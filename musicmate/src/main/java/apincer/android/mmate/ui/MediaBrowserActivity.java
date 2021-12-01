@@ -265,9 +265,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doStopRefresh() {
-        refreshLayout.finishRefreshing();
+        if (refreshLayout.isShown()) {
+            refreshLayout.finishRefreshing();
+        }
         mStateView.hideStates();
-      //  refreshLayout.setRefreshing(false);
     }
 
     @Override
