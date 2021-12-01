@@ -3,9 +3,11 @@
 *.iml
 *.iws
 *.ipr
+*.class
 .idea/
 .gradle/
 local.properties
 */build/
+*/*/build/
 *~
 *.swp
