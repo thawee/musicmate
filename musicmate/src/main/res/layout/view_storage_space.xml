@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_margin="1dp"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/storage_box"
+        android:layout_gravity="top|left"
+        android:layout_margin="1dp"
+        android:paddingLeft="2dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left"
+                    android:layout_marginLeft="1dp"
+                    android:layout_marginRight="2dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="4dp"
+                    android:layout_alignRight="@+id/storage_box"
+                    android:orientation="vertical">
+                    <!--
+                    <TextView
+                        android:id="@+id/storage_title"
+                        android:layout_width="140dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="left|top"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="90%"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="12sp" />
+-->
+                    <!--
+                    <com.daimajia.numberprogressbar.NumberProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/storage_percentage"
+                        app:progress_unreached_color="@color/grey400"
+                        app:progress_reached_color="#3498DB"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="4dp"
+                        app:progress_unreached_bar_height="1.75dp"
+                        app:progress_reached_bar_height="3.0dp"
+
+                        app:progress_text_size="10sp"
+                        app:progress_text_color="#3498DB"
+                        app:progress_text_offset="1dp"
+                        app:progress_text_visibility="visible"
+
+                        app:progress_max="100"
+                        app:progress_current="80"
+                        />-->
+                    <com.skydoves.progressview.ProgressView
+                        android:id="@+id/storage_percentage"
+                        android:layout_width="140dp"
+                        android:layout_height="24dp"
+                        app:progressView_colorBackground="@color/grey600"
+                    app:progressView_colorProgress="@color/grey200"
+                    app:progressView_progress="40"
+                    app:progressView_min="10"
+                    app:progressView_max="100"
+                    app:progressView_progressFromPrevious="false"
+                    app:progressView_autoAnimate="false"
+                    app:progressView_radius="4dp"
+                    app:progressView_padding="1dp"
+                    app:progressView_labelColorInner="@color/black"
+                    app:progressView_labelColorOuter="@color/black"
+                    app:progressView_labelSize="10sp"
+                    app:progressView_labelSpace="8dp"
+                    app:progressView_labelText="achieve 65%"
+                    app:progressView_labelTypeface="bold"
+                    />
+                    <!--
+                    <TextView
+                        android:id="@+id/storage_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:gravity="left|bottom"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="PH"
+                        android:textStyle="bold"
+                        android:textColor="@color/grey200"
+                        android:textSize="10sp" /> -->
+                </LinearLayout>
+</LinearLayout>

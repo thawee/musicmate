@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="4" android:versionName="20.0.1" android:installLocation="internalOnly" package="com.ting.mp3.android" >
+	<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+	<application android:label="Hi-Fi" android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:icon="@mipmap/ic_launcher" android:allowBackup="true">
+		<activity android:label="Hi-Fi" android:name="apincer.android.vivohifi.MainActivity">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<service android:name="apincer.android.vivohifi.DACService" android:exported="true"/>
+		<receiver android:name="apincer.android.vivohifi.HeadsetBroadcastReceiver" android:enabled="true">
+			<intent-filter>
+				<action android:name="android.intent.action.HEADSET_PLUG" />
+			</intent-filter>
+		</receiver>
+	</application>
+</manifest>

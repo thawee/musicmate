@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the theme applied to the application or activity -->
+
+    <style name="AppBaseTheme" parent="@android:style/Theme.Holo.Light">
+    </style>
+
+
+    <style name="CustomActionBarTheme" parent="AppBaseTheme">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="android:actionBarTabStyle">@style/ActionBarTabStyle</item>
+
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
+        <item name="android:dropDownListViewStyle">@style/DropDownListView</item>
+        <item name="android:actionBarWidgetTheme">@style/Theme.stylingactionbar.widget</item>
+        <item name="android:actionDropDownStyle">@style/DropDownNav</item>
+        <item name="android:spinnerDropDownItemStyle">@style/DropDownItem</item>
+        <item name="android:spinnerItemStyle">@style/SpinnerItem</item>
+        <item name="android:homeAsUpIndicator">@drawable/menu_back</item>
+
+        <item name="android:windowContentOverlay">@null</item>
+
+
+    </style>
+    <style name="HomeTheme" parent="AppBaseTheme">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="android:actionBarTabStyle">@style/ActionBarTabStyle</item>
+
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
+        <item name="android:dropDownListViewStyle">@style/DropDownListView</item>
+        <item name="android:actionBarWidgetTheme">@style/Theme.stylingactionbar.widget</item>
+        <item name="android:actionDropDownStyle">@style/DropDownNav</item>
+        <item name="android:spinnerDropDownItemStyle">@style/DropDownItem</item>
+        <item name="android:spinnerItemStyle">@style/SpinnerItem</item>
+
+        <item name="android:windowContentOverlay">@null</item>
+
+
+    </style>
+
+    <style name="TitleTextStyle" parent="AppBaseTheme">
+        <item name="android:textColor">@color/actionText</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:actionMenuTextColor">@color/actionText</item>
+    </style>
+
+    <style name="ActionBar" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">#ffffff</item>
+        <item name="android:titleTextStyle">@style/TitleTextStyle</item>
+        <item name="android:backgroundStacked">@color/actionbar_bg</item>
+        <item name="android:backgroundSplit">@color/actionbar_bg</item>
+    </style>
+
+    <style name="ActionBarTabStyle" parent="@android:style/Widget.Holo.ActionBar.TabView">
+        <item name="android:background">@drawable/actionbar_bg</item>
+    </style>
+
+    <style name="PopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
+        <item name="android:popupBackground">#03A9F4</item>
+
+    </style>
+
+
+    <style name="DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
+        <item name="android:listSelector">#1cb8ff</item>
+        <item name="android:divider">#1cb8ff</item>
+        <item name="android:dividerHeight">1dp</item>
+    </style>
+
+    <style name="Theme.stylingactionbar.widget" parent="@android:style/Theme.Holo">
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
+        <item name="android:dropDownListViewStyle">@style/DropDownListView</item>
+        <item name="android:spinnerStyle">@style/DropDownNav</item>
+    </style>
+
+    <style name="DropDownNav" parent="@android:style/Widget.Holo.Spinner">
+        <item name="android:background">@drawable/actionbar_bg</item>
+        <item name="android:popupBackground">@drawable/actionbar_bg</item>
+        <item name="android:dropDownSelector">@drawable/actionbar_bg</item>
+
+    </style>
+
+    <style name="DropDownItem" parent="@android:style/Widget.Holo.Light.DropDownItem.Spinner">
+        <!--<item name="android:itemTextAppearance">@style/myCustomMenuTextApearance</item>-->
+
+    </style>
+
+    <style name="SpinnerItem" parent="@android:style/Widget.Holo.TextView.SpinnerItem">
+        <!--<item name="android:itemTextAppearance">@style/myCustomMenuTextApearance</item>-->
+    </style>
+
+
+    <!--<style name="CustomActionBarTheme" parent="AppBaseTheme">-->
+        <!--<item name="android:actionBarStyle">@style/MyActionBar</item>-->
+        <!--<item name="android:windowActionBarOverlay">true</item>-->
+        <!--<item name="android:actionDropDownStyle">@style/MyDropDownNav</item>-->
+        <!--<item name="android:popupMenuStyle">@style/MyPopupMenu</item>-->
+        <!--<item name="android:actionBarWidgetTheme">@style/CustomActionBarTheme</item>-->
+        <!--<item name="android:dropDownListViewStyle">@style/MyDropDownListView</item>-->
+
+    <!--</style>-->
+
+    <!--&lt;!&ndash; ActionBar styles &ndash;&gt;-->
+    <!--<style name="MyActionBar" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">-->
+        <!--<item name="android:background">@drawable/actionbar_bg</item>-->
+
+        <!--&lt;!&ndash;<item name="android:background">@color/actionbar_bg</item>&ndash;&gt;-->
+
+    <!--</style>-->
+
+    <!--<style name ="MyPopupMenu" parent="AppBaseTheme">-->
+        <!--<item name="android:popupBackground">@drawable/actionbar_bg</item>-->
+
+    <!--</style>-->
+
+
+
+    <!--&lt;!&ndash; DropDown&ndash;&gt;-->
+
+    <!--&lt;!&ndash; style the items within the overflow menu &ndash;&gt;-->
+    <!--<style name="MyDropDownNav" parent="android:style/Widget.Holo.ListView.DropDown">-->
+        <!--<item name="android:listSelector">@drawable/actionbar_bg</item>-->
+    <!--</style>-->
+    <!--&lt;!&ndash; style the list navigation &ndash;&gt;-->
+
+</resources>

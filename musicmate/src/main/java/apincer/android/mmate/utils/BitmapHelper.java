@@ -1,0 +1,768 @@
+package apincer.android.mmate.utils;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
+import android.view.View;
+
+import androidx.core.content.ContextCompat;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+
+import apincer.android.mmate.R;
+
+/**
+ * Created by Administrator on 11/9/17.
+ */
+
+public class BitmapHelper {
+    private static final float BITMAP_SCALE = 1f;
+    private static final float BLUR_RADIUS = 15f;
+
+    public static Bitmap fastblur(View v) {
+        return blur(v.getContext(), getScreenshot(v));
+    }
+
+    public static Bitmap loadBitmapFromView(View v) {
+        Bitmap b = Bitmap.createBitmap( v.getLayoutParams().width, v.getLayoutParams().height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        v.layout(0, 0, v.getLayoutParams().width, v.getLayoutParams().height);
+        v.draw(c);
+        return b;
+    }
+
+    @SuppressLint("NewApi")
+    public static Bitmap blur(Context ctx, Bitmap image) {
+        int width = Math.round(image.getWidth() / BITMAP_SCALE);
+        int height = Math.round(image.getHeight() / BITMAP_SCALE);
+
+        // http://developers.500px.com/2015/03/17/a-blurring-view-for-android.html
+        width = width - (width % 4) + 4;
+        height = height - (height % 4) + 4;
+
+        Bitmap inputBitmap = Bitmap.createScaledBitmap(image, width, height, false);
+        Bitmap outputBitmap = Bitmap.createBitmap(inputBitmap);
+
+        RenderScript rs = RenderScript.create(ctx);
+        ScriptIntrinsicBlur theIntrinsic = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+        Allocation tmpIn = Allocation.createFromBitmap(rs, inputBitmap);
+        Allocation tmpOut = Allocation.createFromBitmap(rs, outputBitmap);
+        theIntrinsic.setRadius(BLUR_RADIUS);
+        theIntrinsic.setInput(tmpIn);
+        theIntrinsic.forEach(tmpOut);
+        tmpOut.copyTo(outputBitmap);
+        return outputBitmap;
+    }
+
+    public Bitmap getRefelection(Bitmap image) {
+        // The gap we want between the reflection and the original image
+        final int reflectionGap = 4;
+
+        // Get you bit map from drawable folder
+        Bitmap originalImage = image;
+
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+
+        // This will not scale but will flip on the Y axis
+        Matrix matrix = new Matrix();
+        matrix.preScale(1, -1);
+
+        // Create a Bitmap with the flip matix applied to it.
+        // We only want the bottom half of the image
+        Bitmap reflectionImage = Bitmap.createBitmap(originalImage, 0,
+                height / 2, width, height / 2, matrix, false);
+
+        // Create a new bitmap with same width but taller to fit reflection
+        Bitmap bitmapWithReflection = Bitmap.createBitmap(width,
+                (height + height / 2), Bitmap.Config.ARGB_8888);
+
+        // Create a new Canvas with the bitmap that's big enough for
+        // the image plus gap plus reflection
+        Canvas canvas = new Canvas(bitmapWithReflection);
+        // Draw in the original image
+        canvas.drawBitmap(originalImage, 0, 0, null);
+        //Draw the reflection Image
+        canvas.drawBitmap(reflectionImage, 0, height + reflectionGap, null);
+
+        // Create a shader that is a linear gradient that covers the reflection
+        Paint paint = new Paint();
+        LinearGradient shader = new LinearGradient(0,
+                originalImage.getHeight(), 0, bitmapWithReflection.getHeight()
+                + reflectionGap, 0x70ffffff, 0x00ffffff, Shader.TileMode.CLAMP);
+        // Set the paint to use this shader (linear gradient)
+        paint.setShader(shader);
+        // Set the Transfer mode to be porter duff and destination in
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        // Draw a rectangle using the paint with our linear gradient
+        canvas.drawRect(0, height, width, bitmapWithReflection.getHeight()
+                + reflectionGap, paint);
+        return bitmapWithReflection;
+    }
+
+    public static final Bitmap applyReflection(Bitmap bitmap) {
+        // gap space between original and reflected
+        final int reflectionGap = 1;
+        // get image size
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        // this will not scale but will flip on the Y axis
+        Matrix matrix = new Matrix();
+        matrix.preScale(1, -1);
+
+        // create a Bitmap with the flip matrix applied to it.
+        // we only want the bottom half of the image
+        int newHeight = height/ 2;
+      //  Bitmap reflectionImage = Bitmap.createBitmap(bitmap, 0, height/ 2,
+      //          width, height / 2, matrix, false);
+        Bitmap reflectionImage = Bitmap.createBitmap(bitmap, 0, newHeight,
+                          width, newHeight, matrix, false);
+
+        // create a new bitmap with same width but taller to fit reflection
+       // Bitmap bitmapWithReflection = Bitmap.createBitmap(width,
+       //         (height + height / 2), Bitmap.Config.ARGB_8888);
+        Bitmap bitmapWithReflection = Bitmap.createBitmap(width,
+                 (height + height), Bitmap.Config.ARGB_8888);
+
+        // create a new Canvas with the bitmap that's big enough for
+        // the image plus gap plus reflection
+        Canvas canvas = new Canvas(bitmapWithReflection);
+        // draw in the original image
+        canvas.drawBitmap(bitmap, 0, 0, null);
+        // draw in the gap
+        Paint defaultPaint = new Paint();
+        canvas.drawRect(0, height, width, height + reflectionGap, defaultPaint);
+        // draw in the reflection
+        canvas.drawBitmap(reflectionImage, 0, height + reflectionGap, null);
+
+        // create a shader that is a linear gradient that covers the reflection
+        Paint paint = new Paint();
+        LinearGradient shader = new LinearGradient(0, bitmap.getHeight(), 0,
+                bitmapWithReflection.getHeight() + reflectionGap, 0x70ffffff,
+                0x00ffffff, Shader.TileMode.CLAMP);
+        // set the paint to use this shader (linear gradient)
+        paint.setShader(shader);
+        // set the Transfer mode to be porter duff and destination in
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        // draw a rectangle using the paint with our linear gradient
+        canvas.drawRect(0, height, width, bitmapWithReflection.getHeight()
+                + reflectionGap, paint);
+
+        return bitmapWithReflection;
+    }
+
+    public static Bitmap applyReflection2(Bitmap originalImage) {
+        // gap space between original and reflected
+        final int reflectionGap = 4;
+        // get image size
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+
+        // this will not scale but will flip on the Y axis
+        Matrix matrix = new Matrix();
+        matrix.preScale(1, -1);
+
+        // create a Bitmap with the flip matrix applied to it.
+        // we only want the bottom half of the image
+        Bitmap reflectionImage = Bitmap.createBitmap(originalImage, 0, height/2, width, height/2, matrix, false);
+
+        // create a new bitmap with same width but taller to fit reflection
+        Bitmap bitmapWithReflection = Bitmap.createBitmap(width, (height + height/2), Bitmap.Config.ARGB_8888);
+
+        // create a new Canvas with the bitmap that's big enough for
+        // the image plus gap plus reflection
+        Canvas canvas = new Canvas(bitmapWithReflection);
+        // draw in the original image
+        canvas.drawBitmap(originalImage, 0, 0, null);
+        // draw in the gap
+        Paint defaultPaint = new Paint();
+        canvas.drawRect(0, height, width, height + reflectionGap, defaultPaint);
+        // draw in the reflection
+        canvas.drawBitmap(reflectionImage,0, height + reflectionGap, null);
+
+        // create a shader that is a linear gradient that covers the reflection
+        Paint paint = new Paint();
+        LinearGradient shader = new LinearGradient(0, originalImage.getHeight(), 0,
+                bitmapWithReflection.getHeight() + reflectionGap, 0x70ffffff, 0x00ffffff,
+                Shader.TileMode.CLAMP);
+        // set the paint to use this shader (linear gradient)
+        paint.setShader(shader);
+        // set the Transfer mode to be porter duff and destination in
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        // draw a rectangle using the paint with our linear gradient
+        canvas.drawRect(0, height, width, bitmapWithReflection.getHeight() + reflectionGap, paint);
+
+        return bitmapWithReflection;
+    }
+
+    public static Bitmap getReflectBitmap(Bitmap originalImage, float rate) {
+        if (originalImage == null || originalImage.isRecycled())
+            return null;
+        //The gap we want between the reflection and the original image
+        final int reflectionGap = 4;
+
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+        int reflectHeight = Math.round(rate * height);
+
+
+        //This will not scale but will flip on the Y axis
+        Matrix matrix = new Matrix();
+        matrix.preScale(1, -1);
+
+        //Create a Bitmap with the flip matrix applied to it.
+        //We only want the bottom half of the image
+        Bitmap reflectionImage = Bitmap.createBitmap(originalImage, 0, height - reflectHeight, width, reflectHeight, matrix, false);
+
+        //Create a new bitmap with same width but taller to fit reflection
+        Bitmap bitmapWithReflection = Bitmap.createBitmap(width, height + reflectHeight, Bitmap.Config.ARGB_8888);
+
+        //Create a new Canvas with the bitmap that's big enough for
+        //the image plus gap plus reflection
+        Canvas canvas = new Canvas(bitmapWithReflection);
+        //Draw in the original image
+        canvas.drawBitmap(originalImage, 0, 0, null);
+        //Draw in the gap
+        Paint defaultPaint = new Paint();
+        canvas.drawRect(0, height, width, height + reflectionGap, defaultPaint);
+        //Draw in the reflection
+        canvas.drawBitmap(reflectionImage, 0, height + reflectionGap, null);
+
+        //Create a shader that is a linear gradient that covers the reflection
+        Paint paint = new Paint();
+        LinearGradient shader = new LinearGradient(0, originalImage.getHeight(), 0,
+                bitmapWithReflection.getHeight() + reflectionGap, 0x70ffffff, 0x00ffffff,
+                Shader.TileMode.CLAMP);
+        //Set the paint to use this shader (linear gradient)
+        paint.setShader(shader);
+        //Set the Transfer mode to be porter duff and destination in
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        //Draw a rectangle using the paint with our linear gradient
+        canvas.drawRect(0, height, width,
+                bitmapWithReflection.getHeight() + reflectionGap, paint);
+
+        if (!originalImage.isRecycled()) {
+            originalImage.recycle();
+        }
+
+        return bitmapWithReflection;
+    }
+
+    private static Bitmap getScreenshot(View v) {
+        Bitmap b = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        v.draw(c);
+        return b;
+    }
+
+
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeBitmap(byte[] data, int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        //options.inPurgeable = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+        // Calculate inSampleSize
+        //options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        //options.inPreferredConfig = Bitmap.Config.RGB_565;
+        //options.inDither = true;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+        /*
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream);
+        bitmap.recycle();
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        data = stream.toByteArray();
+        Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        //bitmap.recycle();
+
+        Util.closeSilently(stream);
+*/
+        return bitmap;
+    }
+
+    public static Bitmap decodeBitmapFromStream(InputStream inputStream, int reqWidth, int reqHeight) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            int n;
+            byte[] buffer = new byte[1024];
+            while ((n = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, n);
+            }
+            return decodeBitmapFromByteArray(outputStream.toByteArray(), reqWidth, reqHeight);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public static Bitmap decodeBitmapFromByteArray(byte[] data, int reqWidth, int reqHeight) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        options.inSampleSize = calculateInBitmapSize(options, reqWidth, reqHeight);
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeByteArray(data, 0, data.length, options);
+    }
+
+    private static int calculateInBitmapSize(BitmapFactory.Options options, int reqWidth, int
+            reqHeight) {
+        int width = options.outWidth;
+        int height = options.outHeight;
+        int inSampleSize = 1;
+        if (width > reqWidth || height > reqHeight) {
+            int halfWidth = width / 2;
+            int halfHeight = height / 2;
+            while (halfWidth / inSampleSize >= reqWidth && halfHeight / inSampleSize >= reqHeight) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
+    }
+
+    public static Bitmap scaleBitmap(Bitmap src, int maxWidth, int maxHeight) {
+        double scaleFactor = Math.min(
+                ((double) maxWidth)/src.getWidth(), ((double) maxHeight)/src.getHeight());
+        return Bitmap.createScaledBitmap(src,
+                (int) (src.getWidth() * scaleFactor), (int) (src.getHeight() * scaleFactor), false);
+    }
+
+    public static Bitmap transformCircle(final Bitmap source, final int radius, final int margin) {
+        final Paint paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setShader(new BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+
+        Bitmap output = Bitmap.createBitmap(source.getWidth(), source.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+        canvas.drawRoundRect(new RectF(margin, margin, source.getWidth() - margin, source.getHeight() - margin), radius, radius, paint);
+
+        if (source != output) {
+            source.recycle();
+        }
+
+        return output;
+    }
+
+    // Custom method to create rounded bitmap from a rectangular bitmap
+    public static Bitmap getRoundedBitmap(Bitmap srcBitmap, int cornerRadius) {
+        // Initialize a new instance of Bitmap
+        Bitmap dstBitmap = Bitmap.createBitmap(
+                srcBitmap.getWidth(), // Width
+                srcBitmap.getHeight(), // Height
+
+                Bitmap.Config.ARGB_8888 // Config
+        );
+
+        /*
+            Canvas
+                The Canvas class holds the "draw" calls. To draw something, you need 4 basic
+                components: A Bitmap to hold the pixels, a Canvas to host the draw calls (writing
+                into the bitmap), a drawing primitive (e.g. Rect, Path, text, Bitmap), and a paint
+                (to describe the colors and styles for the drawing).
+        */
+        // Initialize a new Canvas to draw rounded bitmap
+        Canvas canvas = new Canvas(dstBitmap);
+
+        // Initialize a new Paint instance
+        Paint paint = new Paint();
+        paint.setAntiAlias(true);
+
+        /*
+            Rect
+                Rect holds four integer coordinates for a rectangle. The rectangle is represented by
+                the coordinates of its 4 edges (left, top, right bottom). These fields can be accessed
+                directly. Use width() and height() to retrieve the rectangle's width and height.
+                Note: most methods do not check to see that the coordinates are sorted correctly
+                (i.e. left <= right and top <= bottom).
+        */
+        /*
+            Rect(int left, int top, int right, int bottom)
+                Create a new rectangle with the specified coordinates.
+        */
+        // Initialize a new Rect instance
+        Rect rect = new Rect(0, 0, srcBitmap.getWidth(), srcBitmap.getHeight());
+
+        /*
+            RectF
+                RectF holds four float coordinates for a rectangle. The rectangle is represented by
+                the coordinates of its 4 edges (left, top, right bottom). These fields can be
+                accessed directly. Use width() and height() to retrieve the rectangle's width and
+                height. Note: most methods do not check to see that the coordinates are sorted
+                correctly (i.e. left <= right and top <= bottom).
+        */
+        // Initialize a new RectF instance
+        RectF rectF = new RectF(rect);
+
+        /*
+            public void drawRoundRect (RectF rect, float rx, float ry, Paint paint)
+                Draw the specified round-rect using the specified paint. The roundrect will be
+                filled or framed based on the Style in the paint.
+
+            Parameters
+                rect : The rectangular bounds of the roundRect to be drawn
+                rx : The x-radius of the oval used to round the corners
+                ry : The y-radius of the oval used to round the corners
+                paint : The paint used to draw the roundRect
+        */
+        // Draw a rounded rectangle object on canvas
+        canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paint);
+
+        /*
+            public Xfermode setXfermode (Xfermode xfermode)
+                Set or clear the xfermode object.
+                Pass null to clear any previous xfermode. As a convenience, the parameter passed
+                is also returned.
+
+            Parameters
+                xfermode : May be null. The xfermode to be installed in the paint
+            Returns
+                xfermode
+        */
+        /*
+            public PorterDuffXfermode (PorterDuff.Mode mode)
+                Create an xfermode that uses the specified porter-duff mode.
+
+            Parameters
+                mode : The porter-duff mode that is applied
+
+        */
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+
+        /*
+            public void drawBitmap (Bitmap bitmap, float left, float top, Paint paint)
+                Draw the specified bitmap, with its top/left corner at (x,y), using the specified
+                paint, transformed by the current matrix.
+
+                Note: if the paint contains a maskfilter that generates a mask which extends beyond
+                the bitmap's original width/height (e.g. BlurMaskFilter), then the bitmap will be
+                drawn as if it were in a Shader with CLAMP mode. Thus the color outside of the
+                original width/height will be the edge color replicated.
+
+                If the bitmap and canvas have different densities, this function will take care of
+                automatically scaling the bitmap to draw at the same density as the canvas.
+
+            Parameters
+                bitmap : The bitmap to be drawn
+                left : The position of the left side of the bitmap being drawn
+                top : The position of the top side of the bitmap being drawn
+                paint : The paint used to draw the bitmap (may be null)
+        */
+        // Make a rounded image by copying at the exact center position of source image
+        canvas.drawBitmap(srcBitmap, 0, 0, paint);
+
+        // Free the native object associated with this bitmap.
+        srcBitmap.recycle();
+
+        // Return the circular bitmap
+        return dstBitmap;
+    }
+
+    // Custom method to add a border around rounded bitmap
+    public static Bitmap addBorderToRoundedBitmap(Bitmap srcBmp, int cornerRadius, int borderWidth, int borderColor) {
+        // We will hide half border by bitmap
+        borderWidth = borderWidth * 2;
+        Bitmap srcBitmap = srcBmp.copy(Bitmap.Config.ARGB_8888, true);
+
+        // Initialize a new Bitmap to make it bordered rounded bitmap
+        Bitmap dstBitmap = Bitmap.createBitmap(
+                srcBitmap.getWidth() + borderWidth, // Width
+                srcBitmap.getHeight() + borderWidth, // Height
+                Bitmap.Config.ARGB_8888 // Config
+        );
+
+        // Initialize a new Canvas instance
+        Canvas canvas = new Canvas(dstBitmap);
+
+        // Initialize a new Paint instance to draw border
+        Paint paint = new Paint();
+        paint.setColor(borderColor);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(borderWidth);
+        paint.setAntiAlias(true);
+
+        // Initialize a new Rect instance
+        Rect rect = new Rect(
+                borderWidth / 2,
+                borderWidth / 2,
+                dstBitmap.getWidth() - borderWidth / 2,
+                dstBitmap.getHeight() - borderWidth / 2
+        );
+
+        // Initialize a new instance of RectF;
+        RectF rectF = new RectF(rect);
+
+        // Draw rounded rectangle as a border/shadow on canvas
+        canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paint);
+
+        // Draw source bitmap to canvas
+        canvas.drawBitmap(srcBitmap, borderWidth / 2, borderWidth / 2, null);
+
+        /*
+            public void recycle ()
+                Free the native object associated with this bitmap, and clear the reference to the
+                pixel data. This will not free the pixel data synchronously; it simply allows it to
+                be garbage collected if there are no other references. The bitmap is marked as
+                "dead", meaning it will throw an exception if getPixels() or setPixels() is called,
+                and will draw nothing. This operation cannot be reversed, so it should only be
+                called if you are sure there are no further uses for the bitmap. This is an advanced
+                call, and normally need not be called, since the normal GC process will free up this
+                memory when there are no more references to this bitmap.
+        */
+        srcBitmap.recycle();
+
+        // Return the bordered circular bitmap
+        return dstBitmap;
+    }
+
+    public static Bitmap getBitmapFromVectorDrawable(Context context, int drawableId) {
+        Drawable drawable = ContextCompat.getDrawable(context, drawableId);
+
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
+    }
+
+    public static Bitmap drawableToBitmap (Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable)drawable).getBitmap();
+        }
+/*
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+*/
+		
+		int width = drawable.getIntrinsicWidth();
+        width = width > 0 ? width : 256; // Replaced the 1 by a 96
+        int height = drawable.getIntrinsicHeight();
+        height = height > 0 ? height : 256; // Replaced the 1 by a 96
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+		
+        return bitmap;
+    }
+
+    public static InputStream bitmapToInputStream(Bitmap bitmap) {
+        int size = bitmap.getHeight() * bitmap.getRowBytes();
+        ByteBuffer buffer = ByteBuffer.allocate(size);
+        bitmap.copyPixelsToBuffer(buffer);
+        return new ByteArrayInputStream(buffer.array());
+    }
+	
+	public static Bitmap textAsBitmap(String text, float textSize, int textColor) {
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		paint.setTextSize(textSize);
+		paint.setColor(textColor);
+		paint.setTextAlign(Paint.Align.LEFT);
+		float baseline = -paint.ascent(); // ascent() is negative
+		int width = (int) (paint.measureText(text) + 0.5f); // round
+		int height = (int) (baseline + paint.descent() + 0.5f);
+		Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(image);
+		canvas.drawText(text, 0, baseline, paint);
+		return image;
+	}
+
+    public static Bitmap buildArcProgress(Context context, int percentage, String bottomText, boolean changedColor) {
+
+        int width = 240;
+        int height = 240;
+        int stroke = 30;
+        int padding = 5;
+        float density = context.getResources().getDisplayMetrics().density;
+
+        //Paint for arc stroke.
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG | Paint.ANTI_ALIAS_FLAG);
+        paint.setStrokeWidth(stroke);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        //paint.setStrokeJoin(Paint.Join.ROUND);
+        //paint.setPathEffect(new CornerPathEffect(10) );
+
+        //Paint for text values.
+        Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+       // mTextPaint.setTextSize((int) textSize);
+        mTextPaint.setTextSize((int) (context.getResources().getDimension(R.dimen.widget_text_large_value) / density));
+        mTextPaint.setColor(Color.WHITE);
+        mTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        final RectF arc = new RectF();
+        arc.set((stroke/2) + padding, (stroke/2) + padding, width-padding-(stroke/2), height-padding-(stroke/2));
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        //First draw full arc as background.
+        paint.setColor(Color.argb(75, 255, 255, 255));
+        canvas.drawArc(arc, 135, 275, false, paint);
+        //Then draw arc progress with actual value.
+        if(changedColor) {
+            if (percentage > 95) {
+                paint.setColor(context.getColor(R.color.storage4));
+            }else if (percentage > 90) {
+                paint.setColor(context.getColor(R.color.storage3));
+            }else if(percentage > 80) {
+                paint.setColor(context.getColor(R.color.storage2));
+            }else {
+                paint.setColor(context.getColor(R.color.storage1));
+            }
+        }else {
+            paint.setColor(Color.WHITE);
+        }
+        int sweepAngle = (percentage*275) / 100;
+
+        //canvas.drawArc(arc, 135, 200, false, paint);
+        canvas.drawArc(arc, 135, sweepAngle, false, paint);
+        //Draw text value.
+        canvas.drawText(percentage + "%", bitmap.getWidth() / 2, (bitmap.getHeight() - mTextPaint.ascent()) / 2, mTextPaint);
+
+        //Draw widget title.
+       // mTextPaint.setTextSize((int) textSize);
+        mTextPaint.setTextSize((int) (context.getResources().getDimension(R.dimen.widget_text_large_value) / density));
+        if(bottomText != null && bottomText.trim().length()>0) {
+            canvas.drawText(bottomText, bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
+        }
+        //canvas.drawText(context.getString(R.string.widget_text_arc_battery), bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
+
+        return  bitmap;
+    }
+
+    public static Bitmap buildArcText(Context context, String text, int color) {
+
+        int width = 240;
+        int height = 240;
+        int stroke = 30;
+        int padding = 5;
+        float density = context.getResources().getDisplayMetrics().density;
+
+        //Paint for arc stroke.
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG | Paint.ANTI_ALIAS_FLAG);
+        paint.setStrokeWidth(stroke);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        //paint.setStrokeJoin(Paint.Join.ROUND);
+        //paint.setPathEffect(new CornerPathEffect(10) );
+
+        //Paint for text values.
+        Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        // mTextPaint.setTextSize((int) textSize);
+        mTextPaint.setTextSize((int) (context.getResources().getDimension(R.dimen.widget_text_large_value) / density));
+        mTextPaint.setColor(Color.WHITE);
+        mTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        final RectF arc = new RectF();
+        arc.set((stroke/2) + padding, (stroke/2) + padding, width-padding-(stroke/2), height-padding-(stroke/2));
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        //First draw full arc as background.
+        paint.setColor(Color.argb(75, 255, 255, 255));
+        canvas.drawArc(arc, 135, 275, false, paint);
+        //Then draw arc progress with actual value.
+       /* if(changedColor) {
+            if (percentage > 95) {
+                paint.setColor(context.getColor(R.color.storage4));
+            }else if (percentage > 90) {
+                paint.setColor(context.getColor(R.color.storage3));
+            }else if(percentage > 80) {
+                paint.setColor(context.getColor(R.color.storage2));
+            }else {
+                paint.setColor(context.getColor(R.color.storage1));
+            }
+        }else {
+            paint.setColor(Color.WHITE);
+        }
+        int sweepAngle = (percentage*275) / 100;
+
+        */
+
+        paint.setColor(Color.WHITE);
+
+        //canvas.drawArc(arc, 135, 200, false, paint);
+        canvas.drawArc(arc, 135, 300, false, paint);
+        //Draw text value.
+        canvas.drawText(String.valueOf(text.toUpperCase().charAt(0)), bitmap.getWidth() / 2, (bitmap.getHeight() - mTextPaint.ascent()) / 2, mTextPaint);
+
+        //Draw widget title.
+        // mTextPaint.setTextSize((int) textSize);
+        mTextPaint.setTextSize((int) (context.getResources().getDimension(R.dimen.widget_text_large_value) / density));
+        //if(bottomText != null && bottomText.trim().length()>0) {
+        //    canvas.drawText(bottomText, bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
+        //}
+        //canvas.drawText(context.getString(R.string.widget_text_arc_battery), bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
+
+        return  bitmap;
+    }
+
+    public static Drawable bitmapToDrawable(Context contex, Bitmap bitmap) {
+        return new BitmapDrawable(contex.getResources(), bitmap);
+    }
+}

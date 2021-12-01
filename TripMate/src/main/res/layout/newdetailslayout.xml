@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#e1e1e1"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:fadingEdge="none"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/linearLayout1"
+                android:layout_width="fill_parent"
+                android:layout_height="0dip"
+                android:layout_weight="3.5"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dip"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="2"
+                    android:background="#fff"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <RelativeLayout
+                        android:id="@+id/relativeLayout1"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:id="@+id/imageViewL"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_gravity="center"
+                            android:adjustViewBounds="true"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/not_found_banner" />
+
+
+                        <RatingBar
+                            android:id="@+id/detailsRating"
+                            style="@style/small_ratingbar"
+                            android:layout_width="wrap_content"
+                            android:layout_height="20dip"
+                            android:layout_below="@+id/cName"
+                            android:layout_centerHorizontal="true"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:isIndicator="true"
+                            android:numStars="5"
+                            android:paddingTop="3dip"
+                            android:rating="0"
+                            android:stepSize="0.1" />
+
+
+                        <TextView
+                            android:id="@+id/cName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:text="--------------------"
+                            android:textColor="#ff9800"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                    </RelativeLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dip"
+                android:layout_margin="2dip"
+                android:layout_weight="2"
+                android:background="#fff"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="8.5"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TableRow
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="1.5"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="1dip"
+                                android:padding="2dip"
+                                android:src="@drawable/address" />
+                        </TableRow>
+
+                        <LinearLayout
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="8.5"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/cAddress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="8dip"
+                                android:text="Address"
+                                android:textColor="#898a88"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TableRow
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="1.5"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="1dip"
+                                android:padding="3dip"
+                                android:src="@drawable/phone" />
+                        </TableRow>
+
+                        <LinearLayout
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="8.5"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/cPhone"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="8dip"
+                                android:text="Phone"
+                                android:textColor="#898a88"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dip"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1.5"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="mapViewBtn"
+                        android:padding="2dip"
+                        android:src="@drawable/mappin" />
+                </LinearLayout>
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="#fff"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dip"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="4"
+                    android:gravity="center"
+
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textD"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8dip"
+                        android:text="Address"
+                        android:textColor="#2196f3"
+                        android:textSize="25sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dip"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="6"
+
+
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dip"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+
+                        <TableRow
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="1"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="1dip"
+                                android:padding="2dip"
+                                android:src="@drawable/walk" />
+                        </TableRow>
+
+                        <LinearLayout
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="8"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="5dip">
+
+                            <TextView
+                                android:id="@+id/walkD"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="5dip"
+                                android:text="No Routes Found"
+                                android:textColor="#898a88"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dip"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+
+                        <TableRow
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="1"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="1dip"
+                                android:padding="2dip"
+                                android:src="@drawable/cycle" />
+                        </TableRow>
+
+                        <LinearLayout
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="8"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="5dip">
+
+                            <TextView
+                                android:id="@+id/bycleD"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="5dip"
+                                android:text="No Routes Found"
+                                android:textColor="#898a88"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dip"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+
+                        <TableRow
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="1"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="1dip"
+                                android:padding="2dip"
+                                android:src="@drawable/sbus" />
+                        </TableRow>
+
+                        <LinearLayout
+                            android:layout_width="0dip"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="8"
+                            android:gravity="center_vertical"
+
+                            android:paddingLeft="5dip">
+
+                            <TextView
+                                android:id="@+id/driveD"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="5dip"
+                                android:text="No Routes Found"
+                                android:textColor="#898a88"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dip"
+                android:layout_margin="2dip"
+                android:layout_weight="3.3"
+                android:orientation="horizontal">
+
+                <ListView
+                    android:id="@+id/reviewListView"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_margin="1dip"
+                    android:cacheColorHint="#00000000"
+                    android:divider="#00000000"
+                    android:dividerHeight="5dip"
+                    android:fadingEdge="none"
+                    android:scrollbars="none"></ListView>
+            </LinearLayout>
+
+            <!-- extra to check-->
+
+
+        </LinearLayout>
+
+
+    </ScrollView>
+ 
+</LinearLayout>

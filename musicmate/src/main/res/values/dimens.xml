@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2014 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<resources>
+    <!-- error infobar -->
+    <dimen name="error_horizontal_padding">4dp</dimen>
+    <dimen name="error_vertical_padding">16dp</dimen>
+
+    <!-- playback controls -->
+    <dimen name="playback_controls_albumart_horizontal_margin">8dp</dimen>
+    <dimen name="playback_controls_albumart_size">64dp</dimen>
+    <dimen name="playback_controls_padding">8dp</dimen>
+
+    <!-- navigation drawer -->
+    <dimen name="drawer_item_icon_margin_end">32dp</dimen>
+    <dimen name="drawer_item_height">48dp</dimen>
+    <dimen name="drawer_item_horizontal_padding">16dp</dimen>
+
+    <!-- media browser listview -->
+    <dimen name="media_item_header_panel_height">44dp</dimen>
+    <dimen name="media_item_header_reverse_panel_height">48dp</dimen>
+    <dimen name="media_item_header_height">42dp</dimen>
+    <dimen name="media_item_header_height_title">28dp</dimen>
+    <dimen name="media_item_header_height_bar">8dp</dimen>
+    <dimen name="media_item_height">72dp</dimen>
+    <dimen name="media_item_icon_margin_start">12dp</dimen>
+    <dimen name="media_item_text_margin_start">60dp</dimen>
+    <!-- Margins for the ShowcaseView button -->
+    <dimen name="button_margin">50dp</dimen>
+
+    <dimen name="collection_title_width">180dp</dimen>
+    <dimen name="collection_subtitle_left">164dp</dimen>
+
+    <!-- Margins for full screen activity-->
+    <dimen name="text_view_margin">16dp</dimen>
+    <dimen name="end_text_margin">16dp</dimen>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="spacing_xsmall">2dp</dimen>
+    <dimen name="spacing_small">4dp</dimen>
+    <dimen name="spacing_medium">8dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_xlarge">32dp</dimen>
+    <dimen name="spacing_xxlarge">64dp</dimen>
+    <dimen name="spacing_xxxlarge">76dp</dimen>
+    <dimen name="spacing_xxxxlarge">128dp</dimen>
+
+    <dimen name="dimen_4_dp">4dp</dimen>
+    <dimen name="dimen_16_dp">16dp</dimen>
+    <dimen name="dimen_24_dp">24dp</dimen>
+    <dimen name="dimen_48_dp">48dp</dimen>
+	<dimen name="dimen_52_dp">52dp</dimen>
+    <dimen name="dimen_58_dp">58dp</dimen>
+    <dimen name="dimen_64_dp">64dp</dimen>
+    <dimen name="dimen_96_dp">96dp</dimen>
+    <dimen name="dimen_108_dp">108dp</dimen>
+    <dimen name="dimen_128_dp">128dp</dimen>
+
+    <dimen name="dimen_info_sample_rate_dp">96dp</dimen>
+
+    <dimen name="elevation_low">9dp</dimen>
+    <dimen name="elevation_high">12dp</dimen>
+    <dimen name="status_bar_height">25dp</dimen>
+
+    <!-- Component -->
+    <dimen name="footer">64dp</dimen>
+
+    <dimen name="dialog_padding_vertical">24dp</dimen>
+    <dimen name="dialog_padding_horizontal">24dp</dimen>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">8dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="margin_top">16dp</dimen>
+    <dimen name="margin_top_medium">8dp</dimen>
+    <dimen name="margin_bottom">16dp</dimen>
+    <dimen name="margin_bottom_small">8dp</dimen>
+    <dimen name="margin_left">16dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_right">16dp</dimen>
+    <dimen name="margin_right_handle">22dp</dimen>
+    <dimen name="icon_width">48dp</dimen>
+    <dimen name="icon_height">48dp</dimen>
+    <dimen name="icon_touchable_component_mini">40dp</dimen>
+    <dimen name="icon_circular_width">24dp</dimen>
+    <dimen name="icon_circular_height">24dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="fab_margin_bottom">40dp</dimen>
+    <dimen name="butterbar_height">3dp</dimen>
+    <dimen name="toolbar_height">64dp</dimen><!-- 56 + 8 small margin top -->
+    <dimen name="popup_button_min_height">48dp</dimen>
+    <dimen name="popup_max_height">290dp</dimen>
+    <dimen name="bottom_sheet_peek">312dp</dimen>
+
+    <dimen name="padding_normal">30dp</dimen>
+
+    <dimen name="notification_artist">10dp</dimen>
+    <dimen name="doorhanger_rounded_corner_radius">4dp</dimen>
+
+    <dimen name="tool_bar_height">56dp</dimen>
+
+    <dimen name="expanded_toolbar_height">144dp</dimen>
+
+    <item name="three_items" format="float" type="dimen">1.5</item>
+    <item name="five_items" format="float" type="dimen">1.25</item>
+    <item name="seven_items" format="float" type="dimen">1.16</item>
+
+    <dimen name="size_divider">1dp</dimen>
+    <dimen name="radius_dialogue">10dp</dimen>
+
+    <!-- dimensions -->
+    <dimen name="avatar_image_width">256dp</dimen>
+    <dimen name="avatar_image_final_width">8dp</dimen>
+    <dimen name="spacing_normal">16dp</dimen>
+	
+	<dimen name="fast_scroll_overlay_text_size">100dp</dimen>
+
+    <!-- arc progress -->
+    <dimen name="widget_text_large_value">64sp</dimen>
+
+    <!-- -->
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
+
+    <dimen name="state_views_icon_size">150dp</dimen>
+</resources>

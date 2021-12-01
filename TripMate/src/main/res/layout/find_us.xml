@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#f7f7f7"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right" />
+    <!--<fragment-->
+    <!--android:id="@+id/ggmap"-->
+    <!--android:name="com.google.android.gms.maps.MapFragment"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="200dp"/>-->
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dip"
+        android:layout_marginBottom="2dip"
+        android:layout_weight="8"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:fadingEdge="none"
+            android:scrollbars="none">
+
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <ImageView
+
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_marginBottom="2dip"
+                        android:src="@drawable/logo_lg" />
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/atms"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:onClick="btnFacebook"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:id="@+id/imageView3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/facebookb" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="facebook"
+                                android:textColor="#263238"
+                                android:textSize="14sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/banks"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:onClick="btnYoutube"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/youtubeb" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="YouTube"
+                                android:textColor="#263238"
+                                android:textSize="14sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/bookstores"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:onClick="btnLinkedin"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/linkedinb" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Linkedin"
+                                android:textColor="#263238"
+                                android:textSize="14sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/busstations"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:onClick="btnGoogleplus"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/googleb" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="GooglePlus"
+                                android:textColor="#263238"
+                                android:textSize="14sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cafes"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:onClick="btnTwitter"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/birdb" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="twitter"
+                                android:textColor="#263238"
+                                android:textSize="14sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/carwash"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:onClick="btnPinterest"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/pinterestb" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Pinterest"
+                                android:textColor="#263238"
+                                android:textSize="14sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <!--<com.google.android.gms.ads.AdView-->
+            <!--android:id="@+id/adView"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center"-->
+            <!--ads:adSize="BANNER"-->
+            <!--ads:adUnitId="ca-app-pub-1183621624869118/9096660980" />-->
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

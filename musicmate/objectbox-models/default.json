@@ -1,0 +1,209 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:484918294143487076",
+      "lastPropertyId": "45:4133727572810150350",
+      "name": "AudioTag",
+      "properties": [
+        {
+          "id": "1:6411260242989550273",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "4:8443249650261782809",
+          "name": "lastModified",
+          "type": 6
+        },
+        {
+          "id": "5:7837786242199518923",
+          "name": "managed",
+          "type": 1
+        },
+        {
+          "id": "9:187834310686645189",
+          "name": "title",
+          "type": 9
+        },
+        {
+          "id": "10:8569753723316148512",
+          "name": "artist",
+          "type": 9
+        },
+        {
+          "id": "11:1002480246635256470",
+          "name": "album",
+          "type": 9
+        },
+        {
+          "id": "12:7990965005499130464",
+          "name": "year",
+          "type": 9
+        },
+        {
+          "id": "13:3723807388436612345",
+          "name": "genre",
+          "type": 9
+        },
+        {
+          "id": "14:160859499312568636",
+          "name": "track",
+          "type": 9
+        },
+        {
+          "id": "15:2549102564443177632",
+          "name": "disc",
+          "type": 9
+        },
+        {
+          "id": "16:7708245045667768775",
+          "name": "comment",
+          "type": 9
+        },
+        {
+          "id": "17:8798296877945390450",
+          "name": "grouping",
+          "type": 9
+        },
+        {
+          "id": "18:8556078783133813956",
+          "name": "composer",
+          "type": 9
+        },
+        {
+          "id": "19:950909459988167701",
+          "name": "albumArtist",
+          "type": 9
+        },
+        {
+          "id": "20:8338017473873929895",
+          "name": "source",
+          "type": 9
+        },
+        {
+          "id": "21:2168114516744707427",
+          "name": "cueSheet",
+          "type": 1
+        },
+        {
+          "id": "24:5384728529293311784",
+          "name": "audioDuration",
+          "type": 6
+        },
+        {
+          "id": "26:5580109726629508978",
+          "name": "lossless",
+          "type": 1
+        },
+        {
+          "id": "27:9066531800374366137",
+          "name": "mqa",
+          "type": 1
+        },
+        {
+          "id": "29:3405793755740829284",
+          "name": "audioBitsPerSample",
+          "type": 5
+        },
+        {
+          "id": "30:6411898650097747013",
+          "name": "audioSampleRate",
+          "type": 6
+        },
+        {
+          "id": "31:1554426740525286166",
+          "name": "audioBitRate",
+          "type": 6
+        },
+        {
+          "id": "33:4505301426134856100",
+          "name": "audioEncoding",
+          "type": 9
+        },
+        {
+          "id": "34:5528675084900608707",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "35:8122949931092972876",
+          "name": "fileSize",
+          "type": 6
+        },
+        {
+          "id": "36:5497065379448571156",
+          "name": "fileExtension",
+          "type": 9
+        },
+        {
+          "id": "37:8913023280268997353",
+          "name": "mqaStudio",
+          "type": 1
+        },
+        {
+          "id": "38:5245663853915657491",
+          "name": "mqaSampleRate",
+          "type": 9
+        },
+        {
+          "id": "40:1313987033821767504",
+          "name": "storageId",
+          "type": 9
+        },
+        {
+          "id": "41:1161908004977913451",
+          "name": "simpleName",
+          "type": 9
+        },
+        {
+          "id": "42:6703804703982970300",
+          "name": "storageName",
+          "type": 9
+        },
+        {
+          "id": "43:7773837728660129309",
+          "name": "audiophile",
+          "type": 1
+        },
+        {
+          "id": "44:6256624140785003312",
+          "name": "rating",
+          "type": 5
+        },
+        {
+          "id": "45:4133727572810150350",
+          "name": "audioChannels",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:484918294143487076",
+  "lastIndexId": "0:0",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [
+    1195333353466417513,
+    1516101449767025398,
+    7444978053631951855,
+    7779055562978146370,
+    106827939046189341,
+    6931783180524936723,
+    8018935119690982097,
+    7752302025222840472,
+    1126481456669770510,
+    4860160978385418517,
+    4642592382030539963
+  ],
+  "retiredRelationUids": [],
+  "version": 1
+}

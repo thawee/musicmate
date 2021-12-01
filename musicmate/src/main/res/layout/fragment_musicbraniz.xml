@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <androidx.cardview.widget.CardView
+        android:id="@+id/editorCardview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/dimen_48_dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="@dimen/spacing_xsmall"
+        app:cardUseCompatPadding="true">
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="@drawable/shadow_below">
+            <!--
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/rounded"> -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/dimen_8_dp"
+                    android:layout_marginTop="@dimen/dimen_4_dp"
+                    android:layout_marginLeft="@dimen/dimen_8_dp"
+                    android:layout_marginRight="@dimen/dimen_8_dp"
+                    android:layout_marginBottom="@dimen/dimen_8_dp"
+                    android:background="@drawable/shape_border_back"
+                    >
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/filter_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/dimen_4_dp"
+                        android:layout_marginLeft="@dimen/dimen_8_dp"
+                        android:layout_marginRight="@dimen/dimen_8_dp"
+                        android:layout_marginBottom="@dimen/dimen_8_dp"
+                        android:layout_gravity="center"
+                        android:background="@color/black">
+
+                        <com.google.android.material.chip.Chip
+                            style="@style/Widget.MaterialComponents.Chip.Entry"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/filter_title"
+                            android:layout_marginLeft="@dimen/dimen_2_dp"
+                            android:layout_marginRight="@dimen/dimen_2_dp"
+                            app:chipIcon="@drawable/ic_song_black_24dp"
+                            app:checkedIconVisible="false"
+                            app:closeIconVisible="false"
+                            android:text="Title"/>
+
+                        <com.google.android.material.chip.Chip
+                            style="@style/Widget.MaterialComponents.Chip.Entry"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/filter_artist"
+                            android:layout_marginLeft="@dimen/dimen_2_dp"
+                            android:layout_marginRight="@dimen/dimen_2_dp"
+                            app:chipIcon="@drawable/ic_artist_black_24dp"
+                            app:checkedIconVisible="false"
+                            app:closeIconVisible="false"
+                            android:text="Artist"/>
+
+                        <com.google.android.material.chip.Chip
+                            style="@style/Widget.MaterialComponents.Chip.Entry"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/filter_album"
+                            android:layout_marginLeft="@dimen/dimen_2_dp"
+                            android:layout_marginRight="@dimen/dimen_2_dp"
+                            app:chipIcon="@drawable/ic_album_black_24dp"
+                            app:checkedIconVisible="false"
+                            app:closeIconVisible="false"
+                            android:text="Album"/>
+                    </com.google.android.material.chip.ChipGroup>
+                </LinearLayout>
+                <!--
+                <com.skydoves.elasticviews.ElasticLayout
+                    android:id="@+id/btn_websearch"
+                    android:layout_width="@dimen/dimen_48_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:layout_marginTop="@dimen/dimen_8_dp"
+                    android:layout_marginRight="@dimen/dimen_8_dp"
+                    android:layout_marginBottom="@dimen/dimen_2_dp"
+                    android:background="@drawable/border_back"
+                    android:layout_gravity="top|right"
+                    app:imageView_scale="0.6"
+                    app:imageView_duration="300" >
+                    <ImageView
+                        android:id="@+id/btn_move"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/web"
+                        android:background="@color/transparent"
+                        android:layout_gravity="center_horizontal|center_vertical"
+                        />
+                </com.skydoves.elasticviews.ElasticLayout>
+                -->
+            <!--
+            </FrameLayout> -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/shadow_below">
+
+                <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@layout/view_list_item_musicbrainz" />
+                <sakout.mehdi.StateViews.StateView
+                    android:id="@+id/status_page"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="" />
+
+                </sakout.mehdi.StateViews.StateView>
+
+                <!--
+                <at.grabner.circleprogress.CircleProgressView
+                    android:id="@+id/progressView"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="80dp"
+                    android:layout_gravity="top|center_horizontal"
+                    app:cpv_autoTextSize="true"
+                    app:cpv_barColor="@color/colorPrimary"
+                    app:cpv_barWidth="35dp"
+                    app:cpv_innerContourSize="0dp"
+                    app:cpv_maxValue="100"
+                    app:cpv_outerContourSize="0dp"
+                    app:cpv_rimColor="@color/colorPrimary_light"
+                    app:cpv_rimWidth="35dp"
+                    app:cpv_seekMode="true"
+                    app:cpv_showUnit="true"
+                    app:cpv_spinColor="@color/colorPrimary"
+                    app:cpv_textColor="@color/colorPrimaryDark"
+                    app:cpv_textScale="1"
+                    app:cpv_unit="%"
+                    app:cpv_unitColor="@color/colorPrimary_light"
+                    app:cpv_unitPosition="right_top"
+                    app:cpv_unitScale="1"
+                    app:cpv_value="10" />
+                    -->
+            </FrameLayout>
+            </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

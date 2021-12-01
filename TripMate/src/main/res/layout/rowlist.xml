@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linBox"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="1dip"
+    android:background="#fff"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="3.7"
+        android:orientation="vertical">
+
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:gravity="center_horizontal">
+
+            <ImageView
+                android:id="@+id/rowImageView"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY" />
+        </TableRow>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_marginBottom="5dip"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="3dip"
+        android:layout_marginTop="5dip"
+        android:layout_weight="5.5"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/rowName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Title"
+            android:textColor="#2c3e50"
+            android:textSize="16sp" />
+
+        <RatingBar
+            android:id="@+id/ratingBarList"
+            style="@style/small_ratingbar"
+            android:layout_width="wrap_content"
+            android:layout_height="20dip"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:isIndicator="true"
+            android:numStars="5"
+            android:paddingTop="1dip"
+            android:rating="0"
+            android:stepSize="0.1" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="3dip">
+
+            <ImageView
+
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_marginRight="2dip"
+                android:background="@drawable/splace" />
+
+            <TextView
+                android:id="@+id/rowAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:text="Address"
+                android:textColor="#8E8D8D"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight=".8"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="2dip"
+            android:background="@drawable/arrow" />
+    </LinearLayout>
+
+</LinearLayout>

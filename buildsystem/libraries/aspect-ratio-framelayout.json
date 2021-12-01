@@ -1,0 +1,6 @@
+{
+  "uniqueId": "me.buck.customview:aspect-ratio-framelayout",
+  "name": "AspectRatioFrameLayout",
+  "description": "FrameLayout with fixed aspect ratio, you can specify width and adaptive height, or you can specify height and adaptive width.",
+  "website": "https://github.com/CoderBuck/AspectRatioFrameLayout"
+}

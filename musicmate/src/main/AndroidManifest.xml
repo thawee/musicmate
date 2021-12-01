@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2014 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="apincer.android.mmate">
+
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <uses-feature android:name="android.software.leanback"
+        android:required="false" />
+
+    <queries>
+        <package android:name="com.neutroncode.mp" />
+        <package android:name="com.extreamsd.usbaudioplayerpro" />
+        <package android:name="com.foobar2000.foobar2000" />
+        <package android:name="com.maxmpz.audioplayer" />
+        <package android:name="com.hiby.music" />
+        <package android:name="com.andrewkhandr.aspect" />
+    </queries>
+
+    <application
+        android:name="apincer.android.mmate.MusixMateApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:requestLegacyExternalStorage="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:replace="android:allowBackup"
+        android:theme="@style/AppTheme">
+        <!--
+          <provider
+              android:name="apincer.android.uamp.repository.MediaFileRepositoryry"
+              android:authorities="apincer.android.uamp.documents.MediaFileRepository"
+              android:exported="true"
+              android:grantUriPermissions="true"
+              android:permission="android.permission.MANAGE_DOCUMENTS">
+              <intent-filter>
+                  <action android:name="android.content.action.DOCUMENTS_PROVIDER"/>
+              </intent-filter>
+          </provider>
+
+          <provider
+              android:name="androidx.core.content.FileProvider"
+              android:authorities="${applicationId}.provider"
+              android:exported="false"
+              android:grantUriPermissions="true">
+              <meta-data
+                  android:name="android.support.FILE_PROVIDER_PATHS"
+                  android:resource="@xml/nnf_provider_paths" />
+          </provider>
+          -->
+
+        <service android:name="apincer.android.mmate.service.MusicListeningService" android:exported="false" android:enabled="true"/>
+        <service android:name="apincer.android.mmate.service.MediaItemIntentService" android:exported="false" android:enabled="true"/>
+        <service android:name="apincer.android.mmate.service.MediaItemScanService" android:exported="false" android:enabled="true"/>
+
+        <!-- Media Item Manipulatiion service (beta) -->
+
+        <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
+        <service
+            android:name="apincer.android.mmate.service.MusicMateNotificationListener"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        <!--
+                <receiver android:name=".events.ManageMediaReceiver" android:exported="false">
+                    <intent-filter>
+                        <action android:name="net.gotev.uploadservicedemo.uploadservice.broadcast.status" />
+                    </intent-filter>
+                </receiver>
+
+                <receiver android:name=".events.NotificationActionsReceiver" android:exported="false">
+                    <intent-filter>
+                        <action android:name="net.gotev.uploadservicedemo.notification.action" />
+                    </intent-filter>
+                </receiver>
+        -->
+        <!-- Main activity for music browsing on phone -->
+        <activity
+            android:name="apincer.android.mmate.ui.MediaBrowserActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:banner="@string/app_name"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Music Tag Editor activity -->
+        <activity
+            android:name="apincer.android.mmate.ui.TagsActivity"
+            android:parentActivityName="apincer.android.mmate.ui.MediaBrowserActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:label="@string/app_name">
+        </activity>
+
+        <activity
+            android:name="apincer.android.mmate.ui.PermissionActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/app_permission">
+        </activity>
+
+        <activity
+            android:name="apincer.android.mmate.ui.SettingsActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/app_name">
+        </activity>
+
+        <activity
+            android:name="apincer.android.mmate.ui.AboutActivity"
+            android:screenOrientation="portrait"/>
+
+        <provider
+            android:name="apincer.android.mmate.fs.MusicFileProvider"
+            android:authorities="apincer.android.mmate.provider"
+            android:exported="false"
+            android:grantUriPermissions="true"/>
+        <provider
+            android:name="apincer.android.mmate.fs.EmbedCoverArtProvider"
+            android:authorities="apincer.android.mmate.embed.coverart.provider"
+            android:exported="false"
+            android:grantUriPermissions="true"/>
+        <provider
+            android:name="apincer.android.mmate.fs.MusicbrainzCoverArtProvider"
+            android:authorities="apincer.android.mmate.musicbrainz.coverart.provider"
+            android:exported="false"
+            android:grantUriPermissions="true"/>
+    </application>
+</manifest>

@@ -1,0 +1,41 @@
+apply plugin: 'com.android.library'
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+
+    defaultConfig {
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+repositories {
+    maven { url "https://jitpack.io" }
+   // maven { url 'https://dl.bintray.com/tsubasap91/maven' }
+   // maven { url 'http://dl.bintray.com/raphaelbussa/maven' }
+}
+
+dependencies {
+    // Support libraries
+    //implementation deps.support.app_compat
+    //implementation deps.support.design
+    implementation deps.androidx.appCompat
+    //implementation deps.androidx.documentFile
+    implementation deps.google.material
+    //implementation deps.ui.custom_alert_view_dialogue
+    //implementation deps.ui.blurview
+   // implementation 'com.azoft.carousellayoutmanager:carousel:1.2.4'
+
+    // implementation 'com.android.support:appcompat-v7:'+project.supportLibVersion;
+   // implementation 'com.android.support:design:'+project.supportLibVersion;
+   // implementation 'com.github.searchy2:CustomAlertViewDialogue:2.3'
+}

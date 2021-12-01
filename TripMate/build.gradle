@@ -1,0 +1,100 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+    defaultConfig {
+        multiDexEnabled true
+        applicationId "apincer.android.tripmate"
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode 2
+        versionName "1.0.1"
+       // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+	packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+      }
+}
+
+dependencies { 
+
+//    implementation deps.androidx.recyclerView
+    implementation deps.androidx.appCompat
+//    implementation deps.androidx.cardView
+    annotationProcessor deps.androidx.annotation
+    //implementation deps.androidx.lifecycle_compiler
+    //implementation deps.androidx.lifecycle_extensions
+    //implementation deps.androidx.palette
+
+    // Room components
+    implementation deps.androidx.room
+    annotationProcessor deps.androidx.room_compiler
+
+    implementation deps.google.material
+ //   implementation deps.google.android_maps_utils
+
+   // implementation deps.room.runtime
+   // annotationProcessor deps.room.compiler
+   // implementation deps.ormlite
+
+   // implementation deps.butterknife
+   // annotationProcessor deps.butterknife
+    implementation 'com.google.maps.android:android-maps-utils:0.5'
+//    implementation 'com.airbnb.android:airmapview:1.8.0'
+//    implementation 'com.github.jd-alexander:library:1.1.0'
+	implementation 'com.google.android.gms:play-services-base:16.0.1'
+	implementation 'com.google.android.gms:play-services-location:16.0.0'
+ //   implementation 'com.google.android.gms:play-services:16.0.1'
+
+//    implementation 'com.google.firebase:firebase-core:16.0.3'
+//    implementation 'com.google.firebase:firebase-auth:16.0.3'
+//    implementation 'com.google.android.gms:play-services-auth:16.0.1'
+
+	implementation 'org.apache.httpcomponents:httpclient:4.2.6'
+    implementation 'org.apache.httpcomponents:httpmime:4.2.6'
+	
+//    implementation deps.ui.materialedittext
+
+    // Firebase UI
+    // Used in FirebaseUIActivity.
+//    implementation 'com.firebaseui:firebase-ui-auth:4.1.0'
+
+    // Facebook Android SDK (only required for Facebook Login)
+    // Used in FacebookLoginActivity.
+    //implementation 'com.facebook.android:facebook-login:4.36.0'
+	implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
+
+   // implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.google.android.gms:play-services-maps:16.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+//    implementation 'com.google.firebase:firebase-database:11.8.0'
+    implementation 'com.google.android.gms:play-services-places:16.0.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+//    implementation 'com.google.firebase:firebase-firestore:17.0.1'
+//    implementation 'com.google.android.gms:play-services-auth:16.0.0'
+//    implementation 'com.firebaseui:firebase-ui-auth:4.0.1'
+//    implementation 'com.firebaseui:firebase-ui-firestore:4.0.1'
+//    implementation 'com.android.volley:volley:1.0.0'
+    implementation project(':library:library')
+    implementation project(':library:slideDateTimePicker')
+	implementation project(':library:placesAPI')
+}
+
+/*  at buttom of file as documents from google */
+//apply plugin: 'com.google.gms.google-services'

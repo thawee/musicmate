@@ -1,0 +1,1077 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#4b0082"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dip"
+        android:layout_marginBottom="2dip"
+        android:layout_weight="8"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:fadingEdge="none"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="#EEEEEE"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/atms"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:id="@+id/imageView3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/atm" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="ATMs"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/banks"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/bank" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Banks"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/bookstores"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/book" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="BookStores"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/busstations"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/bus" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="BusStations"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cafes"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/cafe" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Cafes"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/carwash"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/carwash" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="CarWash"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/dentist"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/dentist" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Dentists"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/doctor"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/doctor" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Doctors"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/food"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/food" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Food"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/gasstation"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/gas" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="GasStations"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/grocery"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/grocery" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Groceries"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/gym"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/gym" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="GYMs"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/hospitals"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/hospitals" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Hospitals"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/temples"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/mosque" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Temples"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/theater"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/theater" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Theaters"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/park"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/park" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Parks"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/pharmacy"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/pharmacy" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Pharmacies"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/police"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/police" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Polices"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/restaurant"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/restaurant" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Restaurants"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/school"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/school" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Schools"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/mall"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/mall" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Malls"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dip"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/spa"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/spa" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Spa"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/store"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/store" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Stores"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/university"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="1dip"
+                        android:layout_weight="1"
+                        android:background="#ffffff"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="2dip"
+                                android:src="@drawable/school" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dip"
+                                android:layout_marginLeft="2dip"
+                                android:layout_marginRight="2dip"
+                                android:layout_marginTop="1dip"
+                                android:text="Universities"
+                                android:textColor="#000"
+                                android:textSize="16sp" />
+                        </TableRow>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <!--<com.google.android.gms.ads.AdView-->
+                <!--android:id="@+id/adView"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_gravity="center"-->
+                <!--ads:adSize="BANNER"-->
+                <!--ads:adUnitId="ca-app-pub-1183621624869118/9096660980" />-->
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

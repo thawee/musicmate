@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Search / will display always -->
+    <!--<item-->
+    <!--android:id="@+id/action_search"-->
+    <!--android:icon="@drawable/ic_action_search"-->
+    <!--android:showAsAction="always"-->
+    <!--android:title="@string/action_search"/>-->
+
+    <!-- Location Found -->
+    <!--<item-->
+    <!--android:id="@+id/action_location_found"-->
+    <!--android:icon="@drawable/ic_action_location_found"-->
+    <!--android:showAsAction="always"-->
+    <!--android:title="@string/action_location_found"/>-->
+
+
+    <!-- More -->
+    <item
+        android:id="@+id/a_More"
+        android:icon="@drawable/menu_iconn"
+        android:showAsAction="always"
+        android:title="More">
+        <menu>
+
+            <item
+                android:id="@+id/idshow_me"
+                android:icon="@drawable/myposition"
+                android:showAsAction="never"
+                android:title="@string/show_me" />
+
+
+            <item
+                android:id="@+id/idimport"
+                android:icon="@drawable/updateloc"
+                android:showAsAction="never"
+                android:title="@string/title_import" />
+
+            <item
+                android:id="@+id/idexport"
+                android:icon="@drawable/updateloc"
+                android:showAsAction="never"
+                android:title="@string/title_export" />
+
+            <!-- Help -->
+			<!--
+            <item
+                android:id="@+id/idfind_us"
+                android:icon="@drawable/findus"
+                android:showAsAction="never"
+                android:title="@string/find_us" />
+            -->
+			<!-- Help -->
+
+            <!-- Help -->
+
+
+            <!-- Check updates -->
+            <item
+                android:id="@+id/idabout_us"
+                android:icon="@drawable/aboutus"
+                android:showAsAction="never"
+                android:title="@string/about_us" />
+            
+			<item
+                android:id="@+id/menu_item_share"
+                android:actionProviderClass="android.widget.ShareActionProvider"
+                android:icon="@drawable/shareit"
+                android:showAsAction="ifRoom"
+                android:title="Share" />
+				
+        </menu>
+    </item>
+
+</menu>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+
+    <color name="flat_pressed">#66999999</color>
+
+    <!-- Basic Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="back_transparent">#00FFFFFF</color>
+    <color name="green">#15CC87</color>
+    <color name="green_light">#1affa7</color>
+    <color name="red">#FE5442</color>
+    <color name="red_light">#ff6c5c</color>
+    <color name="blue">#008af9</color>
+    <color name="blue_light">#4dafff</color>
+    <color name="colorOverlay">#d2ffffff</color>
+    <color name="yellow">#FFCA28</color>
+
+    <color name="divider">#d7d7db</color>
+    <color name="negative">#ff3b30</color>
+    <color name="positive">#007aff</color>
+    <color name="others">#007aff</color>
+    <color name="text_actionsheet_title">#000000</color>
+    <color name="text_actionsheet_msg">#8f8f8f</color>
+    <color name="text_input">#5c5c5c</color>
+    <color name="text_default">#000000</color>
+
+    <color name="defaultTagsTextColor">#FFFFFF</color>
+
+    <!-- Loading Lib -->
+    <color name="book_loading_background">#ffffff</color>
+    <color name="book_loading_book">#ff33b5e5</color>
+    <color name="book_loading_page">#ffffff</color>
+</resources>

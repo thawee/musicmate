@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="btn_corner_radius">2dp</dimen>
+    <dimen name="btn_min_width">88dp</dimen>
+    <dimen name="btn_min_height">36dp</dimen>
+    <dimen name="btn_flat_padding">8dp</dimen>
+    <dimen name="btn_margin">4dp</dimen>
+    <dimen name="btn_padding">16dp</dimen>
+    <dimen name="btn_normal_padding">8dp</dimen>
+    <dimen name="btn_normal_margin">4dp</dimen>
+
+    <dimen name="dimen_1_dp">1dp</dimen>
+    <dimen name="dimen_2_dp">2dp</dimen>
+    <dimen name="dimen_8_dp">8dp</dimen>
+    <dimen name="dimen_11_dp">11dp</dimen>
+    <dimen name="dimen_12_dp">12dp</dimen>
+    <dimen name="dimen_16_dp">16dp</dimen>
+    <dimen name="dimen_24_dp">24dp</dimen>
+    <dimen name="dimen_32_dp">32dp</dimen>
+
+    <dimen name="alert_dialogue_margin_side">30dp</dimen>
+    <dimen name="alert_dialogue_margin_top">30dp</dimen>
+
+    <dimen name="size_divider">1dp</dimen>
+    <dimen name="radius_dialogue">10dp</dimen>
+    <dimen name="radius_actionsheet">5dp</dimen>
+    <dimen name="dialogue_margin_side">30dp</dimen>
+    <dimen name="dialogue_margin_side_land">50dp</dimen>
+    <dimen name="dialogue_margin_top">30dp</dimen>
+    <dimen name="button_height">44dp</dimen>
+    <dimen name="button_text_size">16sp</dimen>
+    <dimen name="button_margin">10dp</dimen>
+    <dimen name="text_margin_border">18dp</dimen>
+    <dimen name="text_margin_bottom">14dp</dimen>
+    <dimen name="text_message_margin_top">12dp</dimen>
+    <dimen name="text_message_margin_bottom">4dp</dimen>
+    <dimen name="text_title_size">20sp</dimen>
+    <dimen name="text_message_size">14sp</dimen>
+    <dimen name="text_title_message_space">6dp</dimen>
+    <dimen name="text_input_margin_bottom">10dp</dimen>
+
+    <dimen name="defaultTagsTextSize">16sp</dimen>
+    <dimen name="defaultTagsCloseImagePadding">10dp</dimen>
+    <dimen name="defaultTagsPadding">0dp</dimen>
+
+    <!-- Loading Lib -->
+    <dimen name="book_border">10dp</dimen>
+    <dimen name="page_border">5dp</dimen>
+    <dimen name="book_padding">15dp</dimen>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="define_int_flexible_adapter">year;owner</string>
+    <!-- Author section -->
+    <string name="library_flexible_adapter_author">Davide Steduto</string>
+    <string name="library_flexible_adapter_authorWebsite">https://github.com/davideas</string>
+    <!-- Library section -->
+    <string name="library_flexible_adapter_libraryName">Flexible Adapter</string>
+    <string name="library_flexible_adapter_libraryDescription">Fast and versatile Adapter for RecyclerView which regroups several features into one library to considerably improve the user experience :-) </string>
+    <string name="library_flexible_adapter_libraryWebsite">https://github.com/davideas/FlexibleAdapter</string>
+    <string name="library_flexible_adapter_libraryVersion">5.1.0</string>
+    <!-- OpenSource section -->
+    <string name="library_flexible_adapter_isOpenSource">true</string>
+    <string name="library_flexible_adapter_repositoryLink"></string>
+    <!-- ClassPath for autoDetect section -->
+    <string name="library_flexible_adapter_classPath">eu.davidea.flexibleadapter.FlexibleAdapter</string>
+    <!-- License section -->
+    <string name="library_flexible_adapter_licenseId">apache_2_0</string>
+    <!-- Custom variables section -->
+    <string name="library_flexible_adapter_owner">The Android Open Source Project</string>
+    <string name="library_flexible_adapter_year">2011</string>
+</resources>

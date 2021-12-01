@@ -1,0 +1,42 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:finalcity="http://schemas.android.com/tools">
+    <!-- Search Widget -->
+    <!--<item android:id="@+id/action_search"-->
+          <!--android:icon="@drawable/ic_action_search"-->
+          <!--android:title="@string/action_search"-->
+          <!--android:showAsAction="ifRoom"-->
+          <!--android:actionViewClass="android.widget.SearchView"/>-->
+
+    <!--&lt;!&ndash; Location Found &ndash;&gt;-->
+    <!--<item android:id="@+id/action_location_found"-->
+          <!--android:icon="@drawable/ic_action_location_found"-->
+          <!--android:title="@string/action_location_found"-->
+        <!--finalcity:showAsAction="never" />-->
+
+    <!--&lt;!&ndash;&lt;!&ndash; Refresh &ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<item android:id="@+id/action_refresh"&ndash;&gt;-->
+          <!--&lt;!&ndash;android:icon="@drawable/ic_action_refresh"&ndash;&gt;-->
+          <!--&lt;!&ndash;android:title="@string/action_refresh"&ndash;&gt;-->
+          <!--&lt;!&ndash;android:showAsAction="ifRoom" />&ndash;&gt;-->
+    <!--<item android:id="@+id/action_share"-->
+        <!--android:icon="@drawable/sharethis"-->
+        <!--finalcity:showAsAction="ifRoom"-->
+        <!--android:title="@string/action_location_found"-->
+        <!--finalcity:actionProviderClass="android.support.v7.widget.ShareActionProvider"-->
+        <!--/>-->
+
+    <!--&lt;!&ndash; Help &ndash;&gt;-->
+    <!--<item android:id="@+id/action_help"-->
+
+          <!--android:title="@string/action_help"-->
+        <!--android:icon="@drawable/ic_action_refresh"-->
+
+
+        <!--finalcity:showAsAction="never"/>-->
+
+    <!--&lt;!&ndash; Check updates &ndash;&gt;-->
+    <!--<item android:id="@+id/action_check_updates"-->
+          <!--android:icon="@drawable/ic_action_refresh"-->
+          <!--android:title="@string/action_check_updates"-->
+        <!--finalcity:showAsAction="never" />-->
+</menu>

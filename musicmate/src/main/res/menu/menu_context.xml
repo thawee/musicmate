@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/action_delete"
+        android:title="@string/action_delete"
+        android:icon="@drawable/ic_item_delete_while_24dp"
+        app:showAsAction="always"/>
+
+	<item
+		android:icon="@drawable/ic_archive_white_24dp"
+		android:id="@+id/action_transfer_file"
+		android:title="Manage Songs"
+		app:showAsAction="always"/>
+
+    <item
+        android:icon="@drawable/ic_edit_white_24dp"
+        android:id="@+id/action_edit_metadata"
+        android:title="Edit Tags"
+        app:showAsAction="always"/>
+
+	<item android:id="@+id/action_select_all"
+		android:title="@string/action_select_all"
+		android:icon="@drawable/ic_select_all_white_24dp"
+		app:showAsAction="always"/>
+
+</menu>

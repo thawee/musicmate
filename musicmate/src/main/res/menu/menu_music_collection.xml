@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2014 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:icon="@drawable/ic_round_library_music_24"
+        android:id="@+id/menu_all_music"
+        android:title="My Songs"
+        app:showAsAction="always" />
+    <item
+        android:icon="@drawable/ic_round_speaker_24"
+        android:id="@+id/menu_audiophile"
+        android:title="Audiophile"
+        app:showAsAction="always" />
+<!--
+    <item
+        android:icon="@drawable/ic_round_copy_all_24"
+        android:id="@+id/menu_similar_songs"
+        android:title="Duplicate Songs"
+        app:showAsAction="always" />
+
+    <item
+        android:icon="@drawable/baseline_cloud_download_white_24"
+        android:id="@+id/menu_new_collection"
+        android:title="Download Songs"
+        app:showAsAction="always" />
+-->
+<!--
+    <item
+        android:icon="@drawable/ic_hd_black_24dp"
+        android:id="@+id/menu_hd_collection"
+        android:title="Hi-Res Audio"
+        app:showAsAction="always" />
+    <item
+        android:icon="@drawable/ic_hd_black_24dp"
+        android:id="@+id/menu_llac_collection"
+        android:title="Lossless Audio"
+        app:showAsAction="always" />
+    <item
+        android:icon="@drawable/ic_hd_black_24dp"
+        android:id="@+id/menu_lsac_collection"
+        android:title="Lossy Audio"
+        app:showAsAction="always" />
+-->
+<!--
+    <item
+        android:icon="@drawable/format_white"
+        android:id="@+id/menu_llac_collection"
+        android:title="Lossless Format"
+        app:showAsAction="always" />
+    <item
+        android:icon="@drawable/format_white"
+        android:id="@+id/menu_lsac_collection"
+        android:title="Other Format"
+        app:showAsAction="always" />
+-->
+<!--
+    <item
+        android:icon="@drawable/music_similar_white"
+        android:id="@+id/menu_similar_title"
+        android:title="Similar Titles"
+        app:showAsAction="always" />
+-->
+    <!--
+    <item
+        android:icon="@drawable/ic_waves_white"
+        android:id="@+id/menu_tag_genre"
+        android:title="Genre"
+        app:showAsAction="always" />
+
+    <item
+        android:icon="@drawable/ic_touch_app_white_24dp"
+        android:id="@+id/menu_tag_group"
+        android:title="Group"
+        app:showAsAction="always" />
+    -->
+<!--
+    <item
+        android:icon="@drawable/format_white"
+        android:id="@+id/menu_tag_sampling"
+        android:title="Audio Format"
+        app:showAsAction="always" />
+-->
+<!--
+    <item
+        android:icon="@drawable/format_white"
+        android:id="@+id/menu_tag_format"
+        android:title="Media Format"
+        app:showAsAction="always" />
+-->
+
+</menu>

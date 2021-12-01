@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory android:title="@string/preferences_sub_appearance">
+        <SwitchPreferenceCompat
+            android:key="preference_show_storage_space"
+            android:summary="Show Storage space on left menu."
+            android:title="Display Storage space"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_notification"
+            android:summary="Show listening song details on notification."
+            android:title="Enable Notification"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_prefix_title_with_track_number"
+            android:summary="Show track number prefix to song's title."
+            android:title="Show Track Number"
+            android:defaultValue="false"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/preferences_sub_next_song"
+        android:summary="Next Song Notification.">
+        <SwitchPreferenceCompat
+            android:key="preference_default_next_by_media_buttons"
+            android:summary="Simulate media buttons to play next song on Music Player."
+            android:title="Media Buttons"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_vibrate_on_next_song"
+            android:summary="Vibrate when trigger next song for Music Player."
+            android:title="Vibrate"
+            android:defaultValue="true"/>
+    </PreferenceCategory>
+    <!--
+    <PreferenceCategory android:title="@string/preferences_sub_collection"
+        android:summary="Collection Menus.">
+        <SwitchPreferenceCompat
+            android:key="preference_similar_title_artist"
+            android:summary="Use title and artist as criteria on similar songs collection."
+            android:title="Title and artist for Similar Songs"
+            android:defaultValue="true"/> -->
+        <!--
+        <SwitchPreferenceCompat
+            android:key="preference_show_groupings_in_collection"
+            android:summary="Show music groupings in collection."
+            android:title="Show Music Groupings"
+            android:defaultValue="true"/>
+            -->
+    <!--
+        <SwitchPreferenceCompat
+            android:key="preference_show_dsd_in_collection"
+            android:summary="Show DSD Audio in collection."
+            android:title="Show DSD Audio Format"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_show_mqa_in_collection"
+            android:summary="Show MQA in collection."
+            android:title="Show MQA Audio container"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_show_pcm_in_collection"
+            android:summary="Show PCM media format quality in collection."
+            android:title="Show PCM Audio Format"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_show_sample_rate_in_collection"
+            android:summary="Show audio sample rate in collection."
+            android:title="Show Audio Sample Rate"
+            android:defaultValue="true"/>
+    </PreferenceCategory> -->
+
+    <PreferenceCategory
+        android:title="@string/preferences_sub_storage"
+        android:summary="Managing media files on storage.">
+        <SwitchPreferenceCompat
+            android:key="preference_save_audiophile_int_card"
+            android:summary="Save Audiophile song on internal storage."
+            android:title="Audiophile on internal storage"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_hires_master_int_card"
+            android:summary="Save Hi-Res Master (above 24Bits/88kHz) song on internal storage."
+            android:title="Hi-Res on internal storage"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_hires_int_card"
+            android:summary="Save Hi-Res (24bits/48kHz) song on internal storage."
+            android:title="Hi-Res on internal storage"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_mqa_int_card"
+            android:summary="Save MQA song on internal storage."
+            android:title="MQA on internal storage"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_dxd_int_card"
+            android:summary="Save DxD song on internal storage."
+            android:title="DxD on internal storage"
+            android:defaultValue="true"/>
+        <!--
+        <MultiSelectListPreference
+            android:entries="@array/AudioFormatNames"
+            android:title="@string/SaveFormatOnInternalStorage"
+            android:key="preference_save_format_on_int_card"
+            android:summary="@string/SaveFormatOnInternalStorageSummary"
+            android:dialogTitle="@string/SaveFormatOnInternalStorageSummary"
+            android:entryValues="@array/AudioFormatValues"
+            android:defaultValue="@array/AudioFormatINTDefaultValues"/>
+            -->
+        <!--
+        <MultiSelectListPreference
+            android:entries="@array/MusicGroupNames"
+            android:title="@string/SaveGroupOnInternalStorage"
+            android:key="preference_save_grouping_on_int_card"
+            android:summary="@string/SaveGroupOnInternalStorageSummary"
+            android:dialogTitle="@string/SaveGroupOnInternalStorageSummary"
+            android:entryValues="@array/MusicGroupValues"
+            android:defaultValue="@array/MusicGroupINTDefaultValues"/>
+-->
+        <!--
+        <MultiSelectListPreference
+            android:entries="@array/MetaDataEncodingNames"
+            android:title="@string/SaveGroupOnInternalStorage"
+            android:key="preference_save_on_int_card"
+            android:summary="@string/SaveGroupOnInternalStorageSummary"
+            android:dialogTitle="@string/SaveGroupOnExternalStorage"
+            android:entryValues="@array/MetaDataEncodingValues"
+            android:defaultValue="@array/MetaDataEncodingValues"/>
+        <MultiSelectListPreference
+            android:entries="@array/MetaDataEncodingNames"
+            android:title="@string/SaveGroupOnExternalStorage"
+            android:key="preference_save_on_ext_card"
+            android:summary="@string/SaveGroupOnExternalStorageSummary"
+            android:dialogTitle="@string/SaveGroupOnExternalStorage"
+            android:entryValues="@array/MetaDataEncodingValues"
+            android:defaultValue="@array/MetaDataEncodingValues"/>
+            -->
+        <!--
+        <SwitchPreferenceCompat
+            android:key="preference_save_dsd_on_ext_card"
+            android:summary="Save DSD Audio songs on external storage."
+            android:title="DSD Audio songs on external storage"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_hires_ext_card"
+            android:summary="Save PCM Hi-Res Audio songs on external storage."
+            android:title="Hi-Res Audio songs on external storage"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_sd_on_ext_card"
+            android:summary="Save PCM SD Audio songs on external storage."
+            android:title="CDDA Audio songs on external storage"
+            android:defaultValue="true"/>
+        <SwitchPreferenceCompat
+            android:key="preference_save_mpeg_on_ext_card"
+            android:summary="Save MPEG Audio songs on external storage."
+            android:title="MPEG Audio songs on external storage"
+            android:defaultValue="true"/>
+            -->
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/preferences_sub_others"
+        android:summary="Others Settings.">
+    <MultiSelectListPreference
+        android:entries="@array/MetaDataEncodingNames"
+        android:title="@string/MetaDataEncoding"
+        android:key="preference_matadata_encodings"
+        android:summary="@string/MetaDataEncodingSummary"
+        android:dialogTitle="@string/MetaDataEncoding"
+        android:entryValues="@array/MetaDataEncodingValues"
+        android:defaultValue="@array/MetaDataEncodingValues"/>
+    </PreferenceCategory>
+</PreferenceScreen>

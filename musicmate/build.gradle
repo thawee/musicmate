@@ -1,0 +1,260 @@
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'com.mikepenz.aboutlibraries.plugin'
+apply plugin: 'io.objectbox' // Apply last.
+
+//apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+
+    defaultConfig {
+        applicationId "apincer.android.mmate"
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode 42
+        versionName  "3.0.0 "+ versions.buildDate
+        multiDexEnabled true
+		renderscriptTargetApi versions.compileSdk
+		renderscriptSupportModeEnabled true
+
+        //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+
+  //  buildFeatures {
+  //      dataBinding true
+  //  }
+   // kotlinOptions {
+   //     jvmTarget = '1.8'
+   // }
+
+    lintOptions {
+        abortOnError true
+    }
+    dexOptions {
+       // preDexLibraries = true
+        jumboMode true
+        javaMaxHeapSize "3g"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    packagingOptions {
+        exclude 'META-INF/library_release.kotlin_module'
+        exclude 'META-INF/library-core_release.kotlin_module'
+    }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+}
+kapt {
+    correctErrorTypes = true
+}
+
+project.android.buildTypes.all { buildType ->
+    buildType.javaCompileOptions.annotationProcessorOptions.arguments =
+            [
+                    validateEpoxyModelUsage     : String.valueOf(buildType.name == 'debug'),
+                    requireHashCodeInEpoxyModels: "true",
+                    requireAbstractEpoxyModels  : "true",
+                    implicitlyAddAutoModels     : "true",
+                    logEpoxyTimings     : "false",
+                    enableParallelEpoxyProcessing     : "false",
+            ]
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+    maven { url "https://jitpack.io" }
+    maven { url 'https://dl.bintray.com/tsubasap91/maven' }
+   // maven { url 'http://dl.bintray.com/raphaelbussa/maven' }
+}
+
+dependencies { 
+    // AndroidX
+    implementation deps.androidx.activity
+    implementation deps.androidx.recyclerView
+    implementation deps.androidx.appCompat
+    implementation deps.androidx.cardView
+    implementation deps.androidx.annotation
+    implementation deps.androidx.lifecycle_runtime
+    implementation deps.androidx.lifecycle_process
+    implementation deps.androidx.palette
+    implementation deps.androidx.swiperefreshlayout
+    implementation deps.androidx.preference
+    implementation deps.androidx.documentFile
+    implementation deps.androidx.work
+    implementation deps.storage
+    implementation deps.timber
+
+    implementation deps.google.material
+
+    // RxAndroid
+    implementation deps.rxjava3_rxandroid
+    implementation deps.rxjava3
+
+    // epoxy
+    implementation deps.epoxy.runtime
+    //annotationProcessor deps.epoxy.annotationProcessor
+    kapt deps.epoxy.annotationProcessor
+
+    implementation deps.ui.aboutlibraries
+	implementation deps.ui.toasty
+	
+	//implementation deps.ui.AvatarView
+    implementation deps.ui.shapeofview
+    implementation deps.ui.photoview;
+   // implementation 'com.rishabhharit.roundedimageview:RoundedImageView:0.8.4'
+
+    //retrofit and json Libraries
+    implementation deps.gson
+    implementation deps.retrofit.runtime
+    implementation deps.retrofit.gson
+    //implementation deps.retrofit.mock
+
+    implementation deps.guava
+
+    // Glide (Image Loader & Caching)
+   // implementation deps.glide.runtime
+   // annotationProcessor deps.glide.compiler
+
+   // implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    // Coil
+    implementation deps.coil.runtime
+  //  implementation('de.esoco:coroutines:0.9.1')
+
+    // Logging and Debugging
+   // implementation deps.timber
+   // debugImplementation deps.crashreporter
+    // add leakcanary to debug implementation will enable leak detection. no other action required
+   // debugImplementation deps.leakcanary
+   // implementation deps.blockcanary_no_op
+   // implementation deps.blockcanary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
+
+    // implementation deps.ui.meowBottomNavigation
+    //implementation deps.ui.expandablebottombar
+    implementation deps.ui.powerspinner
+    implementation deps.ui.progressview
+    //implementation 'com.github.linger1216:labelview:v1.1.2'
+
+   // implementation 'com.google.android:flexbox:1.0.0'
+   // implementation 'com.github.mahimrocky:TagView:1.0.3'
+   // implementation 'co.lujun:androidtagview:1.1.7' // used on read tag from filename
+   // implementation deps.ui.doublelift
+   // implementation "com.github.skydoves:expandablelayout:1.0.5"
+    implementation deps.ui.simplifyspan
+    implementation deps.ui.materialratingbar
+    implementation deps.ui.aspectRatioFramelayout
+   // implementation deps.ui.smartmaterialspinner
+    implementation deps.ui.aspectRatioImageview
+    implementation deps.ui.fastscroll
+    implementation deps.ui.elasticviews
+    implementation deps.ui.stateViews
+
+    //https://github.com/Chrisvin/FlipTabs
+    //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
+    implementation deps.ui.liquidrefreshlayout
+
+    implementation deps.ffmpeg
+    implementation deps.coverartarchive
+    //https://github.com/jaredrummler/AndroidDeviceNames
+  //  implementation('com.jaredrummler:android-device-names:2.1.0')
+
+
+    //https://github.com/knight-rider1609/MultiProgressBar
+   // implementation 'com.aseem.versatileprogressbar:MultiProgressBar:1.1.1'
+
+    //implementation 'com.github.ybq:Android-SpinKit:1.4.0'
+
+
+    // implementation 'com.sensorberg.libs:permission-bitte:2.0.0'
+
+    // Local Library
+    //implementation project(':library:jaudiotagger226')
+    implementation project(':library:jaudiotagger')
+    implementation project(':library:justdsd')
+    implementation project(':library:library')
+    implementation project(':library:androidtagview')
+    //implementation project(':library:LoadingLib')
+   // debugImplementation project(':library:crashreporter')
+    implementation project(':library:MaterialEditText')
+
+   // implementation 'com.daimajia.numberprogressbar:library:1.4@aar'
+}
+
+aboutLibraries {
+    // define the path configuration files are located in. E.g. additional libraries, licenses to add to the target .json
+    configPath = "buildsystem"
+
+    // Enable the duplication mode, allows to merge, or link dependencies which relate
+    duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.LINK
+    // Configure the duplication rule, to match "duplicates" with
+    duplicationRule = com.mikepenz.aboutlibraries.plugin.DuplicateRule.SIMPLE
+
+    exclusionPatterns = [
+            ~"org.jetbrains.*",
+            ~"androidx.*",
+            ~"com.google.guava.*",
+            ~"com.google.errorprone.*",
+            ~"com.google.j2objc.*",
+            ~"org.checkerframework.*",
+            ~"com.arthenica.*",
+            ~"org.greenrobot.*",
+            ~"com.google.code.findbugs:jsr305",
+            ~"com.fasterxml.jackson.*",
+            ~"org.slf4j:slf4j-api",
+            ~"commons-io:commons-io",
+            ~"commons-logging:commons-logging",
+            ~"commons-codec:commons-codec",
+            ~"org.apache..*",
+            ~"io.coil-kt:coil-base",
+            ~"com.airbnb.android:epoxy-annotations",
+            ~"io.objectbox:objectbox-kotlin",
+            ~"io.objectbox:objectbox-java",
+            ~"io.objectbox:objectbox-java-api",
+            ~"com.mikepenz:aboutlibraries-core-android",
+            ~"com.squareup.retrofit2:retrofit-mock",
+            ~"org.reactivestreams:reactive-streams",
+            ~"com.mikepenz:fastadapter",
+            ~"com.squareup.okio:okio",
+            ~"com.squareup.okhttp3:okhttp",
+            ~"com.squareup.retrofit2:converter-gson"
+    ]
+}
+

@@ -1,0 +1,13 @@
+@startuml
+
+(*)  --> "Order"
+--> "Browse Menu Catalog"
+--> "Pick Menu"
+If "Pick More Menu" then
+--> [Yes] "Browse Menu Catalog"
+--> "Check out"
+else
+--> "Check out"
+Endif
+-->(*)
+@enduml

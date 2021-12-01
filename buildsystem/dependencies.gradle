@@ -1,0 +1,281 @@
+/**
+ * Shared file between builds so that they can all use the same dependencies and
+ * maven repositories.
+ **/
+
+ext.versions = [
+        //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
+        androidGradlePlugin: '7.0.3',
+        minSdk             : 30,
+        targetSdk          : 30,
+        compileSdk         : 31,
+        buildTools         : '32.0.0-rc1', //''30.0.3',
+        //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
+        kotlin             : '1.6.0',  //'1.5.31',
+        buildDate          : "built on " + getDate(),
+        //https://github.com/objectbox/objectbox-java/releases
+        objectbox          : '3.0.1',
+        //https://github.com/mikepenz/AboutLibraries/releases
+        aboutlibraries     : '10.0.0-b02',
+]
+
+ext.gradlePlugins = [
+        android: "com.android.tools.build:gradle:$versions.androidGradlePlugin",
+        kotlin : "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin",
+        objectbox : "io.objectbox:objectbox-gradle-plugin:$versions.objectbox",
+        aboutlibraries: "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${versions.aboutlibraries}"
+
+]
+
+ext.deps = [:]
+def deps = [:]
+
+def google = [:]
+// https://github.com/material-components/material-components-android/releases
+google.material = "com.google.android.material:material:1.5.0-beta01"
+google.android_maps_utils = "com.google.maps.android:android-maps-utils:0.5" //23/06/2019
+deps.google = google
+
+def androidx = [:]
+//https://developer.android.com/jetpack/androidx/releases/activity
+androidx.activity = "androidx.activity:activity:1.4.0"
+//https://developer.android.com/jetpack/androidx/releases/annotation
+androidx.annotation = "androidx.annotation:annotation:1.2.0"
+//https://developer.android.com/jetpack/androidx/releases/appcompat
+androidx.appCompat = "androidx.appcompat:appcompat:1.4.0"
+//https://developer.android.com/jetpack/androidx/releases/cardview
+androidx.cardView = "androidx.cardview:cardview:1.0.0"
+//https://developer.android.com/jetpack/androidx/releases/constraintlayout
+androidx.constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.1"
+//https://developer.android.com/jetpack/androidx/releases/recyclerview
+androidx.recyclerView = "androidx.recyclerview:recyclerview:1.2.1"
+//https://developer.android.com/jetpack/androidx/releases/palette
+androidx.palette = "androidx.palette:palette:1.0.0"
+//https://developer.android.com/jetpack/androidx/releases/swiperefreshlayout
+androidx.swiperefreshlayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+//https://developer.android.com/jetpack/androidx/releases/preference
+androidx.preference = "androidx.preference:preference:1.1.0"
+//https://developer.android.com/jetpack/androidx/releases/documentfile
+androidx.documentFile = "androidx.documentfile:documentfile:1.0.1"
+//  ktx - kotlin
+//androidx.ktx = "androidx.core:core-ktx:1.0.2" //23/06/2019
+//https://developer.android.com/jetpack/androidx/releases/viewpager2
+androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.1.0-beta01"
+// Lifecycle ViewModel and LiveData
+//https://developer.android.com/jetpack/androidx/releases/lifecycle
+androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.4.0"
+//androidx.lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:2.3.1"
+androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.4.0"
+androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.4.0"
+// alternately - if using Java8, use the following instead of lifecycle-compiler
+androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.4.0"
+// optional - ReactiveStreams support for LiveData
+androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.4.0" // use -ktx for Kotlin //23/06/2019
+// optional - Test helpers for LiveData
+androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.4.0"
+
+// Room
+androidx.room = "androidx.room:room-runtime:2.2.0" //23/06/2019
+androidx.room_compiler = "androidx.room:room-compiler:2.2.0" // use kapt for Kotlin //23/06/2019
+// optional - RxJava support for Room
+androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.2.0" //23/06/2019
+// optional - Guava support for Room, including Optional and ListenableFuture
+androidx.room_guava = "androidx.room:room-guava:2.2.0" //23/06/2019
+// Test helpers
+androidx.room_testing = "androidx.room:room-testing:2.2.0" //23/06/2019
+
+// Paging
+//https://developer.android.com/jetpack/androidx/releases/paging
+androidx.paging = "androidx.paging:paging-runtime:3.1.0"
+// alternatively - without Android dependencies for testing
+androidx.paging_common = "androidx.paging:paging-common:3.1.0" //23/06/2019
+// optional - RxJava support
+androidx.paging_rxjava2 = "androidx.paging:paging-rxjava2:3.1.0" //23/06/2019
+
+// Worker
+//https://developer.android.com/jetpack/androidx/releases/work
+androidx.work = "androidx.work:work-runtime:2.7.1"
+
+deps.androidx = androidx
+
+def retrofit = [:]
+//https://github.com/square/retrofit/releases
+retrofit.runtime = "com.squareup.retrofit2:retrofit:2.9.0" //23/06/2019
+retrofit.gson = "com.squareup.retrofit2:converter-gson:2.9.0" //23/06/2019
+retrofit.mock = "com.squareup.retrofit2:retrofit-mock:2.9.0" //23/06/2019
+//https://github.com/square/okhttp/tree/master/okhttp-logging-interceptor
+retrofit.okhttp_logging_interceptor = "com.squareup.okhttp3:logging-interceptor:4.9.2"
+deps.retrofit = retrofit
+
+def dagger = [:]
+dagger.runtime = "com.google.dagger:dagger:2.23.2" //23/06/2019
+dagger.android = "com.google.dagger:dagger-android:2.23.2" //23/06/2019
+dagger.android_support = "com.google.dagger:dagger-android-support:2.23.2" //23/06/2019
+dagger.compiler = "com.google.dagger:dagger-compiler:2.23.2" //23/06/2019
+dagger.android_support_compiler = "com.google.dagger:dagger-android-processor:2.23.2" //23/06/2019
+deps.dagger = dagger
+
+def espresso = [:]
+espresso.core = "com.android.support.test.espresso:espresso-core:$versions.espresso"
+espresso.contrib = "com.android.support.test.espresso:espresso-contrib:$versions.espresso"
+espresso.intents = "com.android.support.test.espresso:espresso-intents:$versions.espresso"
+deps.espresso = espresso
+
+def mockito = [:]
+mockito.core = "org.mockito:mockito-core:$versions.mockito"
+mockito.all = "org.mockito:mockito-all:$versions.mockito_all"
+deps.mockito = mockito
+
+def kotlin = [:]
+kotlin.stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin" //23/06/2019
+kotlin.test = "org.jetbrains.kotlin:kotlin-test-junit:$versions.kotlin" //23/06/2019
+//kotlin.allopen = "org.jetbrains.kotlin:kotlin-allopen:1.3.30" //23/06/2019
+deps.kotlin = kotlin
+
+def ui = [:]
+ui.flexible_adapter = "eu.davidea:flexible-adapter:5.1.0" //23/06/2019
+ui.flexible_adapter_ui  = "eu.davidea:flexible-adapter-ui:1.0.0" //23/06/2019
+ui.flexible_adapter_livedata  = "eu.davidea:flexible-adapter-livedata:1.0.0-b3" //23/06/2019
+//ui.materialedittext = "com.rengwuxian.materialedittext:library:2.1.4" //23/06/2019
+ui.android_shape_imageview = "com.github.siyamed:android-shape-imageview:0.9.3" //23/06/2019
+//ui.snacky = "com.github.matecode:Snacky:$versions.snacky"
+ui.about_page = "com.github.husaynhakeem:about-page:0.1.1" //23/06/2019
+//https://github.com/zhanghai/MaterialProgressBar
+ui.materialprogressbar = "me.zhanghai.android.materialprogressbar:library:1.6.1" //23/06/2019
+//https://github.com/searchy2/CustomPermissionsDialogue
+ui.custom_permissions_dialogue = "com.github.searchy2:CustomPermissionsDialogue:2.2.1" //23/06/2019
+//https://github.com/searchy2/CustomAlertViewDialogue
+ui.custom_alert_view_dialogue = "com.github.searchy2:CustomAlertViewDialogue:2.6.1" //23/06/2019
+//ui.styleabletoast = "com.muddzdev:styleabletoast:$versions.styleabletoast"
+ui.toprightmenu = "com.zaaach:toprightmenu:1.1.2" //23/06/2019
+ui.statusbarutil = "com.jaeger.statusbarutil:library:1.5.1" //23/06/2019
+ui.search_filter = "com.github.Yalantis:SearchFilter:1.0.4" //23/06/2019
+ui.color_match_tabs_android = "com.github.Yalantis:ColorMatchTabsAndroid:1.0.1" //23/06/2019
+ui.floating_arc_menu = "com.github.BrotherV:Floating-ArcMenu:1.1.0.2" //23/06/2019
+ui.circleimageview = "de.hdodenhof:circleimageview:3.0.0" //23/06/2019
+ui.lapism_searchview = "com.lapism:searchview:28.0.0" //23/06/2019
+ui.lapism_search = "com.lapism:search:1.0.0" //26/01/2020
+ui.jellytoolbar = "com.github.yalantis:jellytoolbar:v1.0"
+//https://github.com/florent37/ShapeOfView
+ui.shapeofview = "com.github.florent37:shapeofview:1.4.7" //23/06/2019
+ui.boommenu = "com.nightonke:boommenu:2.1.1" //23/06/2019
+ui.textdrawable = "com.amulyakhare:com.amulyakhare.textdrawable:1.0.1" //23/06/2019
+ui.aboutlibraries = "com.mikepenz:aboutlibraries:${versions.aboutlibraries}"
+//https://github.com/GrenderG/Toasty
+ui.toasty = "com.github.GrenderG:Toasty:1.5.2" //23/06/2019
+//https://github.com/vitorhugods/AvatarView
+ui.AvatarView = "xyz.schwaab:avvylib:1.2.0"
+ui.materialpopupmenu = "com.github.zawadz88.materialpopupmenu:material-popup-menu:4.0.0" //23/07/2019
+ui.roundedimageview = "com.makeramen:roundedimageview:2.3.0" //23/06/2019
+//https://github.com/Dimezis/BlurView
+ui.blurview = "com.eightbitlab.blurview:1.6.6"
+ui.FabulousFilter="com.allattentionhere:fabulousfilter:0.0.5" //23/06/2019
+//https://github.com/oneHamidreza/MeowBottomNavigation
+ui.meowBottomNavigation= "com.etebarian:meow-bottom-navigation:1.3.1"
+//https://github.com/st235/ExpandableBottomBar
+ui.expandablebottombar= "com.github.st235:expandablebottombar:1.4.0"
+//https://github.com/skydoves/PowerSpinner
+ui.powerspinner = "com.github.skydoves:powerspinner:1.1.9"
+//https://github.com/Chivorns/SmartMaterialSpinner
+ui.smartmaterialspinner = "com.github.chivorns:smartmaterialspinner:1.5.0"
+//https://github.com/skydoves/ElasticViews
+ui.elasticviews = "com.github.skydoves:elasticviews:2.1.0"
+//https://github.com/skydoves/DoubleLift
+ui.doublelift = "com.github.skydoves:doublelift:1.0.4"
+// https://github.com/skydoves/ProgressView
+ui.progressview = "com.github.skydoves:progressview:1.1.2"
+//https://github.com/iwgang/SimplifySpan
+ui.simplifyspan ='com.github.iwgang:simplifyspan:2.2'
+//https://github.com/CoderBuck/AspectRatioFrameLayout
+ui.aspectRatioFramelayout  = 'me.buck.customview:aspect-ratio-framelayout:1.0.0'
+ui.materialratingbar = 'me.zhanghai.android.materialratingbar:library:1.4.0'
+//https://github.com/santalu/aspect-ratio-imageview
+ui.aspectRatioImageview = 'com.github.santalu:aspect-ratio-imageview:1.0.9'
+ui.fastscroll =  'me.zhanghai.android.fastscroll:library:1.1.7'
+//https://github.com/mukeshsolanki/liquidrefreshlayout=
+ui.liquidrefreshlayout = 'com.github.mukeshsolanki:liquidrefreshlayout:1.0.3'
+//https://github.com/medyo/StateViews
+ui.stateViews =  'com.github.medyo:state-views:0.2'
+//https://github.com/Baseflow/PhotoView
+ui.photoview = 'com.github.chrisbanes:PhotoView:2.0.0'
+deps.ui = ui
+
+def epoxy = [:]
+//https://github.com/airbnb/epoxy/releases
+epoxy.runtime = "com.airbnb.android:epoxy:5.0.0-beta03" //4.6.3"
+epoxy.databinding = "com.airbnb.android:epoxy-databinding:5.0.0-beta03" //4.6.3"
+epoxy.annotationProcessor = "com.airbnb.android:epoxy-processor:5.0.0-beta03" //4.6.3"
+deps.epoxy = epoxy
+
+//https://github.com/afollestad/material-dialogs
+def material_dialogs = [:]
+material_dialogs.core = "com.afollestad.material-dialogs:core:3.3.0"
+material_dialogs.input = "com.afollestad.material-dialogs:input:3.3.0"
+material_dialogs.file = "com.afollestad.material-dialogs:files:3.3.0"
+material_dialogs.color = "com.afollestad.material-dialogs:color:3.3.0"
+material_dialogs.datetime = "com.afollestad.material-dialogs:datetime:3.3.0"
+material_dialogs.bottomsheets = "com.afollestad.material-dialogs:bottomsheets:3.3.0"
+material_dialogs.lifecycle = "com.afollestad.material-dialogs:lifecycle:3.3.0"
+deps.material_dialogs = material_dialogs
+
+// https://github.com/coil-kt/coil
+def coil = [:]
+coil.runtime = "io.coil-kt:coil:1.4.0"
+deps.coil = coil
+
+def glide = [:]
+glide.runtime = "com.github.bumptech.glide:glide:4.12.0" //23/01/2020
+glide.compiler = "com.github.bumptech.glide:compiler:4.12.0" //23/01/2020
+deps.glide = glide
+
+deps.dexmaker = "com.linkedin.dexmaker:dexmaker-mockito:2.25.0" //23/06/2019
+//https://github.com/JakeWharton/timber
+deps.timber = "com.jakewharton.timber:timber:5.0.1"
+deps.junit = "junit:junit:$versions.junit"
+deps.mock_web_server = "com.squareup.okhttp3:mockwebserver:$versions.mockwebserver"
+//https://github.com/ReactiveX/RxAndroid
+deps.rxjava3 = "io.reactivex.rxjava3:rxjava:3.1.2" //10/12/2019
+deps.rxjava3_rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.0"
+deps.rxjava2 = "io.reactivex.rxjava2:rxjava:2.2.21" //10/12/2019
+deps.rxjava2_rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1" //10/12/2019
+deps.hamcrest = "org.hamcrest:hamcrest-all:1.3" //23/06/2019
+//deps.ormlite = "com.j256.ormlite:ormlite-android:5.1" //23/06/2019
+deps.gson = "com.google.code.gson:gson:2.8.5" //23/06/2019
+//deps.crashreporter = "com.balsikandar.android:crashreporter:1.1.0" // 2/11/2019
+deps.leakcanary = "com.squareup.leakcanary:leakcanary-android:2.0-alpha-2" //23/07/2019
+deps.blockcanary = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
+deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
+deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
+//https://github.com/anggrayudi/SimpleStorage
+deps.storage = "com.anggrayudi:storage:0.13.0"
+deps.guava = "com.google.guava:guava:31.0.1-android"
+//https://github.com/tanersener/ffmpeg-kit/tree/main/android
+deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5'
+deps.coverartarchive = 'fm.last:coverartarchive-api:2.1.1'
+ext.deps = deps
+
+def developer = [:]
+developer.id = "thawee"
+developer.name = "Thawee Prakaipetch"
+developer.email = "thaweemail@gmail.com"
+ext.developer = developer
+
+/*ext.deps = deps */
+
+def addRepos(RepositoryHandler handler) {
+    handler.google()
+    handler.jcenter() // require for AvatarView
+    handler.mavenCentral()
+    handler.maven {url "https://jitpack.io"}
+	handler.maven {url "https://maven.google.com" }
+    //handler.maven {url "http://repository.jetbrains.com/gradle-libs"}
+   // handler.maven {url = "https://oss.sonatype.org/content/repositories/snapshots/" } //For Snapshots
+    //handler.maven {url "http://dl.bintray.com/gigamole/maven/"}
+   // handler.maven {url "https://mvnrepository.com/artifact/"}
+}
+ext.addRepos = this.&addRepos
+
+def getDate() {
+    def date = new Date()
+    return date.format('yyyy.MM.dd')
+}

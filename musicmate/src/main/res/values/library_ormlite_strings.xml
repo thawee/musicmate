@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="define_int_ormlite">year;owner</string>
+    <!-- Author section -->
+    <string name="library_ormlite_author">http://ormlite.com/</string>
+    <string name="library_ormlite_authorWebsite">http://ormlite.com/</string>
+    <!-- Library section -->
+    <string name="library_ormlite_libraryName">OrmLite</string>
+    <string name="library_ormlite_libraryDescription">Object Relational Mapping Lite (ORM Lite) provides some simple, lightweight functionality for persisting Java objects to SQL databases while avoiding the complexity and overhead of more standard ORM packages. </string>
+    <string name="library_ormlite_libraryWebsite">http://ormlite.com/</string>
+    <string name="library_ormlite_libraryVersion">5.1.0</string>
+    <!-- OpenSource section -->
+    <string name="library_ormlite_isOpenSource">true</string>
+    <string name="library_ormlite_repositoryLink"></string>
+    <!-- ClassPath for autoDetect section -->
+    <string name="library_ormlite_classPath">com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper</string>
+    <!-- License section -->
+    <string name="library_ormlite_licenseId">apache_2_0</string>
+    <!-- Custom variables section -->
+    <string name="library_ormlite_owner">The Android Open Source Project</string>
+    <string name="library_ormlite_year">2011</string>
+</resources>
