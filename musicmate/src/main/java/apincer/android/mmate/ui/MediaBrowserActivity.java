@@ -58,7 +58,6 @@ import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.service.BroadcastData;
-import apincer.android.mmate.service.MediaItemIntentService;
 import apincer.android.mmate.service.MusicListeningService;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -127,6 +126,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     //selected song to scroll
     private AudioTag selectedTag;
+    private AudioTag lastPlaying;
     private boolean onSetup = true;
 
     private void doDeleteMediaItems(List<AudioTag> itemsList) {
@@ -172,10 +172,21 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         dlg.show();
     }
 	
-	private void showPlayingSongFAB() {
-        if(MusicListeningService.getInstance()==null || MusicListeningService.getInstance().getPlayingSong()==null) {
-            return;
-        }
+	private void showPlayingSongFAB(AudioTag tag) {
+      //  if(MusicListeningService.getInstance()==null || MusicListeningService.getInstance().getPlayingSong()==null) {
+      //      return;
+      //  }
+        if(tag ==null) return;
+
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                .crossfade(false)
+                .allowHardware(false)
+                .transformations(new CircleCropTransformation())
+                .target(fabPlayingAction)
+                .build();
+        imageLoader.enqueue(request);
 
         ViewCompat.animate(fabPlayingAction)
                     .scaleX(1f).scaleY(1f)
@@ -701,8 +712,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
 
-        filter = new IntentFilter(MusicListeningService.ACTION);
-        LocalBroadcastManager.getInstance(this).registerReceiver(playingReceiver, filter);
+       // filter = new IntentFilter(MusicListeningService.ACTION);
+       // LocalBroadcastManager.getInstance(this).registerReceiver(playingReceiver, filter);
  
     }
 
@@ -711,7 +722,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         super.onPause();
         // Unregister the listener when the application is paused
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(playingReceiver);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(playingReceiver);
     }
 
     @Override
@@ -1072,14 +1083,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-                       // if(mFastScroller!=null) {
-                       //     mFastScroller.hideScrollbar();
-                       // }
-						showPlayingSongFAB();
+                        if(MusicListeningService.getInstance()!=null) {
+                            showPlayingSongFAB(MusicListeningService.getInstance().getPlayingSong());
+                        }
                     }else {
-                        //if(mFastScroller!=null) {
-                        //    mFastScroller.showScrollbar();
-                        //}
 						hidePlayingSongFAB();
                     }
                 }
@@ -1138,15 +1145,27 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         public void onReceive(Context context, Intent intent) {
             BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
             if(broadcastData!=null) {
-                ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
-                // refresh tag
-                epoxyController.notifyModelChanged(broadcastData.getTagInfo());
-
-                // re-load library
-                epoxyController.loadSource(null);
-                return;
+                if(broadcastData.getAction() == BroadcastData.Action.PLAYING) {
+                    AudioTag tag = broadcastData.getTagInfo();
+                    if(lastPlaying ==null || (lastPlaying!=null && !lastPlaying.equals(tag))) {
+                        ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
+                        lastPlaying = tag;
+                        epoxyController.notifyPlayingStatus();
+                        selectedTag = null; //tag; // reset auto scroll to song
+                        showPlayingSongFAB(tag);
+                    }
+                   // }
+                }else {
+                    ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
+                    if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
+                        // refresh tag
+                        epoxyController.notifyModelChanged(broadcastData.getTagInfo());
+                    }
+                    // re-load library
+                    epoxyController.loadSource(null);
+                }
             }
-
+/*
             int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, RESULT_CANCELED);
             if (resultCode == RESULT_OK) {
                 String status = intent.getStringExtra(Constants.KEY_STATUS);
@@ -1169,7 +1188,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         epoxyController.notifyModelChanged(tag);
                         //epoxyController.loadSource(null); // reload current source
                     }
-                }/*else if(Constants.STATUS_SUCCESS.equalsIgnoreCase(status)) {
+                }*/ /*else if(Constants.STATUS_SUCCESS.equalsIgnoreCase(status)) {
                     if(Constants.COMMAND_DELETE.equalsIgnoreCase(command)) {
                         epoxyController.loadSource(null); // reload current source
                     }else if(tag!=null) {
@@ -1204,11 +1223,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         mLibraryAdapter.notifyDataSetChanged();
                     }
                 }*/
-            }
+        //    }
         }
     };
 
     // Define the callback for what to do when data is received
+    /*
     private final BroadcastReceiver playingReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1233,7 +1253,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }
             }
         }
-    };
+    }; */
 
     @Override
     public void onClick(View view) {

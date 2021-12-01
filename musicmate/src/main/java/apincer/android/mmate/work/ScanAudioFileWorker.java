@@ -2,10 +2,8 @@ package apincer.android.mmate.work;
 
 import android.content.Context;
 import android.os.HandlerThread;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
-import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
@@ -27,7 +25,7 @@ import timber.log.Timber;
 
 public class ScanAudioFileWorker extends Worker {
    // private volatile Looper serviceLooper;
-    private ThreadPoolExecutor mExecutor;
+    private final ThreadPoolExecutor mExecutor;
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -47,8 +45,8 @@ public class ScanAudioFileWorker extends Worker {
 
        // serviceLooper = thread.getLooper();
         mExecutor = new ThreadPoolExecutor(
-                NUMBER_OF_CORES + 5,   // Initial pool size
-                NUMBER_OF_CORES + 8,   // Max pool size
+                NUMBER_OF_CORES, // + 5,   // Initial pool size
+                NUMBER_OF_CORES + 4, //8,   // Max pool size
                 KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
                 KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
                 new LinkedBlockingDeque<Runnable>());  // Work Queue
@@ -103,7 +101,9 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     public static void startScan(Context context) {
-        WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class).build();
+        WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
+                .setInitialDelay(15, TimeUnit.SECONDS)
+                .build();
         WorkManager.getInstance(context).enqueue(workRequest);
     }
 

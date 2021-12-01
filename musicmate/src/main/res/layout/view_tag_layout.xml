@@ -183,6 +183,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/delete_song_underline"
                 android:textStyle="bold"
+                android:layout_marginLeft="@dimen/dimen_4_dp"
                 android:textColor="@android:color/white"
                 android:layout_gravity="center_horizontal"
                 android:selectAllOnFocus="false"
@@ -235,6 +236,7 @@
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
                 android:layout_gravity="center_horizontal"
+                android:layout_marginRight="@dimen/dimen_4_dp"
                 android:selectAllOnFocus="false"
                 android:linksClickable="false"
                 android:autoLink="all"/>

@@ -415,9 +415,13 @@ public class AudioFileRepository {
                 AudioTag[] metadataList = readMediaTag(mediaPath);
                 if (metadataList != null && metadataList.length > 0) {
                     for (AudioTag mdata : metadataList) {
-                        String matePath = buildMatePath(mdata);
-                        mdata.setManaged(StringUtils.equals(matePath, mdata.getPath()));
-                        tagRepos.saveTag(mdata);
+                        try {
+                            String matePath = buildMatePath(mdata);
+                            mdata.setManaged(StringUtils.equals(matePath, mdata.getPath()));
+                            tagRepos.saveTag(mdata);
+                        }catch (Exception ex) {
+                            Timber.e(ex);
+                        }
                     }
                 }
         }

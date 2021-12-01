@@ -140,7 +140,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
 
             @Override
             public void onComplete() {
-               // listener.onModelBuildFinished(null);
+                listener.onModelBuildFinished(null);
             }
         });
     }
@@ -211,13 +211,6 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     public long getTotalSize() {
         return totalSize;
     }
-
-    /*
-    public String getHeaderSubtitle() {
-        int count = getCurrentData().size();
-        String subtitle = StringUtils.formatSongSize (count);
-        return subtitle+StringUtils.ARTIST_SEP+StringUtils.formatDuration(duration, true);
-    } */
 
     private AudioTagModel_ buildModel(AudioTag tag) {
         return new AudioTagModel_()
@@ -349,5 +342,23 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
 
     public AudioTag getAudioTag(EpoxyViewHolder holder) {
         return  ((AudioTagModel_)holder.getModel()).tag();
+    }
+
+    public void notifyPlayingStatus() {
+        int cnt = getAdapter().getItemCount();
+        for(int i=0; i < cnt;i++) {
+            notifyModelChanged(i);
+        }
+       /* if(tag!= null) {
+            AudioTagModel_ model = buildModel(tag);
+            int position = getAdapter().getModelPosition(model);
+            if (position != RecyclerView.NO_POSITION) {
+                AudioTagModel_ md = (AudioTagModel_) getAdapter().getModelAtPosition(position);
+                if (md != null) {
+                    tagRepos.populateAudioTag(md.tag());
+                }
+                notifyModelChanged(position);
+            }
+        } */
     }
 }

@@ -22,14 +22,17 @@ public class BroadcastData implements Parcelable {
         COMPLETED,
         CANCELLED
     }
+    public enum Action {
+        IMPORT,
+        UPDATE,
+        DELETE,
+        PLAYING
+    }
 
     private Status status;
     private AudioTag tagInfo;
-    private String command = "";
+    private Action action;
     private String message = "";
-    private int totalItems = 0;
-    private int countSuccess = 0;
-    private int countError = 0;
 
     public BroadcastData() {
 
@@ -67,21 +70,15 @@ public class BroadcastData implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeInt(status.ordinal());
-        parcel.writeString(command);
+        parcel.writeInt(action.ordinal());
         parcel.writeString(message);
-        parcel.writeInt(totalItems);
-        parcel.writeInt(countSuccess);
-        parcel.writeInt(countError);
         parcel.writeParcelable(tagInfo, flags);
     }
 
     private BroadcastData(Parcel in) {
         status = Status.values()[in.readInt()];
-        command = in.readString();
+        action = Action.values()[in.readInt()];
         message = in.readString();
-        totalItems = in.readInt();
-        countSuccess = in.readInt();
-        countError = in.readInt();
         tagInfo = in.readParcelable(AudioTag.class.getClassLoader());
     }
 
@@ -103,8 +100,8 @@ public class BroadcastData implements Parcelable {
         return this;
     }
 
-    public BroadcastData setCommand(String command) {
-        this.command = command;
+    public BroadcastData setAction(Action action) {
+        this.action = action;
         return this;
     }
 
@@ -113,39 +110,12 @@ public class BroadcastData implements Parcelable {
         return this;
     }
 
-    public BroadcastData setTotalItems(int totalItems) {
-        this.totalItems = totalItems;
-        return this;
-    }
-
-    public BroadcastData setCountSuccess(int countSuccess) {
-        this.countSuccess = countSuccess;
-        return this;
-    }
-
-    public String getCommand() {
-        return command;
+    public Action getAction() {
+        return action;
     }
 
     public String getMessage() {
         return message;
-    }
-
-    public int getTotalItems() {
-        return totalItems;
-    }
-
-    public int getCountSuccess() {
-        return countSuccess;
-    }
-
-    public int getCountError() {
-        return countError;
-    }
-
-    public BroadcastData setCountError(int countError) {
-        this.countError = countError;
-        return this;
     }
 
     public AudioTag getTagInfo() {

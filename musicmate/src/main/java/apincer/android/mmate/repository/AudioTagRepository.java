@@ -475,11 +475,12 @@ public class AudioTagRepository {
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {
-                    if (tag.getPath().contains("/Music/")) {
+                    return !tag.isManaged();
+                    /*if (tag.getPath().contains("/Music/")) {
                         return false; // drop from results
                     } else {
                         return true; // include to results
-                    }
+                    } */
                 }
             }).order(AudioTag_.artist).order(AudioTag_.title).build();
             list = query.find();

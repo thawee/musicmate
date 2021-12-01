@@ -165,7 +165,7 @@ dependencies {
    // debugImplementation deps.leakcanary
    // implementation deps.blockcanary_no_op
    // implementation deps.blockcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
+   // debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 
     // implementation deps.ui.meowBottomNavigation
     //implementation deps.ui.expandablebottombar

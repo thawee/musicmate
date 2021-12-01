@@ -19,10 +19,10 @@ import es.dmoral.toasty.Toasty;
 public class ToastUtils {
     public static Typeface currentTypeface = Typeface.create("sans-serif-condensed", Typeface.NORMAL);
     public static int textSize = 12; // in SP
-    public static Toast toastMessage;
+   // public static Toast toastMessage;
 
     public static void showActionMessage(Context context, ImageView fabCurrentProgress, FloatingActionButton mainAction, int successCount, int errorCount, int pendingTotal, String status, String message) {
-
+        Toast toastMessage = null;
         if(toastMessage!= null) {
             toastMessage.cancel();
         }
@@ -59,7 +59,7 @@ public class ToastUtils {
 
 
     public static void showActionMessage(Context context, String status, String message) {
-
+        Toast toastMessage = null;
         if(toastMessage!= null) {
             toastMessage.cancel();
         }
@@ -78,6 +78,7 @@ public class ToastUtils {
 
 
     public static void showBroadcastData(Context context, BroadcastData broadcastData) {
+        Toast toastMessage = null;
         if (toastMessage != null) {
             toastMessage.cancel();
         }
@@ -95,7 +96,7 @@ public class ToastUtils {
     }
 
     public static void showActionMessageBrowse(Context context, int successCount, int errorCount, int pendingTotal, String status, String message) {
-
+        Toast toastMessage = null;
         if(toastMessage!= null) {
             toastMessage.cancel();
         }
@@ -127,7 +128,7 @@ public class ToastUtils {
 
 
     public static void showActionMessageEditor(Context context, FloatingActionButton mainAction, int successCount, int errorCount, int pendingTotal, String status, String message) {
-
+        Toast toastMessage = null;
         if(toastMessage!= null) {
             toastMessage.cancel();
         }

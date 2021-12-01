@@ -35,31 +35,19 @@ public class ImportAudioFileWorker extends Worker {
     @Override
     public Result doWork() {
         Data inputData = getInputData();
-        String s =inputData.getString(Constants.KEY_MEDIA_TAG_LIST);
+        String s =inputData.getString(Constants.KEY_MEDIA_TAG);
         Gson gson = new Gson();
-        Type listOfAudioTag = new TypeToken<List<AudioTag>>(){}.getType();
-        List<AudioTag> files = gson.fromJson(s, listOfAudioTag);
-        int pendingTotal = files.size();
-        int successCount = 0;
-        int errorCount = 0;
-        for(AudioTag tag: files) {
+        Type audioTagType = new TypeToken<AudioTag>(){}.getType();
+        AudioTag tag = gson.fromJson(s, audioTagType);
             boolean status = AudioFileRepository.getInstance(getApplicationContext()).importAudioFile(tag);
             String txt = status?getApplicationContext().getString(R.string.alert_organize_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_organize_fail, tag.getTitle());
-            if(status) {
-                successCount++;
-            }else {
-                errorCount++;
-            }
+
             BroadcastData data = new BroadcastData()
-                    .setCommand(Constants.COMMAND_MOVE)
-                    .setTotalItems(pendingTotal)
-                    .setCountError(errorCount)
-                    .setCountSuccess(successCount)
+                    .setAction(BroadcastData.Action.IMPORT)
                     .setStatus(status?BroadcastData.Status.COMPLETED: BroadcastData.Status.ERROR)
                     .setTagInfo(tag)
                     .setMessage(txt);
             sendBroadcast(data);
-        }
 
         return Result.success();
     }
@@ -71,13 +59,15 @@ public class ImportAudioFileWorker extends Worker {
 
     public static void startWorker(Context context, List<AudioTag> files) {
         Gson gson = new Gson();
-        Type listOfAudioTag = new TypeToken<List<AudioTag>>(){}.getType();
-        String s = gson.toJson(files, listOfAudioTag);
-        Data inputData = (new Data.Builder())
-                .putString(Constants.KEY_MEDIA_TAG_LIST, s)
-                .build();
-        WorkRequest workRequest = new OneTimeWorkRequest.Builder(ImportAudioFileWorker.class)
-                .setInputData(inputData).build();
-        WorkManager.getInstance(context).enqueue(workRequest);
+        Type audioTagType = new TypeToken<AudioTag>(){}.getType();
+        for(AudioTag tag: files) {
+            String s = gson.toJson(tag, audioTagType);
+            Data inputData = (new Data.Builder())
+                    .putString(Constants.KEY_MEDIA_TAG, s)
+                    .build();
+            WorkRequest workRequest = new OneTimeWorkRequest.Builder(ImportAudioFileWorker.class)
+                    .setInputData(inputData).build();
+            WorkManager.getInstance(context).enqueue(workRequest);
+        }
     }
 }

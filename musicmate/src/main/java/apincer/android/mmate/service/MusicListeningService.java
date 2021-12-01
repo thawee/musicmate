@@ -1,7 +1,6 @@
 package apincer.android.mmate.service;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -53,7 +52,7 @@ import timber.log.Timber;
  */
 
 public class MusicListeningService extends Service {
-    public static final String ACTION = "com.apincer.mmate.MusicListeningService";
+   // public static final String ACTION = "com.apincer.mmate.MusicListeningService";
     public Bitmap DEFAULT_PLAYER_ICON;
 	
 	/**
@@ -80,7 +79,7 @@ public class MusicListeningService extends Service {
     private Context context;
     private static MusicListeningService instance;
     private AudioTag playingSong;
-    private AudioTag prvPlayingSong;
+    //private AudioTag prvPlayingSong;
     private static final List<ListeningReceiver> receivers = new ArrayList<>();
 
     private NotificationCompat.Builder builder;
@@ -485,13 +484,14 @@ public class MusicListeningService extends Service {
         return playingSong;
     }
 
+    /*
     public AudioTag getPrvPlayingSong() {
         return prvPlayingSong;
-    }
+    } */
 
     private void populatePlayingSong(String currentTitle, String currentArtist, String currentAlbum) {
         AudioFileRepository provider = AudioFileRepository.getInstance(getApplication());
-        prvPlayingSong = playingSong;
+      //  prvPlayingSong = playingSong;
         playingSong = null;
         if(provider!=null) {
             try {
@@ -518,7 +518,7 @@ public class MusicListeningService extends Service {
 
     protected void sendBroadcast(){
         // Fire the broadcast with intent packaged
-        // Construct our Intent specifying the Service
+        /*
         Intent intent = new Intent(ACTION);
         // Add extras to the bundle
         intent.putExtra("resultCode", Activity.RESULT_OK);
@@ -530,6 +530,14 @@ public class MusicListeningService extends Service {
         }
         intent.putExtra("command", "playing");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+*/
+        BroadcastData data = new BroadcastData()
+                .setAction(BroadcastData.Action.PLAYING)
+                .setStatus(BroadcastData.Status.IN_PROGRESS)
+                .setTagInfo(playingSong)
+                .setMessage("playing "+playingSong.getTitle());
+        Intent intent = data.getIntent();
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
     protected void setPlayerInfo(MusicPlayerInfo playerInfo) {
