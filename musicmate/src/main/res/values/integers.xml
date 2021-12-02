@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="scroll_duration">1000</integer>
 
-    <integer name="duration_bar">800</integer>
-    <integer name="duration_search">800</integer>
 </resources>

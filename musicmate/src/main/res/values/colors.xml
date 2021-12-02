@@ -15,20 +15,8 @@
   limitations under the License.
   -->
 <resources>
-    <color name="branding">#ffff5722</color>
-    <color name="branding_dark">#ffbf360c</color>
-    <color name="branding_accent">#00B8D4</color>
     <color name="bt_accent">#00B8D4</color>
-    <color name="media_item_icon_playing">@color/bt_accent</color>
-    <color name="media_item_icon_not_playing">#ccc</color>
     <color name="drawer_header_background">@color/bt_accent</color>
-    <color name="error_message_background">#ffff1600</color>
-    <color name="drawer_item_selected_background">#feee</color>
-    <color name="drawer_item_tint_color">#ff333333</color>
-    <color name="fullscreen_secondary_line_color">#E5CCCCCC</color>
-    <color name="fullscreen_line_color">#E5FFFFFF</color>
-    <color name="tv_search_button">#ff0097A7</color>
-    <color name="navigationbar_color">#000000</color>
     <!--
     <color name="background_gradient_start">#000000</color>
      <color name="background_gradient_end">#DDDDDD</color>
@@ -40,57 +28,24 @@
     <color name="background_gradient_start">#808080</color>
     <color name="background_gradient_end">#A9A9A9</color>
 
-    <color name="default_background">#0096a6</color>
-
-    <color name="colorTransparent">#00ffffff</color>
     <color name="search_bar_color_start">#cb5ed9</color>
-    <color name="search_bar_color_end">#8463d4</color>
 
     <!-- Menu Background -->
-    <color name="menu_editor_background">@color/material_color_amber_700</color>
-    <color name="menu_move_background">@color/material_color_blue_700</color>
-    <color name="menu_delete_background">@color/material_color_red_700</color>
-    <color name="menu_web_search_background">@color/material_color_cyan_700</color>
-    <color name="menu_analyser_background">@color/material_color_deep_orange_700</color>
-    <color name="menu_save_background">@color/material_color_green_700</color>
-    <color name="menu_filter_background">@color/material_color_blue_grey_700</color>
-    <color name="menu_play_background">#2979FF</color>
-    <color name="menu_tag_background">#0096a6</color>
-    <color name="menu_charset_background">#0096a6</color>
-    <color name="menu_default_background">@color/material_color_grey_700</color>
-    <color name="menu_close_icon_color">@color/grey600</color>
-    <color name="menu_file_icon_color">#ffff1600</color>
-    <color name="menu_parser_icon_color">@color/material_color_blue_700</color>
-    <color name="menu_tag_icon_color">@color/material_color_green_700</color>
 
     <color name="blue_accent200">#2979FF</color>
-    <color name="list_item_selected_background">#2979FF</color>
-    <color name="list_item_background">#FFFFFF</color>
 
     <!-- Light Theme -->
     <color name="colorPrimary_light">#380396</color><!-- Deep Purple 500 -->
-    <color name="colorPrimary_light_extra">#7c4dff</color><!-- Deep Purple 500 -->
-    <color name="colorPrimaryDark_light">#5b15d8</color><!-- Deep Purple 700 -->
+    <!-- Deep Purple 500 -->
+    <!-- Deep Purple 700 -->
     <color name="colorAccent">#FF8000</color>
     <color name="colorAccent_light">#ff4081</color><!-- Pink A200 -->
-    <color name="colorAccentDark_light">#c51162</color><!-- Pink A700: for statusBar in actionMode -->
+    <!-- Pink A700: for statusBar in actionMode -->
     <color name="colorPrimaryText_light">#de000000</color>
 
-    <color name="colorPrimary_light_transparent">#AD5b15d8</color>
-    <color name="colorPrimaryDark_light_transparent">#AD380396</color>
-    <color name="colorAccent_transparent">#ADFF8000</color>
-    <color name="colorAccent_light_transparent">#9Dff4081</color>
-    <color name="colorAccentDark_light_transparent">#ADc51162</color>
-
-    <color name="header_title_background">@color/colorPrimaryDark</color>
-
     <!-- FAB colors-->
-    <color name="fab_delete_background">#ffff1600</color>
     <color name="fab_save_background">#4CAF50</color>
-    <color name="fab_organize_background">#0000FF</color>
-    <color name="fab_charset_background">#FF00FF</color>
     <color name="fab_listening_background">#FF8000</color>
-    <color name="fab_listening_background_alpha">#E6FF8000</color>
 
     <!-- Greyscales -->
 	<!--
@@ -101,15 +56,13 @@
     <color name="grey600_transparent">#AD757575</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
-	
-	<color name="grey50">#fffafafa</color>
+
     <color name="grey100">#fff5f5f5</color>
     <color name="grey200">#ffeeeeee</color>
     <color name="grey300">#ffe0e0e0</color>
     <color name="grey400">#ffbdbdbd</color>
     <color name="grey500">#ff9e9e9e</color>
     <color name="grey600">#ff757575</color>
-    <color name="grey700">#ff616161</color>
     <color name="grey800">#ff424242</color>
 	<color name="grey900">#ff212121</color>
 
@@ -219,31 +172,17 @@
         0% — 00
             -->
     <color name="black_transparent_98">#FA000000</color>
-    <color name="black_transparent_95">#F2000000</color>
     <color name="black_transparent_80">#CC000000</color>
     <color name="black_transparent_50">#80000000</color>
     <color name="black_transparent_40">#66000000</color>
-    <color name="black_transparent_30">#4D000000</color>
     <color name="black_transparent_25">#40000000</color>
     <color name="black_transparent_10">#1A000000</color>
-    <color name="black_alpha_12">#1F000000</color>
-    <color name="black_alpha_30">#4D000000</color>
-    <color name="black_alpha_90">#9D000000</color>
-    <color name="colorPrimary_alpha_12">#1F380396</color>
-    <color name="colorPrimary_alpha_30">#4D380396</color>
-    <color name="colorPrimary_alpha_80">#80380396</color>
-    <color name="colorPrimary_alpha_200">#f6380396</color>
-    <color name="colorPrimary_alpha_xxx">#AD380396</color>
-    <color name="colorPrimaryDark_light_30">#2d5b15d8</color>
-    <color name="colorPrimaryDark_light_90">#9d5b15d8</color>
 
     <color name="colorPrimary_light_transparent_98">#FA380396</color>
     <color name="colorPrimary_light_transparent_10">#1A380396</color>
 
-    <color name="now_playing_alpha_30">#4DFF8000</color>
     <color name="now_playing_alpha_80">#CCFF8000</color>
     <color name="now_playing">#FF8000</color>
-    <color name="audiophile_background">#CCf57f17</color>
 
     <color name="selected">#FF8000</color>
 
@@ -267,14 +206,7 @@
 -->
 
     // following dragonfly red LED color
-    <color name="encoding_unknown">@color/material_color_grey_700</color>
-    <color name="encoding_pcm_44">@color/material_color_green_700</color>
-    <color name="encoding_pcm_48">@color/material_color_blue_700</color>
-    <color name="encoding_pcm_88">@color/material_color_amber_700</color>
-    <color name="encoding_pcm_96">@color/material_color_pink_600</color>
-    <color name="encoding_pcm_96_plus">@color/material_color_light_blue_700</color>
-    <color name="encoding_dsd">@color/material_color_lime_700</color>
-    <color name="encoding_mqa">@color/material_color_purple_700</color> // following dragonfly red LED color
+    // following dragonfly red LED color
 
     <color name="quality_hd">#ffb300</color>
     <color name="quality_h24bits">#FEC500</color>
@@ -306,50 +238,18 @@
     -->
 
     <!-- Common colors -->
-    <color name="list_choice_normal_bg_light">#fffafafa</color>
-    <color name="list_choice_pressed_bg_light">#fddd</color>
 
-    <color name="devider">#757575</color>
-    <color name="text_info_roundect_value">#000000</color>
-    <color name="text_info_roundect_value_invert">#ffffff</color>
-
-	<!-- Override fastScroller bar color and handle idle color -->
+    <!-- Override fastScroller bar color and handle idle color -->
 	<!-- Tip: you can use transparency -->
-	<color name="fast_scroller_bar">#bccc</color>
-	<color name="fast_scroller_handle_idle">@color/colorAccent</color>
-	
-    <color name="fastScrollHandleColor">#FFF</color>
-    <color name="fastScrollBarColor">#ffcecece</color>
-    <color name="float_transparent">#00000000</color>
-    <color name="float_transparent_60">#60000000</color>
-    <color name="float_transparent_80">#CC000000</color>
-    <color name="dimension_transparent_20">#20D2DD07</color>
 
-    <color name="editor_hint_color">@color/material_color_orange_600</color>
-    <color name="editor_label_color">@color/material_text_color_black_secondary_text</color>
-
-    <color name="editor_tab_metadata">@color/material_color_purple_800</color>
-    <color name="editor_tab_musicbrainz">@color/material_color_orange_800</color>
-    <color name="editor_tab_google">@color/material_color_blue_800</color>
-
-    <color name="bottom_bar_background">#bdbdbd</color>
-    <color name="header_bar_background">#cecece</color>
-    <color name="header_bar_border">@color/material_color_orange_800</color>
     <color name="item_divider">@color/grey400</color>
     <!--
     <color name="item_divider">#eeef6c00</color>
     -->
 
 	<!-- toast -->
-	 <color name="defaultTextColor">#FFFFFF</color>
-    <color name="errorColor">#D50000</color>
-    <color name="infoColor">#3F51B5</color>
-    <color name="successColor">#388E3C</color>
     <color name="warningColor">#FFA900</color>
-    <color name="normalColor">#353A3E</color>
 
-    <color name="storage_nomal">#18992C</color>
-    <color name="storage_warning">#FFA900</color>
     <color name="storage_critical">#D50000</color>
 
     <!-- storage colors -->
@@ -358,9 +258,6 @@
     <color name="storage3">#689702</color>
     <color name="storage4">#EF5350</color>
 
-    <color name="blackOlive">#39393F</color>
-    <color name="orange">#FEC500</color>
-    <color name="bg_tag_default">#7cd167</color>
     <color name="bgColor">#252525</color>
 
 </resources>

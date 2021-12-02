@@ -1,23 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <string name="define_int_jaudiotagger">year;owner</string>
     <!-- Author section -->
-    <string name="library_jaudiotagger_author">jthink</string>
-    <string name="library_jaudiotagger_authorWebsite">http://www.jthink.net/</string>
     <!-- Library section -->
-    <string name="library_jaudiotagger_libraryName">Jaudiotagger</string>
-    <string name="library_jaudiotagger_libraryDescription">Jaudiotagger is the Audio Tagging library used by Jaikoz and SongKong taggers for tagging data in Audio files. It currently fully supports Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac, Wav, Aif, Dsf and Wma</string>
-    <string name="library_jaudiotagger_libraryWebsite">http://www.jthink.net/jaudiotagger/</string>
-    <string name="library_jaudiotagger_libraryVersion">2.2.6</string>
     <!-- OpenSource section -->
-    <string name="library_jaudiotagger_isOpenSource">true</string>
-    <string name="library_jaudiotagger_repositoryLink"></string>
     <!-- ClassPath for autoDetect section -->
-    <string name="library_jaudiotagger_classPath">org.jaudiotagger.audio.AudioHeader</string>
     <!-- License section -->
-    <string name="library_jaudiotagger_licenseId">apache_2_0</string>
     <!-- Custom variables section -->
-    <string name="library_jaudiotagger_owner">The Android Open Source Project</string>
-    <string name="library_jaudiotagger_year">2011</string>
 </resources>

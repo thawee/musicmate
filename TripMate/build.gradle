@@ -45,7 +45,7 @@ dependencies {
     annotationProcessor deps.androidx.room_compiler
 
     implementation deps.google.material
- //   implementation deps.google.android_maps_utils
+    implementation deps.google.android_maps_utils
 
    // implementation deps.room.runtime
    // annotationProcessor deps.room.compiler
@@ -53,7 +53,7 @@ dependencies {
 
    // implementation deps.butterknife
    // annotationProcessor deps.butterknife
-    implementation 'com.google.maps.android:android-maps-utils:0.5'
+   // implementation 'com.google.maps.android:android-maps-utils:0.5'
 //    implementation 'com.airbnb.android:airmapview:1.8.0'
 //    implementation 'com.github.jd-alexander:library:1.1.0'
 	implementation 'com.google.android.gms:play-services-base:16.0.1'
@@ -64,8 +64,8 @@ dependencies {
 //    implementation 'com.google.firebase:firebase-auth:16.0.3'
 //    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
-	implementation 'org.apache.httpcomponents:httpclient:4.2.6'
-    implementation 'org.apache.httpcomponents:httpmime:4.2.6'
+	implementation deps.apache.httpclient
+    implementation deps.apache.httpmime
 	
 //    implementation deps.ui.materialedittext
 

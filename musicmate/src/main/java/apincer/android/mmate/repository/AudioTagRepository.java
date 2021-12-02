@@ -482,7 +482,7 @@ public class AudioTagRepository {
                         return true; // include to results
                     } */
                 }
-            }).order(AudioTag_.artist).order(AudioTag_.title).build();
+            }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){

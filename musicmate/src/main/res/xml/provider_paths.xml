@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <external-path name="internal_files" path="."/>
-    <!--
-    <root-path name="external_files" path="/storage" />
-    <root-path name="internal_files" path="/storage/emulated" />
-    -->
-</paths>

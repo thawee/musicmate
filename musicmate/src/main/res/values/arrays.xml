@@ -61,56 +61,10 @@
         <item>CP1258</item>
     </string-array>
 
-    <string-array name="AudioFormatNames">
-        <item>DSD DFF</item>
-        <item>DSD DSF</item>
-        <item>DSD SACD</item>
-        <item>WAVE</item>
-        <item>AIF</item>
-        <item>FLAC</item>
-        <item>ALAC</item>
-        <item>Mpeg III &amp; Apple AAC</item>
-    </string-array>
-    <string-array name="AudioFormatValues">
-        <item>DFF</item>
-        <item>DSF</item>
-        <item>SACD</item>
-        <item>WAVE</item>
-        <item>AIF</item>
-        <item>FLAC</item>
-        <item>ALAC</item>
-        <item>MPEG</item>
-    </string-array>
-    <string-array name="AudioFormatINTDefaultValues">
-        <item>DFF</item>
-        <item>DSF</item>
-        <item>SACD</item>
-        <item>WAVE</item>
-        <item>AIF</item>
-    </string-array>
-
-    <string-array name="MusicGroupNames">
-        <item>Asian</item>
-        <item>Audiophile</item>
-        <item>FIXME</item>
-        <item>Symphony</item>
-        <item>Thai</item>
-        <item>EMPTY</item>
-    </string-array>
-    <string-array name="MusicGroupValues">
-        <item>Asian</item>
-        <item>Audiophile</item>
-        <item>FIXME</item>
-        <item>Symphony</item>
-        <item>Thai</item>
-        <item>EMPTY</item>
-    </string-array>
     <string-array name="MusicGroupINTDefaultValues">
         <item>EMPTY</item>
         <item>FIXME</item>
     </string-array>
-
-    <string-array name="empty_array"/>
 
     <array name="auto_size_text_sizes">
         <item>16sp</item>
