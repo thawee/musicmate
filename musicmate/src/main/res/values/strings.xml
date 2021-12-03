@@ -42,12 +42,12 @@
     <string name="alert_delete_inprogress_many">Deleting %1$d songs</string>
 
     <string name="alert_write_tag_inprogress">Updating tags on \"%1$s\"</string>
-    <string name="alert_write_tag_success">\"%1$s\" are updated</string>
+    <string name="alert_write_tag_success">\"%1$s\" is updated</string>
     <string name="alert_write_tag_fail">Cannot update \"%1$s\"</string>
 
     <string name="alert_write_tag_inprogress_many">Updating tags for %1$d songs.</string>
 
-    <string name="alert_organize_success">\"%1$s\" is moved to Music Directory</string>
+    <string name="alert_organize_success">\"%1$s\" is imported to Music Directory</string>
     <string name="alert_organize_inprogress">Import \"%1$s\" to Music Directory;</string>
     <string name="alert_organize_fail">Cannot import \"%1$s\"</string>
 
