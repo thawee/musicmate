@@ -137,6 +137,7 @@
 				   app:layout_constraintStart_toStartOf="parent"
 				   app:layout_constraintTop_toTopOf="parent">
 				   -->
+				   <!--
 				   <com.madapps.liquid.LiquidRefreshLayout
 					   android:id="@+id/refreshLayout"
 					   android:layout_width="match_parent"
@@ -144,7 +145,17 @@
 					   app:AniBackColor="@color/colorAccent"
 					   app:AniForeColor="@color/colorPrimary"
 					   app:CircleSmaller="8"
-					   >
+					   > -->
+					   <com.scwang.smart.refresh.layout.SmartRefreshLayout
+						   android:id="@+id/refreshLayout"
+						   android:layout_width="match_parent"
+						   android:layout_height="match_parent"
+						   android:background="@color/black"
+						   app:srlPrimaryColor="@color/grey900"
+						   app:srlAccentColor="@android:color/white">
+					   <com.scwang.smart.refresh.header.ClassicsHeader
+						   android:layout_width="match_parent"
+						   android:layout_height="wrap_content"/>
 				   <androidx.recyclerview.widget.RecyclerView
 					   android:id="@+id/recycler_view"
 					   android:layout_width="match_parent"
@@ -154,8 +165,10 @@
 					   android:background="@drawable/img_back"
 					   android:clipToPadding="false"
 					   tools:listitem="@layout/view_list_item" />
-
-				   </com.madapps.liquid.LiquidRefreshLayout>
+						   <com.scwang.smart.refresh.footer.ClassicsFooter
+							   android:layout_width="match_parent"
+							   android:layout_height="wrap_content"/>
+					   </com.scwang.smart.refresh.layout.SmartRefreshLayout>
 					   <sakout.mehdi.StateViews.StateView
 						   android:id="@+id/status_page"
 						   android:layout_width="match_parent"
@@ -170,6 +183,15 @@
 							   android:text="" />
 
 					   </sakout.mehdi.StateViews.StateView>
+				   <LinearLayout
+					   android:id="@+id/now_playing_panel"
+					   android:layout_width="match_parent"
+					   android:layout_height="wrap_content"
+					   android:gravity="bottom|center_horizontal"
+					   android:layout_alignParentBottom="true"
+					   android:layout_marginBottom="@dimen/dimen_96_dp">
+					   <include layout="@layout/view_now_playing"/>
+				   </LinearLayout>
    			</RelativeLayout>
 			   <!--
 			   </com.simform.refresh.SSPullToRefreshLayout>

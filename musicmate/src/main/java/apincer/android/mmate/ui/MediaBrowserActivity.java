@@ -43,11 +43,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
-import com.madapps.liquid.LiquidRefreshLayout;
 import com.mikepenz.aboutlibraries.LibsBuilder;
+import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
@@ -114,12 +117,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private SearchView mSearchView;
     private ImageView mSearchViewSwitch;
 
-    private LiquidRefreshLayout refreshLayout;
+    private RefreshLayout refreshLayout;
+    //private LiquidRefreshLayout refreshLayout;
     private StateView mStateView;
+    private View nowPlayingView;
 
     // header panel
     TabLayout headerTab;
     TextView headerSubtitle;
+
 
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
@@ -187,32 +193,41 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .target(fabPlayingAction)
                 .build();
         imageLoader.enqueue(request);
-
-        ViewCompat.animate(fabPlayingAction)
-                    .scaleX(1f).scaleY(1f)
-                    .alpha(1f).setDuration(250)
-                    .setStartDelay(700L)
-                    .setListener(new ViewPropertyAnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationStart(View view) {
-                            view.setVisibility(View.VISIBLE);
-                        }
-                    })
-                    .start();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ViewCompat.animate(fabPlayingAction)
+                        .scaleX(1f).scaleY(1f)
+                        .alpha(1f).setDuration(250)
+                        .setStartDelay(700L)
+                        .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationStart(View view) {
+                                view.setVisibility(View.VISIBLE);
+                            }
+                        })
+                        .start();
+            }
+        });
     }
 	
 	private void hidePlayingSongFAB() {
-         ViewCompat.animate(fabPlayingAction)
-                    .scaleX(0f).scaleY(0f)
-                    .alpha(0f).setDuration(100)
-					.setStartDelay(10L)
-                    .setListener(new ViewPropertyAnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(View view) {
-                            view.setVisibility(View.GONE);
-                        }
-                    })
-                    .start();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ViewCompat.animate(fabPlayingAction)
+                        .scaleX(0f).scaleY(0f)
+                        .alpha(0f).setDuration(100)
+                        .setStartDelay(10L)
+                        .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(View view) {
+                                view.setVisibility(View.GONE);
+                            }
+                        })
+                        .start();
+            }
+        });
     }
 
     @Override
@@ -253,22 +268,25 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doStartRefresh() {
-        refreshLayout.post(() -> {
+        refreshLayout.autoRefresh();
+
+      ///  refreshLayout.post(() -> {
            /* MotionEvent event = MotionEvent.obtain(4000, 4000, MotionEvent.ACTION_MOVE, 400, 2000, 0);
             refreshLayout.onTouchEvent(event);
             event.setAction(MotionEvent.ACTION_UP);
             refreshLayout.onTouchEvent(event); */
            // refreshLayout.
-            mStateView.displayLoadingState();
+       ///     mStateView.displayLoadingState();
          //   refreshLayout.setRefreshing(true);
-        });
+      ///  });
     }
 
     private void doStopRefresh() {
-        if (refreshLayout.isShown()) {
+        refreshLayout.finishRefresh();
+       /* if (refreshLayout.isShown()) {
             refreshLayout.finishRefreshing();
-        }
-        mStateView.hideStates();
+        } */
+       // mStateView.hideStates();
     }
 
     @Override
@@ -330,7 +348,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }
             }
         }; */
-
+        setUpNowPoayingView();
         setUpPermissionsAndScan();
         setUpHeaderPanel();
         setUpBottomAppBar();
@@ -346,6 +364,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mExitSnackbar = Snackbar.make(this.mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
+    }
+
+    private void setUpNowPoayingView() {
+        nowPlayingView = findViewById(R.id.now_playing_panel);
+        nowPlayingView.setVisibility(View.GONE);
     }
 
     private void setUpEditorLauncher() {
@@ -394,7 +417,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void initMediaItemList(Intent startIntent) {
-        //enableSwipeRefresh();
+        ScanAudioFileWorker.startScan(getApplicationContext());
         doStartRefresh();
         SearchCriteria criteria = null;
         if (startIntent.getExtras() != null) {
@@ -482,7 +505,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
          // FAB
         fabPlayingAction = findViewById(R.id.fab_playing);
        // UIUtils.getTintedDrawable(fabPlayingAction.getDrawable(), getColor(R.color.now_playing));
-        fabPlayingAction.setOnClickListener(view1 -> doShowPlayingSong());
+        fabPlayingAction.setOnClickListener(view1 -> scrollToListening());
         fabPlayingAction.setOnLongClickListener(view1 -> doPlayNextSong());
     }
 
@@ -513,16 +536,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
         return false;
     } */
-
-    private void doShowPlayingSong() {
-		/*TranslateAnimation anim = new TranslateAnimation(0, -500, 0, -500);
-        anim.setDuration(1000);
-        anim.setFillEnabled(true);
-        anim.setFillAfter(true);
-        fabPlayingAction.startAnimation(anim);
-		*/
-        scrollToListening(); 
-	}
 	
 	private boolean doPlayNextSong() {
 		if(MusicListeningService.getInstance()==null) return false;
@@ -641,13 +654,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         @Override
                         public void onActivityResult(ActivityResult result) {
                            // MediaItemScanService.startService(getApplicationContext(),Constants.COMMAND_SCAN);
-                            ScanAudioFileWorker.startScan(getApplicationContext());
+                           /// ScanAudioFileWorker.startScan(getApplicationContext());
+                            initMediaItemList(getIntent());
                         }
                     });
             permissionResultLauncher.launch(myIntent);
-        }else {
+       // }else {
            // MediaItemScanService.startService(getApplicationContext(),Constants.COMMAND_SCAN);
-            ScanAudioFileWorker.startScan(getApplicationContext());
+           /// ScanAudioFileWorker.startScan(getApplicationContext());
         }
     }
 
@@ -1020,7 +1034,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }); */
 
         refreshLayout = findViewById(R.id.refreshLayout);
-        refreshLayout.setOnRefreshListener(new LiquidRefreshLayout.OnRefreshListener() {
+        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+            @Override
+            public void onRefresh(RefreshLayout refreshlayout) {
+                refreshlayout.finishRefresh(2000/*,false*/);//传入false表示刷新失败
+            }
+        });
+
+       /* refreshLayout.setOnRefreshListener(new LiquidRefreshLayout.OnRefreshListener() {
             @Override
             public void completeRefresh() {
 
@@ -1030,7 +1051,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             public void refreshing() {
                 epoxyController.loadSource(null);
             }
-        });
+        }); */
        /* mSwipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setDistanceToTriggerSync(390);
         mSwipeRefreshLayout.setColorSchemeResources(
@@ -1050,7 +1071,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             updateHeaderPanel();
             scrollToSong(selectedTag);
             if(epoxyController.getAdapter().getItemCount()==0) {
-                mStateView.displayState("search");
+               mStateView.displayState("search");
             }else {
                 mStateView.hideStates();
             }
@@ -1100,6 +1121,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         actionModeCallback = new ActionModeCallback();
         mStateView = findViewById(R.id.status_page);
+        mStateView.hideStates();
     }
 
     private void updateHeaderPanel() {
@@ -1146,14 +1168,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         public void onReceive(Context context, Intent intent) {
             BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
             if(broadcastData!=null) {
-                if(broadcastData.getAction() == BroadcastData.Action.PLAYING) {
+                if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     AudioTag tag = broadcastData.getTagInfo();
-                    if(lastPlaying ==null || (lastPlaying!=null && !lastPlaying.equals(tag))) {
-                        ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
+                    if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(tag))) {
                         lastPlaying = tag;
                         epoxyController.notifyPlayingStatus();
                         selectedTag = null; //tag; // reset auto scroll to song
-                        showPlayingSongFAB(tag);
+                        doShowPlayingSong(tag);
                     }
                    // }
                 }else {
@@ -1227,6 +1248,51 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         //    }
         }
     };
+
+    private void doShowPlayingSong(AudioTag tag) {
+        //ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
+        if(nowPlayingView==null) return;
+
+        hidePlayingSongFAB();
+       // @SuppressLint("InflateParams") View view = getLayoutInflater().inflate(R.layout.dailog_now_playing, null);
+        TextView title = nowPlayingView.findViewById(R.id.title);
+        title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(),tag));
+        TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
+        subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
+        ImageView cover = nowPlayingView.findViewById(R.id.coverart);
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                .crossfade(false)
+                .allowHardware(false)
+                .transformations(new CircleCropTransformation())
+                .target(cover)
+                .build();
+        imageLoader.enqueue(request);
+        nowPlayingView.setVisibility(View.VISIBLE);
+       /* AlertDialog dlg = new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.PlayingDialogTheme)
+                //.setIcon(R.drawable.ic_play_arrow_black_24dp)
+               // .setTitle("Playing")
+                //.setMessage(tag.getTitle()+" by "+tag.getArtist())
+                .setView(view)
+                .setCancelable(true)
+                .setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent))
+                .show(); */
+        final Timer t = new Timer();
+        t.schedule(new TimerTask() {
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        nowPlayingView.setVisibility(View.GONE);
+                    }
+                });
+                showPlayingSongFAB(tag);
+               // dlg.dismiss(); // when the task active then close the dialog
+                t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
+            }
+        }, 2500); // after 2 second (or 2000 miliseconds), the task will be active.
+    }
 
     // Define the callback for what to do when data is received
     /*

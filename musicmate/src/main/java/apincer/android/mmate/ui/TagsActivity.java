@@ -215,6 +215,7 @@ public class TagsActivity extends AppCompatActivity {
         toolbar.setTitle(displayTag.getTitle());
         titleView.setText(displayTag.getTitle());
         artistView.setText(displayTag.getArtist());
+        artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
             Intent resultIntent = new Intent();
@@ -227,6 +228,7 @@ public class TagsActivity extends AppCompatActivity {
             finish();
         });
         albumView.setText(displayTag.getAlbum());
+        albumView.setPaintFlags(albumView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         albumView.setOnClickListener(view -> {
             // filter by album
             Intent resultIntent = new Intent();
@@ -249,7 +251,7 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         pathInfo.setText(displayTag.getStorageId()+"://"+simplePath + mateInd);
-        pathInfo.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
+        pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
 
         pathInfo.setOnClickListener(new View.OnClickListener() {
             @Override

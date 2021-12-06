@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.github.florent37.shapeofview.shapes.BubbleView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="320dp"
+        android:layout_height="110dp"
+        app:shape_bubble_arrowHeight="18dp"
+        app:shape_bubble_arrowWidth="24dp"
+        app:shape_bubble_arrowPosition="bottom"
+        app:shape_bubble_borderRadius="30dp"
+        app:arrow_posititon_percent="0.5">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/selected">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="84dp"
+        android:layout_marginBottom="22dp"
+        android:layout_marginTop="@dimen/dimen_4_dp"
+        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_marginRight="@dimen/dimen_4_dp"
+        android:orientation="horizontal"
+        android:background="@drawable/shape_now_playing_background">
+
+        <ImageView
+            android:id="@+id/coverart"
+            android:layout_width="@dimen/dimen_64_dp"
+            android:layout_height="@dimen/dimen_64_dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="12dp"
+            android:layout_marginBottom="@dimen/dimen_24_dp"
+            />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/coverart"
+            android:lines="1"
+            android:ellipsize="end"
+            android:padding="@dimen/dimen_2_dp" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/dimen_2_dp"
+            android:layout_below="@id/title"
+            android:lines="1"
+            android:ellipsize="end"
+            android:layout_toRightOf="@id/coverart"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_toRightOf="@+id/coverart"
+        android:layout_alignParentBottom="true"
+        android:padding="@dimen/dimen_2_dp"
+        android:layout_marginBottom="@dimen/dimen_8_dp">
+        <ImageView
+            android:id="@+id/file_type"
+            android:layout_width="@dimen/dimen_24_dp"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:layout_margin="@dimen/dimen_2_dp"
+            />
+        <ImageView
+            android:id="@+id/hires"
+            android:layout_width="@dimen/dimen_24_dp"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:src="@drawable/ic_format_hires"
+            android:layout_margin="@dimen/dimen_2_dp"
+            />
+        <ImageView
+            android:id="@+id/mqa"
+            android:layout_width="@dimen/dimen_24_dp"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:src="@drawable/ic_format_mqa_white"
+            android:layout_margin="@dimen/dimen_2_dp"
+            />
+        <ImageView
+            android:id="@+id/player"
+            android:layout_width="@dimen/dimen_24_dp"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:src="@drawable/ic_play_arrow_black_24dp"
+            android:layout_margin="@dimen/dimen_2_dp"
+            />
+        <ImageView
+            android:id="@+id/output"
+            android:layout_width="@dimen/dimen_24_dp"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:src="@drawable/ic_baseline_volume_up_24"
+            android:layout_margin="@dimen/dimen_2_dp"
+            />
+
+    </LinearLayout>
+    </RelativeLayout>
+    </LinearLayout>
+</io.github.florent37.shapeofview.shapes.BubbleView>

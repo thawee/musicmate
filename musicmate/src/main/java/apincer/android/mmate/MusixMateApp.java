@@ -1,10 +1,19 @@
 package apincer.android.mmate;
 
 import android.app.Application;
+import android.content.Context;
 import android.graphics.Color;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 
+import com.github.moduth.blockcanary.BlockCanary;
+import com.github.moduth.blockcanary.BlockCanaryContext;
+import com.github.moduth.blockcanary.internal.BlockInfo;
+
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +32,8 @@ public class MusixMateApp extends Application  {
 
     @Override public void onCreate() {
         super.onCreate();
+
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
         Timber.plant(new Timber.DebugTree());
 
@@ -69,12 +80,9 @@ public class MusixMateApp extends Application  {
             jAudioTaggerLogger2.setLevel(Level.SEVERE);
         }
 
-       // CoilLogger.setEnabled(BuildConfig.DEBUG); // Enable logging to the standard Android log if this is a debug build.
-      //  Coil.setDefaultImageLoader(buildDefaultImageLoader()); // Set a callback to lazily initialize the default ImageLoader.
-
       //  CrashReporter.initialize(this, CrashUtil.getDefaultPath());
 
-/*
+
         BlockCanary.install(this, new BlockCanaryContext() {
 
             public String provideQualifier() {
@@ -139,40 +147,7 @@ public class MusixMateApp extends Application  {
             public void onBlock(Context context, BlockInfo blockInfo) {
 
             }
-        }).start(); */
+        }).start();
     }
 
-   // private ImageLoader buildDefaultImageLoader() {
-        /*
-        ImageLoaderBuilder bld = new ImageLoaderBuilder(getApplicationContext());
-        bld.availableMemoryPercentage(0.5);
-        bld.crossfade(true);
-        bld.placeholder(R.drawable.progress);
-        bld.error(R.drawable.ic_broken_image_black_24dp);
-        bld.componentRegistry(builder1 -> {
-            builder1.add(MediaItem.class, new Fetcher<MediaItem>() {
-                @org.jetbrains.annotations.Nullable
-                @Override
-                public String key(@NotNull MediaItem item) {
-                    return item.getPath();
-                }
-
-                @Override
-                public boolean handles(@NotNull MediaItem item) {
-                    return false;
-                }
-
-                @Nullable
-                @Override
-                public Object fetch(@NotNull BitmapPool bitmapPool, @NotNull MediaItem item, @NotNull Size size, @NotNull Options options, @NotNull Continuation<? super FetchResult> continuation) {
-                    return null;
-                }
-            });
-        });
-
-
-        return bld.build();
-        */
-      //  return Coil.loader();
-    //}
 }

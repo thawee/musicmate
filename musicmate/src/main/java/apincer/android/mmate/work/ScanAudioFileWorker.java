@@ -5,6 +5,7 @@ import android.os.HandlerThread;
 
 import androidx.annotation.NonNull;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.Operation;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 import androidx.work.Worker;
@@ -20,10 +21,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.repository.AudioTagRepository;
 import timber.log.Timber;
 
 public class ScanAudioFileWorker extends Worker {
+    private static Operation scanOperation;
    // private volatile Looper serviceLooper;
     private final ThreadPoolExecutor mExecutor;
     /**
@@ -71,6 +75,7 @@ public class ScanAudioFileWorker extends Worker {
                 mExecutor.execute(r);
             }
         }
+        AudioTagRepository.cleanMusicMate();
 
         return Result.success();
     }
@@ -101,10 +106,12 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     public static void startScan(Context context) {
-        WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                .setInitialDelay(15, TimeUnit.SECONDS)
-                .build();
-        WorkManager.getInstance(context).enqueue(workRequest);
+        if(scanOperation == null) {
+            WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
+                    .setInitialDelay(10, TimeUnit.SECONDS)
+                    .build();
+            scanOperation = WorkManager.getInstance(context).enqueue(workRequest);
+        }
     }
 
     private final class ScanRunnable  implements Runnable {

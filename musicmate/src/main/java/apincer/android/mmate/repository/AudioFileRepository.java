@@ -24,6 +24,7 @@ import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisAlbumArtistSaveOptions;
 import org.jaudiotagger.tag.wav.WavTag;
+import org.jetbrains.annotations.NotNull;
 import org.justcodecs.dsd.DISOFormat;
 import org.justcodecs.dsd.Scarletbook;
 import org.justcodecs.dsd.Utils;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -415,12 +417,10 @@ public class AudioFileRepository {
                 AudioTag[] metadataList = readMediaTag(mediaPath);
                 if (metadataList != null && metadataList.length > 0) {
                     for (AudioTag mdata : metadataList) {
-                        try {
+                        if(mdata != null) {
                             String matePath = buildMatePath(mdata);
                             mdata.setManaged(StringUtils.equals(matePath, mdata.getPath()));
                             tagRepos.saveTag(mdata);
-                        }catch (Exception ex) {
-                            Timber.e(ex);
                         }
                     }
                 }
@@ -455,6 +455,7 @@ public class AudioFileRepository {
 
     private AudioTag[] readCueSheet(AudioTag metadata) {
         AudioTag[] mList = null;
+        int validTitle = 0;
         try {
             String path = metadata.getPath();
             File dirFile = new File(path);
@@ -490,6 +491,7 @@ public class AudioFileRepository {
                         mList[t].setPath(path);
                         mList[t].setSimpleName(metadata.getSimpleName());
                         mList[t].setId(tagRepos.getAudioTagId(mList[t]));
+                        validTitle++;
                     }
                 }
             }else {
@@ -503,6 +505,12 @@ public class AudioFileRepository {
             mList = new AudioTag[1];
             mList[0] = metadata;
             metadata.setId(tagRepos.getAudioTagId(metadata));
+        }
+        if(validTitle == 0) {
+            // found invalid cue lib file, use yag from audiofile
+            Timber.i("found invalid cue lib file, use yag from audiofile, "+metadata.getPath());
+            mList = new AudioTag[1];
+            mList[0] = metadata;
         }
         return mList;
     }
@@ -815,7 +823,7 @@ public class AudioFileRepository {
         return  encType.toUpperCase();
     }
 
-    public String buildMatePath(AudioTag metadata) {
+    public String buildMatePath(@NotNull AudioTag metadata) {
         // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
         // /format/<album|albumartist|artist>/<track no> <artist>-<title>
         final String ReservedChars = "?|\\*<\":>[]~#%^@.";
@@ -1065,7 +1073,7 @@ public class AudioFileRepository {
         return true;
     }
 
-    private boolean moveToManagedDirectory(AudioTag tag) {
+    private boolean importAudioTag(AudioTag tag) {
             String newPath = buildMatePath(tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 return true;
@@ -1212,7 +1220,7 @@ public class AudioFileRepository {
         boolean status = false;
         try {
             MusicListeningService.getInstance().playNextSongOnMatched(item);
-            status = moveToManagedDirectory(item);
+            status = importAudioTag(item);
         }catch(Exception|OutOfMemoryError ex) {
             Timber.e(ex);
             status = false;
@@ -1226,7 +1234,7 @@ public class AudioFileRepository {
         boolean status = false;
         try {
             MusicListeningService.getInstance().playNextSongOnMatched(item);
-            status = moveToManagedDirectory(item);
+            status = importAudioTag(item);
         }catch(Exception|OutOfMemoryError ex) {
             Timber.e(ex);
             status = false;

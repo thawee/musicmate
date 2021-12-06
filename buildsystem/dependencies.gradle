@@ -9,7 +9,7 @@ ext.versions = [
         minSdk             : 30,
         targetSdk          : 30,
         compileSdk         : 31,
-        buildTools         : '31.0.0', //''30.0.3',
+        buildTools         : '32.0.0-rc1', // ''31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
         kotlin             : '1.6.0',  //'1.5.31',
         buildDate          : "built on " + getDate(),
@@ -162,7 +162,7 @@ ui.lapism_searchview = "com.lapism:searchview:28.0.0" //23/06/2019
 ui.lapism_search = "com.lapism:search:1.0.0" //26/01/2020
 ui.jellytoolbar = "com.github.yalantis:jellytoolbar:v1.0"
 //https://github.com/florent37/ShapeOfView
-ui.shapeofview = "com.github.florent37:shapeofview:1.4.7" //23/06/2019
+ui.shapeofview = "io.github.florent37:shapeofview:1.4.7" //23/06/2019
 ui.boommenu = "com.nightonke:boommenu:2.1.1" //23/06/2019
 ui.textdrawable = "com.amulyakhare:com.amulyakhare.textdrawable:1.0.1" //23/06/2019
 ui.aboutlibraries = "com.mikepenz:aboutlibraries:${versions.aboutlibraries}"
@@ -248,7 +248,7 @@ deps.hamcrest = "org.hamcrest:hamcrest-all:1.3" //23/06/2019
 deps.gson = "com.google.code.gson:gson:2.8.9" //2.8.5" //23/06/2019
 //deps.crashreporter = "com.balsikandar.android:crashreporter:1.1.0" // 2/11/2019
 //deps.leakcanary = "com.squareup.leakcanary:leakcanary-android:2.0-alpha-2" //23/07/2019
-//deps.blockcanary = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
+deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019
 //deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
 deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 //https://github.com/anggrayudi/SimpleStorage

@@ -140,7 +140,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
 
             @Override
             public void onComplete() {
-                //listener.onModelBuildFinished(null);
+                listener.onModelBuildFinished(null);
             }
         });
     }

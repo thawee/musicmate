@@ -92,5 +92,11 @@
     <string name="aspect_underline"><u>Spectrogram</u></string>
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
+    <string name="import_songs_label">Import</string>
+    <string name="edit_tags_label">Edit Tags</string>
+    <string name="delete_song_label">Delete</string>
+    <string name="aspect_label">Spectrogram</string>
+    <string name="websearch_label">Web Search</string>
+    <string name="convert_label">2 Flac</string>
 
 </resources>
