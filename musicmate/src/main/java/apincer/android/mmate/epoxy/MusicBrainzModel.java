@@ -57,6 +57,29 @@ public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzM
 
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof MusicBrainzModel_)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        MusicBrainzModel_ that = (MusicBrainzModel_) o;
+        if (((tag == null) != (that.tag == null))) {
+            return false;
+        }
+        return tag.equals(that.tag);
+    }
+
+    @Override
+    public int hashCode() {
+        return tag.hashCode();
+    }
+
     public class Holder extends EpoxyHolder {
         View rootView;
         TextView mTitle;

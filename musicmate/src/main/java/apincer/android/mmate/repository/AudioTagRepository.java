@@ -20,19 +20,14 @@ import io.objectbox.query.QueryFilter;
 import timber.log.Timber;
 
 public class AudioTagRepository {
-  //  private static AudioTagRepository INSTANCE;
-    //private final Context context;
     private static final Box<AudioTag> tagBox = ObjectBox.get().boxFor(AudioTag.class);
     public static List<String> lossyAudioFormatList = new ArrayList<>();
 
 
     public AudioTagRepository() {
-      //  this.context = context;
-       // tagBox = ObjectBox.get().boxFor(AudioTag.class);
         lossyAudioFormatList.add("MP3");
         lossyAudioFormatList.add("AAC");
         lossyAudioFormatList.add("WMA");
-      //  INSTANCE = this;
     }
 
     public void saveTag(AudioTag tag) {
@@ -89,25 +84,6 @@ public class AudioTagRepository {
 
         return rates;
     }
-
-    /*
-    public static String sqlEscapeString(String sqlString) {
-        StringBuilder sb = new StringBuilder();
-        if (sqlString.indexOf('\'') != -1) {
-            int length = sqlString.length();
-            for (int i = 0; i < length; i++) {
-                char c = sqlString.charAt(i);
-                if (c == '\'') {
-                    sb.append('\'');
-                }
-                sb.append(c);
-            }
-        }else {
-            sb.append(sqlString);
-        }
-
-        return sb.toString();
-    } */
 
 /*
     private boolean isHiRes(String bitDepth, String sampleRate) {
@@ -389,30 +365,12 @@ public class AudioTagRepository {
         }
         return sampleRate;
     }
-/*
-    public static AudioTagRepository getInstance(Context context) {
-        if(INSTANCE==null) {
-            INSTANCE = new AudioTagRepository(context);
-        }
-        return INSTANCE;
-    } */
 
-    public List<AudioTag> findMedia(String title) throws SQLException {
-        Query<AudioTag> query = tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
+    public List<AudioTag> findMediaByTitle(String title) throws SQLException {
+        Query<AudioTag> query = tagBox.query(AudioTag_.path.contains(title)).build(); // tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
         List<AudioTag> list = query.find();
         query.close();
         return list;
-        /*
-        QueryBuilder<AudioTag, String> qb = dao.queryBuilder();
-        SelectArg selectTitle = new SelectArg();
-        SelectArg selectPath = new SelectArg();
-        qb.where().like("title", selectTitle).or().like("mediaPath", selectPath);
-        // prepare it so it is ready for later query or iterator calls
-        PreparedQuery<AudioTag> preparedQuery = qb.prepare();
-
-        selectTitle.setValue(StringUtils.trimToEmpty(title));
-        selectPath.setValue(StringUtils.trimToEmpty(title));
-        return dao.query(preparedQuery); */
     }
 
     public List findMediaTag(SearchCriteria criteria) {

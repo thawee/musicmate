@@ -65,6 +65,29 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof AudioTagModel_)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        AudioTagModel_ that = (AudioTagModel_) o;
+        if (((tag == null) != (that.tag == null))) {
+            return false;
+        }
+        return tag.equals(that.tag);
+    }
+
+    @Override
+    public int hashCode() {
+        return tag.hashCode();
+    }
+
     private void bindTagView(Holder holder) {
         // When user scrolls, this line binds the correct selection status
          holder.rootView.setActivated(controller.isSelected(tag));

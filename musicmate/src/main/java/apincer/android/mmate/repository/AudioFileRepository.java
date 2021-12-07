@@ -1,6 +1,5 @@
 package apincer.android.mmate.repository;
 
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -73,8 +71,6 @@ public class AudioFileRepository {
 
     public static final String ACTION = "com.apincer.mmate.provider.MediaItemProvider";
 
-   // private static volatile boolean scanning;
-
     public Context getContext() {
         return context;
     }
@@ -85,7 +81,6 @@ public class AudioFileRepository {
         this.fileRepos = new MediaFileRepository(context);
         this.tagRepos = new AudioTagRepository();
         INSTANCE = this;
-      //  scanning = false;
     }
 
     public static AudioFileRepository getInstance(Context context) {
@@ -260,7 +255,7 @@ public class AudioFileRepository {
 
     public AudioTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
         try {
-            List<AudioTag> list = tagRepos.findMedia(currentTitle);
+            List<AudioTag> list = tagRepos.findMediaByTitle(currentTitle);
 
             double prvTitleScore = 0.0;
             double prvArtistScore = 0.0;

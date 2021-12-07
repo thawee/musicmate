@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 import androidx.annotation.Nullable;
 
+import java.util.Objects;
+
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 import io.objectbox.annotation.Transient;
@@ -15,6 +17,10 @@ import apincer.android.mmate.utils.StringUtils;
 
 @Entity
 public class AudioTag implements Cloneable , Parcelable {
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, path, managed, source, audiophile, rating, title, artist, album, genre, track, disc, grouping, albumArtist);
+    }
 
     //
     @Transient
@@ -60,7 +66,7 @@ public class AudioTag implements Cloneable , Parcelable {
     }
 
     // file information
-    protected String path;
+    protected String path = "";
     protected long lastModified = 0;
     @Transient
     protected String obsoletePath;
@@ -72,7 +78,7 @@ public class AudioTag implements Cloneable , Parcelable {
     protected String storageId;
     protected String storageName;
     protected String simpleName;
-    protected String source;
+    protected String source = "";
     protected boolean cueSheet;
     protected boolean audiophile;
     protected int rating; //0-10
@@ -107,17 +113,17 @@ public class AudioTag implements Cloneable , Parcelable {
     }
 
     // tags information
-    protected String title;
-    protected String artist;
-    protected String album;
-    private String year;
-    private String genre;
-    private String track;
-    private String disc;
-    private String comment;
-    private String grouping;
-    private String composer;
-    protected String albumArtist;
+    protected String title= "";
+    protected String artist = "";
+    protected String album = "";
+    private String year = "";
+    private String genre = "";
+    private String track = "";
+    private String disc = "";
+    private String comment = "";
+    private String grouping = "";
+    private String composer = "";
+    protected String albumArtist="";
 
 
     public AudioTag() {
