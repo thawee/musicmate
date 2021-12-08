@@ -184,7 +184,7 @@ dependencies {
    // implementation deps.ui.smartmaterialspinner
     implementation deps.ui.aspectRatioImageview
     implementation deps.ui.fastscroll
-    //implementation deps.ui.elasticviews
+    implementation deps.ui.elasticviews
     implementation deps.ui.stateViews
 
     //https://github.com/Chrisvin/FlipTabs

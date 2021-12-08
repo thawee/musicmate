@@ -152,6 +152,7 @@ public class TagsEditorFragment extends Fragment {
     private void doShowPopupMenu() {
         PopupMenu popup = new PopupMenu(getContext(), fabMainAction);
         popup.getMenuInflater().inflate(R.menu.menu_editor_tools, popup.getMenu());
+        UIUtils.makePopForceShowIcon(popup);
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {

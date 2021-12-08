@@ -17,17 +17,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto" >
     <item
-        android:icon="@drawable/ic_insert_drive_file_black_24dp"
+        android:icon="@drawable/ic_baseline_audio_file_24"
         android:id="@+id/menu_editor_tool_read_tag"
         android:title="Read TAG from filename"
         app:showAsAction="always" />
     <item
-        android:icon="@drawable/ic_text_format_black_24dp"
+        android:icon="@drawable/ic_baseline_auto_fix_normal_24"
         android:id="@+id/menu_editor_tool_format_tag"
         android:title="Format TAG"
         app:showAsAction="always" />
     <item
-            android:icon="@drawable/ic_add_a_photo_black_24dp"
+            android:icon="@drawable/ic_baseline_add_photo_alternate_24"
             android:id="@+id/menu_editor_tool_pick_coverart"
             android:title="Pick CoverArt from image"
             app:showAsAction="always" />

@@ -118,14 +118,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private ImageView mSearchViewSwitch;
 
     private RefreshLayout refreshLayout;
-    //private LiquidRefreshLayout refreshLayout;
     private StateView mStateView;
     private View nowPlayingView;
 
     // header panel
     TabLayout headerTab;
     TextView headerSubtitle;
-
 
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
@@ -646,22 +644,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             alertPermissions.show();
             */
             Intent myIntent = new Intent(MediaBrowserActivity.this, PermissionActivity.class);
-           // startActivity(myIntent);
             // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
             ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     new ActivityResultCallback<ActivityResult>() {
                         @Override
                         public void onActivityResult(ActivityResult result) {
-                           // MediaItemScanService.startService(getApplicationContext(),Constants.COMMAND_SCAN);
-                           /// ScanAudioFileWorker.startScan(getApplicationContext());
                             initMediaItemList(getIntent());
                         }
                     });
             permissionResultLauncher.launch(myIntent);
-       // }else {
-           // MediaItemScanService.startService(getApplicationContext(),Constants.COMMAND_SCAN);
-           /// ScanAudioFileWorker.startScan(getApplicationContext());
         }
     }
 

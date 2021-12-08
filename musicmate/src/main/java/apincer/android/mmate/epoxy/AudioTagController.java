@@ -111,9 +111,6 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             }else {
                 criteria = this.criteria;
             }
-       // }else if(criteria.equals(this.criteria)) {
-            // igore if not criteria changed
-         //   return ;
         }
 
         this.criteria = criteria;
@@ -295,7 +292,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     }
 
     public void notifyModelChanged(AudioTag tag) {
-        if(tag!= null) {
+      /*  if(tag!= null) {
             AudioTagModel_ model = buildModel(tag);
             int position = getAdapter().getModelPosition(model);
             if (position != RecyclerView.NO_POSITION) {
@@ -305,7 +302,14 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                 }
                 notifyModelChanged(position);
             }
+        } */
+       /* List<AudioTag> tags = getCurrentData();
+        for(AudioTag aTag : tags) {
+            if(aTag.equals(tag)) {
+                tagRepos.populateAudioTag(aTag);
+            }
         }
+        setData(tags); */
     }
 
     public SearchCriteria getCurrentCriteria() {
@@ -345,20 +349,10 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     }
 
     public void notifyPlayingStatus() {
+       // requestModelBuild();
         int cnt = getAdapter().getItemCount();
         for(int i=0; i < cnt;i++) {
             notifyModelChanged(i);
         }
-       /* if(tag!= null) {
-            AudioTagModel_ model = buildModel(tag);
-            int position = getAdapter().getModelPosition(model);
-            if (position != RecyclerView.NO_POSITION) {
-                AudioTagModel_ md = (AudioTagModel_) getAdapter().getModelAtPosition(position);
-                if (md != null) {
-                    tagRepos.populateAudioTag(md.tag());
-                }
-                notifyModelChanged(position);
-            }
-        } */
     }
 }

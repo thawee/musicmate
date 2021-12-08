@@ -106,9 +106,9 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     public static void startScan(Context context) {
-        if(scanOperation == null) {
+        if(scanOperation == null || scanOperation.getResult().isDone() || scanOperation.getResult().isCancelled()) {
             WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                    .setInitialDelay(10, TimeUnit.SECONDS)
+                    .setInitialDelay(5, TimeUnit.SECONDS)
                     .build();
             scanOperation = WorkManager.getInstance(context).enqueue(workRequest);
         }

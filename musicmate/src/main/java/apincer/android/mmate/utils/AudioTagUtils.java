@@ -510,7 +510,7 @@ public class AudioTagUtils {
         if (rate ==0 || rate == tag.getAudioSampleRate()) {
             return null;
         }
-        Bitmap icon = AudioTagUtils.createBitmapFromText(context, 120, 32, "MQA " +StringUtils.getFormatedAudioSampleRate(rate, true), textColor,borderColor, qualityColor);
+        Bitmap icon = AudioTagUtils.createBitmapFromText(context, 120, 32, "M " +StringUtils.getFormatedAudioSampleRate(rate, true), textColor,borderColor, qualityColor);
 
         return icon;
     }

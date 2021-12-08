@@ -326,7 +326,7 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="6dp"
             android:layout_marginTop="52dp"
-            android:src="@drawable/ic_beenhere_black_24dp"
+            android:src="@drawable/ic_round_save_24"
             android:layout_gravity="top|right"
             android:tint="@android:color/white"
             android:visibility="visible"
