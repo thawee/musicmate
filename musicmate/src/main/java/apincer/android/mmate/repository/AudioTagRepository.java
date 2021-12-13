@@ -367,7 +367,7 @@ public class AudioTagRepository {
     }
 
     public List<AudioTag> findMediaByTitle(String title) throws SQLException {
-        Query<AudioTag> query = tagBox.query(AudioTag_.path.contains(title)).build(); // tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
+        Query<AudioTag> query = tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
         List<AudioTag> list = query.find();
         query.close();
         return list;

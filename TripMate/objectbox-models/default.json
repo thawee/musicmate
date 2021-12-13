@@ -1,0 +1,97 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:6975288566191591719",
+      "lastPropertyId": "14:1567072850398503284",
+      "name": "Place",
+      "properties": [
+        {
+          "id": "1:3342745204484001461",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3744258704447353033",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "3:1532082041921111560",
+          "name": "popularity",
+          "type": 5
+        },
+        {
+          "id": "4:8601749030168473423",
+          "name": "roadType",
+          "type": 9
+        },
+        {
+          "id": "5:5497276886596205894",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "6:4396368684507876939",
+          "name": "description",
+          "type": 9
+        },
+        {
+          "id": "7:4947321640196844938",
+          "name": "latitude",
+          "type": 8
+        },
+        {
+          "id": "8:3815179489583851457",
+          "name": "longitude",
+          "type": 8
+        },
+        {
+          "id": "9:5191369645342231969",
+          "name": "rating",
+          "type": 5
+        },
+        {
+          "id": "10:3045163531942907550",
+          "name": "fee",
+          "type": 9
+        },
+        {
+          "id": "11:2195834958214300421",
+          "name": "feeNote",
+          "type": 9
+        },
+        {
+          "id": "12:3804650631486431749",
+          "name": "publicSite",
+          "type": 1
+        },
+        {
+          "id": "13:2801936353632488933",
+          "name": "sourceName",
+          "type": 9
+        },
+        {
+          "id": "14:1567072850398503284",
+          "name": "sourceUrl",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:6975288566191591719",
+  "lastIndexId": "0:0",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

@@ -47,7 +47,6 @@ import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.service.BroadcastData;
-import apincer.android.mmate.service.MediaItemIntentService;
 import apincer.android.mmate.service.MusicListeningService;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;

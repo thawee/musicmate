@@ -103,6 +103,12 @@ androidx.work = "androidx.work:work-runtime:2.7.1"
 
 deps.androidx = androidx
 
+def maps = [:]
+maps.osmdroid = "org.osmdroid:osmdroid-android:6.1.11"
+maps.osmdroid_shape = "org.osmdroid:osmdroid-shape:6.1.11"
+maps.osmbonuspack = "com.github.MKergall:osmbonuspack:6.8.0"
+deps.maps = maps
+
 def retrofit = [:]
 //https://github.com/square/retrofit/releases
 retrofit.runtime = "com.squareup.retrofit2:retrofit:2.9.0" //23/06/2019
@@ -188,7 +194,7 @@ ui.elasticviews = "com.github.skydoves:elasticviews:2.1.0"
 //https://github.com/skydoves/DoubleLift
 ui.doublelift = "com.github.skydoves:doublelift:1.0.4"
 // https://github.com/skydoves/ProgressView
-ui.progressview = "com.github.skydoves:progressview:1.1.2"
+ui.progressview = "com.github.skydoves:progressview:1.1.3"
 //https://github.com/iwgang/SimplifySpan
 ui.simplifyspan ='com.github.iwgang:simplifyspan:2.2'
 //https://github.com/CoderBuck/AspectRatioFrameLayout

@@ -35,7 +35,7 @@ public class MusixMateApp extends Application  {
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
-        Timber.plant(new Timber.DebugTree());
+       // Timber.plant(new Timber.DebugTree());
 
         //initialize ObjectBox is when your app starts
         ObjectBox.init(this);

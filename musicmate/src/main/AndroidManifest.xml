@@ -56,34 +56,8 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:replace="android:allowBackup"
         android:theme="@style/AppTheme">
-        <!--
-          <provider
-              android:name="apincer.android.uamp.repository.MediaFileRepositoryry"
-              android:authorities="apincer.android.uamp.documents.MediaFileRepository"
-              android:exported="true"
-              android:grantUriPermissions="true"
-              android:permission="android.permission.MANAGE_DOCUMENTS">
-              <intent-filter>
-                  <action android:name="android.content.action.DOCUMENTS_PROVIDER"/>
-              </intent-filter>
-          </provider>
-
-          <provider
-              android:name="androidx.core.content.FileProvider"
-              android:authorities="${applicationId}.provider"
-              android:exported="false"
-              android:grantUriPermissions="true">
-              <meta-data
-                  android:name="android.support.FILE_PROVIDER_PATHS"
-                  android:resource="@xml/nnf_provider_paths" />
-          </provider>
-          -->
 
         <service android:name="apincer.android.mmate.service.MusicListeningService" android:exported="false" android:enabled="true"/>
-        <service android:name="apincer.android.mmate.service.MediaItemIntentService" android:exported="false" android:enabled="true"/>
-        <service android:name="apincer.android.mmate.service.MediaItemScanService" android:exported="false" android:enabled="true"/>
-
-        <!-- Media Item Manipulatiion service (beta) -->
 
         <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
         <service
@@ -94,19 +68,6 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <!--
-                <receiver android:name=".events.ManageMediaReceiver" android:exported="false">
-                    <intent-filter>
-                        <action android:name="net.gotev.uploadservicedemo.uploadservice.broadcast.status" />
-                    </intent-filter>
-                </receiver>
-
-                <receiver android:name=".events.NotificationActionsReceiver" android:exported="false">
-                    <intent-filter>
-                        <action android:name="net.gotev.uploadservicedemo.notification.action" />
-                    </intent-filter>
-                </receiver>
-        -->
         <!-- Main activity for music browsing on phone -->
         <activity
             android:name="apincer.android.mmate.ui.MediaBrowserActivity"

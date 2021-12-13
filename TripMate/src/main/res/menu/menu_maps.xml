@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- Search / will display always -->
     <!--<item-->
@@ -15,20 +16,18 @@
     <!--android:showAsAction="always"-->
     <!--android:title="@string/action_location_found"/>-->
 
-
-    <!-- More -->
+    <!-- Add New Place -->
     <item
-        android:id="@+id/a_More"
-        android:icon="@drawable/menu_iconn"
-        android:showAsAction="always"
-        android:title="More">
-        <menu>
+        android:id="@+id/id_add_place"
+        android:icon="@drawable/myposition"
+        app:showAsAction="never"
+        android:title="@string/action_new_place" />
 
             <!-- Refresh -->
             <item
-                android:id="@+id/idlist_places"
+                android:id="@+id/id_list_places"
                 android:icon="@drawable/myposition"
-                android:showAsAction="never"
+                app:showAsAction="never"
                 android:title="@string/action_search" />
 
             <!-- Help -->
@@ -46,9 +45,9 @@
 
             <!-- Check updates -->
             <item
-                android:id="@+id/idabout_us"
+                android:id="@+id/id_about_us"
                 android:icon="@drawable/aboutus"
-                android:showAsAction="never"
+                app:showAsAction="never"
                 android:title="@string/about_us" />
             <!--
 			<item
@@ -58,7 +57,5 @@
                 android:showAsAction="ifRoom"
                 android:title="Share" />
 				-->
-        </menu>
-    </item>
 
 </menu>

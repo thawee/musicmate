@@ -18,7 +18,8 @@
         android:allowBackup="true"
         android:icon="@drawable/launcher_icon"
         android:label="@string/app_name"
-        android:theme="@style/CustomActionBarTheme" >
+        android:theme="@style/CustomActionBarTheme"
+        android:name="apincer.android.tripmate.Application">
         <activity
             android:name="apincer.android.tripmate.activity.SplashScreenActivity"
             android:label="@string/app_name" >
@@ -51,7 +52,7 @@
         </activity>
         <activity
             android:name="apincer.android.tripmate.activity.MapViewActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name">
         </activity>
 <!--
         <meta-data
@@ -64,7 +65,8 @@
 
         <activity
             android:name="apincer.android.tripmate.activity.MapsActivity"
-            android:label="@string/title_activity_maps" >
+            android:label="@string/title_activity_maps"
+            android:theme="@style/MapTheme">
         </activity>
         <activity
             android:name="apincer.android.tripmate.geoloc.GeoLocActivity"

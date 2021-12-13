@@ -29,14 +29,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.epoxy.MusicBrainzController;
 import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
 import apincer.android.mmate.musicbrainz.MusicBrainz;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.MediaFileRepository;
-import apincer.android.mmate.service.MediaItemIntentService;
 import apincer.android.mmate.ui.view.LinearDividerItemDecoration;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Outdoor Mate</string>
+    <string name="app_name">Trip Mate</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Action Bar</string>
     <string name="btn_send_message">Send Message</string>
@@ -45,5 +45,6 @@
 
     <string name="title_import">Export</string>
     <string name="title_export">Import</string>
+    <string name="action_new_place">New Place</string>
 
 </resources>

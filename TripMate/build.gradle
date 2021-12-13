@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'io.objectbox' // Apply last.
 
 android {
     compileSdkVersion versions.compileSdk
@@ -47,6 +48,11 @@ dependencies {
     implementation deps.google.material
     implementation deps.google.android_maps_utils
 
+    implementation deps.timber
+
+    implementation deps.maps.osmdroid
+    implementation deps.maps.osmbonuspack
+
    // implementation deps.room.runtime
    // annotationProcessor deps.room.compiler
    // implementation deps.ormlite
@@ -80,7 +86,7 @@ dependencies {
 
    // implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.android.gms:play-services-maps:16.0.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    //implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 //    implementation 'com.google.firebase:firebase-database:11.8.0'
     implementation 'com.google.android.gms:play-services-places:16.0.0'
     testImplementation 'junit:junit:4.12'

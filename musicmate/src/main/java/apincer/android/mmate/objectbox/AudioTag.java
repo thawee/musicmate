@@ -19,7 +19,7 @@ import apincer.android.mmate.utils.StringUtils;
 public class AudioTag implements Cloneable , Parcelable {
     @Override
     public int hashCode() {
-        return Objects.hash(id, path, managed, source, audiophile, rating, title, artist, album, genre, track, disc, grouping, albumArtist);
+        return Objects.hash(id);
     }
 
     //

@@ -123,4 +123,7 @@
     <!--</style>-->
     <!--&lt;!&ndash; style the list navigation &ndash;&gt;-->
 
+    <style name="MapTheme" parent="Theme.MaterialComponents.DayNight">
+    </style>
+
 </resources>
