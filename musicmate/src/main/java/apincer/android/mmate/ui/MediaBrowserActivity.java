@@ -148,7 +148,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     DeleteAudioFileWorker.startWorker(getApplicationContext(), itemsList);
                   //  MediaItemIntentService.startService(getApplicationContext(),Constants.COMMAND_DELETE,itemsList);
                     dialogInterface.dismiss();
-                    epoxyController.loadSource(null);
+                    epoxyController.loadSource();
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss())
                 .show();
@@ -170,7 +170,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     dialogInterface.dismiss();
                     ImportAudioFileWorker.startWorker(getApplicationContext(), itemsList);
                    // MediaItemIntentService.startService(getApplicationContext(),Constants.COMMAND_MOVE,itemsList);
-                    epoxyController.loadSource(null);
+                    epoxyController.loadSource();
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss()).create();
         dlg.show();
@@ -396,9 +396,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             public void onTabSelected(TabLayout.Tab tab) {
                 if(!onSetup) {
                     doStartRefresh();
-                    SearchCriteria criteria = epoxyController.getCurrentCriteria();
-                    criteria.setKeyword(tab.getText().toString());
-                    epoxyController.loadSource(criteria);
+                   // SearchCriteria criteria = epoxyController.getCurrentCriteria();
+                   // criteria.setKeyword(tab.getText().toString());
+                    epoxyController.loadSource(tab.getText().toString());
                 }
             }
 
@@ -958,7 +958,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .setMessage(getString(R.string.alert_invalid_media_file, mediaItem.getTitle()))
                     .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                         AudioFileRepository.getInstance(getApplication()).deleteMediaItem(mediaItem);
-                        epoxyController.loadSource(null);
+                        epoxyController.loadSource();
                        // mLibraryAdapter.removeItem(position);
                         dialogInterface.dismiss();
                     })
@@ -977,7 +977,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .setMessage(getString(R.string.alert_invalid_media_file, tag.getTitle()))
                     .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                         AudioFileRepository.getInstance(getApplication()).deleteMediaItem(tag);
-                        epoxyController.loadSource(null);
+                        epoxyController.loadSource();
                         dialogInterface.dismiss();
                     })
                     .show();
@@ -1176,7 +1176,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         epoxyController.notifyModelChanged(broadcastData.getTagInfo());
                     }
                     // re-load library
-                    epoxyController.loadSource(null);
+                    epoxyController.loadSource();
                 }
             }
 /*

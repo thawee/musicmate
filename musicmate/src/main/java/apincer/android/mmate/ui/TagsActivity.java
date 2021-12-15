@@ -126,7 +126,7 @@ public class TagsActivity extends AppCompatActivity {
         coverArtView = findViewById(R.id.panel_cover_art);
         toolBarLayout = findViewById(R.id.toolbar_layout);
         int statusBarHeight = getStatusBarHeight();
-        int height = getWindow().getWindowManager().getDefaultDisplay().getHeight();
+        int height = UIUtils.getScreenHeight(this); // getWindow().getWindowManager().getDefaultDisplay().getHeight();
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
         toolbar_from_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);

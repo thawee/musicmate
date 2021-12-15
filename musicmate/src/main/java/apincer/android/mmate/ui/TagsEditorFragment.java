@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -24,6 +25,10 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -85,6 +90,7 @@ public class TagsEditorFragment extends Fragment {
     private Snackbar mSnackbar;
     private File pendingCoverartFile;
     private FloatingActionButton fabMainAction;
+    private ActivityResultLauncher startForResultFromGallery;
 
     final int DRAWABLE_LEFT = 0;
     final int DRAWABLE_TOP = 1;
@@ -96,11 +102,54 @@ public class TagsEditorFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View root= inflater.inflate(R.layout.fragment_editor, container, false);
         viewHolder = new ViewHolder(root);
+        setupImagePicker();
         setupFab(root);
         setupFabMenus(root);
         //setupMenuBar(root);
         toggleSaveFabAction();
         return root;
+    }
+
+    private void setupImagePicker() {
+        startForResultFromGallery = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == Activity.RESULT_OK){
+                  /*  try {
+                        if (result.getData() != null){
+                            Uri selectedImageUri = result.getData().getData();
+                            Bitmap bitmap = BitmapFactory.decodeStream(getBaseContext().getContentResolver().openInputStream(selectedImageUri));
+                            // set bitmap to image view here........
+                            binding.menuFragmentCircularProfileImageview.setImageBitmap(bitmap)
+                        }
+                    }catch (Exception exception){
+                        Log.d("TAG",""+exception.getLocalizedMessage());
+                    } */
+
+                    try {
+                        if (result.getData() == null && result.getData().getData()!=null) {
+                            return;
+                        }
+                        InputStream input = getApplicationContext().getContentResolver().openInputStream(result.getData().getData());
+                        File outputDir = getApplicationContext().getCacheDir(); // context being the Activity pointer
+                        pendingCoverartFile = new File(outputDir, "tmp_cover_art");
+                        if (pendingCoverartFile.exists()) {
+                            pendingCoverartFile.delete();
+                        }
+                        FileOutputStream output = new FileOutputStream(new File(outputDir, "tmp_cover_art"));
+                        // MediaFileRepository.getInstance(getActivity().getApplication()).copy(input, pendingCoverartFile);
+                        IOUtils.copy(input, output);
+                        output.close();
+
+                        mainActivity.doPreviewCoverArt(pendingCoverartFile);
+                        viewHolder.coverartChanged = true;
+                        toggleSaveFabAction();
+                    }catch (IOException ex) {
+                        Timber.e( ex);
+                    }
+                }
+            }
+        });
     }
 
     /*
@@ -222,7 +271,8 @@ public class TagsEditorFragment extends Fragment {
     private void doPickCoverart() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        startActivityForResult(intent,REQUEST_GET_CONTENT_IMAGE);
+        //startActivityForResult(intent,REQUEST_GET_CONTENT_IMAGE);
+        startForResultFromGallery.launch(intent);
     }
 
     /*

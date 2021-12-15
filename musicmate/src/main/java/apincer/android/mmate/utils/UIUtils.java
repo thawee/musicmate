@@ -12,6 +12,7 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.graphics.LinearGradient;
 import android.graphics.Outline;
 import android.graphics.Paint;
@@ -39,7 +40,9 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewOutlineProvider;
+import android.view.WindowInsets;
 import android.view.WindowManager;
+import android.view.WindowMetrics;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -705,6 +708,7 @@ public class UIUtils  {
         }
     }
 
+    /*
     public static boolean hasSoftKeys(WindowManager windowManager){
         Display d = windowManager.getDefaultDisplay();
 
@@ -721,7 +725,7 @@ public class UIUtils  {
         int displayWidth = displayMetrics.widthPixels;
 
         return (realWidth - displayWidth) > 0 || (realHeight - displayHeight) > 0;
-    }
+    } */
 
     public static void displayStorages(Application application, LinearLayout vStoragesLayout) {
         if (vStoragesLayout == null) return;
@@ -795,5 +799,31 @@ public class UIUtils  {
         LinearGradient linGrad = new LinearGradient(0, 0, 0, view.getHeight(), colors, position, tileMode);
         Shader shaderGradient = linGrad;
         view.getPaint().setShader(shaderGradient);
+    }
+
+    public static int getScreenWidth(@NonNull Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
+            Insets insets = windowMetrics.getWindowInsets()
+                    .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
+            return windowMetrics.getBounds().width() - insets.left - insets.right;
+        } else {
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            return displayMetrics.widthPixels;
+        }
+    }
+
+    public static int getScreenHeight(@NonNull Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
+            Insets insets = windowMetrics.getWindowInsets()
+                    .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
+            return windowMetrics.getBounds().height() - insets.top - insets.bottom;
+        } else {
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            return displayMetrics.heightPixels;
+        }
     }
 }

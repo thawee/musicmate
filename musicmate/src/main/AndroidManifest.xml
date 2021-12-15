@@ -43,6 +43,7 @@
         <package android:name="com.foobar2000.foobar2000" />
         <package android:name="com.maxmpz.audioplayer" />
         <package android:name="com.hiby.music" />
+        <package android:name="jp.co.radius.neplayer_lite_an"/>
         <package android:name="com.andrewkhandr.aspect" />
     </queries>
 

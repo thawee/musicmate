@@ -503,7 +503,7 @@ public class AudioFileRepository {
         }
         if(validTitle == 0) {
             // found invalid cue lib file, use yag from audiofile
-            Timber.i("found invalid cue lib file, use yag from audiofile, "+metadata.getPath());
+            Timber.i("found invalid cue lib file, use yag from audio file, %s",metadata.getPath());
             mList = new AudioTag[1];
             mList[0] = metadata;
         }

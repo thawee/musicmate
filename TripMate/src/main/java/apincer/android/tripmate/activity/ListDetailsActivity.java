@@ -582,27 +582,6 @@ public class ListDetailsActivity extends Activity {
 
 	}
 
-	public void webView(View v) {
-
-		if (CD.getWebsite().length() != 0) {
-			try {
-
-				AllConstants.webUrl = CD.getWebsite().trim();
-				Intent next = new Intent(con, DroidWebViewActivity.class);
-				next.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-				startActivity(next);
-				PrintLog.myLog("Website::", AllConstants.cWeb);
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-
-		} else {
-
-			Toast.makeText(ListDetailsActivity.this, "Sorry!No URL Found.",
-					Toast.LENGTH_LONG).show();
-		}
-
-	}
 	private void ShareIntent() {
 		Intent sendIntent = new Intent();
 		sendIntent.setAction(Intent.ACTION_SEND);
@@ -620,7 +599,7 @@ public class ListDetailsActivity extends Activity {
 
 	public void btnHome(View v) {
 
-		Intent next = new Intent(con, MainActivity.class);
+		Intent next = new Intent(con, MapsActivity.class);
 		next.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(next);
 

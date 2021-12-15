@@ -183,7 +183,6 @@ public class FileUtils {
         return filePath.startsWith(dirPath);
     }
 
-
     public static void updateMediaStore(Context context, String path) {
         try {
             Uri contentUri = Uri.fromFile(new File(path).getParentFile());

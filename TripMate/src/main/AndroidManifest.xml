@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <!--
  The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but are recommended.
@@ -34,18 +33,9 @@
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name="apincer.android.tripmate.activity.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/HomeTheme" >
-        </activity>
-        <activity
             android:name="apincer.android.tripmate.activity.SearchResultsActivity"
             android:label="@string/app_name" >
         </activity>
-        <!-- <activity -->
-        <!-- android:name=".activity.ListActivity" -->
-        <!-- android:label="@string/app_name" > -->
-        <!-- </activity> -->
         <activity
             android:name="apincer.android.tripmate.activity.ListDetailsActivity"
             android:label="@string/app_name" >
@@ -54,35 +44,11 @@
             android:name="apincer.android.tripmate.activity.MapViewActivity"
             android:label="@string/app_name">
         </activity>
-<!--
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
--->
-        <meta-data
-            android:name="com.google.android.maps.v2.API_KEY"
-            android:value="@string/google_maps_key" />
 
         <activity
             android:name="apincer.android.tripmate.activity.MapsActivity"
             android:label="@string/title_activity_maps"
             android:theme="@style/MapTheme">
-        </activity>
-        <activity
-            android:name="apincer.android.tripmate.geoloc.GeoLocActivity"
-            android:label="@string/title_activity_maps" >
-        </activity>
-        <activity
-            android:name="apincer.android.tripmate.geoloc.GeoLoccActivity"
-            android:label="@string/title_activity_maps" >
-        </activity>
-        <activity
-            android:name="apincer.android.tripmate.activity.FindUsActivity"
-            android:label="@string/title_activity_main2" >
-        </activity>
-        <activity
-            android:name="apincer.android.tripmate.activity.DroidWebViewActivity"
-            android:label="@string/title_activity_main2" >
         </activity>
         <activity
             android:name="apincer.android.tripmate.activity.DrivingDetailsActivity"

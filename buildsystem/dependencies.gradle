@@ -5,13 +5,13 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.1.0-beta04', //''7.0.3',
+        androidGradlePlugin: '7.1.0-beta05', //''7.0.3',
         minSdk             : 30,
         targetSdk          : 30,
         compileSdk         : 31,
-        buildTools         : '31.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.6.0',  //'1.5.31',
+        kotlin             : '1.6.10',  //'1.5.31',
         buildDate          : "built on " + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.0.1',
@@ -258,7 +258,7 @@ deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019
 //deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
 deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 //https://github.com/anggrayudi/SimpleStorage
-deps.storage = "com.anggrayudi:storage:0.13.0"
+deps.storage = "com.anggrayudi:storage:0.14.0"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
 deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5'

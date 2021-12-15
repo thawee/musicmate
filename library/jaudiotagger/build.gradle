@@ -6,8 +6,6 @@ android {
     defaultConfig {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 2
-        versionName "20190530"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

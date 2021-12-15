@@ -12,10 +12,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-
-
 public class SplashScreenActivity extends Activity {
 	/** Called when the activity is first created. */
 	private final Handler mHandler = new Handler();
@@ -23,19 +19,19 @@ public class SplashScreenActivity extends Activity {
 
 	private Context con;
 	// LogCat tag
-	private static final String TAG = MainActivity.class.getSimpleName();
+	private static final String TAG = SplashScreenActivity.class.getSimpleName();
 
 	private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
 
 	private Location mLastLocation;
 
 	// Google client to interact with Google API
-	private GoogleApiClient mGoogleApiClient;
+	//private GoogleApiClient mGoogleApiClient;
 
 	// boolean flag to toggle periodic location updates
 	private boolean mRequestingLocationUpdates = false;
 
-	private LocationRequest mLocationRequest;
+	//private LocationRequest mLocationRequest;
 
 	// Location updates intervals in sec
 	private static int UPDATE_INTERVAL = 10000; // 10 sec

@@ -28,7 +28,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     private AudioTagRepository tagRepos;
     private SearchCriteria criteria;
-    private Activity activity;
+    //private Activity activity;
     private long totalDuration = 0;
     private long totalSize = 0;
     private View.OnClickListener clickListener;
@@ -38,7 +38,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     private OnModelBuildFinishedListener listener;
 
     public AudioTagController(Activity mediaBrowserActivity, View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
-        this.activity = mediaBrowserActivity;
+       // this.activity = mediaBrowserActivity;
         tagRepos = new AudioTagRepository();
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
@@ -96,6 +96,13 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         }
     }
 
+    public void loadSource() {
+        if(criteria == null) {
+            criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+        }
+        loadSource(criteria);
+    }
+
     public void loadSource(boolean resetSearch) {
         if(criteria!=null && resetSearch) {
             criteria.resetSearch();
@@ -103,8 +110,15 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         loadSource(criteria);
     }
 
-    public void loadSource(@Nullable SearchCriteria criteria) {
+    public void loadSource(String keyword) {
+        if(criteria == null) {
+            criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+        }
+        criteria.setKeyword(keyword);
+        loadSource(criteria);
+    }
 
+    public void loadSource(@Nullable SearchCriteria criteria) {
         if(criteria == null) {
             if(this.criteria==null) {
                 criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);

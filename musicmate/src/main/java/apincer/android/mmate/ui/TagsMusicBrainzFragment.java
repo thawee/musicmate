@@ -485,7 +485,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                                 buildPendingTags(item, title, artist, album, genre, year, singleTrack);
                             }
 
-                            String artworkPath = MediaFileRepository.getDownloadPath("MusicMate/" + tag.getAlbumId()).getAbsolutePath();
+                            String artworkPath = MediaFileRepository.getDownloadPath(getContext(), "MusicMate/" + tag.getAlbumId()).getAbsolutePath();
 
                            // URL retrofit = MusicBrainz.getCoverart(tag);
                             ImageRequest rq = new ImageRequest.Builder(getContext())

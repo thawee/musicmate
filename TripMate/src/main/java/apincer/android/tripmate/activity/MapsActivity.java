@@ -3,25 +3,24 @@ package apincer.android.tripmate.activity;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.InputDevice;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import org.osmdroid.api.IGeoPoint;
-import org.osmdroid.api.IMapController;
-import org.osmdroid.api.IMapView;
 import org.osmdroid.bonuspack.kml.KmlDocument;
 import org.osmdroid.bonuspack.kml.KmlFeature;
 import org.osmdroid.bonuspack.kml.KmlFolder;
@@ -32,15 +31,18 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.FolderOverlay;
-import org.osmdroid.views.overlay.ItemizedOverlay;
-import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+import org.osmdroid.views.overlay.simplefastpoint.LabelledGeoPoint;
+import org.osmdroid.views.overlay.simplefastpoint.SimpleFastPointOverlay;
+import org.osmdroid.views.overlay.simplefastpoint.SimpleFastPointOverlayOptions;
+import org.osmdroid.views.overlay.simplefastpoint.SimplePointTheme;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.tripmate.BuildConfig;
@@ -49,16 +51,19 @@ import apincer.android.tripmate.objectbox.ObjectBox;
 import apincer.android.tripmate.objectbox.Place;
 import io.objectbox.Box;
 
-public class MapsActivity extends AppCompatActivity { //implements LocationListener {
+public class MapsActivity extends AppCompatActivity {
     Box<Place> placeBox = ObjectBox.get().boxFor(Place.class);
-   // GoogleMap googleMap;
     MapView map;
     MyLocationNewOverlay mLocationOverlay;
     ScaleBarOverlay mScaleBarOverlay;
     CompassOverlay mCompassOverlay;
     FolderOverlay mPlaceOverlay;
+    //Map rotation
+    private RotationGestureOverlay mRotationGestureOverlay;
+    private FloatingActionButton fabMyLocation;
+    private TextView placeResultView;
 
-    private CenterOverlay centerOverlay;
+    //private CenterOverlay centerOverlay;
     private Paint circlePaint;
 
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1111;
@@ -81,6 +86,8 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
                     MY_PERMISSIONS_REQUEST_FINE_LOCATION);
         }
 
+        placeResultView = findViewById(R.id.header_results);
+
         Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
@@ -90,10 +97,30 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
         map.setTilesScaledToDpi(true);
         map.setMinZoomLevel(6.5);
         map.setMaxZoomLevel(20.5);
+        map.setUseDataConnection (true);
         map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
+        //Whether to display the map data source
+        map.getOverlayManager (). getTilesOverlay (). setEnabled (true);
+
+        //The map rotates freely
+        mRotationGestureOverlay = new RotationGestureOverlay (map);
+        mRotationGestureOverlay.setEnabled (true);
+        map.getOverlays (). add (this.mRotationGestureOverlay);
+
         // default zoom level
-        IMapController mapController = map.getController();
-        mapController.setZoom(12.0);
+        //IMapController mapController = map.getController();
+       // mapController.setZoom(12.0);
+        //zoom to its bounding box
+        map.addOnFirstLayoutListener(new MapView.OnFirstLayoutListener() {
+
+            @Override
+            public void onFirstLayout(View v, int left, int top, int right, int bottom) {
+                if(map != null && map.getController() != null) {
+                    map.getController().zoomTo(9.5);
+                   // map.zoomToBoundingBox(sfpo.getBoundingBox(), true);
+                }
+            }
+        });
 
         circlePaint = new Paint();
         circlePaint.setARGB(0, 255, 100, 100);
@@ -117,15 +144,15 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
             }
         });
 
-        centerOverlay = new CenterOverlay();
-        map.getOverlays().add(centerOverlay);
+        //centerOverlay = new CenterOverlay();
+      //  map.getOverlays().add(centerOverlay);
 
         //Map Scale bar overlay
         final DisplayMetrics dm = getBaseContext().getResources().getDisplayMetrics();
         mScaleBarOverlay = new ScaleBarOverlay(map);
         mScaleBarOverlay.setCentred(true);
-//play around with these values to get the location on screen in the right place for your application
-        mScaleBarOverlay.setScaleBarOffset(dm.widthPixels / 2, 10);
+        mScaleBarOverlay.setAlignBottom (true);//Display at the bottom
+        mScaleBarOverlay.setScaleBarOffset (dm.widthPixels/3, 160);
         map.getOverlays().add(this.mScaleBarOverlay);
 
         // Compass
@@ -133,58 +160,26 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
         this.mCompassOverlay.enableCompass();
         map.getOverlays().add(this.mCompassOverlay);
 
+        //
+        fabMyLocation = findViewById(R.id.fab_my_location);
+        fabMyLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                map.getController().animateTo(mLocationOverlay.getMyLocation());
+            }
+        });
+
         //display marker from places
         displayPlaces();
 
         map.invalidate();
-
-        // Getting Google Play availability status
-      /*  int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getBaseContext());
-
-        // Showing status
-        if(status!= ConnectionResult.SUCCESS){ // Google Play Services are not available
-
-            int requestCode = 10;
-            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(status, this, requestCode);
-            dialog.show();
-
-        }else { // Google Play Services are available
-
-            // Getting reference to the SupportMapFragment of activity_main.xml
-            SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-
-            // Getting GoogleMap object from the fragment
-            //googleMap = fm.getMap();
-			fm.getMapAsync(this); */
-/*
-            // Enabling MyLocation Layer of Google Map
-            googleMap.setMyLocationEnabled(true);
-
-            // Getting LocationManager object from System Service LOCATION_SERVICE
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-            // Creating a criteria object to retrieve provider
-            Criteria criteria = new Criteria();
-
-            // Getting the name of the best provider
-            String provider = locationManager.getBestProvider(criteria, true);
-
-            // Getting Current Location
-            Location location = locationManager.getLastKnownLocation(provider);
-
-            if(location!=null){
-                onLocationChanged(location);
-            }
-            locationManager.requestLocationUpdates(provider, 20000, 0, this);
-			*/
-       // }
     }
 
     private void displayPlaces() {
         Box<Place> placeBox = ObjectBox.get().boxFor(Place.class);
         List<Place> places = placeBox.getAll();
         mPlaceOverlay = new FolderOverlay();
-        for(Place place: places) {
+      /*  for(Place place: places) {
             if(place.getLatitude()!= 0 && place.getLongitude()!=0) {
                 Marker marker = new Marker(map);
                 marker.setPosition(new GeoPoint(place.getLatitude(), place.getLongitude()));
@@ -199,6 +194,54 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
             public void run() {
                 map.getOverlays().add(mPlaceOverlay);
                 map.invalidate();
+            }
+        }); */
+
+        //in most cases, there will be no problems of displaying >100k points, feel free to try
+        List<IGeoPoint> points = new ArrayList<>();
+        for(Place place: places) {
+            if(place.getLatitude()!= 0 && place.getLongitude()!=0) {
+                points.add(new LabelledGeoPoint(place.getLatitude(), place.getLongitude(),0
+                        , place.getName()));
+            }
+        }
+
+        //wrap them in a theme
+        SimplePointTheme pt = new SimplePointTheme(points, true);
+
+        //create label style
+        Paint textStyle = new Paint();
+        textStyle.setStyle(Paint.Style.FILL);
+        textStyle.setColor(Color.parseColor("#0000ff"));
+        textStyle.setTextAlign(Paint.Align.CENTER);
+        textStyle.setTextSize(24);
+
+        //set some visual options for the overlay
+        //we use here MAXIMUM_OPTIMIZATION algorithm, which works well with >100k points
+        SimpleFastPointOverlayOptions opt = SimpleFastPointOverlayOptions.getDefaultStyle()
+                .setAlgorithm(SimpleFastPointOverlayOptions.RenderingAlgorithm.MAXIMUM_OPTIMIZATION)
+                .setRadius(7).setIsClickable(true).setCellSize(15).setTextStyle(textStyle);
+
+        //create the overlay with the theme
+        final SimpleFastPointOverlay sfpo = new SimpleFastPointOverlay(pt, opt);
+
+        //onClick callback
+        sfpo.setOnClickListener(new SimpleFastPointOverlay.OnClickListener() {
+            @Override
+            public void onClick(SimpleFastPointOverlay.PointAdapter points, Integer point) {
+                Toast.makeText(map.getContext()
+                        , "You clicked " + ((LabelledGeoPoint) points.get(point)).getLabel()
+                        , Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //add overlay
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                map.getOverlays().add(sfpo);
+                map.invalidate();
+                placeResultView.setText(points.size()+" places");
             }
         });
     }
@@ -226,10 +269,6 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
     @Override
     public void onResume() {
         super.onResume();
-        //this will refresh the osmdroid configuration on resuming.
-        //if you make changes to the configuration, use
-        //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        //Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
         map.onResume(); //needed for compass, my location overlays, v6.0.0 and up
         mLocationOverlay.enableMyLocation();
         mLocationOverlay.enableFollowLocation();
@@ -238,88 +277,10 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
     @Override
     public void onPause() {
         super.onPause();
-        //this will refresh the osmdroid configuration on resuming.
-        //if you make changes to the configuration, use
-        //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        //Configuration.getInstance().save(this, prefs);
         map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
         mLocationOverlay.disableMyLocation();
         mLocationOverlay.disableFollowLocation();
     }
-
-	/*
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        this.googleMap = googleMap;
-		// Enabling MyLocation Layer of Google Map
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-
-            googleMap.setMyLocationEnabled(true);
-
-            // Getting LocationManager object from System Service LOCATION_SERVICE
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-            // Creating a criteria object to retrieve provider
-            Criteria criteria = new Criteria();
-
-            // Getting the name of the best provider
-            String provider = locationManager.getBestProvider(criteria, true);
-
-            // Getting Current Location
-            Location location = locationManager.getLastKnownLocation(provider);
-
-            if (location != null) {
-                onLocationChanged(location);
-            }
-            locationManager.requestLocationUpdates(provider, 20000, 0, this);
-        }
-    } */
-
-    /*
-    @Override
-    public void onLocationChanged(Location location) {
-
-        // Getting latitude of the current location
-        double latitude = location.getLatitude();
-
-        // Getting longitude of the current location
-        double longitude = location.getLongitude();
-
-        IMapController mapController = map.getController();
-       // mapController.setZoom(9.5);
-        GeoPoint startPoint = new GeoPoint(latitude, longitude);
-        mapController.setCenter(startPoint);
-       // map.setExpectedCenter(startPoint); */
-
-        /*
-        // Creating a LatLng object for the current location
-        LatLng latLng = new LatLng(latitude, longitude);
-
-        // Showing the current location in Google Map
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-//        googleMap.addMarker(new MarkerOptions()
-//                .position(latLng)
-//                .title("Golden Gate Bridge")
-//                .snippet("San Francisco")
-//                .icon(BitmapDescriptorFactory
-//                        .fromResource(R.drawable.mappin)));
-        // Zoom in the Google Map
-        googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-*/
-
-        // Setting latitude and longitude in the TextView tv_location
-
-
-   // }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.testmenu, menu);
-//        return true;
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -345,7 +306,7 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
             case R.id.id_list_places:
                 // goto List
                 final Intent intent = new Intent(MapsActivity.this,
-                        MainActivity.class);
+                        ListActivity.class);
 
                 startActivity(intent);
 
@@ -397,32 +358,6 @@ public class MapsActivity extends AppCompatActivity { //implements LocationListe
                 place.setType(feature.mStyle);
                 placeBox.put(place);
             }
-        }
-    }
-
-    private class CenterOverlay extends ItemizedOverlay<OverlayItem> {
-
-        public CenterOverlay() {
-            super(ContextCompat.getDrawable(getBaseContext(), R.drawable.actionbar_bg));
-        }
-
-        public void update() {
-            populate();
-        }
-
-        @Override
-        protected OverlayItem createItem(int i) {
-            return new OverlayItem(null, null, map.getMapCenter());
-        }
-
-        @Override
-        public int size() {
-            return 1;
-        }
-
-        @Override
-        public boolean onSnapToItem(int x, int y, Point snapPoint, IMapView mapView) {
-            return false;
         }
     }
 }

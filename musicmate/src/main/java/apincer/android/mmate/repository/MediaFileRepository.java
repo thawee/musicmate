@@ -1,15 +1,15 @@
 package apincer.android.mmate.repository;
 
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Environment;
-import android.os.ParcelFileDescriptor;
 
 import androidx.documentfile.provider.DocumentFile;
 
+import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
+import com.anggrayudi.storage.file.DocumentFileUtils;
+import com.anggrayudi.storage.media.MediaStoreCompat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -22,18 +22,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 
-import apincer.android.mmate.fs.DocumentFileUtils;
 import timber.log.Timber;
 
 public class MediaFileRepository {
-    private static MediaFileRepository INSTANCE;
 
     private Context mContext;
 
     MediaFileRepository(Context context) {
         super();
         this.mContext = context;
-       // INSTANCE = this;
     }
 
     private Context getContext() {
@@ -44,27 +41,27 @@ public class MediaFileRepository {
      * file manipulations
      */
     public boolean copyFile(final File source, final File target) {
-        InputStream inStream = null;
+        FileInputStream inStream = null;
         OutputStream outStream = null;
         FileChannel inChannel = null;
         FileChannel outChannel = null;
         try {
-            inStream = DocumentFileUtils.getInputStream(getContext(), source); //new FileInputStream(source);
-
-            if(inStream == null) return false;
+            inStream = new FileInputStream(source);
 
             // First try the normal way
-            if (isWritable(target)) {
+            try {
+           // if(target.canWrite()) {
                 // standard way
                 outStream = new FileOutputStream(target);
-                inChannel = DocumentFileUtils.getFileChannel(getContext(), source);  //inStream.getChannel();
+                inChannel = inStream.getChannel();
                 outChannel = ((FileOutputStream) outStream).getChannel();
                 inChannel.transferTo(0, inChannel.size(), outChannel);
-            } else {
+            }catch(Exception ex) {
+                Timber.d("Trying copy by documentfile");
+           // } else {
                 // Storage Access Framework
-                DocumentFile documentFile = DocumentFileUtils.getDocumentFile(target,false,getContext());
-
-                outStream = DocumentFileUtils.getOutputStream(getContext(), documentFile);
+                DocumentFile targetDoc = DocumentFileCompat.fromFile(getContext(), target);
+                outStream = DocumentFileUtils.openOutputStream(targetDoc, getContext());
                 if (outStream != null) {
                     // Both for SAF and for Kitkat, write to output stream.
                     byte[] buffer = new byte[16384]; // MAGIC_NUMBER
@@ -75,23 +72,6 @@ public class MediaFileRepository {
                 }else {
                     return false;
                 }
-                /*
-                Uri documentUri = documentFile.getUri();
-
-                // open stream
-                ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(documentUri, "w");
-                if (pfd != null) {
-                    outStream = new FileOutputStream(pfd.getFileDescriptor());
-                    if (outStream != null) {
-                        // Both for SAF and for Kitkat, write to output stream.
-                        byte[] buffer = new byte[16384]; // MAGIC_NUMBER
-                        int bytesRead;
-                        while ((bytesRead = inStream.read(buffer)) != -1) {
-                            outStream.write(buffer, 0, bytesRead);
-                        }
-                    }
-                    pfd.close();
-                } */
             }
         } catch (Exception e) {
             Timber.e(e,"Error when copying file from " + source.getAbsolutePath() + " to " + target.getAbsolutePath());
@@ -125,6 +105,7 @@ public class MediaFileRepository {
         }
     }
 
+    /*
     public boolean copy(final DocumentFile source, final File target) {
         InputStream inStream = null;
         OutputStream outStream = null;
@@ -134,7 +115,8 @@ public class MediaFileRepository {
             inStream = DocumentFileUtils.getInputStream(getContext(), source); //new FileInputStream(source);
 
             // First try the normal way
-            if (isWritable(target)) {
+            //if (isWritable(target)) {
+            if (target.canWrite()) {
                 // standard way
                 outStream = new FileOutputStream(target);
                 inChannel = DocumentFileUtils.getFileChannel(getContext(), source);  //inStream.getChannel();
@@ -170,7 +152,7 @@ public class MediaFileRepository {
             closeSilently(outChannel);
         }
         return true;
-    }
+    } */
 
     // Copy an InputStream to a File.
     public void copy(InputStream in, File file) {
@@ -232,7 +214,8 @@ public class MediaFileRepository {
         File newDir  = newFile.getParentFile();
         if(!newDir.exists()) {
             // create new directory
-            mkdirs(newDir);
+            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(getContext(), newDir.getAbsolutePath());
+            //mkdirs(newDir);
         }
 
         if(copyFile(file, newFile)) {
@@ -264,13 +247,8 @@ public class MediaFileRepository {
 
         // Try with Storage Access Framework.
         Timber.i( "start deleting DocumentFile");
-        DocumentFile documentFile = DocumentFileUtils.getDocumentFile(file,false,getContext());
-        if(documentFile!=null && documentFile.exists()) {
-            documentFile.delete();
-        }
-
-        Timber.i("check file is existed");
-        return !file.exists();
+        DocumentFile docFile = DocumentFileCompat.fromFile(getContext(), file);
+        return DocumentFileUtils.forceDelete(docFile,getContext());
     }
 
     /*
@@ -294,7 +272,8 @@ public class MediaFileRepository {
         }else return ext.equalsIgnoreCase("iso");
     } */
 
-    @Deprecated
+
+    /*
     public boolean mkdirs(File file) {
         if(file==null)
             return false;
@@ -304,12 +283,14 @@ public class MediaFileRepository {
         }
 
         // Try the normal way
-        if(!file.mkdirs()) {
+        return file.mkdirs(); */
+       /* if(!file.mkdirs()) {
+            com.anggrayudi.storage.file.DocumentFileUtils.m
             return DocumentFileUtils.mkdirs(getContext(), file);
         }else {
             return true;
-        }
-    }
+        } */
+    //}
 
     @Deprecated
     /**
@@ -319,8 +300,10 @@ public class MediaFileRepository {
      * @return true if the file is writable.
      */
     public static boolean isWritable(final File file) {
-        if (file == null)
+        if (file == null) {
             return false;
+        }
+
         boolean isExisting = file.exists();
 
         try {
@@ -378,8 +361,8 @@ public class MediaFileRepository {
     }
 
 
-    public static File getDownloadPath(String path) {
-        File download = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+    public static File getDownloadPath(Context context, String path) {
+        File download = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return new File(download, path);
     }
 /*

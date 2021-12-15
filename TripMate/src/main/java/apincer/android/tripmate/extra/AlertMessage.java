@@ -26,6 +26,7 @@ public class AlertMessage {
 		aBuilder.show();
 	}
 
+	/*
 	public static void showProgress(final Context c,
 			ProgressDialog progressDialog) {
 		if (progressDialog == null) {
@@ -45,5 +46,5 @@ public class AlertMessage {
 			progressDialog.dismiss();
 
 		}
-	}
+	} */
 }

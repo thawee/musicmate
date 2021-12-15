@@ -413,7 +413,7 @@ public class ListActivity extends Activity{
 
 	public void btnHome(View v) {
 
-		Intent next = new Intent(con, MainActivity.class);
+		Intent next = new Intent(con, MapsActivity.class);
 		next.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(next);
 

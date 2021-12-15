@@ -9,8 +9,8 @@ android {
         applicationId "apincer.android.tripmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "3.0.0"
        // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -46,7 +46,7 @@ dependencies {
     annotationProcessor deps.androidx.room_compiler
 
     implementation deps.google.material
-    implementation deps.google.android_maps_utils
+    //implementation deps.google.android_maps_utils
 
     implementation deps.timber
 
@@ -62,8 +62,8 @@ dependencies {
    // implementation 'com.google.maps.android:android-maps-utils:0.5'
 //    implementation 'com.airbnb.android:airmapview:1.8.0'
 //    implementation 'com.github.jd-alexander:library:1.1.0'
-	implementation 'com.google.android.gms:play-services-base:16.0.1'
-	implementation 'com.google.android.gms:play-services-location:16.0.0'
+	//implementation 'com.google.android.gms:play-services-base:16.0.1'
+	//implementation 'com.google.android.gms:play-services-location:16.0.0'
  //   implementation 'com.google.android.gms:play-services:16.0.1'
 
 //    implementation 'com.google.firebase:firebase-core:16.0.3'
@@ -85,21 +85,21 @@ dependencies {
 	implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
 
    // implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.google.android.gms:play-services-maps:16.0.0'
+   // implementation 'com.google.android.gms:play-services-maps:16.0.0'
     //implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 //    implementation 'com.google.firebase:firebase-database:11.8.0'
-    implementation 'com.google.android.gms:play-services-places:16.0.0'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+   // implementation 'com.google.android.gms:play-services-places:16.0.0'
+  //  testImplementation 'junit:junit:4.12'
+  //  androidTestImplementation 'com.android.support.test:runner:1.0.2'
+ //   androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 //    implementation 'com.google.firebase:firebase-firestore:17.0.1'
 //    implementation 'com.google.android.gms:play-services-auth:16.0.0'
 //    implementation 'com.firebaseui:firebase-ui-auth:4.0.1'
 //    implementation 'com.firebaseui:firebase-ui-firestore:4.0.1'
 //    implementation 'com.android.volley:volley:1.0.0'
     implementation project(':library:library')
-    implementation project(':library:slideDateTimePicker')
-	implementation project(':library:placesAPI')
+    //implementation project(':library:slideDateTimePicker')
+	//implementation project(':library:placesAPI')
 }
 
 /*  at buttom of file as documents from google */
