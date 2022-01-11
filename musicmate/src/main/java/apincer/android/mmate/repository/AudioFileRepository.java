@@ -68,6 +68,8 @@ public class AudioFileRepository {
     private final Context context;
     private final MediaFileRepository fileRepos;
     private final AudioTagRepository tagRepos;
+    private static String STORAGE_PRIMARY = StorageId.PRIMARY;
+    private static String STORAGE_SECONDARY = StorageId.PRIMARY;
 
     public static final String ACTION = "com.apincer.mmate.provider.MediaItemProvider";
 
@@ -79,8 +81,19 @@ public class AudioFileRepository {
         super();
         this.context = context;
         this.fileRepos = new MediaFileRepository(context);
-        this.tagRepos = new AudioTagRepository();
+        this.tagRepos = AudioTagRepository.getInstance(); //new AudioTagRepository();
         INSTANCE = this;
+        init();
+    }
+
+    private void init() {
+        List<String> sids = DocumentFileCompat.getStorageIds(getContext());
+        for(String sid: sids) {
+            if(!sid.equals(STORAGE_PRIMARY)) {
+                STORAGE_SECONDARY=sid;
+                break;
+            }
+        }
     }
 
     public static AudioFileRepository getInstance(Context context) {
@@ -369,7 +382,7 @@ public class AudioFileRepository {
             return false;
         }
 
-        item.setManaged(StringUtils.compare(item.getPath(),buildMatePath(item)));
+        item.setManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
         File file = new File(item.getPath());
         setupTagOptionsForWriting();
         AudioFile audioFile = buildAudioFile(file.getAbsolutePath(),"rw");
@@ -413,7 +426,7 @@ public class AudioFileRepository {
                 if (metadataList != null && metadataList.length > 0) {
                     for (AudioTag mdata : metadataList) {
                         if(mdata != null) {
-                            String matePath = buildMatePath(mdata);
+                            String matePath = buildCollectionPath(mdata);
                             mdata.setManaged(StringUtils.equals(matePath, mdata.getPath()));
                             tagRepos.saveTag(mdata);
                         }
@@ -818,7 +831,168 @@ public class AudioFileRepository {
         return  encType.toUpperCase();
     }
 
+    public String buildCollectionPath(@NotNull AudioTag metadata) {
+        // hierarchy directory
+        // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc)
+        // 2. hires, lossless, mqa, etc
+        // 3. artist|albumArtist
+        // 4. album
+        // 5. file name <track no>-<artist>-<title>
+        // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
+        // /format/<album|albumartist|artist>/<track no> <artist>-<title>
+        final String ReservedChars = "?|\\*<\":>[]~#%^@.";
+        try {
+            String musicPath ="Music/";
+            String storageId = getStorageIdFor(metadata);
+            String ext = FileUtils.getExtension(metadata.getPath());
+            StringBuffer filename = new StringBuffer(musicPath);
+
+            if(!StringUtils.isEmpty(metadata.getGrouping())) {
+                filename.append(StringUtils.formatTitle(metadata.getGrouping())).append(File.separator);
+            }
+
+            if(AudioTagUtils.isDSD(metadata)) {
+                filename.append(Constants.MEDIA_PATH_DSD);
+            }else if (metadata.isMQA()) {
+                filename.append(Constants.MEDIA_PATH_MQA);
+            }else if (AudioTagUtils.isPCMHiResMaster(metadata)) {
+                filename.append(Constants.MEDIA_PATH_HRMS);
+            }else if (AudioTagUtils.isPCMHiResLossless(metadata)) {
+                filename.append(Constants.MEDIA_PATH_HR);
+            }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
+                filename.append(Constants.MEDIA_PATH_ALAC);
+            }else if (Constants.MEDIA_ENC_FLAC.equals(metadata.getAudioEncoding())) {
+                filename.append(Constants.MEDIA_PATH_FLAC);
+            }else if (Constants.MEDIA_ENC_WAVE.equals(metadata.getAudioEncoding())) {
+                filename.append(Constants.MEDIA_PATH_WAVE);
+            }else if (Constants.MEDIA_ENC_AIFF.equals(metadata.getAudioEncoding())) {
+                filename.append(Constants.MEDIA_PATH_AIFF);
+            }else if (Constants.MEDIA_ENC_AAC.equals(metadata.getAudioEncoding())) {
+                filename.append(Constants.MEDIA_PATH_ACC);
+            }else if (Constants.MEDIA_ENC_MP3.equals(metadata.getAudioEncoding())) {
+                filename.append(Constants.MEDIA_PATH_MP3);
+            }
+            filename.append(File.separator);
+
+            // albumArtist or artist
+
+            String artist = StringUtils.trimTitle(metadata.getArtist());
+            String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
+
+            String pathArtist = getAlbumArtistOrArtist(artist, albumArtist);
+
+            if(StringUtils.isEmpty(pathArtist)) {
+                pathArtist = StringUtils.UNKNOWN_ARTIST;
+            }
+            if(!StringUtils.isEmpty(pathArtist)) {
+                filename.append(StringUtils.formatTitle(pathArtist)).append(File.separator);
+            }
+
+            // album
+            String album = StringUtils.trimTitle(metadata.getAlbum());
+            if(!StringUtils.isEmpty(album)) {
+                if(!album.equalsIgnoreCase(albumArtist)) {
+                    filename.append(StringUtils.formatTitle(album)).append(File.separator);
+                }
+            }
+
+            // file name
+            String title = StringUtils.trimTitle(metadata.getTitle());
+            if(!metadata.isCueSheet()) {
+                // track
+                boolean hasTrackOrArtist = false;
+                String track = StringUtils.trimToEmpty(metadata.getTrack());
+                if (!StringUtils.isEmpty(track)) {
+                    int indx = track.indexOf("/");
+                    if (indx > 0) {
+                        filename.append(StringUtils.trimToEmpty(track.substring(0, indx)));
+                    } else {
+                        filename.append(StringUtils.trimToEmpty(track));
+                    }
+                    //  filename.append(" - ");
+                    hasTrackOrArtist = true;
+                }
+
+                // artist, if albumartist and arttist != albumartist
+                if(!hasTrackOrArtist) {
+                    if ((!StringUtils.isEmpty(artist)) && !artist.equalsIgnoreCase(albumArtist)) {
+                        // add artist to file name only have albumArtist
+                        filename.append(StringUtils.formatTitle(artist));
+                        //  filename.append(" - ");
+                        hasTrackOrArtist = true;
+                    }
+                }
+
+                // artist
+                if (hasTrackOrArtist) {
+                    filename.append(" - ");
+                }
+
+                // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] -
+
+                // title
+                if (!StringUtils.isEmpty(title)) {
+                    filename.append(StringUtils.formatTitle(title));
+                } else {
+                    filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
+                }
+
+                // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] - [title| file name]
+            }else {
+                // title
+                if (!StringUtils.isEmpty(album)) {
+                    filename.append(StringUtils.formatTitle(album));
+                } else {
+                    filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
+                }
+            }
+
+            String newPath =  filename.toString();
+            for(int i=0;i<ReservedChars.length();i++) {
+                newPath = newPath.replace(String.valueOf(ReservedChars.charAt(i)),"");
+            }
+
+            newPath = newPath+"."+ext;
+            return DocumentFileCompat.buildAbsolutePath(getContext(), storageId, newPath);
+
+            //  return newPath;
+        } catch (Exception e) {
+            Timber.e(e);
+        }
+        return metadata.getPath();
+    }
+
+    private String getStorageIdFor(AudioTag metadata) {
+        // Jazz, Thai, Classical, World
+       // if("Audiophile".equalsIgnoreCase(metadata.getGrouping())) {
+       //     return STORAGE_PRIMARY;
+       // }
+        if("Jazz".equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_PRIMARY;
+        }
+        if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_SECONDARY;
+        }
+        if("Thai".equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_PRIMARY;
+        }
+        if("English".equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_SECONDARY;
+        }
+        if("World".equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_SECONDARY;
+        }
+        return STORAGE_SECONDARY;
+    }
+
+    @Deprecated
     public String buildMatePath(@NotNull AudioTag metadata) {
+        // hierarchy directory
+        // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc)
+        // 2. hires, lossless, mqa, etc
+        // 3. artist|albumArtist
+        // 4. album
+        // 5. file name <track no>-<artist>-<title>
         // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
         // /format/<album|albumartist|artist>/<track no> <artist>-<title>
         final String ReservedChars = "?|\\*<\":>[]~#%^@.";
@@ -863,9 +1037,9 @@ public class AudioFileRepository {
                 filename.append(Constants.MEDIA_PATH_DSD);
             }else if (metadata.isMQA()) {
                 filename.append(Constants.MEDIA_PATH_MQA);
-            }else if (AudioTagUtils.isHiResMaster(metadata)) {
+            }else if (AudioTagUtils.isPCMHiResMaster(metadata)) {
                 filename.append(Constants.MEDIA_PATH_HRMS);
-            }else if (AudioTagUtils.isHiResLossless(metadata)) {
+            }else if (AudioTagUtils.isPCMHiResLossless(metadata)) {
                 filename.append(Constants.MEDIA_PATH_HR);
             }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ALAC);
@@ -1011,20 +1185,11 @@ public class AudioFileRepository {
         if(item == null || item.getPath()==null) {
             return false;
         }
-        String path = item.getPath();
-        if(path.indexOf("#") >0) {
-            path = path.substring(0, path.indexOf("#"));
-        }
-
-        File file = new File(path);
-        if(file.exists() && file.length() ==0) {
-            return false;
-        }
-        return file.exists();
+        return isMediaFileExist(item.getPath());
     }
 
     public static boolean isMediaFileExist(String path) {
-        if(path == null) {
+        if(StringUtils.isEmpty(path)) {
             return false;
         }
         if(path.indexOf("#") >0) {
@@ -1069,7 +1234,7 @@ public class AudioFileRepository {
     }
 
     private boolean importAudioTag(AudioTag tag) {
-            String newPath = buildMatePath(tag);
+            String newPath = buildCollectionPath(tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 return true;
             }
@@ -1095,7 +1260,7 @@ public class AudioFileRepository {
         if(mediaDir==null || (!mediaDir.exists())) return;
 
         if(mediaDir.isDirectory()) {
-            int noneRelatedFileCnt = 0;
+            boolean toClean = true;
             List<File> toDelete = new ArrayList();
             File[] files = mediaDir.listFiles();
             if (files != null && files.length > 0) {
@@ -1104,20 +1269,22 @@ public class AudioFileRepository {
                     if(Constants.RELATED_FILE_TYPES.contains(ext)) {
                         toDelete.add(f);
                     }else {
-                        noneRelatedFileCnt++;
+                        toClean = false;
+                        break;
                     }
                 }
             }
-            if(noneRelatedFileCnt==0) {
+            if(toClean) {
                 // directory is empty or no others media files
                 if(toDelete.size()>0) {
                     for (File file: toDelete) {
                         fileRepos.delete(file);
                     }
                 }
-                fileRepos.delete(mediaDir);
                 // trying delete parent folder
-                cleanMediaDirectory(mediaDir.getParentFile());
+                File parentFolder = mediaDir.getParentFile();
+                fileRepos.delete(mediaDir);
+                cleanMediaDirectory(parentFolder);
             }
         }
      }
@@ -1224,20 +1391,6 @@ public class AudioFileRepository {
         return status;
     }
 
-    @Deprecated
-    public boolean manageMediaItem(AudioTag item) {
-        boolean status = false;
-        try {
-            MusicListeningService.getInstance().playNextSongOnMatched(item);
-            status = importAudioTag(item);
-        }catch(Exception|OutOfMemoryError ex) {
-            Timber.e(ex);
-            status = false;
-        }
-		
-		return status;
-    }
-
     public boolean deleteMediaItem(AudioTag item) {
         boolean status = false;
         try {
@@ -1276,22 +1429,6 @@ public class AudioFileRepository {
         }
 
         return status;
-    }
-
-    @Deprecated
-    public boolean saveMediaItem(AudioTag item, Artwork artwork) {
-        boolean status = false;
-        try {
-            // call new API
-            saveTag(item);
-            //readMetadata(item.getMetadata());
-            saveMediaArtwork(item, artwork);
-            status = true;
-        }catch (Exception|OutOfMemoryError ex) {
-            status = false;
-        }
-		
-		return status;
     }
 
     protected AudioTag[] readMediaTag(String mediaPath) {

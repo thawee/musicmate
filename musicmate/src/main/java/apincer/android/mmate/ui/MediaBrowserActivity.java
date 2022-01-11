@@ -59,6 +59,7 @@ import apincer.android.mmate.epoxy.AudioTagController;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.service.BroadcastData;
 import apincer.android.mmate.service.MusicListeningService;
@@ -68,7 +69,7 @@ import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mmate.utils.ToastUtils;
+import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
@@ -94,13 +95,9 @@ import timber.log.Timber;
 public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
     private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=20; //start scrolling from 5 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
-    private static final int MENU_ID_FORMAT = 888888888;
-    private static final int MENU_ID_GENRE = 777777777;
-    private static final int MENU_ID_GROUPING = 66666666;
     private static final int MENU_ID_QUALITY = 55555555;
     private static final int MENU_ID_HIRES = 55555556;
     private static final int MENU_ID_HIFI = 55555557;
-    private static final int MENU_ID_SAMPLE_RATE = 444444444;
 
     ActivityResultLauncher<Intent> editorLauncher;
 
@@ -132,6 +129,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private AudioTag selectedTag;
     private AudioTag lastPlaying;
     private boolean onSetup = true;
+
+    private SearchCriteria searchCriteria;
+    private boolean backFromEditor;
 
     private void doDeleteMediaItems(List<AudioTag> itemsList) {
         String text = "Delete ";
@@ -265,18 +265,24 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }*/
     }
 
-    private void doStartRefresh() {
-        refreshLayout.autoRefresh();
 
-      ///  refreshLayout.post(() -> {
-           /* MotionEvent event = MotionEvent.obtain(4000, 4000, MotionEvent.ACTION_MOVE, 400, 2000, 0);
-            refreshLayout.onTouchEvent(event);
-            event.setAction(MotionEvent.ACTION_UP);
-            refreshLayout.onTouchEvent(event); */
-           // refreshLayout.
-       ///     mStateView.displayLoadingState();
-         //   refreshLayout.setRefreshing(true);
-      ///  });
+    private void doStartRefresh(SearchCriteria criteria) {
+        if(criteria == null) {
+            searchCriteria = epoxyController.getCriteria();
+        }else {
+            searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+        }
+        refreshLayout.autoRefresh();
+    }
+
+    private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
+        if(type == null) {
+            searchCriteria = epoxyController.getCriteria();
+        }else {
+            searchCriteria = new SearchCriteria(type);
+        }
+        searchCriteria.setKeyword(keyword);
+        refreshLayout.autoRefresh();
     }
 
     private void doStopRefresh() {
@@ -313,12 +319,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         } else {
             stopService(new Intent(getApplicationContext(),MusicListeningService.class));
             mExitSnackbar.dismiss();
-            finish();
+            finishAndRemoveTask();
+            System.exit(0);
         }
     }
 
     protected RecyclerView mRecyclerView;
-   // private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private void initActivityTransitions() {
             Slide transition = new Slide();
@@ -346,7 +352,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }
             }
         }; */
-        setUpNowPoayingView();
+        setUpNowPlayingView();
         setUpPermissionsAndScan();
         setUpHeaderPanel();
         setUpBottomAppBar();
@@ -364,7 +370,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
     }
 
-    private void setUpNowPoayingView() {
+    private void setUpNowPlayingView() {
         nowPlayingView = findViewById(R.id.now_playing_panel);
         nowPlayingView.setVisibility(View.GONE);
     }
@@ -382,7 +388,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     // if retrun criteria, use it otherwise provide null
                     criteria = result.getData().getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
                 }
-                epoxyController.loadSource(criteria);
+                SearchCriteria finalCriteria = criteria;
+                backFromEditor = true;
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                epoxyController.loadSource(finalCriteria);
+                            }
+                        });
+                    }
+                }, 200);
             }
         });
     }
@@ -395,10 +413,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if(!onSetup) {
-                    doStartRefresh();
+                    epoxyController.loadSource(tab.getText().toString());
+                    doStartRefresh(null, tab.getText().toString());
                    // SearchCriteria criteria = epoxyController.getCurrentCriteria();
                    // criteria.setKeyword(tab.getText().toString());
-                    epoxyController.loadSource(tab.getText().toString());
                 }
             }
 
@@ -416,16 +434,31 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void initMediaItemList(Intent startIntent) {
         ScanAudioFileWorker.startScan(getApplicationContext());
-        doStartRefresh();
         SearchCriteria criteria = null;
+
         if (startIntent.getExtras() != null) {
             criteria = startIntent.getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
             String showPlaying = startIntent.getStringExtra(MusicListeningService.FLAG_SHOW_LISTENING);
             if("yes".equalsIgnoreCase(showPlaying)) {
                 selectedTag = startIntent.getParcelableExtra(Constants.KEY_MEDIA_TAG);
+                criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
             }
         }
-        epoxyController.loadSource(criteria);
+        doStartRefresh(criteria);
+        /*
+        SearchCriteria finalCriteria = criteria;
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //doStartRefresh(finalCriteria);
+                        epoxyController.loadSource(finalCriteria);
+                    }
+                });
+            }
+        }, 2000); */
     }
 
     /**
@@ -457,9 +490,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
               //// if(query!= null && query.length()>=2) {
                //    return mLibraryAdapter.searchItems(query);
               // }
-               SearchCriteria criteria = epoxyController.getCurrentCriteria();
+               SearchCriteria criteria = epoxyController.getCriteria();
                criteria.searchFor(query);
-               epoxyController.loadSource(criteria);
+               doStartRefresh(criteria);
+               //epoxyController.loadSource(criteria);
                return false;
            }
 
@@ -476,9 +510,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
            @Override
            public void onClick(View v) {
                String query = String.valueOf(mSearchView.getQuery());
-               SearchCriteria criteria = epoxyController.getCurrentCriteria();
-               criteria.searchFor(query);
-               epoxyController.loadSource(criteria);
+               SearchCriteria criteria = epoxyController.getCriteria();
+               doStartRefresh(criteria);
+               //epoxyController.loadSource(criteria);
            }
        });
 
@@ -515,8 +549,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 mSearchBar.setVisibility(View.GONE);
                 mSearchView.setQuery("", false);
            // }
-            doStartRefresh();
-            epoxyController.loadSource(true);
+            doStartRefresh(null);
+            //epoxyController.loadSource(true);
            // mediaItemViewModel.loadSource(false);
 
            // mSwipeRefreshLayout.setEnabled(true);
@@ -557,7 +591,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(Preferences.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
-            UIUtils.displayStorages(getApplication(),panel);
+            UIUtils.buildStoragesUsed(getApplication(),panel);
             mResideMenu.setLeftHeader(storageView);
         }
         mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
@@ -575,7 +609,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(Preferences.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
-            UIUtils.displayStorages(getApplication(),panel);
+            UIUtils.buildStoragesUsed(getApplication(),panel);
             mResideMenu.setLeftHeader(storageView);
         }
         return mResideMenu.dispatchTouchEvent(ev);
@@ -705,7 +739,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     protected void onResume() {
         super.onResume();
 
-        initMediaItemList(getIntent());
+        if(!backFromEditor) {
+            initMediaItemList(getIntent());
+        }
+        backFromEditor = false;
 
         if(mResideMenu.isOpened()) {
             mResideMenu.closeMenu();
@@ -756,8 +793,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }else if(item.getItemId() == R.id.menu_all_music) {
             doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.MY_SONGS));
+          //  epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.MY_SONGS));
+            doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
 
             return true;
        /* }else if(item.getItemId() == R.id.menu_new_collection) {
@@ -766,55 +803,54 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doStartRefresh();
             epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.MY_SONGS, Constants.TITLE_INCOMING_SONGS));
             return true; */
-        } else if(item.getItemId() == MENU_ID_GROUPING) {
-            doHideSearch();
+      //  } else if(item.getItemId() == MENU_ID_FORMAT) {
+       //     doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.GROUPING, (String)item.getTitle()));
-            return true;
-        } else if(item.getItemId() == MENU_ID_FORMAT) {
-            doHideSearch();
-            //enableSwipeRefresh();
-            doStartRefresh();
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_FORMAT, (String)item.getTitle()));
-            return true;
+
+           // epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_FORMAT, (String)item.getTitle()));
+       //     doStartRefresh(SearchCriteria.TYPE.AUDIO_FORMAT, (String)item.getTitle());
+       //     return true;
         } else if(item.getItemId() == MENU_ID_QUALITY) {
             doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_SQ, (String)item.getTitle()));
+
+           // epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_SQ, (String)item.getTitle()));
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, (String)item.getTitle());
             return true;
         } else if(item.getItemId() == MENU_ID_HIRES) {
             doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
+
             //epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_HIRES, (String)item.getTitle()));
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_HIRES, Constants.TITLE_HR_LOSSLESS));
+          //  epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_HIRES, Constants.TITLE_HR_LOSSLESS));
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_HIRES, Constants.TITLE_HR_LOSSLESS);
             return true;
         } else if(item.getItemId() == MENU_ID_HIFI) {
             doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
+
             //epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_HIFI, (String)item.getTitle()));
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_HIFI, Constants.TITLE_HIFI_LOSSLESS));
+           // epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_HIFI, Constants.TITLE_HIFI_LOSSLESS));
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_HIFI, Constants.TITLE_HIFI_LOSSLESS);
             return true;
-        } else if(item.getItemId() == MENU_ID_SAMPLE_RATE) {
-            doHideSearch();
+       // } else if(item.getItemId() == MENU_ID_SAMPLE_RATE) {
+        //    doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_SAMPLE_RATE, (String)item.getTitle()));
-             return true;
+
+            //epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIO_SAMPLE_RATE, (String)item.getTitle()));
+         //   doStartRefresh(SearchCriteria.TYPE.AUDIO_SAMPLE_RATE, (String)item.getTitle());
+         //    return true;
         /*} else if(item.getItemId() == MENU_ID_CODEC) {
             doHideSearch();
             mediaItemViewModel.loadSource(new SearchCriteria(SearchCriteria.TYPE.SAMPLING_RATE, (String) item.getTitle()));
             mSwipeRefreshLayout.setEnabled(true);
             return true; */
-        } else if (item.getItemId() == MENU_ID_GENRE) {
-            doHideSearch();
+       // } else if (item.getItemId() == MENU_ID_GENRE) {
+        //    doHideSearch();
             //enableSwipeRefresh();
-            doStartRefresh();
-            epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.GENRE, (String) item.getTitle()));
-            return true;
+        //    doStartRefresh(SearchCriteria.TYPE.GENRE, (String) item.getTitle());
+          //  epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.GENRE, (String) item.getTitle()));
+        //    return true;
        /* }else if(item.getItemId() == R.id.menu_similar_songs) {
             doHideSearch();
             //enableSwipeRefresh();
@@ -826,17 +862,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
            // }
 
             return true; */
-        }else if(item.getItemId() == R.id.menu_audiophile) {
+        }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            //enableSwipeRefresh();
-            doStartRefresh();
-           // if(Preferences.isSimilarOnTitleAndArtist(getApplicationContext())) {
-                epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.AUDIOPHILE));
-           // }else {
-           //     epoxyController.loadSource(new SearchCriteria(SearchCriteria.TYPE.SIMILAR_TITLE));
-           // }
-
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, AudioTagRepository.getInstance().getGroupingList(getApplicationContext()).get(0));
             return true;
+        /*}else if(item.getItemId() == R.id.menu_audiophile) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.AUDIOPHILE, null);
+            return true; */
         }else if(item.getItemId() == R.id.menu_settings) {
             Intent myIntent = new Intent(MediaBrowserActivity.this, SettingsActivity.class);
             startActivity(myIntent);
@@ -873,7 +906,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doShowSignalPath() {
-        String text = "";
+       // String text = "";
         MusicListeningService service = MusicListeningService.getInstance();
         AudioTag tag = service.getPlayingSong();
       //  text = "Song "+tag.getTitle() +"; BPS: "+tag.getAudioBitsPerSample() +" & SampleRate: "+tag.getAudioSampleRate();
@@ -1015,49 +1048,21 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void setUpSwipeToRefresh() {
-       /* refreshLayout = findViewById(R.id.ssPullRefresh);
-        refreshLayout.setRepeatMode(SSPullToRefreshLayout.RepeatMode.REPEAT);
-        refreshLayout.setRepeatCount(SSPullToRefreshLayout.RepeatCount.INFINITE);
-        refreshLayout.setOnRefreshListener(new SSPullToRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                epoxyController.loadSource(null);
-            }
-        }); */
-
         refreshLayout = findViewById(R.id.refreshLayout);
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {
-                refreshlayout.finishRefresh(2000/*,false*/);//传入false表示刷新失败
+               // refreshLayout.getLayout().postDelayed(() -> {
+                epoxyController.loadSource(searchCriteria);
+                   // refreshLayout.finishRefresh();
+               // }, 500);
+                //refreshlayout.finishRefresh(2000/*,false*/);//传入false表示刷新失败
             }
         });
-
-       /* refreshLayout.setOnRefreshListener(new LiquidRefreshLayout.OnRefreshListener() {
-            @Override
-            public void completeRefresh() {
-
-            }
-
-            @Override
-            public void refreshing() {
-                epoxyController.loadSource(null);
-            }
-        }); */
-       /* mSwipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        mSwipeRefreshLayout.setDistanceToTriggerSync(390);
-        mSwipeRefreshLayout.setColorSchemeResources(
-                android.R.color.holo_purple, android.R.color.holo_blue_light,
-                android.R.color.holo_green_light, android.R.color.holo_orange_light);
-        mSwipeRefreshLayout.setOnRefreshListener(() -> {
-            // Passing true as parameter we always animate the changes between the old and the new data set
-           // doScanMediaItems();
-            epoxyController.loadSource(null);
-        }); */
     }
 
     protected void setUpRecycleView() {
-        epoxyController = new AudioTagController(this, this, this);
+        epoxyController = new AudioTagController(this, this);
         epoxyController.addModelBuildListener(result -> {
             doStopRefresh();
             updateHeaderPanel();
@@ -1119,7 +1124,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private void updateHeaderPanel() {
         onSetup = true;
         headerTab.removeAllTabs();
-        List<String> titles = epoxyController.getHeaderTitles();
+        List<String> titles = epoxyController.getHeaderTitles(getApplicationContext());
         String headerTitle = epoxyController.getHeaderTitle();
         for(String title: titles) {
             TabLayout.Tab firstTab = headerTab.newTab(); // Create a new Tab names
@@ -1137,19 +1142,22 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         long totalSize = epoxyController.getTotalSize();
         String duration = StringUtils.formatDuration(epoxyController.getTotalDuration(), true);
         SimplifySpanBuild spannable = new SimplifySpanBuild("");
-        SearchCriteria criteria = epoxyController.getCurrentCriteria();
-        if(!StringUtils.isEmpty(criteria.getFilterType())) {
-            String filterType = criteria.getFilterType();
-            spannable.appendMultiClickable(new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> {
-                epoxyController.clearFilter();
-            }).setNormalTextColor(getColor(R.color.grey200)), new SpecialTextUnit("x ["+filterType+"] ").setTextSize(10));
+        if(count >0) {
+            SearchCriteria criteria = epoxyController.getCriteria();
+            if (!StringUtils.isEmpty(criteria.getFilterType())) {
+                String filterType = criteria.getFilterType();
+                spannable.appendMultiClickable(new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> {
+                    epoxyController.clearFilter();
+                }).setNormalTextColor(getColor(R.color.grey200)), new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10));
+            }
+            spannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
+                    .append(new SpecialLabelUnit(StringUtils.ARTIST_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold())
+                    .append(new SpecialLabelUnit(StringUtils.ARTIST_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                    .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
+        }else {
+            spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
         }
-        spannable.append(new SpecialTextUnit(StringUtils.formatSongSize (count)).setTextSize(12).useTextBold())
-                .append(new SpecialLabelUnit(StringUtils.ARTIST_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold())
-                .append(new SpecialLabelUnit(StringUtils.ARTIST_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
-
         headerSubtitle.setText(spannable.build());
 
     }
@@ -1170,13 +1178,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     }
                    // }
                 }else {
-                    ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
+                    ToastHelper.showBroadcastData(MediaBrowserActivity.this, broadcastData);
                     if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
                         // refresh tag
                         epoxyController.notifyModelChanged(broadcastData.getTagInfo());
                     }
                     // re-load library
-                    epoxyController.loadSource();
+                    new Timer().schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            // this code will be executed after 1 seconds
+                            epoxyController.loadSource();
+                        }
+                    }, 2000);
                 }
             }
 /*
@@ -1251,6 +1265,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(),tag));
         TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
         subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
+        ImageView hires = nowPlayingView.findViewById(R.id.hires);
+        ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
+        ImageView player = nowPlayingView.findViewById(R.id.player);
+        ImageView output = nowPlayingView.findViewById(R.id.output);
+        hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag)?View.VISIBLE:View.GONE);
+        mqa.setVisibility(tag.isMQA()?View.VISIBLE:View.GONE);
+        player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
+        AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
+            @Override
+            public void onReady(AudioOutputHelper.Device device) {
+                output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+            }
+        });
         ImageView cover = nowPlayingView.findViewById(R.id.coverart);
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
@@ -1262,14 +1289,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .build();
         imageLoader.enqueue(request);
         nowPlayingView.setVisibility(View.VISIBLE);
-       /* AlertDialog dlg = new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.PlayingDialogTheme)
-                //.setIcon(R.drawable.ic_play_arrow_black_24dp)
-               // .setTitle("Playing")
-                //.setMessage(tag.getTitle()+" by "+tag.getArtist())
-                .setView(view)
-                .setCancelable(true)
-                .setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent))
-                .show(); */
         final Timer t = new Timer();
         t.schedule(new TimerTask() {
             public void run() {
@@ -1285,34 +1304,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
         }, 2500); // after 2 second (or 2000 miliseconds), the task will be active.
     }
-
-    // Define the callback for what to do when data is received
-    /*
-    private final BroadcastReceiver playingReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, RESULT_CANCELED);
-            if (resultCode == RESULT_OK && epoxyController!=null) {
-                AudioTag tag = intent.getParcelableExtra(Constants.KEY_MEDIA_TAG);
-                AudioTag prvTag = intent.getParcelableExtra(Constants.KEY_MEDIA_PRV_TAG);
-                epoxyController.notifyModelChanged(tag);
-                epoxyController.notifyModelChanged(prvTag);
-                if(tag!=null) {
-                    selectedTag = null; //tag; // reset auto scroll to song
-                    fabPlayingAction.setVisibility(View.VISIBLE);
-                    ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-                    ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                            .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                            .crossfade(false)
-                            .allowHardware(false)
-                            .transformations(new CircleCropTransformation())
-                            .target(fabPlayingAction)
-                            .build();
-                    imageLoader.enqueue(request);
-                }
-            }
-        }
-    }; */
 
     @Override
     public void onClick(View view) {

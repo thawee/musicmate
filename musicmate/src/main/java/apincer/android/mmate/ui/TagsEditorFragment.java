@@ -44,7 +44,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
-import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.apache.commons.io.IOUtils;
@@ -87,7 +86,7 @@ public class TagsEditorFragment extends Fragment {
     private List<AudioTag> mediaItems;
     private ViewHolder viewHolder;
     private FloatingActionButton fabSaveAction;
-    private Snackbar mSnackbar;
+    //private Snackbar mSnackbar;
     private File pendingCoverartFile;
     private FloatingActionButton fabMainAction;
     private ActivityResultLauncher startForResultFromGallery;
@@ -327,6 +326,8 @@ public class TagsEditorFragment extends Fragment {
 
         viewHolder.resetState();
         toggleSaveFabAction();
+        mainActivity.buildDisplayTag(false);
+        mainActivity.updateTitlePanel();
         UIUtils.hideKeyboard(getActivity());
     }
 
@@ -399,7 +400,8 @@ public class TagsEditorFragment extends Fragment {
         private PowerSpinnerView mMediaSourceView;
         private List<IconSpinnerItem> mMediaSourceItems;
         private View mEditorPanel;
-        private TextView mPathView;
+        private TextView mPathNameView;
+        private TextView mFileNameView;
 
         private ViewTextWatcher mTextWatcher;
         protected boolean tagChanged;
@@ -409,28 +411,22 @@ public class TagsEditorFragment extends Fragment {
             tagChanged = false;
             coverartChanged = false;
             mTextWatcher =new ViewTextWatcher();
-            AudioTagRepository repository = new AudioTagRepository();
+            AudioTagRepository repository = AudioTagRepository.getInstance();  //new AudioTagRepository();
 
             mEditorCardView = view.findViewById(R.id.editorCardView);
             mEditorPanel = view.findViewById(R.id.editorPanel);
 
             // music mate info
             mRatingBar = view.findViewById(R.id.media_rating);
-            mRatingBar.setOnRatingChangeListener(new MaterialRatingBar.OnRatingChangeListener() {
-                @Override
-                public void onRatingChanged(MaterialRatingBar ratingBar, float rating) {
-                    tagChanged = true;
-                    toggleSaveFabAction();
-                }
+            mRatingBar.setOnRatingChangeListener((ratingBar, rating) -> {
+                tagChanged = true;
+                toggleSaveFabAction();
             });
 
             mAudiophileButton = view.findViewById(R.id.media_audiophile);
-            mAudiophileButton.setOnToggleChanged(new TriStateToggleButton.OnToggleChanged() {
-                @Override
-                public void onToggle(TriStateToggleButton.ToggleStatus toggleStatus, boolean booleanToggleStatus, int toggleIntValue) {
-                    tagChanged = true;
-                    toggleSaveFabAction();
-                }
+            mAudiophileButton.setOnToggleChanged((toggleStatus, booleanToggleStatus, toggleIntValue) -> {
+                tagChanged = true;
+                toggleSaveFabAction();
             });
 
             mMediaSourceView = view.findViewById(R.id.media_source);
@@ -450,15 +446,13 @@ public class TagsEditorFragment extends Fragment {
             mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
             adapter.setItems(mMediaSourceItems);
             mMediaSourceView.setSpinnerAdapter(adapter);
-            mMediaSourceView.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener<Object>() {
-                @Override
-                public void onItemSelected(int i, @Nullable Object o, int i1, Object t1) {
-                    tagChanged = true;
-                    toggleSaveFabAction();
-                }
+            mMediaSourceView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {
+                tagChanged = true;
+                toggleSaveFabAction();
             });
 
-            mPathView = view.findViewById(R.id.editor_btns);
+            mPathNameView = view.findViewById(R.id.editor_pathname);
+            mFileNameView = view.findViewById(R.id.editor_filename);
 
             // title
             mTitleView = setupTextEdit(view, R.id.tag_title);
@@ -471,19 +465,16 @@ public class TagsEditorFragment extends Fragment {
             //characters the user has to type in order to display the drop down hint.
             mArtistView.setThreshold(2);
             mArtistView.setAdapter(arrayAdapter);
-            mArtistView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
+            mArtistView.setOnTouchListener((v, event) -> {
 
-                    if(event.getAction() == MotionEvent.ACTION_UP) {
-                        if(event.getRawX() >= (mArtistView.getRight() - mArtistView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
-                            // your action here
-                            mArtistView.showDropDown();
-                            return true;
-                        }
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getRawX() >= (mArtistView.getRight() - mArtistView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        mArtistView.showDropDown();
+                        return true;
                     }
-                    return false;
                 }
+                return false;
             });
 
             // album
@@ -500,32 +491,17 @@ public class TagsEditorFragment extends Fragment {
             //characters the user has to type in order to display the drop down hint.
             mAlbumArtistView.setThreshold(2);
             mAlbumArtistView.setAdapter(arrayAdapter);
-            mAlbumArtistView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
+            mAlbumArtistView.setOnTouchListener((v, event) -> {
 
-                    if(event.getAction() == MotionEvent.ACTION_UP) {
-                        if(event.getRawX() >= (mAlbumArtistView.getRight() - mAlbumArtistView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
-                            // your action here
-                            mAlbumArtistView.showDropDown();
-                            return true;
-                        }
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getRawX() >= (mAlbumArtistView.getRight() - mAlbumArtistView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        mAlbumArtistView.showDropDown();
+                        return true;
                     }
-                    return false;
                 }
+                return false;
             });
-          /*  adapter = new IconSpinnerAdapter(mAlbumArtistView);
-            List<IconSpinnerItem> items = new ArrayList<>();
-            List<String> list = repository.getAlbumArtistList();
-            for(String txt: list) {
-                items.add(new IconSpinnerItem(txt,null));
-            }
-            adapter.setItems(items);
-            mAlbumArtistView.setSpinnerAdapter(adapter); */
-           // ArrayAdapter<String> albumArtistAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.select_dialog_item,repository.getAlbumArtistList().toArray(new String[0]));
-           // mAlbumArtistView.setThreshold(2);//will start working from second character
-           // mAlbumArtistView.setSpinnerAdapter(albumArtistAdapter); //setting the adapter data into the AutoCompleteTextView
-
             // year
             mYearView = setupTextEdit(view, R.id.tag_year);
 
@@ -537,103 +513,50 @@ public class TagsEditorFragment extends Fragment {
 
             // genre
             mGenreView = setupAutoCompleteTextView(view,R.id.tag_genre);
-            list = repository.getGenreList();
+            list = repository.getGenreList(getContext());
             arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
-            mGenreView.setThreshold(1);
-            mGenreView.setAdapter(arrayAdapter);
-            mGenreView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
+           // mGenreView.setThreshold(1);
 
-                    if(event.getAction() == MotionEvent.ACTION_UP) {
-                        if(event.getRawX() >= (mGenreView.getRight() - mGenreView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
-                            // your action here
-                            mGenreView.showDropDown();
-                            return true;
-                        }
+            mGenreView.setAdapter(arrayAdapter);
+            mGenreView.setOnTouchListener((v, event) -> {
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getRawX() >= (mGenreView.getRight() - mGenreView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        mGenreView.showDropDown();
+                        //return true;
                     }
-                    return false;
                 }
+                return false;
             });
 
             // grouping
             mGroupingView = setupAutoCompleteTextView(view, R.id.tag_group);
-            list = repository.getGroupingList();
+            list = repository.getGroupingList(getContext());
             arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
             mGroupingView.setThreshold(1);
             mGroupingView.setAdapter(arrayAdapter);
-            mGroupingView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
+            mGroupingView.setOnTouchListener((v, event) -> {
 
-                    if(event.getAction() == MotionEvent.ACTION_UP) {
-                        if(event.getRawX() >= (mGroupingView.getRight() - mGroupingView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
-                            // your action here
-                            mGroupingView.showDropDown();
-                            return true;
-                        }
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getRawX() >= (mGroupingView.getRight() - mGroupingView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        mGroupingView.showDropDown();
+                        return true;
                     }
-                    return false;
                 }
+                return false;
             });
-            /*
-            mGroupingView = setupPowerSpinner(view, R.id.tag_group);
-            adapter = new IconSpinnerAdapter(mGroupingView);
-            items = new ArrayList<>();
-            list = repository.getGroupingList();
-            for(String txt: list) {
-                items.add(new IconSpinnerItem(txt,null));
-            }
-            adapter.setItems(items);
-            mGroupingView.setSpinnerAdapter(adapter);
-             */
-			//ArrayAdapter<String> groupingAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.select_dialog_item,repository.getGroupingList().toArray(new String[0]));
-           // mGroupingView.setThreshold(2);//will start working from second character
-           // mGroupingView.setAdapter(groupingAdapter); //setting the adapter data into the AutoCompleteTextView
 
-            /*
-            mSourceView = view.findViewById(R.id.source);
-            mSourceView.setItem(Constants.getSourceList());
-            mSourceView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        tagChanged = true;
-                        toggleSaveFabAction();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-
-                }
-            }); */
-            //ArrayAdapter<String> sourceAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.select_dialog_item,repository.getSourceList().toArray(new String[0]));
-          //  mSourceView.setThreshold(1);
-            //mSourceView.setAdapter(sourceAdapter);
 
             //composer
             mComposerView = setupTextEdit(view, R.id.tag_composer);
 
             // comment
             mCommentView = setupTextEdit(view, R.id.tag_comment);
-
-           // mMenuBar = view.findViewById(R.id.menu_bar);
-           // mMenuWebSearchLayout = view.findViewById(R.id.menu_websearch_doubleLift);
-           // mMenuAnalyserLayout = view.findViewById(R.id.menu_analyser_doubleLift);
-           // mMenuDeleteLayout = view.findViewById(R.id.menu_delete_doubleLift);
-           // mMenuManageLayout = view.findViewById(R.id.menu_move_doubleLift);
-          //  mMenuWebSearch = view.findViewById(R.id.menu_websearch);
-          //  mMenuAnalyser = view.findViewById(R.id.menu_analyser);
-          //  mMenuDelete = view.findViewById(R.id.menu_delete);
-          //  mMenuManage = view.findViewById(R.id.menu_move);
-
-          //  mToolBar = view.findViewById(R.id.tools_bar);
-          //  mToolReadTag = view.findViewById(R.id.btn_read_tag);
-          //  mToolFormatTag = view.findViewById(R.id.btn_format_tag);
-          //  mToolPickCoverArt = view.findViewById(R.id.btn_pick_cover_art);
         }
 
         private EditText setupTextEdit(View view, int viewId) {
@@ -653,12 +576,6 @@ public class TagsEditorFragment extends Fragment {
             textInput.addTextChangedListener(mTextWatcher);
             return textInput;
         }
-/*
-        private MaterialEditText setupTextInputLayout(View view, int viewId) {
-            MaterialEditText textInput = view.findViewById(viewId);
-            textInput.addTextChangedListener(mTextWatcher);
-            return textInput;
-        } */
 
         void resetState() {
             tagChanged = false;
@@ -676,7 +593,9 @@ public class TagsEditorFragment extends Fragment {
                 mAudiophileButton.setToggleStatus(TriStateToggleButton.ToggleStatus.mid);
             }
             mRatingBar.setRating(mediaTag.getRating());
-            mPathView.setText(mediaTag.getPath());
+            File file = new File(mediaTag.getPath());
+            mPathNameView.setText(file.getParentFile().getAbsolutePath());
+            mFileNameView.setText(file.getName());
 
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
@@ -860,6 +779,7 @@ public class TagsEditorFragment extends Fragment {
         TextView trackLabel = cview.findViewById(R.id.track_label);
         TextView sepLabel = cview.findViewById(R.id.btn_add_sep);
         TextView dashLabel = cview.findViewById(R.id.btn_add_dash);
+        TextView uscLabel = cview.findViewById(R.id.btn_add_uscore);
         TextView dotLabel = cview.findViewById(R.id.btn_add_dot);
         TextView spaceLabel = cview.findViewById(R.id.btn_add_space);
         TextView freeTextLabel = cview.findViewById(R.id.btn_add_free_text);
@@ -911,6 +831,7 @@ public class TagsEditorFragment extends Fragment {
         trackLabel.setOnClickListener(v -> mTagListLayout.addTag("track"));
         sepLabel.setOnClickListener(v -> mTagListLayout.addTag("/"));
         dashLabel.setOnClickListener(v -> mTagListLayout.addTag("-"));
+        uscLabel.setOnClickListener(v -> mTagListLayout.addTag("_"));
         dotLabel.setOnClickListener(v -> mTagListLayout.addTag("."));
         spaceLabel.setOnClickListener(v -> mTagListLayout.addTag("sp"));
         freeTextLabel.setOnClickListener(v -> mTagListLayout.addTag("*"));
@@ -973,7 +894,7 @@ public class TagsEditorFragment extends Fragment {
         });
         alert.show();
     }
-
+/*
     private void doAnalyser() {
         Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
         if (intent != null && mediaItems.size()==1) {
@@ -997,7 +918,7 @@ public class TagsEditorFragment extends Fragment {
                 startActivity(intent);
             }
         }
-    }
+    } */
 
     private void doWebSearch() {
         try {

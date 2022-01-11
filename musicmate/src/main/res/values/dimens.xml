@@ -57,4 +57,5 @@
     <dimen name="app_bar_height">180dp</dimen>
 
     <dimen name="state_views_icon_size">150dp</dimen>
+    <dimen name="dimen_52_dp">52dp</dimen>
 </resources>

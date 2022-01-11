@@ -144,14 +144,24 @@
                     app:widthRatio="1"
                     app:heightRatio="2"
                     android:src="@drawable/ic_broken_image_black_24dp"/>
-                <!--
-                <com.santalu.aspectratioimageview.AspectRatioImageView
-                    android:id="@+id/panel_cover_art2"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_below="@id/panel_cover_art"
-                    android:paddingTop="0dp"
-                    app:ari_ratio="1"/> -->
+                <ImageView
+                    android:id="@+id/icon_hires"
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:src="@drawable/ic_format_hires"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginRight="@dimen/dimen_12_dp"
+                    android:layout_marginBottom="@dimen/dimen_12_dp"/>
+                <ImageView
+                    android:id="@+id/icon_mqa"
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:src="@drawable/ic_format_mqa_white"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginRight="@dimen/dimen_48_dp"
+                    android:layout_marginBottom="@dimen/dimen_12_dp"/>
             </RelativeLayout>
 
             <include layout="@layout/view_tag_layout" />

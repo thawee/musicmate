@@ -23,10 +23,17 @@
         android:title="My Songs"
         app:showAsAction="always" />
     <item
+        android:icon="@drawable/ic_round_local_play_24"
+        android:id="@+id/menu_groupings"
+        android:title="Groupings"
+        app:showAsAction="always" />
+    <!--
+    <item
         android:icon="@drawable/ic_round_speaker_24"
         android:id="@+id/menu_audiophile"
         android:title="Audiophile"
         app:showAsAction="always" />
+        -->
 <!--
     <item
         android:icon="@drawable/ic_round_copy_all_24"

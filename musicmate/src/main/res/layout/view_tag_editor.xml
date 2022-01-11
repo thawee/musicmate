@@ -19,6 +19,46 @@
         android:text="@string/editor_mmate_info"
         android:background="@color/transparent"/>
     -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="left"
+        android:layout_marginTop="@dimen/spacing_small"
+        android:padding="@dimen/spacing_small"
+        android:background="@drawable/shape_rounded_edittext">
+        <TextView
+            android:id="@+id/editor_pathname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/dimen_2_dp"
+            android:paddingLeft="@dimen/spacing_medium"
+            android:paddingRight="@dimen/spacing_medium"
+            android:layout_marginRight="@dimen/dimen_48_dp"
+            android:layout_gravity="left"
+            android:gravity="left"
+            android:maxLines="1"
+            android:ellipsize="start"
+            android:textSize="10sp"
+            android:textColor="@color/grey200"
+            />
+        <TextView
+            android:id="@+id/editor_filename"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/dimen_4_dp"
+            android:paddingLeft="@dimen/spacing_medium"
+            android:paddingRight="@dimen/spacing_medium"
+            android:layout_marginRight="@dimen/dimen_48_dp"
+            android:layout_gravity="left"
+            android:gravity="left"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="12sp"
+            android:textColor="@color/grey200"
+            />
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -36,7 +76,7 @@
             app:tbMidColor="@color/grey400"
             android:padding="@dimen/dimen_4_dp"
             android:background="@drawable/shape_rounded_edittext"
-            android:layout_marginLeft="@dimen/dimen_12_dp"
+            android:layout_marginLeft="@dimen/dimen_8_dp"
             />
         <me.zhanghai.android.materialratingbar.MaterialRatingBar
             android:id="@+id/media_rating"
@@ -61,7 +101,9 @@
             android:textColorHint="@color/white"
             android:textSize="12sp"
             android:layout_marginLeft="@dimen/dimen_12_dp"
-            android:layout_marginRight="@dimen/dimen_12_dp"
+            android:layout_marginRight="@dimen/dimen_8_dp"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
             app:spinner_arrow_gravity="end"
             app:spinner_arrow_padding="8dp"
             app:spinner_divider_color="@color/grey600_transparent"
@@ -168,6 +210,7 @@
                 android:textColor="@color/grey600"
                 android:text="Genre"
                 android:background="@color/transparent"/>
+
             <AutoCompleteTextView
                 android:id="@+id/tag_genre"
                 android:layout_width="match_parent"
@@ -177,6 +220,7 @@
                 android:layout_marginRight="@dimen/spacing_small"
                 android:imeOptions="actionNext"
                 android:nextFocusDown="@+id/artist"
+                android:completionThreshold="1"
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
@@ -184,6 +228,7 @@
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
                 android:background="@drawable/shape_rounded_edittext" />
+
             <!--
             <com.skydoves.powerspinner.PowerSpinnerView
                 android:id="@+id/tag_genre"

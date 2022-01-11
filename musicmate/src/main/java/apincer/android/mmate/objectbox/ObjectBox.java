@@ -10,6 +10,7 @@ public class ObjectBox {
     public static void init(Context context) {
         boxStore = MyObjectBox.builder()
                 .androidContext(context.getApplicationContext())
+             ///   .maxReaders(10)
                 .build();
     }
 

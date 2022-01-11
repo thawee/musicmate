@@ -25,7 +25,7 @@
     <string name="editor_label_title">Title</string>
     <string name="editor_label_artist">Artist</string>
     <string name="editor_label_genre">Genre</string>
-    <string name="editor_label_group">Group</string>
+    <string name="editor_label_group">Grouping</string>
     <string name="editor_label_album">Album</string>
     <string name="editor_label_album_artist">Album Artist</string>
     <string name="editor_label_track">Track</string>
@@ -98,5 +98,7 @@
     <string name="aspect_label">Spectrogram</string>
     <string name="websearch_label">Web Search</string>
     <string name="convert_label">2 Flac</string>
+    <string name="editor_label_collection">Collection</string>
+    <string name="preferences_sub_collection">Collections</string>
 
 </resources>

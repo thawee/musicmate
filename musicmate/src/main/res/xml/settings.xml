@@ -67,7 +67,20 @@
             android:title="Show Audio Sample Rate"
             android:defaultValue="true"/>
     </PreferenceCategory> -->
-
+<!--
+    <PreferenceCategory
+        android:title="@string/preferences_sub_collection"
+        android:summary="Managing media files in collection with it's storage.">
+        <MultiSelectListPreference
+            android:entries="@array/AudioFormatNames"
+            android:title="@string/SaveFormatOnInternalStorage"
+            android:key="preference_save_format_on_int_card"
+            android:summary="@string/SaveFormatOnInternalStorageSummary"
+            android:dialogTitle="@string/SaveFormatOnInternalStorageSummary"
+            android:entryValues="@array/AudioFormatValues"
+            android:defaultValue="@array/AudioFormatINTDefaultValues"/>
+    </PreferenceCategory>-->
+    <!--
     <PreferenceCategory
         android:title="@string/preferences_sub_storage"
         android:summary="Managing media files on storage.">
@@ -95,7 +108,7 @@
             android:key="preference_save_dxd_int_card"
             android:summary="Save DxD song on internal storage."
             android:title="DxD on internal storage"
-            android:defaultValue="true"/>
+            android:defaultValue="true"/> -->
         <!--
         <MultiSelectListPreference
             android:entries="@array/AudioFormatNames"
@@ -156,7 +169,8 @@
             android:title="MPEG Audio songs on external storage"
             android:defaultValue="true"/>
             -->
-    </PreferenceCategory>
+    <!--
+    </PreferenceCategory> -->
     <PreferenceCategory
         android:title="@string/preferences_sub_others"
         android:summary="Others Settings.">

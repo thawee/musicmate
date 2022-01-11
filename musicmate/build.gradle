@@ -129,11 +129,13 @@ dependencies {
 
     // epoxy
     implementation deps.epoxy.runtime
+    implementation 'androidx.appcompat:appcompat:1.3.0'
     //annotationProcessor deps.epoxy.annotationProcessor
     kapt deps.epoxy.annotationProcessor
 
     implementation deps.ui.aboutlibraries
 	implementation deps.ui.toasty
+    //implementation deps.ui.vpawesomewidgets
 	
 	//implementation deps.ui.AvatarView
     implementation deps.ui.shapeofview

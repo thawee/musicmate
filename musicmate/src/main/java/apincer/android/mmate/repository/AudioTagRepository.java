@@ -1,5 +1,7 @@
 package apincer.android.mmate.repository;
 
+import android.content.Context;
+
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -9,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.objectbox.AudioTag_;
 import apincer.android.mmate.objectbox.ObjectBox;
@@ -22,12 +25,19 @@ import timber.log.Timber;
 public class AudioTagRepository {
     private static final Box<AudioTag> tagBox = ObjectBox.get().boxFor(AudioTag.class);
     public static List<String> lossyAudioFormatList = new ArrayList<>();
+    private static AudioTagRepository INSTANCE;
 
-
-    public AudioTagRepository() {
+    private AudioTagRepository() {
         lossyAudioFormatList.add("MP3");
         lossyAudioFormatList.add("AAC");
         lossyAudioFormatList.add("WMA");
+    }
+
+    public static AudioTagRepository getInstance() {
+        if(INSTANCE==null) {
+            INSTANCE = new AudioTagRepository();
+        }
+        return INSTANCE;
     }
 
     public void saveTag(AudioTag tag) {
@@ -61,29 +71,6 @@ public class AudioTagRepository {
         }
     }
 
-    public List<String> getSampleRates() {
-        List<String> rates = new ArrayList<>();
-     /*   try {
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT audioSampleRate FROM MediaItem ");
-            for (String[] resultColumns : rawResults) {
-                String sampleRate = resultColumns[0];
-                if(sampleRate ==null) {
-                    continue;
-                }
-                String samplingRate = StringUtils.getFormatedAudioSampleRate(StringUtils.toLong(sampleRate),true);
-                rates.add(samplingRate);
-            }
-        }catch (SQLException ex) {
-        }
-        Collections.sort(rates, (o1, o2) -> {
-            int srate1 = parseSamplingRate(o1);
-            int srate2 = parseSamplingRate(o2);
-            return srate2<srate1?-1:1;
-        }); */
-
-        return rates;
-    }
 
 /*
     private boolean isHiRes(String bitDepth, String sampleRate) {
@@ -113,72 +100,39 @@ public class AudioTagRepository {
         return 0;
     } */
 
-    /*
-    @Deprecated
-    public List<String> getAudioFormats() {
-        List<String> formats = new ArrayList<>();
-        try {
-            boolean foundUnknown = false;
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT audioFormat FROM MediaItem order by audioFormat");
-            for (String[] resultColumns : rawResults) {
-                String format = resultColumns[0];
-                if(StringUtils.isEmpty(format)) {
-                    foundUnknown = true;
-                } else {
-                    formats.add(format + " Format");
-                }
-            }
-            if(foundUnknown) {
-                formats.add(SearchCriteria.UNKNOWN_AUDIO_FORMAT);
-            }
-        }catch (SQLException ex) {
-        }
-        return formats;
-    } */
-
-    public List<String> getGenreList() {
+    public List<String> getGenreList(Context context) {
         List<String> list = new ArrayList<>();
         String[] names = tagBox.query().build().property(AudioTag_.genre).distinct().findStrings();
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-       /* try {
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT genre FROM MediaItem order by genre");
-            for (String[] resultColumns : rawResults) {
-                String format = resultColumns[0];
-                if(!StringUtils.isEmpty(format)) {
-                    genres.add(format);
-                }
+        String[] genres =  context.getResources().getStringArray(R.array.default_genres);
+        for(String genre: genres) {
+            if(!list.contains(genre)) {
+                list.add(genre);
             }
-        }catch (SQLException ex) {
-        } */
+        }
+
         Collections.sort(list);
         return list;
     }
 	
-	public List<String> getGroupingList() {
+	public List<String> getGroupingList(Context context) {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.grouping).distinct().findStrings();
+      /*  String[] names = tagBox.query().build().property(AudioTag_.grouping).distinct().findStrings();
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-        /*try {
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT grouping FROM MediaItem order by grouping");
-            for (String[] resultColumns : rawResults) {
-                String format = resultColumns[0];
-                if(!StringUtils.isEmpty(format)) {
-                    genres.add(format);
-                }else if(!genres.contains(SearchCriteria.DEFAULT_MUSIC_GROUPING)){
-                    genres.add(SearchCriteria.DEFAULT_MUSIC_GROUPING);
-                }
-            }
-        }catch (SQLException ex) {
-        }
-        // Sorting ArrayList in ascending Order
-        Collections.sort(genres); */
+        Collections.sort(list); */
+       // list.add("Jazz");
+       // list.add("Mor-Lum");
+       // list.add("Classic");
+       // list.add("Thai");
+       // list.add("English");
+       // list.add("World");
+       // list.add("");
+        String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
+        list.addAll(Arrays.asList(groupings));
         Collections.sort(list);
         return list;
     }
@@ -189,23 +143,6 @@ public class AudioTagRepository {
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-       /* try {
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT artist FROM MediaItem order by artist");
-            for (String[] resultColumns : rawResults) {
-                String format = resultColumns[0];
-                if(!StringUtils.isEmpty(format)) {
-                    String []artists = StringUtils.splitArtists(format);
-                    for (String artist: artists) {
-                        if(StringUtils.isEmpty(artist)) continue;
-                        if (!list.contains(artist)) {
-                            list.add(artist);
-                        }
-                    }
-                }
-            }
-        }catch (SQLException ex) {
-        } */
         Collections.sort(list);
         return list;
     }
@@ -216,17 +153,6 @@ public class AudioTagRepository {
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-       /* try {
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT albumArtist FROM MediaItem order by albumArtist");
-            for (String[] resultColumns : rawResults) {
-                String format = resultColumns[0];
-                if(!StringUtils.isEmpty(format)) {
-                    list.add(format);
-                }
-            }
-        }catch (SQLException ex) {
-        } */
         Collections.sort(list);
         return list;
     }
@@ -237,17 +163,6 @@ public class AudioTagRepository {
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-       /* try {
-            GenericRawResults<String[]> rawResults =
-                    dao.queryRaw("SELECT DISTINCT album FROM MediaItem order by album");
-            for (String[] resultColumns : rawResults) {
-                String format = resultColumns[0];
-                if(!StringUtils.isEmpty(format)) {
-                    list.add(format);
-                }
-            }
-        }catch (SQLException ex) {
-        } */
         Collections.sort(list);
         return list;
     }
@@ -258,20 +173,6 @@ public class AudioTagRepository {
             // tag in library already up-to-dated
             return false;
         }
-       /* try {
-            //File file = new File(mediaPath);
-            //if (file.exists()) {
-                AudioTag mdata = dao.queryForId(mediaPath);
-                if (mdata == null) {
-                    return true; // need insert
-                } else if (mdata.getLastModified() < lastModified) {
-                    return true; // need update database
-                }
-            //}
-        }catch (Exception ex) {
-            LogHelper.e(TAG, ex);
-        }
-        return false; */
 
         return true;
     }
@@ -373,7 +274,7 @@ public class AudioTagRepository {
         return list;
     }
 
-    public List findMediaTag(SearchCriteria criteria) {
+    public synchronized List findMediaTag(SearchCriteria criteria) {
         List list = new ArrayList();
         if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query(AudioTag_.audioBitsPerSample.equal(1)).order(AudioTag_.title).order(AudioTag_.artist).build();
@@ -392,7 +293,7 @@ public class AudioTagRepository {
                     .filter(new QueryFilter<AudioTag>() {
                         @Override
                         public boolean keep(AudioTag tag) {
-                            if (!AudioTagUtils.isHiRes(tag) && !tag.isMQA()) {
+                            if (!AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA()) {
                                 return true; // include to results
                             } else {
                                 return false; // drop from results
@@ -406,7 +307,7 @@ public class AudioTagRepository {
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {
-                    if (AudioTagUtils.isHiResMaster(tag) && !tag.isMQA()) {
+                    if (AudioTagUtils.isPCMHiResMaster(tag) && !tag.isMQA()) {
                         return true; // include to results
                     } else {
                         return false; // drop from results
@@ -419,7 +320,7 @@ public class AudioTagRepository {
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {
-                    if (AudioTagUtils.isHiResLossless(tag) && !tag.isMQA()) {
+                    if (AudioTagUtils.isPCMHiResLossless(tag) && !tag.isMQA()) {
                     //if (AudioTagUtils.isHiRes(tag) && !tag.isMQA()) {
                         return true; // include to results
                     } else {
@@ -443,6 +344,10 @@ public class AudioTagRepository {
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
+        }else if(criteria.getType()== SearchCriteria.TYPE.GROUPING){
+            Query<AudioTag> query = tagBox.query(AudioTag_.grouping.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
+            list = query.find();
+            query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
             Query<AudioTag> query = tagBox.query(AudioTag_.audiophile.equal(true)).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
@@ -456,8 +361,8 @@ public class AudioTagRepository {
             for (AudioTag tag: audioTags) {
                 if(StringUtils.isEmpty(title)) {
                     title = tag.getTitle();
-                }else if((StringUtils.similarity(title, tag.getTitle()) > Constants.MIN_TITLE) ||
-                StringUtils.contains(title, tag.getTitle())) {
+                }else if((StringUtils.similarity(title, tag.getTitle()) > Constants.MIN_TITLE)) {// ||
+               // StringUtils.contains(title, tag.getTitle())) {
                     // found similar title
                     // check artist
                     if((StringUtils.similarity(artist, tag.getArtist()) > Constants.MIN_ARTIST) ||

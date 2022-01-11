@@ -284,7 +284,7 @@ public class MusicListeningService extends Service {
                     // contentView.setImageViewBitmap(R.id.notification_filesize_img, MediaItemUtils.createBitmapFromText(context,100, 32, item.getMetadata().getMediaSize(), getColor(R.color.black), getColor(R.color.black), qualityColor));
                     contentView.setImageViewBitmap(R.id.notification_filesize_img, AudioTagUtils.getFileSizeIcon(context, item));
 
-                    if(item.isDSD() || AudioTagUtils.isHiRes(item)) {
+                    if(AudioTagUtils.isHiResOrDSD(item)) {
                         contentView.setImageViewBitmap(R.id.notification_hires_icon, AudioTagUtils.createBitmapFromDrawable(getApplicationContext(), 1, 1, R.drawable.ic_format_hires, Color.WHITE, Color.TRANSPARENT));
                         contentView.setViewVisibility(R.id.notification_hires_icon, View.VISIBLE);
                     }else  {

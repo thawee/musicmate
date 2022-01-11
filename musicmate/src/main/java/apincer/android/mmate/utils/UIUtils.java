@@ -727,7 +727,7 @@ public class UIUtils  {
         return (realWidth - displayWidth) > 0 || (realHeight - displayHeight) > 0;
     } */
 
-    public static void displayStorages(Application application, LinearLayout vStoragesLayout) {
+    public static void buildStoragesUsed(Application application, LinearLayout vStoragesLayout) {
         if (vStoragesLayout == null) return;
 
         vStoragesLayout.setVisibility(View.GONE);
@@ -747,7 +747,7 @@ public class UIUtils  {
             long total = DocumentFileCompat.getStorageCapacity(application.getApplicationContext(), sid);
             float pcnt = (((total-free)*100)/total);
 
-            String storageName = MediaFileRepository.getStorageName(sid);
+           // String storageName = MediaFileRepository.getStorageName(sid);
             if(StorageId.PRIMARY.equals(sid)) {
                 icon.setImageDrawable(ContextCompat.getDrawable(application,R.drawable.ic_memory_white_24dp));
             }else {
@@ -756,18 +756,23 @@ public class UIUtils  {
 
             progressBar.setProgress((int)pcnt);
             progressBar.setLabelText(StringUtils.formatStorageSize(free)+"/"+StringUtils.formatStorageSize(total)+" "+((int)pcnt)+"%");
-            if(pcnt >= 98) {
+            if(pcnt >= 99) {
                 progressBar.setLabelColorInner(application.getColor(R.color.storage_critical));
                 progressBar.setLabelColorOuter(application.getColor(R.color.storage_critical));
               //  progressBar.setReachedBarColor(application.getColor(R.color.storage_critical));
               //  progressBar.setProgressTextColor(application.getColor(R.color.storage_critical));
                 //progressBar.set
-            }else if(pcnt >= 90) {
+            }else if(pcnt >= 95) {
                 progressBar.setLabelColorInner(application.getColor(R.color.material_color_yellow_900));
                 progressBar.setLabelColorOuter(application.getColor(R.color.material_color_yellow_900));
               //  progressBar.setReachedBarColor(application.getColor(R.color.storage_warning));
               //  progressBar.setProgressTextColor(application.getColor(R.color.storage_warning));
-            }else {
+            }else if(pcnt >= 90) {
+                progressBar.setLabelColorInner(application.getColor(R.color.material_color_lime_800));
+                progressBar.setLabelColorOuter(application.getColor(R.color.material_color_lime_800));
+                //  progressBar.setReachedBarColor(application.getColor(R.color.storage_warning));
+                //  progressBar.setProgressTextColor(application.getColor(R.color.storage_warning));
+            }else {  // < 90 %
                 progressBar.setLabelColorInner(application.getColor(R.color.material_color_green_800));
                 progressBar.setLabelColorOuter(application.getColor(R.color.material_color_green_800));
               //  progressBar.setReachedBarColor(application.getColor(R.color.storage_nomal));

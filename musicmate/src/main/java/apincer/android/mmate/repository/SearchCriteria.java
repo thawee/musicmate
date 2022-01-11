@@ -11,9 +11,9 @@ public class SearchCriteria implements Parcelable {
     public SearchCriteria(TYPE type) {
         this.type = type;
     }
-    public SearchCriteria(TYPE type, String text) {
+    public SearchCriteria(TYPE type, String keyword) {
         this.type = type;
-        this.keyword = text;
+        this.keyword = keyword;
     }
 
    // public enum TYPE {MY_SONGS, AUDIOPHILE, SEARCH, SEARCH_BY_ARTIST,SEARCH_BY_ALBUM,GENRE,AUDIO_FORMAT,DOWNLOAD,SIMILAR_TITLE,DUPLICATE,GROUPING,AUDIO_SQ,AUDIO_SAMPLE_RATE}

@@ -1,26 +1,16 @@
 package apincer.android.mmate.utils;
 
 import android.content.Context;
-import android.graphics.Typeface;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.core.content.ContextCompat;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.R;
 import apincer.android.mmate.service.BroadcastData;
 import es.dmoral.toasty.Toasty;
 
-public class ToastUtils {
-    public static Typeface currentTypeface = Typeface.create("sans-serif-condensed", Typeface.NORMAL);
-    public static int textSize = 12; // in SP
-   // public static Toast toastMessage;
+public class ToastHelper {
+    public static Toast toastMessage;
 
+    /*
     public static void showActionMessage(Context context, ImageView fabCurrentProgress, FloatingActionButton mainAction, int successCount, int errorCount, int pendingTotal, String status, String message) {
         Toast toastMessage = null;
         if(toastMessage!= null) {
@@ -55,11 +45,11 @@ public class ToastUtils {
                 }
             }
         }
-    }
+    } */
 
 
     public static void showActionMessage(Context context, String status, String message) {
-        Toast toastMessage = null;
+        //Toast toastMessage = null;
         if(toastMessage!= null) {
             toastMessage.cancel();
         }
@@ -78,7 +68,7 @@ public class ToastUtils {
 
 
     public static void showBroadcastData(Context context, BroadcastData broadcastData) {
-        Toast toastMessage = null;
+        //Toast toastMessage = null;
         if (toastMessage != null) {
             toastMessage.cancel();
         }
@@ -87,14 +77,15 @@ public class ToastUtils {
             toastMessage = Toasty.success(context, broadcastData.getMessage(), Toast.LENGTH_SHORT, true);
         } else if (BroadcastData.Status.ERROR == broadcastData.getStatus()) {
             toastMessage = Toasty.error(context, broadcastData.getMessage(), Toast.LENGTH_SHORT, true);
-        } else {
-            toastMessage = Toasty.info(context, broadcastData.getMessage(), Toast.LENGTH_SHORT, true);
+       // } else {
+       //     toastMessage = Toasty.info(context, broadcastData.getMessage(), Toast.LENGTH_SHORT, true);
         }
         if (toastMessage != null) {
             toastMessage.show();
         }
     }
 
+    /*
     public static void showActionMessageBrowse(Context context, int successCount, int errorCount, int pendingTotal, String status, String message) {
         Toast toastMessage = null;
         if(toastMessage!= null) {
@@ -110,7 +101,7 @@ public class ToastUtils {
         }
         if(toastMessage!= null) {
             toastMessage.show();
-        }
+        } */
 /*
         if(mainAction !=null) {
             int processedCount = successCount + errorCount;
@@ -124,9 +115,9 @@ public class ToastUtils {
                 mainAction.setVisibility(View.VISIBLE);
            // }
         } */
-    }
+   // }
 
-
+/*
     public static void showActionMessageEditor(Context context, FloatingActionButton mainAction, int successCount, int errorCount, int pendingTotal, String status, String message) {
         Toast toastMessage = null;
         if(toastMessage!= null) {
@@ -156,7 +147,7 @@ public class ToastUtils {
                 mainAction.setVisibility(View.VISIBLE);
             }
         }
-    }
+    } */
 
 		/*
         Snacky.builder().setActivity(this)

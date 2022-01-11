@@ -81,7 +81,6 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     private boolean isValidMediaFile(File file) {
-
         if(!file.exists()) return false;
 
         String ext = Utils.getExtension(file);
@@ -108,7 +107,7 @@ public class ScanAudioFileWorker extends Worker {
     public static void startScan(Context context) {
         if(scanOperation == null || scanOperation.getResult().isDone() || scanOperation.getResult().isCancelled()) {
             WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                    .setInitialDelay(5, TimeUnit.SECONDS)
+                    .setInitialDelay(10, TimeUnit.SECONDS)
                     .build();
             scanOperation = WorkManager.getInstance(context).enqueue(workRequest);
         }

@@ -1,6 +1,7 @@
 package apincer.android.mmate.epoxy;
 
 import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -28,7 +29,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     private AudioTagRepository tagRepos;
     private SearchCriteria criteria;
-    //private Activity activity;
     private long totalDuration = 0;
     private long totalSize = 0;
     private View.OnClickListener clickListener;
@@ -36,10 +36,10 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     private ArrayList<AudioTag> selections;
     private ArrayList<AudioTag> lastSelections;
     private OnModelBuildFinishedListener listener;
+    public static volatile boolean loading  = false;
 
-    public AudioTagController(Activity mediaBrowserActivity, View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
-       // this.activity = mediaBrowserActivity;
-        tagRepos = new AudioTagRepository();
+    public AudioTagController(View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
+        tagRepos = AudioTagRepository.getInstance(); //new AudioTagRepository();
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
         selections = new ArrayList<>();
@@ -62,23 +62,30 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         String filterPath = "";
         if(Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
             File file = new File(criteria.getFilterText());
-            if (file.isFile()) {
+            if (!file.isDirectory()) {
                 file = file.getParentFile();
             }
             filterPath = file.getAbsolutePath()+File.separator;
         }
+        boolean noFilters = StringUtils.isEmpty(criteria.getFilterType()) && StringUtils.isEmpty(criteria.getFilterText());
         for (AudioTag tag : audioTags) {
-            if(Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
-                if (!StringUtils.equals(tag.getAlbum(), criteria.getFilterText())) {
-                    continue;
-                }
-            } else if(Constants.FILTER_TYPE_ARTIST.equals(criteria.getFilterType())) {
-                if(!StringUtils.equals(tag.getArtist(), criteria.getFilterText())) {
-                    continue;
-                }
-            }else if(Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
-                if(!tag.getPath().startsWith(filterPath)) {
-                    continue;
+            if(!noFilters) {
+                if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
+                    if (!StringUtils.equals(tag.getAlbum(), criteria.getFilterText())) {
+                        continue;
+                    }
+                } else if (Constants.FILTER_TYPE_ARTIST.equals(criteria.getFilterType())) {
+                    if (!StringUtils.equals(tag.getArtist(), criteria.getFilterText())) {
+                        continue;
+                    }
+                } else if (Constants.FILTER_TYPE_ALBUM_ARTIST.equals(criteria.getFilterType())) {
+                    if (!StringUtils.equals(tag.getAlbumArtist(), criteria.getFilterText())) {
+                        continue;
+                    }
+                } else if (Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
+                    if (!tag.getPath().startsWith(filterPath)) {
+                        continue;
+                    }
                 }
             }
             new AudioTagModel_()
@@ -127,33 +134,40 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             }
         }
 
-        this.criteria = criteria;
+        if(loading) return;
 
-        SearchCriteria finalCriteria = criteria;
-        Observable<List> observable = Observable.fromCallable(() -> {
-            return tagRepos.findMediaTag(finalCriteria);
-        });
-        observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-                clearSelections();
-            }
+        synchronized (this) {
+            loading = true;
+            this.criteria = criteria;
 
-            @Override
-            public void onNext(List actionResult) {
-                setData(actionResult);
-            }
+            SearchCriteria finalCriteria = criteria;
+            Observable<List> observable = Observable.fromCallable(() -> {
+                return tagRepos.findMediaTag(finalCriteria);
+            });
+            observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+                    clearSelections();
+                }
 
-            @Override
-            public void onError(Throwable e) {
-                listener.onModelBuildFinished(null);
-            }
+                @Override
+                public void onNext(List actionResult) {
+                    setData(actionResult);
+                }
 
-            @Override
-            public void onComplete() {
-                listener.onModelBuildFinished(null);
-            }
-        });
+                @Override
+                public void onError(Throwable e) {
+                    listener.onModelBuildFinished(null);
+                    loading = false;
+                }
+
+                @Override
+                public void onComplete() {
+                    listener.onModelBuildFinished(null);
+                    loading = false;
+                }
+            });
+        };
     }
 
     public String getHeaderTitle() {
@@ -319,10 +333,6 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         }
     }
 
-    public SearchCriteria getCurrentCriteria() {
-        return criteria;
-    }
-
     public boolean hasFilter() {
         if(criteria==null) return false;
         return !StringUtils.isEmpty(criteria.getFilterType());
@@ -332,7 +342,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         return getAdapter().getItemCount();
     }
 
-    public List<String> getHeaderTitles() {
+    public List<String> getHeaderTitles(Context context) {
         List<String> titles = new ArrayList();
         if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
             titles.add(Constants.TITLE_ALL_SONGS);
@@ -344,6 +354,11 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_HIFI) {
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIFI_QUALITY);
+        }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
+            List<String> tabs = tagRepos.getGroupingList(context);
+            for(String tab: tabs) {
+                titles.add(tab);
+            }
         }else {
             titles.add(getHeaderTitle());
         }

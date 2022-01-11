@@ -43,7 +43,7 @@
 		app:showAsAction="always" />
 	<item
 		android:id="@+id/menu_notification_access"
-		android:icon="@drawable/ic_round_perm_data_setting_24"
+		android:icon="@drawable/ic_round_notification_add_24"
 		android:title="Notification Access"
 		app:showAsAction="always" />
 

@@ -6,6 +6,8 @@ import android.graphics.Color;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.work.Configuration;
+import androidx.work.WorkManager;
 
 import com.github.moduth.blockcanary.BlockCanary;
 import com.github.moduth.blockcanary.BlockCanaryContext;
@@ -14,17 +16,12 @@ import com.github.moduth.blockcanary.internal.BlockInfo;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import apincer.android.mmate.objectbox.ObjectBox;
 import sakout.mehdi.StateViews.StateViewsBuilder;
-import timber.log.Timber;
-
-//import com.balsikandar.crashreporter.CrashReporter;
-//import com.balsikandar.crashreporter.utils.CrashUtil;
-
-//import static timber.log.Timber.DebugTree;
 
 public class MusixMateApp extends Application  {
     private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
@@ -32,8 +29,13 @@ public class MusixMateApp extends Application  {
 
     @Override public void onCreate() {
         super.onCreate();
-
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+
+       /* WorkManager.initialize(
+                getApplicationContext(),
+                new Configuration.Builder()
+                        .setExecutor(Executors.newFixedThreadPool(8))
+                        .build()); */
 
        // Timber.plant(new Timber.DebugTree());
 
@@ -149,5 +151,4 @@ public class MusixMateApp extends Application  {
             }
         }).start();
     }
-
 }

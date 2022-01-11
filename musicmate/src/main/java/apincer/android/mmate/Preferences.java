@@ -72,11 +72,11 @@ public class Preferences {
             return true;
         }
         boolean ms =prefs.getBoolean("preference_save_hires_master_int_card",true);
-        if(ms && AudioTagUtils.isHiResMaster(metadata) & !metadata.isMQA()) {
+        if(ms && AudioTagUtils.isPCMHiResMaster(metadata) & !metadata.isMQA()) {
             return true;
         }
         boolean lsac =prefs.getBoolean("preference_save_hires_int_card",false);
-        if(lsac && AudioTagUtils.isHiResLossless(metadata) & !metadata.isMQA()) {
+        if(lsac && AudioTagUtils.isPCMHiResLossless(metadata) & !metadata.isMQA()) {
             return true;
         }
         boolean mqa =prefs.getBoolean("preference_save_mqa_int_card",false);

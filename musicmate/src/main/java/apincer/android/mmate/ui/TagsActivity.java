@@ -52,7 +52,7 @@ import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mmate.utils.ToastUtils;
+import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
@@ -76,7 +76,10 @@ public class TagsActivity extends AppCompatActivity {
     private TextView titleView;
     private TextView artistView ;
     private TextView albumView ;
+    private TextView albumArtistView;
     private TextView encInfo;
+    private ImageView hiresView;
+    private ImageView mqaView;
    // private View mainFrame;
     private View coverArtLayout;
     private View panelLabels;
@@ -178,7 +181,7 @@ public class TagsActivity extends AppCompatActivity {
                     AudioFileRepository.getInstance(getApplication()).scanFileAndSaveTag(new File(flacPath));
                     runOnUiThread(() -> {
                         String message = "Convert '"+tag.getTitle()+"' completed in " + session.getDuration() +" ms.";
-                        ToastUtils.showActionMessage(getApplicationContext(), Constants.STATUS_SUCCESS, message);
+                        ToastHelper.showActionMessage(getApplicationContext(), Constants.STATUS_SUCCESS, message);
                         if(total == count[0]) {
                             mStateView.hideStates();
                         }
@@ -205,15 +208,20 @@ public class TagsActivity extends AppCompatActivity {
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
         albumView = findViewById(R.id.panel_album);
+        albumArtistView = findViewById(R.id.panel_album_artist);
         encInfo = findViewById(R.id.panel_enc);
         tagInfo = findViewById(R.id.panel_tag);
         pathInfo = findViewById(R.id.panel_path);
+        hiresView = findViewById(R.id.icon_hires);
+        mqaView = findViewById(R.id.icon_mqa);
     }
 
     public void updateTitlePanel() {
         toolbar.setTitle(displayTag.getTitle());
         titleView.setText(displayTag.getTitle());
         artistView.setText(displayTag.getArtist());
+        hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
+        mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -239,7 +247,25 @@ public class TagsActivity extends AppCompatActivity {
             setResult(RESULT_OK, resultIntent);
             finish();
         });
-        String matePath = AudioFileRepository.getInstance(getApplication()).buildMatePath(displayTag);
+        if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
+            albumArtistView.setText(displayTag.getAlbumArtist());
+            albumArtistView.setPaintFlags(albumArtistView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            albumArtistView.setOnClickListener(view -> {
+                // filter by album
+                Intent resultIntent = new Intent();
+                if (criteria != null) {
+                    criteria.setFilterType(Constants.FILTER_TYPE_ALBUM_ARTIST);
+                    criteria.setFilterText(displayTag.getAlbumArtist());
+                    resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                }
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            });
+        }else {
+            albumArtistView.setText("N/A");
+        }
+
+        String matePath = AudioFileRepository.getInstance(getApplication()).buildCollectionPath(displayTag);
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
             mateInd = " **";
@@ -288,18 +314,39 @@ public class TagsActivity extends AppCompatActivity {
                         coverArtView.setImageDrawable(drawable);
                         try {
                             Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
-                            Palette palette = Palette.from(bmp).generate();
-                            int frameColor = palette.getDominantColor(getColor(R.color.bgColor));
-                            int panelColor = palette.getVibrantColor(getColor(R.color.bgColor));
-                            toolbar_from_color = ColorUtils.TranslateDark(frameColor,100);
-                            toolbar_to_color = ColorUtils.TranslateDark(frameColor,100);; //frameColor;
+                          //  Palette palette = Palette.from(bmp).generate();
+                           // int frameColor = palette.getDominantColor(getColor(R.color.bgColor));
+                           // int panelColor = palette.getVibrantColor(getColor(R.color.bgColor));
+                          //  toolbar_from_color = ColorUtils.TranslateDark(frameColor,100);
+                          //  toolbar_to_color = ColorUtils.TranslateDark(frameColor,100);; //frameColor;
                             //mainFrame.setBackgroundColor(ColorUtils.TranslateDark(frameColor,100));
                             //Bitmap bmp2 = BitmapHelper.blur(getApplicationContext(), bmp);
                            // coverArtView2.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), bmp2));
                             coverArtView.setImageBitmap(BitmapHelper.applyReflection(bmp));
-                            panelLabels.setBackgroundColor(ColorUtils.TranslateLight(panelColor, 400));
-                            toolBarLayout.setContentScrimColor(ColorUtils.TranslateDark(frameColor,100));
-                            coverArtLayout.setBackgroundColor(ColorUtils.TranslateDark(panelColor, 400));
+                         //   panelLabels.setBackgroundColor(ColorUtils.TranslateLight(panelColor, 400));
+                          //  toolBarLayout.setContentScrimColor(ColorUtils.TranslateDark(frameColor,100));
+                          //  coverArtLayout.setBackgroundColor(ColorUtils.TranslateDark(panelColor, 400));
+                            Palette.from(bmp).generate(palette -> {
+                                int vibrant = palette.getVibrantColor(0x000000); // <=== color you want
+                                int vibrantLight = palette.getLightVibrantColor(0x000000);
+                                int vibrantDark = palette.getDarkVibrantColor(0x000000);
+                                int muted = palette.getMutedColor(0x000000);
+                                int mutedLight = palette.getLightMutedColor(0x000000);
+                                int mutedDark = palette.getDarkMutedColor(0x000000);
+
+                                int frameColor = palette.getDominantColor(getColor(R.color.bgColor));
+                                int panelColor = palette.getVibrantColor(getColor(R.color.bgColor));
+                                toolbar_from_color = ColorUtils.TranslateDark(frameColor,100);
+                                toolbar_to_color = ColorUtils.TranslateDark(frameColor,100);; //frameColor;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        panelLabels.setBackgroundColor(ColorUtils.TranslateLight(panelColor, 400));
+                                        toolBarLayout.setContentScrimColor(ColorUtils.TranslateDark(frameColor,100));
+                                        coverArtLayout.setBackgroundColor(ColorUtils.TranslateDark(panelColor, 400));
+                                    }
+                                });
+                            });
                         }catch (Exception ex) {
                             Timber.e(ex);
                         }
@@ -309,25 +356,26 @@ public class TagsActivity extends AppCompatActivity {
         imageLoader.enqueue(request);
 
         // Tag
+        int labelColor = ContextCompat.getColor(getApplicationContext(), R.color.grey400);
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
-        if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
-            tagSpan.append(new SpecialLabelUnit("Album Artist:", Color.GRAY, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                    .append(new SpecialTextUnit(displayTag.getAlbumArtist()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
-                    .append("\n");
-        }
-        tagSpan.append(new SpecialLabelUnit("Grouping:", Color.GRAY, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+        //if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
+         //   tagSpan.append(new SpecialLabelUnit("Album Artist:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+          //          .append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getAlbumArtist())?"N/A":displayTag.getAlbumArtist()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
+          //          .append("\n");
+       // }
+        tagSpan.append(new SpecialLabelUnit("Grouping:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
                 .append("  ")
-                .append(new SpecialLabelUnit("Genre:", Color.GRAY, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                .append(new SpecialLabelUnit("Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
         tagInfo.setText(tagSpan.build());
 
         // ENC info
-        int encColot = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
+        int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
         SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-        spannableEnc.append(new SpecialTextUnit("[ ",encColot).setTextSize(10))
-                .append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColot).setTextSize(10))
-                .append(new SpecialTextUnit(" | ",encColot).setTextSize(10));
+        spannableEnc.append(new SpecialTextUnit("[ ",encColor).setTextSize(10))
+                .append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
+                .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
         if(displayTag.isMQA()) {
             String mqaLabel = "MQA";
             String mqaRate = displayTag.getMQASampleRate();
@@ -335,19 +383,19 @@ public class TagsActivity extends AppCompatActivity {
             if (rate >0 && rate != displayTag.getAudioSampleRate()) {
                 mqaLabel = mqaLabel + " " + StringUtils.getFormatedAudioSampleRate(rate, true);
             }
-            spannableEnc.append(new SpecialTextUnit(mqaLabel,encColot).setTextSize(10))
-                    .append(new SpecialTextUnit(" | ",encColot).setTextSize(10));
+            spannableEnc.append(new SpecialTextUnit(mqaLabel,encColor).setTextSize(10))
+                    .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
         }
-        spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColot).setTextSize(10))
+        spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10))
-                .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColot).setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(StringUtils.getFormatedChannels(displayTag.getAudioChannels()),encColot).setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.getFormatedChannels(displayTag.getAudioChannels()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(),true),encColot).setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(),true),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()),encColot).setTextSize(10))
-                .append(new SpecialTextUnit(" ]",encColot).setTextSize(10));
+                .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()),encColor).setTextSize(10))
+                .append(new SpecialTextUnit(" ]",encColor).setTextSize(10));
         encInfo.setText(spannableEnc.build());
     }
 
@@ -591,13 +639,11 @@ public class TagsActivity extends AppCompatActivity {
     private final BroadcastReceiver operationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, RESULT_CANCELED);
-          // if (resultCode == RESULT_OK) {
+          //  int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, RESULT_CANCELED);
                 BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
                 if (broadcastData != null) {
-                    ToastUtils.showBroadcastData(TagsActivity.this, broadcastData);
+                    ToastHelper.showBroadcastData(TagsActivity.this, broadcastData);
                 }
-           // }
         }
     };
 }

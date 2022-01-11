@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.1.0-beta05', //''7.0.3',
+        androidGradlePlugin: '7.1.0-rc01', //''7.0.3',
         minSdk             : 30,
         targetSdk          : 30,
         compileSdk         : 31,
@@ -14,7 +14,7 @@ ext.versions = [
         kotlin             : '1.6.10',  //'1.5.31',
         buildDate          : "built on " + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
-        objectbox          : '3.0.1',
+        objectbox          : '3.1.0',
         //https://github.com/mikepenz/AboutLibraries/releases
         aboutlibraries     : '10.0.0-b02',
 ]
@@ -209,6 +209,8 @@ ui.liquidrefreshlayout = 'com.github.mukeshsolanki:liquidrefreshlayout:1.0.3'
 ui.stateViews =  'com.github.medyo:state-views:0.2'
 //https://github.com/Baseflow/PhotoView
 ui.photoview = 'com.github.chrisbanes:PhotoView:2.0.0'
+// https://github.com/VrUnd14/VPAwesomeWidgets
+ui.vpawesomewidgets = 'awesome.vrund.vpawesomewidgets:VPAwesomeWidgets:1.5.2'
 deps.ui = ui
 
 def epoxy = [:]
