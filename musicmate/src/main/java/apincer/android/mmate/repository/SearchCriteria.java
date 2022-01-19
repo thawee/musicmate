@@ -24,17 +24,21 @@ public class SearchCriteria implements Parcelable {
     protected SearchCriteria(Parcel in) {
         String typeName = in.readString();
         keyword = in.readString();
-        type = TYPE.valueOf(typeName);
         filterType = in.readString();
         filterText = in.readString();
+        try {
+            type = TYPE.valueOf(typeName);
+        }catch (Exception ex) {
+            type = TYPE.MY_SONGS;
+        }
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(type.name());
-        dest.writeString(keyword);
-        dest.writeString(filterType);
-        dest.writeString(filterText);
+        dest.writeString(StringUtils.trimToEmpty(keyword));
+        dest.writeString(StringUtils.trimToEmpty(filterType));
+        dest.writeString(StringUtils.trimToEmpty(filterText));
     }
 
     @Override

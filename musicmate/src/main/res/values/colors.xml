@@ -34,6 +34,9 @@
 
     <color name="blue_accent200">#2979FF</color>
 
+    <!-- App Color Material 3-->
+
+
     <!-- Light Theme -->
     <color name="colorPrimary_light">#380396</color><!-- Deep Purple 500 -->
     <!-- Deep Purple 500 -->
@@ -183,6 +186,7 @@
 
     <color name="now_playing_alpha_80">#CCFF8000</color>
     <color name="now_playing">#FF8000</color>
+    <color name="now_playing_background">#85FF8000</color>
 
     <color name="selected">#FF8000</color>
 

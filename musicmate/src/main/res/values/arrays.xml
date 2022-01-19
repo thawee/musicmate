@@ -65,6 +65,16 @@
         <item>EMPTY</item>
         <item>FIXME</item>
     </string-array>
+    <string-array name="default_album_artist" >
+        <item>Musical Film</item>
+        <item>Various Artists</item>
+        <item>Linn Records</item>
+        <item>RS Group</item>
+        <item>RSiam</item>
+        <item>HDTracks</item>
+        <item>Audiophile</item>
+        <item>Sennheiser</item>
+    </string-array>
 
     <array name="auto_size_text_sizes">
         <item>16sp</item>
@@ -74,7 +84,7 @@
         <item>54sp</item>
     </array>
 
-    <array name="default_genres">
+    <string-array name="default_genres">
         <item>Folk/Roots</item>
         <item>Classical</item>
         <item>Musical/Film</item>
@@ -88,13 +98,12 @@
         <item>Dance/Electronica</item>
         <item>Hip-Hop</item>
         <item>Mor-Lum</item>
-    </array>
-    <array name="default_groupings">
+    </string-array>
+    <string-array name="default_groupings">
         <item>Jazz</item>
         <item>Classical</item>
         <item>Thai</item>
         <item>English</item>
         <item>World</item>
-    </array>
-
+    </string-array>
 </resources>

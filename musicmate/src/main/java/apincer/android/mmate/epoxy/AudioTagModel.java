@@ -114,17 +114,18 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         }
 
         if(isListening) {
+            //mTitleLayout
             // set border
            // holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item_border));
            // this.mPlayerView.setImageBitmap(AudioTagUtils.createBitmapFromDrawable(getContext(), 1, 1, MusicListeningService.getInstance().getPlayerIconDrawable(), Color.WHITE, Color.TRANSPARENT));
            // this.mPlayerView.setVisibility(View.VISIBLE);
-              holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background_now_playing));
-              holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background_now_playing));
-            holder.mTitle.setTextColor(holder.mContext.getColor(R.color.fab_listening_background));
+              holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
+              holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
+   //         holder.mTitle.setTextColor(holder.mContext.getColor(R.color.fab_listening_background));
         }else {
           //  holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item));
            // this.mPlayerView.setVisibility(View.GONE);
-            holder.mTitle.setTextColor(holder.mContext.getColor(R.color.grey100));
+          //  holder.mTitle.setTextColor(holder.mContext.getColor(R.color.grey100));
             holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
             holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
         }

@@ -114,10 +114,10 @@ dependencies {
     implementation deps.androidx.lifecycle_runtime
     implementation deps.androidx.lifecycle_process
     implementation deps.androidx.palette
-    //implementation deps.androidx.swiperefreshlayout
     implementation deps.androidx.preference
     implementation deps.androidx.documentFile
     implementation deps.androidx.work
+    implementation deps.eventbus
     implementation deps.storage
     implementation deps.timber
 
@@ -129,7 +129,7 @@ dependencies {
 
     // epoxy
     implementation deps.epoxy.runtime
-    implementation 'androidx.appcompat:appcompat:1.3.0'
+   // implementation 'androidx.appcompat:appcompat:1.3.0'
     //annotationProcessor deps.epoxy.annotationProcessor
     kapt deps.epoxy.annotationProcessor
 
@@ -166,7 +166,7 @@ dependencies {
     // add leakcanary to debug implementation will enable leak detection. no other action required
    // debugImplementation deps.leakcanary
    // implementation deps.blockcanary_no_op
-    implementation deps.blockcanary
+   // implementation deps.blockcanary
    // debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 
     // implementation deps.ui.meowBottomNavigation

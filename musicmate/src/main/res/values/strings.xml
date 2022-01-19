@@ -95,10 +95,11 @@
     <string name="import_songs_label">Import</string>
     <string name="edit_tags_label">Edit Tags</string>
     <string name="delete_song_label">Delete</string>
-    <string name="aspect_label">Spectrogram</string>
+    <string name="aspect_label">Aspect</string>
     <string name="websearch_label">Web Search</string>
-    <string name="convert_label">2 Flac</string>
+    <string name="convert_label">Convert</string>
     <string name="editor_label_collection">Collection</string>
     <string name="preferences_sub_collection">Collections</string>
+    <string name="file_explorer_label">Folder</string>
 
 </resources>

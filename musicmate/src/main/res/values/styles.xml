@@ -18,8 +18,10 @@
 
     <!--
     <style name="AppTheme.Light" parent="Theme.AppCompat.Light.NoActionBar">
-    -->
+    M2
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- status bar transparent -->
     <!--
     <item name="android:statusBarColor">@android:color/transparent</item>
@@ -136,8 +138,11 @@
         <item name="android:textSize">14sp</item>
     </style>
 -->
-
-    <style name="PlayingDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+<!--
+M2
+<style name="PlayingDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+-->
+    <style name="PlayingDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="colorSurface">@color/grey200_transparent</item>
         <item name="elevation">0dp</item>
         <item name="materialAlertDialogTitleTextStyle">@style/TitleTextStyle</item>
@@ -145,7 +150,11 @@
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
     </style>
 
-    <style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+    <!--
+M2
+<style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+-->
+    <style name="AlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="colorSurface">@color/grey400</item>
         <item name="elevation">0dp</item>
         <item name="materialAlertDialogTitleTextStyle">@style/TitleTextStyle</item>
@@ -154,20 +163,36 @@
         <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
     </style>
+    <!--
+    M2
     <style name="TitleTextStyle" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+    -->
+    <style name="TitleTextStyle" parent="MaterialAlertDialog.Material3.Title.Text">
         <item name="android:textColor">@color/black</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">20sp</item>
     </style>
-    <style name="BodyTextStyle" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+    <!--
+   M2
+   <style name="BodyTextStyle" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+   -->
+    <style name="BodyTextStyle" parent="MaterialAlertDialog.Material3.Body.Text">
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">14sp</item>
     </style>
-    <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+    <!--
+ M2
+ <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+ -->
+    <style name="PositiveButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:textColor">#d81b60</item>
         <item name="rippleColor">#3F51B5</item>
     </style>
-    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+    <!--
+M2
+<style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+-->
+    <style name="NegativeButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:textColor">#757575</item>
         <item name="rippleColor">#a4a4a4</item>
     </style>

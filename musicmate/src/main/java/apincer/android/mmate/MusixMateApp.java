@@ -1,22 +1,13 @@
 package apincer.android.mmate;
 
 import android.app.Application;
-import android.content.Context;
 import android.graphics.Color;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.work.Configuration;
-import androidx.work.WorkManager;
 
-import com.github.moduth.blockcanary.BlockCanary;
-import com.github.moduth.blockcanary.BlockCanaryContext;
-import com.github.moduth.blockcanary.internal.BlockInfo;
+import com.google.android.material.color.DynamicColors;
 
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,13 +20,10 @@ public class MusixMateApp extends Application  {
 
     @Override public void onCreate() {
         super.onCreate();
-        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+        // Apply dynamic color
+        DynamicColors.applyToActivitiesIfAvailable(this);
 
-       /* WorkManager.initialize(
-                getApplicationContext(),
-                new Configuration.Builder()
-                        .setExecutor(Executors.newFixedThreadPool(8))
-                        .build()); */
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
        // Timber.plant(new Timber.DebugTree());
 
@@ -73,18 +61,18 @@ public class MusixMateApp extends Application  {
                 .build());
 */
         // TURN OFF log for JAudioTagger
-        if (BuildConfig.DEBUG) {
+       // if (BuildConfig.DEBUG) {
             jAudioTaggerLogger1.setLevel(Level.SEVERE);
             jAudioTaggerLogger2.setLevel(Level.SEVERE);
             //Timber.plant(new DebugTree());
-        } else {
-            jAudioTaggerLogger1.setLevel(Level.SEVERE);
-            jAudioTaggerLogger2.setLevel(Level.SEVERE);
-        }
+       // } else {
+        //    jAudioTaggerLogger1.setLevel(Level.SEVERE);
+        //    jAudioTaggerLogger2.setLevel(Level.SEVERE);
+       // }
 
       //  CrashReporter.initialize(this, CrashUtil.getDefaultPath());
 
-
+/*
         BlockCanary.install(this, new BlockCanaryContext() {
 
             public String provideQualifier() {
@@ -149,6 +137,6 @@ public class MusixMateApp extends Application  {
             public void onBlock(Context context, BlockInfo blockInfo) {
 
             }
-        }).start();
+        }).start(); */
     }
 }

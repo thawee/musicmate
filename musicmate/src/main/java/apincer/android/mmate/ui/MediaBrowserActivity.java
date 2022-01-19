@@ -47,6 +47,8 @@ import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -62,6 +64,7 @@ import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.service.BroadcastData;
+import apincer.android.mmate.service.AudioTagEditEvent;
 import apincer.android.mmate.service.MusicListeningService;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -386,7 +389,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 SearchCriteria criteria = null;
                 if (result.getData() != null) {
                     // if retrun criteria, use it otherwise provide null
-                    criteria = result.getData().getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
+                    criteria = ApplicationUtils.getSearchCriteria(result.getData()); //result.getData().getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
                 }
                 SearchCriteria finalCriteria = criteria;
                 backFromEditor = true;
@@ -437,7 +440,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         SearchCriteria criteria = null;
 
         if (startIntent.getExtras() != null) {
-            criteria = startIntent.getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
+            criteria =  ApplicationUtils.getSearchCriteria(startIntent); //startIntent.getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
             String showPlaying = startIntent.getStringExtra(MusicListeningService.FLAG_SHOW_LISTENING);
             if("yes".equalsIgnoreCase(showPlaying)) {
                 selectedTag = startIntent.getParcelableExtra(Constants.KEY_MEDIA_TAG);
@@ -556,18 +559,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
            // mSwipeRefreshLayout.setEnabled(true);
         }
     }
-/*
-    private boolean isBackToSearch() {
-        SearchCriteria criteria = epoxyController.peekCriteria(); //getPrevSearchCriteria();
-        if(criteria == null) return false;
-
-        if(criteria.getType() == SearchCriteria.TYPE.SEARCH ||
-                criteria.getType() == SearchCriteria.TYPE.SEARCH_BY_ARTIST||
-                criteria.getType() == SearchCriteria.TYPE.SEARCH_BY_ALBUM) {
-            return true;
-        }
-        return false;
-    } */
 	
 	private boolean doPlayNextSong() {
 		if(MusicListeningService.getInstance()==null) return false;
@@ -726,14 +717,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         return position;
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
+  //  @Override
+  //  protected void onNewIntent(Intent intent) {
+  //      super.onNewIntent(intent);
         // show listening on all songs mode only.
        // displayListenningSong = true;
        // initMediaItemList(intent);
         //mediaItemViewModel.loadSource(new SearchCriteria(SearchCriteria.TYPE.ALL));
-    }
+   // }
 
     @Override
     protected void onResume() {
@@ -975,16 +966,20 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void doShowEditActivity(AudioTag mediaItem) {
         if(AudioFileRepository.isMediaFileExist(mediaItem)) {
-            //changedPositions.add(position);
-            //List<AudioTag> items = Collections.singletonList(mediaItem);
-            //MetadataActivity.startActivity(MediaBrowserActivity.this, items);
-            Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
-           // List<AudioTag> tags = Collections.singletonList(mediaItem);
+           /* Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
             ArrayList<AudioTag> tagList = new ArrayList<>();
             tagList.add(mediaItem);
             myIntent.putParcelableArrayListExtra(Constants.KEY_MEDIA_TAG_LIST, tagList);
-            myIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, epoxyController.getCriteria());
+            ApplicationUtils.setSearchCriteria(myIntent,epoxyController.getCriteria()); //myIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, epoxyController.getCriteria());
+            editorLauncher.launch(myIntent); */
+
+            ArrayList<AudioTag> tagList = new ArrayList<>();
+            tagList.add(mediaItem);
+            AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
+            EventBus.getDefault().postSticky(message);
+            Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
             editorLauncher.launch(myIntent);
+           // startActivity(myIntent);
         }else {
             new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.AlertDialogTheme)
                     .setTitle("Problem")
@@ -1019,9 +1014,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
             Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
 
-            myIntent.putParcelableArrayListExtra(Constants.KEY_MEDIA_TAG_LIST, tagList);
-            myIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, epoxyController.getCriteria());
+       //     myIntent.putParcelableArrayListExtra(Constants.KEY_MEDIA_TAG_LIST, tagList);
+      //  ApplicationUtils.setSearchCriteria(myIntent,epoxyController.getCriteria()); //myIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, epoxyController.getCriteria());
+      //  editorLauncher.launch(myIntent);
+        AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
+        EventBus.getDefault().postSticky(message);
         editorLauncher.launch(myIntent);
+        //startActivity(myIntent);
     }
 
     private void doShowAboutApp() {

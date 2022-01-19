@@ -83,11 +83,12 @@ public class FileUtils {
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
-    public static String removeExtension(String path) {
-        if(path==null) {
+    public static String removeExtension(String fileName) {
+        if(fileName==null) {
             return "";
         }
-        return removeExtension(new File(path));
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
     private static String getTypeForFile(DocumentFile file) {

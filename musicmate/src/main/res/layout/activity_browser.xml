@@ -270,9 +270,11 @@
 		app:layout_scrollFlags="scroll|enterAlways"
 		app:navigationContentDescription="Collection">
 		-->
-    </RelativeLayout>
 
-	<com.google.android.material.floatingactionbutton.FloatingActionButton
+
+    </RelativeLayout>
+<!--
+<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/fab_playing"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -284,6 +286,24 @@
 		app:backgroundTint="@color/now_playing_alpha_80"
 		android:visibility="gone"
 		/>
+-->
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_playing"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:src="@drawable/ic_center_focus_strong_black_24dp"
+		app:layout_anchor="@id/bottom_app_bar"
+		android:scaleType="center"
+		app:maxImageSize="@dimen/dimen_48_dp"
+		app:tint="@null"
+		android:visibility="gone"
+		app:backgroundTint="@color/grey200_transparent"
+		/>
+
+	<!--
+
+		app:backgroundTint="@color/now_playing_background"
+	-->
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"

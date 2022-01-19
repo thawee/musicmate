@@ -3,13 +3,10 @@ package apincer.android.mmate.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,7 +16,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -41,7 +37,6 @@ import androidx.palette.graphics.Palette;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
@@ -52,18 +47,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
-import apincer.android.mmate.fs.MusicFileProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioTagRepository;
-import apincer.android.mmate.service.MusicListeningService;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
@@ -485,7 +476,7 @@ public class TagsEditorFragment extends Fragment {
 
             // album artist
             mAlbumArtistView = setupAutoCompleteTextView(view, R.id.tag_album_artist);
-            list = repository.getAlbumArtistList();
+            list = repository.getAlbumArtistList(getContext());
             arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
@@ -894,61 +885,6 @@ public class TagsEditorFragment extends Fragment {
         });
         alert.show();
     }
-/*
-    private void doAnalyser() {
-        Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
-        if (intent != null && mediaItems.size()==1) {
-            ApplicationInfo ai = MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
-            if (ai != null) {
-                intent.setAction(Intent.ACTION_SEND);
-                MimeTypeMap mime = MimeTypeMap.getSingleton();
-
-                String path = mediaItems.get(0).getPath();
-                File file = new File(path);
-                String type = mime.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(path));
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri apkURI = MusicFileProvider.getUriForFile(path);
-                    // Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), "ru.zdevs.zarchiver.system.FileProvider", file);
-                    intent.setDataAndType(apkURI, type);
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                } else {
-                    intent.setDataAndType(Uri.fromFile(file), type);
-                }
-                startActivity(intent);
-            }
-        }
-    } */
-
-    private void doWebSearch() {
-        try {
-            String text = "";
-            int size = mediaItems.size();
-            AudioTag item = mediaItems.get(0);
-            // title and artist
-                if(size ==1 && !StringUtils.isEmpty(item.getTitle())) {
-                    text = text+" "+item.getTitle();
-                }
-                if(!StringUtils.isEmpty(item.getAlbum())) {
-                    text = text+" "+item.getAlbum();
-                }
-                if(!StringUtils.isEmpty(item.getArtist())) {
-                    text = text+" "+item.getArtist();
-                }
-            String search= URLEncoder.encode(text, "UTF-8");
-            Uri uri = Uri.parse("http://www.google.com/#q=" + search);
-            Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(gSearchIntent);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        /*
-        Uri uri = Uri.parse("http://www.google.com/#q=" + Search);
-        Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
-        searchIntent.putExtra(SearchManager.QUERY, uri);
-        startActivity(searchIntent);
-        */
-    }
 
 /*
     private void doShowCharsetOptions() {
@@ -991,45 +927,4 @@ public class TagsEditorFragment extends Fragment {
     private Context getApplicationContext() {
         return getActivity().getApplicationContext();
     }
-
-    /*
-    // Define the callback for what to do when data is received
-    private BroadcastReceiver mFileManagerReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, Activity.RESULT_CANCELED);
-            if (resultCode == Activity.RESULT_OK) {
-                String command = intent.getStringExtra(Constants.KEY_COMMAND);
-                String status = intent.getStringExtra(Constants.KEY_STATUS);
-                String message = intent.getStringExtra(Constants.KEY_MESSAGE);
-                int successCount = intent.getIntExtra(Constants.KEY_SUCCESS_COUNT,0);
-                int errorCount = intent.getIntExtra(Constants.KEY_ERROR_COUNT,0);
-                int pendingTotal = intent.getIntExtra(Constants.KEY_PENDING_TOTAL, 0);
-
-                ToastUtils.showActionMessageEditor(getActivity(), fabMainAction, successCount,errorCount,pendingTotal, status, message);
-
-                if("success".equalsIgnoreCase(status)) {
-                   // Toasty.success(getActivity(), percent+message, Toast.LENGTH_LONG, true).show();
-                    if((successCount+errorCount)==pendingTotal) {
-                        stopProgressBar();
-                        // remove snackbar
-                        if(mSnackbar!=null) {
-                            mSnackbar.dismiss();
-                            mSnackbar = null;
-                        }
-                        if (Constants.COMMAND_DELETE.equalsIgnoreCase(command)) {
-                            // back to main activity after delete all
-                            getActivity().onBackPressed();
-                        }else {
-                            // refresh view
-                            viewHolder.bindViewHolder(mainActivity.buildDisplayTag(true)); // silent mode
-                            viewHolder.resetState();
-                            toggleSaveFabAction();
-                        }
-                        mainActivity.updateTitlePanel();
-                    }
-                }
-            }
-        }
-    }; */
 }

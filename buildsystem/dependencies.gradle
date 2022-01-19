@@ -8,7 +8,7 @@ ext.versions = [
         androidGradlePlugin: '7.1.0-rc01', //''7.0.3',
         minSdk             : 30,
         targetSdk          : 30,
-        compileSdk         : 31,
+        compileSdk         : 32,
         buildTools         : '32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
         kotlin             : '1.6.10',  //'1.5.31',
@@ -16,7 +16,7 @@ ext.versions = [
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.1.0',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.0.0-b02',
+        aboutlibraries     : '10.0.0-b07',
 ]
 
 ext.gradlePlugins = [
@@ -32,7 +32,7 @@ def deps = [:]
 
 def google = [:]
 // https://github.com/material-components/material-components-android/releases
-google.material = "com.google.android.material:material:1.5.0-beta01"
+google.material = "com.google.android.material:material:1.5.0"
 google.android_maps_utils = "com.google.maps.android:android-maps-utils:2.3.0" //0.5" //23/06/2019
 deps.google = google
 
@@ -232,6 +232,7 @@ material_dialogs.lifecycle = "com.afollestad.material-dialogs:lifecycle:3.3.0"
 deps.material_dialogs = material_dialogs
 
 // https://github.com/coil-kt/coil
+//https://mvnrepository.com/artifact/io.coil-kt/coil
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:2.0.0-alpha05" //1.4.0"
 deps.coil = coil
@@ -263,8 +264,10 @@ deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 deps.storage = "com.anggrayudi:storage:0.14.0"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
-deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5'
+deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1'
 deps.coverartarchive = 'fm.last:coverartarchive-api:2.1.1'
+//https://github.com/greenrobot/EventBus
+deps.eventbus = 'org.greenrobot:eventbus:3.3.1'
 ext.deps = deps
 
 def developer = [:]

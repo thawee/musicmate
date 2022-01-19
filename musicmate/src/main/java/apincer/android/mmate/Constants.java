@@ -79,7 +79,11 @@ public final class Constants {
     public static String STATUS_SUCCESS="success";
     public static String STATUS_FAIL="fail";
     public static String STATUS_START="start";
-    public static String KEY_SEARCH_CRITERIA="search_criteria";
+    public static String KEY_SEARCH_TYPE="search_criteria_type";
+    public static String KEY_SEARCH_KEYWORD="search_criteria_keyword";
+    public static String KEY_FILTER_TYPE="search_filter_type";
+    public static String KEY_FILTER_KEYWORD="search_filter_keyword";
+   // public static String KEY_SEARCH_CRITERIA="search_criteria";
     public static String KEY_COMMAND="command";
     public static String KEY_STATUS="status";
     public static String KEY_MESSAGE="message";

@@ -147,11 +147,17 @@ public class AudioTagRepository {
         return list;
     }
 
-    public List<String> getAlbumArtistList() {
+    public List<String> getAlbumArtistList(Context context) {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.albumArtist).distinct().findStrings();
-        if(names!=null) {
-            list.addAll(Arrays.asList(names));
+       // String[] names = tagBox.query().build().property(AudioTag_.albumArtist).distinct().findStrings();
+        //if(names!=null) {
+       //     list.addAll(Arrays.asList(names));
+       // }
+        String[] names =  context.getResources().getStringArray(R.array.default_album_artist);
+        for(String name: names) {
+            if(!list.contains(name)) {
+                list.add(name);
+            }
         }
         Collections.sort(list);
         return list;

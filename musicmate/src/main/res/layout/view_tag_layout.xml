@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<io.github.florent37.shapeofview.shapes.DiagonalView
-    android:id="@+id/panel_labels"
+<FrameLayout
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,16 +7,23 @@
     android:layout_height="340dp"
     android:background="#504F4F"
     android:layout_gravity="bottom"
-    app:shape_diagonal_angle="8"
-    app:shape_diagonal_position="top"
+    app:shape_diagonal_angle="-10"
+    app:shape_diagonal_position="right"
     app:barrierDirection="right"
     tools:showIn="@layout/activity_tags">
-
+    <io.github.florent37.shapeofview.shapes.DiagonalView
+        android:id="@+id/panel_labels"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#504F4F"
+        app:shape_diagonal_angle="10"
+        app:shape_diagonal_position="left"
+        app:barrierDirection="right"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingTop="@dimen/dimen_32_dp"
+        android:paddingTop="@dimen/dimen_1_dp"
         android:paddingStart="20dp">
 
         <LinearLayout
@@ -55,11 +61,9 @@
                     android:maxLines="2"
                     android:gravity="right"
                     android:paddingRight="@dimen/dimen_4_dp"
-                    android:autoSizeTextType="uniform"
-                    android:autoSizePresetSizes="@array/auto_size_text_sizes"
                     android:layout_gravity="center_horizontal"
                     android:textColor="@android:color/white"
-                    android:textSize="26sp"
+                    android:textSize="22sp"
                     android:background="@drawable/selectable_link"/>
 
             </LinearLayout>
@@ -97,11 +101,9 @@
                     android:maxLines="2"
                     android:gravity="left"
                     android:paddingLeft="@dimen/dimen_4_dp"
-                    android:autoSizeTextType="uniform"
-                    android:autoSizePresetSizes="@array/auto_size_text_sizes"
                     android:layout_gravity="center_horizontal"
                     android:textColor="@android:color/white"
-                    android:textSize="26sp"
+                    android:textSize="22sp"
                     android:background="@drawable/selectable_link"/>
             </LinearLayout>
         </LinearLayout>
@@ -109,6 +111,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dimen_4_dp"
             android:orientation="vertical">
             <TextView
                 android:layout_width="wrap_content"
@@ -180,18 +183,122 @@
                 android:gravity="center"
                 android:layout_gravity="center"/>
         </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="45dp"
+            android:layout_marginTop="@dimen/dimen_12_dp"
+            android:layout_gravity="">
+
+
+            <com.skydoves.elasticviews.ElasticLayout
+                android:id="@+id/btnDelete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:background="@drawable/shape_border_back_selectable"
+                android:paddingLeft="@dimen/dimen_12_dp"
+                android:paddingTop="@dimen/dimen_4_dp"
+                android:paddingRight="@dimen/dimen_12_dp"
+                android:paddingBottom="@dimen/dimen_4_dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left"
+                    android:src="@drawable/ic_round_delete_forever_24" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginLeft="@dimen/dimen_16_dp"
+                    android:gravity="center_vertical"
+                    android:paddingRight="@dimen/dimen_12_dp"
+                    android:text="@string/delete_song_label"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
+            </com.skydoves.elasticviews.ElasticLayout>
+
+            <com.skydoves.elasticviews.ElasticLayout
+                android:id="@+id/btnEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_border_back_selectable"
+                android:gravity="center"
+                android:paddingLeft="@dimen/dimen_12_dp"
+                android:paddingTop="@dimen/dimen_4_dp"
+                android:paddingRight="@dimen/dimen_12_dp"
+                android:paddingBottom="@dimen/dimen_4_dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@drawable/ic_round_edit_24" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/dimen_24_dp"
+                    android:paddingLeft="@dimen/dimen_12_dp"
+                    android:paddingRight="@dimen/dimen_12_dp"
+                    android:text="@string/edit_tags_label"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
+
+            </com.skydoves.elasticviews.ElasticLayout>
+
+            <com.skydoves.elasticviews.ElasticLayout
+                android:id="@+id/btnImport"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:background="@drawable/shape_border_back_selectable"
+                android:paddingLeft="@dimen/dimen_12_dp"
+                android:paddingTop="@dimen/dimen_4_dp"
+                android:paddingRight="@dimen/dimen_12_dp"
+                android:paddingBottom="@dimen/dimen_4_dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginRight="@dimen/dimen_16_dp"
+                    android:paddingLeft="@dimen/dimen_12_dp"
+                    android:text="@string/import_songs_label"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:src="@drawable/ic_round_move_to_inbox_24" />
+            </com.skydoves.elasticviews.ElasticLayout>
+        </RelativeLayout>
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="@dimen/dimen_16_dp"
+                    android:gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/dimen_4_dp"
+                    android:layout_marginLeft="@dimen/dimen_16_dp"
+                    android:layout_marginRight="@dimen/dimen_16_dp"
                     >
                     <com.skydoves.elasticviews.ElasticLayout
                         android:id="@+id/btnAspect"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
                         android:background="@drawable/shape_border_back_selectable"
                         android:layout_marginTop="@dimen/dimen_2_dp"
                         android:layout_marginRight="@dimen/dimen_12_dp"
@@ -211,10 +318,9 @@
                     </com.skydoves.elasticviews.ElasticLayout>
 
                     <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/btnFFMPEG"
+                        android:id="@+id/btnExplorer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
                         android:background="@drawable/shape_border_back_selectable"
                         android:layout_marginTop="@dimen/dimen_2_dp"
                         android:layout_marginBottom="@dimen/dimen_4_dp"
@@ -224,8 +330,29 @@
                             android:layout_height="wrap_content"
                             android:paddingTop="@dimen/dimen_4_dp"
                             android:paddingBottom="@dimen/dimen_4_dp"
-                            android:paddingLeft="@dimen/dimen_24_dp"
-                            android:paddingRight="@dimen/dimen_24_dp"
+                            android:paddingLeft="@dimen/dimen_12_dp"
+                            android:paddingRight="@dimen/dimen_12_dp"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:textColor="@android:color/white"
+                            android:textStyle="bold"
+                            android:text="@string/file_explorer_label"/>
+                    </com.skydoves.elasticviews.ElasticLayout>
+                    <com.skydoves.elasticviews.ElasticLayout
+                        android:id="@+id/btnFFMPEG"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/shape_border_back_selectable"
+                        android:layout_marginTop="@dimen/dimen_2_dp"
+                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:layout_marginRight="@dimen/dimen_12_dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="@dimen/dimen_4_dp"
+                            android:paddingBottom="@dimen/dimen_4_dp"
+                            android:paddingLeft="@dimen/dimen_12_dp"
+                            android:paddingRight="@dimen/dimen_12_dp"
                             android:layout_gravity="center"
                             android:gravity="center"
                             android:textColor="@android:color/white"
@@ -236,11 +363,9 @@
                         android:id="@+id/btnWebSearch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
                         android:background="@drawable/shape_border_back_selectable"
                         android:layout_marginTop="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:layout_marginLeft="@dimen/dimen_12_dp">
+                        android:layout_marginBottom="@dimen/dimen_4_dp">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -256,105 +381,7 @@
                     </com.skydoves.elasticviews.ElasticLayout>
                 </LinearLayout>
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginEnd="45dp"
-                    android:layout_gravity="">
 
-
-                    <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/btnDelete"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/dimen_12_dp"
-                        android:background="@drawable/shape_border_back_selectable"
-                        android:paddingLeft="@dimen/dimen_12_dp"
-                        android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
-                        android:paddingBottom="@dimen/dimen_4_dp">
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="left"
-                            android:src="@drawable/ic_round_delete_forever_24" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginLeft="@dimen/dimen_16_dp"
-                            android:gravity="center_vertical"
-                            android:paddingRight="@dimen/dimen_12_dp"
-                            android:text="@string/delete_song_label"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold" />
-                    </com.skydoves.elasticviews.ElasticLayout>
-
-                    <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/btnEdit"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:layout_gravity="center"
-                        android:layout_marginTop="@dimen/dimen_8_dp"
-                        android:background="@drawable/shape_border_back_selectable"
-                        android:gravity="center"
-                        android:paddingLeft="@dimen/dimen_12_dp"
-                        android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
-                        android:paddingBottom="@dimen/dimen_4_dp">
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:src="@drawable/ic_round_edit_24" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="@dimen/dimen_24_dp"
-                            android:paddingLeft="@dimen/dimen_12_dp"
-                            android:paddingRight="@dimen/dimen_12_dp"
-                            android:text="@string/edit_tags_label"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold" />
-
-                    </com.skydoves.elasticviews.ElasticLayout>
-
-                    <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/btnImport"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_marginTop="@dimen/dimen_12_dp"
-                        android:background="@drawable/shape_border_back_selectable"
-                        android:paddingLeft="@dimen/dimen_12_dp"
-                        android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
-                        android:paddingBottom="@dimen/dimen_4_dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginRight="@dimen/dimen_16_dp"
-                            android:paddingLeft="@dimen/dimen_12_dp"
-                            android:text="@string/import_songs_label"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold" />
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="right"
-                            android:src="@drawable/ic_round_move_to_inbox_24" />
-                    </com.skydoves.elasticviews.ElasticLayout>
-                </RelativeLayout>
             <!--
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -412,4 +439,4 @@
         android:fitsSystemWindows="true"
         android:background="@drawable/bg_gradient"/>
 
-</io.github.florent37.shapeofview.shapes.DiagonalView>
+</FrameLayout>

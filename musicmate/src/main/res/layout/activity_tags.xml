@@ -65,7 +65,7 @@
 
                         <TextView
                             android:id="@+id/panel_title"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Title"
                             android:textAllCaps="false"
@@ -73,6 +73,8 @@
                             android:autoSizeTextType="uniform"
                             android:textColor="@android:color/white"
                             android:textStyle="bold"
+                            android:gravity="center_horizontal"
+                            android:layout_gravity="center_horizontal"
                             android:textSize="18sp"/>
 <!--
                         <ImageView
@@ -131,37 +133,69 @@
                 android:id="@+id/panel_cover_art_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/dimen_64_dp"
+                android:layout_marginTop="@dimen/dimen_52_dp"
                 android:layout_gravity="top"
                 android:translationY="50dp"
                 app:layout_collapseMode="parallax"
                 android:background="@color/bgColor">
+
                 <apincer.android.mmate.ui.view.AspectRatioPhotoView
                     android:id="@+id/panel_cover_art"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:paddingTop="2dp"
-                    app:widthRatio="1"
+                    android:paddingTop="1dp"
+                    android:src="@drawable/ic_broken_image_black_24dp"
                     app:heightRatio="2"
-                    android:src="@drawable/ic_broken_image_black_24dp"/>
-                <ImageView
-                    android:id="@+id/icon_hires"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:src="@drawable/ic_format_hires"
+                    app:widthRatio="1" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginRight="@dimen/dimen_12_dp"
+                    android:layout_marginBottom="@dimen/dimen_24_dp"
+                    android:background="@drawable/shadow">
+
+                    <me.zhanghai.android.materialratingbar.MaterialRatingBar
+                        android:id="@+id/icon_rating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:padding="@dimen/dimen_4_dp"
+                        android:numStars="5"
+                        android:max="5"
+                        android:stepSize="1"
+                        android:layout_gravity="center_horizontal"
+                        android:background="@color/transparent"
+                        android:layout_marginLeft="@dimen/dimen_12_dp"
+                        style="@style/Widget.MaterialRatingBar.RatingBar" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerInParent="true"
                     android:layout_marginRight="@dimen/dimen_12_dp"
-                    android:layout_marginBottom="@dimen/dimen_12_dp"/>
-                <ImageView
-                    android:id="@+id/icon_mqa"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:src="@drawable/ic_format_mqa_white"
-                    android:layout_alignParentRight="true"
-                    android:layout_centerInParent="true"
-                    android:layout_marginRight="@dimen/dimen_48_dp"
-                    android:layout_marginBottom="@dimen/dimen_12_dp"/>
+                    android:paddingTop="@dimen/dimen_8_dp"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:layout_marginBottom="@dimen/dimen_24_dp"
+                    android:background="@drawable/shadow">
+
+                    <ImageView
+                        android:id="@+id/icon_mqa"
+                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_height="@dimen/dimen_32_dp"
+                        android:src="@drawable/ic_format_mqa_white"
+                        android:layout_marginRight="@dimen/dimen_12_dp"
+                        android:layout_marginBottom="@dimen/dimen_12_dp"/>
+
+                    <ImageView
+                        android:id="@+id/icon_hires"
+                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_height="@dimen/dimen_32_dp"
+                        android:layout_marginRight="@dimen/dimen_12_dp"
+                        android:layout_marginBottom="@dimen/dimen_12_dp"
+                        android:src="@drawable/ic_format_hires" />
+                </LinearLayout>
             </RelativeLayout>
 
             <include layout="@layout/view_tag_layout" />
