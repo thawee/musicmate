@@ -64,7 +64,8 @@
         <service
             android:name="apincer.android.mmate.service.MusicMateNotificationListener"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
@@ -75,7 +76,8 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:banner="@string/app_name"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
