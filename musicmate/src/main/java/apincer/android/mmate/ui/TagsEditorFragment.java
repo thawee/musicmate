@@ -77,7 +77,6 @@ public class TagsEditorFragment extends Fragment {
     private List<AudioTag> mediaItems;
     private ViewHolder viewHolder;
     private FloatingActionButton fabSaveAction;
-    //private Snackbar mSnackbar;
     private File pendingCoverartFile;
     private FloatingActionButton fabMainAction;
     private ActivityResultLauncher startForResultFromGallery;
@@ -206,21 +205,6 @@ public class TagsEditorFragment extends Fragment {
         super.onAttach(context);
         mainActivity = (TagsActivity) getActivity();
         mediaItems = mainActivity.getEditItems();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Register for the particular broadcast based on ACTION string
-       // IntentFilter filter = new IntentFilter(AudioFileRepository.ACTION);
-       // LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mFileManagerReceiver, filter);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        // Unregister the listener when the application is paused
-      //  LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mFileManagerReceiver);
     }
 
     @Override
@@ -524,14 +508,13 @@ public class TagsEditorFragment extends Fragment {
 
             // grouping
             mGroupingView = setupAutoCompleteTextView(view, R.id.tag_group);
-            list = repository.getGroupingList(getContext());
+            list = repository.getDefaultGroupingList(getContext());
             arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
             mGroupingView.setThreshold(1);
             mGroupingView.setAdapter(arrayAdapter);
             mGroupingView.setOnTouchListener((v, event) -> {
-
                 if(event.getAction() == MotionEvent.ACTION_UP) {
                     if(event.getRawX() >= (mGroupingView.getRight() - mGroupingView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
                         // your action here

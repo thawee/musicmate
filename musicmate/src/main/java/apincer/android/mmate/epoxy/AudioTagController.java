@@ -82,6 +82,14 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                     if (!StringUtils.equals(tag.getAlbumArtist(), criteria.getFilterText())) {
                         continue;
                     }
+                } else if (Constants.FILTER_TYPE_GENRE.equals(criteria.getFilterType())) {
+                    if (!StringUtils.equals(tag.getGenre(), criteria.getFilterText())) {
+                        continue;
+                    }
+                } else if (Constants.FILTER_TYPE_GROUPING.equals(criteria.getFilterType())) {
+                    if (!StringUtils.equals(tag.getGrouping(), criteria.getFilterText())) {
+                        continue;
+                    }
                 } else if (Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
                     if (!tag.getPath().startsWith(filterPath)) {
                         continue;

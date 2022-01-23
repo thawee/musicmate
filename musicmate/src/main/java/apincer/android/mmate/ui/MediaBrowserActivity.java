@@ -48,6 +48,7 @@ import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import org.greenrobot.eventbus.EventBus;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -162,7 +163,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(itemsList.size()>1) {
             text = text + itemsList.size() + " songs to Music Directory?";
         }else {
-            // displayListenningSong = true;
             text = text + "'"+itemsList.get(0).getTitle()+"' song to Music Directory?";
         }
 
@@ -180,9 +180,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 	
 	private void showPlayingSongFAB(AudioTag tag) {
-      //  if(MusicListeningService.getInstance()==null || MusicListeningService.getInstance().getPlayingSong()==null) {
-      //      return;
-      //  }
         if(tag ==null) return;
 
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
@@ -234,20 +231,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     @Override
     public final void onActivityResult(final int requestCode, final int resultCode, final Intent resultData) {
         super.onActivityResult(requestCode, resultCode, resultData);
-        if (requestCode == MusicListeningService.REQUEST_CODE_EDIT_MEDIA_TAG) {
-           /** for (int changedPosition : changedPositions) {
-                MediaItem item = (MediaItem) mLibraryAdapter.getItem(changedPosition);
-                if (item == null || !AudioFileRepository.isMediaFileExist(item)) {
-                    mLibraryAdapter.removeItem(changedPosition);
-                    // remove selection
-                    if (mLibraryAdapter.isSelected(changedPosition)) {
-                        mLibraryAdapter.removeSelection(changedPosition);
-                    }
-                } else {
-                    mLibraryAdapter.notifyItemChanged(changedPosition);
-                }
-            } */
-        } else if (requestCode == MusicListeningService.REQUEST_CODE_STORAGE_PERMISSION) {
+        if (requestCode == MusicListeningService.REQUEST_CODE_STORAGE_PERMISSION) {
             if (resultCode == Activity.RESULT_OK) {
                 // Get Uri from Storage Access Framework.
                 // Persist access permissions.
@@ -259,13 +243,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 //String rootPath = uri.getPath();
                 Preferences.setPersistableUriPermission(this, rootPath, uri);
             }
-        } /*else if (requestCode == DocumentFileUtils.OPEN_DOCUMENT_TREE_CODE) {
-            if (resultData != null && resultData.getData() != null) {
-                Uri uri = resultData.getData();
-                String rootPath = uri.getPath();
-                Preferences.setPersistableUriPermission(this, rootPath, uri);
-            }
-        }*/
+        }
     }
 
 
@@ -290,10 +268,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void doStopRefresh() {
         refreshLayout.finishRefresh();
-       /* if (refreshLayout.isShown()) {
-            refreshLayout.finishRefreshing();
-        } */
-       // mStateView.hideStates();
     }
 
     @Override
@@ -418,8 +392,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 if(!onSetup) {
                     epoxyController.loadSource(tab.getText().toString());
                     doStartRefresh(null, tab.getText().toString());
-                   // SearchCriteria criteria = epoxyController.getCurrentCriteria();
-                   // criteria.setKeyword(tab.getText().toString());
                 }
             }
 
@@ -448,20 +420,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
         }
         doStartRefresh(criteria);
-        /*
-        SearchCriteria finalCriteria = criteria;
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //doStartRefresh(finalCriteria);
-                        epoxyController.loadSource(finalCriteria);
-                    }
-                });
-            }
-        }, 2000); */
     }
 
     /**
@@ -571,10 +529,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mSearchBar.setVisibility(View.VISIBLE);
         mSearchView.requestFocus();
         UIUtils.showKeyboard(getApplicationContext(), mSearchView);
-        /*
-        InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        manager.showSoftInput(mSearchView, InputMethodManager.SHOW_IMPLICIT); */
-        //mSwipeRefreshLayout.setEnabled(false);
         doStopRefresh();
     }
 
@@ -612,7 +566,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mResideMenu.setBackground(R.drawable.bg);
         mResideMenu.attachToActivity(this);
         mResideMenu.setScaleValue(0.54f);
-      //  mResideMenu.setSwipeDirectionDisable(ResideMenu.DIRECTION_RIGHT);
+        mResideMenu.setSwipeDirectionDisable(ResideMenu.DIRECTION_LEFT);
+        mResideMenu.setSwipeDirectionDisable(ResideMenu.DIRECTION_RIGHT);
         mResideMenu.setOnMenuItemClickListener(item -> {
             onOptionsItemSelected(item);
             mResideMenu.closeMenu();
@@ -716,15 +671,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
         return position;
     }
-
-  //  @Override
-  //  protected void onNewIntent(Intent intent) {
-  //      super.onNewIntent(intent);
-        // show listening on all songs mode only.
-       // displayListenningSong = true;
-       // initMediaItemList(intent);
-        //mediaItemViewModel.loadSource(new SearchCriteria(SearchCriteria.TYPE.ALL));
-   // }
 
     @Override
     protected void onResume() {
@@ -855,7 +801,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             return true; */
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, AudioTagRepository.getInstance().getGroupingList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, AudioTagRepository.getInstance().getDefaultGroupingList(getApplicationContext()).get(0));
             return true;
         /*}else if(item.getItemId() == R.id.menu_audiophile) {
             doHideSearch();
@@ -925,7 +871,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getApplicationContext(),tag));
             quality = AudioTagUtils.getTrackQuality(tag);
             qualityDetails = AudioTagUtils.getTrackQualityDetails(tag);
-            sourceLabel.setText("Track Quality: "+quality);
+            sourceLabel.setText("Source: "+quality);
         }else {
             sourceText.setText("...");
         }
@@ -957,10 +903,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MediaBrowserActivity.this) //, R.style.SignalPathDialogTheme)
                 .setTitle("Signal Path: "+quality)
                 .setMessage(qualityDetails) // + text)
-                .setView(view)
-                .setPositiveButton("OK", (dialogInterface, i) -> {
-                    dialogInterface.dismiss();
-                });
+                .setView(view);
+                //.setPositiveButton("OK", (dialogInterface, i) -> {
+                //    dialogInterface.dismiss();
+                //});
         builder.show();
     }
 
@@ -1036,12 +982,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .withAboutVersionShownName(true)
                 .withEdgeToEdge(true)
                 .withLicenseShown(true)
-                .withAboutSpecial1("DEVELOPER")
-                .withAboutSpecial1Description("<b>Thawee Prakaipetch</b><br /><br />E-Mail: thaweemail@gmail.com<br />")
-                .withAboutSpecial2("DIGITAL MUSIC")
-                .withAboutSpecial2Description(ApplicationUtils.getAssetsText(this,"digital_music.html"))
+               // .withAboutSpecial1("DEVELOPER")
+               // .withAboutSpecial1Description("<b>Thawee Prakaipetch</b><br /><br />E-Mail: thaweemail@gmail.com<br />")
+                .withAboutSpecial1("DIGITAL MUSIC")
+                .withAboutSpecial1Description(ApplicationUtils.getAssetsText(this,"digital_music.html"))
                 //.withFields(R.string.class.getFields())
-                .withAboutDescription("<b>by Thawee Prakaipetch</b><br /><br />Managing music collections on Android<br /><b>Enjoy Your Music :D</b>")
+                //.withAboutDescription("<b>by Thawee Prakaipetch</b><br /><br />Managing music collections on Android<br /><b>Enjoy Your Music :D</b>")
+                .withAboutDescription("<b>by Thawee Prakaipetch</b><br /><b>Enjoy Your Music :D</b>")
                 .withActivityTitle("About MusicMate")
                 .start(this);
     }
@@ -1255,26 +1202,28 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     };
 
     private void doShowPlayingSong(AudioTag tag) {
-        //ToastUtils.showBroadcastData(MediaBrowserActivity.this, broadcastData);
         if(nowPlayingView==null) return;
 
         hidePlayingSongFAB();
-       // @SuppressLint("InflateParams") View view = getLayoutInflater().inflate(R.layout.dailog_now_playing, null);
         TextView title = nowPlayingView.findViewById(R.id.title);
         title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(),tag));
         TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
         subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
+        ImageView type = nowPlayingView.findViewById(R.id.file_type);
         ImageView hires = nowPlayingView.findViewById(R.id.hires);
         ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
         ImageView player = nowPlayingView.findViewById(R.id.player);
         ImageView output = nowPlayingView.findViewById(R.id.output);
+        TextView outputText = nowPlayingView.findViewById(R.id.output_text);
         hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag)?View.VISIBLE:View.GONE);
         mqa.setVisibility(tag.isMQA()?View.VISIBLE:View.GONE);
+        type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
         player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
         AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
             @Override
             public void onReady(AudioOutputHelper.Device device) {
                 output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+                outputText.setText(device.getName());
             }
         });
         ImageView cover = nowPlayingView.findViewById(R.id.coverart);
@@ -1298,10 +1247,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     }
                 });
                 showPlayingSongFAB(tag);
-               // dlg.dismiss(); // when the task active then close the dialog
                 t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
             }
-        }, 2500); // after 2 second (or 2000 miliseconds), the task will be active.
+        }, 6000); // after 2 second (or 2000 miliseconds), the task will be active.
     }
 
     @Override

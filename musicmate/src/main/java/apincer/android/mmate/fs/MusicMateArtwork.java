@@ -18,8 +18,9 @@ import apincer.android.mmate.utils.BitmapHelper;
  */
 
 public class MusicMateArtwork extends AndroidArtwork {
-   // public static int MIN_ALBUM_ART_SIZE = 600; // px
+   // public static int MIN_ALBUM_ART_SIZE = 800; // px
     public static int MAX_ALBUM_ART_SIZE = 1024; // px
+    final int IMAGE_MAX_SIZE = 640000; // 640 kb
     @Override
     public void setFromFile(File file)  throws IOException  {
         RandomAccessFile imageFile = new RandomAccessFile(file, "r");
@@ -27,7 +28,19 @@ public class MusicMateArtwork extends AndroidArtwork {
         imageFile.read(imagedata);
         imageFile.close();
 
-        Bitmap bitmap = BitmapHelper.decodeBitmap(imagedata, MAX_ALBUM_ART_SIZE, MAX_ALBUM_ART_SIZE);
+        Bitmap resultBitmap = BitmapHelper.decodeBitmap(imagedata, MAX_ALBUM_ART_SIZE, MAX_ALBUM_ART_SIZE);
+        // resize to desired dimensions
+        int height = resultBitmap.getHeight();
+        int width = resultBitmap.getWidth();
+        double y = Math.sqrt(IMAGE_MAX_SIZE
+                / (((double) width) / height));
+        double x = (y / height) * width;
+
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(resultBitmap, (int) x, (int) y, true);
+        resultBitmap.recycle();
+        Bitmap bitmap = scaledBitmap;
+
+        System.gc();
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);

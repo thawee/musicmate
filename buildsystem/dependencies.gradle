@@ -16,7 +16,7 @@ ext.versions = [
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.1.0',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.0.0-b07',
+        aboutlibraries     : '10.0.0-b08',
 ]
 
 ext.gradlePlugins = [
@@ -212,6 +212,9 @@ ui.stateViews =  'com.github.medyo:state-views:0.2'
 ui.photoview = 'com.github.chrisbanes:PhotoView:2.0.0'
 // https://github.com/VrUnd14/VPAwesomeWidgets
 ui.vpawesomewidgets = 'awesome.vrund.vpawesomewidgets:VPAwesomeWidgets:1.5.2'
+//https://github.com/scwang90/SmartRefreshLayout
+ui.refresh_layout_kernel = 'io.github.scwang90:refresh-layout-kernel:2.0.5'
+ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.0.5'
 deps.ui = ui
 
 def epoxy = [:]
@@ -262,7 +265,7 @@ deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019
 //deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
 deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 //https://github.com/anggrayudi/SimpleStorage
-deps.storage = "com.anggrayudi:storage:0.14.0"
+deps.storage = "com.anggrayudi:storage:1.0.0"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
 deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1'
@@ -281,12 +284,13 @@ ext.developer = developer
 
 def addRepos(RepositoryHandler handler) {
     handler.google()
-    handler.jcenter() // require for AvatarView
+    //handler.jcenter() // require for AvatarView
     handler.mavenCentral()
     handler.maven {url "https://jitpack.io"}
 	handler.maven {url "https://maven.google.com" }
     //handler.maven {url "http://repository.jetbrains.com/gradle-libs"}
-   // handler.maven {url = "https://oss.sonatype.org/content/repositories/snapshots/" } //For Snapshots
+    handler.maven {url "https://repo1.maven.org/maven2"}
+    handler.maven {url = "https://oss.sonatype.org/content/repositories/snapshots/" } //For Snapshots
     //handler.maven {url "http://dl.bintray.com/gigamole/maven/"}
    // handler.maven {url "https://mvnrepository.com/artifact/"}
 }

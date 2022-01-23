@@ -117,22 +117,26 @@ public class AudioTagRepository {
         return list;
     }
 	
-	public List<String> getGroupingList(Context context) {
+	public List<String> getDefaultGroupingList(Context context) {
         List<String> list = new ArrayList<>();
-      /*  String[] names = tagBox.query().build().property(AudioTag_.grouping).distinct().findStrings();
+        String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
+        list.addAll(Arrays.asList(groupings));
+        Collections.sort(list);
+        return list;
+    }
+
+    public List<String> getGroupingList(Context context) {
+        List<String> list = new ArrayList<>();
+        String[] names = tagBox.query().build().property(AudioTag_.grouping).distinct().findStrings();
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-        Collections.sort(list); */
-       // list.add("Jazz");
-       // list.add("Mor-Lum");
-       // list.add("Classic");
-       // list.add("Thai");
-       // list.add("English");
-       // list.add("World");
-       // list.add("");
         String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
-        list.addAll(Arrays.asList(groupings));
+        for(String grp: groupings) {
+            if(!list.contains(grp)) {
+                list.add(grp);
+            }
+        }
         Collections.sort(list);
         return list;
     }

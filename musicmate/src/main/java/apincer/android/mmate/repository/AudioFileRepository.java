@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.Preferences;
 import apincer.android.mmate.cue.CueParse;
 import apincer.android.mmate.cue.Track;
 import apincer.android.mmate.fs.MusicMateArtwork;
@@ -970,6 +969,9 @@ public class AudioFileRepository {
         if("Jazz".equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
         }
+        if("Special".equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_PRIMARY;
+        }
         if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_SECONDARY;
         }
@@ -984,180 +986,6 @@ public class AudioFileRepository {
         }
         return STORAGE_SECONDARY;
     }
-
-    @Deprecated
-    public String buildMatePath(@NotNull AudioTag metadata) {
-        // hierarchy directory
-        // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc)
-        // 2. hires, lossless, mqa, etc
-        // 3. artist|albumArtist
-        // 4. album
-        // 5. file name <track no>-<artist>-<title>
-        // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
-        // /format/<album|albumartist|artist>/<track no> <artist>-<title>
-        final String ReservedChars = "?|\\*<\":>[]~#%^@.";
-        try {
-            String musicPath ="Music/";
-            String storageId = StorageId.PRIMARY;
-           // String storagePath = null;
-            //if(Preferences.isSaveOnSDCard(getContext(), metadata)) {
-            //    storagePath = fileRepos.getExternalRootPath();
-            //}else
-            if(!Preferences.isSaveOnInternalStorage(getContext(), metadata)) {
-                List<String> sids = DocumentFileCompat.getStorageIds(getContext());
-                for(String sid: sids) {
-                    if(!sid.equals(StorageId.PRIMARY)) {
-                        storageId=sid;
-                        break;
-                    }
-                }
-                //storagePath = fileRepos.getInternalRootPath();
-            //}else {
-                //storagePath = fileRepos.getExternalRootPath();
-            }
-
-           // if(StringUtils.isEmpty(storagePath)) {
-                // same as current storage
-           //     storagePath = fileRepos.getStoragePath(metadata.getPath());
-           // }
-
-           // if(storagePath.endsWith(File.separator)) {
-           //     storagePath = storagePath.substring(0,storagePath.length()-1);
-           // }
-           // storagePath = storagePath+musicPath; // .../Music
-
-            String ext = FileUtils.getExtension(metadata.getPath());
-            StringBuffer filename = new StringBuffer(musicPath);
-
-			if(!StringUtils.isEmpty(metadata.getGrouping())) {
-                filename.append(StringUtils.formatTitle(metadata.getGrouping())).append(File.separator);
-            }
-
-			if(AudioTagUtils.isDSD(metadata)) {
-                filename.append(Constants.MEDIA_PATH_DSD);
-            }else if (metadata.isMQA()) {
-                filename.append(Constants.MEDIA_PATH_MQA);
-            }else if (AudioTagUtils.isPCMHiResMaster(metadata)) {
-                filename.append(Constants.MEDIA_PATH_HRMS);
-            }else if (AudioTagUtils.isPCMHiResLossless(metadata)) {
-                filename.append(Constants.MEDIA_PATH_HR);
-            }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_ALAC);
-            }else if (Constants.MEDIA_ENC_FLAC.equals(metadata.getAudioEncoding())) {
-			    filename.append(Constants.MEDIA_PATH_FLAC);
-            }else if (Constants.MEDIA_ENC_WAVE.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_WAVE);
-            }else if (Constants.MEDIA_ENC_AIFF.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_AIFF);
-            }else if (Constants.MEDIA_ENC_AAC.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_ACC);
-            }else if (Constants.MEDIA_ENC_MP3.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_MP3);
-            }
-			filename.append(File.separator);
-
-            // MQA
-            // SACD (ISO)
-            // /Music/[DSD|MQA|Hi-Res|Lossless|Others]/
-
-            // albumArtist or artist
-           // boolean useAlbumArtist = false;
-            String title = StringUtils.trimTitle(metadata.getTitle());
-            String artist = StringUtils.trimTitle(metadata.getArtist());
-            String album = StringUtils.trimTitle(metadata.getAlbum());
-            String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
-
-            String pathArtist = getAlbumArtistOrArtist(artist, albumArtist);
-
-            if(StringUtils.isEmpty(pathArtist)) {
-                pathArtist = StringUtils.UNKNOWN_ARTIST;
-            }
-           /* if(!StringUtils.isEmpty(albumArtist)) {
-                filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
-                useAlbumArtist = true;
-            }else if(!StringUtils.isEmpty(artist)) {
-                filename.append(StringUtils.formatTitle(artist)).append(File.separator);
-            }*/
-            if(!StringUtils.isEmpty(pathArtist)) {
-                filename.append(StringUtils.formatTitle(pathArtist)).append(File.separator);
-               // useAlbumArtist = true;
-            }
-            // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/
-
-            // album
-            if(!StringUtils.isEmpty(album)) {
-                // album!=albumarist, add album as parent folder
-                if(!album.equalsIgnoreCase(albumArtist)) {
-                    filename.append(StringUtils.formatTitle(album)).append(File.separator);
-                }
-            }
-            // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/
-
-            if(!metadata.isCueSheet()) {
-                // track
-                boolean hasTrackOrArtist = false;
-                String track = StringUtils.trimToEmpty(metadata.getTrack());
-                if (!StringUtils.isEmpty(track)) {
-                    int indx = track.indexOf("/");
-                    if (indx > 0) {
-                        filename.append(StringUtils.trimToEmpty(track.substring(0, indx)));
-                    } else {
-                        filename.append(StringUtils.trimToEmpty(track));
-                    }
-                  //  filename.append(" - ");
-                    hasTrackOrArtist = true;
-                }
-
-                // artist, if albumartist and arttist != albumartist
-                if(!hasTrackOrArtist) {
-                    if ((!StringUtils.isEmpty(artist)) && !artist.equalsIgnoreCase(albumArtist)) {
-                        // add artist to file name only have albumArtist
-                        filename.append(StringUtils.formatTitle(artist));
-                      //  filename.append(" - ");
-                        hasTrackOrArtist = true;
-                    }
-                }
-
-                // artist
-                if (hasTrackOrArtist) {
-                    filename.append(" - ");
-                }
-
-                // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] -
-
-                // title
-                if (!StringUtils.isEmpty(title)) {
-                    filename.append(StringUtils.formatTitle(title));
-                } else {
-                    filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
-                }
-
-                // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] - [title| file name]
-            }else {
-                // title
-                if (!StringUtils.isEmpty(album)) {
-                    filename.append(StringUtils.formatTitle(album));
-                } else {
-                    filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
-                }
-            }
-
-            String newPath =  filename.toString();
-            for(int i=0;i<ReservedChars.length();i++) {
-                newPath = newPath.replace(String.valueOf(ReservedChars.charAt(i)),"");
-            }
-
-            newPath = newPath+"."+ext;
-            return DocumentFileCompat.buildAbsolutePath(getContext(), storageId, newPath);
-
-          //  return newPath;
-        } catch (Exception e) {
-            Timber.e(e);
-        }
-        return metadata.getPath();
-    }
-
-
 
     private String getAlbumArtistOrArtist(String artist, String albumArtist) {
         if(StringUtils.isEmpty(albumArtist)) {

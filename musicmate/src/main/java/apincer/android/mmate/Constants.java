@@ -16,6 +16,8 @@ public final class Constants {
    // public static final String KEY_FILTER_VALUE = "KEY_FILTER_VALUE";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
+    public static final String FILTER_TYPE_GENRE = "Genre";
+    public static final String FILTER_TYPE_GROUPING = "Grouping";
     public static final String FILTER_TYPE_PATH = "Folder";
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
 

@@ -52,7 +52,6 @@ import timber.log.Timber;
  */
 
 public class MusicListeningService extends Service {
-   // public static final String ACTION = "com.apincer.mmate.MusicListeningService";
     public Bitmap DEFAULT_PLAYER_ICON;
 	
 	/**
@@ -67,7 +66,6 @@ public class MusicListeningService extends Service {
 
     // android 5 SD card permissions
     public static final int REQUEST_CODE_STORAGE_PERMISSION = 1010;
-    public static final int REQUEST_CODE_EDIT_MEDIA_TAG = 2020;
 
     public static final String FLAG_SHOW_LISTENING = "__FLAG_SHOW_LISTENING";
 
@@ -79,20 +77,11 @@ public class MusicListeningService extends Service {
     private Context context;
     private static MusicListeningService instance;
     private AudioTag playingSong;
-    //private AudioTag prvPlayingSong;
     private static final List<ListeningReceiver> receivers = new ArrayList<>();
 
     private NotificationCompat.Builder builder;
     private NotificationChannel mChannel;
     private MusicPlayerInfo playerInfo;
-   // private ListeningReceiver listeningReceiver;
-
-    // floating now playing
-   // View mFloatingView;
-   // ImageView mFloatingCoverArt;
-   // private WindowManager mWindowManager;
-   // private WindowManager.LayoutParams mLayoutParams,mFooterLayoutParams;
-   // private int mScreenH,mScreenW;
 
     @Override
     public void onCreate() {
@@ -100,11 +89,13 @@ public class MusicListeningService extends Service {
         playingSong = null;
         context = getApplicationContext();
         mChannel = createNotificationChannel();
-        startForeground(NOTIFICATION_ID, createNotification(null,"MusicMate","",""));
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID);
+        builder.setContentTitle("Music Mate")
+                .setContentText("")
+                .setTicker("Music Mate");
+        startForeground(NOTIFICATION_ID, builder.build());
         DEFAULT_PLAYER_ICON = BitmapFactory.decodeResource(getResources(), R.drawable.ic_broken_image_black_24dp);
         registerReceiver(new MusicMateBroadcastReceiver());
-       // setUpFloatingNowPlaying();
-
         instance = this;
     }
 
@@ -117,7 +108,7 @@ public class MusicListeningService extends Service {
         // The user-visible name of the channel.
         CharSequence name = "Music Mate Listening";
         // The user-visible description of the channel.
-        String description = "Song currently play...";
+        String description = "Now playing song...";
         int importance = NotificationManager.IMPORTANCE_LOW;
         NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
         // Configure the notification channel.
@@ -144,10 +135,6 @@ public class MusicListeningService extends Service {
         super.onDestroy();
         finishNotification();
         unregisterReceivers();
-       // mWindowManager.removeView(mFloatingView);
-       // mFooterLayoutParams = null;
-      //  mFloatingView = null;
-       // mLayoutParams = null;
         instance = null;
     }
 
@@ -200,7 +187,7 @@ public class MusicListeningService extends Service {
         if(playingSong!=null) {
            sendBroadcast();
            if(Preferences.isShowNotification(getApplicationContext())) {
-                Notification notification = createNotification(playingSong, currentTitle,currentArtist,currentAlbum);
+                Notification notification = createNowPlayingNotification(playingSong, currentTitle,currentArtist,currentAlbum);
                 displayNotification(context, notification);
            }
         }
@@ -216,7 +203,7 @@ public class MusicListeningService extends Service {
         return PendingIntent.getActivity(this, 100, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private Notification createNotification(AudioTag item, String currentTitle, String currentArtist, String currentAlbum) {
+    private Notification createNowPlayingNotification(AudioTag item, String currentTitle, String currentArtist, String currentAlbum) {
         builder = createCustomNotificationBuilder(context);
         if(Preferences.isShowNotification(getApplicationContext()) && item !=null) {
             RemoteViews notificationLayout = createRemoteView(item, currentTitle, currentArtist, currentAlbum, false);//new RemoteViews(getPackageName(), R.layout.notification_small);

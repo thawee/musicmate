@@ -67,7 +67,7 @@
                     android:layout_height="wrap_content"
                     android:text="Audio Track"
                     android:layout_gravity="left"
-                    android:textColor="@color/grey800"
+                    android:textColor="@color/grey400"
                     android:textStyle="bold"/>
 
                 <LinearLayout
@@ -151,7 +151,7 @@
                 android:layout_height="wrap_content"
                 android:text="Player"
                 android:layout_gravity="left"
-                android:textColor="@color/grey800"
+                android:textColor="@color/grey400"
                 android:textStyle="bold"/>
 
             <LinearLayout
@@ -185,6 +185,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/dimen_24_dp"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -231,7 +232,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left"
                 android:text="Output Device"
-                android:textColor="@color/grey800"
+                android:textColor="@color/grey400"
                 android:textStyle="bold" />
 
             <LinearLayout

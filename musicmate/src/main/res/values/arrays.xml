@@ -92,15 +92,14 @@
         <item>Blue</item>
         <item>Country</item>
         <item>R &amp; B/Soul</item>
-        <item>Rock</item>
-        <item>Pop</item>
+        <item>Pop/Rock</item>
         <item>Reggae</item>
         <item>Dance/Electronica</item>
         <item>Hip-Hop</item>
         <item>Mor-Lum</item>
     </string-array>
     <string-array name="default_groupings">
-        <item>Jazz</item>
+        <item>Special</item>
         <item>Classical</item>
         <item>Thai</item>
         <item>English</item>

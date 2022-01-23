@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * Created by Noman on 8/25/2016.
  */
+@Deprecated
 public abstract class AbstractPlaces extends AsyncTask<Void, Void, List<Place>> {
     protected final String PARAM_KEY = "key=";
     protected final String PARAM_LOCATION = "location=";

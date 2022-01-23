@@ -536,8 +536,8 @@ public class AudioTagUtils {
     public static String getTrackQuality(AudioTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
-        }else if(tag.isMQA()) {
-            return Constants.TITLE_MQA_AUDIO;
+      //  }else if(tag.isMQA()) {
+      //      return Constants.TITLE_MQA_AUDIO;
         }else if(isPCMHiResMaster(tag)) {
             return Constants.TITLE_HR_MASTER;
         }else if(isPCMHiResLossless(tag)) {

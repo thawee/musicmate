@@ -21,14 +21,12 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
 import timber.log.Timber;
 
 public class ScanAudioFileWorker extends Worker {
     private static Operation scanOperation;
-   // private volatile Looper serviceLooper;
     private final ThreadPoolExecutor mExecutor;
     /**
      * Gets the number of available cores
@@ -46,8 +44,6 @@ public class ScanAudioFileWorker extends Worker {
         super(context, parameters);
         HandlerThread thread = new HandlerThread("ScanFilesWorker");
         thread.start();
-
-       // serviceLooper = thread.getLooper();
         mExecutor = new ThreadPoolExecutor(
                 NUMBER_OF_CORES, // + 5,   // Initial pool size
                 NUMBER_OF_CORES + 4, //8,   // Max pool size
@@ -59,9 +55,6 @@ public class ScanAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        //Data inputData = getInputData();
-        // Mark the Worker as important/
-        //setForegroundAsync(createForegroundInfo(progress));
         List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
         for (String sid : storageIds) {
             File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
@@ -70,6 +63,11 @@ public class ScanAudioFileWorker extends Worker {
                 mExecutor.execute(r);
             }
             file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Download"));
+            if(file.exists()) {
+                ScanRunnable r = new ScanRunnable(file);
+                mExecutor.execute(r);
+            }
+            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
             if(file.exists()) {
                 ScanRunnable r = new ScanRunnable(file);
                 mExecutor.execute(r);

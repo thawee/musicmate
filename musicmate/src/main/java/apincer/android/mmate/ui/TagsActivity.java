@@ -58,7 +58,10 @@ import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
+import cn.iwgang.simplifyspan.customspan.CustomClickableSpan;
+import cn.iwgang.simplifyspan.other.OnClickableSpanListener;
 import cn.iwgang.simplifyspan.other.SpecialGravity;
+import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialLabelUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
@@ -80,10 +83,11 @@ public class TagsActivity extends AppCompatActivity {
     private TextView albumView ;
     private TextView albumArtistView;
     private TextView encInfo;
+    private ImageView audiophileView;
     private ImageView hiresView;
     private ImageView mqaView;
     private MaterialRatingBar ratingView;
-   // private View mainFrame;
+    private TextView qualityView;
     private View coverArtLayout;
     private View panelLabels;
     private CollapsingToolbarLayout toolBarLayout;
@@ -137,8 +141,6 @@ public class TagsActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-      //  final AppBarLayout appBarLayout = findViewById(R.id.appbar);
-       // mainFrame = findViewById(R.id.frame_container);
         coverArtLayout = findViewById(R.id.panel_cover_art_layout);
         panelLabels = findViewById(R.id.panel_labels);
         coverArtView = findViewById(R.id.panel_cover_art);
@@ -153,38 +155,6 @@ public class TagsActivity extends AppCompatActivity {
 
         setUpTitlePanel();
 
-        /*
-        readIntent();
-        displayTag = buildDisplayTag(true);
-        updateTitlePanel();
-
-        ViewPager2 viewPager = findViewById(R.id.viewpager);
-
-        tabLayout = findViewById(R.id.tabLayout);
-        TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
-        adapter.addNewTab(new TagsEditorFragment(), "Editor");
-        adapter.addNewTab(new TagsMusicBrainzFragment(), "MusicBrainz");
-        viewPager.setAdapter(adapter);
-
-        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
-        tabLayoutMediator.attach();
-
-        appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
-
-        findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
-        findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItem());
-        findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItem());
-        findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
-        findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
-        findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
-        if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(displayTag.getAudioEncoding())) {
-            //findViewById(R.id.btnFFMPEG).setVisibility(View.VISIBLE);
-            findViewById(R.id.btnFFMPEG).setEnabled(true);
-            findViewById(R.id.btnFFMPEG).setOnClickListener(view -> doStartFFMpeg());
-        }else {
-           // findViewById(R.id.btnFFMPEG).setEnabled(false);
-            findViewById(R.id.btnFFMPEG).setVisibility(View.GONE);
-        } */
     }
 
     private void doStartFFMpeg( ) {
@@ -193,9 +163,9 @@ public class TagsActivity extends AppCompatActivity {
         final int[] count = {0};
         for(AudioTag tag: getEditItems()) {
             if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(tag.getAudioEncoding()))  {
-                //String wavePath = tag.getPath();
-                String wavePath = FileUtils.removeExtension(tag.getPath());
-                String flacPath = wavePath+".flac";
+                String wavePath = tag.getPath();
+                String filePath = FileUtils.removeExtension(tag.getPath());
+                String flacPath = filePath+".flac";
                 String cmd = "-i \""+wavePath+"\" \""+flacPath+"\"";
                 FFmpegKit.executeAsync(cmd, session -> {
                     AudioFileRepository.getInstance(getApplication()).scanFileAndSaveTag(new File(flacPath));
@@ -250,18 +220,6 @@ public class TagsActivity extends AppCompatActivity {
         }
        // Toast.makeText(getActivity(), event.message, Toast.LENGTH_SHORT).show();
     }
-/*
-    private void readIntent() {
-        Intent intent = getIntent();
-        criteria = ApplicationUtils.getSearchCriteria(intent);
-        ArrayList<AudioTag> tags = intent.getParcelableArrayListExtra(Constants.KEY_MEDIA_TAG_LIST);
-        AudioFileRepository repos = AudioFileRepository.getInstance(getApplication());
-        editItems.clear();
-        for(AudioTag tag: tags) {
-            repos.reloadMediaItem(tag);
-            editItems.add(tag);
-        }
-    } */
 
     private void setUpTitlePanel() {
         titleView = findViewById(R.id.panel_title);
@@ -271,18 +229,22 @@ public class TagsActivity extends AppCompatActivity {
         encInfo = findViewById(R.id.panel_enc);
         tagInfo = findViewById(R.id.panel_tag);
         pathInfo = findViewById(R.id.panel_path);
+        audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
         mqaView = findViewById(R.id.icon_mqa);
         ratingView = findViewById(R.id.icon_rating);
+        qualityView = findViewById(R.id.icon_quality_text);
     }
 
     public void updateTitlePanel() {
         toolbar.setTitle(displayTag.getTitle());
         titleView.setText(displayTag.getTitle());
         artistView.setText(displayTag.getArtist());
+        audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
         mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         ratingView.setRating(displayTag.getRating());
+        qualityView.setText(AudioTagUtils.getTrackQuality(displayTag));
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -418,17 +380,43 @@ public class TagsActivity extends AppCompatActivity {
 
         // Tag
         int labelColor = ContextCompat.getColor(getApplicationContext(), R.color.grey400);
+        int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
+        int linkPressBgColor = ContextCompat.getColor(getApplicationContext(), R.color.grey200);
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
-        //if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
-         //   tagSpan.append(new SpecialLabelUnit("Album Artist:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-          //          .append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getAlbumArtist())?"N/A":displayTag.getAlbumArtist()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
-          //          .append("\n");
-       // }
         tagSpan.append(new SpecialLabelUnit("Grouping:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
+                //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
+                .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
+                            @Override
+                            public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
+                                Intent resultIntent = new Intent();
+                                if(criteria!=null) {
+                                    criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
+                                    criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getGrouping()));
+                                    ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+                                }
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
+                            }
+                        }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+                new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
+
                 .append("  ")
                 .append(new SpecialLabelUnit("Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                .append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
+                //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
+                .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
+                            @Override
+                            public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
+                                Intent resultIntent = new Intent();
+                                if(criteria!=null) {
+                                    criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
+                                    criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getGenre()));
+                                    ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+                                }
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
+                            }
+                        }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+                        new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
         tagInfo.setText(tagSpan.build());
 
         // ENC info
@@ -459,66 +447,6 @@ public class TagsActivity extends AppCompatActivity {
                 .append(new SpecialTextUnit(" ]",encColor).setTextSize(10));
         encInfo.setText(spannableEnc.build());
     }
-/*
-    private void doWebSearch() {
-        try {
-            String text = "";
-            int size = getEditItems().size();
-            AudioTag item = getEditItems().get(0);
-            // title and artist
-            if(size ==1 && !StringUtils.isEmpty(item.getTitle())) {
-                text = text+" "+item.getTitle();
-            }
-            if(!StringUtils.isEmpty(item.getAlbum())) {
-                text = text+" "+item.getAlbum();
-            }
-            if(!StringUtils.isEmpty(item.getArtist())) {
-                text = text+" "+item.getArtist();
-            }
-            String search= URLEncoder.encode(text, "UTF-8");
-            //Uri uri = Uri.parse("http://www.google.com/#q=" + search);
-             Uri uri = Uri.parse("http://www.google.com/search?q=" + search);
-            Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(gSearchIntent);
-           // Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
-           // String search = text;
-           // intent.putExtra(SearchManager.QUERY, search);
-           // startActivity(intent);
-        } catch (Exception e) {
-            Timber.e(e);
-        }*/
-        /*
-        Uri uri = Uri.parse("http://www.google.com/#q=" + Search);
-        Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
-        searchIntent.putExtra(SearchManager.QUERY, uri);
-        startActivity(searchIntent);
-        */
-   // }
-/*
-    private void doStartAspect(AudioTag tag) {
-        Intent intent = getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
-        if (intent != null) {
-            ApplicationInfo ai = MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
-            if (ai != null) {
-                intent.setAction(Intent.ACTION_SEND);
-                MimeTypeMap mime = MimeTypeMap.getSingleton();
-
-                String path = tag.getPath();
-                //File file = new File(path);
-                String type = mime.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(path));
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Uri apkURI = MusicFileProvider.getUriForFile(path);
-                // Uri apkURI = FileProvider.getUriForFile(getApplicationContext(), "ru.zdevs.zarchiver.system.FileProvider", file);
-                intent.setDataAndType(apkURI, type);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                //  } else {
-                //     intent.setDataAndType(Uri.fromFile(file), type);
-                //  }
-                startActivity(intent);
-            }
-        }
-    } */
 
     //
     AudioTag buildDisplayTag(boolean reload) {
@@ -579,7 +507,6 @@ public class TagsActivity extends AppCompatActivity {
         return displayTag;
     }
 
-
     public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -629,7 +556,6 @@ public class TagsActivity extends AppCompatActivity {
                 .setIcon(R.drawable.ic_round_move_to_inbox_24)
                 .setMessage(text)
                 .setPositiveButton("Import", (dialogInterface, i) -> {
-                   // MediaItemIntentService.startService(getApplicationContext(),Constants.COMMAND_MOVE,editItems);
                     ImportAudioFileWorker.startWorker(getApplicationContext(), editItems);
                     dialogInterface.dismiss();
                     Intent resultIntent = new Intent();
@@ -653,7 +579,6 @@ public class TagsActivity extends AppCompatActivity {
                 .build();
         imageLoader.enqueue(request);
     }
-
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
 
@@ -682,9 +607,6 @@ public class TagsActivity extends AppCompatActivity {
                 colorFade.setDuration(2000);
                 colorFade.start();
             }
-
-//            Log.i("SCROLL", "onOffsetChanged: " + Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset));
-
         }
     }
 
@@ -704,7 +626,6 @@ public class TagsActivity extends AppCompatActivity {
     private final BroadcastReceiver operationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-          //  int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, RESULT_CANCELED);
                 BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
                 if (broadcastData != null) {
                     ToastHelper.showBroadcastData(TagsActivity.this, broadcastData);

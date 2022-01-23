@@ -63,7 +63,7 @@
                     android:paddingRight="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
                     android:textColor="@android:color/white"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     android:background="@drawable/selectable_link"/>
 
             </LinearLayout>
@@ -103,7 +103,7 @@
                     android:paddingLeft="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
                     android:textColor="@android:color/white"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     android:background="@drawable/selectable_link"/>
             </LinearLayout>
         </LinearLayout>
@@ -179,9 +179,9 @@
                 android:paddingTop="@dimen/dimen_1_dp"
                 android:textSize="10sp"
                 android:ellipsize="start"
-                android:maxLines="1"
                 android:gravity="center"
-                android:layout_gravity="center"/>
+                android:layout_gravity="center"
+                android:singleLine="true" />
         </LinearLayout>
 
         <RelativeLayout

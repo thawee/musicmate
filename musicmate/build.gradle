@@ -29,8 +29,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 42
-        versionName  "3.0.0 "+ versions.buildDate
+        versionCode 43
+        versionName  "3.0.1 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
@@ -48,21 +48,14 @@ android {
         }
     }
 
-  //  buildFeatures {
-  //      dataBinding true
-  //  }
-   // kotlinOptions {
-   //     jvmTarget = '1.8'
-   // }
-
     lintOptions {
         abortOnError true
     }
-    dexOptions {
+    ///dexOptions {
        // preDexLibraries = true
-        jumboMode true
-        javaMaxHeapSize "3g"
-    }
+       /// jumboMode true
+       /// javaMaxHeapSize "3g"
+    ///}
     buildTypes {
         release {
             minifyEnabled true
@@ -96,9 +89,6 @@ project.android.buildTypes.all { buildType ->
 }
 
 repositories {
-    flatDir {
-        dirs 'libs'
-    }
     maven { url "https://jitpack.io" }
     maven { url 'https://dl.bintray.com/tsubasap91/maven' }
    // maven { url 'http://dl.bintray.com/raphaelbussa/maven' }
@@ -117,10 +107,8 @@ dependencies {
     implementation deps.androidx.preference
     implementation deps.androidx.documentFile
     implementation deps.androidx.work
-    implementation deps.eventbus
-    implementation deps.storage
-    implementation deps.timber
 
+    // google
     implementation deps.google.material
 
     // RxAndroid
@@ -133,13 +121,34 @@ dependencies {
     //annotationProcessor deps.epoxy.annotationProcessor
     kapt deps.epoxy.annotationProcessor
 
+    // UI Libs
+    implementation deps.ui.powerspinner
+    implementation deps.ui.progressview
+    implementation deps.ui.simplifyspan
+    implementation deps.ui.materialratingbar
+    //implementation deps.ui.aspectRatioFramelayout
+    implementation deps.ui.aspectRatioImageview
+    implementation deps.ui.fastscroll
+    implementation deps.ui.elasticviews
+    implementation deps.ui.stateViews
+
+    //https://github.com/Chrisvin/FlipTabs
+    //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
+    implementation deps.ui.refresh_layout_kernel
+    implementation deps.ui.refresh_header_classics
+
     implementation deps.ui.aboutlibraries
-	implementation deps.ui.toasty
-    //implementation deps.ui.vpawesomewidgets
-	
-	//implementation deps.ui.AvatarView
+    implementation deps.ui.toasty
     implementation deps.ui.shapeofview
     implementation deps.ui.photoview;
+
+    //others
+    implementation deps.eventbus
+    implementation deps.storage
+    implementation deps.timber
+    implementation deps.guava
+    implementation deps.ffmpeg
+    implementation deps.coverartarchive
    // implementation 'com.rishabhharit.roundedimageview:RoundedImageView:0.8.4'
 
     //retrofit and json Libraries
@@ -147,8 +156,6 @@ dependencies {
     implementation deps.retrofit.runtime
     implementation deps.retrofit.gson
     //implementation deps.retrofit.mock
-
-    implementation deps.guava
 
     // Glide (Image Loader & Caching)
    // implementation deps.glide.runtime
@@ -169,36 +176,6 @@ dependencies {
    // implementation deps.blockcanary
    // debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 
-    // implementation deps.ui.meowBottomNavigation
-    //implementation deps.ui.expandablebottombar
-    implementation deps.ui.powerspinner
-    implementation deps.ui.progressview
-    //implementation 'com.github.linger1216:labelview:v1.1.2'
-
-   // implementation 'com.google.android:flexbox:1.0.0'
-   // implementation 'com.github.mahimrocky:TagView:1.0.3'
-   // implementation 'co.lujun:androidtagview:1.1.7' // used on read tag from filename
-   // implementation deps.ui.doublelift
-   // implementation "com.github.skydoves:expandablelayout:1.0.5"
-    implementation deps.ui.simplifyspan
-    implementation deps.ui.materialratingbar
-    //implementation deps.ui.aspectRatioFramelayout
-   // implementation deps.ui.smartmaterialspinner
-    implementation deps.ui.aspectRatioImageview
-    implementation deps.ui.fastscroll
-    implementation deps.ui.elasticviews
-    implementation deps.ui.stateViews
-
-    //https://github.com/Chrisvin/FlipTabs
-    //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
-   // implementation deps.ui.liquidrefreshlayout
-    //https://github.com/scwang90/SmartRefreshLayout
-    implementation  'io.github.scwang90:refresh-layout-kernel:2.0.5'
-    implementation  'io.github.scwang90:refresh-header-classics:2.0.5'
-
-    implementation deps.ffmpeg
-    implementation deps.coverartarchive
-
     // implementation 'com.sensorberg.libs:permission-bitte:2.0.0'
 
     // Local Library
@@ -207,11 +184,8 @@ dependencies {
     implementation project(':library:justdsd')
     implementation project(':library:library')
     implementation project(':library:androidtagview')
-    //implementation project(':library:LoadingLib')
    // debugImplementation project(':library:crashreporter')
     implementation project(':library:MaterialEditText')
-
-   // implementation 'com.daimajia.numberprogressbar:library:1.4@aar'
 }
 
 aboutLibraries {

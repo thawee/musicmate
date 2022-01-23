@@ -154,6 +154,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
                 .transformations(new RoundedCornersTransformation(12,12,12,12))
