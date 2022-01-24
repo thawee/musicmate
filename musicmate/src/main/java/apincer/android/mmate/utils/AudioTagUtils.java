@@ -257,7 +257,7 @@ public class AudioTagUtils {
         bgPaint.setStyle(Paint.Style.FILL);
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
 
-        padding = 1;
+        padding = 2;
         rectangle = new RectF(
                 padding, // Left
                 padding, // Top
@@ -273,8 +273,8 @@ public class AudioTagUtils {
         // Finally, draw the rectangle on the canvas
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
-        //int letterTextSize = 20;
-        int letterTextSize = 16;
+        int letterTextSize = 20;
+       // int letterTextSize = 16;
         // int letterTextSize = 18;
         Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
         //Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
@@ -286,7 +286,7 @@ public class AudioTagUtils {
         // Text draws from the baselineAdd some top padding to center vertically.
         Rect textMathRect = new Rect();
         mLetterPaint.getTextBounds(text, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() / 2f;
+        float mLetterTop = (textMathRect.height() / 2f) + 5;
         myCanvas.drawText(text,
                 bounds.exactCenterX(), mLetterTop + bounds.exactCenterY(),
                 mLetterPaint);

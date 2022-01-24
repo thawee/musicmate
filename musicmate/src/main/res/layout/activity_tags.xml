@@ -186,7 +186,8 @@
                         android:layout_height="@dimen/dimen_32_dp"
                         android:src="@drawable/ic_round_speaker_24"
                         android:layout_marginRight="@dimen/dimen_12_dp"
-                        android:layout_marginBottom="@dimen/dimen_12_dp"/>
+                        android:layout_marginBottom="@dimen/dimen_12_dp"
+                        app:tint="@color/now_playing"/>
 
                     <ImageView
                         android:id="@+id/icon_mqa"

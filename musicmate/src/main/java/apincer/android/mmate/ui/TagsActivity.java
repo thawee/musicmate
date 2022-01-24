@@ -24,6 +24,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.palette.graphics.Palette;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.anggrayudi.storage.file.StorageId;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
@@ -56,6 +57,7 @@ import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
+import apincer.android.storage.StorageUtils;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.customspan.CustomClickableSpan;
@@ -98,6 +100,12 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+
+        if(criteria!=null) {
+            Intent resultIntent = new Intent();
+            ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+            setResult(RESULT_OK, resultIntent);
+        }
     }
 
     @Override
@@ -289,16 +297,28 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         String matePath = AudioFileRepository.getInstance(getApplication()).buildCollectionPath(displayTag);
+        String sid = displayTag.getStorageId();
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            mateInd = " **";
+            mateInd = " *";
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
 
-        pathInfo.setText(displayTag.getStorageId()+"://"+simplePath + mateInd);
+        pathInfo.setText(simplePath + mateInd);
+        int bgColor = getApplication().getColor(R.color.grey600);//Color.TRANSPARENT;
+        int textColor = getApplication().getColor(R.color.grey200);
+        if(StorageId.PRIMARY.equals(sid)) {
+            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,textColor,bgColor);
+            pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
+           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_memory_white_24dp),null,null,null);
+        }else {
+            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," SD ",textColor,textColor,bgColor);
+            pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
+            //pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_sd_storage_white_24dp),null,null,null);
+        }
         pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
 
         pathInfo.setOnClickListener(new View.OnClickListener() {
@@ -337,18 +357,11 @@ public class TagsActivity extends AppCompatActivity {
                         coverArtView.setImageDrawable(drawable);
                         try {
                             Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
-                          //  Palette palette = Palette.from(bmp).generate();
-                           // int frameColor = palette.getDominantColor(getColor(R.color.bgColor));
-                           // int panelColor = palette.getVibrantColor(getColor(R.color.bgColor));
-                          //  toolbar_from_color = ColorUtils.TranslateDark(frameColor,100);
-                          //  toolbar_to_color = ColorUtils.TranslateDark(frameColor,100);; //frameColor;
-                            //mainFrame.setBackgroundColor(ColorUtils.TranslateDark(frameColor,100));
-                            //Bitmap bmp2 = BitmapHelper.blur(getApplicationContext(), bmp);
-                           // coverArtView2.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), bmp2));
-                            coverArtView.setImageBitmap(BitmapHelper.applyReflection(bmp));
-                         //   panelLabels.setBackgroundColor(ColorUtils.TranslateLight(panelColor, 400));
-                          //  toolBarLayout.setContentScrimColor(ColorUtils.TranslateDark(frameColor,100));
-                          //  coverArtLayout.setBackgroundColor(ColorUtils.TranslateDark(panelColor, 400));
+                            Bitmap fullBitmap = BitmapHelper.applyReflection(bmp);
+                            if(fullBitmap.getAllocationByteCount() > 1024) {
+                                fullBitmap = BitmapHelper.scaleBitmap(fullBitmap, 1024, 1024);
+                            }
+                            coverArtView.setImageBitmap(fullBitmap);
                             Palette.from(bmp).generate(palette -> {
                                 int vibrant = palette.getVibrantColor(0x000000); // <=== color you want
                                 int vibrantLight = palette.getLightVibrantColor(0x000000);
