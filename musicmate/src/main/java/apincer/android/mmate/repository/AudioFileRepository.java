@@ -1088,21 +1088,26 @@ public class AudioFileRepository {
         if(mediaDir==null || (!mediaDir.exists())) return;
 
         if(mediaDir.isDirectory()) {
-            boolean toClean = true;
+           // boolean toClean = true;
             List<File> toDelete = new ArrayList();
             File[] files = mediaDir.listFiles();
             if (files != null && files.length > 0) {
                 for (File f : files) {
+                    if(f.isDirectory()) {
+                        // if contains folder quit
+                        return;
+                    }
                     String ext = FileUtils.getExtension(f).toLowerCase();
                     if(Constants.RELATED_FILE_TYPES.contains(ext)) {
                         toDelete.add(f);
                     }else {
-                        toClean = false;
-                        break;
+                       // toClean = false;
+                        // if contains music or any others files quit
+                        return;
                     }
                 }
             }
-            if(toClean) {
+          //  if(toClean) {
                 // directory is empty or no others media files
                 if(toDelete.size()>0) {
                     for (File file: toDelete) {
@@ -1114,7 +1119,7 @@ public class AudioFileRepository {
                 fileRepos.delete(mediaDir);
                 cleanMediaDirectory(parentFolder);
             }
-        }
+       // }
      }
 
     private void copyRelatedFiles(AudioTag item, String newPath) {
@@ -1226,6 +1231,8 @@ public class AudioFileRepository {
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
                 tagRepos.removeTag(item);
+                File file = new File(item.getPath());
+                cleanMediaDirectory(file.getParentFile());
             }
         } catch (Exception|OutOfMemoryError ex) {
             status = false;

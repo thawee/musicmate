@@ -335,7 +335,7 @@ public class AudioTagUtils {
         return null;
     }
 
-    private static int getResolutionColor(Context context, AudioTag tag) {
+    public static int getResolutionColor(Context context, AudioTag tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
         // Lossless - >= 24 bits and >= 48 kHz
@@ -429,6 +429,18 @@ public class AudioTagUtils {
             return StringUtils.UNKNOWN_CAP + StringUtils.ARTIST_SEP + album;
         }
         return StringUtils.truncate(artist, 40) + StringUtils.ARTIST_SEP + album;
+    }
+
+    public static String getAlbumArtistOrArtist(AudioTag tag) {
+        String albumArtist = StringUtils.trimTitle(tag.getAlbumArtist());
+        if (StringUtils.isEmpty(albumArtist)) {
+            albumArtist = StringUtils.trimTitle(tag.getArtist());
+        }
+        if (StringUtils.isEmpty(albumArtist)) {
+            return "N/A";
+        } {
+            return albumArtist;
+        }
     }
 
     public static Bitmap getFileSizeIcon(Context context, AudioTag tag) {

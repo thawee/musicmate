@@ -46,8 +46,8 @@ import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.service.BroadcastData;
 import apincer.android.mmate.service.AudioTagEditEvent;
+import apincer.android.mmate.service.BroadcastData;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
@@ -57,7 +57,6 @@ import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
-import apincer.android.storage.StorageUtils;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.customspan.CustomClickableSpan;
@@ -252,7 +251,9 @@ public class TagsActivity extends AppCompatActivity {
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
         mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         ratingView.setRating(displayTag.getRating());
+        ratingView.setFocusable(false);
         qualityView.setText(AudioTagUtils.getTrackQuality(displayTag));
+        qualityView.setTextColor(AudioTagUtils.getResolutionColor(getApplicationContext(), displayTag));
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -293,7 +294,7 @@ public class TagsActivity extends AppCompatActivity {
                 finish();
             });
         }else {
-            albumArtistView.setText("N/A");
+            albumArtistView.setText(AudioTagUtils.getAlbumArtistOrArtist(displayTag));
         }
 
         String matePath = AudioFileRepository.getInstance(getApplication()).buildCollectionPath(displayTag);

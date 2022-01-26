@@ -70,12 +70,11 @@
                             android:text="Title"
                             android:textAllCaps="false"
                             android:maxLines="1"
-                            android:autoSizeTextType="uniform"
                             android:textColor="@android:color/white"
                             android:textStyle="bold"
                             android:gravity="center_horizontal"
                             android:layout_gravity="center_horizontal"
-                            android:textSize="18sp"/>
+                            android:textSize="20sp"/>
 <!--
                         <ImageView
                             android:id="@+id/panel_new"
@@ -222,6 +221,7 @@
                        android:id="@+id/icon_quality_text"
                        android:layout_width="wrap_content"
                        android:layout_height="wrap_content"
+                       android:textStyle="bold"
                        android:text="Lossless"/>
                 </LinearLayout>
             </RelativeLayout>
