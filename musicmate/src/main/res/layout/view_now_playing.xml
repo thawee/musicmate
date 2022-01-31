@@ -37,7 +37,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="@dimen/dimen_1_dp" />
+            android:layout_margin="@dimen/dimen_2_dp" />
 
     <LinearLayout
         android:id="@+id/icon_panel"

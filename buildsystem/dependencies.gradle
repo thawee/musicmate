@@ -5,8 +5,8 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.1.0-rc01', //''7.0.3',
-        minSdk             : 30,
+        androidGradlePlugin: '7.1.0', //''7.0.3',
+        minSdk             : 31,
         targetSdk          : 31,
         compileSdk         : 32,
         buildTools         : '32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
@@ -24,7 +24,6 @@ ext.gradlePlugins = [
         kotlin : "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin",
         objectbox : "io.objectbox:objectbox-gradle-plugin:$versions.objectbox",
         aboutlibraries: "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${versions.aboutlibraries}"
-
 ]
 
 ext.deps = [:]
