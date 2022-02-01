@@ -66,14 +66,16 @@
         <item>FIXME</item>
     </string-array>
     <string-array name="default_album_artist" >
+        <item>Audiophile</item>
         <item>Musical Film</item>
-        <item>Various Artists</item>
+        <item>Denon</item>
+        <item>HD Tracks</item>
+        <item>GMM Grammy</item>
         <item>Linn Records</item>
         <item>RS Group</item>
-        <item>RSiam</item>
-        <item>HDTracks</item>
-        <item>Audiophile</item>
+        <item>R-Siam</item>
         <item>Sennheiser</item>
+        <item>Various Artists</item>
     </string-array>
 
     <array name="auto_size_text_sizes">

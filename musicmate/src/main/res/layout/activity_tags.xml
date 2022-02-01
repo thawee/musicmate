@@ -171,30 +171,53 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginRight="@dimen/dimen_12_dp"
+                    android:paddingTop="@dimen/dimen_8_dp"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingBottom="@dimen/dimen_48_dp"
+                    android:layout_marginBottom="@dimen/dimen_48_dp"
+                    android:background="@drawable/shadow">
+
+                    <TextView
+                        android:id="@+id/icon_quality_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/dimen_12_dp"
+                        android:textStyle="bold|italic"
+                        android:text="Lossless"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerInParent="true"
                     android:layout_marginRight="@dimen/dimen_1_dp"
-                    android:paddingTop="@dimen/dimen_8_dp"
+                    android:background="@drawable/shadow"
                     android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingTop="@dimen/dimen_8_dp"
                     android:paddingRight="@dimen/dimen_2_dp"
-                    android:paddingBottom="@dimen/dimen_48_dp"
-                    android:background="@drawable/shadow">
+                    android:paddingBottom="@dimen/dimen_12_dp">
+
                     <ImageView
                         android:id="@+id/icon_audiophile"
                         android:layout_width="@dimen/dimen_32_dp"
                         android:layout_height="@dimen/dimen_32_dp"
-                        android:src="@drawable/ic_round_speaker_24"
                         android:layout_marginRight="@dimen/dimen_12_dp"
                         android:layout_marginBottom="@dimen/dimen_12_dp"
-                        app:tint="@color/now_playing"/>
+                        android:src="@drawable/ic_round_speaker_24"
+                        app:tint="@color/now_playing" />
 
                     <ImageView
                         android:id="@+id/icon_mqa"
                         android:layout_width="@dimen/dimen_32_dp"
                         android:layout_height="@dimen/dimen_32_dp"
-                        android:src="@drawable/ic_format_mqa_white"
                         android:layout_marginRight="@dimen/dimen_12_dp"
-                        android:layout_marginBottom="@dimen/dimen_12_dp"/>
+                        android:layout_marginBottom="@dimen/dimen_12_dp"
+                        android:src="@drawable/ic_format_mqa_white" />
 
                     <ImageView
                         android:id="@+id/icon_hires"
@@ -204,6 +227,7 @@
                         android:layout_marginBottom="@dimen/dimen_12_dp"
                         android:src="@drawable/ic_format_hires" />
                 </LinearLayout>
+                <!--
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -221,9 +245,9 @@
                        android:id="@+id/icon_quality_text"
                        android:layout_width="wrap_content"
                        android:layout_height="wrap_content"
-                       android:textStyle="bold"
+                       android:textStyle="bold|italic"
                        android:text="Lossless"/>
-                </LinearLayout>
+                </LinearLayout> -->
             </RelativeLayout>
 
             <include layout="@layout/view_tag_layout" />

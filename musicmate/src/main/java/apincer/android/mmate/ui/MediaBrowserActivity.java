@@ -1249,7 +1249,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 showPlayingSongFAB(tag);
                 t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
             }
-        }, 5000); // after 5 second (or 5000 miliseconds), the task will be active.
+        }, 3500); // after 5 second (or 5000 miliseconds), the task will be active.
     }
 
     @Override
