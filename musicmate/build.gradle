@@ -29,8 +29,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 43
-        versionName  "3.0.1 "+ versions.buildDate
+        versionCode 44
+        versionName  "3.0.2 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true

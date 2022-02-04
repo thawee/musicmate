@@ -294,11 +294,11 @@ public class AudioTagRepository {
             Query<AudioTag> query = tagBox.query(AudioTag_.mqa.equal(true)).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_HIFI && Constants.TITLE_HIFI_QUALITY.equals(criteria.keyword)){
+        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_QUALITY.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query(AudioTag_.lossless.notEqual(true).and(AudioTag_.audioBitsPerSample.notEqual(1))).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_HIFI && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
+        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query(AudioTag_.lossless.equal(true).and(AudioTag_.audioBitsPerSample.notEqual(1)))
                     .filter(new QueryFilter<AudioTag>() {
                         @Override
@@ -313,7 +313,7 @@ public class AudioTagRepository {
                     .order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_HIRES && Constants.TITLE_HR_MASTER.equals(criteria.keyword)){
+        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HR_MASTER.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {
@@ -326,7 +326,7 @@ public class AudioTagRepository {
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_HIRES && Constants.TITLE_HR_LOSSLESS.equals(criteria.keyword)){
+        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HR_LOSSLESS.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {

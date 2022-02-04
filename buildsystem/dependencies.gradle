@@ -9,14 +9,14 @@ ext.versions = [
         minSdk             : 31,
         targetSdk          : 31,
         compileSdk         : 32,
-        buildTools         : '32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '32.1.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
         kotlin             : '1.6.10',  //'1.5.31',
         buildDate          : "built on " + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.1.1',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.0.0-b08',
+        aboutlibraries     : '10.0.0-b09',
 ]
 
 ext.gradlePlugins = [
@@ -218,6 +218,7 @@ deps.ui = ui
 
 def epoxy = [:]
 //https://github.com/airbnb/epoxy/releases
+//https://mvnrepository.com/artifact/com.airbnb.android/epoxy
 epoxy.runtime = "com.airbnb.android:epoxy:5.0.0-beta05" //4.6.3"
 epoxy.databinding = "com.airbnb.android:epoxy-databinding:5.0.0-beta05" //4.6.3"
 epoxy.annotationProcessor = "com.airbnb.android:epoxy-processor:5.0.0-beta05" //4.6.3"
@@ -237,7 +238,7 @@ deps.material_dialogs = material_dialogs
 // https://github.com/coil-kt/coil
 //https://mvnrepository.com/artifact/io.coil-kt/coil
 def coil = [:]
-coil.runtime = "io.coil-kt:coil:2.0.0-alpha05" //1.4.0"
+coil.runtime = "io.coil-kt:coil:2.0.0-alpha07" //1.4.0"
 deps.coil = coil
 
 def glide = [:]
