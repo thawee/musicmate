@@ -62,7 +62,7 @@
     <string name="alert_btn_cancel">CANCEL</string>
     <string name="alert_btn_set">UPDATE</string>
 
-    <string name="preferences_sub_next_song">Next Song Notification</string>
+    <string name="preferences_sub_next_song">Now Playing Song Notification</string>
     <string name="preferences_sub_appearance">Appearance</string>
     <string name="preferences_sub_storage">Storage</string>
     <string name="MetaDataEncoding">Metadata Encoding</string>

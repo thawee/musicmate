@@ -1,14 +1,12 @@
 package apincer.android.mmate.ui;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.transition.Slide;
@@ -97,7 +95,6 @@ import timber.log.Timber;
 /**
  * Created by Administrator on 11/23/17.
  */
-
 public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
     private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=20; //start scrolling from 5 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
@@ -183,9 +180,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         dlg.show();
     }
 	
-	private void doShowPlayingSongFAB(AudioTag tag) {
-        if(tag ==null) return;
-
+	private void doShowPlayingSongFAB() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -223,6 +218,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         });
     }
 
+    /*
     @Override
     public final void onActivityResult(final int requestCode, final int resultCode, final Intent resultData) {
         super.onActivityResult(requestCode, resultCode, resultData);
@@ -236,11 +232,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 String rootPath = resultData.getExtras().getString("STORAGE_PATH");
                 //String rootPath = MediaFileRepository.getInstance(getApplication()).getExternalRootPath();
                 //String rootPath = uri.getPath();
-                Preferences.setPersistableUriPermission(this, rootPath, uri);
+                setPersistableUriPermission(this, rootPath, uri);
             }
         }
-    }
-
+    } */
 
     private void doStartRefresh(SearchCriteria criteria) {
         if(criteria == null) {
@@ -325,7 +320,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
         }; */
         setUpNowPlayingView();
-        setUpPermissionsAndScan();
+        setUpPermissions();
         setUpHeaderPanel();
         setUpBottomAppBar();
         setUpRecycleView();
@@ -604,21 +599,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         } */
     }
 
-    private void setUpPermissionsAndScan() {
-        if (!PermissionUtils.isPermissionsEnabled(this, MusicListeningService.PERMISSIONS_ALL)) {
-           /* PermissionsDialogue.Builder alertPermissions = new PermissionsDialogue.Builder(MediaBrowserActivity.this)
-                    .setCancelable(false)
-                    .setMessage(getString(R.string.app_name) + " requires the following permissions to manage music")
-                    .setIcon(R.drawable.ic_launcher)
-                    .setRequireStorage(PermissionsDialogue.REQUIRED)
-                    .setOnContinueClicked((view, dialog) -> {
-                        dialog.dismiss();
-                        setUpPermissionSAF();
-                    })
-                    .setDecorView(getWindow().getDecorView())
-                    .build();
-            alertPermissions.show();
-            */
+    private void setUpPermissions() {
+        if(!PermissionUtils.hasPermissions(getApplicationContext(), MusicListeningService.PERMISSIONS_ALL)) {
+            // do not have read/write storage permission
             Intent myIntent = new Intent(MediaBrowserActivity.this, PermissionActivity.class);
             // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
             ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
@@ -631,6 +614,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     });
             permissionResultLauncher.launch(myIntent);
         }
+        /*if(!EasyPermissions.hasPermissions(getBaseContext(), MusicListeningService.PERMISSIONS_ALL)) {
+            Intent myIntent = new Intent(MediaBrowserActivity.this, PermissionActivity.class);
+            // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
+            ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    new ActivityResultCallback<ActivityResult>() {
+                        @Override
+                        public void onActivityResult(ActivityResult result) {
+                            initMediaItemList(getIntent());
+                        }
+                    });
+            permissionResultLauncher.launch(myIntent);
+        } */
     }
 
     private boolean scrollToListening() {
@@ -688,6 +684,22 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
+
+        if(MusicListeningService.getInstance()!=null) {
+            AudioTag tag = MusicListeningService.getInstance().getPlayingSong();
+            if(tag!=null) {
+                ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+                ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                        .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                        .crossfade(false)
+                        .allowHardware(false)
+                        .transformations(new CircleCropTransformation())
+                        .target(fabPlayingAction)
+                        .build();
+                imageLoader.enqueue(request);
+                doShowPlayingSongFAB();
+            }
+        }
 
        // filter = new IntentFilter(MusicListeningService.ACTION);
        // LocalBroadcastManager.getInstance(this).registerReceiver(playingReceiver, filter);
@@ -1053,7 +1065,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
                         if(MusicListeningService.getInstance()!=null) {
-                            doShowPlayingSongFAB(MusicListeningService.getInstance().getPlayingSong());
+                            doShowPlayingSongFAB();
                         }
                     }else {
 						doHidePlayingSongFAB();
@@ -1274,19 +1286,38 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .build();
         imageLoader.enqueue(request); */
         nowPlayingView.setVisibility(View.VISIBLE);
-        final Timer t = new Timer();
-        t.schedule(new TimerTask() {
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        nowPlayingView.setVisibility(View.GONE);
-                    }
-                });
-                doShowPlayingSongFAB(tag);
-                t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
-            }
-        }, 3500); // after 5 second (or 5000 miliseconds), the task will be active.
+        if(Preferences.isFollowNowPlaying(getApplicationContext())) {
+            nowPlayingView.setVisibility(View.GONE);
+            scrollToSong(tag);
+            doShowPlayingSongFAB();
+            final Timer t = new Timer();
+            t.schedule(new TimerTask() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            doShowEditActivity(tag);
+                        }
+                    });
+                    t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
+                }
+            }, 6000); // after 5 second (or 5000 miliseconds), the task will be active.
+
+        }else {
+            final Timer t = new Timer();
+            t.schedule(new TimerTask() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            nowPlayingView.setVisibility(View.GONE);
+                        }
+                    });
+                    doShowPlayingSongFAB();
+                    t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
+                }
+            }, 3500); // after 5 second (or 5000 miliseconds), the task will be active.
+        }
     }
 
     @Override

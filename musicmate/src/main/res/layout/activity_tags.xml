@@ -200,7 +200,8 @@
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:paddingTop="@dimen/dimen_8_dp"
                     android:paddingRight="@dimen/dimen_2_dp"
-                    android:paddingBottom="@dimen/dimen_12_dp">
+                    android:paddingBottom="@dimen/dimen_4_dp"
+                    android:layout_marginBottom="@dimen/dimen_12_dp">
 
                     <ImageView
                         android:id="@+id/icon_audiophile"
@@ -212,20 +213,20 @@
                         app:tint="@color/now_playing" />
 
                     <ImageView
-                        android:id="@+id/icon_mqa"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="@dimen/dimen_32_dp"
-                        android:layout_marginRight="@dimen/dimen_12_dp"
-                        android:layout_marginBottom="@dimen/dimen_12_dp"
-                        android:src="@drawable/ic_format_mqa_white" />
-
-                    <ImageView
                         android:id="@+id/icon_hires"
                         android:layout_width="@dimen/dimen_32_dp"
                         android:layout_height="@dimen/dimen_32_dp"
                         android:layout_marginRight="@dimen/dimen_12_dp"
                         android:layout_marginBottom="@dimen/dimen_12_dp"
                         android:src="@drawable/ic_format_hires" />
+
+                    <ImageView
+                        android:id="@+id/icon_mqa"
+                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_height="@dimen/dimen_32_dp"
+                        android:layout_marginRight="@dimen/dimen_12_dp"
+                        android:layout_marginBottom="@dimen/dimen_12_dp"
+                        android:src="@drawable/ic_format_mqa_white" />
                 </LinearLayout>
                 <!--
                 <LinearLayout

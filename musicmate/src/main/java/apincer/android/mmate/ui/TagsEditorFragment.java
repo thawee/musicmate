@@ -2,11 +2,11 @@ package apincer.android.mmate.ui;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -24,29 +24,30 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.ActivityResultRegistry;
+import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.ViewPropertyAnimatorListenerAdapter;
 import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
+import com.app.imagepickerlibrary.ImagePickerActivityClass;
+import com.app.imagepickerlibrary.ImagePickerBottomsheet;
+import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,20 +72,31 @@ import coil.target.Target;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import timber.log.Timber;
 
-public class TagsEditorFragment extends Fragment {
+public class TagsEditorFragment extends Fragment implements ImagePickerBottomsheet.ItemClickListener, ImagePickerActivityClass.OnResult {
     public static final int REQUEST_GET_CONTENT_IMAGE = 555;
     private TagsActivity mainActivity;
     private List<AudioTag> mediaItems;
     private ViewHolder viewHolder;
     private FloatingActionButton fabSaveAction;
-    private File pendingCoverartFile;
+    //private File pendingCoverartFile;
     private FloatingActionButton fabMainAction;
     private ActivityResultLauncher startForResultFromGallery;
+    private Uri coverArtUri;
+    private ImagePickerActivityClass imagePicker;
 
     final int DRAWABLE_LEFT = 0;
     final int DRAWABLE_TOP = 1;
     final int DRAWABLE_RIGHT = 2;
     final int DRAWABLE_BOTTOM = 3;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        imagePicker = new ImagePickerActivityClass(getContext(), this, mainActivity.getActivityResultRegistry(), null, this);
+        //set to true if you want all features(crop,rotate,zoomIn,zoomOut)
+        //by Default it's value is set to false (only crop feature is enabled)
+        imagePicker.cropOptions(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -119,7 +131,7 @@ public class TagsEditorFragment extends Fragment {
                         if (result.getData() == null && result.getData().getData()!=null) {
                             return;
                         }
-                        InputStream input = getApplicationContext().getContentResolver().openInputStream(result.getData().getData());
+                     /*   InputStream input = getApplicationContext().getContentResolver().openInputStream(result.getData().getData());
                         File outputDir = getApplicationContext().getCacheDir(); // context being the Activity pointer
                         pendingCoverartFile = new File(outputDir, "tmp_cover_art");
                         if (pendingCoverartFile.exists()) {
@@ -132,8 +144,8 @@ public class TagsEditorFragment extends Fragment {
 
                         mainActivity.doPreviewCoverArt(pendingCoverartFile);
                         viewHolder.coverartChanged = true;
-                        toggleSaveFabAction();
-                    }catch (IOException ex) {
+                        toggleSaveFabAction(); */
+                    }catch (Exception ex) {
                         Timber.e( ex);
                     }
                 }
@@ -215,47 +227,18 @@ public class TagsEditorFragment extends Fragment {
         toggleSaveFabAction();
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_GET_CONTENT_IMAGE) {
-            try {
-                if (data == null || data.getData() == null) {
-                    return;
-                }
-                InputStream input = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                File outputDir = getApplicationContext().getCacheDir(); // context being the Activity pointer
-                pendingCoverartFile = new File(outputDir, "tmp_cover_art");
-                if (pendingCoverartFile.exists()) {
-                    pendingCoverartFile.delete();
-                }
-                FileOutputStream output = new FileOutputStream(new File(outputDir, "tmp_cover_art"));
-               // MediaFileRepository.getInstance(getActivity().getApplication()).copy(input, pendingCoverartFile);
-                IOUtils.copy(input, output);
-                output.close();
-
-               mainActivity.doPreviewCoverArt(pendingCoverartFile);
-                viewHolder.coverartChanged = true;
-                toggleSaveFabAction();
-            }catch (IOException ex) {
-                Timber.e( ex);
-            }
-        }
-    }
-
     private void doPickCoverart() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        //startActivityForResult(intent,REQUEST_GET_CONTENT_IMAGE);
-        startForResultFromGallery.launch(intent);
+        imagePicker.choosePhotoFromGallery();
+       /* ImagePicker.with(this)
+                .galleryMimeTypes(new String[]{"image/png", "image/jpg", "image/jpeg"})
+                .galleryOnly()	//User can only select image from Gallery
+                .cropSquare()	    	//Crop image(Optional), Check Customization for more option
+                .compress(1024)			//Final image size will be less than 1 MB(Optional)
+                .maxResultSize(1080, 1080)	//Final image resolution will be less than 1080 x 1080(Optional)
+                //  Path: /data/data/package/cache/ImagePicker
+                .saveDir(new File(mainActivity.getCacheDir(), "ImagePicker"))
+                .start(); */
     }
-
-    /*
-    private void doSaveCoverart() {
-            File theFilePath = MediaFileRepository.getDownloadPath(mediaItems.get(0).getTitle()+".png");
-            AudioFileRepository.getInstance(getActivity().getApplication()).saveArtworkToFile(mediaItems.get(0), theFilePath.getAbsolutePath());
-			ToastUtils.showActionMessageEditor(getActivity(), fabMainAction, 1,0,1, "success", "Save Artwork to "+theFilePath.getName());
-
-    } */
 
     private void startProgressBar() {
        // if(mMaterialProgressBar!=null) {
@@ -286,17 +269,18 @@ public class TagsEditorFragment extends Fragment {
         }
 
         startProgressBar();
-        String artworkPath = null;
-        if(viewHolder.coverartChanged && pendingCoverartFile!=null) {
-            artworkPath = pendingCoverartFile.getAbsolutePath();
-        }
         if(viewHolder.tagChanged) {
             for(AudioTag item:mediaItems) {
                 buildPendingTags(item);
             }
         }
 
-        UpdateAudioFileWorker.startWorker(getContext(), mediaItems, artworkPath);
+
+        String path = null;
+        if(coverArtUri!=null) {
+            coverArtUri.getPath();
+        }
+        UpdateAudioFileWorker.startWorker(getContext(), mediaItems, path);
       //  MediaItemIntentService.startService(getApplicationContext(), Constants.COMMAND_SAVE,mediaItems, artworkPath);
 
         viewHolder.resetState();
@@ -356,6 +340,28 @@ public class TagsEditorFragment extends Fragment {
         return StringUtils.trimToEmpty(String.valueOf(textView.getText()));
     }
 
+    public void setCoverArtUri(Uri coverArtUri) {
+        this.coverArtUri = coverArtUri;
+        viewHolder.coverartChanged  = true;
+        toggleSaveFabAction();
+    }
+
+    @Override
+    public void returnString(@Nullable Uri uri) {
+        setCoverArtUri(uri);
+        mainActivity.doPreviewCoverArt(uri);
+    }
+
+    @Override
+    public void doCustomisations(@NonNull ImagePickerBottomsheet imagePickerBottomsheet) {
+
+    }
+
+    @Override
+    public void onItemClick(@Nullable String s) {
+
+    }
+
     private class ViewHolder {
         private AudioTag displayTag;
         private EditText mTitleView;
@@ -379,8 +385,8 @@ public class TagsEditorFragment extends Fragment {
         private TextView mFileNameView;
 
         private ViewTextWatcher mTextWatcher;
-        protected boolean tagChanged;
-        protected boolean coverartChanged;
+        protected volatile boolean tagChanged;
+        protected volatile boolean coverartChanged;
 
         public ViewHolder(View view) {
             tagChanged = false;

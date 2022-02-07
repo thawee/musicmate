@@ -154,7 +154,7 @@ public final class Constants {
   //  public static final String PREF_SHOW_AUDIO_QUALITY_IN_COLLECTION = "preference_show_sq_in_collection";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
-    public static final String PREF_SHOW_DSD_AUDIO_IN_COLLECTION = "preference_show_dsd_in_collection";
+    public static final String PREF_FOLLOW_NOW_PLAYING = "preference_follow_now_playing";
     public static final String PREF_SHOW_MQA_AUDIO_IN_COLLECTION = "preference_show_mqa_in_collection";
     public static final String PREF_SHOW_PCM_AUDIO_IN_COLLECTION = "preference_show_pcm_in_collection";
     public static final String PREF_SHOW_AUDIO_SAMPLE_RATE_IN_COLLECTION = "preference_show_sample_rate_in_collection";

@@ -70,7 +70,7 @@ public class MusicListeningService extends Service {
     public static final String FLAG_SHOW_LISTENING = "__FLAG_SHOW_LISTENING";
 
     public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,
-            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_CONNECT};
 
     private static final String CHANNEL_ID = "music_mate_now_listening";
     private static final  int NOTIFICATION_ID = 19099;

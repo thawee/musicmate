@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.1.0', //''7.0.3',
+        androidGradlePlugin: '7.1.1', //''7.0.3',
         minSdk             : 31,
         targetSdk          : 31,
         compileSdk         : 32,
@@ -272,6 +272,8 @@ deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1'
 deps.coverartarchive = 'fm.last:coverartarchive-api:2.1.1'
 //https://github.com/greenrobot/EventBus
 deps.eventbus = 'org.greenrobot:eventbus:3.3.1'
+//https://github.com/Karumi/Dexter
+deps.dexter = 'com.karumi:dexter:6.2.3'
 ext.deps = deps
 
 def developer = [:]

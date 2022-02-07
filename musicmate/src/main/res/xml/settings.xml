@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory android:title="@string/preferences_sub_appearance">
+    <PreferenceCategory android:title="@string/preferences_sub_appearance"
+        android:summary="Look &amp; Feel.">
         <SwitchPreferenceCompat
             android:key="preference_show_storage_space"
             android:summary="Show Storage space on left menu."
@@ -20,6 +21,11 @@
     <PreferenceCategory android:title="@string/preferences_sub_next_song"
         android:summary="Next Song Notification.">
         <SwitchPreferenceCompat
+            android:key="preference_follow_now_playing"
+            android:summary="Always open song details on Now Playing Song."
+            android:title="Show Now Playing"
+            android:defaultValue="false"/>
+        <SwitchPreferenceCompat
             android:key="preference_default_next_by_media_buttons"
             android:summary="Simulate media buttons to play next song on Music Player."
             android:title="Media Buttons"
@@ -28,7 +34,7 @@
             android:key="preference_vibrate_on_next_song"
             android:summary="Vibrate when trigger next song for Music Player."
             android:title="Vibrate"
-            android:defaultValue="true"/>
+            android:defaultValue="false"/>
     </PreferenceCategory>
     <!--
     <PreferenceCategory android:title="@string/preferences_sub_collection"

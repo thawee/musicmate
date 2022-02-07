@@ -2,6 +2,7 @@ package apincer.android.mmate.ui;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,13 +11,16 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -26,6 +30,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.anggrayudi.storage.file.StorageId;
 import com.arthenica.ffmpegkit.FFmpegKit;
+import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -95,6 +100,7 @@ public class TagsActivity extends AppCompatActivity {
     private int toolbar_from_color;
     private int toolbar_to_color;
     private StateView mStateView;
+    private TagsEditorFragment tagsEditorFragment;
 
     @Override
     public void onBackPressed() {
@@ -104,6 +110,40 @@ public class TagsActivity extends AppCompatActivity {
             Intent resultIntent = new Intent();
             ApplicationUtils.setSearchCriteria(resultIntent,criteria);
             setResult(RESULT_OK, resultIntent);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            // Uri object will not be null for RESULT_OK
+            Uri coverArtUri = data.getData();
+            try {
+               /* if (data == null || data.getData() == null) {
+                    return;
+                }
+                InputStream input = getApplicationContext().getContentResolver().openInputStream(data.getData());
+                File outputDir = getApplicationContext().getCacheDir(); // context being the Activity pointer
+                pendingCoverartFile = new File(outputDir, "tmp_cover_art");
+                if (pendingCoverartFile.exists()) {
+                    pendingCoverartFile.delete();
+                }
+                FileOutputStream output = new FileOutputStream(new File(outputDir, "tmp_cover_art"));
+               // MediaFileRepository.getInstance(getActivity().getApplication()).copy(input, pendingCoverartFile);
+                IOUtils.copy(input, output);
+                output.close();
+
+               //mainActivity.doPreviewCoverArt(pendingCoverartFile); */
+                doPreviewCoverArt(coverArtUri);
+
+                tagsEditorFragment.setCoverArtUri(coverArtUri);
+
+               // viewHolder.coverartChanged = true;
+                //toggleSaveFabAction();
+            }catch (Exception ex) {
+                Timber.e( ex);
+            }
         }
     }
 
@@ -202,7 +242,8 @@ public class TagsActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
-        adapter.addNewTab(new TagsEditorFragment(), "Editor");
+        tagsEditorFragment = new TagsEditorFragment();
+        adapter.addNewTab(tagsEditorFragment, "Editor");
         adapter.addNewTab(new TagsMusicBrainzFragment(), "MusicBrainz");
         viewPager.setAdapter(adapter);
 
@@ -311,12 +352,13 @@ public class TagsActivity extends AppCompatActivity {
         pathInfo.setText(simplePath + mateInd);
         int bgColor = getApplication().getColor(R.color.grey600);//Color.TRANSPARENT;
         int textColor = getApplication().getColor(R.color.grey200);
+        int borderColor = getApplication().getColor(R.color.black_transparent_40);
         if(StorageId.PRIMARY.equals(sid)) {
-            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,textColor,bgColor);
+            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,borderColor,bgColor);
             pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_memory_white_24dp),null,null,null);
         }else {
-            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," SD ",textColor,textColor,bgColor);
+            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," SD ",textColor,borderColor,bgColor);
             pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
             //pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_sd_storage_white_24dp),null,null,null);
         }
@@ -439,19 +481,24 @@ public class TagsActivity extends AppCompatActivity {
         spannableEnc.append(new SpecialTextUnit("[ ",encColor).setTextSize(10))
                 .append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
+        String mqaSampleRate = "";
         if(displayTag.isMQA()) {
-            String mqaLabel = "MQA";
+           // String mqaLabel = "MQA";
             String mqaRate = displayTag.getMQASampleRate();
             long rate = AudioTagUtils.parseMQASampleRate(mqaRate);
-            if (rate >0 && rate != displayTag.getAudioSampleRate()) {
-                mqaLabel = mqaLabel + " " + StringUtils.getFormatedAudioSampleRate(rate, true);
+           // if (rate >0 && rate != displayTag.getAudioSampleRate()) {
+           //     mqaLabel = mqaLabel + " " + StringUtils.getFormatedAudioSampleRate(rate, true);
+          //  }
+            if (rate >0) {
+                mqaSampleRate = "/" + StringUtils.getFormatedAudioSampleRate(rate, true);
             }
-            spannableEnc.append(new SpecialTextUnit(mqaLabel,encColor).setTextSize(10))
-                    .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
+           // spannableEnc.append(new SpecialTextUnit(mqaLabel,encColor).setTextSize(10))
+           //         .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
         }
         spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))
+                .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.getFormatedChannels(displayTag.getAudioChannels()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
@@ -538,7 +585,7 @@ public class TagsActivity extends AppCompatActivity {
             text = text + "'"+editItems.get(0).getTitle()+"' song?";
         }
 
-        new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
+        MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
                 .setIcon(R.drawable.ic_round_delete_forever_24)
                 .setTitle("Delete Songs")
                 .setMessage(text)
@@ -553,8 +600,10 @@ public class TagsActivity extends AppCompatActivity {
                     setResult(RESULT_OK, resultIntent);
                     finish(); // back to prev activity
                 })
-                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss())
-                .show();
+                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        AlertDialog alertDialog = builder.create();
+        alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+        alertDialog.show();
     }
 
     public void doMoveMediaItem() {
@@ -565,7 +614,7 @@ public class TagsActivity extends AppCompatActivity {
             text = text + "'"+editItems.get(0).getTitle()+"' song to Music Directory?";
         }
 
-        new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
+        MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
                 .setTitle("Import Songs")
                 .setIcon(R.drawable.ic_round_move_to_inbox_24)
                 .setMessage(text)
@@ -579,14 +628,27 @@ public class TagsActivity extends AppCompatActivity {
                     setResult(RESULT_OK, resultIntent);
                     finish(); // back to prev activity
                 })
-                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss())
-                .show();
+                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        AlertDialog alertDialog = builder.create();
+        alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+        alertDialog.show();
     }
 
     public void doPreviewCoverArt(File coverArtFile) {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(coverArtFile)
+                .placeholder(R.drawable.progress)
+                .error(R.drawable.ic_broken_image_black_24dp)
+                .target(coverArtView)
+                .build();
+        imageLoader.enqueue(request);
+    }
+
+    public void doPreviewCoverArt(Uri coverArtUri) {
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(coverArtUri)
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)
                 .target(coverArtView)
