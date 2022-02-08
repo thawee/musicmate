@@ -368,6 +368,11 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             for(String tab: tabs) {
                 titles.add(tab);
             }
+        }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
+            List<String> tabs = tagRepos.getGenreList(context);
+            for(String tab: tabs) {
+                titles.add(tab);
+            }
         }else {
             titles.add(getHeaderTitle());
         }

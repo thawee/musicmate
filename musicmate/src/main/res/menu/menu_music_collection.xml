@@ -83,13 +83,13 @@
         android:title="Similar Titles"
         app:showAsAction="always" />
 -->
-    <!--
+
     <item
-        android:icon="@drawable/ic_waves_white"
+        android:icon="@drawable/ic_round_style_24"
         android:id="@+id/menu_tag_genre"
         android:title="Genre"
         app:showAsAction="always" />
-
+    <!--
     <item
         android:icon="@drawable/ic_touch_app_white_24dp"
         android:id="@+id/menu_tag_group"

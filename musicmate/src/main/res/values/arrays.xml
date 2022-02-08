@@ -93,12 +93,13 @@
         <item>Jazz</item>
         <item>Blue</item>
         <item>Country</item>
-        <item>R &amp; B/Soul</item>
+        <item>R&amp;B/Soul</item>
         <item>Pop/Rock</item>
         <item>Reggae</item>
         <item>Dance/Electronica</item>
         <item>Hip-Hop</item>
-        <item>Mor-Lum</item>
+        <item>Luk Thung</item>
+        <item>Mor Lum</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Special</item>

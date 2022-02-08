@@ -358,6 +358,10 @@ public class AudioTagRepository {
             Query<AudioTag> query = tagBox.query(AudioTag_.grouping.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
+        }else if(criteria.getType()== SearchCriteria.TYPE.GENRE){
+            Query<AudioTag> query = tagBox.query(AudioTag_.genre.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
+            list = query.find();
+            query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
             Query<AudioTag> query = tagBox.query(AudioTag_.audiophile.equal(true)).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();

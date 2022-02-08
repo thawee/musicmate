@@ -819,6 +819,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GROUPING, AudioTagRepository.getInstance().getDefaultGroupingList(getApplicationContext()).get(0));
             return true;
+        }else if(item.getItemId() == R.id.menu_tag_genre) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.GENRE, AudioTagRepository.getInstance().getGenreList(getApplicationContext()).get(0));
+            return true;
         /*}else if(item.getItemId() == R.id.menu_audiophile) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIOPHILE, null);
