@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.transition.Slide;
@@ -24,7 +23,6 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
@@ -86,7 +84,6 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
-import coil.target.Target;
 import coil.transform.CircleCropTransformation;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
@@ -1153,7 +1150,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     new Timer().schedule(new TimerTask() {
                         @Override
                         public void run() {
-                            // this code will be executed after 1 seconds
+                            // this code will be executed after 2 seconds
                             epoxyController.loadSource();
                         }
                     }, 2000);
@@ -1222,76 +1219,22 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     };
 
     private void doShowPlayingSong(AudioTag tag) {
-        if(nowPlayingView==null) return;
-
         doHidePlayingSongFAB();
-        TextView title = nowPlayingView.findViewById(R.id.title);
-        title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(),tag));
-        TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
-        subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
-        ImageView type = nowPlayingView.findViewById(R.id.file_type);
-        ImageView hires = nowPlayingView.findViewById(R.id.hires);
-        ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
-        ImageView player = nowPlayingView.findViewById(R.id.player);
-        ImageView output = nowPlayingView.findViewById(R.id.output);
-        TextView outputText = nowPlayingView.findViewById(R.id.output_text);
-        hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag)?View.VISIBLE:View.GONE);
-        mqa.setVisibility(tag.isMQA()?View.VISIBLE:View.GONE);
-        type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-        player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
-        AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
-            @Override
-            public void onReady(AudioOutputHelper.Device device) {
-                output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
-                outputText.setText(device.getName());
-            }
-        });
-        ImageView cover = nowPlayingView.findViewById(R.id.coverart);
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                .crossfade(false)
-                .allowHardware(false)
-                .transformations(new CircleCropTransformation())
-                .target(new Target() {
-                    @Override
-                    public void onError(@Nullable Drawable error) {
-                        Target.super.onError(error);
-                        cover.setImageDrawable(error);
-                        fabPlayingAction.setImageDrawable(error);
-                    }
 
-                    @Override
-                    public void onSuccess(@NonNull Drawable result) {
-                        Target.super.onSuccess(result);
-                        cover.setImageDrawable(result);
-                        fabPlayingAction.setImageDrawable(result);
-                    }
-                })
-                .build();
-        imageLoader.enqueue(request);
-        /*ImageView cover = nowPlayingView.findViewById(R.id.coverart);
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                .crossfade(false)
-                .allowHardware(false)
-                .transformations(new CircleCropTransformation())
-                .target(cover)
-                .build();
-        imageLoader.enqueue(request);
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+        ImageLoader fabLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest fabRequest = new ImageRequest.Builder(getApplicationContext())
                 .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
                 .crossfade(false)
                 .allowHardware(false)
                 .transformations(new CircleCropTransformation())
                 .target(fabPlayingAction)
                 .build();
-        imageLoader.enqueue(request); */
-        nowPlayingView.setVisibility(View.VISIBLE);
-        if(Preferences.isFollowNowPlaying(getApplicationContext())) {
-            nowPlayingView.setVisibility(View.GONE);
+        fabLoader.enqueue(fabRequest);
+
+        if(Preferences.isFollowNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
+            if (nowPlayingView != null) {
+                nowPlayingView.setVisibility(View.GONE);
+            }
             scrollToSong(tag);
             doShowPlayingSongFAB();
             final Timer t = new Timer();
@@ -1305,9 +1248,41 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     });
                     t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
                 }
-            }, 6000); // after 5 second (or 5000 miliseconds), the task will be active.
+            }, 5000); // after 5 second (or 5000 miliseconds), the task will be active.
+        }else if(nowPlayingView!=null) {
+            TextView title = nowPlayingView.findViewById(R.id.title);
+            title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), tag));
+            TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
+            subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
+            ImageView type = nowPlayingView.findViewById(R.id.file_type);
+            ImageView hires = nowPlayingView.findViewById(R.id.hires);
+            ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
+            ImageView player = nowPlayingView.findViewById(R.id.player);
+            ImageView output = nowPlayingView.findViewById(R.id.output);
+            TextView outputText = nowPlayingView.findViewById(R.id.output_text);
+            hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag) ? View.VISIBLE : View.GONE);
+            mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
+            type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+            player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
+            AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
+                @Override
+                public void onReady(AudioOutputHelper.Device device) {
+                    output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+                    outputText.setText(device.getName());
+                }
+            });
+        ImageView cover = nowPlayingView.findViewById(R.id.coverart);
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                .crossfade(false)
+                .allowHardware(false)
+                .transformations(new CircleCropTransformation())
+                .target(cover)
+                .build();
+        imageLoader.enqueue(request);
+            nowPlayingView.setVisibility(View.VISIBLE);
 
-        }else {
             final Timer t = new Timer();
             t.schedule(new TimerTask() {
                 public void run() {
@@ -1322,6 +1297,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }
             }, 3500); // after 5 second (or 5000 miliseconds), the task will be active.
         }
+    }
+
+    private boolean isOnMyMusicCollection() {
+        if(epoxyController.getCriteria()!=null) {
+            return (epoxyController.getCriteria().getType() == SearchCriteria.TYPE.MY_SONGS) && (StringUtils.isEmpty(epoxyController.getCriteria().getKeyword()) || Constants.TITLE_ALL_SONGS.equals(epoxyController.getCriteria().getKeyword()));
+        }
+        return false;
     }
 
     @Override

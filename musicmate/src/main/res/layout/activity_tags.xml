@@ -42,11 +42,15 @@
                 android:orientation="vertical"
                 app:layout_collapseMode="parallax"
                 android:layout_marginHorizontal="16dp"
+                android:layout_gravity="top"
+                android:gravity="top"
                 android:layout_marginTop="72dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:layout_gravity="top"
                     android:orientation="horizontal">
 <!--
                     <TextView
@@ -132,8 +136,9 @@
                 android:id="@+id/panel_cover_art_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/dimen_52_dp"
+                android:layout_marginTop="@dimen/dimen_16_dp"
                 android:layout_gravity="top"
+                android:gravity="top"
                 android:translationY="50dp"
                 app:layout_collapseMode="parallax"
                 android:background="@color/bgColor">

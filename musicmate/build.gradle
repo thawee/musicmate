@@ -153,7 +153,7 @@ dependencies {
     //implementation 'com.github.BlueCatSoftware:Pickerly:1.5.0'
     // 'io.github.ParkSangGwon:tedimagepicker:1.2.8'
     //https://github.com/Dhaval2404/ImagePicker
-    implementation 'com.github.dhaval2404:imagepicker:2.1'
+    //implementation 'com.github.dhaval2404:imagepicker:2.1'
     //https://github.com/SimformSolutionsPvtLtd/SSImagePicker
     implementation 'com.github.SimformSolutionsPvtLtd:SSImagePicker:1.8'
     implementation deps.dexter

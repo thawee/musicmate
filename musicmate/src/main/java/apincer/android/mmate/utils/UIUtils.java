@@ -35,13 +35,11 @@ import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 import android.view.WindowInsets;
-import android.view.WindowManager;
 import android.view.WindowMetrics;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
@@ -78,7 +76,6 @@ import java.util.List;
 import java.util.Locale;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MediaFileRepository;
 import timber.log.Timber;
 
 /**
@@ -807,28 +804,28 @@ public class UIUtils  {
     }
 
     public static int getScreenWidth(@NonNull Activity activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+       // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
             Insets insets = windowMetrics.getWindowInsets()
                     .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
             return windowMetrics.getBounds().width() - insets.left - insets.right;
-        } else {
+      /*  } else {
             DisplayMetrics displayMetrics = new DisplayMetrics();
             activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             return displayMetrics.widthPixels;
-        }
+        } */
     }
 
     public static int getScreenHeight(@NonNull Activity activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+       // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
             Insets insets = windowMetrics.getWindowInsets()
                     .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
             return windowMetrics.getBounds().height() - insets.top - insets.bottom;
-        } else {
+       /* } else {
             DisplayMetrics displayMetrics = new DisplayMetrics();
             activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             return displayMetrics.heightPixels;
-        }
+        } */
     }
 }

@@ -10,12 +10,12 @@ import android.os.ParcelFileDescriptor;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
+import timber.log.Timber;
 
 public final class EmbedCoverArtProvider extends ContentProvider {
         public static Uri getUriForMediaItem(AudioTag item) {
@@ -51,8 +51,8 @@ public final class EmbedCoverArtProvider extends ContentProvider {
                     return ParcelFileDescriptorUtil.pipeFrom(is);
                 }
               //  return ParcelFileDescriptor.open(getFileForUri(uri), b(str));
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Timber.e(e);
             }
             return null;
         }

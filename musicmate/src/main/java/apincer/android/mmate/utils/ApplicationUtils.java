@@ -129,22 +129,10 @@ public class ApplicationUtils {
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         isPlugged = plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+       // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
             isPlugged = isPlugged || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-        }
+       // }
         return isPlugged;
-    }
-
-    public static boolean isCharging(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            BatteryManager batteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
-            return batteryManager.isCharging();
-        } else {
-            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent intent = context.registerReceiver(null, filter);
-            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            return status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
-        }
     }
 
     public static void startFileExplorer(TagsActivity tagsActivity, AudioTag displayTag) {

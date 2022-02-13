@@ -22,11 +22,11 @@ public class PermissionUtils {
     public static boolean hasPermissions(@NonNull Context context,
                                          @Size(min = 1) @NonNull String... perms) {
         // Always return true for SDK < M, let the system deal with the permissions
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+       // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
 
             // DANGER ZONE!!! Changing this will break the library.
-            return true;
-        }
+       //     return true;
+       // }
 
         // Null context may be passed if we have detected Low API (less than M) so getting
         // to this point with a null context should not be possible.
@@ -93,12 +93,12 @@ public class PermissionUtils {
 
     public static boolean isPermissionEnabled(Context context, String permission)
     {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+       // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
-        }
-        else
-        {
-            return true;
-        }
+       // }
+      //  else
+      //  {
+      //      return true;
+      //  }
     }
 }

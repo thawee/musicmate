@@ -1,19 +1,22 @@
 package apincer.android.mmate.utils;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.media.AudioDescriptor;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioProfile;
 import android.media.MediaRouter;
 import android.os.Build;
+
+import androidx.core.app.ActivityCompat;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,7 +63,7 @@ public class AudioOutputHelper {
             this.codec = codec;
         }
 
-        String codec="";
+        String codec = "";
 
         public String getAddress() {
             return address;
@@ -80,37 +83,37 @@ public class AudioOutputHelper {
 
     public static void getOutputDevice(Context context, Callback callback) {
         Device outputDevice = new Device();
-        MediaRouter mr = (MediaRouter)context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
+        MediaRouter mr = (MediaRouter) context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
         MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);
-       // text = text+"\nRoute ; name :" + ri.getName() + " & Desc : "+ri.getDescription()+"& type: " + ri.getSupportedTypes();
+        // text = text+"\nRoute ; name :" + ri.getName() + " & Desc : "+ri.getDescription()+"& type: " + ri.getSupportedTypes();
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         String rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-       // String size = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-       // text = text+"\nBuffer Size and sample rate; Size :" + size + " & SampleRate: " + rate +" & MusicActive: "+audioManager.isMusicActive();
+        // String size = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+        // text = text+"\nBuffer Size and sample rate; Size :" + size + " & SampleRate: " + rate +" & MusicActive: "+audioManager.isMusicActive();
 
         String dName = String.valueOf(ri.getName());
         String dType = StringUtils.trimToEmpty(String.valueOf(ri.getDescription()));
-      //  String deviceName = "";
-      //  String deviceSamplingRate = "";
+        //  String deviceName = "";
+        //  String deviceSamplingRate = "";
         AudioDeviceInfo[] adi = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-      //  text = text+"\nAudio Devices:";
-        for(AudioDeviceInfo a: adi) {
-           // final int type = a.getType();
-         //   text = text+"\n Audio Device: "+a.getProductName()+" & SampleRate: "+ Arrays.toString(a.getSampleRates()) +" & type: "+a.getType() +" & toString"+a.toString();
-            if("Phone".equalsIgnoreCase(dName)) {
+        //  text = text+"\nAudio Devices:";
+        for (AudioDeviceInfo a : adi) {
+            // final int type = a.getType();
+            //   text = text+"\n Audio Device: "+a.getProductName()+" & SampleRate: "+ Arrays.toString(a.getSampleRates()) +" & type: "+a.getType() +" & toString"+a.toString();
+            if ("Phone".equalsIgnoreCase(dName)) {
                 String bps = "16";
                 outputDevice.setName("Android SRC");
                 outputDevice.setCodec(Build.MODEL);
-                outputDevice.setDescription(getDescription(bps,rate));
+                outputDevice.setDescription(getDescription(bps, rate));
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
                 break;
-            }else if("USB".equalsIgnoreCase(dName) || (a.getType() == AudioDeviceInfo.TYPE_USB_DEVICE || a.getType() == AudioDeviceInfo.TYPE_USB_HEADSET)) {
+            } else if ("USB".equalsIgnoreCase(dName) || (a.getType() == AudioDeviceInfo.TYPE_USB_DEVICE || a.getType() == AudioDeviceInfo.TYPE_USB_HEADSET)) {
                 outputDevice.setName(dName);
                 outputDevice.setDescription(Arrays.toString(a.getSampleRates()));
                 int[] c = a.getEncodings();
                 String bps = getBPSString(c[0]);
-                outputDevice.setDescription(getDescription(bps,rate));
+                outputDevice.setDescription(getDescription(bps, rate));
 
                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                 outputDevice.setAddress(a.getAddress());
@@ -124,17 +127,17 @@ public class AudioOutputHelper {
                 }
                 callback.onReady(outputDevice);
                 break;
-            }else if(dType.toLowerCase().contains("bluetooth")) {
+            } else if (dType.toLowerCase().contains("bluetooth")) {
                 // bluetooth
-               // BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+                // BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
                 outputDevice.setAddress(a.getAddress());
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
                 getA2DP(context, outputDevice, callback);
-            }else {
+            } else {
                 // others
                 outputDevice.setName("Android SRC");
                 String bps = "16";
-                outputDevice.setDescription(getDescription(bps,rate));
+                outputDevice.setDescription(getDescription(bps, rate));
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
                 break;
@@ -150,8 +153,18 @@ public class AudioOutputHelper {
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
                 List<BluetoothDevice> devices = proxy.getConnectedDevices();
                 BluetoothA2dp bA2dp = (BluetoothA2dp) proxy;
-                for (BluetoothDevice dev: devices) {
-                    if(device.getAddress().equals(dev.getAddress())) {
+                for (BluetoothDevice dev : devices) {
+                    if (device.getAddress().equals(dev.getAddress())) {
+                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                            // TODO: Consider calling
+                            //    ActivityCompat#requestPermissions
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
+                            return;
+                        }
                         device.setName(dev.getName());
                         getA2DPCodec(bA2dp, dev, device);
                         callback.onReady(device);
@@ -171,6 +184,7 @@ public class AudioOutputHelper {
         }, BluetoothProfile.A2DP);
     }
 
+    @SuppressLint("PrivateApi")
     private static void getA2DPCodec(BluetoothA2dp bA2dp, BluetoothDevice device, Device device1) {
         device1.setCodec("");
         device1.setDescription("N/A");

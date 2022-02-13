@@ -40,7 +40,6 @@ import androidx.palette.graphics.Palette;
 
 import com.app.imagepickerlibrary.ImagePickerActivityClass;
 import com.app.imagepickerlibrary.ImagePickerBottomsheet;
-import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
@@ -57,6 +56,7 @@ import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
+import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MediaTagParser;
@@ -706,8 +706,8 @@ public class TagsEditorFragment extends Fragment implements ImagePickerBottomshe
                 tag.setAlbumArtist("");
             }
             // if album empty, add single
-            if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
-                tag.setAlbum(tag.getArtist()+" - Single");
+            if(StringUtils.isEmpty(tag.getAlbum())) {
+                tag.setAlbum(AudioTagUtils.getDefaultAlbum(tag));
             }
         }
         // set updated item on main activity

@@ -13,6 +13,8 @@ import android.text.TextPaint;
 
 import androidx.core.content.res.ResourcesCompat;
 
+import org.jetbrains.annotations.NotNull;
+
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
@@ -434,7 +436,7 @@ public class AudioTagUtils {
     public static String getAlbumArtistOrArtist(AudioTag tag) {
         String albumArtist = StringUtils.trimTitle(tag.getAlbumArtist());
         if (StringUtils.isEmpty(albumArtist)) {
-            albumArtist = StringUtils.trimTitle(tag.getArtist());
+            albumArtist = StringUtils.trimTitle("["+tag.getArtist()+"]");
         }
         if (StringUtils.isEmpty(albumArtist)) {
             return "N/A";
@@ -585,6 +587,26 @@ public class AudioTagUtils {
 
     public static boolean isHiResOrDSD(AudioTag tag) {
         return is24Bits(tag) || isDSD(tag);
+    }
+
+    public static String getDefaultAlbum(AudioTag tag) {
+        // if album empty, add single
+        String defaultAlbum = Constants.DEFAULT_ALBUM_TEXT;
+        if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
+            defaultAlbum = getFirstArtist(tag.getArtist())+" - Single";
+        }else {
+            defaultAlbum = StringUtils.trimToEmpty(tag.getAlbum());
+        }
+        return defaultAlbum;
+    }
+
+    private static String getFirstArtist(String artist) {
+        if(artist.indexOf(";")>0) {
+            return artist.substring(0,artist.indexOf(";"));
+        }else if(artist.indexOf(",")>0) {
+            return artist.substring(0,artist.indexOf(","));
+        }
+        return artist;
     }
 
 /*

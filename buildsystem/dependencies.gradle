@@ -9,7 +9,7 @@ ext.versions = [
         minSdk             : 31,
         targetSdk          : 31,
         compileSdk         : 32,
-        buildTools         : '32.1.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
         kotlin             : '1.6.10',  //'1.5.31',
         buildDate          : "built on " + getDate(),
@@ -17,13 +17,15 @@ ext.versions = [
         objectbox          : '3.1.1',
         //https://github.com/mikepenz/AboutLibraries/releases
         aboutlibraries     : '10.0.0-b09',
+        versionsCheck      : '0.42.0',
 ]
 
 ext.gradlePlugins = [
         android: "com.android.tools.build:gradle:$versions.androidGradlePlugin",
         kotlin : "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin",
         objectbox : "io.objectbox:objectbox-gradle-plugin:$versions.objectbox",
-        aboutlibraries: "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${versions.aboutlibraries}"
+        aboutlibraries: "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${versions.aboutlibraries}",
+       // versionsCheck: "com.github.ben-manes.versions:gradle-versions-plugin:${versions.versionsCheck}"
 ]
 
 ext.deps = [:]
@@ -237,8 +239,9 @@ deps.material_dialogs = material_dialogs
 
 // https://github.com/coil-kt/coil
 //https://mvnrepository.com/artifact/io.coil-kt/coil
+//https://coil-kt.github.io/coil/changelog/
 def coil = [:]
-coil.runtime = "io.coil-kt:coil:2.0.0-alpha07" //1.4.0"
+coil.runtime = "io.coil-kt:coil:2.0.0-alpha08" //1.4.0"
 deps.coil = coil
 
 def glide = [:]
@@ -286,9 +289,11 @@ ext.developer = developer
 
 def addRepos(RepositoryHandler handler) {
     handler.google()
+    handler.gradlePluginPortal()
     //handler.jcenter() // require for AvatarView
     handler.mavenCentral()
     handler.maven {url "https://jitpack.io"}
+
 	handler.maven {url "https://maven.google.com" }
     //handler.maven {url "http://repository.jetbrains.com/gradle-libs"}
     handler.maven {url "https://repo1.maven.org/maven2"}

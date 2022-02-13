@@ -7,10 +7,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -18,19 +16,15 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.palette.graphics.Palette;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.anggrayudi.storage.file.StorageId;
 import com.arthenica.ffmpegkit.FFmpegKit;
-import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -47,6 +41,7 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
+import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
@@ -55,8 +50,6 @@ import apincer.android.mmate.service.AudioTagEditEvent;
 import apincer.android.mmate.service.BroadcastData;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioTagUtils;
-import apincer.android.mmate.utils.BitmapHelper;
-import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
@@ -73,7 +66,6 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
-import coil.target.Target;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
@@ -199,9 +191,7 @@ public class TagsActivity extends AppCompatActivity {
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
         mStateView = findViewById(R.id.status_page);
         mStateView.hideStates();
-
         setUpTitlePanel();
-
     }
 
     private void doStartFFMpeg( ) {
@@ -231,12 +221,22 @@ public class TagsActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
-        criteria = event.getSearchCriteria();
-        editItems.clear();
-        editItems.addAll(event.getItems());
-        displayTag = buildDisplayTag(true);
+        // call from EventBus
+        try {
+            criteria = event.getSearchCriteria();
+            editItems.clear();
+            editItems.addAll(event.getItems());
+            displayTag = buildDisplayTag(true);
 
-        updateTitlePanel();
+            updateTitlePanel();
+            setUpPageViewer();
+        }catch (Exception e) {
+            Timber.e(e);
+        }
+    }
+
+    private void setUpPageViewer() {
+
         final AppBarLayout appBarLayout = findViewById(R.id.appbar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
 
@@ -266,7 +266,6 @@ public class TagsActivity extends AppCompatActivity {
             // findViewById(R.id.btnFFMPEG).setEnabled(false);
             findViewById(R.id.btnFFMPEG).setVisibility(View.GONE);
         }
-       // Toast.makeText(getActivity(), event.message, Toast.LENGTH_SHORT).show();
     }
 
     private void setUpTitlePanel() {
@@ -285,9 +284,9 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void updateTitlePanel() {
-        toolbar.setTitle(displayTag.getTitle());
-        titleView.setText(displayTag.getTitle());
-        artistView.setText(displayTag.getArtist());
+        toolbar.setTitle(StringUtils.trimToEmpty(displayTag.getTitle()));
+        titleView.setText(StringUtils.trimToEmpty(displayTag.getTitle()));
+        artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
         mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
@@ -307,19 +306,23 @@ public class TagsActivity extends AppCompatActivity {
             setResult(RESULT_OK, resultIntent);
             finish();
         });
-        albumView.setText(displayTag.getAlbum());
-        albumView.setPaintFlags(albumView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
-        albumView.setOnClickListener(view -> {
-            // filter by album
-            Intent resultIntent = new Intent();
-            if(criteria!=null) {
-                criteria.setFilterType(Constants.FILTER_TYPE_ALBUM);
-                criteria.setFilterText(displayTag.getAlbum());
-                ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-            }
-            setResult(RESULT_OK, resultIntent);
-            finish();
-        });
+        if(StringUtils.isEmpty(displayTag.getAlbum())) {
+            albumView.setText("["+AudioTagUtils.getDefaultAlbum(displayTag)+"]");
+        }else {
+            albumView.setText(displayTag.getAlbum());
+            albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            albumView.setOnClickListener(view -> {
+                // filter by album
+                Intent resultIntent = new Intent();
+                if (criteria != null) {
+                    criteria.setFilterType(Constants.FILTER_TYPE_ALBUM);
+                    criteria.setFilterText(displayTag.getAlbum());
+                    ApplicationUtils.setSearchCriteria(resultIntent, criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                }
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            });
+        }
         if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
             albumArtistView.setText(displayTag.getAlbumArtist());
             albumArtistView.setPaintFlags(albumArtistView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -350,18 +353,21 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         pathInfo.setText(simplePath + mateInd);
-        int bgColor = getApplication().getColor(R.color.grey600);//Color.TRANSPARENT;
-        int textColor = getApplication().getColor(R.color.grey200);
-        int borderColor = getApplication().getColor(R.color.black_transparent_40);
+       // int bgColor = getApplication().getColor(R.color.grey600);//Color.TRANSPARENT;
+       // int textColor = getApplication().getColor(R.color.grey200);
+       // int borderColor = getApplication().getColor(R.color.black_transparent_40);
         if(StorageId.PRIMARY.equals(sid)) {
-            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,borderColor,bgColor);
-            pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
-           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_memory_white_24dp),null,null,null);
+           // Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,borderColor,bgColor);
+           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
+        //    pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_memory_white_24dp),null,null,null);
+            pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_memory_16,0,0,0);
         }else {
-            Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," SD ",textColor,borderColor,bgColor);
-            pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
-            //pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_sd_storage_white_24dp),null,null,null);
+           // Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," SD ",textColor,borderColor,bgColor);
+           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
+           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_sd_storage_white_24dp),null,null,null);
+            pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_sd_card_16,0,0,0);
         }
+
         pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
 
         pathInfo.setOnClickListener(new View.OnClickListener() {
@@ -379,12 +385,15 @@ public class TagsActivity extends AppCompatActivity {
         });
 
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
                 .allowHardware(false)
+                .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)
-                .target(new Target() {
+                .target(coverArtView)
+              /*  .target(new Target() {
                     @Override
                     public void onStart(@Nullable Drawable drawable) {
 
@@ -397,13 +406,14 @@ public class TagsActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccess(@NonNull Drawable drawable) {
-                        coverArtView.setImageDrawable(drawable);
+                       // coverArtView.setImageDrawable(drawable);
                         try {
+                           // Bitmap bmp = null;
                             Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
                             Bitmap fullBitmap = BitmapHelper.applyReflection(bmp);
-                            if(fullBitmap.getAllocationByteCount() > 1024) {
-                                fullBitmap = BitmapHelper.scaleBitmap(fullBitmap, 1024, 1024);
-                            }
+                           // if(fullBitmap.getAllocationByteCount() > 1024) {
+                            //    fullBitmap = BitmapHelper.scaleBitmap(fullBitmap, 1024, 1024);
+                           // }
                             coverArtView.setImageBitmap(fullBitmap);
                             Palette.from(bmp).generate(palette -> {
                                 int vibrant = palette.getVibrantColor(0x000000); // <=== color you want
@@ -429,8 +439,8 @@ public class TagsActivity extends AppCompatActivity {
                         }catch (Exception ex) {
                             Timber.e(ex);
                         }
-                    }
-                })
+                    } */
+              //  })
                 .build();
         imageLoader.enqueue(request);
 

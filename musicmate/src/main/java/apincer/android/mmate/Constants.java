@@ -20,6 +20,7 @@ public final class Constants {
     public static final String FILTER_TYPE_GROUPING = "Grouping";
     public static final String FILTER_TYPE_PATH = "Folder";
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
+    public static final String DEFAULT_ALBUM_TEXT = "Single";
 
     public static int QUALITY_SAMPLING_RATE_384 = 384000;
     public static int QUALITY_SAMPLING_RATE_352 = 352000;

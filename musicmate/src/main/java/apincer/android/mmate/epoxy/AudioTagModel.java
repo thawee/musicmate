@@ -154,7 +154,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                .size(800, 800)
+               // .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
                 .transformations(new RoundedCornersTransformation(12,12,12,12))
@@ -238,14 +238,6 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             }else {
                 holder.mFileSourceView.setVisibility(View.GONE);
             }
-
-            // In case of searchText matches with Title or with a field this will be highlighted
-            /*if (adapter.hasFilter()) {
-                MediaFilter filter = (MediaFilter) adapter.getFilter(MediaFilter.class);
-                if(filter!=null) {
-                    holder.highlightSearch(filter.getKeyword());
-                }
-            } */
     }
 
     private void bindGroupingView(Holder holder) {

@@ -19,8 +19,8 @@ import apincer.android.mmate.utils.BitmapHelper;
 
 public class MusicMateArtwork extends AndroidArtwork {
    // public static int MIN_ALBUM_ART_SIZE = 800; // px
-    public static int MAX_ALBUM_ART_SIZE = 1024; // px
-    final int IMAGE_MAX_SIZE = 640000; // 640 kb
+    public static int MAX_ALBUM_ART_SIZE = 800; //1024; // px
+    final int IMAGE_MAX_SIZE = 1024; //640000; // 640 kb
     @Override
     public void setFromFile(File file)  throws IOException  {
         RandomAccessFile imageFile = new RandomAccessFile(file, "r");
