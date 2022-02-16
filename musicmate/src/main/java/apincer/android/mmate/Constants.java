@@ -54,19 +54,24 @@ public final class Constants {
         IMAGE_COVERS.add("folder.png");
         IMAGE_COVERS.add("front.jpg");
         IMAGE_COVERS.add("cover.jpg");
-        IMAGE_COVERS.add("folder.jpg");
+        IMAGE_COVERS.add("folder.jpeg");
+        IMAGE_COVERS.add("front.jpeg");
+        IMAGE_COVERS.add("cover.jpeg");
+        IMAGE_COVERS.add("folder.jpeg");
     }
 
     public static final List<String> COVER_IMAGE_TYPES = new ArrayList();
     static {
         COVER_IMAGE_TYPES.add("png");
         COVER_IMAGE_TYPES.add("jpg");
+        COVER_IMAGE_TYPES.add("jpeg");
     }
 
     public static final List<String> RELATED_FILE_TYPES = new ArrayList();
     static {
         RELATED_FILE_TYPES.add("png");
         RELATED_FILE_TYPES.add("jpg");
+        RELATED_FILE_TYPES.add("jpeg");
         RELATED_FILE_TYPES.add("cue");
         RELATED_FILE_TYPES.add("lrc");
         RELATED_FILE_TYPES.add("pdf");
@@ -114,22 +119,23 @@ public final class Constants {
     public static final String MEDIA_PATH_DSD = "DSD"; // DSD
     public static final String MEDIA_PATH_MQA = "MQA"; //MQA
     public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
-    public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
+   // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
     public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless
     public static final String MEDIA_PATH_FLAC = "FLAC"; //Lossless
     public static final String MEDIA_PATH_WAVE = "WAVE";
     public static final String MEDIA_PATH_AIFF = "AIFF";
     public static final String MEDIA_PATH_ACC="AAC";
     public static final String MEDIA_PATH_MP3="MP3";
+    public static final String MEDIA_PATH_OTHER ="Others";
 
     public static final String AUDIO_SQ_DSD = "DSD"; // DSD
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
-    public static final String AUDIO_SQ_HIRES = "Hi-Res"; //Hi-Res
-    public static final String AUDIO_SQ_HIRES_LOSSLESS = "Hi-Res Lossless"; //Hi-Res
-    public static final String AUDIO_SQ_HIRES_MASTER = "Hi-Res Master";
-    public static final String AUDIO_SQ_HIFI = "Hi-Fi";
-    public static final String AUDIO_SQ_HIFI_LOSSLESS = "HiFi Lossless";
-    public static final String AUDIO_SQ_HIFI_QUALITY = "High Quality";
+   // public static final String AUDIO_SQ_HIRES = "Hi-Res Audio"; //Hi-Res
+    //public static final String AUDIO_SQ_HIRES_LOSSLESS = "Hi-Res Lossless"; //Hi-Res
+    //public static final String AUDIO_SQ_HIRES_MASTER = "Hi-Res Master";
+//    public static final String AUDIO_SQ_HIFI = "Hi-Fi";
+   // public static final String AUDIO_SQ_HIFI_LOSSLESS = "Lossless Audio";
+   // public static final String AUDIO_SQ_HIFI_QUALITY = "High Quality";
     public static final String AUDIO_SQ_PCM = "PCM";
 
     public static final String TITLE_DUPLICATE = "Duplicate Songs";
@@ -137,10 +143,11 @@ public final class Constants {
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
-    public static final String TITLE_HR_LOSSLESS = "High-Res";
-    public static final String TITLE_HR_MASTER="High-Res Master";
+    //public static final String TITLE_HR_LOSSLESS = "High-Res Audio";
+    //public static final String TITLE_HR_MASTER="High-Res Master";
     public static final String TITLE_MQA_AUDIO = "Master Quality Authenticated";
-    public static final String TITLE_HIFI_LOSSLESS = "Lossless";
+    public static final String TITLE_HIRES = "High-Res Audio";
+    public static final String TITLE_HIFI_LOSSLESS = "Lossless Audio";
     public static final String TITLE_HIFI_QUALITY = "High Quality";
 
   //  public static final String PREF_TAG_ENCODING = "preference_matadata_encodings";

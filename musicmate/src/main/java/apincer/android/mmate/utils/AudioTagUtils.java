@@ -13,8 +13,6 @@ import android.text.TextPaint;
 
 import androidx.core.content.res.ResourcesCompat;
 
-import org.jetbrains.annotations.NotNull;
-
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
@@ -365,25 +363,27 @@ public class AudioTagUtils {
         return tag.getAudioBitsPerSample()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
-    public static boolean isPCMHiRes(AudioTag tag) {
+   // public static boolean isPCMHiRes(AudioTag tag) {
         // >= 24/48
-        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_48));
-    }
+   //     return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_48));
+   // }
 
-    public static boolean isPCMHiResLossless(AudioTag tag) {
+   // public static boolean isPCMHiResLossless(AudioTag tag) {
         // = 24/48
-        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() == Constants.QUALITY_SAMPLING_RATE_48));
-    }
+   //     return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() == Constants.QUALITY_SAMPLING_RATE_48));
+   // }
 
-    public static boolean isPCMHiResMaster(AudioTag tag) {
+    public static boolean isPCMHiRes(AudioTag tag) {
         // > 24/88
         return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
     }
 
     public static boolean isPCMLossless(AudioTag tag) {
+        // 16/48
+        // 24/48
         return ( tag.isLossless() &&
-                ((tag.getAudioBitsPerSample() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() < Constants.QUALITY_SAMPLING_RATE_48) ||
-                 (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
+                ((tag.getAudioBitsPerSample() < Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48))); // ||
+                // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
     }
 
     public static Bitmap getSampleRateIcon(Context context, AudioTag tag) {
@@ -552,19 +552,17 @@ public class AudioTagUtils {
             return Constants.TITLE_DSD_AUDIO;
       //  }else if(tag.isMQA()) {
       //      return Constants.TITLE_MQA_AUDIO;
-        }else if(isPCMHiResMaster(tag)) {
-            return Constants.TITLE_HR_MASTER;
-        }else if(isPCMHiResLossless(tag)) {
-            return Constants.TITLE_HR_LOSSLESS;
-        }else if(tag.isLossless()) {
+        }else if(isPCMHiRes(tag)) {
+            return Constants.TITLE_HIRES;
+        //}else if(isPCMHiResLossless(tag)) {
+        //    return Constants.TITLE_HR_LOSSLESS;
+        }else if(isPCMLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
             return Constants.TITLE_HIFI_QUALITY;
         }
-        //Hi-Res Lossless
-        //Hi-Res Master
-        //MQA
-        //Lossless
+        //Hi-Res Audio
+        //Lossless Audio
         //High Quality
         //DSD
     }
@@ -574,19 +572,20 @@ public class AudioTagUtils {
             return "You can hear the detail and wide range of the music, its warm tone is very enjoyable.";
        // }else if(tag.isMQA()) {
         //    return Constants.TITLE_MQA_AUDIO;
-        }else if(isPCMHiResMaster(tag)) {
+        }else if(isPCMHiRes(tag)) {
             return "Enjoy and Listening the rich music which reproduces fine details of musical instruments.";
-        }else if(isPCMHiResLossless(tag)) {
-            return "Reproduce details of music much smoother than CD quality that you can hear.";
-        }else if(tag.isLossless()) {
-            return "Same as CD sound quality, audio is digitalized and compressed in order to be stored on CD.";
+        }else if(isPCMLossless(tag)) {
+            return "Reproduce details of music smooth as CD quality that you can hear.";
+ //       }else if(tag.isLossless()) {
+  //          return "Same as CD sound quality, audio is digitalized and compressed in order to be stored on CD.";
         }else {
             return "Best compromise between data usage and sound fidelity.";
         }
     }
 
     public static boolean isHiResOrDSD(AudioTag tag) {
-        return is24Bits(tag) || isDSD(tag);
+       // return is24Bits(tag) || isDSD(tag);
+        return isPCMHiRes(tag) || isDSD(tag);
     }
 
     public static String getDefaultAlbum(AudioTag tag) {

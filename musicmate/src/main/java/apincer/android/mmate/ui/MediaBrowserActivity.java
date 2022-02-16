@@ -97,9 +97,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
     private static final int MENU_ID_QUALITY_PCM = 55550000;
-    //private static final int MENU_ID_HIRES = 55555556;
-    //private static final int MENU_ID_HIFI = 55555557;
-    //private static final int MENU_ID_PCM = 55555558;
 
     ActivityResultLauncher<Intent> editorLauncher;
 
@@ -987,7 +984,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doShowAboutApp() {
-
+        Intent myIntent = new Intent(MediaBrowserActivity.this, AboutActivity.class);
+         startActivity(myIntent);
+/*
         new LibsBuilder()
                 //provide a style (optional) (LIGHT, DARK, LIGHT_DARK_TOOLBAR)
                 //.withActivityStyle(Libs.ActivityStyle.LIGHT_DARK_TOOLBAR)
@@ -997,17 +996,21 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .withAboutVersionShown(true)
                 .withAboutVersionShownCode(true)
                 .withAboutVersionShownName(true)
-                .withEdgeToEdge(true)
-                .withLicenseShown(true)
+                .withEdgeToEdge(false)
+                .withLicenseShown(false)
                // .withAboutSpecial1("DEVELOPER")
                // .withAboutSpecial1Description("<b>Thawee Prakaipetch</b><br /><br />E-Mail: thaweemail@gmail.com<br />")
                 .withAboutSpecial1("DIGITAL MUSIC")
                 .withAboutSpecial1Description(ApplicationUtils.getAssetsText(this,"digital_music.html"))
+               // .withAboutMinimalDesign(true)
+                .withLicenseDialog(true)
+                .withSearchEnabled(false)
+                .withSortEnabled(true)
                 //.withFields(R.string.class.getFields())
                 //.withAboutDescription("<b>by Thawee Prakaipetch</b><br /><br />Managing music collections on Android<br /><b>Enjoy Your Music :D</b>")
-                .withAboutDescription("<b>by Thawee Prakaipetch</b><br /><b>Enjoy Your Music :D</b>")
+                .withAboutDescription("<b>by Thawee Prakaipetch</b><br /><b>Enjoy Your Music :D</b>"+ApplicationUtils.getAssetsText(this,"digital_music.html"))
                 .withActivityTitle("About MusicMate")
-                .start(this);
+                .start(this); */
     }
 
     private void setUpSwipeToRefresh() {

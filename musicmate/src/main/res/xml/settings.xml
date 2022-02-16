@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/preferences_sub_appearance"
-        android:summary="Look &amp; Feel.">
+        android:summary="Music Mate Look &amp; Feel.">
         <SwitchPreferenceCompat
             android:key="preference_show_storage_space"
             android:summary="Show Storage space on left menu."
@@ -19,7 +19,7 @@
             android:defaultValue="false"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/preferences_sub_next_song"
-        android:summary="Next Song Notification.">
+        android:summary="Now Playing Song Notification.">
         <SwitchPreferenceCompat
             android:key="preference_follow_now_playing"
             android:summary="Always open song details on Now Playing Song."
@@ -177,6 +177,7 @@
             -->
     <!--
     </PreferenceCategory> -->
+    <!--
     <PreferenceCategory
         android:title="@string/preferences_sub_others"
         android:summary="Others Settings.">
@@ -188,5 +189,5 @@
         android:dialogTitle="@string/MetaDataEncoding"
         android:entryValues="@array/MetaDataEncodingValues"
         android:defaultValue="@array/MetaDataEncodingValues"/>
-    </PreferenceCategory>
+    </PreferenceCategory> -->
 </PreferenceScreen>

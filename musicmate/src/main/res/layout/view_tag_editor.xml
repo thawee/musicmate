@@ -20,33 +20,42 @@
         android:background="@color/transparent"/>
     -->
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_gravity="left"
+        android:gravity="center_vertical"
         android:layout_marginTop="@dimen/spacing_small"
         android:padding="@dimen/spacing_small"
         android:background="@drawable/shape_rounded_edittext">
+        <ImageView
+            android:id="@+id/editor_cover_art"
+             android:layout_height="@dimen/dimen_48_dp"
+            android:layout_width="@dimen/dimen_64_dp"/>
+
         <TextView
             android:id="@+id/editor_pathname"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="@dimen/dimen_2_dp"
-            android:paddingLeft="@dimen/spacing_medium"
-            android:paddingRight="@dimen/spacing_medium"
-            android:layout_marginRight="@dimen/dimen_48_dp"
             android:layout_gravity="left"
-            android:gravity="left"
-            android:maxLines="1"
+            android:layout_marginRight="@dimen/dimen_48_dp"
+            android:layout_toRightOf="@+id/editor_cover_art"
             android:ellipsize="start"
-            android:textSize="10sp"
+            android:gravity="left"
+            android:lines="2"
+            android:maxLines="2"
+            android:paddingLeft="@dimen/spacing_medium"
+            android:paddingTop="@dimen/dimen_2_dp"
+            android:paddingRight="@dimen/spacing_medium"
+            android:text="File Path"
             android:textColor="@color/grey200"
-            />
+            android:textSize="10sp" />
         <TextView
             android:id="@+id/editor_filename"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/editor_pathname"
+            android:layout_toRightOf="@+id/editor_cover_art"
             android:paddingTop="@dimen/dimen_4_dp"
             android:paddingLeft="@dimen/spacing_medium"
             android:paddingRight="@dimen/spacing_medium"
@@ -57,8 +66,9 @@
             android:ellipsize="end"
             android:textSize="12sp"
             android:textColor="@color/grey200"
+            android:text="File name"
             />
-    </LinearLayout>
+    </RelativeLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -53,6 +53,9 @@
 
     </style>
 
+    <style name="AboutAppTheme" parent="Theme.Material3.DayNight">
+    </style>
+
     <!--
     <style name="NotificationBackgroundImage">
         <item name="android:alpha">0.5</item>

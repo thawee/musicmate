@@ -854,10 +854,10 @@ public class AudioFileRepository {
                 filename.append(Constants.MEDIA_PATH_DSD);
             }else if (metadata.isMQA()) {
                 filename.append(Constants.MEDIA_PATH_MQA);
-            }else if (AudioTagUtils.isPCMHiResMaster(metadata)) {
-                filename.append(Constants.MEDIA_PATH_HRMS);
-            }else if (AudioTagUtils.isPCMHiResLossless(metadata)) {
+            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
                 filename.append(Constants.MEDIA_PATH_HR);
+           // }else if (AudioTagUtils.isPCMLossless(metadata)) {
+           //     filename.append(Constants.MEDIA_PATH_HR);
             }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ALAC);
             }else if (Constants.MEDIA_ENC_FLAC.equals(metadata.getAudioEncoding())) {
@@ -870,6 +870,8 @@ public class AudioFileRepository {
                 filename.append(Constants.MEDIA_PATH_ACC);
             }else if (Constants.MEDIA_ENC_MP3.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_MP3);
+            }else {
+                filename.append(Constants.MEDIA_PATH_OTHER);
             }
             filename.append(File.separator);
 

@@ -1,6 +1,5 @@
 package apincer.android.mmate.epoxy;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 
@@ -197,20 +196,20 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                     return Constants.TITLE_MQA_AUDIO;
                 // }else {
                 //    return criteria.getKeyword();
-                }
+              //  }
         //    } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_HIRES) {
-                else if(Constants.AUDIO_SQ_HIRES_MASTER.equals(criteria.getKeyword())) {
+              /*  else if(Constants.AUDIO_SQ_HIRES_MASTER.equals(criteria.getKeyword())) {
                     return Constants.TITLE_HR_MASTER;
                 }else if(Constants.AUDIO_SQ_HIRES_LOSSLESS.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_HR_LOSSLESS;
+                    return Constants.TITLE_HR_LOSSLESS; */
                // }else {
                 //    return criteria.getKeyword();
-                }
+             //   }
          //   } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_HIRES) {
-                else if(Constants.AUDIO_SQ_HIFI_LOSSLESS.equals(criteria.getKeyword())) {
+               /* else if(Constants.AUDIO_SQ_HIFI_LOSSLESS.equals(criteria.getKeyword())) {
                     return Constants.TITLE_HIFI_LOSSLESS;
                 } else if(Constants.AUDIO_SQ_HIFI_QUALITY.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_HIFI_QUALITY;
+                    return Constants.TITLE_HIFI_QUALITY; */
                 }else {
                     return criteria.getKeyword();
                 }
@@ -360,8 +359,8 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                 !(Constants.TITLE_DSD_AUDIO.equals(criteria.getKeyword()) || Constants.TITLE_MQA_AUDIO.equals(criteria.getKeyword()))) {
             titles.add(Constants.TITLE_HIFI_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
-            titles.add(Constants.TITLE_HR_LOSSLESS);
-            titles.add(Constants.TITLE_HR_MASTER);
+           // titles.add(Constants.TITLE_HR_LOSSLESS);
+            titles.add(Constants.TITLE_HIRES);
        // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_HIFI) {
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
             List<String> tabs = tagRepos.getGroupingList(context);

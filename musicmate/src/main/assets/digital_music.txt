@@ -1,0 +1,23 @@
+High Quality Audio
+Best compromise between data usage and sound fidelity.
+Format: MP3, AAC
+Resolution: 16bit/48kHz, bitrate 256kbps or higher
+
+Lossless Audio
+Reproduce details of music smooth as CD quality that you can hear.
+Format: FLAC, ALAC, WAVE, AIFF
+Resolution: 16bit/48kHz, 24bit/48kHz
+Recommended Genre: Pop, Animation, Rock
+
+Hi-Res Audio
+Enjoy and Listening the rich music which reproduces fine details of musical instruments.
+Distinguish each string vibration of the stringed instrument.
+Format: FLAC, ALAC, WAVE, AIFF
+Resolution: 24bit/88kHz, 24bit/96kHz or Higher
+Recommended Genre: Classic, Jazz, Vocal, Soundtrack, Ballad
+
+Direct Stream Digital (DSD)
+You can hear the detail and wide range of the music, its warm tone is very enjoyable.
+Format: DSF, DFF
+Resolution: DSD 64, DSD 128, DSD 256 or Higher
+Recommended Genre: Classic, Jazz, Vocals

@@ -101,6 +101,14 @@
 
         <activity
             android:name="apincer.android.mmate.ui.SettingsActivity"
+            android:theme="@style/AboutAppTheme"
+            android:screenOrientation="portrait"
+            android:label="@string/app_name">
+        </activity>
+
+        <activity
+            android:name="apincer.android.mmate.ui.AboutActivity"
+            android:theme="@style/AboutAppTheme"
             android:screenOrientation="portrait"
             android:label="@string/app_name">
         </activity>

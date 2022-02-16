@@ -313,11 +313,11 @@ public class AudioTagRepository {
                     .order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HR_MASTER.equals(criteria.keyword)){
+        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {
-                    if (AudioTagUtils.isPCMHiResMaster(tag) && !tag.isMQA()) {
+                    if (AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA()) {
                         return true; // include to results
                     } else {
                         return false; // drop from results
@@ -326,11 +326,11 @@ public class AudioTagRepository {
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HR_LOSSLESS.equals(criteria.keyword)){
+        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
                 @Override
                 public boolean keep(AudioTag tag) {
-                    if (AudioTagUtils.isPCMHiResLossless(tag) && !tag.isMQA()) {
+                    if (AudioTagUtils.isPCMLossless(tag) && !tag.isMQA()) {
                     //if (AudioTagUtils.isHiRes(tag) && !tag.isMQA()) {
                         return true; // include to results
                     } else {

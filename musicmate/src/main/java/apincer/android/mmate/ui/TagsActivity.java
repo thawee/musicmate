@@ -92,7 +92,7 @@ public class TagsActivity extends AppCompatActivity {
     private int toolbar_from_color;
     private int toolbar_to_color;
     private StateView mStateView;
-    private TagsEditorFragment tagsEditorFragment;
+    private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
 
     @Override
     public void onBackPressed() {
@@ -127,9 +127,9 @@ public class TagsActivity extends AppCompatActivity {
                 output.close();
 
                //mainActivity.doPreviewCoverArt(pendingCoverartFile); */
-                doPreviewCoverArt(coverArtUri);
+              //  doPreviewCoverArt(coverArtUri);
 
-                tagsEditorFragment.setCoverArtUri(coverArtUri);
+               // tagsEditorFragment.setCoverArtUri(coverArtUri);
 
                // viewHolder.coverartChanged = true;
                 //toggleSaveFabAction();
@@ -242,7 +242,7 @@ public class TagsActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
-        tagsEditorFragment = new TagsEditorFragment();
+      //  tagsEditorFragment = new TagsEditorFragment();
         adapter.addNewTab(tagsEditorFragment, "Editor");
         adapter.addNewTab(new TagsMusicBrainzFragment(), "MusicBrainz");
         viewPager.setAdapter(adapter);

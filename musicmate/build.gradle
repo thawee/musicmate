@@ -29,8 +29,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 44
-        versionName  "3.0.2 "+ versions.buildDate
+        versionCode 45
+        versionName  "3.0.3 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
@@ -112,6 +112,8 @@ dependencies {
     implementation deps.androidx.preference
     implementation deps.androidx.documentFile
     implementation deps.androidx.work
+  //  implementation "androidx.activity:activity-ktx:1.4.0"
+  //  implementation "androidx.fragment:fragment-ktx:1.4.1"
 
     // google
     implementation deps.google.material
@@ -155,7 +157,14 @@ dependencies {
     //https://github.com/Dhaval2404/ImagePicker
     //implementation 'com.github.dhaval2404:imagepicker:2.1'
     //https://github.com/SimformSolutionsPvtLtd/SSImagePicker
-    implementation 'com.github.SimformSolutionsPvtLtd:SSImagePicker:1.8'
+    //implementation 'com.github.SimformSolutionsPvtLtd:SSImagePicker:1.8'
+    //https://github.com/Drjacky/ImagePicker
+    //implementation 'com.github.Drjacky:ImagePicker:2.1.15'
+    //implementation 'com.github.ronnieotieno:Ronnie-Image-Picker:1.1.0'
+    //https://github.com/soulqw/CoCo
+    implementation 'com.github.soulqw:CoCo:1.1.2'
+    //https://github.com/medyo/android-about-page
+    implementation 'io.github.medyo:android-about-page:2.0.0'
     implementation deps.dexter
     implementation deps.eventbus
     implementation deps.storage
@@ -169,8 +178,8 @@ dependencies {
    // annotationProcessor "com.github.permissions-dispatcher:permissionsdispatcher-processor:4.9.1"
    // implementation 'pub.devrel:easypermissions:3.0.0'
 
-    //retrofit and json Libraries
-    implementation deps.gson
+    //retrofit and json Librariess
+    implementation deps.google.gson
     implementation deps.retrofit.runtime
     implementation deps.retrofit.gson
     //implementation deps.retrofit.mock
