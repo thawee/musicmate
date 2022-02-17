@@ -15,7 +15,7 @@
  */
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-kapt' // require for object box
 apply plugin: 'com.mikepenz.aboutlibraries.plugin'
 apply plugin: 'io.objectbox' // Apply last.
 
@@ -30,7 +30,7 @@ android {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
         versionCode 45
-        versionName  "3.0.3 "+ versions.buildDate
+        versionName  "3.0.4 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true

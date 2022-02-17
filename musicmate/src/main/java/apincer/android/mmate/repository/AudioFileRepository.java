@@ -850,28 +850,42 @@ public class AudioFileRepository {
                 filename.append(StringUtils.formatTitle(metadata.getGrouping())).append(File.separator);
             }
 
+            String encSuffix = "";
+            if (AudioTagUtils.isPCMHiRes(metadata)) {
+                encSuffix="-HR";
+            }
+
             if(AudioTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
+                filename.append("-");
+                filename.append(AudioTagUtils.getDSDSampleRateModulation(metadata));
             }else if (metadata.isMQA()) {
                 filename.append(Constants.MEDIA_PATH_MQA);
-            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
-                filename.append(Constants.MEDIA_PATH_HR);
+//            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
+  //              filename.append(Constants.MEDIA_PATH_HR);
            // }else if (AudioTagUtils.isPCMLossless(metadata)) {
            //     filename.append(Constants.MEDIA_PATH_HR);
             }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ALAC);
+                filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_FLAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_FLAC);
+                filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_WAVE.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_WAVE);
+                filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_AIFF.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_AIFF);
+                filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_AAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ACC);
+                filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_MP3.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_MP3);
+                filename.append(encSuffix);
             }else {
                 filename.append(Constants.MEDIA_PATH_OTHER);
+                filename.append(encSuffix);
             }
             filename.append(File.separator);
 

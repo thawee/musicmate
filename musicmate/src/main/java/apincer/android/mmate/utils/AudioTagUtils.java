@@ -547,7 +547,11 @@ public class AudioTagUtils {
         return icon;
     }
 
-    public static String getTrackQuality(AudioTag tag) {
+    public static int getDSDSampleRateModulation(AudioTag tag) {
+        return (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
+    }
+
+        public static String getTrackQuality(AudioTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
       //  }else if(tag.isMQA()) {
