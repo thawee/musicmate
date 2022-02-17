@@ -174,7 +174,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         dlg.show();
     }
 	
-	private void doShowPlayingSongFAB() {
+	private void doShowNowPlayingSongFAB() {
+        if(nowPlayingView.getVisibility() == View.VISIBLE) {
+            //prevent dhow now playing popup and fab as the same time
+            return;
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -193,7 +197,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         });
     }
 	
-	private void doHidePlayingSongFAB() {
+	private void doHideNowPlayingSongFAB() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -334,6 +338,33 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private void setUpNowPlayingView() {
         nowPlayingView = findViewById(R.id.now_playing_panel);
         nowPlayingView.setVisibility(View.GONE);
+        nowPlayingView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                scrollToListening();
+                doHideNowPlayingSong();
+            }
+        });
+    }
+
+    private void doHideNowPlayingSong() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ViewCompat.animate(nowPlayingView)
+                        .scaleX(0f).scaleY(0f)
+                        .alpha(0f).setDuration(100)
+                        .setStartDelay(10L)
+                        .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(View view) {
+                                view.setVisibility(View.GONE);
+                            }
+                        })
+                        .start();
+            }
+        });
+        doShowNowPlayingSongFAB();
     }
 
     private void setUpEditorLauncher() {
@@ -691,7 +722,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         .target(fabPlayingAction)
                         .build();
                 imageLoader.enqueue(request);
-                doShowPlayingSongFAB();
+                doShowNowPlayingSongFAB();
+                doHideNowPlayingSong();
             }
         }
 
@@ -1069,10 +1101,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
                         if(MusicListeningService.getInstance()!=null) {
-                            doShowPlayingSongFAB();
+                            doShowNowPlayingSongFAB();
                         }
                     }else {
-						doHidePlayingSongFAB();
+                        doHideNowPlayingSong();
+						doHideNowPlayingSongFAB();
                     }
                 }
 
@@ -1140,7 +1173,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         lastPlaying = tag;
                         epoxyController.notifyPlayingStatus();
                         selectedTag = null; //tag; // reset auto scroll to song
-                        doShowPlayingSong(tag);
+                        doShowNowPlayingSong(tag);
                     }
                    // }
                 }else {
@@ -1221,8 +1254,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     };
 
-    private void doShowPlayingSong(AudioTag tag) {
-        doHidePlayingSongFAB();
+    private void doShowNowPlayingSong(AudioTag tag) {
+        doHideNowPlayingSongFAB();
 
         ImageLoader fabLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest fabRequest = new ImageRequest.Builder(getApplicationContext())
@@ -1239,7 +1272,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 nowPlayingView.setVisibility(View.GONE);
             }
             scrollToSong(tag);
-            doShowPlayingSongFAB();
+            doShowNowPlayingSongFAB();
             final Timer t = new Timer();
             t.schedule(new TimerTask() {
                 public void run() {
@@ -1251,7 +1284,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     });
                     t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
                 }
-            }, 5000); // after 5 second (or 5000 miliseconds), the task will be active.
+            }, 10000); // after 10 second (or 5000 miliseconds), the task will be active.
         }else if(nowPlayingView!=null) {
             TextView title = nowPlayingView.findViewById(R.id.title);
             title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), tag));
@@ -1284,21 +1317,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .target(cover)
                 .build();
         imageLoader.enqueue(request);
-            nowPlayingView.setVisibility(View.VISIBLE);
+        nowPlayingView.setVisibility(View.VISIBLE);
 
             final Timer t = new Timer();
             t.schedule(new TimerTask() {
                 public void run() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            nowPlayingView.setVisibility(View.GONE);
-                        }
-                    });
-                    doShowPlayingSongFAB();
+                    doHideNowPlayingSong();
                     t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
                 }
-            }, 3500); // after 5 second (or 5000 miliseconds), the task will be active.
+            }, 30000); // after 30 second (or 30000 miliseconds), the task will be active.
         }
     }
 

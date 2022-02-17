@@ -20,12 +20,14 @@
         app:shape_bubble_arrowPosition="bottom"
         app:shape_bubble_borderRadius="30dp"
         app:arrow_posititon_percent="0.5">
+
+        android:layout_height="72dp">
 -->
     <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="280dp"
-    android:layout_height="72dp">
+    android:layout_width="300dp"
+    android:layout_height="68dp">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -37,103 +39,110 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_centerVertical="true"
-            android:layout_margin="@dimen/dimen_2_dp" />
+            android:layout_marginStart="@dimen/dimen_2_dp"
+            android:layout_marginLeft="@dimen/dimen_2_dp"
+            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:layout_marginEnd="@dimen/dimen_2_dp"
+            android:layout_marginBottom="@dimen/dimen_2_dp" />
 
-    <LinearLayout
-        android:id="@+id/icon_panel"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_24_dp"
-        android:orientation="vertical"
-        android:gravity="center_vertical"
-        android:layout_toRightOf="@id/coverart"
-        android:layout_centerInParent="true"
-        android:paddingLeft="@dimen/dimen_1_dp"
-        android:paddingRight="@dimen/dimen_1_dp"
-        android:paddingTop="@dimen/dimen_1_dp"
-        android:paddingBottom="@dimen/dimen_1_dp"
-        android:layout_marginLeft="@dimen/dimen_1_dp"
-        android:layout_marginRight="@dimen/dimen_4_dp">
-        <!--
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/grey400"
-            android:layout_marginRight="@dimen/dimen_4_dp"/> -->
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
+            android:id="@+id/icon_panel"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:layout_centerInParent="true"
+            android:layout_marginLeft="@dimen/dimen_1_dp"
+            android:layout_marginRight="@dimen/dimen_4_dp"
+            android:layout_toRightOf="@id/coverart"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingLeft="@dimen/dimen_8_dp"
-            android:paddingRight="@dimen/dimen_8_dp"
-            android:background="@drawable/shadow">
-        <ImageView
-            android:id="@+id/file_type"
-            android:layout_width="@dimen/dimen_32_dp"
-            android:layout_height="@dimen/dimen_16_dp"
-            android:layout_margin="@dimen/dimen_1_dp"
-            />
-        <ImageView
-            android:id="@+id/hires"
-            android:layout_width="@dimen/dimen_16_dp"
-            android:layout_height="@dimen/dimen_16_dp"
-            android:layout_margin="@dimen/dimen_1_dp"
-            android:src="@drawable/ic_format_hires"
-            />
-        <ImageView
-            android:id="@+id/mqa"
-            android:layout_width="@dimen/dimen_16_dp"
-            android:layout_height="@dimen/dimen_16_dp"
-            android:layout_margin="@dimen/dimen_1_dp"
-            android:src="@drawable/ic_format_mqa_white"
-            />
-        <ImageView
-                android:layout_width="@dimen/dimen_16_dp"
-                android:layout_height="@dimen/dimen_16_dp"
-                android:layout_margin="@dimen/dimen_1_dp"
-                android:src="@drawable/ic_baseline_keyboard_arrow_right_24"
-                />
-        <ImageView
-            android:id="@+id/player"
-            android:layout_width="@dimen/dimen_16_dp"
-            android:layout_height="@dimen/dimen_16_dp"
-            android:layout_margin="@dimen/dimen_1_dp"
-            android:src="@drawable/ic_play_arrow_black_24dp"
-            />
-            <ImageView
-                android:layout_width="@dimen/dimen_16_dp"
-                android:layout_height="@dimen/dimen_16_dp"
-                android:layout_margin="@dimen/dimen_1_dp"
-                android:src="@drawable/ic_baseline_keyboard_arrow_right_24"
-                />
-            <ImageView
-            android:id="@+id/output"
-            android:layout_width="@dimen/dimen_16_dp"
-            android:layout_height="@dimen/dimen_16_dp"
-            android:layout_margin="@dimen/dimen_1_dp"
-            android:src="@drawable/ic_baseline_volume_up_24"
-            />
-            <TextView
-                android:id="@+id/output_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:paddingLeft="@dimen/dimen_2_dp"
-                android:text="Android SRC"
-                android:textColor="@color/grey400"
-                android:lines="1"
-                android:textSize="10sp"
-                android:ellipsize="end"
-                android:padding="@dimen/dimen_2_dp" />
-        </LinearLayout>
-        <!--
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/dimen_1_dp"
+            android:paddingTop="@dimen/dimen_1_dp"
+            android:paddingRight="@dimen/dimen_1_dp"
+            android:paddingBottom="@dimen/dimen_1_dp">
+            <!--
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/grey400"
             android:layout_marginRight="@dimen/dimen_4_dp"/> -->
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="214dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="@drawable/shape_now_playing_icons_background"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="@dimen/dimen_8_dp"
+                android:paddingTop="@dimen/dimen_1_dp"
+                android:paddingRight="@dimen/dimen_8_dp"
+                android:paddingBottom="@dimen/dimen_1_dp">
+
+                <ImageView
+                    android:id="@+id/file_type"
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp" />
+
+                <ImageView
+                    android:id="@+id/hires"
+                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp"
+                    android:src="@drawable/ic_format_hires" />
+
+                <ImageView
+                    android:id="@+id/mqa"
+                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp"
+                    android:src="@drawable/ic_format_mqa_white" />
+
+                <ImageView
+                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp"
+                    android:src="@drawable/ic_baseline_keyboard_arrow_right_24" />
+
+                <ImageView
+                    android:id="@+id/player"
+                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp"
+                    android:src="@drawable/ic_play_arrow_black_24dp" />
+
+                <ImageView
+                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp"
+                    android:src="@drawable/ic_baseline_keyboard_arrow_right_24" />
+
+                <ImageView
+                    android:id="@+id/output"
+                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp"
+                    android:src="@drawable/ic_baseline_volume_up_24" />
+
+                <TextView
+                    android:id="@+id/output_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:lines="1"
+                    android:padding="@dimen/dimen_2_dp"
+                    android:paddingLeft="@dimen/dimen_2_dp"
+                    android:text="Android SRC"
+                    android:textColor="@color/grey300"
+                    android:textSize="10sp" />
+            </LinearLayout>
+            <!--
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/grey400"
+            android:layout_marginRight="@dimen/dimen_4_dp"/> -->
+        </LinearLayout>
         <LinearLayout
             android:id="@+id/title_panel"
             android:layout_width="match_parent"
@@ -141,7 +150,8 @@
             android:orientation="vertical"
             android:layout_alignParentTop="true"
             android:layout_toRightOf="@+id/coverart"
-            android:layout_marginTop="@dimen/dimen_2_dp">
+            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:paddingRight="@dimen/dimen_8_dp">
             <TextView
                 android:id="@+id/title"
                 android:layout_width="match_parent"
@@ -164,7 +174,8 @@
             android:layout_alignParentBottom="true"
             android:layout_below="@id/icon_panel"
             android:layout_toRightOf="@+id/coverart"
-            android:layout_marginBottom="@dimen/dimen_2_dp">
+            android:layout_marginBottom="@dimen/dimen_2_dp"
+            android:paddingRight="@dimen/dimen_8_dp">
             <TextView
                 android:id="@+id/subtitle"
                 android:layout_width="match_parent"
@@ -174,6 +185,7 @@
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:lines="1"
                 android:text="Subtitle"
+                android:textColor="@color/grey200"
                 android:ellipsize="end"/>
         </LinearLayout>
     </RelativeLayout>

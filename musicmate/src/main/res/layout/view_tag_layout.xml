@@ -194,9 +194,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginEnd="45dp"
-            android:layout_marginTop="@dimen/dimen_12_dp"
+            android:layout_marginTop="@dimen/dimen_8_dp"
             android:layout_gravity="">
-
 
             <com.skydoves.elasticviews.ElasticLayout
                 android:id="@+id/btnDelete"

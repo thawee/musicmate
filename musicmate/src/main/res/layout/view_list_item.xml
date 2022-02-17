@@ -137,7 +137,7 @@
         android:layout_marginTop="4dp"
         android:layout_marginLeft="@dimen/dimen_8_dp"
         android:layout_marginRight="@dimen/dimen_8_dp"
-        android:background="@drawable/shape_item_background">
+        android:background="@drawable/shape_item_coverart_background">
         <ImageView
             android:id="@+id/item_image_coverart"
             android:layout_width="68dp"
