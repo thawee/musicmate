@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
@@ -93,6 +94,7 @@ public class TagsActivity extends AppCompatActivity {
     private int toolbar_to_color;
     private StateView mStateView;
     private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
+    private volatile boolean isEditing;
 
     @Override
     public void onBackPressed() {
@@ -643,7 +645,7 @@ public class TagsActivity extends AppCompatActivity {
         alertDialog.getWindow().setGravity(Gravity.BOTTOM);
         alertDialog.show();
     }
-
+/*
     public void doPreviewCoverArt(File coverArtFile) {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
@@ -664,12 +666,13 @@ public class TagsActivity extends AppCompatActivity {
                 .target(coverArtView)
                 .build();
         imageLoader.enqueue(request);
-    }
+    } */
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
 
         @Override
         public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+
             double vScrollOffset = Math.abs(verticalOffset);
             double scale = (1 - (1.0 / appBarLayout.getTotalScrollRange() * (vScrollOffset) * 0.2));
             coverArtView.setScaleX((float) scale);
@@ -677,6 +680,8 @@ public class TagsActivity extends AppCompatActivity {
             fadeToolbarTitle((1.0 / appBarLayout.getTotalScrollRange() * (vScrollOffset)));
 
             if (Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset) >= 0.8) {
+                //edit mode
+                isEditing = true;
 //                tabLayout.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                 ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
                         "backgroundColor" /*view attribute name*/, new ArgbEvaluator(),
@@ -685,6 +690,8 @@ public class TagsActivity extends AppCompatActivity {
                 colorFade.setDuration(2000);
                 colorFade.start();
             } else {
+                // view mode
+                updateTitlePanel();
 //                tabLayout.setBackgroundColor(getResources().getColor(R.color.bgColor));
                 ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
                         "backgroundColor" /*view attribute name*/, new ArgbEvaluator(),
@@ -714,7 +721,22 @@ public class TagsActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
                 BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
                 if (broadcastData != null) {
-                    ToastHelper.showBroadcastData(TagsActivity.this, broadcastData);
+                    if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
+                        if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
+                            AudioTag tag = broadcastData.getTagInfo();
+                            try {
+                                editItems.clear();
+                                editItems.add(tag);
+                                displayTag = buildDisplayTag(true);
+                                updateTitlePanel();
+                                setUpPageViewer();
+                            } catch (Exception e) {
+                                Timber.e(e);
+                            }
+                        }
+                    }else {
+                        ToastHelper.showBroadcastData(TagsActivity.this, broadcastData);
+                    }
                 }
         }
     };

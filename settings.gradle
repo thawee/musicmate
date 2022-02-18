@@ -11,10 +11,11 @@ include ':library:TableFixHeaders:library'
 include ':library:AnimatedExpandableListView'
 include ':library:paralloid'
 include ':library:slideDateTimePicker'
+include ':library:androidtagview'
 //include ':library:placesAPI'
 //include ':library:curvebottombar'
 //include ':library:spacetablayout'
 //,':DreamPlan', ':library:TableFixHeaders:library'
 // ':library:circleimageview',
 //':library:jaudiotagger20181016',':library:jaudiotagger226',':library:SearchFilter',,'TripMate',':library:slideDateTimePicker',':library:placesAPI',
-include ':library:androidtagview'
+
