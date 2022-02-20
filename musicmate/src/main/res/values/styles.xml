@@ -51,9 +51,24 @@
         <item name="selectableItemBackground">@drawable/selector_item</item>
         <item name="primaryTextSelector">@drawable/primary_text_selector_light</item>
 
+        <!--this is makes changes to the entire snackbar-->
+        <item name="snackbarStyle">@style/AppSnackbar</item>
+
     </style>
 
     <style name="AboutAppTheme" parent="Theme.Material3.DayNight">
+    </style>
+
+    <style name="AppSnackbar" parent="Widget.Material3.Snackbar">
+
+        <!--if this is made 0 then the action button text color will be white-->
+        <!--if this is 1 then the custom color can be set to action button text-->
+        <item name="actionTextColorAlpha">1</item>
+
+        <!--this attribute makes slide animation for the snackbar-->
+        <item name="animationMode">slide</item>
+
+        <item name="android:textAppearance">?attr/textAppearanceHeadline1</item>
     </style>
 
     <!--

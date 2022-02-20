@@ -2,7 +2,6 @@ package apincer.android.mmate.work;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -23,7 +22,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.service.BroadcastData;
+import apincer.android.mmate.broadcast.BroadcastData;
 
 public class UpdateAudioFileWorker extends Worker {
     private UpdateAudioFileWorker(

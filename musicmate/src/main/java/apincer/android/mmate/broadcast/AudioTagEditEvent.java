@@ -1,4 +1,4 @@
-package apincer.android.mmate.service;
+package apincer.android.mmate.broadcast;
 
 import java.util.Collection;
 import java.util.List;

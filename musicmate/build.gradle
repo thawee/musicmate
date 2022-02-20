@@ -30,7 +30,7 @@ android {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
         versionCode 45
-        versionName  "3.0.4 "+ versions.buildDate
+        versionName  "3.0.5 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
@@ -112,8 +112,6 @@ dependencies {
     implementation deps.androidx.preference
     implementation deps.androidx.documentFile
     implementation deps.androidx.work
-  //  implementation "androidx.activity:activity-ktx:1.4.0"
-  //  implementation "androidx.fragment:fragment-ktx:1.4.1"
 
     // google
     implementation deps.google.material
@@ -138,6 +136,9 @@ dependencies {
     implementation deps.ui.fastscroll
     implementation deps.ui.elasticviews
     implementation deps.ui.stateViews
+    implementation deps.ui.androidribbon
+    implementation deps.ui.coco
+    implementation deps.ui.androidAboutPage
 
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
@@ -145,26 +146,11 @@ dependencies {
     implementation deps.ui.refresh_header_classics
 
     implementation deps.ui.aboutlibraries
-    implementation deps.ui.toasty
+    //implementation deps.ui.toasty
     implementation deps.ui.shapeofview
     implementation deps.ui.photoview;
 
     //others
-    //implementation 'com.github.jrvansuita:PickImage:2.5.4'
-    //implementation 'com.github.SimformSolutionsPvtLtd:SSImagePicker:1.8'
-    //implementation 'com.github.BlueCatSoftware:Pickerly:1.5.0'
-    // 'io.github.ParkSangGwon:tedimagepicker:1.2.8'
-    //https://github.com/Dhaval2404/ImagePicker
-    //implementation 'com.github.dhaval2404:imagepicker:2.1'
-    //https://github.com/SimformSolutionsPvtLtd/SSImagePicker
-    //implementation 'com.github.SimformSolutionsPvtLtd:SSImagePicker:1.8'
-    //https://github.com/Drjacky/ImagePicker
-    //implementation 'com.github.Drjacky:ImagePicker:2.1.15'
-    //implementation 'com.github.ronnieotieno:Ronnie-Image-Picker:1.1.0'
-    //https://github.com/soulqw/CoCo
-    implementation 'com.github.soulqw:CoCo:1.1.2'
-    //https://github.com/medyo/android-about-page
-    implementation 'io.github.medyo:android-about-page:2.0.0'
     implementation deps.dexter
     implementation deps.eventbus
     implementation deps.storage
@@ -172,11 +158,6 @@ dependencies {
     implementation deps.guava
     implementation deps.ffmpeg
     implementation deps.coverartarchive
-    //implementation 'com.github.getActivity:XXPermissions:13.2'
-   // implementation 'com.rishabhharit.roundedimageview:RoundedImageView:0.8.4'
-    //implementation "com.github.permissions-dispatcher:permissionsdispatcher:4.9.1"
-   // annotationProcessor "com.github.permissions-dispatcher:permissionsdispatcher-processor:4.9.1"
-   // implementation 'pub.devrel:easypermissions:3.0.0'
 
     //retrofit and json Librariess
     implementation deps.google.gson

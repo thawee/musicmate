@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.storage.StorageManager;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,9 +18,12 @@ import com.anggrayudi.storage.SimpleStorage;
 import com.anggrayudi.storage.file.StorageId;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.service.MusicListeningService;
+import apincer.android.mmate.utils.PermissionUtils;
 
 public class PermissionActivity extends AppCompatActivity {
+    // android 5 SD card permissions
+    public static final int REQUEST_CODE_STORAGE_PERMISSION = 1010;
+
     private LinearLayout panel;
     private TextView txtTitle;
     private TextView txtDesc;
@@ -45,7 +47,7 @@ public class PermissionActivity extends AppCompatActivity {
                                            String permissions[], int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
-            case MusicListeningService.REQUEST_CODE_STORAGE_PERMISSION: {
+            case REQUEST_CODE_STORAGE_PERMISSION: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if(!SimpleStorage.hasFullDiskAccess(getApplicationContext(), StorageId.PRIMARY)) {
@@ -71,8 +73,8 @@ public class PermissionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 ActivityCompat.requestPermissions(PermissionActivity.this,
-                        MusicListeningService.PERMISSIONS_ALL,
-                        MusicListeningService.REQUEST_CODE_STORAGE_PERMISSION);
+                        PermissionUtils.PERMISSIONS_ALL,
+                        REQUEST_CODE_STORAGE_PERMISSION);
             }
         });
 

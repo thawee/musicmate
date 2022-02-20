@@ -58,4 +58,5 @@
 
     <dimen name="state_views_icon_size">150dp</dimen>
     <dimen name="dimen_52_dp">52dp</dimen>
+    <dimen name="dimen_128_dp">128dp</dimen>
 </resources>

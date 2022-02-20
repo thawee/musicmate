@@ -183,7 +183,7 @@ public final class Constants {
     public static final String SRC_2L = "2L";
     public static final String SRC_HD_TRACKS = "HDTracks";
     public static final String SRC_NATIVE_DSD = "NativeDSD";
- public static final String SRC_NONE = "";
+ public static final String SRC_NONE = "-";
 
  public static List<String> getSourceList() {
     List list = new ArrayList<>();

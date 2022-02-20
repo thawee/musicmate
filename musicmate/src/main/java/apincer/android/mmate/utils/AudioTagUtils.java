@@ -355,7 +355,7 @@ public class AudioTagUtils {
         }
     }
 
-    private static boolean is24Bits(AudioTag tag) {
+    public static boolean is24Bits(AudioTag tag) {
         return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
 
@@ -610,6 +610,24 @@ public class AudioTagUtils {
             return artist.substring(0,artist.indexOf(","));
         }
         return artist;
+    }
+
+    public static Bitmap getBitsPerSampleIcon(Context context,  AudioTag tag) {
+        int borderColor = context.getColor(R.color.grey400);
+        int textColor = context.getColor(R.color.black);
+        int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
+
+        return icon;
+    }
+
+    public static Bitmap getAudiophileIcon(Context context, AudioTag tag) {
+        int borderColor = context.getColor(R.color.grey400);
+        int textColor = context.getColor(R.color.black);
+        int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        Bitmap icon = AudioTagUtils.createBitmapFromText(context, 128, 36, "Audiophile", textColor,borderColor, qualityColor);
+
+        return icon;
     }
 
 /*

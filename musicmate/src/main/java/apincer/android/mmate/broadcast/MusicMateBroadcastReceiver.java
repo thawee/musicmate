@@ -1,4 +1,4 @@
-package apincer.android.mmate.service;
+package apincer.android.mmate.broadcast;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -30,14 +30,16 @@ import timber.log.Timber;
  */
 public class MusicMateBroadcastReceiver extends BroadcastReceiver implements ListeningReceiver {
     //private MusicListeningService service;
+    private BroadcastHelper broadcastHelper;
     protected String title;
     protected String artist;
     protected String album;
     protected MusicPlayerInfo playerInfo;
     public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
 
-    public MusicMateBroadcastReceiver( ) {
+    public MusicMateBroadcastReceiver(BroadcastHelper broadcastHelper ) {
        // this.service = service;
+        this.broadcastHelper = broadcastHelper;
         playerInfo = new MusicPlayerInfo();
         initPlayer();
     }
@@ -66,9 +68,11 @@ public class MusicMateBroadcastReceiver extends BroadcastReceiver implements Lis
                     extractPlayer(context, intent);
                     extractTitle(intent);
                    // displayNotification();
-                    MusicListeningService.getInstance().setPlayerInfo(playerInfo);
-                    MusicListeningService.getInstance().setPlayingSong(title,artist,album);
+                  //  MusicListeningService.getInstance().setPlayerInfo(playerInfo);
+                  //  MusicListeningService.getInstance().setPlayingSong(title,artist,album);
                    // service.setListeningReceiver(this);
+                    broadcastHelper.setPlayerInfo(playerInfo);
+                    broadcastHelper.setPlayingSong( context, title,artist,album);
                 }catch (Exception ex) {
                     Timber.e(ex);
                 }
@@ -114,18 +118,24 @@ public class MusicMateBroadcastReceiver extends BroadcastReceiver implements Lis
         initPlayer();
         playerInfo.playerPackage = packageName;
         playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
-        ApplicationInfo ai = MusicListeningService.getInstance().getApplicationInfo(packageName);
-        if(ai!=null) {
-            playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
+        ApplicationInfo ai = null;
+        try {
+            ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        if (ai != null) {
+                playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
                 if (playerInfo.playerIconDrawable != null) {
                     playerInfo.playerIconBitmap = BitmapHelper.drawableToBitmap(playerInfo.playerIconDrawable);
-                }else {
+                } else {
                     playerInfo.playerIconBitmap = null;
                 }
-                if(playerName==null) {
+                if (playerName == null) {
                     playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
                 }
-        }
+            }
     }
 
     public void register(Context context) {
@@ -173,6 +183,9 @@ public class MusicMateBroadcastReceiver extends BroadcastReceiver implements Lis
 
         // hiby
         iF.addAction("com.hiby.music");
+
+        // get forword from notification reader
+        iF.addAction("apincer.android.mmate");
 
         //Audio
        // iF.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED);

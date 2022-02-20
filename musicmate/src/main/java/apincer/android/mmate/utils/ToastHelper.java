@@ -1,14 +1,20 @@
 package apincer.android.mmate.utils;
 
 import android.content.Context;
-import android.widget.Toast;
+import android.view.View;
+
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.service.BroadcastData;
-import es.dmoral.toasty.Toasty;
+import apincer.android.mmate.R;
+import apincer.android.mmate.broadcast.BroadcastData;
+//import es.dmoral.toasty.Toasty;
 
 public class ToastHelper {
-    public static Toast toastMessage;
+    //public static Toast toastMessage;
 
     /*
     public static void showActionMessage(Context context, ImageView fabCurrentProgress, FloatingActionButton mainAction, int successCount, int errorCount, int pendingTotal, String status, String message) {
@@ -48,9 +54,9 @@ public class ToastHelper {
     } */
 
 
-    public static void showActionMessage(Context context, String status, String message) {
+    public static void showActionMessage(Context context, View view, String status, String message) {
         //Toast toastMessage = null;
-        if(toastMessage!= null) {
+     /*   if(toastMessage!= null) {
             toastMessage.cancel();
         }
 
@@ -63,13 +69,28 @@ public class ToastHelper {
         }
         if(toastMessage!= null) {
             toastMessage.show();
+        } */
+
+        Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG);
+        snackbar.setTextColor(ContextCompat.getColor(context, R.color.defaultTextColor));
+        if(Constants.STATUS_SUCCESS.equalsIgnoreCase(status)) {
+            snackbar.setBackgroundTint(ContextCompat.getColor(context, R.color.successColor));
+        }else if(Constants.STATUS_FAIL.equalsIgnoreCase(status)) {
+            snackbar.setBackgroundTint(ContextCompat.getColor(context,R.color.errorColor));
+        }else {
+            snackbar.setBackgroundTint(ContextCompat.getColor(context,R.color.infoColor));
         }
+        if(view instanceof FloatingActionButton) {
+            snackbar.setAnchorView(view);
+        }
+
+        snackbar.show();
     }
 
 
-    public static void showBroadcastData(Context context, BroadcastData broadcastData) {
+    public static void showBroadcastData(Context context, View view, BroadcastData broadcastData) {
         //Toast toastMessage = null;
-        if (toastMessage != null) {
+      /*  if (toastMessage != null) {
             toastMessage.cancel();
         }
 
@@ -82,7 +103,21 @@ public class ToastHelper {
         }
         if (toastMessage != null) {
             toastMessage.show();
+        } */
+        Snackbar snackbar = Snackbar.make(view, broadcastData.getMessage(), Snackbar.LENGTH_LONG);
+        snackbar.setTextColor(ContextCompat.getColor(context, R.color.defaultTextColor));
+        if (BroadcastData.Status.COMPLETED == broadcastData.getStatus()) {
+            snackbar.setBackgroundTint(ContextCompat.getColor(context, R.color.successColor));
+        } else if (BroadcastData.Status.ERROR == broadcastData.getStatus()) {
+            snackbar.setBackgroundTint(ContextCompat.getColor(context,R.color.errorColor));
+        }else {
+            snackbar.setBackgroundTint(ContextCompat.getColor(context,R.color.infoColor));
         }
+        if(view instanceof FloatingActionButton) {
+            snackbar.setAnchorView(view);
+        }
+
+        snackbar.show();
     }
 
     /*

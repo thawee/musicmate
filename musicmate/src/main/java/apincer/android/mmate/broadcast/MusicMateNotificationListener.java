@@ -1,8 +1,10 @@
-package apincer.android.mmate.service;
+package apincer.android.mmate.broadcast;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -10,8 +12,7 @@ import android.service.notification.StatusBarNotification;
 import apincer.android.mmate.utils.BitmapHelper;
 
 public class MusicMateNotificationListener extends NotificationListenerService implements ListeningReceiver {
-
-    public static final String HIBY_MUSIC = "com.hiby.music";
+     public static final String HIBY_MUSIC = "com.hiby.music";
     String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
     public MusicMateNotificationListener() {
@@ -19,8 +20,8 @@ public class MusicMateNotificationListener extends NotificationListenerService i
     }
 
     Context context;
-    protected MusicPlayerInfo playerInfo;
-    public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
+  //  protected MusicPlayerInfo playerInfo;
+  //  public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
 
     @Override
 
@@ -39,20 +40,34 @@ public class MusicMateNotificationListener extends NotificationListenerService i
         if (HIBY_MUSIC.equals(pack)) {
             String title = extras.getString("android.title");
             String artist = extras.getCharSequence("android.text").toString();
-            if (MusicListeningService.getInstance() != null) {
-                setPlayer(getApplicationContext(),pack, null);
-                MusicListeningService.getInstance().setPlayerInfo(playerInfo);
-                MusicListeningService.getInstance().setPlayingSong(title, artist, null);
-            }
+            sendBroadcast(pack, title, artist);
+           // if (MusicListeningService.getInstance() != null) {
+          //      setPlayer(getApplicationContext(),pack, null);
+          //  broadcastHelper.setPlayerInfo(playerInfo);
+         //   broadcastHelper.setPlayingSong( context, title,artist,null);
+            //    MusicListeningService.getInstance().setPlayerInfo(playerInfo);
+            //    MusicListeningService.getInstance().setPlayingSong(title, artist, null);
+           // }
         } else if (NE_PLAYER_LITE.equals(pack)) {
             String title = extras.getString("android.title");
             String artist = extras.getCharSequence("android.text").toString();
-            if (MusicListeningService.getInstance() != null) {
-                setPlayer(getApplicationContext(),pack, null);
-                MusicListeningService.getInstance().setPlayerInfo(playerInfo);
-                MusicListeningService.getInstance().setPlayingSong(title, artist, null);
-            }
+            sendBroadcast(pack, title, artist);
+           // if (MusicListeningService.getInstance() != null) {
+            //    setPlayer(getApplicationContext(),pack, null);
+            //    MusicListeningService.getInstance().setPlayerInfo(playerInfo);
+            //    MusicListeningService.getInstance().setPlayingSong(title, artist, null);
+           // broadcastHelper.setPlayerInfo(playerInfo);
+           // broadcastHelper.setPlayingSong( context, title,artist,null);
+           // }
         }
+    }
+
+    public void sendBroadcast(String pack, String title, String artist) {
+        Intent intent = new Intent("apincer.android.mmate");
+        intent.putExtra(INTENT_KEY_PACKAGE, pack);
+        intent.putExtra("track", title);
+        intent.putExtra("artist", artist);
+        sendBroadcast(intent);
     }
 
     @Override
@@ -61,6 +76,7 @@ public class MusicMateNotificationListener extends NotificationListenerService i
 
     }
 
+    /*
     private void initPlayer() {
         if(playerInfo==null) {
             playerInfo = new MusicPlayerInfo();
@@ -75,7 +91,12 @@ public class MusicMateNotificationListener extends NotificationListenerService i
         initPlayer();
         playerInfo.playerPackage = packageName;
         playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
-        ApplicationInfo ai = MusicListeningService.getInstance().getApplicationInfo(packageName);
+        ApplicationInfo ai = null;
+        try {
+            ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
         if(ai!=null) {
             playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
             if (playerInfo.playerIconDrawable != null) {
@@ -87,5 +108,5 @@ public class MusicMateNotificationListener extends NotificationListenerService i
                 playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
             }
         }
-    }
+    } */
 }

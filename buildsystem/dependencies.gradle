@@ -198,6 +198,8 @@ ui.elasticviews = "com.github.skydoves:elasticviews:2.1.0"
 ui.doublelift = "com.github.skydoves:doublelift:1.0.4"
 // https://github.com/skydoves/ProgressView
 ui.progressview = "com.github.skydoves:progressview:1.1.3"
+//https://github.com/skydoves/AndroidRibbon
+ui.androidribbon = "com.github.skydoves:androidribbon:1.0.4"
 //https://github.com/iwgang/SimplifySpan
 ui.simplifyspan ='com.github.iwgang:simplifyspan:2.2'
 //https://github.com/CoderBuck/AspectRatioFrameLayout
@@ -217,6 +219,10 @@ ui.vpawesomewidgets = 'awesome.vrund.vpawesomewidgets:VPAwesomeWidgets:1.5.2'
 //https://github.com/scwang90/SmartRefreshLayout
 ui.refresh_layout_kernel = 'io.github.scwang90:refresh-layout-kernel:2.0.5'
 ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.0.5'
+//https://github.com/soulqw/CoCo
+ui.coco ='com.github.soulqw:CoCo:1.1.2'
+//https://github.com/medyo/android-about-page
+ui.androidAboutPage = 'io.github.medyo:android-about-page:2.0.0'
 deps.ui = ui
 
 def epoxy = [:]

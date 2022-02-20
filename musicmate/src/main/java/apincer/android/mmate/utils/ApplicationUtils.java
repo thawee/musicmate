@@ -1,11 +1,6 @@
 package apincer.android.mmate.utils;
 
-import static android.content.Context.ACTIVITY_SERVICE;
-
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.SearchManager;
-import android.content.ContentProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -14,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
-import android.os.Build;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
@@ -28,7 +22,6 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.fs.MusicFileProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.service.MusicListeningService;
 import apincer.android.mmate.ui.TagsActivity;
 
 public class ApplicationUtils {
@@ -36,7 +29,12 @@ public class ApplicationUtils {
     public static void startAspect(Activity activity, AudioTag tag) {
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
         if (intent != null) {
-            ApplicationInfo ai = MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
+            ApplicationInfo ai = null;
+            try {
+                ai =  activity.getPackageManager().getApplicationInfo("com.andrewkhandr.aspect",0);  //MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
             if (ai != null) {
                 intent.setAction(Intent.ACTION_SEND);
                 MimeTypeMap mime = MimeTypeMap.getSingleton();

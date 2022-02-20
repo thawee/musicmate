@@ -59,6 +59,7 @@ public class AudioTag implements Cloneable , Parcelable {
 
     @Override
     public boolean equals(@Nullable Object obj) {
+        if(obj==null) return false;
         if(obj instanceof  AudioTag) {
             return (id == ((AudioTag)obj).id)?true:false;
         }

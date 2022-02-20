@@ -1,4 +1,4 @@
-package apincer.android.mmate.service;
+package apincer.android.mmate.broadcast;
 
 import android.app.Activity;
 import android.content.Intent;

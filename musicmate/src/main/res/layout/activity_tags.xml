@@ -195,35 +195,44 @@
                         android:text="Lossless"/>
                 </LinearLayout>
 
-                <LinearLayout
+                <RelativeLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerInParent="true"
                     android:layout_marginRight="@dimen/dimen_1_dp"
+                    android:layout_marginBottom="@dimen/dimen_12_dp"
                     android:background="@drawable/shadow"
+                    android:gravity="right"
+                    android:orientation="horizontal"
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:paddingTop="@dimen/dimen_8_dp"
                     android:paddingRight="@dimen/dimen_2_dp"
-                    android:paddingBottom="@dimen/dimen_4_dp"
-                    android:layout_marginBottom="@dimen/dimen_12_dp">
+                    android:paddingBottom="@dimen/dimen_4_dp">
 
                     <ImageView
                         android:id="@+id/icon_audiophile"
-                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_width="@dimen/dimen_128_dp"
                         android:layout_height="@dimen/dimen_32_dp"
                         android:layout_marginRight="@dimen/dimen_12_dp"
                         android:layout_marginBottom="@dimen/dimen_12_dp"
-                        android:src="@drawable/ic_round_speaker_24"
-                        app:tint="@color/now_playing" />
+                        android:padding="@dimen/dimen_2_dp"
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:layout_toLeftOf="@id/icon_24bit"
+                        android:scaleType="center" />
 
                     <ImageView
-                        android:id="@+id/icon_hires"
-                        android:layout_width="@dimen/dimen_32_dp"
+                        android:id="@+id/icon_24bit"
+                        android:layout_width="@dimen/dimen_48_dp"
                         android:layout_height="@dimen/dimen_32_dp"
                         android:layout_marginRight="@dimen/dimen_12_dp"
                         android:layout_marginBottom="@dimen/dimen_12_dp"
-                        android:src="@drawable/ic_format_hires" />
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:layout_toLeftOf="@id/icon_mqa"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:scaleType="center" />
 
                     <ImageView
                         android:id="@+id/icon_mqa"
@@ -231,8 +240,34 @@
                         android:layout_height="@dimen/dimen_32_dp"
                         android:layout_marginRight="@dimen/dimen_12_dp"
                         android:layout_marginBottom="@dimen/dimen_12_dp"
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:layout_toLeftOf="@id/icon_dsd"
                         android:src="@drawable/ic_format_mqa_white" />
-                </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/icon_dsd"
+                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_height="@dimen/dimen_32_dp"
+                        android:layout_marginRight="@dimen/dimen_12_dp"
+                        android:layout_marginBottom="@dimen/dimen_12_dp"
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:layout_toLeftOf="@id/icon_hires"
+                        android:src="@drawable/ic_format_dsd_white" />
+
+                    <ImageView
+                        android:id="@+id/icon_hires"
+                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_height="@dimen/dimen_32_dp"
+                        android:layout_marginRight="@dimen/dimen_12_dp"
+                        android:layout_marginBottom="@dimen/dimen_12_dp"
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:layout_alignParentRight="true"
+                        android:src="@drawable/ic_format_hires" />
+
+                </RelativeLayout>
                 <!--
                 <LinearLayout
                     android:layout_width="wrap_content"

@@ -61,19 +61,16 @@
         <item>CP1258</item>
     </string-array>
 
-    <string-array name="MusicGroupINTDefaultValues">
-        <item>EMPTY</item>
-        <item>FIXME</item>
-    </string-array>
     <string-array name="default_album_artist" >
         <item>Audiophile</item>
-        <item>Musical Film</item>
+        <item>Film</item>
         <item>Denon</item>
-        <item>HD Tracks</item>
+        <item>HDTracks</item>
         <item>GMM Grammy</item>
         <item>Linn Records</item>
         <item>RS Group</item>
         <item>R-Siam</item>
+        <item>Remastered</item>
         <item>Sennheiser</item>
         <item>Various Artists</item>
     </string-array>
@@ -87,25 +84,41 @@
     </array>
 
     <string-array name="default_genres">
-        <item>Folk/Roots</item>
+        <item>Acoustic, Vocal</item>
         <item>Classical</item>
-        <item>Musical/Film</item>
+        <item>Film</item>
+        <item>Bossa Nova</item>
+        <item>Ballad</item>
+        <item>Concertos</item>
         <item>Jazz</item>
-        <item>Blue</item>
-        <item>Country</item>
-        <item>R&amp;B/Soul</item>
-        <item>Pop/Rock</item>
-        <item>Reggae</item>
-        <item>Dance/Electronica</item>
-        <item>Hip-Hop</item>
+        <item>Jazz, Contemporary</item>
+        <item>Jazz, Vocal</item>
+        <item>Blues, Country, Folk</item>
+        <item>Soul, Funk, R&amp;B</item>
+        <item>Pop</item>
+        <item>Pop, Dance</item>
+        <item>Pop, Rock</item>
+        <item>Pop, Alternative</item>
+        <item>Pop, Indie</item>
+        <item>Pop, Vocal</item>
+        <item>Rock</item>
+        <item>Rock, Hard Rock</item>
+        <item>Rock, Metal</item>
+        <item>Rock, Soft Rock</item>
+        <item>Reggae, Ska</item>
+        <item>Electronic, Ambiance</item>
+        <item>Latin</item>
+        <item>Hip Hop</item>
+        <item>Rap</item>
         <item>Luk Thung</item>
-        <item>Mor Lum</item>
+        <item>Luk Thung, Mor Lum</item>
     </string-array>
     <string-array name="default_groupings">
-        <item>Special</item>
+        <item>Favorite</item>
         <item>Classical</item>
         <item>Thai</item>
         <item>English</item>
         <item>World</item>
+        <item>Laos</item>
     </string-array>
 </resources>

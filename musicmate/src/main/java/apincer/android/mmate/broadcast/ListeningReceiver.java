@@ -1,4 +1,4 @@
-package apincer.android.mmate.service;
+package apincer.android.mmate.broadcast;
 
 public interface ListeningReceiver {
     String PACKAGE_NEUTRON = "com.neutroncode.mp";

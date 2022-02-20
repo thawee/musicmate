@@ -1,4 +1,4 @@
-package apincer.android.mmate.service;
+package apincer.android.mmate.broadcast;
 
 import android.Manifest;
 import android.app.Notification;
@@ -50,7 +50,7 @@ import timber.log.Timber;
 /**
  * Created by e1022387 on 5/29/2017.
  */
-
+@Deprecated
 public class MusicListeningService extends Service {
     public Bitmap DEFAULT_PLAYER_ICON;
 	
@@ -95,7 +95,7 @@ public class MusicListeningService extends Service {
                 .setTicker("Music Mate");
         startForeground(NOTIFICATION_ID, builder.build());
         DEFAULT_PLAYER_ICON = BitmapFactory.decodeResource(getResources(), R.drawable.ic_broken_image_black_24dp);
-        registerReceiver(new MusicMateBroadcastReceiver());
+      //  registerReceiver(new MusicMateBroadcastReceiver());
         instance = this;
     }
 

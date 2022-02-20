@@ -1,5 +1,6 @@
 package apincer.android.mmate.utils;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -18,6 +19,10 @@ import org.json.JSONObject;
 import timber.log.Timber;
 
 public class PermissionUtils {
+
+    public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,
+            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_CONNECT};
+
 
     public static boolean hasPermissions(@NonNull Context context,
                                          @Size(min = 1) @NonNull String... perms) {

@@ -251,9 +251,6 @@
     <color name="item_divider">#eeef6c00</color>
     -->
 
-	<!-- toast -->
-    <color name="warningColor">#FFA900</color>
-
     <color name="storage_critical">#D50000</color>
 
     <!-- storage colors -->
@@ -263,5 +260,12 @@
     <color name="storage4">#EF5350</color>
 
     <color name="bgColor">#252525</color>
+
+    <color name="defaultTextColor">#FFFFFF</color>
+    <color name="errorColor">#D50000</color>
+    <color name="infoColor">#3F51B5</color>
+    <color name="successColor">#388E3C</color>
+    <color name="warningColor">#FFA900</color>
+    <color name="normalColor">#353A3E</color>
 
 </resources>

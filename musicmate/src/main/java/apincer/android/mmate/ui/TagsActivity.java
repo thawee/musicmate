@@ -2,14 +2,12 @@ package apincer.android.mmate.ui;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -42,13 +40,15 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
+import apincer.android.mmate.broadcast.BroadcastHelper;
+import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.service.AudioTagEditEvent;
-import apincer.android.mmate.service.BroadcastData;
+import apincer.android.mmate.broadcast.AudioTagEditEvent;
+import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -71,7 +71,7 @@ import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
 
-public class TagsActivity extends AppCompatActivity {
+public class TagsActivity extends AppCompatActivity implements Callback {
     private static ArrayList<AudioTag> editItems = new ArrayList<>();
     private volatile AudioTag displayTag;
     private ImageView coverArtView;
@@ -85,6 +85,8 @@ public class TagsActivity extends AppCompatActivity {
     private ImageView audiophileView;
     private ImageView hiresView;
     private ImageView mqaView;
+    private ImageView dsdView;
+    private ImageView ico24bitView;
     private MaterialRatingBar ratingView;
     private TextView qualityView;
     private View coverArtLayout;
@@ -95,6 +97,7 @@ public class TagsActivity extends AppCompatActivity {
     private StateView mStateView;
     private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     private volatile boolean isEditing;
+    private BroadcastHelper broadcastHelper;
 
     @Override
     public void onBackPressed() {
@@ -104,40 +107,6 @@ public class TagsActivity extends AppCompatActivity {
             Intent resultIntent = new Intent();
             ApplicationUtils.setSearchCriteria(resultIntent,criteria);
             setResult(RESULT_OK, resultIntent);
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            // Uri object will not be null for RESULT_OK
-            Uri coverArtUri = data.getData();
-            try {
-               /* if (data == null || data.getData() == null) {
-                    return;
-                }
-                InputStream input = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                File outputDir = getApplicationContext().getCacheDir(); // context being the Activity pointer
-                pendingCoverartFile = new File(outputDir, "tmp_cover_art");
-                if (pendingCoverartFile.exists()) {
-                    pendingCoverartFile.delete();
-                }
-                FileOutputStream output = new FileOutputStream(new File(outputDir, "tmp_cover_art"));
-               // MediaFileRepository.getInstance(getActivity().getApplication()).copy(input, pendingCoverartFile);
-                IOUtils.copy(input, output);
-                output.close();
-
-               //mainActivity.doPreviewCoverArt(pendingCoverartFile); */
-              //  doPreviewCoverArt(coverArtUri);
-
-               // tagsEditorFragment.setCoverArtUri(coverArtUri);
-
-               // viewHolder.coverartChanged = true;
-                //toggleSaveFabAction();
-            }catch (Exception ex) {
-                Timber.e( ex);
-            }
         }
     }
 
@@ -158,6 +127,7 @@ public class TagsActivity extends AppCompatActivity {
         super.onPause();
         // Unregister the listener when the application is paused
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
+        broadcastHelper.onPause(this);
     }
     @Override
     protected void onResume() {
@@ -165,6 +135,7 @@ public class TagsActivity extends AppCompatActivity {
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
+        broadcastHelper.onResume(this);
     }
 
     private TextView tagInfo;
@@ -181,6 +152,7 @@ public class TagsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_tags);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        broadcastHelper = new BroadcastHelper(this);
 
         coverArtLayout = findViewById(R.id.panel_cover_art_layout);
         panelLabels = findViewById(R.id.panel_labels);
@@ -210,7 +182,7 @@ public class TagsActivity extends AppCompatActivity {
                     AudioFileRepository.getInstance(getApplication()).scanFileAndSaveTag(new File(flacPath));
                     runOnUiThread(() -> {
                         String message = "Convert '"+tag.getTitle()+"' completed in " + session.getDuration() +" ms.";
-                        ToastHelper.showActionMessage(getApplicationContext(), Constants.STATUS_SUCCESS, message);
+                        ToastHelper.showActionMessage(getApplicationContext(), mStateView, Constants.STATUS_SUCCESS, message);
                         if(total == count[0]) {
                             mStateView.hideStates();
                         }
@@ -228,7 +200,7 @@ public class TagsActivity extends AppCompatActivity {
             criteria = event.getSearchCriteria();
             editItems.clear();
             editItems.addAll(event.getItems());
-            displayTag = buildDisplayTag(true);
+            displayTag = buildDisplayTag(false); // not re-load tags from media file
 
             updateTitlePanel();
             setUpPageViewer();
@@ -281,6 +253,8 @@ public class TagsActivity extends AppCompatActivity {
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
         mqaView = findViewById(R.id.icon_mqa);
+        dsdView = findViewById(R.id.icon_dsd);
+        ico24bitView = findViewById(R.id.icon_24bit);
         ratingView = findViewById(R.id.icon_rating);
         qualityView = findViewById(R.id.icon_quality_text);
     }
@@ -289,9 +263,24 @@ public class TagsActivity extends AppCompatActivity {
         toolbar.setTitle(StringUtils.trimToEmpty(displayTag.getTitle()));
         titleView.setText(StringUtils.trimToEmpty(displayTag.getTitle()));
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
-        audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
+        dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
         mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
+       // audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+
+        if(AudioTagUtils.is24Bits(displayTag)) {
+            ico24bitView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
+            ico24bitView.setVisibility(View.VISIBLE);
+        }else {
+            ico24bitView.setVisibility(View.GONE);
+        }
+        if(displayTag.isAudiophile()) {
+            audiophileView.setImageBitmap(AudioTagUtils.getAudiophileIcon(getApplicationContext(), displayTag));
+            audiophileView.setVisibility(View.VISIBLE);
+        }else {
+            audiophileView.setVisibility(View.GONE);
+        }
+
         ratingView.setRating(displayTag.getRating());
         ratingView.setFocusable(false);
         qualityView.setText(AudioTagUtils.getTrackQuality(displayTag));
@@ -451,9 +440,9 @@ public class TagsActivity extends AppCompatActivity {
         int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
         int linkPressBgColor = ContextCompat.getColor(getApplicationContext(), R.color.grey200);
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
-        tagSpan.append(new SpecialLabelUnit("Grouping:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+       // tagSpan.append(new SpecialLabelUnit("Grouping:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
-                .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
+        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
                             @Override
                             public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
                                 Intent resultIntent = new Intent();
@@ -467,9 +456,10 @@ public class TagsActivity extends AppCompatActivity {
                             }
                         }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                 new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
+                .append(new SpecialLabelUnit(":Grouping"+StringUtils.ARTIST_SEP+"Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
 
-                .append("  ")
-                .append(new SpecialLabelUnit("Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+               // .append(StringUtils.ARTIST_SEP)
+               // .append(new SpecialLabelUnit("Genre>", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
                 .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
                             @Override
@@ -645,6 +635,21 @@ public class TagsActivity extends AppCompatActivity {
         alertDialog.getWindow().setGravity(Gravity.BOTTOM);
         alertDialog.show();
     }
+
+    @Override
+    public void onPlaying(AudioTag tag) {
+        if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
+            try {
+                editItems.clear();
+                editItems.add(tag);
+                displayTag = buildDisplayTag(true);
+                updateTitlePanel();
+                setUpPageViewer();
+            } catch (Exception e) {
+                Timber.e(e);
+            }
+        }
+    }
 /*
     public void doPreviewCoverArt(File coverArtFile) {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
@@ -691,6 +696,7 @@ public class TagsActivity extends AppCompatActivity {
                 colorFade.start();
             } else {
                 // view mode
+                buildDisplayTag(false);
                 updateTitlePanel();
 //                tabLayout.setBackgroundColor(getResources().getColor(R.color.bgColor));
                 ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
@@ -721,7 +727,7 @@ public class TagsActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
                 BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
                 if (broadcastData != null) {
-                    if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
+                   /* if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                         if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
                             AudioTag tag = broadcastData.getTagInfo();
                             try {
@@ -734,9 +740,9 @@ public class TagsActivity extends AppCompatActivity {
                                 Timber.e(e);
                             }
                         }
-                    }else {
-                        ToastHelper.showBroadcastData(TagsActivity.this, broadcastData);
-                    }
+                    }else { */
+                        ToastHelper.showBroadcastData(TagsActivity.this, mStateView, broadcastData);
+                   // }
                 }
         }
     };

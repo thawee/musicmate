@@ -117,17 +117,6 @@
             android:layout_marginBottom="@dimen/dimen_4_dp"
             android:orientation="vertical">
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Album Artist"
-                android:textSize="10sp"
-                android:maxLines="1"
-                android:gravity="left|center_horizontal"
-                android:layout_gravity="center_horizontal"
-                android:textColor="@color/grey400"
-                android:textStyle="bold"/>
-
-            <TextView
                 android:id="@+id/panel_album_artist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -140,6 +129,16 @@
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
                 android:background="@drawable/selectable_link"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Album Artist"
+                android:textSize="10sp"
+                android:maxLines="1"
+                android:gravity="left|center_horizontal"
+                android:layout_gravity="center_horizontal"
+                android:textColor="@color/grey400"
+                android:textStyle="bold"/>
         </LinearLayout>
 
             <LinearLayout

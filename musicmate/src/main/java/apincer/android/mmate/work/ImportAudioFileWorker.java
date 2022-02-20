@@ -22,7 +22,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.service.BroadcastData;
+import apincer.android.mmate.broadcast.BroadcastData;
 
 public class ImportAudioFileWorker extends Worker {
     private ImportAudioFileWorker(

@@ -41,11 +41,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.cue.CueParse;
 import apincer.android.mmate.cue.Track;
 import apincer.android.mmate.fs.MusicMateArtwork;
 import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.service.MusicListeningService;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.StringUtils;
@@ -852,12 +852,12 @@ public class AudioFileRepository {
 
             String encSuffix = "";
             if (AudioTagUtils.isPCMHiRes(metadata)) {
-                encSuffix="-HR";
+                encSuffix="-HRA";
             }
 
             if(AudioTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
-                filename.append("-");
+                //filename.append("-");
                 filename.append(AudioTagUtils.getDSDSampleRateModulation(metadata));
             }else if (metadata.isMQA()) {
                 filename.append(Constants.MEDIA_PATH_MQA);
@@ -1230,7 +1230,8 @@ public class AudioFileRepository {
     public boolean importAudioFile(AudioTag item) {
         boolean status = false;
         try {
-            MusicListeningService.getInstance().playNextSongOnMatched(item);
+            //MusicListeningService.getInstance().playNextSongOnMatched(item);
+            BroadcastHelper.playNextSongOnMatched(getContext(), item);
             status = importAudioTag(item);
         }catch(Exception|OutOfMemoryError ex) {
             Timber.e(ex);
@@ -1243,7 +1244,8 @@ public class AudioFileRepository {
     public boolean deleteMediaItem(AudioTag item) {
         boolean status = false;
         try {
-            MusicListeningService.getInstance().playNextSongOnMatched(item);
+            //MusicListeningService.getInstance().playNextSongOnMatched(item);
+            BroadcastHelper.playNextSongOnMatched(getContext(), item);
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
                 tagRepos.removeTag(item);
