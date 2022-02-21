@@ -3,15 +3,11 @@ package apincer.android.mmate.broadcast;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
-import apincer.android.mmate.utils.BitmapHelper;
-
-public class MusicMateNotificationListener extends NotificationListenerService implements ListeningReceiver {
+public class MusicMateNotificationListener extends NotificationListenerService {
      public static final String HIBY_MUSIC = "com.hiby.music";
     String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
@@ -64,7 +60,7 @@ public class MusicMateNotificationListener extends NotificationListenerService i
 
     public void sendBroadcast(String pack, String title, String artist) {
         Intent intent = new Intent("apincer.android.mmate");
-        intent.putExtra(INTENT_KEY_PACKAGE, pack);
+        intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PACKAGE, pack);
         intent.putExtra("track", title);
         intent.putExtra("artist", artist);
         sendBroadcast(intent);

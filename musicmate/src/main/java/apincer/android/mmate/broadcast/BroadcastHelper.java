@@ -34,14 +34,13 @@ public class BroadcastHelper {
     public static final ComponentName PAAPI_PLAYER_SERVICE_COMPONENT_NAME = new ComponentName(PAAPI_PACKAGE_NAME, PAAPI_PLAYER_SERVICE_NAME);
 
 
-    private static AudioTag playingSong;
-    private static MusicPlayerInfo playerInfo;
-    private static final List<ListeningReceiver> receivers = new ArrayList<>();
+    private volatile static AudioTag playingSong;
+    private volatile static MusicPlayerInfo playerInfo;
+    private static final List<MusicBroadcastReceiver> receivers = new ArrayList<>();
     private Callback callback;
 
     public BroadcastHelper(@NonNull Callback callback) {
         this.callback = callback;
-        playerInfo = new MusicPlayerInfo();
     }
 
     public static AudioTag getPlayingSong() {
@@ -53,25 +52,25 @@ public class BroadcastHelper {
     }
 
     public void onResume(Activity activity) {
-        registerReceiver(activity, new MusicMateBroadcastReceiver(this));
+        registerReceiver(activity, new MusicBroadcastReceiver(this));
     }
 
     public void onPause(Activity activity) {
         unregisterReceivers(activity);
     }
 
-    private void registerReceiver(Context context, ListeningReceiver receiver) {
-        if(receiver instanceof MusicMateBroadcastReceiver) {
-            ((MusicMateBroadcastReceiver)receiver).register(context);
+    private void registerReceiver(Context context, MusicBroadcastReceiver receiver) {
+        if(receiver instanceof MusicBroadcastReceiver) {
+            ((MusicBroadcastReceiver)receiver).register(context);
         }
         receivers.add(receiver);
     }
 
     private void unregisterReceivers(Context context) {
         if(!receivers.isEmpty()) {
-            for (ListeningReceiver receiver : receivers) {
+            for (MusicBroadcastReceiver receiver : receivers) {
                 try {
-                    if(receiver instanceof MusicMateBroadcastReceiver) {
+                    if(receiver instanceof MusicBroadcastReceiver) {
                         context.unregisterReceiver((BroadcastReceiver)receiver);
                     }
                 } catch (Exception ex) {
@@ -110,9 +109,9 @@ public class BroadcastHelper {
     }
 
     public static void playNextSong(Context context) {
-        if(playerInfo==null) {
-            return;
-        }
+       // if(playerInfo==null) {
+       //     return;
+       // }
 
         if(Preferences.isVibrateOnNextSong(context)) {
             try {
@@ -132,20 +131,20 @@ public class BroadcastHelper {
             }
         }
 
-        if(ListeningReceiver.PACKAGE_NEUTRON.equals(playerInfo.playerPackage)) {
+        if(MusicBroadcastReceiver.PACKAGE_NEUTRON.equals(playerInfo.playerPackage)) {
             // Neutron MP use
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);
-        }else if(ListeningReceiver.PACKAGE_POWERAMP.equals(playerInfo.playerPackage)) {
+        }else if(MusicBroadcastReceiver.PACKAGE_POWERAMP.equals(playerInfo.playerPackage)) {
             // call PowerAmp API
             //PowerampAPIHelper.startPAService(this, new Intent(PowerampAPI.ACTION_API_COMMAND).putExtra(PowerampAPI.COMMAND, PowerampAPI.Commands.NEXT));
             Intent intent = new Intent(PAAPI_ACTION_API_COMMAND).putExtra(PAAPI_COMMAND, PAAPI_COMMAND_NEXT);
             intent.setComponent(PAAPI_PLAYER_SERVICE_COMPONENT_NAME);
             context.startForegroundService(intent);
-        }else if(ListeningReceiver.PACKAGE_UAPP.equals(playerInfo.playerPackage) ||
-                ListeningReceiver.PACKAGE_FOOBAR2000.equals(playerInfo.playerPackage) ||
-                ListeningReceiver.PREFIX_VLC.equals(playerInfo.playerPackage)) {
+        }else if(MusicBroadcastReceiver.PACKAGE_UAPP.equals(playerInfo.playerPackage) ||
+                MusicBroadcastReceiver.PACKAGE_FOOBAR2000.equals(playerInfo.playerPackage) ||
+                MusicBroadcastReceiver.PREFIX_VLC.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);

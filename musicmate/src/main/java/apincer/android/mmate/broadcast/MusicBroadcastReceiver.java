@@ -7,7 +7,6 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-//import android.os.Bundle;
 
 import java.util.List;
 
@@ -28,7 +27,18 @@ import timber.log.Timber;
  *      - Radsone DCT
  *      - Hiby Music
  */
-public class MusicMateBroadcastReceiver extends BroadcastReceiver implements ListeningReceiver {
+public class MusicBroadcastReceiver extends BroadcastReceiver {
+    public static String PACKAGE_NEUTRON = "com.neutroncode.mp";
+    public static String PACKAGE_UAPP = "com.extreamsd.usbaudioplayerpro";
+    public static String PACKAGE_FOOBAR2000="com.foobar2000.foobar2000";
+    public static String PACKAGE_POWERAMP = "com.maxmpz.audioplayer";
+    public static String PREFIX_UAPP = "com.extreamsd.usbaudioplayershared";
+    public static String PREFIX_VLC = "org.videolan.vlc";
+    public static String INTENT_KEY_PACKAGE = "package";
+    public static String INTENT_KEY_PLAYER = "player";
+    public static String INTENT_KEY_SCROBBLING_SOURCE = "scrobbling_source";
+
+    String PLAYER_NAME_FOOBAR2000 = "foobar2000";
     //private MusicListeningService service;
     private BroadcastHelper broadcastHelper;
     protected String title;
@@ -37,7 +47,7 @@ public class MusicMateBroadcastReceiver extends BroadcastReceiver implements Lis
     protected MusicPlayerInfo playerInfo;
     public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
 
-    public MusicMateBroadcastReceiver(BroadcastHelper broadcastHelper ) {
+    public MusicBroadcastReceiver(BroadcastHelper broadcastHelper ) {
        // this.service = service;
         this.broadcastHelper = broadcastHelper;
         playerInfo = new MusicPlayerInfo();

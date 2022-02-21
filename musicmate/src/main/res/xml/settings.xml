@@ -7,11 +7,12 @@
             android:summary="Show Storage space on left menu."
             android:title="Display Storage space"
             android:defaultValue="true"/>
+        <!--
         <SwitchPreferenceCompat
             android:key="preference_notification"
             android:summary="Show listening song details on notification."
             android:title="Enable Notification"
-            android:defaultValue="true"/>
+            android:defaultValue="true"/> -->
         <SwitchPreferenceCompat
             android:key="preference_prefix_title_with_track_number"
             android:summary="Show track number prefix to song's title."

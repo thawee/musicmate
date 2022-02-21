@@ -934,14 +934,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             qualityDetails = AudioTagUtils.getTrackQualityDetails(tag);
             sourceLabel.setText("Source: "+quality);
         }else {
-            sourceText.setText("...");
+            sourceText.setText("-");
         }
-        if(playerInfo.getPlayerName() != null) {
+        if(playerInfo != null) {
            // playerIcon.setText("");
             playerText.setText(playerInfo.getPlayerName());
             playerIcon.setImageDrawable(playerInfo.getPlayerIconDrawable());
+        }else {
+            playerText.setText("-");
         }
-
 
         AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
             @Override

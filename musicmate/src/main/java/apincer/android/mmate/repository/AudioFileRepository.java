@@ -982,24 +982,24 @@ public class AudioFileRepository {
        // if("Audiophile".equalsIgnoreCase(metadata.getGrouping())) {
        //     return STORAGE_PRIMARY;
        // }
-        if("Jazz".equalsIgnoreCase(metadata.getGrouping())) {
+       // if("Jazz".equalsIgnoreCase(metadata.getGrouping())) {
+       //     return STORAGE_PRIMARY;
+       // }
+        if("Favorite".equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
         }
-        if("Special".equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
-        }
-        if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_SECONDARY;
-        }
+        //if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
+        //    return STORAGE_SECONDARY;
+       // }
         if("Thai".equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
         }
-        if("English".equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_SECONDARY;
-        }
-        if("World".equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_SECONDARY;
-        }
+        //if("English".equalsIgnoreCase(metadata.getGrouping())) {
+        //    return STORAGE_SECONDARY;
+        //}
+        //if("World".equalsIgnoreCase(metadata.getGrouping())) {
+        //    return STORAGE_SECONDARY;
+        //}
         return STORAGE_SECONDARY;
     }
 

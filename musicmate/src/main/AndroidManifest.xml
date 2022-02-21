@@ -56,10 +56,6 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/AppTheme">
 
-        <!--
-        <service android:name="apincer.android.mmate.broadcast.MusicListeningService" android:exported="false" android:enabled="true"/>
--->
-
         <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
         <service
             android:name="apincer.android.mmate.broadcast.MusicMateNotificationListener"
