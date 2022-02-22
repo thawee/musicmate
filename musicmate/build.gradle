@@ -149,6 +149,7 @@ dependencies {
     //implementation deps.ui.toasty
     implementation deps.ui.shapeofview
     implementation deps.ui.photoview;
+    implementation 'com.github.tapadoo:alerter:7.2.4'
 
     //others
     implementation deps.dexter
@@ -172,7 +173,7 @@ dependencies {
    // implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     // Coil
-    implementation deps.coil.runtime
+    implementation deps.coil.runtime2
   //  implementation('de.esoco:coroutines:0.9.1')
 
     // Logging and Debugging

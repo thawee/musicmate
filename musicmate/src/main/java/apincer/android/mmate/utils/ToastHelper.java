@@ -1,17 +1,13 @@
 package apincer.android.mmate.utils;
 
-import android.content.Context;
+import android.app.Activity;
 import android.view.View;
 
-import androidx.core.content.ContextCompat;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import com.tapadoo.alerter.Alerter;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.BroadcastData;
-//import es.dmoral.toasty.Toasty;
 
 public class ToastHelper {
     //public static Toast toastMessage;
@@ -54,7 +50,7 @@ public class ToastHelper {
     } */
 
 
-    public static void showActionMessage(Context context, View view, String status, String message) {
+    public static void showActionMessage(Activity activity, View view, String status, String message) {
         //Toast toastMessage = null;
      /*   if(toastMessage!= null) {
             toastMessage.cancel();
@@ -71,6 +67,7 @@ public class ToastHelper {
             toastMessage.show();
         } */
 
+/*
         Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG);
         snackbar.setTextColor(ContextCompat.getColor(context, R.color.defaultTextColor));
         if(Constants.STATUS_SUCCESS.equalsIgnoreCase(status)) {
@@ -84,11 +81,28 @@ public class ToastHelper {
             snackbar.setAnchorView(view);
         }
 
-        snackbar.show();
+        snackbar.show(); */
+
+        int bgColor = R.color.infoColor;
+        if(Constants.STATUS_SUCCESS.equalsIgnoreCase(status)) {
+            bgColor = R.color.successColor;
+        }else if(Constants.STATUS_FAIL.equalsIgnoreCase(status)) {
+            bgColor = R.color.errorColor;
+        }
+
+        Alerter.hide();
+        Alerter.create(activity)
+                //.setTitle("Alert Title")
+                .setText(message)
+                .setBackgroundColorRes(bgColor) // or setBackgroundColorInt(Color.CYAN)
+                .setEnterAnimation(R.anim.alerter_slide_in_from_left)
+                .setExitAnimation(R.anim.alerter_slide_out_to_right)
+                .enableSwipeToDismiss()
+                .show();
     }
 
 
-    public static void showBroadcastData(Context context, View view, BroadcastData broadcastData) {
+    public static void showBroadcastData(Activity activity, View view, BroadcastData broadcastData) {
         //Toast toastMessage = null;
       /*  if (toastMessage != null) {
             toastMessage.cancel();
@@ -104,6 +118,7 @@ public class ToastHelper {
         if (toastMessage != null) {
             toastMessage.show();
         } */
+        /*
         Snackbar snackbar = Snackbar.make(view, broadcastData.getMessage(), Snackbar.LENGTH_LONG);
         snackbar.setTextColor(ContextCompat.getColor(context, R.color.defaultTextColor));
         if (BroadcastData.Status.COMPLETED == broadcastData.getStatus()) {
@@ -117,7 +132,24 @@ public class ToastHelper {
             snackbar.setAnchorView(view);
         }
 
-        snackbar.show();
+        snackbar.show(); */
+
+        int bgColor = R.color.infoColor;
+        if (BroadcastData.Status.COMPLETED == broadcastData.getStatus()) {
+            bgColor = R.color.successColor;
+        } else if (BroadcastData.Status.ERROR == broadcastData.getStatus()) {
+            bgColor = R.color.errorColor;
+        }
+
+        Alerter.hide();
+        Alerter.create(activity)
+       //.setTitle("Alert Title")
+                .setText(broadcastData.getMessage())
+                .setBackgroundColorRes(bgColor) // or setBackgroundColorInt(Color.CYAN)
+                .setEnterAnimation(R.anim.alerter_slide_in_from_left)
+                .setExitAnimation(R.anim.alerter_slide_out_to_right)
+                .enableSwipeToDismiss()
+                .show();
     }
 
     /*

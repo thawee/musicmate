@@ -182,7 +182,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
                     AudioFileRepository.getInstance(getApplication()).scanFileAndSaveTag(new File(flacPath));
                     runOnUiThread(() -> {
                         String message = "Convert '"+tag.getTitle()+"' completed in " + session.getDuration() +" ms.";
-                        ToastHelper.showActionMessage(getApplicationContext(), mStateView, Constants.STATUS_SUCCESS, message);
+                        ToastHelper.showActionMessage(TagsActivity.this, mStateView, Constants.STATUS_SUCCESS, message);
                         if(total == count[0]) {
                             mStateView.hideStates();
                         }
@@ -200,7 +200,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
             criteria = event.getSearchCriteria();
             editItems.clear();
             editItems.addAll(event.getItems());
-            displayTag = buildDisplayTag(false); // not re-load tags from media file
+            displayTag = buildDisplayTag(editItems.size()==1); // reload for single song, not re-load tags from media file
 
             updateTitlePanel();
             setUpPageViewer();
@@ -480,8 +480,13 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         // ENC info
         int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
         SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-        spannableEnc.append(new SpecialTextUnit("[ ",encColor).setTextSize(10))
-                .append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
+        spannableEnc.append(new SpecialTextUnit("[ ",encColor).setTextSize(10));
+        if(!StringUtils.isEmpty(displayTag.getSource())) {
+            spannableEnc.append(new SpecialTextUnit(displayTag.getSource(),encColor).setTextSize(10))
+                    .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
+        }
+
+        spannableEnc.append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
         String mqaSampleRate = "";
         if(displayTag.isMQA()) {

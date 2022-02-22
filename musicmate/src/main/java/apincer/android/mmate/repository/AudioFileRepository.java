@@ -67,8 +67,8 @@ public class AudioFileRepository {
     private final Context context;
     private final MediaFileRepository fileRepos;
     private final AudioTagRepository tagRepos;
-    private static String STORAGE_PRIMARY = StorageId.PRIMARY;
-    private static String STORAGE_SECONDARY = StorageId.PRIMARY;
+    private String STORAGE_PRIMARY = StorageId.PRIMARY;
+    private String STORAGE_SECONDARY;
 
     public static final String ACTION = "com.apincer.mmate.provider.MediaItemProvider";
 
@@ -79,20 +79,21 @@ public class AudioFileRepository {
     private AudioFileRepository(Context context) {
         super();
         this.context = context;
+        STORAGE_SECONDARY = getSecondaryId(context);
         this.fileRepos = new MediaFileRepository(context);
         this.tagRepos = AudioTagRepository.getInstance(); //new AudioTagRepository();
         INSTANCE = this;
-        init();
     }
 
-    private void init() {
-        List<String> sids = DocumentFileCompat.getStorageIds(getContext());
+    public static String getSecondaryId(Context context) {
+        List<String> sids = DocumentFileCompat.getStorageIds(context);
         for(String sid: sids) {
-            if(!sid.equals(STORAGE_PRIMARY)) {
-                STORAGE_SECONDARY=sid;
-                break;
+            if(!sid.equals(StorageId.PRIMARY)) {
+                return sid;
+                //break;
             }
         }
+        return StorageId.PRIMARY;
     }
 
     public static AudioFileRepository getInstance(Context context) {

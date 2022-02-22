@@ -65,7 +65,6 @@ import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
-//import apincer.android.mmate.broadcast.MusicListeningService;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
@@ -1065,11 +1064,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         refreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {
-               // refreshLayout.getLayout().postDelayed(() -> {
-                epoxyController.loadSource(searchCriteria);
-                   // refreshLayout.finishRefresh();
-               // }, 500);
-                //refreshlayout.finishRefresh(2000/*,false*/);//传入false表示刷新失败
+               epoxyController.loadSource(searchCriteria);
             }
         });
     }
