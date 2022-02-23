@@ -12,7 +12,8 @@
         android:id="@+id/storage_box"
         android:layout_gravity="top|left"
         android:layout_margin="1dp"
-        android:paddingLeft="2dp"/>
+        android:paddingLeft="2dp"
+        android:src="@drawable/ic_memory_white_24dp"/>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -23,6 +24,29 @@
                     android:layout_marginBottom="4dp"
                     android:layout_alignRight="@+id/storage_box"
                     android:orientation="vertical">
+                    <TextView
+                        android:id="@+id/storage_info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="8dp"
+                        android:gravity="left|top"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="90%"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="10sp" />
+
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="@dimen/dimen_2_dp"
+                        android:layout_marginLeft="4dp"
+                        android:layout_marginRight="4dp"/>
                     <!--
                     <TextView
                         android:id="@+id/storage_title"
@@ -57,6 +81,7 @@
                         app:progress_max="100"
                         app:progress_current="80"
                         />-->
+                    <!--
                     <com.skydoves.progressview.ProgressView
                         android:id="@+id/storage_percentage"
                         android:layout_width="140dp"
@@ -77,6 +102,37 @@
                     app:progressView_labelText="achieve 65%"
                     app:progressView_labelTypeface="bold"
                     />
+                    <com.cliff.comparingperformancebar.PercentageProgressBar
+                        android:id="@+id/percentageProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:ppb_percentage="50"
+                        app:ppb_progressLeftColor="@color/material_color_green_800"
+                        app:ppb_progressRightColor="@color/material_color_yellow_900"
+                        app:ppb_textSize="16sp" />
+                    <com.cliff.comparingperformancebar.ValueProgressBar
+                        android:id="@+id/valuesProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/percentageProgressBar"
+                        app:vpb_progressLeftColor="#77B9C1"
+                        app:vpb_progressRightColor="#45718B"
+                        app:vpb_percent="false"
+                        app:vpb_textSize="18sp"
+                        app:vpb_valueLeft="6"
+                        app:vpb_valueRight="10" /> -->
+
                     <!--
                     <TextView
                         android:id="@+id/storage_size"

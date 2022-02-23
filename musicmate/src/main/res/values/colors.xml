@@ -267,5 +267,12 @@
     <color name="successColor">#388E3C</color>
     <color name="warningColor">#FFA900</color>
     <color name="normalColor">#353A3E</color>
+    <color name="material_color_green_400">#66BB6A</color>
+    <color name="meteial_color_deep_orange_300">#FF8A65</color>
+    <color name="meteial_color_deep_orange_A400">#FF3D00</color>
+    <color name="material_color_light_green_800">#558B2F</color>
+    <color name="material_color_yellow_800">#F9A825</color>
+    <color name="meteial_color_amber_800">#FF8F00</color>
+    <color name="meteial_color_orange_800">#EF6C00</color>
 
 </resources>

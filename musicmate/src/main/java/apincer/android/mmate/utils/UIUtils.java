@@ -45,6 +45,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.TextView;
 
@@ -64,7 +65,6 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
-import com.skydoves.progressview.ProgressView;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -72,10 +72,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import timber.log.Timber;
 
 /**
@@ -736,9 +738,8 @@ public class UIUtils  {
             LayoutInflater layoutInflater = LayoutInflater.from(application);
             View inf = layoutInflater.inflate(R.layout.view_storage_space, null);
             ImageView icon = inf.findViewById(R.id.storage_box);
-           // TextView size = inf.findViewById(R.id.storage_size);
-           // NumberProgressBar progressBar = inf.findViewById(R.id.storage_percentage);
-            ProgressView progressBar = inf.findViewById(R.id.storage_percentage);
+            TextView info = inf.findViewById(R.id.storage_info);
+            ProgressBar progressBar = inf.findViewById(R.id.progressBar);
 
             long free = DocumentFileCompat.getFreeSpace(application.getApplicationContext(), sid);
             long total = DocumentFileCompat.getStorageCapacity(application.getApplicationContext(), sid);
@@ -751,38 +752,33 @@ public class UIUtils  {
                 icon.setImageDrawable(ContextCompat.getDrawable(application,R.drawable.ic_sd_storage_white_24dp));
             }
 
-            progressBar.setProgress((int)pcnt);
-            progressBar.setLabelText(StringUtils.formatStorageSize(free)+"/"+StringUtils.formatStorageSize(total)+" "+((int)pcnt)+"%");
-            if(pcnt >= 99) {
-                progressBar.setLabelColorInner(application.getColor(R.color.storage_critical));
-                progressBar.setLabelColorOuter(application.getColor(R.color.storage_critical));
-              //  progressBar.setReachedBarColor(application.getColor(R.color.storage_critical));
-              //  progressBar.setProgressTextColor(application.getColor(R.color.storage_critical));
-                //progressBar.set
-            }else if(pcnt >= 95) {
-                progressBar.setLabelColorInner(application.getColor(R.color.material_color_yellow_900));
-                progressBar.setLabelColorOuter(application.getColor(R.color.material_color_yellow_900));
-              //  progressBar.setReachedBarColor(application.getColor(R.color.storage_warning));
-              //  progressBar.setProgressTextColor(application.getColor(R.color.storage_warning));
-            }else if(pcnt >= 90) {
-                progressBar.setLabelColorInner(application.getColor(R.color.material_color_lime_800));
-                progressBar.setLabelColorOuter(application.getColor(R.color.material_color_lime_800));
-                //  progressBar.setReachedBarColor(application.getColor(R.color.storage_warning));
-                //  progressBar.setProgressTextColor(application.getColor(R.color.storage_warning));
-            }else {  // < 90 %
-                progressBar.setLabelColorInner(application.getColor(R.color.material_color_green_800));
-                progressBar.setLabelColorOuter(application.getColor(R.color.material_color_green_800));
-              //  progressBar.setReachedBarColor(application.getColor(R.color.storage_nomal));
-              //  progressBar.setProgressTextColor(application.getColor(R.color.storage_nomal));
+            int barColor = Color.GRAY;
+            info.setText(StringUtils.formatStorageSizeGB(free)+"/"+StringUtils.formatStorageSizeGB(total)+" GB - "+((int)pcnt)+"%");
+            if(pcnt > 99) {
+                barColor = application.getColor(R.color.meteial_color_orange_800);
+            }else if(pcnt > 98) {
+                barColor = application.getColor(R.color.meteial_color_amber_800);
+            }else if(pcnt > 95) {
+                barColor = application.getColor(R.color.material_color_yellow_800);
+            }else if(pcnt > 90) {
+                barColor = application.getColor(R.color.material_color_lime_800);
+            }else if(pcnt > 75) {
+                barColor = application.getColor(R.color.material_color_light_green_800);
+            }else {  // 50, 75
+                barColor = application.getColor(R.color.material_color_green_800);
             }
 
-            /*
-            String sizeString = StringUtils.formatStorageSize(free)+" free / "+StringUtils.formatStorageSize(total);
-            SimplifySpanBuild span = new SimplifySpanBuild("");
-            span.append(new SpecialLabelUnit(storageName, Color.GRAY, sp2px(application,10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM));
-            span.append(new SpecialTextUnit(sizeString).setTextSize(8));
-            size.setText(span.build()); */
-
+            List valueList = new ArrayList();
+            valueList.add(50);
+            valueList.add(25);
+            valueList.add(15);
+            valueList.add(5);
+            valueList.add(3);
+            valueList.add(1);
+            valueList.add(1);
+            progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+            progressBar.setMax(100);
+            progressBar.setProgress((int) pcnt);
             vStoragesLayout.addView(inf);
             vStoragesLayout.setVisibility(View.VISIBLE);
         }

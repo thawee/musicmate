@@ -116,6 +116,7 @@
     </string-array>
     <string-array name="default_groupings">
         <item>Favorite</item>
+        <item>Relaxation</item>
         <item>Classical</item>
         <item>Thai</item>
         <item>English</item>

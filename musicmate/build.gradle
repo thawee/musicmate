@@ -149,10 +149,10 @@ dependencies {
     //implementation deps.ui.toasty
     implementation deps.ui.shapeofview
     implementation deps.ui.photoview;
-    implementation 'com.github.tapadoo:alerter:7.2.4'
+    implementation deps.ui.alerter
 
     //others
-    implementation deps.dexter
+   // implementation deps.dexter
     implementation deps.eventbus
     implementation deps.storage
     implementation deps.timber
@@ -188,6 +188,7 @@ dependencies {
     // implementation 'com.sensorberg.libs:permission-bitte:2.0.0'
 
     // Local Library
+    //https://bitbucket.org/ijabz/jaudiotagger/src/master/
     //implementation project(':library:jaudiotagger226')
     implementation project(':library:jaudiotagger')
     implementation project(':library:justdsd')

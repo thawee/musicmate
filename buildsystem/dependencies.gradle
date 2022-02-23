@@ -223,6 +223,7 @@ ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.0.5'
 ui.coco ='com.github.soulqw:CoCo:1.1.2'
 //https://github.com/medyo/android-about-page
 ui.androidAboutPage = 'io.github.medyo:android-about-page:2.0.0'
+ui.alerter = 'com.github.tapadoo:alerter:7.2.4'
 deps.ui = ui
 
 def epoxy = [:]
