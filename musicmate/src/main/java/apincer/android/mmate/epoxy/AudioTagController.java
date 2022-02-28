@@ -356,12 +356,16 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
-                !(Constants.TITLE_DSD_AUDIO.equals(criteria.getKeyword()) || Constants.TITLE_MQA_AUDIO.equals(criteria.getKeyword()))) {
+                Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword())) {
+            titles.add(Constants.TITLE_MQA_AUDIO);
+        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
+                Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
+            titles.add(Constants.TITLE_DSD_AUDIO);
+        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {// &&
+            //    !(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword()) || Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword()))) {
             titles.add(Constants.TITLE_HIFI_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
-           // titles.add(Constants.TITLE_HR_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
-       // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_HIFI) {
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
             List<String> tabs = tagRepos.getGroupingList(context);
             for(String tab: tabs) {

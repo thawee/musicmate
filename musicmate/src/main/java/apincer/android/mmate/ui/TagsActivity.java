@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -701,8 +702,8 @@ public class TagsActivity extends AppCompatActivity implements Callback {
                 colorFade.start();
             } else {
                 // view mode
-                buildDisplayTag(false);
-                updateTitlePanel();
+                //buildDisplayTag(false);
+                //updateTitlePanel();
 //                tabLayout.setBackgroundColor(getResources().getColor(R.color.bgColor));
                 ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
                         "backgroundColor" /*view attribute name*/, new ArgbEvaluator(),
