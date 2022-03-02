@@ -82,19 +82,25 @@ public class BroadcastHelper {
     }
 
     protected void setPlayingSong(Context context, String currentTitle, String currentArtist, String currentAlbum) {
-        // FIXME move to RXAndroid
         currentTitle = StringUtils.trimTitle(currentTitle);
         currentArtist = StringUtils.trimTitle(currentArtist);
         currentAlbum = StringUtils.trimTitle(currentAlbum);
         AudioFileRepository provider = AudioFileRepository.getInstance(context);
-        playingSong = null;
+
         if(provider!=null) {
             try {
-                playingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
-                callback.onPlaying(playingSong);
+                AudioTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
+                if(newPlayingSong!=null && !newPlayingSong.equals(playingSong)) {
+                    playingSong = newPlayingSong;
+                    callback.onPlaying(playingSong);
+                }else {
+                    playingSong = null;
+                }
             } catch (Exception ex) {
                 Timber.e( ex);
             }
+        }else {
+            playingSong = null;
         }
     }
 

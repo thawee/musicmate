@@ -7,10 +7,13 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Bundle;
 
 import java.util.List;
 
+import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.BitmapHelper;
+import apincer.android.mmate.utils.StringUtils;
 import timber.log.Timber;
 
 /**
@@ -75,27 +78,32 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
             boolean paused = intent.getBooleanExtra("paused", false);
             if(!paused) {
                 try {
-                    extractPlayer(context, intent);
+                    Bundle extras = intent.getExtras();
+                    String playerPackage = extractPlayer(context, intent);
                     extractTitle(intent);
                    // displayNotification();
                   //  MusicListeningService.getInstance().setPlayerInfo(playerInfo);
                   //  MusicListeningService.getInstance().setPlayingSong(title,artist,album);
                    // service.setListeningReceiver(this);
-                    broadcastHelper.setPlayerInfo(playerInfo);
-                    broadcastHelper.setPlayingSong( context, title,artist,album);
+                  //  if((!StringUtils.isEmpty(playerPackage)) && ApplicationUtils.isAppRunning(context, playerPackage)) {
+                        broadcastHelper.setPlayerInfo(playerInfo);
+                        broadcastHelper.setPlayingSong(context, title, artist, album);
+                //    }
                 }catch (Exception ex) {
                     Timber.e(ex);
                 }
             }
     }
 
-    protected void extractPlayer(Context context, Intent intent) {
+    protected String extractPlayer(Context context, Intent intent) {
         String action = intent.getAction();
+        String playerPackage = "";
 
         if(action.startsWith(PREFIX_UAPP)) {
+            playerPackage = PACKAGE_UAPP;
             setPlayer(context, PACKAGE_UAPP,null);
         }else {
-            String playerPackage = intent.getStringExtra(INTENT_KEY_PACKAGE);
+            playerPackage = intent.getStringExtra(INTENT_KEY_PACKAGE);
             String playerName = intent.getStringExtra(INTENT_KEY_PLAYER);
             if(PLAYER_NAME_FOOBAR2000.equalsIgnoreCase(playerName)) {
                 playerPackage = PACKAGE_FOOBAR2000;
@@ -107,7 +115,9 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                 playerPackage = getDefaultPlayerPackage(context);
             }
             setPlayer(context, playerPackage,playerName);
+
         }
+        return playerPackage;
     }
 
     protected String getDefaultPlayerPackage(Context context) {

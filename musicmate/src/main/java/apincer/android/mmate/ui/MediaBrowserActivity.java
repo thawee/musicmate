@@ -1278,7 +1278,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .build();
         fabLoader.enqueue(fabRequest);
 
-        if(Preferences.isFollowNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
+        if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
             if (nowPlayingView != null) {
                 nowPlayingView.setVisibility(View.GONE);
             }
@@ -1399,11 +1399,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onPlaying(AudioTag song) {
-        if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
+        if(song!=null && !song.equals(lastPlaying)) {
+       // if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
             lastPlaying = song;
             epoxyController.notifyPlayingStatus();
             selectedTag = null; //tag; // reset auto scroll to song
             doShowNowPlayingSong(song);
+        }else {
+            lastPlaying = song;
+            selectedTag = null;
         }
     }
 

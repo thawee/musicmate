@@ -1,6 +1,7 @@
 package apincer.android.mmate.utils;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -48,6 +49,21 @@ public class ApplicationUtils {
                 activity.startActivity(intent);
             }
         }
+    }
+
+    public static boolean isAppRunning(final Context context, final String packageName) {
+        // can see nly activity on self-app
+        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        final List<ActivityManager.RunningAppProcessInfo> procInfos = activityManager.getRunningAppProcesses();
+        if (procInfos != null)
+        {
+            for (final ActivityManager.RunningAppProcessInfo processInfo : procInfos) {
+                if (processInfo.processName.equals(packageName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static String getAssetsText(Activity activity, String inFile) {

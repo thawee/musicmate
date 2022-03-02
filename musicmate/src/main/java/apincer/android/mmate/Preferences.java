@@ -26,6 +26,12 @@ public class Preferences {
         return prefs.getBoolean(Constants.PREF_SHOW_STORAGE_SPACE,true);
     }
 
+    public static boolean isOpenNowPlaying(Context context) {
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_OPEN_NOW_PLAYING,false);
+    }
+
     public static boolean isFollowNowPlaying(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);

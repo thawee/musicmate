@@ -22,6 +22,7 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
+
     public static int QUALITY_SAMPLING_RATE_384 = 384000;
     public static int QUALITY_SAMPLING_RATE_352 = 352000;
     public static int QUALITY_SAMPLING_RATE_192 = 192000;
@@ -100,8 +101,8 @@ public final class Constants {
     public static String KEY_ERROR_COUNT="errorCount";
     public static String KEY_RESULT_CODE="resultCode";
     public static final String KEY_MEDIA_TAG = "mediaTAG";
-    public static final String KEY_MEDIA_PRV_TAG ="mediaPRVTAG";
-    public static final String KEY_MEDIA_TAG_LIST = "mediaTAGLIST";
+  //  public static final String KEY_MEDIA_PRV_TAG ="mediaPRVTAG";
+  //  public static final String KEY_MEDIA_TAG_LIST = "mediaTAGLIST";
     public static final String KEY_COVER_ART_PATH = "coverArtPath";
     public static final String MEDIA_ENC_AAC="AAC";
     public static final String MEDIA_ENC_MP3="MPEG";
@@ -118,7 +119,7 @@ public final class Constants {
 
     public static final String MEDIA_PATH_DSD = "DSD"; // DSD
     public static final String MEDIA_PATH_MQA = "MQA"; //MQA
-    public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
+   // public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
    // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
     public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless
     public static final String MEDIA_PATH_FLAC = "FLAC"; //Lossless
@@ -158,14 +159,15 @@ public final class Constants {
    // public static final String PREF_SHOW_SONG_GENRE_IN_COLLECTION = "preference_show_genre_in_collection";
     public static final String PREF_SHOW_GROUPINGS_IN_COLLECTION = "preference_show_groupings_in_collection";
     public static final String PREF_SHOW_NOTIFICATION = "preference_notification";
-    public static final String PREF_SIMILAR_ON_TITLE_AND_ARTIST = "preference_similar_title_artist";
+   // public static final String PREF_SIMILAR_ON_TITLE_AND_ARTIST = "preference_similar_title_artist";
   //  public static final String PREF_SHOW_AUDIO_QUALITY_IN_COLLECTION = "preference_show_sq_in_collection";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
     public static final String PREF_FOLLOW_NOW_PLAYING = "preference_follow_now_playing";
-    public static final String PREF_SHOW_MQA_AUDIO_IN_COLLECTION = "preference_show_mqa_in_collection";
-    public static final String PREF_SHOW_PCM_AUDIO_IN_COLLECTION = "preference_show_pcm_in_collection";
-    public static final String PREF_SHOW_AUDIO_SAMPLE_RATE_IN_COLLECTION = "preference_show_sample_rate_in_collection";
+    public static final String PREF_OPEN_NOW_PLAYING = "preference_open_now_playing";
+   // public static final String PREF_SHOW_MQA_AUDIO_IN_COLLECTION = "preference_show_mqa_in_collection";
+   // public static final String PREF_SHOW_PCM_AUDIO_IN_COLLECTION = "preference_show_pcm_in_collection";
+   // public static final String PREF_SHOW_AUDIO_SAMPLE_RATE_IN_COLLECTION = "preference_show_sample_rate_in_collection";
 
     public static final int INFO_SAMPLE_RATE_WIDTH = 180; //164;
     public static final int INFO_HEIGHT = 32;
