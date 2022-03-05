@@ -1,22 +1,66 @@
 package apincer.android.mmate;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.color.DynamicColors;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import apincer.android.mmate.broadcast.BroadcastData;
+import apincer.android.mmate.broadcast.BroadcastHelper;
+import apincer.android.mmate.broadcast.Callback;
+import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.objectbox.ObjectBox;
 import sakout.mehdi.StateViews.StateViewsBuilder;
+import timber.log.Timber;
 
 public class MusixMateApp extends Application  {
     private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
     private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
+    private static Context context;
+    private static final BroadcastHelper broadcastHelper = new BroadcastHelper(new Callback() {
+        @Override
+        public void onPlaying(AudioTag song) {
+            try {
+                BroadcastData data = new BroadcastData()
+                        .setAction(BroadcastData.Action.PLAYING)
+                        .setStatus(BroadcastData.Status.COMPLETED)
+                        .setTagInfo(song)
+                        .setMessage("");
+                Intent intent = data.getIntent();
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            }catch (Exception ex) {
+                Timber.e(ex);
+            }
+        }
+    });
+
+    public static AudioTag getPlayingSong() {
+        return broadcastHelper.getPlayingSong();
+    }
+
+    public static MusicPlayerInfo getPlayerInfo() {
+        return broadcastHelper.getPlayerInfo();
+    }
+
+    public static void playNextSong(Context applicationContext) {
+        broadcastHelper.playNextSong(applicationContext);
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        broadcastHelper.onTerminate(this);
+    }
 
     @Override public void onCreate() {
         super.onCreate();
@@ -24,6 +68,9 @@ public class MusixMateApp extends Application  {
         DynamicColors.applyToActivitiesIfAvailable(this);
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+
+        context = this;
+        broadcastHelper.onCreate(this);
 
        // Timber.plant(new Timber.DebugTree());
 

@@ -29,6 +29,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dimen_12_dp"
             android:layout_marginLeft="@dimen/dimen_24_dp"
             android:layout_marginRight="@dimen/dimen_24_dp"
             android:layout_marginBottom="@dimen/dimen_4_dp"
@@ -40,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
-
+<!--
                 <TextView
                     android:layout_width="80dp"
                     android:layout_height="wrap_content"
@@ -52,7 +53,7 @@
                     android:layout_gravity="right|center_horizontal"
                     android:textColor="@color/grey400"
                     android:textStyle="bold" />
-
+-->
                 <TextView
                     android:id="@+id/panel_artist"
                     android:layout_width="match_parent"
@@ -81,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
-
+<!--
                 <TextView
                     android:layout_width="80dp"
                     android:layout_height="wrap_content"
@@ -93,7 +94,7 @@
                     android:layout_gravity="left|center_horizontal"
                     android:textColor="@color/grey400"
                     android:textStyle="bold"/>
-
+-->
                 <TextView
                     android:id="@+id/panel_album"
                     android:layout_width="match_parent"
@@ -132,8 +133,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Album Artist"
-                android:textSize="10sp"
+                android:text="(Album Artist)"
+                android:textSize="8sp"
                 android:maxLines="1"
                 android:gravity="left|center_horizontal"
                 android:layout_gravity="center_horizontal"
@@ -148,19 +149,95 @@
                 android:layout_marginTop="2dp"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="45dp">
+
                 <TextView
                     android:id="@+id/panel_tag"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
+                    android:gravity="center|bottom"
                     android:padding="@dimen/dimen_4_dp"
-                    android:layout_marginBottom="@dimen/dimen_4_dp"
+                    android:layout_marginBottom="@dimen/dimen_2_dp"
                     android:background="@color/transparent"/>
+                    <!--
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="26dp"
+                    android:gravity="center"
+                    android:layout_gravity="center_horizontal"
+                    >
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_alignParentLeft="true">
+                        <TextView
+                            android:id="@+id/panel_grouping"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center|bottom"
+                            android:padding="@dimen/dimen_4_dp"
+                            android:text="Grouping AA"
+                            android:layout_marginBottom="@dimen/dimen_4_dp"
+                            android:background="@color/transparent"/>
+                        <TextView
+                            android:id="@+id/panel_grouping_label"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center|bottom"
+                            android:layout_marginTop="@dimen/dimen_16_dp"
+                            android:padding="@dimen/dimen_4_dp"
+                            android:text="Grouping"
+                            android:textSize="8sp"
+                            android:layout_marginBottom="@dimen/dimen_4_dp"
+                            android:background="@color/transparent"/>
+                    </RelativeLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center|bottom"
+                        android:background="@android:color/white"
+                        android:textColor="@color/white"
+                        android:layout_centerInParent="true"
+                        android:text="\u20df"
+                        android:layout_marginRight="@dimen/dimen_8_dp"
+                        android:layout_marginLeft="@dimen/dimen_8_dp"/>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_alignParentRight="true">
+                        <TextView
+                            android:id="@+id/panel_tag"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center|bottom"
+                            android:padding="@dimen/dimen_4_dp"
+                            android:text="Genre BB"
+                            android:layout_marginBottom="@dimen/dimen_4_dp"
+                            android:background="@color/transparent"/>
+
+                        <TextView
+                            android:id="@+id/panel_tag_label"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/dimen_16_dp"
+                            android:layout_marginBottom="@dimen/dimen_4_dp"
+                            android:background="@color/transparent"
+                            android:gravity="center|bottom"
+                            android:padding="@dimen/dimen_4_dp"
+                            android:text="Genre"
+                            android:textSize="8sp" />
+                    </RelativeLayout>
+                </RelativeLayout> -->
                 <TextView
                     android:id="@+id/panel_enc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingTop="@dimen/dimen_4_dp"
+                    android:textSize="8sp"
+                    android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
+                    android:gravity="center|bottom"
                     android:textColor="@android:color/white"
                     android:layout_gravity="center_horizontal"/>
             </LinearLayout>
@@ -181,7 +258,7 @@
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:paddingTop="@dimen/dimen_1_dp"
                 android:textSize="10sp"
-                android:text="path"
+                android:text="file path"
                 android:ellipsize="start"
                 android:gravity="center"
                 android:layout_gravity="center"

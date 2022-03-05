@@ -1,6 +1,7 @@
 package apincer.android.mmate.broadcast;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -16,6 +17,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
@@ -178,4 +180,11 @@ public class BroadcastHelper {
         }
     }
 
+    public void onCreate(Application musixMateApp) {
+        registerReceiver(musixMateApp, new MusicBroadcastReceiver(this));
+    }
+
+    public void onTerminate(Application musixMateApp) {
+        unregisterReceivers(musixMateApp);
+    }
 }

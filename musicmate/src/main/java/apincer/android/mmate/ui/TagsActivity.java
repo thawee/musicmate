@@ -42,8 +42,8 @@ import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
-import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.broadcast.Callback;
+//import apincer.android.mmate.broadcast.BroadcastHelper;
+//import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
@@ -71,7 +71,7 @@ import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
 
-public class TagsActivity extends AppCompatActivity implements Callback {
+public class TagsActivity extends AppCompatActivity { //implements Callback {
     private static ArrayList<AudioTag> editItems = new ArrayList<>();
     private volatile AudioTag displayTag;
     private ImageView coverArtView;
@@ -82,6 +82,8 @@ public class TagsActivity extends AppCompatActivity implements Callback {
     private TextView albumView ;
     private TextView albumArtistView;
     private TextView encInfo;
+  //  private TextView groupingView;
+  //  private TextView genreView;
     private ImageView audiophileView;
     private ImageView hiresView;
     private ImageView mqaView;
@@ -97,7 +99,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
     private StateView mStateView;
     private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     private volatile boolean isEditing;
-    private BroadcastHelper broadcastHelper;
+    //private BroadcastHelper broadcastHelper;
 
     @Override
     public void onBackPressed() {
@@ -127,7 +129,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         super.onPause();
         // Unregister the listener when the application is paused
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
-        broadcastHelper.onPause(this);
+        //broadcastHelper.onPause(this);
     }
     @Override
     protected void onResume() {
@@ -135,7 +137,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
-        broadcastHelper.onResume(this);
+        //broadcastHelper.onResume(this);
     }
 
     private TextView tagInfo;
@@ -152,7 +154,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         setContentView(R.layout.activity_tags);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        broadcastHelper = new BroadcastHelper(this);
+        //broadcastHelper = new BroadcastHelper(this);
 
         coverArtLayout = findViewById(R.id.panel_cover_art_layout);
         panelLabels = findViewById(R.id.panel_labels);
@@ -249,6 +251,8 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         albumArtistView = findViewById(R.id.panel_album_artist);
         encInfo = findViewById(R.id.panel_enc);
         tagInfo = findViewById(R.id.panel_tag);
+       // groupingView = findViewById(R.id.panel_grouping);
+       // genreView = findViewById(R.id.panel_tag);
         pathInfo = findViewById(R.id.panel_path);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
@@ -455,9 +459,11 @@ public class TagsActivity extends AppCompatActivity implements Callback {
                                 finish();
                             }
                         }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
-                .append(new SpecialLabelUnit(":Grouping"+StringUtils.ARTIST_SEP+"Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
-
+                new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
+               // .append(new SpecialLabelUnit(":Grouping"+StringUtils.ARTIST_SEP+"Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
+               //  .append(new SpecialLabelUnit(":Grouping | Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
+               // .append(new SpecialTextUnit("   |   ").setTextSize(14).useTextBold())
+                .append(new SpecialTextUnit("    \u20df    ").setTextSize(14).useTextBold())
                // .append(StringUtils.ARTIST_SEP)
                // .append(new SpecialLabelUnit("Genre>", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
@@ -474,7 +480,7 @@ public class TagsActivity extends AppCompatActivity implements Callback {
                                 finish();
                             }
                         }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                        new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
+                        new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?" - ":displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
         tagInfo.setText(tagSpan.build());
 
         // ENC info
@@ -641,7 +647,6 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         alertDialog.show();
     }
 
-    @Override
     public void onPlaying(AudioTag tag) {
         if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
             try {
@@ -732,8 +737,10 @@ public class TagsActivity extends AppCompatActivity implements Callback {
         public void onReceive(Context context, Intent intent) {
                 BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
                 if (broadcastData != null) {
-                   /* if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
-                        if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
+                    if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
+                        AudioTag tag = broadcastData.getTagInfo();
+                        onPlaying(tag);
+                    /*    if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
                             AudioTag tag = broadcastData.getTagInfo();
                             try {
                                 editItems.clear();
@@ -744,10 +751,10 @@ public class TagsActivity extends AppCompatActivity implements Callback {
                             } catch (Exception e) {
                                 Timber.e(e);
                             }
-                        }
-                    }else { */
+                        } */
+                    }else {
                         ToastHelper.showBroadcastData(TagsActivity.this, mStateView, broadcastData);
-                   // }
+                    }
                 }
         }
     };

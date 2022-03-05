@@ -52,10 +52,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
-import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.broadcast.Callback;
+//import apincer.android.mmate.broadcast.BroadcastHelper;
+//import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.epoxy.AudioTagController;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
@@ -93,7 +94,7 @@ import timber.log.Timber;
 /**
  * Created by Administrator on 11/23/17.
  */
-public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener, Callback {
+public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener { //}, Callback {
     private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=20; //start scrolling from 5 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
@@ -132,7 +133,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private SearchCriteria searchCriteria;
     private boolean backFromEditor;
-    private BroadcastHelper broadcastHelper;
+   // private BroadcastHelper broadcastHelper;
 
     private void doDeleteMediaItems(List<AudioTag> itemsList) {
         String text = "Delete ";
@@ -181,7 +182,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             //prevent dhow now playing popup and fab as the same time
             return;
         }
-        if(BroadcastHelper.getPlayingSong()==null) return;
+        if(MusixMateApp.getPlayingSong()==null) return;
 
         runOnUiThread(new Runnable() {
             @Override
@@ -308,7 +309,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         initActivityTransitions();
         setContentView(R.layout.activity_browser);
         setUpEditorLauncher();
-        broadcastHelper = new BroadcastHelper(this);
+       // broadcastHelper = new BroadcastHelper(this);
 
         /*
         viewModelFactory = new ViewModelProvider.Factory() {
@@ -544,7 +545,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 	private boolean doPlayNextSong() {
 		//if(MusicListeningService.getInstance()==null) return false;
         //MusicListeningService.getInstance().playNextSong();
-        broadcastHelper.playNextSong(getApplicationContext());
+        MusixMateApp.playNextSong(getApplicationContext());
         return true;
 	}
 
@@ -667,7 +668,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        // if (MusicListeningService.getInstance() == null) return false;
        // AudioTag item = MusicListeningService.getInstance().getPlayingSong();
 
-        return scrollToSong(broadcastHelper.getPlayingSong());
+        return scrollToSong(MusixMateApp.getPlayingSong());
     }
     private boolean scrollToSong(AudioTag tag) {
         if (tag == null) return false;
@@ -702,7 +703,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     protected void onResume() {
         super.onResume();
 
-        broadcastHelper.onResume(this);
+        //broadcastHelper.onResume(this);
 
         if(!backFromEditor) {
             initMediaItemList(getIntent());
@@ -722,7 +723,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
 
      //   if(MusicListeningService.getInstance()!=null) {
-            AudioTag tag = broadcastHelper.getPlayingSong(); //MusicListeningService.getInstance().getPlayingSong();
+            AudioTag tag = MusixMateApp.getPlayingSong(); //MusicListeningService.getInstance().getPlayingSong();
             if(tag!=null) {
                 ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
                 ImageRequest request = new ImageRequest.Builder(getApplicationContext())
@@ -746,7 +747,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     @Override
     protected void onPause() {
         super.onPause();
-        broadcastHelper.onPause(this);
+        //broadcastHelper.onPause(this);
         // Unregister the listener when the application is paused
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
         //LocalBroadcastManager.getInstance(this).unregisterReceiver(playingReceiver);
@@ -906,8 +907,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        // AudioTag tag = service.getPlayingSong();
       //  text = "Song "+tag.getTitle() +"; BPS: "+tag.getAudioBitsPerSample() +" & SampleRate: "+tag.getAudioSampleRate();
       //  text = text+"\n Player: "+service.getPlayerName();
-        AudioTag tag = broadcastHelper.getPlayingSong();
-        MusicPlayerInfo playerInfo = broadcastHelper.getPlayerInfo();
+        AudioTag tag = MusixMateApp.getPlayingSong();
+        MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
 
         // file
         // player
@@ -1075,7 +1076,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doStopRefresh();
             doHideNowPlayingSong();
             updateHeaderPanel();
-            scrollToSong(selectedTag);
+            scrollToSong(MusixMateApp.getPlayingSong());
             if(epoxyController.getAdapter().getItemCount()==0) {
                mStateView.displayState("search");
             }else {
@@ -1178,16 +1179,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         public void onReceive(Context context, Intent intent) {
             BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
             if(broadcastData!=null) {
-              /*  if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
+                if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     AudioTag tag = broadcastData.getTagInfo();
-                    if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(tag))) {
+                    onPlaying(tag);
+                   /* if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(tag))) {
                         lastPlaying = tag;
                         epoxyController.notifyPlayingStatus();
                         selectedTag = null; //tag; // reset auto scroll to song
                         doShowNowPlayingSong(tag);
-                    }
-                   // }
-                }else { */
+                    }*/
+                }else {
                     ToastHelper.showBroadcastData(MediaBrowserActivity.this, fabPlayingAction, broadcastData);
                     if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
                         // refresh tag
@@ -1201,7 +1202,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             epoxyController.loadSource();
                         }
                     }, 2000);
-              //  }
+                }
             }
 /*
             int resultCode = intent.getIntExtra(Constants.KEY_RESULT_CODE, RESULT_CANCELED);
@@ -1311,7 +1312,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
             type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
             //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
-            player.setImageDrawable(broadcastHelper.getPlayerInfo().getPlayerIconDrawable());
+            player.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
                 @Override
                 public void onReady(AudioOutputHelper.Device device) {
@@ -1397,7 +1398,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         epoxyController.notifyModelChanged(position);
     }
 
-    @Override
     public void onPlaying(AudioTag song) {
         if(song!=null && !song.equals(lastPlaying)) {
        // if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
