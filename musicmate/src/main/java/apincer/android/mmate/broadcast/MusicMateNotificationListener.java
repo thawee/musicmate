@@ -9,7 +9,7 @@ import android.service.notification.StatusBarNotification;
 
 public class MusicMateNotificationListener extends NotificationListenerService {
      public static final String HIBY_MUSIC = "com.hiby.music";
-    String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
+    public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
     public MusicMateNotificationListener() {
         super();

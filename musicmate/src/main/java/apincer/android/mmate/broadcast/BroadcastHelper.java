@@ -17,7 +17,6 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
@@ -164,6 +163,10 @@ public class BroadcastHelper {
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
+        }else if (MusicMateNotificationListener.NE_PLAYER_LITE.equals(playerInfo.playerPackage)) {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
+            audioManager.dispatchMediaKeyEvent(event);
         }else if (Preferences.isUseMediaButtons(context)) {
             Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
             i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));
