@@ -375,7 +375,9 @@ public class AudioTagUtils {
 
     public static boolean isPCMHiRes(AudioTag tag) {
         // > 24/88
-        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
+        // JAS,  96kHz/24bit format or above
+        //https://www.jas-audio.or.jp/english/hi-res-logo-en
+        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_96));
     }
 
     public static boolean isPCMLossless(AudioTag tag) {
@@ -613,18 +615,105 @@ public class AudioTagUtils {
     }
 
     public static Bitmap getBitsPerSampleIcon(Context context,  AudioTag tag) {
-        int borderColor = context.getColor(R.color.grey400);
-        int textColor = context.getColor(R.color.black);
-        int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
-        Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
+        int width = 128;
+        int height = 96;
+       // int borderColor = context.getColor(R.color.grey400);
+      //  int textColor = context.getColor(R.color.black);
+        int whiteColor = context.getColor(R.color.white);
+        int blackColor = context.getColor(R.color.black);
+     //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        String bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
+        String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
+      //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
+      //  return icon;
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 2;
+        int cornerRadius = 4;
+        Rect bounds = new Rect(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
 
-        return icon;
+        // Initialize a new Round Rect object
+        // draw black box
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw top white box
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                (myCanvas.getHeight()/2) - 2 // Bottom
+        );
+       // int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        //.setStyle(Paint.Style.STROKE);
+        //paint.setStrokeWidth(borderWidth);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        //int letterTextSize = 20;
+        int letterTextSize = 28;
+        // int letterTextSize = 18;
+       // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+
+        // draw bit per , black color
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(bps, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 8f;
+        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
+        myCanvas.drawText(bps,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        // draw sampling rate, white color
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
+        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
+        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/4);
+        myCanvas.drawText(samplingRate,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        return myBitmap;
     }
 
     public static Bitmap getAudiophileIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.grey400);
         int textColor = context.getColor(R.color.black);
-        int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+       // int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        int qualityColor = context.getColor(R.color.audiophile_background);
         Bitmap icon = AudioTagUtils.createBitmapFromText(context, 128, 36, "Audiophile", textColor,borderColor, qualityColor);
 
         return icon;

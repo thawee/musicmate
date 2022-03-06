@@ -164,9 +164,16 @@ public class BroadcastHelper {
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
         }else if (MusicMateNotificationListener.NE_PLAYER_LITE.equals(playerInfo.playerPackage)) {
-            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+           /* AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
-            audioManager.dispatchMediaKeyEvent(event);
+            audioManager.dispatchMediaKeyEvent(event); */
+            Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
+            i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));
+            context.sendOrderedBroadcast(i, null);
+
+            i = new Intent(Intent.ACTION_MEDIA_BUTTON);
+            i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT));
+            context.sendOrderedBroadcast(i, null);
         }else if (Preferences.isUseMediaButtons(context)) {
             Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
             i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));

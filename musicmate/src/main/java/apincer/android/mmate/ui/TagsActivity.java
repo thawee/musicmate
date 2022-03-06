@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -42,8 +41,6 @@ import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
-//import apincer.android.mmate.broadcast.BroadcastHelper;
-//import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
@@ -60,9 +57,7 @@ import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.customspan.CustomClickableSpan;
 import cn.iwgang.simplifyspan.other.OnClickableSpanListener;
-import cn.iwgang.simplifyspan.other.SpecialGravity;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
-import cn.iwgang.simplifyspan.unit.SpecialLabelUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
@@ -70,6 +65,9 @@ import coil.request.ImageRequest;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
+
+//import apincer.android.mmate.broadcast.BroadcastHelper;
+//import apincer.android.mmate.broadcast.Callback;
 
 public class TagsActivity extends AppCompatActivity { //implements Callback {
     private static ArrayList<AudioTag> editItems = new ArrayList<>();
@@ -90,7 +88,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     private ImageView dsdView;
     private ImageView ico24bitView;
     private MaterialRatingBar ratingView;
-    private TextView qualityView;
+   // private TextView qualityView;
     private View coverArtLayout;
     private View panelLabels;
     private CollapsingToolbarLayout toolBarLayout;
@@ -260,7 +258,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         dsdView = findViewById(R.id.icon_dsd);
         ico24bitView = findViewById(R.id.icon_24bit);
         ratingView = findViewById(R.id.icon_rating);
-        qualityView = findViewById(R.id.icon_quality_text);
+       // qualityView = findViewById(R.id.icon_quality_text);
     }
 
     public void updateTitlePanel() {
@@ -270,25 +268,26 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
         dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
         mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
-       // audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+        audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
 
-        if(AudioTagUtils.is24Bits(displayTag)) {
+        if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
             ico24bitView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
             ico24bitView.setVisibility(View.VISIBLE);
         }else {
             ico24bitView.setVisibility(View.GONE);
         }
+        /*
         if(displayTag.isAudiophile()) {
-            audiophileView.setImageBitmap(AudioTagUtils.getAudiophileIcon(getApplicationContext(), displayTag));
+           // audiophileView.setImageBitmap(AudioTagUtils.getAudiophileIcon(getApplicationContext(), displayTag));
             audiophileView.setVisibility(View.VISIBLE);
         }else {
             audiophileView.setVisibility(View.GONE);
-        }
+        } */
 
         ratingView.setRating(displayTag.getRating());
         ratingView.setFocusable(false);
-        qualityView.setText(AudioTagUtils.getTrackQuality(displayTag));
-        qualityView.setTextColor(AudioTagUtils.getResolutionColor(getApplicationContext(), displayTag));
+      //  qualityView.setText(AudioTagUtils.getTrackQuality(displayTag));
+       // qualityView.setTextColor(AudioTagUtils.getResolutionColor(getApplicationContext(), displayTag));
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
