@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.Constants.SRC_NONE;
+
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
@@ -65,9 +67,6 @@ import coil.request.ImageRequest;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
-
-//import apincer.android.mmate.broadcast.BroadcastHelper;
-//import apincer.android.mmate.broadcast.Callback;
 
 public class TagsActivity extends AppCompatActivity { //implements Callback {
     private static ArrayList<AudioTag> editItems = new ArrayList<>();
@@ -339,7 +338,8 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         String sid = displayTag.getStorageId();
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            mateInd = " *";
+            //mateInd = " *";
+            mateInd = " \u0394"; //delta symbol
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
@@ -462,7 +462,8 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                // .append(new SpecialLabelUnit(":Grouping"+StringUtils.ARTIST_SEP+"Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
                //  .append(new SpecialLabelUnit(":Grouping | Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
                // .append(new SpecialTextUnit("   |   ").setTextSize(14).useTextBold())
-                .append(new SpecialTextUnit("    \u20df    ").setTextSize(14).useTextBold())
+              //  .append(new SpecialTextUnit("    \u20df    ").setTextSize(14).useTextBold())
+                .append(new SpecialTextUnit("  \u00bb  ").setTextSize(14).useTextBold())
                // .append(StringUtils.ARTIST_SEP)
                // .append(new SpecialLabelUnit("Genre>", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
@@ -486,7 +487,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
         SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
         spannableEnc.append(new SpecialTextUnit("[ ",encColor).setTextSize(10));
-        if(!StringUtils.isEmpty(displayTag.getSource())) {
+        if((!StringUtils.isEmpty(displayTag.getSource())) && !SRC_NONE.equals(displayTag.getSource())) {
             spannableEnc.append(new SpecialTextUnit(displayTag.getSource(),encColor).setTextSize(10))
                     .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
         }

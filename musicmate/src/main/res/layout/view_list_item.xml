@@ -152,13 +152,13 @@
             android:scaleType="fitXY"/>
         <ImageView
             android:id="@+id/item_audiophile_label"
-            android:layout_width="24dp"
-            android:layout_height="@dimen/dimen_12_dp"
-            android:layout_marginLeft="@dimen/dimen_2_dp"
+            android:layout_width="16dp"
+            android:layout_height="@dimen/dimen_8_dp"
+            android:layout_marginLeft="@dimen/dimen_4_dp"
             android:layout_marginBottom="@dimen/dimen_4_dp"
             android:layout_gravity="bottom|left"
-            app:tint="@color/audiophile"
-            android:scaleType="fitCenter"
+            app:tint="@color/audiophile_background"
+            android:scaleType="fitXY"
             android:src="@drawable/ic_audiophile"/>
         <!--
         <com.skydoves.androidribbon.RibbonView

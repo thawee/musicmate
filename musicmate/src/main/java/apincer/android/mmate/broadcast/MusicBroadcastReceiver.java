@@ -1,5 +1,8 @@
 package apincer.android.mmate.broadcast;
 
+import static apincer.android.mmate.broadcast.MusicMateNotificationListener.HIBY_MUSIC;
+import static apincer.android.mmate.broadcast.MusicMateNotificationListener.NE_PLAYER_LITE;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -105,7 +108,13 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         }else {
             playerPackage = intent.getStringExtra(INTENT_KEY_PACKAGE);
             String playerName = intent.getStringExtra(INTENT_KEY_PLAYER);
-            if(PLAYER_NAME_FOOBAR2000.equalsIgnoreCase(playerName)) {
+            if(NE_PLAYER_LITE.equalsIgnoreCase(playerName)) {
+                playerPackage = playerName;
+                playerName = null;
+            }else if(HIBY_MUSIC.equalsIgnoreCase(playerName)) {
+                playerPackage = playerName;
+                playerName = null;
+            }else if(PLAYER_NAME_FOOBAR2000.equalsIgnoreCase(playerName)) {
                 playerPackage = PACKAGE_FOOBAR2000;
             }else if(PACKAGE_POWERAMP.equals(intent.getStringExtra(INTENT_KEY_SCROBBLING_SOURCE))) {
                 playerPackage = PACKAGE_POWERAMP;

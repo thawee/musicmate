@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.2.0-beta02', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '7.2.0-beta03', //'7.1.1', //''7.0.3',
         minSdk             : 31,
         targetSdk          : 31,
         compileSdk         : 32,
@@ -16,7 +16,7 @@ ext.versions = [
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.1.2',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.0.0-rc02',
+        aboutlibraries     : '10.0.0',
         //versionsCheck      : '0.42.0',
 ]
 
@@ -250,7 +250,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.0.0-alpha09" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.0.0-rc01" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]

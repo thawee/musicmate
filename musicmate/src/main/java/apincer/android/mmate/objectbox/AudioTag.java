@@ -437,7 +437,7 @@ public class AudioTag implements Cloneable , Parcelable {
     public boolean isDSD() {
         return audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD;
     }
-
+/*
     public boolean isDSD64() {
         return ( isDSD() && getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_DSD64);
     }
@@ -477,7 +477,7 @@ public class AudioTag implements Cloneable , Parcelable {
     public boolean isSDA() {
         return (isLossless() &&
          ((getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_44 && getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_SD)));
-    }
+    } */
 
     public boolean isMQA() {
         return mqa;

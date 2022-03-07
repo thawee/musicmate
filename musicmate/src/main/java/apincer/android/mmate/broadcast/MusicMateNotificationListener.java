@@ -61,6 +61,7 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     public void sendBroadcast(String pack, String title, String artist) {
         Intent intent = new Intent("apincer.android.mmate");
         intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PACKAGE, pack);
+        intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PLAYER, pack);
         intent.putExtra("track", title);
         intent.putExtra("artist", artist);
         sendBroadcast(intent);

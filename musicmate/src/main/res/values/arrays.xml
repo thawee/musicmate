@@ -90,7 +90,7 @@
         <item>Film</item>
         <item>Bossa Nova</item>
         <item>Ballad</item>
-        <item>Concertos</item>
+        <item>Classical, Concertos</item>
         <item>Jazz</item>
         <item>Jazz, Contemporary</item>
         <item>Jazz, Vocal</item>
@@ -99,7 +99,7 @@
         <item>Pop</item>
         <item>Pop, Dance</item>
         <item>Pop, Rock</item>
-        <item>Pop, Alternative</item>
+        <item>Pop, Rock, Alternative</item>
         <item>Pop, Indie</item>
         <item>Pop, Vocal</item>
         <item>Rock</item>
@@ -116,7 +116,7 @@
     </string-array>
     <string-array name="default_groupings">
         <item>Favorite</item>
-        <item>Relaxation</item>
+        <item>Lounge</item>
         <item>Classical</item>
         <item>Thai</item>
         <item>English</item>

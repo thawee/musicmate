@@ -9,7 +9,7 @@ import apincer.android.storage.StorageVolume;
 import apincer.android.mmate.Constants;
 
 public class StringUtils {
-    public static final String ARTIST_SEP = " -/- ";
+    public static final String ARTIST_SEP = " \u00bb "; //"" -/- ";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";

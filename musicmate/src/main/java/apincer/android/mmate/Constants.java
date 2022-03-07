@@ -10,7 +10,7 @@ import java.util.List;
 public final class Constants {
    // public static final long QUALITY_SAMPLING_RATE_DSD256 = 2822400; // 64*44.1 kHz
    // public static final long QUALITY_SAMPLING_RATE_DSD128 = 2822400; // 64*44.1 kHz
-    public static final long QUALITY_SAMPLING_RATE_DSD64 = 2822400; // 64*44.1 kHz
+   // public static final long QUALITY_SAMPLING_RATE_DSD64 = 2822400; // 64*44.1 kHz
     public static final String AUDIOPHILE = "Audiophile";
    // public static final String KEY_FILTER_TYPE = "KEY_FILTER_TYPE";
    // public static final String KEY_FILTER_VALUE = "KEY_FILTER_VALUE";
@@ -22,18 +22,17 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-
-    public static int QUALITY_SAMPLING_RATE_384 = 384000;
-    public static int QUALITY_SAMPLING_RATE_352 = 352000;
-    public static int QUALITY_SAMPLING_RATE_192 = 192000;
-    public static int QUALITY_SAMPLING_RATE_176 = 176000;
+   // public static int QUALITY_SAMPLING_RATE_384 = 384000;
+    //public static int QUALITY_SAMPLING_RATE_352 = 352000;
+    //public static int QUALITY_SAMPLING_RATE_192 = 192000;
+    //public static int QUALITY_SAMPLING_RATE_176 = 176000;
     public static int QUALITY_SAMPLING_RATE_96 = 96000;
-    public static int QUALITY_SAMPLING_RATE_88 = 88200;
+    //public static int QUALITY_SAMPLING_RATE_88 = 88200;
     public static int QUALITY_SAMPLING_RATE_48 = 48000;
     public static int QUALITY_SAMPLING_RATE_44 = 44100;
    // public static int QUALITY_SAMPLING_RATE_48_KHZ = 48;
     public static int QUALITY_BIT_DEPTH_HD = 24;
-    public static int QUALITY_BIT_DEPTH_SD = 16;
+   // public static int QUALITY_BIT_DEPTH_SD = 16;
     public static int QUALITY_BIT_DEPTH_DSD = 1;
     public static String FIELD_SEP = ";";
   //  public static final String HEADER_SEP = " :: ";
