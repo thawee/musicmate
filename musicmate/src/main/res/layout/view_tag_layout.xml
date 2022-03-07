@@ -155,7 +155,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center|bottom"
-                    android:padding="@dimen/dimen_4_dp"
+                    android:paddingTop="@dimen/dimen_2_dp"
+                    android:paddingRight="@dimen/dimen_4_dp"
+                    android:paddingLeft="@dimen/dimen_4_dp"
+                    android:paddingBottom="@dimen/dimen_8_dp"
                     android:layout_marginBottom="@dimen/dimen_2_dp"
                     android:background="@color/transparent"/>
                     <!--
@@ -249,12 +252,14 @@
             android:layout_marginStart="24dp"
             android:layout_marginEnd="45dp">
 
+            <!--
+             android:background="@drawable/selectable_link"
+            -->
             <TextView
                 android:id="@+id/panel_path"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:background="@drawable/selectable_link"
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:paddingTop="@dimen/dimen_1_dp"
                 android:textSize="10sp"

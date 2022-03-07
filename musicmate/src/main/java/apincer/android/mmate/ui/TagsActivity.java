@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.UnderlineSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -339,14 +341,17 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
             //mateInd = " *";
-            mateInd = " \u0394"; //delta symbol
+            mateInd = " (\u0394)"; //delta symbol
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
+        SpannableString content = new SpannableString(simplePath + mateInd);
+        content.setSpan(new UnderlineSpan(), 0, simplePath.length(), 0);
+        pathInfo.setText(content);
+        //pathInfo.setText(simplePath + mateInd);
 
-        pathInfo.setText(simplePath + mateInd);
        // int bgColor = getApplication().getColor(R.color.grey600);//Color.TRANSPARENT;
        // int textColor = getApplication().getColor(R.color.grey200);
        // int borderColor = getApplication().getColor(R.color.black_transparent_40);
@@ -362,20 +367,17 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_sd_card_16,0,0,0);
         }
 
-        pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
+       // pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
 
-        pathInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent resultIntent = new Intent();
-                if(criteria!=null) {
-                    criteria.setFilterType(Constants.FILTER_TYPE_PATH);
-                    criteria.setFilterText(displayTag.getPath());
-                    ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-                }
-                setResult(RESULT_OK, resultIntent);
-                finish();
+        pathInfo.setOnClickListener(view -> {
+            Intent resultIntent = new Intent();
+            if(criteria!=null) {
+                criteria.setFilterType(Constants.FILTER_TYPE_PATH);
+                criteria.setFilterText(displayTag.getPath());
+                ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
             }
+            setResult(RESULT_OK, resultIntent);
+            finish();
         });
 
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
