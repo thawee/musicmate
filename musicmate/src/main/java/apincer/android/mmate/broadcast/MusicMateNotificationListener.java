@@ -7,9 +7,14 @@ import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
+import apincer.android.mmate.utils.StringUtils;
+
 public class MusicMateNotificationListener extends NotificationListenerService {
      public static final String HIBY_MUSIC = "com.hiby.music";
     public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
+    private String prvPack;
+    private String prvTitle;
+    private String prvArtist;
 
     public MusicMateNotificationListener() {
         super();
@@ -59,12 +64,17 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     }
 
     public void sendBroadcast(String pack, String title, String artist) {
-        Intent intent = new Intent("apincer.android.mmate");
-        intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PACKAGE, pack);
-        intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PLAYER, pack);
-        intent.putExtra("track", title);
-        intent.putExtra("artist", artist);
-        sendBroadcast(intent);
+        if(!(StringUtils.compare(prvPack, pack) && StringUtils.compare(prvTitle, title) && StringUtils.compare(prvArtist, artist))) {
+            prvPack = pack;
+            prvTitle = title;
+            prvArtist = artist;
+            Intent intent = new Intent("apincer.android.mmate");
+            intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PACKAGE, pack);
+            intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PLAYER, pack);
+            intent.putExtra("track", title);
+            intent.putExtra("artist", artist);
+            sendBroadcast(intent);
+        }
     }
 
     @Override

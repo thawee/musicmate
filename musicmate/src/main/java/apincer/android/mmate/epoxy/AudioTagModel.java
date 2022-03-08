@@ -19,6 +19,7 @@ import com.airbnb.epoxy.EpoxyModelWithHolder;
 import com.airbnb.epoxy.OnModelClickListener;
 import com.airbnb.epoxy.OnModelLongClickListener;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
@@ -94,12 +95,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
          holder.rootView.setActivated(controller.isSelected(tag));
 
         // Background, when bound the first time
-        boolean isListening = false;
-        AudioTag listeningItem = null;
-       // if (MusicListeningService.getInstance() != null) {
-            listeningItem = BroadcastHelper.getPlayingSong(); // MusicListeningService.getInstance().getPlayingSong();
-            isListening = tag.equals(listeningItem);
-       // }
+        AudioTag listeningItem = MusixMateApp.getPlayingSong(); // MusicListeningService.getInstance().getPlayingSong();
+        boolean isListening = tag.equals(listeningItem);
 
         holder.rootView.setOnClickListener(clickListener);
         holder.rootView.setOnLongClickListener(longClickListener);

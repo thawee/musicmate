@@ -701,7 +701,7 @@ public class AudioTagUtils {
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
         mLetterTop = mLetterTop +(textMathRect.height() / 2f);
-        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/4);
+        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
         myCanvas.drawText(samplingRate,
                 bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
                 mLetterPaint);

@@ -155,7 +155,7 @@
             android:layout_width="16dp"
             android:layout_height="@dimen/dimen_8_dp"
             android:layout_marginLeft="@dimen/dimen_4_dp"
-            android:layout_marginBottom="@dimen/dimen_4_dp"
+            android:layout_marginBottom="6dp"
             android:layout_gravity="bottom|left"
             app:tint="@color/audiophile_background"
             android:scaleType="fitXY"

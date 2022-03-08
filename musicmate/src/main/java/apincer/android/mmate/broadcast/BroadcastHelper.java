@@ -167,13 +167,9 @@ public class BroadcastHelper {
            /* AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event); */
-            Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
-            i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));
-            context.sendOrderedBroadcast(i, null);
-
-            i = new Intent(Intent.ACTION_MEDIA_BUTTON);
-            i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT));
-            context.sendOrderedBroadcast(i, null);
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
+            audioManager.dispatchMediaKeyEvent(event);
         }else if (Preferences.isUseMediaButtons(context)) {
             Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
             i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));

@@ -271,19 +271,13 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
 
-        if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
+        //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
+        if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
             ico24bitView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
             ico24bitView.setVisibility(View.VISIBLE);
         }else {
             ico24bitView.setVisibility(View.GONE);
         }
-        /*
-        if(displayTag.isAudiophile()) {
-           // audiophileView.setImageBitmap(AudioTagUtils.getAudiophileIcon(getApplicationContext(), displayTag));
-            audiophileView.setVisibility(View.VISIBLE);
-        }else {
-            audiophileView.setVisibility(View.GONE);
-        } */
 
         ratingView.setRating(displayTag.getRating());
         ratingView.setFocusable(false);
@@ -341,7 +335,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
             //mateInd = " *";
-            mateInd = " (\u0394)"; //delta symbol
+            mateInd = "    \u0394"; //delta symbol
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
