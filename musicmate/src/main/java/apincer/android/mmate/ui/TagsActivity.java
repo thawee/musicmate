@@ -141,6 +141,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
 
     private TextView tagInfo;
     private TextView pathInfo;
+    private ImageView pathIcon;
     private SearchCriteria criteria;
 
     public List<AudioTag> getEditItems() {
@@ -253,6 +254,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
        // groupingView = findViewById(R.id.panel_grouping);
        // genreView = findViewById(R.id.panel_tag);
         pathInfo = findViewById(R.id.panel_path);
+        pathIcon = findViewById(R.id.panel_path_storage_icon);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
         mqaView = findViewById(R.id.icon_mqa);
@@ -268,8 +270,15 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
         dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
-        mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
+        //mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+        // MQA
+        if(displayTag.isMQA()) {
+            mqaView.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), displayTag));
+            mqaView.setVisibility(View.VISIBLE);
+        }else {
+            mqaView.setVisibility(View.GONE);
+        }
 
         //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
         if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
@@ -353,12 +362,14 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
            // Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,borderColor,bgColor);
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
         //    pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_memory_white_24dp),null,null,null);
-            pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_memory_16,0,0,0);
+           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_memory_16,0,0,0);
+            pathIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_round_memory_16));
         }else {
            // Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," SD ",textColor,borderColor,bgColor);
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_sd_storage_white_24dp),null,null,null);
-            pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_sd_card_16,0,0,0);
+           // pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_sd_card_16,0,0,0);
+            pathIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_round_sd_card_16));
         }
 
        // pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
@@ -490,7 +501,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
 
         spannableEnc.append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
-        String mqaSampleRate = "";
+      /*  String mqaSampleRate = "";
         if(displayTag.isMQA()) {
            // String mqaLabel = "MQA";
             String mqaRate = displayTag.getMQASampleRate();
@@ -503,11 +514,11 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             }
            // spannableEnc.append(new SpecialTextUnit(mqaLabel,encColor).setTextSize(10))
            //         .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
-        }
+        } */
         spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
+               // .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.getFormatedChannels(displayTag.getAudioChannels()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))

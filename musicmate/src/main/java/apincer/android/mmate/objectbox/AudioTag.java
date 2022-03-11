@@ -138,14 +138,6 @@ public class AudioTag implements Cloneable , Parcelable {
         this.rating = rating;
     }
 
-    public boolean isMqa() {
-        return mqa;
-    }
-
-    public void setMqa(boolean mqa) {
-        this.mqa = mqa;
-    }
-
     public boolean isMQAStudio() {
         return mqaStudio;
     }

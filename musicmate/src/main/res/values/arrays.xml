@@ -84,6 +84,23 @@
         <item>54sp</item>
     </array>
 
+    <string-array name="default_source">
+        <item>-</item>
+        <item>Joox</item>
+        <item>Qobuz</item>
+        <item>CD</item>
+        <item>SACD</item>
+        <item>VINYL</item>
+        <item>Apple</item>
+        <item>Spotify</item>
+        <item>Tidal</item>
+        <item>Youtube</item>
+        <item>2L</item>
+        <item>HDTracks</item>
+        <item>NativeDSD</item>
+        <item>Onkyo</item>
+    </string-array>
+
     <string-array name="default_genres">
         <item>Acoustic, Vocal</item>
         <item>Classical</item>
@@ -115,7 +132,6 @@
         <item>Luk Thung, Mor Lum</item>
     </string-array>
     <string-array name="default_groupings">
-        <item>Favorite</item>
         <item>Lounge</item>
         <item>Classical</item>
         <item>Thai</item>
