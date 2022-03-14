@@ -199,7 +199,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             //  int textColor = holder.getContext().getColor(R.color.black);
             //  int qualityColor = getSampleRateColor(holder.getContext());
 
-        if(tag.isMQA()){
+      /*  if(tag.isMQA()){
             Bitmap bmp = AudioTagUtils.getMQASampleRateIcon(holder.mContext,tag);
             if(bmp != null) {
                 holder.mBitrateView.setVisibility(View.VISIBLE);
@@ -207,7 +207,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             }else {
                 holder.mBitrateView.setVisibility(View.GONE);
             }
-        }else if(tag.isDSD()) {
+        }else*/
+        if(tag.isDSD()) {
                 holder.mBitrateView.setVisibility(View.VISIBLE);
                 //holder.mBitrateView.setImageBitmap(AudioTagUtils.getBitRateIcon(holder.mContext,tag));
             holder.mBitrateView.setImageBitmap(AudioTagUtils.getDSDSampleRateIcon(holder.mContext,tag));
@@ -218,7 +219,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             holder.mBitrateView.setImageBitmap(AudioTagUtils.getBitRateIcon(holder.mContext,tag));
         }else {
                 holder.mBitrateView.setVisibility(View.GONE);
-            }
+        }
 
             // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
             holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));

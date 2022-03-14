@@ -47,6 +47,7 @@ import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -987,8 +988,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
             editorLauncher.launch(myIntent);
            // startActivity(myIntent);
-        }else {
-            new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.AlertDialogTheme)
+       // }else {
+          /*  new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.AlertDialogTheme)
                     .setTitle("Problem")
                     .setMessage(getString(R.string.alert_invalid_media_file, mediaItem.getTitle()))
                     .setPositiveButton("GOT IT", (dialogInterface, i) -> {
@@ -997,11 +998,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                        // mLibraryAdapter.removeItem(position);
                         dialogInterface.dismiss();
                     })
-                    .show();
+                    .show(); */
+
+            //ToastHelper.showActionMessage(this,null, Constants.STATUS_FAIL,getString(R.string.alert_invalid_media_file, mediaItem.getTitle()));
+            //AudioFileRepository.getInstance(getApplication()).deleteMediaItem(mediaItem);
+            //epoxyController.loadSource();
         }
     }
 
-    private void doShowEditActivity(ArrayList<AudioTag> selections) {
+    private void doShowEditActivity(List<AudioTag> selections) {
         ArrayList<AudioTag> tagList = new ArrayList<>();
         for(AudioTag tag: selections) {
             if(AudioFileRepository.isMediaFileExist(tag)) {
@@ -1182,26 +1187,23 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     AudioTag tag = broadcastData.getTagInfo();
                     onPlaying(tag);
-                   /* if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(tag))) {
-                        lastPlaying = tag;
-                        epoxyController.notifyPlayingStatus();
-                        selectedTag = null; //tag; // reset auto scroll to song
-                        doShowNowPlayingSong(tag);
-                    }*/
                 }else {
                     ToastHelper.showBroadcastData(MediaBrowserActivity.this, fabPlayingAction, broadcastData);
                     if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
                         // refresh tag
                         epoxyController.notifyModelChanged(broadcastData.getTagInfo());
+                        //  }
+                        // re-load library
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                // this code will be executed after 1 seconds
+                                epoxyController.loadSource();
+                            }
+                        }, 1000);
+                    }else {
+                        epoxyController.notifyModelChanged(broadcastData.getTagInfo());
                     }
-                    // re-load library
-                    new Timer().schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            // this code will be executed after 2 seconds
-                            epoxyController.loadSource();
-                        }
-                    }, 2000);
                 }
             }
 /*
@@ -1279,7 +1281,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .build();
         fabLoader.enqueue(fabRequest);
 
-        if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
+     /*   if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
             if (nowPlayingView != null) {
                 nowPlayingView.setVisibility(View.GONE);
             }
@@ -1296,8 +1298,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     });
                     t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
                 }
-            }, 5000); // after 5 second (or 5000 miliseconds), the task will be active.
-        }else if(nowPlayingView!=null) {
+            } 5000); // after 5 second (or 5000 miliseconds), the task will be active.
+        }else */
+        if(nowPlayingView!=null) {
             TextView title = nowPlayingView.findViewById(R.id.title);
             title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), tag));
             TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
@@ -1309,8 +1312,24 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             ImageView output = nowPlayingView.findViewById(R.id.output);
             TextView outputText = nowPlayingView.findViewById(R.id.output_text);
             hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag) ? View.VISIBLE : View.GONE);
-            mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
-            type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+           // mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
+           // type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+            // MQA
+            if(tag.isMQA()) {
+                mqa.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
+                mqa.setVisibility(View.VISIBLE);
+            }else {
+                mqa.setVisibility(View.GONE);
+            }
+
+            //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
+            if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
+                type.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
+                type.setVisibility(View.VISIBLE);
+            }else {
+                type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+                type.setVisibility(View.VISIBLE);
+            }
             //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
             player.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
@@ -1336,9 +1355,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             t.schedule(new TimerTask() {
                 public void run() {
                     doHideNowPlayingSong();
+                    if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
+                        scrollToSong(tag);
+                        doShowEditActivity(tag);
+                    }else {
+                        //scrollToSong(tag);
+                        doShowNowPlayingSongFAB();
+                    }
                     t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
                 }
-            }, 20000); // after 20 second (or 20000 miliseconds), the task will be active.
+            }, 60000); // after 60 second (or 60000 milli-seconds), the task will be active.
         }else {
             doShowNowPlayingSongFAB();
         }
@@ -1359,7 +1385,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if (epoxyController.getSelectedItemCount() > 0) {
                 enableActionMode(epoxyController.getAudioTag(holder));
             } else {
-                doShowEditActivity(epoxyController.getAudioTag(holder));
+                doShowEditActivity(Arrays.asList(epoxyController.getAudioTag(holder)));
             }
         }
     }
@@ -1399,16 +1425,18 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void onPlaying(AudioTag song) {
-        if(song!=null && !song.equals(lastPlaying)) {
+        lastPlaying = song;
+        selectedTag = null;
+        if(song!=null) { // && !song.equals(lastPlaying)) {
        // if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
-            lastPlaying = song;
+           // lastPlaying = song;
             epoxyController.notifyPlayingStatus();
-            selectedTag = null; //tag; // reset auto scroll to song
+           // selectedTag = null; //tag; // reset auto scroll to song
             doShowNowPlayingSong(song);
-        }else {
+        }/*else {
             lastPlaying = song;
             selectedTag = null;
-        }
+        }*/
     }
 
     private class ActionModeCallback implements ActionMode.Callback {

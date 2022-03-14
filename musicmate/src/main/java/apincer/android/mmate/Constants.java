@@ -1,6 +1,10 @@
 package apincer.android.mmate;
 
+import android.content.Context;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -173,21 +177,25 @@ public final class Constants {
 
     // Source
     public static final String SRC_JOOX = "Joox";
- public static final String SRC_QOBUZ = "Qobuz";
- public static final String SRC_CD = "CD";
- public static final String SRC_SACD = "SACD";
-  public static final String SRC_VINYL = "VINYL";
- public static final String SRC_APPLE = "Apple";
- public static final String SRC_SPOTIFY = "Spotify";
- public static final String SRC_TIDAL = "Tidal";
- public static final String SRC_YOUTUBE = "Youtube";
-    public static final String SRC_2L = "2L";
-    public static final String SRC_HD_TRACKS = "HDTracks";
-    public static final String SRC_NATIVE_DSD = "NativeDSD";
+    public static final String SRC_QOBUZ = "Qobuz";
+    public static final String SRC_CD = "CD";
+    public static final String SRC_SACD = "SACD";
+    public static final String SRC_VINYL = "VINYL";
+    public static final String SRC_APPLE = "Apple";
+    public static final String SRC_SPOTIFY = "Spotify";
+    public static final String SRC_TIDAL = "Tidal";
+   // public static final String SRC_2L = "2L";
+   // public static final String SRC_HD_TRACKS = "HDTracks";
+   // public static final String SRC_NATIVE_DSD = "NativeDSD";
  public static final String SRC_NONE = "-";
 
- public static List<String> getSourceList() {
+ public static List<String> getSourceList(Context context) {
     List list = new ArrayList<>();
+     String[] srcs =  context.getResources().getStringArray(R.array.default_source);
+     Collections.sort(list);
+     list.add(SRC_NONE);
+     list.addAll(Arrays.asList(srcs));
+    /*
      list.add(SRC_2L);
      list.add(SRC_APPLE);
      list.add(SRC_CD);
@@ -200,7 +208,7 @@ public final class Constants {
     list.add(SRC_TIDAL);
    // list.add(SRC_YOUTUBE);
      list.add(SRC_VINYL);
-     list.add(SRC_NONE);
+     list.add(SRC_NONE); */
     return list;
  }
 }

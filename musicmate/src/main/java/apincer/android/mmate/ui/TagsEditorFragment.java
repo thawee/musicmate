@@ -389,18 +389,39 @@ public class TagsEditorFragment extends Fragment {
             mMediaSourceView = view.findViewById(R.id.media_source);
             IconSpinnerAdapter adapter = new IconSpinnerAdapter(mMediaSourceView);
             mMediaSourceItems = new ArrayList<>();
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_NONE, null));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_2L, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_CD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_HD_TRACKS, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_JOOX, ContextCompat.getDrawable(getContext(), R.drawable.icon_joox)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_NATIVE_DSD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_QOBUZ, ContextCompat.getDrawable(getContext(), R.drawable.icon_qobuz)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SACD, ContextCompat.getDrawable(getContext(), R.drawable.icon_sacd)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SPOTIFY, ContextCompat.getDrawable(getContext(), R.drawable.icon_spotify)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_TIDAL, ContextCompat.getDrawable(getContext(), R.drawable.icon_tidal)));
-            mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
+            List<String> srcs = Constants.getSourceList(getContext());
+            for(String src : srcs) {
+                if(src.equals(Constants.SRC_APPLE)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_itune)));
+                }else if(src.equals(Constants.SRC_CD)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_CD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
+                }else if(src.equals(Constants.SRC_JOOX)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_JOOX, ContextCompat.getDrawable(getContext(), R.drawable.icon_joox)));
+                }else if(src.equals(Constants.SRC_QOBUZ)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_QOBUZ, ContextCompat.getDrawable(getContext(), R.drawable.icon_qobuz)));
+                }else if(src.equals(Constants.SRC_SACD)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SACD, ContextCompat.getDrawable(getContext(), R.drawable.icon_sacd)));
+                }else if(src.equals(Constants.SRC_SPOTIFY)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SPOTIFY, ContextCompat.getDrawable(getContext(), R.drawable.icon_spotify)));
+                }else if(src.equals(Constants.SRC_TIDAL)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_TIDAL, ContextCompat.getDrawable(getContext(), R.drawable.icon_tidal)));
+                }else if(src.equals(Constants.SRC_VINYL)) {
+                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
+                }else {
+                    mMediaSourceItems.add(new IconSpinnerItem(src, null));
+                }
+               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_2L, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
+               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
+               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_CD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
+               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_HD_TRACKS, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
+              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_JOOX, ContextCompat.getDrawable(getContext(), R.drawable.icon_joox)));
+              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_NATIVE_DSD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
+              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_QOBUZ, ContextCompat.getDrawable(getContext(), R.drawable.icon_qobuz)));
+              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SACD, ContextCompat.getDrawable(getContext(), R.drawable.icon_sacd)));
+               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SPOTIFY, ContextCompat.getDrawable(getContext(), R.drawable.icon_spotify)));
+                //mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_TIDAL, ContextCompat.getDrawable(getContext(), R.drawable.icon_tidal)));
+               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
+            }
             adapter.setItems(mMediaSourceItems);
             mMediaSourceView.setSpinnerAdapter(adapter);
             mMediaSourceView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {

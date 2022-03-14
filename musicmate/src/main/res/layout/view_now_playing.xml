@@ -78,12 +78,6 @@
                 android:paddingBottom="@dimen/dimen_1_dp">
 
                 <ImageView
-                    android:id="@+id/file_type"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
-                    android:layout_margin="@dimen/dimen_1_dp" />
-
-                <ImageView
                     android:id="@+id/hires"
                     android:layout_width="@dimen/dimen_16_dp"
                     android:layout_height="@dimen/dimen_16_dp"
@@ -91,8 +85,14 @@
                     android:src="@drawable/ic_format_hires" />
 
                 <ImageView
+                    android:id="@+id/file_type"
+                    android:layout_width="@dimen/dimen_24_dp"
+                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_margin="@dimen/dimen_1_dp" />
+
+                <ImageView
                     android:id="@+id/mqa"
-                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_width="@dimen/dimen_24_dp"
                     android:layout_height="@dimen/dimen_16_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
                     android:src="@drawable/ic_format_mqa_white" />

@@ -457,7 +457,6 @@ public class AudioTagUtils {
     }
     public static Bitmap getSourceIcon(Context context, AudioTag item) {
         int borderColor = Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
-       // int textColor = context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
         String letter = item.getSource();
         if(StringUtils.isEmpty(letter)) {
@@ -480,16 +479,12 @@ public class AudioTagUtils {
             return createBitmapFromDrawable(context, size, size,R.drawable.icon_tidal,borderColor, qualityColor);
         }else  if(letter.equalsIgnoreCase(Constants.SRC_APPLE)) {
             return createBitmapFromDrawable(context, size, size,R.drawable.icon_itune,borderColor, qualityColor);
-        }else  if(letter.equalsIgnoreCase(Constants.SRC_YOUTUBE)) {
-            return createBitmapFromDrawable(context, size, size,R.drawable.icon_youtube,borderColor, qualityColor);
-       // }else  {
-       //     return createBitmapFromDrawable(context, size, size,R.drawable.icon_unkoown,borderColor, qualityColor);
-        }else  if(letter.equalsIgnoreCase(Constants.SRC_2L)) {
-            return createBitmapFromDrawable(context, size, size,R.drawable.ic_2l,borderColor, qualityColor);
-        }else  if(letter.equalsIgnoreCase(Constants.SRC_NATIVE_DSD)) {
-            return createBitmapFromDrawable(context, size, size,R.drawable.ic_2l,borderColor, qualityColor);
-        }else  if(letter.equalsIgnoreCase(Constants.SRC_HD_TRACKS)) {
-            return createBitmapFromDrawable(context, size, size,R.drawable.ic_2l,borderColor, qualityColor);
+        }else if(!Constants.SRC_NONE.equals(letter)) {
+            int width = 96;
+            int height = 32;
+            int whiteColor = Color.WHITE;
+            letter = StringUtils.getChars(letter,6);
+            return createButtonFromText (context, width, height, letter, whiteColor, borderColor,borderColor);
         }
         return null;
     }

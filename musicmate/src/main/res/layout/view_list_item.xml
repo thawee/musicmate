@@ -57,12 +57,12 @@
 
             <ImageView
                 android:id="@+id/item_src_icon"
-                android:layout_width="16dp"
+                android:layout_width="32dp"
                 android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:padding="1dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_graphic_eq_black_24dp" />
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_cd" />
 
             <ImageView
                 android:id="@+id/item_enc_icon"

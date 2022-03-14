@@ -109,6 +109,9 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             ApplicationUtils.setSearchCriteria(resultIntent,criteria);
             setResult(RESULT_OK, resultIntent);
         }
+        if(isEditing) {
+            // send event notif to list page
+        }
     }
 
     @Override

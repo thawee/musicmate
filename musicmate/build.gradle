@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt' // require for object box
 apply plugin: 'com.mikepenz.aboutlibraries.plugin'
 apply plugin: 'io.objectbox' // Apply last.
-
 //apply plugin: 'kotlin-kapt'
 
 android {
@@ -29,8 +29,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 46
-        versionName  "3.0.6 "+ versions.buildDate
+        versionCode 47
+        versionName  "3.0.7 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
