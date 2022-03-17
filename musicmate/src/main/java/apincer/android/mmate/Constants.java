@@ -26,7 +26,8 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-   // public static int QUALITY_SAMPLING_RATE_384 = 384000;
+
+    // public static int QUALITY_SAMPLING_RATE_384 = 384000;
     //public static int QUALITY_SAMPLING_RATE_352 = 352000;
     //public static int QUALITY_SAMPLING_RATE_192 = 192000;
     //public static int QUALITY_SAMPLING_RATE_176 = 176000;
@@ -184,6 +185,7 @@ public final class Constants {
     public static final String SRC_APPLE = "Apple";
     public static final String SRC_SPOTIFY = "Spotify";
     public static final String SRC_TIDAL = "Tidal";
+    public static final String SRC_YOUTUBE = "Youtube";
    // public static final String SRC_2L = "2L";
    // public static final String SRC_HD_TRACKS = "HDTracks";
    // public static final String SRC_NATIVE_DSD = "NativeDSD";
@@ -192,9 +194,9 @@ public final class Constants {
  public static List<String> getSourceList(Context context) {
     List list = new ArrayList<>();
      String[] srcs =  context.getResources().getStringArray(R.array.default_source);
-     Collections.sort(list);
-     list.add(SRC_NONE);
      list.addAll(Arrays.asList(srcs));
+     Collections.sort(list);
+
     /*
      list.add(SRC_2L);
      list.add(SRC_APPLE);

@@ -187,13 +187,15 @@
 							   android:text="" />
 
 					   </sakout.mehdi.StateViews.StateView>
+
+
 				   <LinearLayout
 					   android:id="@+id/now_playing_panel"
 					   android:layout_width="match_parent"
 					   android:layout_height="wrap_content"
 					   android:gravity="bottom|center_horizontal"
 					   android:layout_alignParentBottom="true"
-					   android:layout_marginBottom="@dimen/dimen_96_dp">
+					   android:layout_marginBottom="@dimen/dimen_64_dp">
 					   <include layout="@layout/view_now_playing"/>
 				   </LinearLayout>
    			</RelativeLayout>
@@ -291,6 +293,7 @@
 		android:visibility="gone"
 		/>
 -->
+	<!--
 	<com.google.android.material.floatingactionbutton.FloatingActionButton
 		android:id="@+id/fab_playing"
 		android:layout_width="wrap_content"
@@ -302,7 +305,18 @@
 		app:tint="@null"
 		android:visibility="gone"
 		app:backgroundTint="@color/grey200_transparent"
-		/>
+		/> -->
+	<!--
+	<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+		android:id="@+id/fab_now_playing"
+		android:layout_width="@dimen/dimen_256_dp"
+		android:layout_height="wrap_content"
+		android:lines="2"
+		app:layout_anchor="@id/bottom_app_bar"
+		app:maxImageSize="@dimen/dimen_48_dp"
+		app:tint="@null"
+		android:visibility="gone"
+		/> -->
 
 	<!--
 

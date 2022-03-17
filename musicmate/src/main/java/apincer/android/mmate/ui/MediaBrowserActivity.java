@@ -37,7 +37,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.epoxy.EpoxyViewHolder;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
@@ -56,8 +55,8 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
-//import apincer.android.mmate.broadcast.BroadcastHelper;
-//import apincer.android.mmate.broadcast.Callback;
+import apincer.android.mmate.broadcast.AudioTagEditEvent;
+import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.epoxy.AudioTagController;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
@@ -65,8 +64,6 @@ import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.broadcast.AudioTagEditEvent;
-import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
@@ -95,7 +92,7 @@ import timber.log.Timber;
 /**
  * Created by Administrator on 11/23/17.
  */
-public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener { //}, Callback {
+public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
     private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=20; //start scrolling from 5 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
@@ -103,7 +100,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     ActivityResultLauncher<Intent> editorLauncher;
 
-	private FloatingActionButton fabPlayingAction;
+	//private FloatingActionButton fabPlayingAction;
+   // private ExtendedFloatingActionButton fabPlayingAction;
     private BottomAppBar bottomAppBar;
 
     private ResideMenu mResideMenu;
@@ -119,6 +117,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private RefreshLayout refreshLayout;
     private StateView mStateView;
     private View nowPlayingView;
+    private ImageView nowPlayingCoverArt;
+    private TextView nowPlayingTitle;
+   // private TextView nowPlayingSubtitle;
+    private ImageView nowPlayingType;
+    private ImageView nowPlayingPlayer;
+    private ImageView nowPlayingOutput;
+    private TextView nowPlayingOutputName;
 
     // header panel
     TabLayout headerTab;
@@ -178,36 +183,111 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         dlg.show();
     }
 	
-	private void doShowNowPlayingSongFAB() {
-        if(nowPlayingView.getVisibility() == View.VISIBLE) {
-            //prevent dhow now playing popup and fab as the same time
+	private void doShowNowPlayingSongFAB(AudioTag song) {
+        ///  if(nowPlayingView.getVisibility() == View.VISIBLE) {
+        //prevent show now playing popup and fab as the same time
+        //     return;
+        //  }
+        // if(MusixMateApp.getPlayingSong()==
+        if (song == null) {
+            song = MusixMateApp.getPlayingSong();
+        }
+
+        if (song == null || nowPlayingView == null) {
+            doHideNowPlayingSongFAB();
             return;
         }
-        if(MusixMateApp.getPlayingSong()==null) return;
+          /*  ImageLoader fabLoader = Coil.imageLoader(getApplicationContext());
+            ImageRequest fabRequest = new ImageRequest.Builder(getApplicationContext())
+                    .data(EmbedCoverArtProvider.getUriForMediaItem(song))
+                    .crossfade(false)
+                    .allowHardware(false)
+                    .transformations(new CircleCropTransformation())
+                    .target(fabPlayingAction)
+                    .build();
+            fabLoader.enqueue(fabRequest); */
+            ImageLoader fabLoader = Coil.imageLoader(this);
+            ImageRequest fabRequest = new ImageRequest.Builder(this)
+                    .data(EmbedCoverArtProvider.getUriForMediaItem(song))
+                    .size(256,256)
+                    .crossfade(false)
+                    .allowHardware(false)
+                    .transformations(new CircleCropTransformation())
+                    .target(nowPlayingCoverArt)
+                    .build();
+            fabLoader.enqueue(fabRequest);
+        //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ViewCompat.animate(fabPlayingAction)
-                        .scaleX(1f).scaleY(1f)
-                        .alpha(1f).setDuration(250)
-                        .setStartDelay(200L)
-                        .setListener(new ViewPropertyAnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationStart(View view) {
-                                view.setVisibility(View.VISIBLE);
-                            }
-                        })
-                        .start();
+        //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
+            nowPlayingTitle.setText(song.getTitle());
+            if(song.isMQA()) {
+                nowPlayingType.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), song));
+                nowPlayingType.setVisibility(View.VISIBLE);
+            }else if(song.isLossless() || AudioTagUtils.isDSD(song)) {
+                nowPlayingType.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), song));
+                nowPlayingType.setVisibility(View.VISIBLE);
+            }else {
+                nowPlayingType.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), song));
+                nowPlayingType.setVisibility(View.VISIBLE);
             }
-        });
+            //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
+            nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+            AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
+                @Override
+                public void onReady(AudioOutputHelper.Device device) {
+                    nowPlayingOutput.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+                    nowPlayingOutputName.setText(device.getName());
+                }
+            });
+           // fabPlayingAction.setText(song.getTitle()+"\n"+AudioTagUtils.getFormattedSubtitle(song));
+            //fabPlayingAction.setIconPadding(12);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                  /*  ViewCompat.animate(fabPlayingAction)
+                            .scaleX(1f).scaleY(1f)
+                            .alpha(1f).setDuration(250)
+                            .setStartDelay(200L)
+                            .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationStart(View view) {
+                                    view.setVisibility(View.VISIBLE);
+                                }
+                            })
+                            .start(); */
+                    ViewCompat.animate(nowPlayingView)
+                            .scaleX(1f).scaleY(1f)
+                            .alpha(1f).setDuration(250)
+                            .setStartDelay(200L)
+                            .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationStart(View view) {
+                                    view.setVisibility(View.VISIBLE);
+                                }
+                            })
+                            .start();
+                }
+            });
+
     }
 	
 	private void doHideNowPlayingSongFAB() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ViewCompat.animate(fabPlayingAction)
+              /*  ViewCompat.animate(fabPlayingAction)
+                        .scaleX(0f).scaleY(0f)
+                        .alpha(0f).setDuration(100)
+                        .setStartDelay(10L)
+                        .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(View view) {
+                                view.setVisibility(View.GONE);
+                            }
+                        })
+                        .start(); */
+                ViewCompat.animate(nowPlayingView)
                         .scaleX(0f).scaleY(0f)
                         .alpha(0f).setDuration(100)
                         .setStartDelay(10L)
@@ -346,7 +426,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void setUpNowPlayingView() {
-        nowPlayingView = findViewById(R.id.now_playing_panel);
+       /* nowPlayingView = findViewById(R.id.now_playing_panel);
         nowPlayingView.setVisibility(View.GONE);
         nowPlayingView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -354,11 +434,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 scrollToListening();
                 doHideNowPlayingSong();
             }
-        });
+        }); */
     }
 
     private void doHideNowPlayingSong() {
-        runOnUiThread(new Runnable() {
+       /* runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 ViewCompat.animate(nowPlayingView)
@@ -369,12 +449,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             @Override
                             public void onAnimationEnd(View view) {
                                 view.setVisibility(View.GONE);
-                                doShowNowPlayingSongFAB();
+                               // doShowNowPlayingSongFAB();
                             }
                         })
                         .start();
             }
-        });
+        }); */
     }
 
     private void setUpEditorLauncher() {
@@ -521,10 +601,22 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         });
         rightMenu.setOnClickListener(v -> doShowRightMenus());
          // FAB
-        fabPlayingAction = findViewById(R.id.fab_playing);
+       /// fabPlayingAction = findViewById(R.id.fab_now_playing);
        // UIUtils.getTintedDrawable(fabPlayingAction.getDrawable(), getColor(R.color.now_playing));
-        fabPlayingAction.setOnClickListener(view1 -> scrollToListening());
-        fabPlayingAction.setOnLongClickListener(view1 -> doPlayNextSong());
+      ///  fabPlayingAction.setOnClickListener(view1 -> scrollToListening());
+      ///  fabPlayingAction.setOnLongClickListener(view1 -> doPlayNextSong());
+
+        // Now Playing
+        nowPlayingView = findViewById(R.id.now_playing_panel);
+        nowPlayingTitle = findViewById(R.id.now_playing_title);
+       // nowPlayingSubtitle = findViewById(R.id.now_playing_subtitle);
+        nowPlayingType = findViewById(R.id.now_playing_file_type);
+        nowPlayingPlayer = findViewById(R.id.now_playing_player);
+        nowPlayingOutput = findViewById(R.id.now_playing_output);
+        nowPlayingOutputName = findViewById(R.id.now_playing_output_name);
+        nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
+        nowPlayingView.setOnClickListener(view1 -> scrollToListening());
+        nowPlayingView.setOnLongClickListener(view1 -> doPlayNextSong());
     }
 
     private void doHideSearch() {
@@ -726,7 +818,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
      //   if(MusicListeningService.getInstance()!=null) {
             AudioTag tag = MusixMateApp.getPlayingSong(); //MusicListeningService.getInstance().getPlayingSong();
             if(tag!=null) {
-                ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+                /*ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
                 ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                         .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
                         .crossfade(false)
@@ -734,9 +826,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         .transformations(new CircleCropTransformation())
                         .target(fabPlayingAction)
                         .build();
-                imageLoader.enqueue(request);
-                doShowNowPlayingSongFAB();
-                doHideNowPlayingSong();
+                imageLoader.enqueue(request); */
+                doShowNowPlayingSongFAB(null);
+                //doHideNowPlayingSong();
             }
      //   }
 
@@ -1079,7 +1171,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         epoxyController = new AudioTagController(this, this);
         epoxyController.addModelBuildListener(result -> {
             doStopRefresh();
-            doHideNowPlayingSong();
+           // doHideNowPlayingSong();
             updateHeaderPanel();
             scrollToSong(MusixMateApp.getPlayingSong());
             if(epoxyController.getAdapter().getItemCount()==0) {
@@ -1118,7 +1210,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
                        // if(MusicListeningService.getInstance()!=null) {
-                        doShowNowPlayingSongFAB();
+                        doShowNowPlayingSongFAB(null);
                        // }
                     }else {
                         doHideNowPlayingSong();
@@ -1188,7 +1280,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     AudioTag tag = broadcastData.getTagInfo();
                     onPlaying(tag);
                 }else {
-                    ToastHelper.showBroadcastData(MediaBrowserActivity.this, fabPlayingAction, broadcastData);
+                  //  ToastHelper.showBroadcastData(MediaBrowserActivity.this, fabPlayingAction, broadcastData);
+                    ToastHelper.showBroadcastData(MediaBrowserActivity.this, null, broadcastData);
                     if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
                         // refresh tag
                         epoxyController.notifyModelChanged(broadcastData.getTagInfo());
@@ -1269,8 +1362,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     };
 
     private void doShowNowPlayingSong(AudioTag tag) {
-        doHideNowPlayingSongFAB();
-
+      //  doHideNowPlayingSongFAB();
+/*
         ImageLoader fabLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest fabRequest = new ImageRequest.Builder(getApplicationContext())
                 .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
@@ -1279,7 +1372,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .transformations(new CircleCropTransformation())
                 .target(fabPlayingAction)
                 .build();
-        fabLoader.enqueue(fabRequest);
+        fabLoader.enqueue(fabRequest); */
 
      /*   if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
             if (nowPlayingView != null) {
@@ -1300,81 +1393,118 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }
             } 5000); // after 5 second (or 5000 miliseconds), the task will be active.
         }else */
-        if(nowPlayingView!=null) {
-            TextView title = nowPlayingView.findViewById(R.id.title);
-            title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), tag));
-            TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
-            subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
-            ImageView type = nowPlayingView.findViewById(R.id.file_type);
-            ImageView hires = nowPlayingView.findViewById(R.id.hires);
-            ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
-            ImageView player = nowPlayingView.findViewById(R.id.player);
-            ImageView output = nowPlayingView.findViewById(R.id.output);
-            TextView outputText = nowPlayingView.findViewById(R.id.output_text);
-            hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag) ? View.VISIBLE : View.GONE);
-           // mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
-           // type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-            // MQA
-            if(tag.isMQA()) {
-                mqa.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
-                mqa.setVisibility(View.VISIBLE);
-            }else {
-                mqa.setVisibility(View.GONE);
-            }
-
-            //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
-            if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
-                type.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
-                type.setVisibility(View.VISIBLE);
-            }else {
-                type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-                type.setVisibility(View.VISIBLE);
-            }
-            //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
-            player.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
-            AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
+      //  if(nowPlayingView!=null) {
+            runOnUiThread(new Runnable() {
                 @Override
-                public void onReady(AudioOutputHelper.Device device) {
-                    output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
-                    outputText.setText(device.getName());
+                public void run() {
+                  /*  TextView title = nowPlayingView.findViewById(R.id.title);
+                    title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), tag));
+                    TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
+                    subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
+                    ImageView type = nowPlayingView.findViewById(R.id.file_type);
+                    ImageView hires = nowPlayingView.findViewById(R.id.hires);
+                    ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
+                    ImageView player = nowPlayingView.findViewById(R.id.player);
+                    ImageView output = nowPlayingView.findViewById(R.id.output);
+                    TextView outputText = nowPlayingView.findViewById(R.id.output_text);
+                    hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag) ? View.VISIBLE : View.GONE);
+                    // mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
+                    // type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+                    // MQA
+                    if(tag.isMQA()) {
+                        mqa.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
+                        mqa.setVisibility(View.VISIBLE);
+                    }else {
+                        mqa.setVisibility(View.GONE);
+                    }
+
+                    //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
+                    if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
+                        type.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
+                        type.setVisibility(View.VISIBLE);
+                    }else {
+                        type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+                        type.setVisibility(View.VISIBLE);
+                    }
+                    //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
+                    player.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+                    AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
+                        @Override
+                        public void onReady(AudioOutputHelper.Device device) {
+                            output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+                            outputText.setText(device.getName());
+                        }
+                    });
+                    ImageView cover = nowPlayingView.findViewById(R.id.coverart);
+                    ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+                    ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                            .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                            .crossfade(false)
+                            .allowHardware(false)
+                            .transformations(new CircleCropTransformation())
+                            .target(cover)
+                            .build();
+                    imageLoader.enqueue(request); */
+                    nowPlayingView.setVisibility(View.VISIBLE);
                 }
             });
-        ImageView cover = nowPlayingView.findViewById(R.id.coverart);
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                .crossfade(false)
-                .allowHardware(false)
-                .transformations(new CircleCropTransformation())
-                .target(cover)
-                .build();
-        imageLoader.enqueue(request);
-        nowPlayingView.setVisibility(View.VISIBLE);
 
+        if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
+            scrollToSong(tag);
             final Timer t = new Timer();
             t.schedule(new TimerTask() {
                 public void run() {
-                    doHideNowPlayingSong();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            doShowEditActivity(tag);
+                        }
+                    });
+                    t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
+                }
+            }, 5000); // after 5 second (or 5000 miliseconds), the task will be active.
+        }
+
+        /*
+            final Timer t = new Timer();
+            t.schedule(new TimerTask() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            doHideNowPlayingSong();
+                            epoxyController.notifyPlayingStatus();
+                        }
+                    });
+
                     if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
                         scrollToSong(tag);
                         doShowEditActivity(tag);
                     }else {
                         //scrollToSong(tag);
-                        doShowNowPlayingSongFAB();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                doShowNowPlayingSongFAB();
+                            }
+                        });
                     }
                     t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
                 }
-            }, 60000); // after 60 second (or 60000 milli-seconds), the task will be active.
-        }else {
+            }, 60000); // after 60 second (or 60000 milli-
+
+         */
+       /* }else {
             doShowNowPlayingSongFAB();
-        }
+        } */
     }
 
     private boolean isOnMyMusicCollection() {
-        if(epoxyController.getCriteria()!=null) {
+      /*  if(epoxyController.getCriteria()!=null) {
             return (epoxyController.getCriteria().getType() == SearchCriteria.TYPE.MY_SONGS) && (StringUtils.isEmpty(epoxyController.getCriteria().getKeyword()) || Constants.TITLE_ALL_SONGS.equals(epoxyController.getCriteria().getKeyword()));
         }
-        return false;
+        return false; */
+        return true;
     }
 
     @Override
@@ -1430,9 +1560,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(song!=null) { // && !song.equals(lastPlaying)) {
        // if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
            // lastPlaying = song;
-            epoxyController.notifyPlayingStatus();
+           // epoxyController.notifyPlayingStatus();
            // selectedTag = null; //tag; // reset auto scroll to song
-            doShowNowPlayingSong(song);
+            doShowNowPlayingSongFAB(song);
+          //  doShowNowPlayingSong(song);
         }/*else {
             lastPlaying = song;
             selectedTag = null;

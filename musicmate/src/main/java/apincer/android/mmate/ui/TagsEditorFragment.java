@@ -43,6 +43,7 @@ import com.skydoves.powerspinner.PowerSpinnerView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -390,7 +391,15 @@ public class TagsEditorFragment extends Fragment {
             IconSpinnerAdapter adapter = new IconSpinnerAdapter(mMediaSourceView);
             mMediaSourceItems = new ArrayList<>();
             List<String> srcs = Constants.getSourceList(getContext());
+           // Collections.sort(srcs);
             for(String src : srcs) {
+                int rescId = AudioTagUtils.getSourceRescId(src);
+                if(rescId == -1) {
+                    mMediaSourceItems.add(new IconSpinnerItem(src, null));
+                }else {
+                    mMediaSourceItems.add(new IconSpinnerItem(src, ContextCompat.getDrawable(getContext(), rescId)));
+                }
+                /*
                 if(src.equals(Constants.SRC_APPLE)) {
                     mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_itune)));
                 }else if(src.equals(Constants.SRC_CD)) {
@@ -409,7 +418,7 @@ public class TagsEditorFragment extends Fragment {
                     mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
                 }else {
                     mMediaSourceItems.add(new IconSpinnerItem(src, null));
-                }
+                } */
                // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_2L, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
                // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
                // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_CD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
@@ -422,6 +431,7 @@ public class TagsEditorFragment extends Fragment {
                 //mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_TIDAL, ContextCompat.getDrawable(getContext(), R.drawable.icon_tidal)));
                // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
             }
+           // mMediaSourceItems.add(0, new IconSpinnerItem(Constants.SRC_NONE, null));
             adapter.setItems(mMediaSourceItems);
             mMediaSourceView.setSpinnerAdapter(adapter);
             mMediaSourceView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {

@@ -455,6 +455,34 @@ public class AudioTagUtils {
 
         return icon;
     }
+
+    public static int getSourceRescId(String letter) {
+        //String letter = item.getSource();
+        if (StringUtils.isEmpty(letter)) {
+            letter = Constants.SRC_NONE;
+        }
+        if (letter.equalsIgnoreCase(Constants.SRC_JOOX)) {
+            return R.drawable.icon_joox;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_QOBUZ)) {
+            return R.drawable.icon_qobuz;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_CD)) {
+            return R.drawable.icon_cd;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_SACD)) {
+            return R.drawable.icon_sacd;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_VINYL)) {
+            return R.drawable.icon_vinyl;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_SPOTIFY)) {
+            return R.drawable.icon_spotify;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_TIDAL)) {
+            return R.drawable.icon_tidal;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_APPLE)) {
+            return R.drawable.icon_itune;
+        } else if (letter.equalsIgnoreCase(Constants.SRC_YOUTUBE)) {
+            return R.drawable.icon_youtube;
+        }
+
+        return -1;
+    }
     public static Bitmap getSourceIcon(Context context, AudioTag item) {
         int borderColor = Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
@@ -463,7 +491,20 @@ public class AudioTagUtils {
             letter = Constants.SRC_NONE;
         }
         int size =24;
-        if(letter.equalsIgnoreCase(Constants.SRC_JOOX)) {
+        int rescId = getSourceRescId(item.getSource());
+        if(Constants.SRC_NONE.equals(letter)) {
+           return null;
+        }else if(rescId ==-1) {
+            int width = 96;
+            int height = 32;
+            int whiteColor = Color.WHITE;
+            letter = StringUtils.getChars(letter,6);
+            return createButtonFromText (context, width, height, letter, whiteColor, borderColor,borderColor);
+        }else {
+            return createBitmapFromDrawable(context, size, size,rescId,borderColor, qualityColor);
+        }
+
+       /* if(letter.equalsIgnoreCase(Constants.SRC_JOOX)) {
             return createBitmapFromDrawable(context, size, size,R.drawable.icon_joox,borderColor, qualityColor);
         }else if(letter.equalsIgnoreCase(Constants.SRC_QOBUZ)) {
             return createBitmapFromDrawable(context, size, size,R.drawable.icon_qobuz,borderColor, qualityColor);
@@ -485,8 +526,8 @@ public class AudioTagUtils {
             int whiteColor = Color.WHITE;
             letter = StringUtils.getChars(letter,6);
             return createButtonFromText (context, width, height, letter, whiteColor, borderColor,borderColor);
-        }
-        return null;
+        } */
+        //return null;
     }
 
     public static Bitmap getFileFormatIcon(Context context, AudioTag tag) {

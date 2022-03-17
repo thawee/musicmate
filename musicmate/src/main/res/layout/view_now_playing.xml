@@ -1,41 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-<io.github.florent37.shapeofview.shapes.ArcView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="280dp"
-    android:layout_height="68dp"
-    android:elevation="4dp"
-    app:shape_arc_height="20dp"
-    app:shape_arc_position="left">
--->
-<!--
-<io.github.florent37.shapeofview.shapes.BubbleView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="320dp"
-        android:layout_height="110dp"
-        app:shape_bubble_arrowHeight="18dp"
-        app:shape_bubble_arrowWidth="24dp"
-        app:shape_bubble_arrowPosition="bottom"
-        app:shape_bubble_borderRadius="30dp"
-        app:arrow_posititon_percent="0.5">
-
-        android:layout_height="72dp">
--->
     <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="300dp"
-    android:layout_height="68dp">
+    android:layout_width="240dp"
+    android:layout_height="60dp">
     <RelativeLayout
+        android:id="@+id/now_playing_block"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:background="@drawable/shape_now_playing_background">
 
         <ImageView
-            android:id="@+id/coverart"
+            android:id="@+id/now_playing_coverart"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_centerVertical="true"
@@ -46,13 +23,14 @@
             android:layout_marginBottom="@dimen/dimen_2_dp" />
 
         <LinearLayout
-            android:id="@+id/icon_panel"
+            android:id="@+id/now_playing_icon_panel"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dimen_24_dp"
-            android:layout_centerInParent="true"
+            android:layout_height="@dimen/dimen_32_dp"
+            android:layout_alignParentBottom="true"
             android:layout_marginLeft="@dimen/dimen_1_dp"
-            android:layout_marginRight="@dimen/dimen_4_dp"
-            android:layout_toRightOf="@id/coverart"
+            android:layout_marginRight="@dimen/dimen_16_dp"
+            android:layout_marginBottom="@dimen/dimen_4_dp"
+            android:layout_toRightOf="@id/now_playing_coverart"
             android:gravity="center_vertical"
             android:orientation="vertical"
             android:paddingLeft="@dimen/dimen_1_dp"
@@ -66,65 +44,83 @@
             android:background="@color/grey400"
             android:layout_marginRight="@dimen/dimen_4_dp"/> -->
             <LinearLayout
-                android:layout_width="214dp"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
+                android:minWidth="@dimen/dimen_128_dp"
+                android:layout_gravity="left|center_vertical"
                 android:background="@drawable/shape_now_playing_icons_background"
-                android:gravity="center_vertical"
+                android:gravity="left|center_vertical"
                 android:orientation="horizontal"
-                android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingTop="@dimen/dimen_1_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:paddingBottom="@dimen/dimen_1_dp">
-
+                android:paddingRight="@dimen/dimen_4_dp"
+                android:paddingBottom="@dimen/dimen_1_dp"
+                >
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginLeft="@dimen/dimen_4_dp"
+                    android:layout_marginTop="@dimen/dimen_4_dp"
+                    android:layout_marginBottom="@dimen/dimen_4_dp"
+                    android:background="@drawable/shape_black_round_corner">
                 <ImageView
-                    android:id="@+id/hires"
-                    android:layout_width="@dimen/dimen_16_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
+                    android:id="@+id/now_playing_file_type"
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
-                    android:src="@drawable/ic_format_hires" />
+                    android:src="@drawable/ic_format_mqa_white"/>
+                </LinearLayout>
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:gravity="center_vertical"
+                    android:text=" » "/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginTop="@dimen/dimen_4_dp"
+                    android:layout_marginBottom="@dimen/dimen_4_dp"
+                    android:background="@drawable/shape_black_round_corner">
                 <ImageView
-                    android:id="@+id/file_type"
+                    android:id="@+id/now_playing_player"
                     android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
-                    android:layout_margin="@dimen/dimen_1_dp" />
-
-                <ImageView
-                    android:id="@+id/mqa"
-                    android:layout_width="@dimen/dimen_24_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
-                    android:layout_margin="@dimen/dimen_1_dp"
-                    android:src="@drawable/ic_format_mqa_white" />
-
-                <ImageView
-                    android:layout_width="@dimen/dimen_16_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
-                    android:layout_margin="@dimen/dimen_1_dp"
-                    android:src="@drawable/ic_baseline_keyboard_arrow_right_24" />
-
-                <ImageView
-                    android:id="@+id/player"
-                    android:layout_width="@dimen/dimen_16_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
                     android:src="@drawable/ic_play_arrow_black_24dp" />
+                </LinearLayout>
 
-                <ImageView
-                    android:layout_width="@dimen/dimen_16_dp"
-                    android:layout_height="@dimen/dimen_16_dp"
-                    android:layout_margin="@dimen/dimen_1_dp"
-                    android:src="@drawable/ic_baseline_keyboard_arrow_right_24" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/white"
+                    android:gravity="center_vertical"
+                    android:text=" » "/>
 
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginRight="@dimen/dimen_2_dp"
+                    android:layout_marginTop="@dimen/dimen_4_dp"
+                    android:layout_marginBottom="@dimen/dimen_4_dp"
+                    android:background="@drawable/shape_black_round_corner">
                 <ImageView
-                    android:id="@+id/output"
+                    android:id="@+id/now_playing_output"
                     android:layout_width="@dimen/dimen_16_dp"
                     android:layout_height="@dimen/dimen_16_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
                     android:src="@drawable/ic_baseline_volume_up_24" />
 
                 <TextView
-                    android:id="@+id/output_text"
+                    android:id="@+id/now_playing_output_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
@@ -135,6 +131,7 @@
                     android:text="Android SRC"
                     android:textColor="@color/grey300"
                     android:textSize="10sp" />
+                </LinearLayout>
             </LinearLayout>
             <!--
         <View
@@ -144,21 +141,22 @@
             android:layout_marginRight="@dimen/dimen_4_dp"/> -->
         </LinearLayout>
         <LinearLayout
-            android:id="@+id/title_panel"
+            android:id="@+id/now_playing_title_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_alignParentTop="true"
-            android:layout_toRightOf="@+id/coverart"
-            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:layout_toRightOf="@+id/now_playing_coverart"
+            android:layout_marginTop="@dimen/dimen_4_dp"
+            android:layout_marginBottom="@dimen/dimen_2_dp"
+            android:layout_marginRight="@dimen/dimen_12_dp"
             android:paddingRight="@dimen/dimen_8_dp">
             <TextView
-                android:id="@+id/title"
+                android:id="@+id/now_playing_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="@dimen/dimen_2_dp"
                 android:lines="1"
-                android:gravity="center_horizontal"
+                android:gravity="center"
                 android:text="Title"
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="@color/grey200"
@@ -166,33 +164,29 @@
                 android:ellipsize="end"
                 android:padding="@dimen/dimen_2_dp" />
         </LinearLayout>
+        <!--
         <LinearLayout
-            android:id="@+id/subtitle_panel"
+            android:id="@+id/now_playing_subtitle_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_alignParentBottom="true"
-            android:layout_below="@id/icon_panel"
-            android:layout_toRightOf="@+id/coverart"
+            android:layout_below="@id/now_playing_icon_panel"
+            android:layout_toRightOf="@+id/now_playing_coverart"
             android:layout_marginBottom="@dimen/dimen_2_dp"
+            android:layout_marginRight="@dimen/dimen_12_dp"
             android:paddingRight="@dimen/dimen_8_dp">
             <TextView
-                android:id="@+id/subtitle"
+                android:id="@+id/now_playing_subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingLeft="@dimen/dimen_2_dp"
-                android:gravity="center_horizontal"
-                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:gravity="left"
+                android:textSize="10sp"
                 android:lines="1"
                 android:text="Subtitle"
                 android:textColor="@color/grey200"
                 android:ellipsize="end"/>
-        </LinearLayout>
+        </LinearLayout> -->
     </RelativeLayout>
     </LinearLayout>
-    <!--
-</io.github.florent37.shapeofview.shapes.BubbleView>
-    -->
-<!--
-</io.github.florent37.shapeofview.shapes.ArcView>
--->
