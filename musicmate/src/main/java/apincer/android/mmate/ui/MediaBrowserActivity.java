@@ -117,6 +117,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private RefreshLayout refreshLayout;
     private StateView mStateView;
     private View nowPlayingView;
+    private View nowPlayingPanel;
     private ImageView nowPlayingCoverArt;
     private TextView nowPlayingTitle;
    // private TextView nowPlayingSubtitle;
@@ -216,6 +217,31 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .target(nowPlayingCoverArt)
                     .build();
             fabLoader.enqueue(fabRequest);
+            /*
+         fabRequest = new ImageRequest.Builder(this)
+                .data(EmbedCoverArtProvider.getUriForMediaItem(song))
+                //.size(256,256)
+                .crossfade(false)
+                .allowHardware(false)
+                .transformations(new BlurTransformation(getBaseContext()))
+                .target(new Target() {
+                    @Override
+                    public void onStart(@Nullable Drawable drawable) {
+
+                    }
+
+                    @Override
+                    public void onError(@Nullable Drawable drawable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(@NonNull Drawable drawable) {
+                        nowPlayingPanel.setBackground(drawable);
+                    }
+                })
+                .build();
+        fabLoader.enqueue(fabRequest); */
         //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
 
         //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
@@ -608,6 +634,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         // Now Playing
         nowPlayingView = findViewById(R.id.now_playing_panel);
+        nowPlayingPanel = findViewById(R.id.now_playing_block);
         nowPlayingTitle = findViewById(R.id.now_playing_title);
        // nowPlayingSubtitle = findViewById(R.id.now_playing_subtitle);
         nowPlayingType = findViewById(R.id.now_playing_file_type);
