@@ -1311,6 +1311,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(song!=null) {
             doShowNowPlayingSongFAB(song);
             if(Preferences.isOpenNowPlaying(getBaseContext())) {
+                scrollToSong(song);
                 if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
                     new Timer().schedule(new TimerTask() {
                         @Override
