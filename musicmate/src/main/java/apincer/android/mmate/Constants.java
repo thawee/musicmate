@@ -12,12 +12,7 @@ import java.util.List;
  */
 
 public final class Constants {
-   // public static final long QUALITY_SAMPLING_RATE_DSD256 = 2822400; // 64*44.1 kHz
-   // public static final long QUALITY_SAMPLING_RATE_DSD128 = 2822400; // 64*44.1 kHz
-   // public static final long QUALITY_SAMPLING_RATE_DSD64 = 2822400; // 64*44.1 kHz
     public static final String AUDIOPHILE = "Audiophile";
-   // public static final String KEY_FILTER_TYPE = "KEY_FILTER_TYPE";
-   // public static final String KEY_FILTER_VALUE = "KEY_FILTER_VALUE";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
@@ -26,28 +21,12 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-
-    // public static int QUALITY_SAMPLING_RATE_384 = 384000;
-    //public static int QUALITY_SAMPLING_RATE_352 = 352000;
-    //public static int QUALITY_SAMPLING_RATE_192 = 192000;
-    //public static int QUALITY_SAMPLING_RATE_176 = 176000;
     public static int QUALITY_SAMPLING_RATE_96 = 96000;
-    //public static int QUALITY_SAMPLING_RATE_88 = 88200;
     public static int QUALITY_SAMPLING_RATE_48 = 48000;
     public static int QUALITY_SAMPLING_RATE_44 = 44100;
-   // public static int QUALITY_SAMPLING_RATE_48_KHZ = 48;
     public static int QUALITY_BIT_DEPTH_HD = 24;
-   // public static int QUALITY_BIT_DEPTH_SD = 16;
     public static int QUALITY_BIT_DEPTH_DSD = 1;
     public static String FIELD_SEP = ";";
-  //  public static final String HEADER_SEP = " :: ";
- //public static final String HEADER_CNT_PREFIX = " (";
- //public static final String HEADER_CNT_SUFFIX = ")";
-
- /* public static double MIN_TITLE_ONLY = 0.80;
-    public static double MIN_TITLE = 0.70;
-    public static double MIN_ARTIST = 0.60;
-*/
    public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;
    public static double MIN_ARTIST = 0.70;
@@ -83,27 +62,27 @@ public final class Constants {
         RELATED_FILE_TYPES.add("md5");
     }
 
-    public static final String COMMAND_CLEAN_DB = "cleanDatabase";
-    public static String COMMAND_DELETE="delete";
-    public static String COMMAND_MOVE="move";
-    public static String COMMAND_SAVE="save";
-    public static String COMMAND_SCAN="scan";
-    public static String COMMAND_SCAN_FULL="scanFull";
+   // public static final String COMMAND_CLEAN_DB = "cleanDatabase";
+   // public static String COMMAND_DELETE="delete";
+   // public static String COMMAND_MOVE="move";
+   // public static String COMMAND_SAVE="save";
+   // public static String COMMAND_SCAN="scan";
+   // public static String COMMAND_SCAN_FULL="scanFull";
     public static String STATUS_SUCCESS="success";
     public static String STATUS_FAIL="fail";
-    public static String STATUS_START="start";
+  //  public static String STATUS_START="start";
     public static String KEY_SEARCH_TYPE="search_criteria_type";
     public static String KEY_SEARCH_KEYWORD="search_criteria_keyword";
     public static String KEY_FILTER_TYPE="search_filter_type";
     public static String KEY_FILTER_KEYWORD="search_filter_keyword";
    // public static String KEY_SEARCH_CRITERIA="search_criteria";
-    public static String KEY_COMMAND="command";
-    public static String KEY_STATUS="status";
-    public static String KEY_MESSAGE="message";
-    public static String KEY_SUCCESS_COUNT="successCount";
-    public static String KEY_PENDING_TOTAL="pendingTotal";
-    public static String KEY_ERROR_COUNT="errorCount";
-    public static String KEY_RESULT_CODE="resultCode";
+   // public static String KEY_COMMAND="command";
+   // public static String KEY_STATUS="status";
+   // public static String KEY_MESSAGE="message";
+   // public static String KEY_SUCCESS_COUNT="successCount";
+   // public static String KEY_PENDING_TOTAL="pendingTotal";
+   // public static String KEY_ERROR_COUNT="errorCount";
+   // public static String KEY_RESULT_CODE="resultCode";
     public static final String KEY_MEDIA_TAG = "mediaTAG";
   //  public static final String KEY_MEDIA_PRV_TAG ="mediaPRVTAG";
   //  public static final String KEY_MEDIA_TAG_LIST = "mediaTAGLIST";
@@ -197,20 +176,6 @@ public final class Constants {
      list.addAll(Arrays.asList(srcs));
      Collections.sort(list);
 
-    /*
-     list.add(SRC_2L);
-     list.add(SRC_APPLE);
-     list.add(SRC_CD);
-     list.add(SRC_HD_TRACKS);
-     list.add(SRC_JOOX);
-     list.add(SRC_NATIVE_DSD);
-    list.add(SRC_QOBUZ);
-     list.add(SRC_SACD);
-     list.add(SRC_SPOTIFY);
-    list.add(SRC_TIDAL);
-   // list.add(SRC_YOUTUBE);
-     list.add(SRC_VINYL);
-     list.add(SRC_NONE); */
     return list;
  }
 }

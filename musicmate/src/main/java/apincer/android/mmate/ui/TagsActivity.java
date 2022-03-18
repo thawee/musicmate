@@ -473,7 +473,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                //  .append(new SpecialLabelUnit(":Grouping | Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
                // .append(new SpecialTextUnit("   |   ").setTextSize(14).useTextBold())
               //  .append(new SpecialTextUnit("    \u20df    ").setTextSize(14).useTextBold())
-                .append(new SpecialTextUnit("  \u00bb  ").setTextSize(14).useTextBold())
+                .append(new SpecialTextUnit(" "+StringUtils.SEP_SUBTITLE+" ").setTextSize(14).useTextBold())
                // .append(StringUtils.ARTIST_SEP)
                // .append(new SpecialLabelUnit("Genre>", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
@@ -496,7 +496,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         // ENC info
         int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
         SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-        spannableEnc.append(new SpecialTextUnit("[ ",encColor).setTextSize(10));
+        spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor).setTextSize(10));
         if((!StringUtils.isEmpty(displayTag.getSource())) && !SRC_NONE.equals(displayTag.getSource())) {
             spannableEnc.append(new SpecialTextUnit(displayTag.getSource(),encColor).setTextSize(10))
                     .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
@@ -528,7 +528,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                 .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(),true),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(" ]",encColor).setTextSize(10));
+                .append(new SpecialTextUnit(StringUtils.SEP_RIGHT,encColor).setTextSize(10));
         encInfo.setText(spannableEnc.build());
     }
 

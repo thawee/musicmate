@@ -2,15 +2,8 @@ package apincer.android.mmate;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 
-import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import timber.log.Timber;
 
 public class Preferences {
     private static final String TAG = Preferences.class.getSimpleName();

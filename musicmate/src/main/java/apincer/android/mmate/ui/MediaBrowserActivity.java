@@ -100,8 +100,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     ActivityResultLauncher<Intent> editorLauncher;
 
-	//private FloatingActionButton fabPlayingAction;
-   // private ExtendedFloatingActionButton fabPlayingAction;
     private BottomAppBar bottomAppBar;
 
     private ResideMenu mResideMenu;
@@ -140,7 +138,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private SearchCriteria searchCriteria;
     private boolean backFromEditor;
-   // private BroadcastHelper broadcastHelper;
 
     private void doDeleteMediaItems(List<AudioTag> itemsList) {
         String text = "Delete ";
@@ -177,7 +174,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .setPositiveButton("Import", (dialogInterface, i) -> {
                     dialogInterface.dismiss();
                     ImportAudioFileWorker.startWorker(getApplicationContext(), itemsList);
-                   // MediaItemIntentService.startService(getApplicationContext(),Constants.COMMAND_MOVE,itemsList);
                     epoxyController.loadSource();
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss()).create();
@@ -189,7 +185,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         //prevent show now playing popup and fab as the same time
         //     return;
         //  }
-        // if(MusixMateApp.getPlayingSong()==
         if (song == null) {
             song = MusixMateApp.getPlayingSong();
         }
@@ -217,34 +212,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .target(nowPlayingCoverArt)
                     .build();
             fabLoader.enqueue(fabRequest);
-            /*
-         fabRequest = new ImageRequest.Builder(this)
-                .data(EmbedCoverArtProvider.getUriForMediaItem(song))
-                //.size(256,256)
-                .crossfade(false)
-                .allowHardware(false)
-                .transformations(new BlurTransformation(getBaseContext()))
-                .target(new Target() {
-                    @Override
-                    public void onStart(@Nullable Drawable drawable) {
 
-                    }
-
-                    @Override
-                    public void onError(@Nullable Drawable drawable) {
-
-                    }
-
-                    @Override
-                    public void onSuccess(@NonNull Drawable drawable) {
-                        nowPlayingPanel.setBackground(drawable);
-                    }
-                })
-                .build();
-        fabLoader.enqueue(fabRequest); */
         //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
 
-        //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
             nowPlayingTitle.setText(song.getTitle());
             if(song.isMQA()) {
                 nowPlayingType.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), song));
@@ -265,8 +235,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     nowPlayingOutputName.setText(device.getName());
                 }
             });
-           // fabPlayingAction.setText(song.getTitle()+"\n"+AudioTagUtils.getFormattedSubtitle(song));
-            //fabPlayingAction.setIconPadding(12);
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -328,25 +296,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         });
     }
 
-    /*
-    @Override
-    public final void onActivityResult(final int requestCode, final int resultCode, final Intent resultData) {
-        super.onActivityResult(requestCode, resultCode, resultData);
-        if (requestCode == MusicListeningService.REQUEST_CODE_STORAGE_PERMISSION) {
-            if (resultCode == Activity.RESULT_OK) {
-                // Get Uri from Storage Access Framework.
-                // Persist access permissions.
-                this.getContentResolver().takePersistableUriPermission(resultData.getData(), (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
-               // Preferences.setExternalURI(getApplicationContext(),resultData.getData().);
-                Uri uri = resultData.getData();
-                String rootPath = resultData.getExtras().getString("STORAGE_PATH");
-                //String rootPath = MediaFileRepository.getInstance(getApplication()).getExternalRootPath();
-                //String rootPath = uri.getPath();
-                setPersistableUriPermission(this, rootPath, uri);
-            }
-        }
-    } */
-
     private void doStartRefresh(SearchCriteria criteria) {
         if(criteria == null) {
             searchCriteria = epoxyController.getCriteria();
@@ -394,7 +343,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if (!mExitSnackbar.isShown()) {
             mExitSnackbar.show();
         } else {
-           // stopService(new Intent(getApplicationContext(),MusicListeningService.class));
             mExitSnackbar.dismiss();
             finishAndRemoveTask();
             System.exit(0);
@@ -416,21 +364,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         initActivityTransitions();
         setContentView(R.layout.activity_browser);
         setUpEditorLauncher();
-       // broadcastHelper = new BroadcastHelper(this);
-
-        /*
-        viewModelFactory = new ViewModelProvider.Factory() {
-            @NonNull
-            @Override
-            public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-                if (modelClass.equals(MediaItemViewModel.class)) {
-                    return (T) new MediaItemViewModel(AudioTagRepository.getInstance(getApplication()));
-                } else {
-                    return null;
-                }
-            }
-        }; */
-        setUpNowPlayingView();
         setUpPermissions();
         setUpHeaderPanel();
         setUpBottomAppBar();
@@ -439,48 +372,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         setUpResideMenus();
 
         initMediaItemList(getIntent());
-        // start foreground service
-      /*  try {
-            Intent serviceIntent = new Intent(this, MusicListeningService.class);
-            ContextCompat.startForegroundService(this, serviceIntent);
-        }catch (Exception ex) {
-            Timber.e(ex);
-        } */
         mExitSnackbar = Snackbar.make(this.mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
-    }
-
-    private void setUpNowPlayingView() {
-       /* nowPlayingView = findViewById(R.id.now_playing_panel);
-        nowPlayingView.setVisibility(View.GONE);
-        nowPlayingView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                scrollToListening();
-                doHideNowPlayingSong();
-            }
-        }); */
-    }
-
-    private void doHideNowPlayingSong() {
-       /* runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ViewCompat.animate(nowPlayingView)
-                        .scaleX(0f).scaleY(0f)
-                        .alpha(0f).setDuration(100)
-                        .setStartDelay(10L)
-                        .setListener(new ViewPropertyAnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(View view) {
-                                view.setVisibility(View.GONE);
-                               // doShowNowPlayingSongFAB();
-                            }
-                        })
-                        .start();
-            }
-        }); */
     }
 
     private void setUpEditorLauncher() {
@@ -644,6 +538,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
         nowPlayingView.setOnClickListener(view1 -> scrollToListening());
         nowPlayingView.setOnLongClickListener(view1 -> doPlayNextSong());
+        nowPlayingView.setVisibility(View.GONE);
     }
 
     private void doHideSearch() {
@@ -1143,45 +1038,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     }
         }
 
-            Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
+        Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
 
-       //     myIntent.putParcelableArrayListExtra(Constants.KEY_MEDIA_TAG_LIST, tagList);
-      //  ApplicationUtils.setSearchCriteria(myIntent,epoxyController.getCriteria()); //myIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, epoxyController.getCriteria());
-      //  editorLauncher.launch(myIntent);
         AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
         EventBus.getDefault().postSticky(message);
         editorLauncher.launch(myIntent);
-        //startActivity(myIntent);
     }
 
     private void doShowAboutApp() {
         Intent myIntent = new Intent(MediaBrowserActivity.this, AboutActivity.class);
-         startActivity(myIntent);
-/*
-        new LibsBuilder()
-                //provide a style (optional) (LIGHT, DARK, LIGHT_DARK_TOOLBAR)
-                //.withActivityStyle(Libs.ActivityStyle.LIGHT_DARK_TOOLBAR)
-                //start the activity
-                .withAboutAppName("Music Mate")
-                .withAboutIconShown(true)
-                .withAboutVersionShown(true)
-                .withAboutVersionShownCode(true)
-                .withAboutVersionShownName(true)
-                .withEdgeToEdge(false)
-                .withLicenseShown(false)
-               // .withAboutSpecial1("DEVELOPER")
-               // .withAboutSpecial1Description("<b>Thawee Prakaipetch</b><br /><br />E-Mail: thaweemail@gmail.com<br />")
-                .withAboutSpecial1("DIGITAL MUSIC")
-                .withAboutSpecial1Description(ApplicationUtils.getAssetsText(this,"digital_music.html"))
-               // .withAboutMinimalDesign(true)
-                .withLicenseDialog(true)
-                .withSearchEnabled(false)
-                .withSortEnabled(true)
-                //.withFields(R.string.class.getFields())
-                //.withAboutDescription("<b>by Thawee Prakaipetch</b><br /><br />Managing music collections on Android<br /><b>Enjoy Your Music :D</b>")
-                .withAboutDescription("<b>by Thawee Prakaipetch</b><br /><b>Enjoy Your Music :D</b>"+ApplicationUtils.getAssetsText(this,"digital_music.html"))
-                .withActivityTitle("About MusicMate")
-                .start(this); */
+        startActivity(myIntent);
     }
 
     private void setUpSwipeToRefresh() {
@@ -1198,7 +1064,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         epoxyController = new AudioTagController(this, this);
         epoxyController.addModelBuildListener(result -> {
             doStopRefresh();
-           // doHideNowPlayingSong();
             updateHeaderPanel();
             scrollToSong(MusixMateApp.getPlayingSong());
             if(epoxyController.getAdapter().getItemCount()==0) {
@@ -1236,11 +1101,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-                       // if(MusicListeningService.getInstance()!=null) {
                         doShowNowPlayingSongFAB(null);
-                       // }
                     }else {
-                        doHideNowPlayingSong();
 						doHideNowPlayingSongFAB();
                     }
                 }
@@ -1286,9 +1148,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }).setNormalTextColor(getColor(R.color.grey200)), new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10));
             }
             spannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
-                    .append(new SpecialLabelUnit(StringUtils.ARTIST_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                    .append(new SpecialLabelUnit(StringUtils.SEP_RIGHT, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                     .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold())
-                    .append(new SpecialLabelUnit(StringUtils.ARTIST_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                    .append(new SpecialLabelUnit(StringUtils.SEP_RIGHT, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                     .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
         }else {
             spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
@@ -1388,144 +1250,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     };
 
-    private void doShowNowPlayingSong(AudioTag tag) {
-      //  doHideNowPlayingSongFAB();
-/*
-        ImageLoader fabLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest fabRequest = new ImageRequest.Builder(getApplicationContext())
-                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                .crossfade(false)
-                .allowHardware(false)
-                .transformations(new CircleCropTransformation())
-                .target(fabPlayingAction)
-                .build();
-        fabLoader.enqueue(fabRequest); */
-
-     /*   if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
-            if (nowPlayingView != null) {
-                nowPlayingView.setVisibility(View.GONE);
-            }
-            scrollToSong(tag);
-            doShowNowPlayingSongFAB();
-            final Timer t = new Timer();
-            t.schedule(new TimerTask() {
-                public void run() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            doShowEditActivity(tag);
-                        }
-                    });
-                    t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
-                }
-            } 5000); // after 5 second (or 5000 miliseconds), the task will be active.
-        }else */
-      //  if(nowPlayingView!=null) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                  /*  TextView title = nowPlayingView.findViewById(R.id.title);
-                    title.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), tag));
-                    TextView subtitle = nowPlayingView.findViewById(R.id.subtitle);
-                    subtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
-                    ImageView type = nowPlayingView.findViewById(R.id.file_type);
-                    ImageView hires = nowPlayingView.findViewById(R.id.hires);
-                    ImageView mqa = nowPlayingView.findViewById(R.id.mqa);
-                    ImageView player = nowPlayingView.findViewById(R.id.player);
-                    ImageView output = nowPlayingView.findViewById(R.id.output);
-                    TextView outputText = nowPlayingView.findViewById(R.id.output_text);
-                    hires.setVisibility(AudioTagUtils.isHiResOrDSD(tag) ? View.VISIBLE : View.GONE);
-                    // mqa.setVisibility(tag.isMQA() ? View.VISIBLE : View.GONE);
-                    // type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-                    // MQA
-                    if(tag.isMQA()) {
-                        mqa.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
-                        mqa.setVisibility(View.VISIBLE);
-                    }else {
-                        mqa.setVisibility(View.GONE);
-                    }
-
-                    //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
-                    if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
-                        type.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
-                        type.setVisibility(View.VISIBLE);
-                    }else {
-                        type.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-                        type.setVisibility(View.VISIBLE);
-                    }
-                    //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
-                    player.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
-                    AudioOutputHelper.getOutputDevice(getApplicationContext(), new AudioOutputHelper.Callback() {
-                        @Override
-                        public void onReady(AudioOutputHelper.Device device) {
-                            output.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
-                            outputText.setText(device.getName());
-                        }
-                    });
-                    ImageView cover = nowPlayingView.findViewById(R.id.coverart);
-                    ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-                    ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                            .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                            .crossfade(false)
-                            .allowHardware(false)
-                            .transformations(new CircleCropTransformation())
-                            .target(cover)
-                            .build();
-                    imageLoader.enqueue(request); */
-                    nowPlayingView.setVisibility(View.VISIBLE);
-                }
-            });
-
-        if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
-            scrollToSong(tag);
-            final Timer t = new Timer();
-            t.schedule(new TimerTask() {
-                public void run() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            doShowEditActivity(tag);
-                        }
-                    });
-                    t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
-                }
-            }, 5000); // after 5 second (or 5000 miliseconds), the task will be active.
-        }
-
-        /*
-            final Timer t = new Timer();
-            t.schedule(new TimerTask() {
-                public void run() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            doHideNowPlayingSong();
-                            epoxyController.notifyPlayingStatus();
-                        }
-                    });
-
-                    if(Preferences.isOpenNowPlaying(getApplicationContext()) && isOnMyMusicCollection()) {
-                        scrollToSong(tag);
-                        doShowEditActivity(tag);
-                    }else {
-                        //scrollToSong(tag);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                doShowNowPlayingSongFAB();
-                            }
-                        });
-                    }
-                    t.cancel(); // also just top the timer thread, otherwise, you may receive a crash report
-                }
-            }, 60000); // after 60 second (or 60000 milli-
-
-         */
-       /* }else {
-            doShowNowPlayingSongFAB();
-        } */
-    }
-
     private boolean isOnMyMusicCollection() {
       /*  if(epoxyController.getCriteria()!=null) {
             return (epoxyController.getCriteria().getType() == SearchCriteria.TYPE.MY_SONGS) && (StringUtils.isEmpty(epoxyController.getCriteria().getKeyword()) || Constants.TITLE_ALL_SONGS.equals(epoxyController.getCriteria().getKeyword()));
@@ -1584,23 +1308,29 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     public void onPlaying(AudioTag song) {
         lastPlaying = song;
         selectedTag = null;
-        if(song!=null) { // && !song.equals(lastPlaying)) {
-       // if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
-           // lastPlaying = song;
-           // epoxyController.notifyPlayingStatus();
-           // selectedTag = null; //tag; // reset auto scroll to song
+        if(song!=null) {
             doShowNowPlayingSongFAB(song);
-          //  doShowNowPlayingSong(song);
-        }/*else {
-            lastPlaying = song;
-            selectedTag = null;
-        }*/
+            if(Preferences.isOpenNowPlaying(getBaseContext())) {
+                if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
+                    new Timer().schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    doShowEditActivity(song);
+                                }
+                            });
+                        }
+                    }, 5000); // 5 seconds
+                }
+            }
+        }
     }
 
     private class ActionModeCallback implements ActionMode.Callback {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-           // Tools.setSystemBarColor(MultiSelect.this, R.color.colorDarkBlue2);
             mode.getMenuInflater().inflate(R.menu.menu_context, menu);
             return true;
         }

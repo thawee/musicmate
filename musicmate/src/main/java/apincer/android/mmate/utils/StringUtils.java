@@ -9,7 +9,11 @@ import apincer.android.storage.StorageVolume;
 import apincer.android.mmate.Constants;
 
 public class StringUtils {
-    public static final String ARTIST_SEP = " \u00bb "; //"" -/- ";
+    //public static final String ARTIST_SEP = " \u00bb "; //"" -/- "; ·
+    public static final String SEP_SUBTITLE = " \u00b7 ";
+    public static final String SEP_TITLE = " \u00b7 ";
+    public static final String SEP_LEFT = " \u00ab ";
+    public static final String SEP_RIGHT = " \u00bb ";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";

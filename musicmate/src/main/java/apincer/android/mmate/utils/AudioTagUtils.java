@@ -412,8 +412,11 @@ public class AudioTagUtils {
             if(track.startsWith("0")) {
                 track = track.substring(1,track.length());
             }
+            if(track.indexOf("/")>0) {
+                track = track.substring(0,track.indexOf("/"));
+            }
             if(!StringUtils.isEmpty(track)) {
-                title = track + ". " + title;
+                title = track + StringUtils.SEP_TITLE + title;
             }
         }
         return title;
@@ -426,13 +429,13 @@ public class AudioTagUtils {
             artist = StringUtils.trimTitle(tag.getAlbumArtist());
         }
         if (StringUtils.isEmpty(album) && StringUtils.isEmpty(artist)) {
-            return StringUtils.UNKNOWN_CAP + StringUtils.ARTIST_SEP + StringUtils.UNKNOWN_CAP;
+            return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + StringUtils.UNKNOWN_CAP;
         } else if (StringUtils.isEmpty(album)) {
             return artist;
         } else if (StringUtils.isEmpty(artist)) {
-            return StringUtils.UNKNOWN_CAP + StringUtils.ARTIST_SEP + album;
+            return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + album;
         }
-        return StringUtils.truncate(artist, 40) + StringUtils.ARTIST_SEP + album;
+        return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
     }
 
     public static String getAlbumArtistOrArtist(AudioTag tag) {
