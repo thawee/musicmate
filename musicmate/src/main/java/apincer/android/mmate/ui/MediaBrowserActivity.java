@@ -1306,8 +1306,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void onPlaying(AudioTag song) {
-        lastPlaying = song;
-        selectedTag = null;
         if(song!=null) {
             doShowNowPlayingSongFAB(song);
             if(Preferences.isOpenNowPlaying(getBaseContext())) {
@@ -1323,10 +1321,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                                 }
                             });
                         }
-                    }, 5000); // 5 seconds
+                    }, 3000); // 3 seconds
                 }
             }
         }
+        lastPlaying = song;
+        selectedTag = null;
     }
 
     private class ActionModeCallback implements ActionMode.Callback {

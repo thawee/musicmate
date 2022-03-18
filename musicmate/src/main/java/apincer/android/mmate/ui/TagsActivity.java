@@ -268,8 +268,8 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     }
 
     public void updateTitlePanel() {
-        toolbar.setTitle(StringUtils.trimToEmpty(displayTag.getTitle()));
-        titleView.setText(StringUtils.trimToEmpty(displayTag.getTitle()));
+        toolbar.setTitle(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+        titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
         dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
@@ -346,8 +346,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         String sid = displayTag.getStorageId();
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            //mateInd = " *";
-            mateInd = "    \u0394"; //delta symbol
+            mateInd = " "+StringUtils.SYMBOL_ATTENTION;
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
@@ -499,11 +498,11 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor).setTextSize(10));
         if((!StringUtils.isEmpty(displayTag.getSource())) && !SRC_NONE.equals(displayTag.getSource())) {
             spannableEnc.append(new SpecialTextUnit(displayTag.getSource(),encColor).setTextSize(10))
-                    .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
+                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
         }
 
         spannableEnc.append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
       /*  String mqaSampleRate = "";
         if(displayTag.isMQA()) {
            // String mqaLabel = "MQA";
@@ -519,14 +518,14 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
            //         .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
         } */
         spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(" | ").setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))
                // .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
-                .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.getFormatedChannels(displayTag.getAudioChannels()),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(),true),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(" | ").setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SEP_RIGHT,encColor).setTextSize(10));
         encInfo.setText(spannableEnc.build());

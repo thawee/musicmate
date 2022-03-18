@@ -10,10 +10,12 @@ import apincer.android.mmate.Constants;
 
 public class StringUtils {
     //public static final String ARTIST_SEP = " \u00bb "; //"" -/- "; ·
-    public static final String SEP_SUBTITLE = " \u00b7 ";
-    public static final String SEP_TITLE = "\u00b7 ";
-    public static final String SEP_LEFT = " \u00ab ";
-    public static final String SEP_RIGHT = " \u00bb ";
+    public static final String SEP_SUBTITLE = " \u00b7 \u266C \u00b7 "; //"" \u2022\u266A\u2022 ";
+    public static final String SEP_TITLE = " \u25C8 "; //""\u266A "; //""\u00b7 ";
+    public static final String SEP_LEFT = " \u255E "; //"" \u00ab ";
+    public static final String SEP_RIGHT = " \u2561 "; //"" \u00bb ";
+    public static final String SYMBOL_ATTENTION = " \u266F ";
+    public static final String SYMBOL_ENC_SEP = " \u25C8 ";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";

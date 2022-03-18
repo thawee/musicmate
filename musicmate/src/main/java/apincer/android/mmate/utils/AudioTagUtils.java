@@ -406,7 +406,7 @@ public class AudioTagUtils {
     }
 
     public static String getFormattedTitle(Context context, AudioTag tag) {
-        String title = tag.getTitle();
+        String title =  StringUtils.trimToEmpty(tag.getTitle());
         if(Preferences.isShowTrackNumber(context)) {
             String track = StringUtils.trimToEmpty(tag.getTrack());
             if(track.startsWith("0")) {
