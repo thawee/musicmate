@@ -150,6 +150,7 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:scaleType="fitXY"/>
+        <!--
         <ImageView
             android:id="@+id/item_audiophile_label"
             android:layout_width="16dp"
@@ -159,7 +160,19 @@
             android:layout_gravity="bottom|left"
             app:tint="@color/audiophile_background"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_audiophile"/>
+            android:src="@drawable/ic_audiophile"/> -->
+        <TextView
+            android:id="@+id/item_audiophile_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            android:layout_marginRight="@dimen/dimen_8_dp"
+            android:layout_marginLeft="@dimen/dimen_8_dp"
+            android:layout_marginBottom="6dp"
+            android:text="\u222D"
+            android:textColor="@color/audiophile_background"
+            android:textStyle="bold|italic"
+            />
         <!--
         <com.skydoves.androidribbon.RibbonView
             android:id="@+id/item_audiophile_label"

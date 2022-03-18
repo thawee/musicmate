@@ -208,17 +208,18 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                 holder.mBitrateView.setVisibility(View.GONE);
             }
         }else*/
-        if(tag.isDSD()) {
+       /* if(tag.isDSD()) {
                 holder.mBitrateView.setVisibility(View.VISIBLE);
                 //holder.mBitrateView.setImageBitmap(AudioTagUtils.getBitRateIcon(holder.mContext,tag));
             holder.mBitrateView.setImageBitmap(AudioTagUtils.getDSDSampleRateIcon(holder.mContext,tag));
-        }else if(!tag.isLossless()) { // && !AudioTagUtils.isHiRes(tag)) { // && !(metadata.isMQA() || metadata.isPCMHiRes192() || metadata.isPCMHiRes88_96() || metadata.isPCMHiRes44())) {
+        }else */
+        if(!tag.isLossless() && !tag.isDSD()) { // && !AudioTagUtils.isHiRes(tag)) { // && !(metadata.isMQA() || metadata.isPCMHiRes192() || metadata.isPCMHiRes88_96() || metadata.isPCMHiRes44())) {
             holder.mBitrateView.setVisibility(View.VISIBLE);
             //holder.mBitrate.setText(StringUtils.getFormatedAudioBitRate(metadata.getAudioBitRate()));
             // holder.mBitrateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 120, 32, StringUtils.getFormatedAudioBitRate(metadata.getAudioBitRate()), textColor,borderColor, qualityColor));
             holder.mBitrateView.setImageBitmap(AudioTagUtils.getBitRateIcon(holder.mContext,tag));
         }else {
-                holder.mBitrateView.setVisibility(View.GONE);
+            holder.mBitrateView.setVisibility(View.GONE);
         }
 
             // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));

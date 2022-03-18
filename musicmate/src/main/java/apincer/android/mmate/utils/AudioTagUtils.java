@@ -661,7 +661,13 @@ public class AudioTagUtils {
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
      //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
-        String bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
+        String bps = "";
+        if(tag.isDSD()) {
+            int rateModulation = (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
+             bps = "DSD"+rateModulation;
+        }else {
+             bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
+        }
         String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
       //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
       //  return icon;
