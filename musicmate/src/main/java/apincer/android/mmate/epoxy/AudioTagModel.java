@@ -161,14 +161,14 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
         // show file type i.e. DxD, FLAC, ALAC, MP3
         Bitmap typeBitmap = AudioTagUtils.getFileFormatIcon(holder.mContext, tag);
-        if(typeBitmap != null) {
-            holder.mFileTypeView.setVisibility(View.VISIBLE);
-            holder.mFileTypeView.setImageBitmap(typeBitmap);
-        }else{
-            holder.mFileTypeView.setVisibility(View.GONE);
-        }
+        //if(typeBitmap != null) {
+        holder.mFileTypeView.setVisibility(View.VISIBLE);
+        holder.mFileTypeView.setImageBitmap(typeBitmap);
+        //}else{
+        //    holder.mFileTypeView.setVisibility(View.GONE);
+        //}
 
-        // show enc i.e. MQA
+        // show enc i.e. MQA, DSD
         Bitmap resBitmap = AudioTagUtils.getResIcon(holder.mContext, tag);
         if(resBitmap != null) {
             holder.mAudioENCView.setVisibility(View.VISIBLE);

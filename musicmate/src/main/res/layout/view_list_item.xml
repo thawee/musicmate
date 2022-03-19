@@ -86,24 +86,24 @@
                 android:src="@drawable/shape_bottom_background" />
 
             <ImageView
-                android:id="@+id/item_src_icon"
+                android:id="@+id/item_enc_icon"
                 android:layout_width="32dp"
-                android:layout_height="16dp"
+                android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:layout_toRightOf="@id/item_bitrate"
                 android:padding="1dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/icon_cd" />
-
-            <ImageView
-                android:id="@+id/item_enc_icon"
-                android:layout_width="28dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:layout_toRightOf="@id/item_src_icon"
-                android:padding="1dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/ic_format_mqa_white" />
+
+            <ImageView
+                android:id="@+id/item_src_icon"
+                android:layout_width="36dp"
+                android:layout_height="18dp"
+                android:layout_gravity="left|bottom"
+                android:layout_toRightOf="@id/item_enc_icon"
+                android:padding="1dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_cd" />
 
             <LinearLayout
                 android:layout_width="wrap_content"

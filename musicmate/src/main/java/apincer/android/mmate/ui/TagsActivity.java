@@ -86,7 +86,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     private ImageView audiophileView;
     private ImageView hiresView;
     private ImageView mqaView;
-    private ImageView dsdView;
+    //private ImageView dsdView;
     private ImageView ico24bitView;
     private MaterialRatingBar ratingView;
    // private TextView qualityView;
@@ -261,7 +261,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
         mqaView = findViewById(R.id.icon_mqa);
-        dsdView = findViewById(R.id.icon_dsd);
+        //dsdView = findViewById(R.id.icon_dsd);
         ico24bitView = findViewById(R.id.icon_24bit);
         ratingView = findViewById(R.id.icon_rating);
        // qualityView = findViewById(R.id.icon_quality_text);
@@ -272,7 +272,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
-        dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
+       // dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
         //mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         // MQA

@@ -21,7 +21,9 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
+
     public static int QUALITY_SAMPLING_RATE_96 = 96000;
+    public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static int QUALITY_SAMPLING_RATE_48 = 48000;
     public static int QUALITY_SAMPLING_RATE_44 = 44100;
     public static int QUALITY_BIT_DEPTH_HD = 24;

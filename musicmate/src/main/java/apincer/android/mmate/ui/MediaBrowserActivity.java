@@ -85,6 +85,7 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.CircleCropTransformation;
+import coil.transform.RoundedCornersTransformation;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
@@ -208,7 +209,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .size(256,256)
                     .crossfade(false)
                     .allowHardware(false)
-                    .transformations(new CircleCropTransformation())
+                    //.transformations(new CircleCropTransformation())
+                    .transformations(new RoundedCornersTransformation(86,86,86,86))
                     .target(nowPlayingCoverArt)
                     .build();
             fabLoader.enqueue(fabRequest);

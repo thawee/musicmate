@@ -316,7 +316,7 @@ public class AudioTagUtils {
         return icon; */
 
         // for DSD, MQA only
-
+/*
         int borderColor = Color.TRANSPARENT;
         int qualityColor = Color.TRANSPARENT;
         int size =24;
@@ -330,6 +330,11 @@ public class AudioTagUtils {
        //     return createBitmapFromDrawable(context, size, size,R.drawable.ic_format_mp3_black,borderColor, qualityColor);
        // }else {
        //     return createBitmapFromDrawable(context, size, size,R.drawable.ic_waves_white,borderColor, qualityColor);
+        } */
+        if(tag.isMQA() ) {
+            return getMQASamplingRateIcon(context, tag);
+        }else if (isDSD(tag)) {
+            return getBitsPerSampleIcon(context, tag);
         }
 
         return null;
@@ -377,7 +382,7 @@ public class AudioTagUtils {
         // > 24/88
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_96));
+        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
     }
 
     public static boolean isPCMLossless(AudioTag tag) {
@@ -487,7 +492,7 @@ public class AudioTagUtils {
         return -1;
     }
     public static Bitmap getSourceIcon(Context context, AudioTag item) {
-        int borderColor = Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
+        int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
         String letter = item.getSource();
         if(StringUtils.isEmpty(letter)) {
@@ -498,13 +503,13 @@ public class AudioTagUtils {
         if(Constants.SRC_NONE.equals(letter)) {
            return null;
         }else if(rescId ==-1) {
-            int width = 96;
-            int height = 32;
+            int width = 128;
+            int height = 48;
             int whiteColor = Color.WHITE;
-            letter = StringUtils.getChars(letter,6);
-            return createButtonFromText (context, width, height, letter, whiteColor, borderColor,borderColor);
+            letter = StringUtils.getChars(letter,8);
+            return createButtonFromText (context, width, height, letter, whiteColor, borderColor,qualityColor);
         }else {
-            return createBitmapFromDrawable(context, size, size,rescId,borderColor, qualityColor);
+            return createBitmapFromDrawable(context, size, size,rescId,qualityColor, qualityColor);
         }
 
        /* if(letter.equalsIgnoreCase(Constants.SRC_JOOX)) {
@@ -556,6 +561,7 @@ public class AudioTagUtils {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
+    /*
     public static Bitmap getMQASampleRateIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
@@ -568,7 +574,7 @@ public class AudioTagUtils {
         Bitmap icon = AudioTagUtils.createBitmapFromText(context, 120, 32, "M " +StringUtils.getFormatedAudioSampleRate(rate, true), textColor,borderColor, qualityColor);
 
         return icon;
-    }
+    } */
 
     public static long parseMQASampleRate(String mqaRate) {
         if(StringUtils.isDigitOnly(mqaRate)) {
@@ -576,7 +582,7 @@ public class AudioTagUtils {
         }
         return 0;
     }
-
+/*
     public static Bitmap getDSDSampleRateIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
@@ -586,7 +592,7 @@ public class AudioTagUtils {
         Bitmap icon = AudioTagUtils.createBitmapFromText(context, 120, 32, "DSD " +rateModulation, textColor,borderColor, qualityColor);
 
         return icon;
-    }
+    } */
 
     public static int getDSDSampleRateModulation(AudioTag tag) {
         return (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
@@ -715,9 +721,7 @@ public class AudioTagUtils {
         // Finally, draw the rectangle on the canvas
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
-        //int letterTextSize = 20;
-        int letterTextSize = 28;
-        // int letterTextSize = 18;
+        int letterTextSize = 30; //28;
        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
         Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
 
@@ -829,9 +833,7 @@ public class AudioTagUtils {
         // Finally, draw the rectangle on the canvas
         myCanvas.drawOval(rectangle, paint);
 
-        //int letterTextSize = 20;
-        int letterTextSize = 28;
-        // int letterTextSize = 18;
+        int letterTextSize = 30; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
         Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
 

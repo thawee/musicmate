@@ -860,7 +860,7 @@ public class AudioFileRepository {
 
             if(AudioTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
-                filename.append("-");
+                //filename.append("-");
                 filename.append(AudioTagUtils.getDSDSampleRateModulation(metadata));
             //}else if (metadata.isMQA()) {
             //    filename.append(Constants.MEDIA_PATH_MQA);
