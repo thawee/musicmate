@@ -43,7 +43,6 @@ import com.skydoves.powerspinner.PowerSpinnerView;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -68,8 +67,6 @@ import coil.target.Target;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import timber.log.Timber;
 
-//import dev.ronnie.github.imagepicker.ImagePicker;
-//import dev.ronnie.github.imagepicker.ImageResult;
 
 public class TagsEditorFragment extends Fragment {
     public static final int REQUEST_GET_CONTENT_IMAGE = 555;
