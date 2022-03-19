@@ -391,7 +391,8 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
 
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-                .allowHardware(false)
+               // .allowHardware(false)
+                .size(1024,1024)
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)

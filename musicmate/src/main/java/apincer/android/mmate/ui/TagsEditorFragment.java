@@ -587,7 +587,8 @@ public class TagsEditorFragment extends Fragment {
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-                .allowHardware(false)
+                    .size(640, 640)
+                //.allowHardware(false)
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)
                 .target(new Target() {

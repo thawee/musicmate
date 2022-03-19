@@ -87,7 +87,7 @@
 
             <ImageView
                 android:id="@+id/item_enc_icon"
-                android:layout_width="32dp"
+                android:layout_width="28dp"
                 android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:layout_toRightOf="@id/item_bitrate"
