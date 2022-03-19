@@ -9,13 +9,24 @@ import apincer.android.storage.StorageVolume;
 import apincer.android.mmate.Constants;
 
 public class StringUtils {
+    // ·  \u00b7
+    // ♪   \u266A
+    // ♬  \u266C
+    // ◈  \u25C8
+    // ╞  \u255E
+    // ╡  \u2561
+    // ♯  \u266F
+    // ◈  \u25C8
+    // ☾
+    // ☽
     //public static final String ARTIST_SEP = " \u00bb "; //"" -/- "; ·
-    public static final String SEP_SUBTITLE = " \u00b7 \u266C \u00b7 "; //"" \u2022\u266A\u2022 ";
-    public static final String SEP_TITLE = " \u25C8 "; //""\u266A "; //""\u00b7 ";
-    public static final String SEP_LEFT = " \u255E "; //"" \u00ab ";
-    public static final String SEP_RIGHT = " \u2561 "; //"" \u00bb ";
-    public static final String SYMBOL_ATTENTION = " \u266F ";
+    public static final String SEP_SUBTITLE = " \u266A\u266C "; //"" \u2022\u266A\u2022 ";
+    public static final String SEP_TITLE = "\u00b7 "; //""\u266A "; //""\u00b7 ";
+    public static final String SEP_LEFT = "\u263E "; //""\u00b7\u255E "; //"" \u00ab ";
+    public static final String SEP_RIGHT = " \u263D"; //"" \u2561\u00b7"; //"" \u00bb ";
+    public static final String SYMBOL_ATTENTION = " \u266F\u266F";
     public static final String SYMBOL_ENC_SEP = " \u25C8 ";
+    public static final String SYMBOL_HEADER_SEP = " \u25C8 ";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";
@@ -375,10 +386,10 @@ public class StringUtils {
         long d = milliseconds / unitms / 60 / 60 / 24;
         //String format = "%02d:%02d";
         String format = "%02d:%02d:%02d:%02d";
-        String formatDayUnit = "%2d days";
-        String formatHrsUnit = "%2d hrs";
-        String formatMinuteUnit = "%2d mins";
-        //String formatUnits = "%2d days, %2d hrs, %2d mins.";
+        String formatDayUnit = "%2d Days";
+        String formatHrsUnit = "%2d Hrs";
+        String formatMinuteUnit = "%2d Min";
+        //String formatUnits = "%2d days, %2d hrs, %2d Min.";
         String formatText = "";
 
         if(withUnit) {

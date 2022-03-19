@@ -852,16 +852,18 @@ public class AudioFileRepository {
             }
 
             String encSuffix = "";
-            if (AudioTagUtils.isPCMHiRes(metadata)) {
+            if (metadata.isMQA()) {
+                encSuffix="-MQA";
+            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
                 encSuffix="-HRA";
             }
 
             if(AudioTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
-                //filename.append("-");
+                filename.append("-");
                 filename.append(AudioTagUtils.getDSDSampleRateModulation(metadata));
-            }else if (metadata.isMQA()) {
-                filename.append(Constants.MEDIA_PATH_MQA);
+            //}else if (metadata.isMQA()) {
+            //    filename.append(Constants.MEDIA_PATH_MQA);
 //            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
   //              filename.append(Constants.MEDIA_PATH_HR);
            // }else if (AudioTagUtils.isPCMLossless(metadata)) {
