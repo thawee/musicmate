@@ -208,7 +208,7 @@ ui.materialratingbar = 'me.zhanghai.android.materialratingbar:library:1.4.0'
 //https://github.com/santalu/aspect-ratio-imageview
 ui.aspectRatioImageview = 'com.github.santalu:aspect-ratio-imageview:1.0.9'
 ui.fastscroll =  'me.zhanghai.android.fastscroll:library:1.1.7'
-//https://github.com/mukeshsolanki/liquidrefreshlayout=
+//https://github.com/mukeshsolanki/liquidrefreshlayout
 ui.liquidrefreshlayout = 'com.github.mukeshsolanki:liquidrefreshlayout:1.0.3'
 //https://github.com/medyo/StateViews
 ui.stateViews =  'com.github.medyo:state-views:0.2'
@@ -223,6 +223,7 @@ ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.0.5'
 ui.coco ='com.github.soulqw:CoCo:1.1.2'
 //https://github.com/medyo/android-about-page
 ui.androidAboutPage = 'io.github.medyo:android-about-page:2.0.0'
+//https://github.com/Tapadoo/Alerter
 ui.alerter = 'com.github.tapadoo:alerter:7.2.4'
 deps.ui = ui
 
@@ -250,7 +251,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.0.0-rc01" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.0.0-rc02" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]
@@ -276,7 +277,7 @@ deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019
 //deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
 deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 //https://github.com/anggrayudi/SimpleStorage
-deps.storage = "com.anggrayudi:storage:1.1.0"
+deps.storage = "com.anggrayudi:storage:1.2.0"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
 deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1'
