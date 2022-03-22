@@ -1040,11 +1040,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     }
         }
 
-        Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
+        if(!tagList.isEmpty()) {
+            Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
 
-        AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
-        EventBus.getDefault().postSticky(message);
-        editorLauncher.launch(myIntent);
+            AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
+            EventBus.getDefault().postSticky(message);
+            editorLauncher.launch(myIntent);
+        }
     }
 
     private void doShowAboutApp() {

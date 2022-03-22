@@ -67,6 +67,7 @@
         <item>Denon</item>
         <item>HDTracks</item>
         <item>GMM Grammy</item>
+        <item>Chesky Records</item>
         <item>Linn Records</item>
         <item>RS Group</item>
         <item>R-Siam</item>
@@ -133,7 +134,6 @@
     </string-array>
     <string-array name="default_groupings">
         <item>Lounge</item>
-        <item>Classical</item>
         <item>Thai</item>
         <item>English</item>
         <item>World</item>

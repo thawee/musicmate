@@ -1007,9 +1007,9 @@ public class AudioFileRepository {
         //if("English".equalsIgnoreCase(metadata.getGrouping())) {
         //    return STORAGE_SECONDARY;
         //}
-        if("World".equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
-        }
+        //if("World".equalsIgnoreCase(metadata.getGrouping())) {
+        //    return STORAGE_PRIMARY;
+        //}
         return STORAGE_SECONDARY;
     }
 
