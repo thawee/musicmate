@@ -71,47 +71,18 @@ public class AudioTagRepository {
         }
     }
 
-
-/*
-    private boolean isHiRes(String bitDepth, String sampleRate) {
-        if(extractNumber(bitDepth) >= Constants.QUALITY_BIT_DEPTH_HD) { // &&  extractNumber(sampleRate) > Constants.QUALITY_SAMPLING_RATE_48_KHZ) {
-            return true;
-        } else {
-            return sampleRate != null && sampleRate.endsWith("MHz");
-        }
-    }
-
-    private float extractNumber(String text) {
-        if(text!=null) {
-            String str = "";
-            for (char ch : text.toCharArray()) {
-                if (Character.isDigit(ch) || ch == '.') {
-                    str = str + ch;
-                } else {
-                    break;
-                }
-            }
-            try {
-                return Float.parseFloat(str);
-            } catch (Exception ex) {
-            }
-        }
-        //  LogHelper.d(TAG,samplingRate+":"+sampleRate);
-        return 0;
-    } */
-
     public List<String> getGenreList(Context context) {
         List<String> list = new ArrayList<>();
         String[] names = tagBox.query().build().property(AudioTag_.genre).distinct().findStrings();
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
-        String[] genres =  context.getResources().getStringArray(R.array.default_genres);
+        /*String[] genres =  context.getResources().getStringArray(R.array.default_genres);
         for(String genre: genres) {
             if(!list.contains(genre)) {
                 list.add(genre);
             }
-        }
+        } */
 
         Collections.sort(list);
         return list;
@@ -151,7 +122,7 @@ public class AudioTagRepository {
         return list;
     }
 
-    public List<String> getAlbumArtistList(Context context) {
+    public List<String> getDefaultAlbumArtistList(Context context) {
         List<String> list = new ArrayList<>();
        // String[] names = tagBox.query().build().property(AudioTag_.albumArtist).distinct().findStrings();
         //if(names!=null) {
@@ -233,6 +204,7 @@ public class AudioTagRepository {
         return String.valueOf(rate);
     }
 
+    /*
     private int parseSamplingRate(String samplingRate) {
         int sampleRate = 0;
         String str = "";
@@ -275,7 +247,7 @@ public class AudioTagRepository {
             Timber.e(ex);
         }
         return sampleRate;
-    }
+    } */
 
     public List<AudioTag> findMediaByTitle(String title) throws SQLException {
         Query<AudioTag> query = tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
@@ -345,11 +317,6 @@ public class AudioTagRepository {
                 @Override
                 public boolean keep(AudioTag tag) {
                     return !tag.isManaged();
-                    /*if (tag.getPath().contains("/Music/")) {
-                        return false; // drop from results
-                    } else {
-                        return true; // include to results
-                    } */
                 }
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
@@ -376,7 +343,6 @@ public class AudioTagRepository {
                 if(StringUtils.isEmpty(title)) {
                     title = tag.getTitle();
                 }else if((StringUtils.similarity(title, tag.getTitle()) > Constants.MIN_TITLE)) {// ||
-               // StringUtils.contains(title, tag.getTitle())) {
                     // found similar title
                     // check artist
                     if((StringUtils.similarity(artist, tag.getArtist()) > Constants.MIN_ARTIST) ||
@@ -454,255 +420,4 @@ public class AudioTagRepository {
             md.cloneFrom(tag);
         }
     }
-
-/*
-    @Deprecated
-    public List<AudioTag> findMedia(String title) throws SQLException {
-        QueryBuilder<AudioTag, String> qb = dao.queryBuilder();
-        SelectArg selectTitle = new SelectArg();
-        SelectArg selectPath = new SelectArg();
-        qb.where().like("title", selectTitle).or().like("mediaPath", selectPath);
-        // prepare it so it is ready for later query or iterator calls
-        PreparedQuery<AudioTag> preparedQuery = qb.prepare();
-
-        selectTitle.setValue(StringUtils.trimToEmpty(title));
-        selectPath.setValue(StringUtils.trimToEmpty(title));
-        return dao.query(preparedQuery);
-    } */
-
-    /*
-    private static class QueryAsyncTask extends
-            AsyncTask<SearchCriteria, Void, List<AudioTag>> {
-
-        private Dao asyncTaskDao;
-        private AudioTagRepository delegate = null;
-
-        QueryAsyncTask(Dao dao) {
-            asyncTaskDao = dao;
-        }
-
-        private QueryBuilder orderBy(QueryBuilder builder) {
-            return builder.orderByRaw("title COLLATE NOCASE, artist COLLATE NOCASE");
-            //return builder;
-        }
-
-        @Override
-        protected List<AudioTag> doInBackground(final SearchCriteria... params) {
-            //return asyncTaskDao.find(params[0]);
-            try {
-                if(params.length==0 || params[0]==null || params[0].getType()== SearchCriteria.TYPE.ALL) {
-                    //return asyncTaskDao.queryBuilder().orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(asyncTaskDao.queryBuilder()).query();
-               }else if(params[0].getType()== SearchCriteria.TYPE.DOWNLOAD){
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    qb.where().not().like("mediaPath", "%/Music/%");
-                   // return qb.orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(qb).query();
-                }else if(params[0].getType()== SearchCriteria.TYPE.SIMILAR_TITLE){
-                    //List<MediaMetadata> list = asyncTaskDao.queryBuilder().orderBy("title", true).orderBy("artist", true).query();
-                    List<AudioTag> list = orderBy(asyncTaskDao.queryBuilder()).query();
-                    List<AudioTag> items = new ArrayList();
-                    AudioTag pmdata = null;
-                    boolean preAdded = false;
-                    for(AudioTag mdata: list) {
-                        //similarity
-                        if (pmdata!=null && (StringUtils.similarity(mdata.getTitle(), pmdata.getTitle())>Constants.MIN_TITLE_ONLY)) {
-                            if(!preAdded && pmdata != null) {
-                                items.add(pmdata);
-                            }
-                            items.add(mdata);
-                            preAdded = true;
-                        }else {
-                            preAdded = false;
-                        }
-                        pmdata = mdata;
-                    }
-                    return items;
-                }else if(params[0].getType()== SearchCriteria.TYPE.SIMILAR_TITLE_ARTIST){
-                    //List<MediaMetadata> list = asyncTaskDao.queryBuilder().orderBy("title", true).orderBy("artist", true).query();
-                    List<AudioTag> list = orderBy(asyncTaskDao.queryBuilder()).query();
-                    List<AudioTag> items = new ArrayList();
-                    AudioTag pmdata = null;
-                    boolean preAdded = false;
-                    for(AudioTag mdata: list) {
-                        //similarity
-                        if (pmdata!=null && (StringUtils.similarity(mdata.getTitle(), pmdata.getTitle())>Constants.MIN_TITLE) &&
-                                (StringUtils.similarity(mdata.getArtist(), pmdata.getArtist())>Constants.MIN_ARTIST)) {
-                            if(!preAdded && pmdata != null) {
-                                items.add(pmdata);
-                            }
-                            items.add(mdata);
-                            preAdded = true;
-                        }else {
-                            preAdded = false;
-                        }
-                        pmdata = mdata;
-                    }
-                    return items;
-                }else if(params[0].getType()== SearchCriteria.TYPE.GENRE){
-                    String genre = params[0].keyword;
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    if("EMPTY".equalsIgnoreCase(genre)) {
-                        qb.where().isNull("genre").or().eq("genre", "");
-                    }else {
-                        qb.where().eq("genre", sqlEscapeString(genre));
-                    }
-                    //return qb.orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(qb).query();
-                } else if(params[0].getType()== SearchCriteria.TYPE.GROUPING){
-                    String grouping = params[0].keyword;
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    if(SearchCriteria.DEFAULT_MUSIC_GROUPING.equalsIgnoreCase(grouping)) {
-                        qb.where().isNull("grouping").or().eq("grouping","");
-                    }else {
-                        qb.where().eq("grouping", sqlEscapeString(grouping));
-                    }
-                    //return qb.orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(qb).query();
-                }else if(params[0].getType()== SearchCriteria.TYPE.AUDIO_FORMAT){
-                    String format = params[0].keyword;
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    if(SearchCriteria.OTHER_AUDIO_FORMAT.equalsIgnoreCase(format)) {
-                       qb.where().in("audioFormat", lossyAudioFormatList);
-                    }else if(SearchCriteria.UNKNOWN_AUDIO_FORMAT.equalsIgnoreCase(format)) {
-                        qb.where().isNull("audioFormat");
-                    }else {
-                        int indx = format.indexOf(" ");
-                        indx = indx < 0 ? 0 : indx;
-                        String audioFormat = format.substring(0, indx);
-                        qb.where().eq("audioFormat", audioFormat);
-                    }
-                    //return qb.orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(qb).query();
-                }else if(params[0].getType()== SearchCriteria.TYPE.AUDIO_SAMPLE_RATE){
-                    String sampleRate = parseSmapleRateString(params[0].keyword);
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    //if(SearchCriteria.OTHER_SAMPLING_RATE.equalsIgnoreCase(title)) {
-                    //    qb.where().lt("audioBitsPerSample", Constants.QUALITY_BIT_DEPTH_HD).and().lt("audioSampleRate","");
-                    //}else {
-                        //int indx = title.indexOf("/");
-                        //indx = indx < 0 ? 0 : indx;
-                        //String bitdepht = title.substring(0, indx);
-                        //String sampleRate = title.substring(indx + 1);
-                        qb.where().eq("audioSampleRate", sampleRate);
-                    //}
-                    //return qb.orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(qb).query();
-                } else if (params[0].getType() == SearchCriteria.TYPE.AUDIO_SQ) {
-                    String sq = params[0].keyword;
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    if(Constants.AUDIO_SQ_DSD.equalsIgnoreCase(sq)) {
-                        qb.where().eq("audioBitsPerSample", Constants.QUALITY_BIT_DEPTH_DSD);
-                    }else if(Constants.AUDIO_SQ_PCM_LD.equalsIgnoreCase(sq)) {
-                        qb.where().eq("lossless", false).and().gt("audioBitsPerSample", Constants.QUALITY_BIT_DEPTH_DSD);
-                    }else if(Constants.AUDIO_SQ_PCM_HD.equalsIgnoreCase(sq)) {
-                        qb.where().eq("lossless", true).and().eq("mqa", false).and().ge("audioBitsPerSample", Constants.QUALITY_BIT_DEPTH_HD); //.and().ge("audioSampleRate", Constants.QUALITY_SAMPLING_RATE_SD48);
-                    }else if(Constants.AUDIO_SQ_PCM_SD.equalsIgnoreCase(sq)) {
-                        qb.where().eq("lossless", true).and().eq("mqa", false).and().eq("audioBitsPerSample", Constants.QUALITY_BIT_DEPTH_SD); //.and().le("audioSampleRate", Constants.QUALITY_SAMPLING_RATE_SD48);
-                    }else if(Constants.AUDIO_SQ_PCM_MQA.equalsIgnoreCase(sq)) {
-                        qb.where().eq("lossless", true).and().eq("mqa", true);
-                    }
-
-                    //return qb.orderBy("title", true).orderBy("artist", true).query();
-                    return orderBy(qb).query();
-                } else if(params[0].getType()== SearchCriteria.TYPE.SEARCH_BY_ARTIST){
-                    String keyword = params[0].keyword;
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    qb.where().like("artist", "%"+sqlEscapeString(keyword)+"%");
-                    return orderByForArtist(qb).query();
-                } else if(params[0].getType()== SearchCriteria.TYPE.SEARCH_BY_ALBUM){
-                    String keyword = params[0].keyword;
-                    QueryBuilder qb =asyncTaskDao.queryBuilder();
-                    qb.where().eq("album", sqlEscapeString(keyword));
-                    return orderByForAlbum(qb).query();
-                }else if (params[0].getType() == SearchCriteria.TYPE.SEARCH) {
-                    List<AudioTag> list = new ArrayList<AudioTag>();
-                    String keyword = StringUtils.trimToEmpty(params[0].keyword);
-                    // for for top result (matched title) , artist, album, tracks
-
-                    // top results
-                    QueryBuilder<AudioTag, String> qb = asyncTaskDao.queryBuilder();
-                    qb.where().like("title", sqlEscapeString(keyword)+"%");
-                    qb = orderBy(qb);
-                    List<AudioTag> tmpList = qb.query();
-                    int i=0;
-                    for(AudioTag met: tmpList) {
-                        met.setResultType(SearchCriteria.RESULT_TYPE.TOP_RESULT);
-                        list.add(met);
-                        if(i++ > 5) break;
-                    }
-
-                    // artist
-                    GenericRawResults<String[]> rawResults =
-                            asyncTaskDao.queryRaw("SELECT DISTINCT artist FROM MediaItem where artist like '%"+sqlEscapeString(keyword)+"%' order by artist");
-                    Map<String, String> found = new HashMap<>();
-                    for (String[] resultColumns : rawResults) {
-                        //String artist = resultColumns[0];
-                        String[] artists = StringUtils.splitArtists(resultColumns[0]);
-                        if (artists != null) {
-                            for (String artist : artists) {
-                                if((!found.containsKey(artist.toLowerCase())) && artist.toLowerCase().contains(keyword.toLowerCase())) {
-                                    AudioTag met = new AudioTag();
-                                    met.setMediaId("artist_" + artist);
-                                    met.setTitle(artist);
-                                    met.setArtist(artist);
-                                    met.setResultType(SearchCriteria.RESULT_TYPE.ARTIST);
-                                    list.add(met);
-                                    found.put(artist.toLowerCase(), artist);
-                                }
-                            }
-                        }
-                    }
-
-                    //album
-                    rawResults =
-                            asyncTaskDao.queryRaw("SELECT DISTINCT album FROM MediaItem where album like '%"+sqlEscapeString(keyword)+"%' order by album");
-                    for (String[] resultColumns : rawResults) {
-                        String album = resultColumns[0];
-                        AudioTag met = new AudioTag();
-                        met.setMediaId("album_"+album);
-                        met.setTitle(album);
-                        met.setAlbum(album);
-                        met.setResultType(SearchCriteria.RESULT_TYPE.ALBUM);
-                        list.add(met);
-                    }
-
-                    // tracks
-                    qb = asyncTaskDao.queryBuilder();
-                    qb.where().like("title", "%"+sqlEscapeString(keyword)+"%")
-                            .or().like("artist", "%"+sqlEscapeString(keyword)+"%")
-                            .or().like("mediaPath", "%"+sqlEscapeString(keyword)+"%");
-                    qb = orderBy(qb);
-                    tmpList = qb.query();
-                    for(AudioTag met: tmpList) {
-                        met.setResultType(SearchCriteria.RESULT_TYPE.TRACKS);
-                        list.add(met);
-                    }
-
-                    return list;
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return null; // FIXME
-        }
-
-        private QueryBuilder orderByForAlbum(QueryBuilder qb) {
-            return qb.orderByRaw("artist COLLATE NOCASE, CAST (\"+ track + \" AS INTEGER), title COLLATE NOCASE");
-        }
-
-        private QueryBuilder orderByForArtist(QueryBuilder qb) {
-            return qb.orderByRaw("title COLLATE NOCASE, album COLLATE NOCASE, CAST (\" track + \" AS INTEGER), title COLLATE NOCASE");
-        }
-
-        @Override
-        protected void onPreExecute() {
-            delegate.asyncFinished(new ArrayList<AudioTag>());
-        }
-
-        @Override
-        protected void onPostExecute(List<AudioTag> result) {
-            delegate.asyncFinished(result);
-        }
-    } */
 }

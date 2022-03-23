@@ -470,7 +470,7 @@ public class TagsEditorFragment extends Fragment {
 
             // album artist
             mAlbumArtistView = setupAutoCompleteTextView(view, R.id.tag_album_artist);
-            list = repository.getAlbumArtistList(getContext());
+            list = repository.getDefaultAlbumArtistList(getContext());
             arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
