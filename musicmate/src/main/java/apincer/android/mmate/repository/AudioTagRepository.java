@@ -87,6 +87,23 @@ public class AudioTagRepository {
         Collections.sort(list);
         return list;
     }
+
+    public List<String> getDefaultGenreList(Context context) {
+        List<String> list = new ArrayList<>();
+        String[] names = tagBox.query().build().property(AudioTag_.genre).distinct().findStrings();
+        if(names!=null) {
+            list.addAll(Arrays.asList(names));
+        }
+        String[] genres =  context.getResources().getStringArray(R.array.default_genres);
+        for(String genre: genres) {
+            if(!list.contains(genre)) {
+                list.add(genre);
+            }
+        }
+
+        Collections.sort(list);
+        return list;
+    }
 	
 	public List<String> getDefaultGroupingList(Context context) {
         List<String> list = new ArrayList<>();

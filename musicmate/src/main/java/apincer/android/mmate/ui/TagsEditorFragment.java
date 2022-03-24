@@ -498,7 +498,7 @@ public class TagsEditorFragment extends Fragment {
 
             // genre
             mGenreView = setupAutoCompleteTextView(view,R.id.tag_genre);
-            list = repository.getGenreList(getContext());
+            list = repository.getDefaultGenreList(getContext());
             arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.

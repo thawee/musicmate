@@ -79,7 +79,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     private TextView titleView;
     private TextView artistView ;
     private TextView albumView ;
-    private TextView albumArtistView;
+    private TextView genreView;
     private TextView encInfo;
   //  private TextView groupingView;
   //  private TextView genreView;
@@ -251,7 +251,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
         albumView = findViewById(R.id.panel_album);
-        albumArtistView = findViewById(R.id.panel_album_artist);
+        genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
         tagInfo = findViewById(R.id.panel_tag);
        // groupingView = findViewById(R.id.panel_grouping);
@@ -324,6 +324,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                 finish();
             });
         }
+        /*
         if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
             albumArtistView.setText(displayTag.getAlbumArtist());
             albumArtistView.setPaintFlags(albumArtistView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -340,6 +341,23 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             });
         }else {
             albumArtistView.setText(AudioTagUtils.getAlbumArtistOrArtist(displayTag));
+        } */
+        if(!StringUtils.isEmpty(displayTag.getGenre())) {
+            genreView.setText(displayTag.getGenre());
+            genreView.setPaintFlags(genreView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            genreView.setOnClickListener(view -> {
+                // filter by genre
+                Intent resultIntent = new Intent();
+                if (criteria != null) {
+                    criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
+                    criteria.setFilterText(displayTag.getGenre());
+                    ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                }
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            });
+        }else {
+            genreView.setText(SRC_NONE);
         }
 
         String matePath = AudioFileRepository.getInstance(getApplication()).buildCollectionPath(displayTag);
@@ -477,7 +495,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                // .append(StringUtils.ARTIST_SEP)
                // .append(new SpecialLabelUnit("Genre>", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
-                .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
+               /* .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
                             @Override
                             public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
                                 Intent resultIntent = new Intent();
@@ -490,7 +508,24 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                                 finish();
                             }
                         }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                        new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?" - ":displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
+                        new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?" - ":displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline()); */
+                .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
+                        @Override
+                        public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
+                            if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
+                                Intent resultIntent = new Intent();
+                                if (criteria != null) {
+                                    criteria.setFilterType(Constants.FILTER_TYPE_ALBUM_ARTIST);
+                                    criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getAlbumArtist()));
+                                    ApplicationUtils.setSearchCriteria(resultIntent, criteria);
+                                }
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
+                            }
+                        }
+                    }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+                    new SpecialTextUnit(AudioTagUtils.getAlbumArtistOrArtist(displayTag)).setTextSize(14).useTextBold().showUnderline());
+
         tagInfo.setText(tagSpan.build());
 
         // ENC info

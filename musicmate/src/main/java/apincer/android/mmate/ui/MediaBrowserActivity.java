@@ -84,7 +84,6 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
-import coil.transform.CircleCropTransformation;
 import coil.transform.RoundedCornersTransformation;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
@@ -128,6 +127,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     // header panel
     TabLayout headerTab;
     TextView headerSubtitle;
+
+    // open tag timer
+    private Timer timer;
 
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
@@ -1315,7 +1317,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if(Preferences.isOpenNowPlaying(getBaseContext())) {
                 scrollToSong(song);
                 if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
-                    new Timer().schedule(new TimerTask() {
+                    if(timer!=null) {
+                        //try {
+                            timer.cancel();
+                       // }catch (Exception ex) {
+                            // IGNORE
+                      //  }
+                    }
+                    timer = new Timer();
+                    timer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             runOnUiThread(new Runnable() {
@@ -1325,7 +1335,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                                 }
                             });
                         }
-                    }, 3000); // 3 seconds
+                    }, 3500); // 3 seconds
                 }
             }
         }

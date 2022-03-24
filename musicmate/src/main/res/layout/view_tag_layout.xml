@@ -118,10 +118,10 @@
             android:layout_marginBottom="@dimen/dimen_4_dp"
             android:orientation="vertical">
             <TextView
-                android:id="@+id/panel_album_artist"
+                android:id="@+id/panel_genre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Album Artist"
+                android:text="Genre"
                 android:maxLines="1"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_4_dp"
@@ -133,7 +133,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="(Album Artist)"
+                android:text="(Genre)"
                 android:textSize="8sp"
                 android:maxLines="1"
                 android:gravity="left|center_horizontal"
