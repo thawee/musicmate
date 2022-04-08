@@ -20,7 +20,7 @@ public class StringUtils {
     // ☾
     // ☽
     //public static final String ARTIST_SEP = " \u00bb "; //"" -/- "; ·
-    public static final String SEP_SUBTITLE = " \u266A\u266C "; //"" \u2022\u266A\u2022 ";
+    public static final String SEP_SUBTITLE = " \u266A\u266A "; //"" \u2022\u266A\u2022 ";
     public static final String SEP_TITLE = "\u00b7 "; //""\u266A "; //""\u00b7 ";
     public static final String SEP_LEFT = "\u263E "; //""\u00b7\u255E "; //"" \u00ab ";
     public static final String SEP_RIGHT = " \u263D"; //"" \u2561\u00b7"; //"" \u00bb ";
@@ -291,6 +291,11 @@ public class StringUtils {
         return substring.trim();
     }
 
+    public static String trim(String substring, String defaultString) {
+        if(isEmpty(substring)) return defaultString;
+        return substring.trim();
+    }
+
     public static String[] splitArtists(String artist) {
         if(!StringUtils.isEmpty(artist)) {
             return artist.split(Constants.FIELD_SEP);
@@ -353,6 +358,13 @@ public class StringUtils {
         String str = String.format(Locale.getDefault(),"%.2f "+unit, s);
         //str = str.replace(".0", "");
         return str;
+    }
+
+    public static String formatNumber(long size) {
+        if(size ==0) {
+            return " - ";
+        }
+        return java.text.NumberFormat.getInstance().format(size);
     }
 
     public static String formatSongSize(long size) {

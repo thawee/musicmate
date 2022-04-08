@@ -103,5 +103,6 @@
     <string name="editor_label_collection">Collection</string>
     <string name="preferences_sub_collection">Collections</string>
     <string name="file_explorer_label">Folder</string>
+    <string name="app_statistics">Statistics</string>
 
 </resources>

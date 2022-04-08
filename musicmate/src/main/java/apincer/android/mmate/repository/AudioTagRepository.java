@@ -437,4 +437,8 @@ public class AudioTagRepository {
             md.cloneFrom(tag);
         }
     }
+
+    public List<AudioTag> getAllMusics() {
+        return tagBox.getAll();
+    }
 }

@@ -161,8 +161,10 @@
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="@color/grey200"
                 android:textStyle="bold"
-                android:ellipsize="end"
-                android:padding="@dimen/dimen_1_dp" />
+                android:ellipsize="middle"
+                android:layout_marginLeft="@dimen/dimen_4_dp"
+                android:paddingTop="@dimen/dimen_1_dp"
+                android:paddingBottom="@dimen/dimen_1_dp"/>
         </LinearLayout>
         <!--
         <LinearLayout

@@ -13,10 +13,14 @@ import android.text.TextPaint;
 
 import androidx.core.content.res.ResourcesCompat;
 
+import com.anggrayudi.storage.file.DocumentFileCompat;
+import com.anggrayudi.storage.file.StorageId;
+
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.storage.StorageUtils;
 
 public class AudioTagUtils {
 
@@ -878,6 +882,26 @@ public class AudioTagUtils {
         Bitmap icon = AudioTagUtils.createBitmapFromText(context, 128, 36, "Audiophile", textColor,borderColor, qualityColor);
 
         return icon;
+    }
+
+    public static boolean isOnPrimaryStorage(Context context, AudioTag tag) {
+        return StorageId.PRIMARY.equals(DocumentFileCompat.getStorageId(context, tag.getPath()));
+    }
+
+    public static String getEncodingType(AudioTag tag) {
+        if(tag.isDSD()) {
+            return Constants.AUDIO_SQ_DSD;
+        }else if(tag.isMQA()) {
+                  return Constants.AUDIO_SQ_PCM_MQA;
+        }else if(isPCMHiRes(tag)) {
+            return Constants.TITLE_HIRES;
+            //}else if(isPCMHiResLossless(tag)) {
+            //    return Constants.TITLE_HR_LOSSLESS;
+        }else if(isPCMLossless(tag)) {
+            return Constants.TITLE_HIFI_LOSSLESS;
+        }else {
+            return Constants.TITLE_HIFI_QUALITY;
+        }
     }
 
 /*

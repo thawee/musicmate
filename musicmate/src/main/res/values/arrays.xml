@@ -106,16 +106,12 @@
         <item>Vocal</item>
         <item>Film</item>
         <item>Classical</item>
+        <item>Instrument</item>
         <item>Classical, Concertos</item>
         <item>Jazz</item>
         <item>Jazz, Ballads</item>
         <item>Jazz, Bossa Nova</item>
         <item>Jazz, Contemporary</item>
-        <item>Jazz, Waltz</item>
-        <item>Jazz, Samba</item>
-        <item>Jazz, Cha Cha Cha</item>
-        <item>Jazz, Songo</item>
-        <item>Jazz, Swing</item>
         <item>Jazz, Vocal</item>
         <item>Blues, Country, Folk</item>
         <item>Soul, Funk, R&amp;B</item>
@@ -131,7 +127,7 @@
         <item>Reggae, Ska</item>
         <item>Electronic, Ambiance</item>
         <item>Latin</item>
-        <item>Hip Hop</item>
+        <item>Hip Hop, EDM</item>
         <item>Rap</item>
         <item>Luk Thung</item>
         <item>Luk Thung, Mor Lum</item>

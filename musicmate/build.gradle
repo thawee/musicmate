@@ -29,12 +29,11 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 48
-        versionName  "3.0.8 "+ versions.buildDate
+        versionCode 49
+        versionName  "3.0.9 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
-
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -138,6 +137,10 @@ dependencies {
     implementation deps.ui.androidribbon
     implementation deps.ui.coco
     implementation deps.ui.androidAboutPage
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    //implementation("ir.mahozad.android:pie-chart:0.7.0")
+    implementation 'com.github.salehyarahmadi:DataTable:v1.0.1'
+
 
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'

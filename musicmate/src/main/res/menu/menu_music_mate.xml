@@ -32,18 +32,25 @@
 
 	<item
         android:id="@+id/menu_settings"
-        android:icon="@drawable/ic_round_app_settings_alt_24"
+        android:icon="@drawable/ic_round_settings_24"
         android:title="Settings"
         app:showAsAction="always" />
+
+	<item
+		android:id="@+id/menu_storage"
+		android:icon="@drawable/ic_round_library_music_24"
+		android:title="Music Folders"
+		app:showAsAction="always" />
 
 	<item
 		android:id="@+id/menu_sd_permission"
 		android:icon="@drawable/ic_round_perm_data_setting_24"
 		android:title="Storage Permissions"
 		app:showAsAction="always" />
+
 	<item
 		android:id="@+id/menu_notification_access"
-		android:icon="@drawable/ic_round_notification_add_24"
+		android:icon="@drawable/ic_round_admin_panel_settings_24"
 		android:title="Notification Access"
 		app:showAsAction="always" />
 
@@ -54,6 +61,11 @@
             android:title="Full Scan Songs"
             app:showAsAction="always" />
     -->
+	<item
+		android:id="@+id/menu_statistics"
+		android:icon="@drawable/ic_outline_auto_graph_24"
+		android:title="Statistics"
+		app:showAsAction="always" />
 	<item
 		android:id="@+id/menu_about_music_mate"
 		android:icon="@drawable/ic_round_copyright_24"

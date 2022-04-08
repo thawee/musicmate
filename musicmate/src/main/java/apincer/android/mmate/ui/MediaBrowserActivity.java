@@ -889,6 +889,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             Intent myIntent = new Intent(MediaBrowserActivity.this, SettingsActivity.class);
             startActivity(myIntent);
             return true;
+        }else if(item.getItemId() == R.id.menu_statistics) {
+            Intent myIntent = new Intent(MediaBrowserActivity.this, StatisticsActivity.class);
+            startActivity(myIntent);
+            return true;
         } else if(item.getItemId() == R.id.menu_sd_permission) {
             //setUpPermissionSAF();
             Intent myIntent = new Intent(MediaBrowserActivity.this, PermissionActivity.class);
