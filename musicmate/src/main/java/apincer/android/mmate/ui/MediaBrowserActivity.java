@@ -951,11 +951,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         String quality = "";
         String qualityDetails = "";
         if(tag != null) {
-            sourceText.setText(tag.getAudioBitCountAndSampleRate());
-            sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getApplicationContext(),tag));
+           // sourceText.setText(tag.getAudioBitCountAndSampleRate());
+            if(tag.isMQA()) {
+                sourceIcon.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
+            }else if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
+                sourceIcon.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
+            }else {
+                sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
+            }
+           // sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getApplicationContext(),tag));
             quality = AudioTagUtils.getTrackQuality(tag);
             qualityDetails = AudioTagUtils.getTrackQualityDetails(tag);
-            sourceLabel.setText("Source: "+quality);
+            //sourceLabel.setText("Source: "+quality);
+            sourceText.setText(quality);
         }else {
             sourceText.setText("-");
         }
@@ -981,16 +989,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
         });
         if(StringUtils.isEmpty(qualityDetails)) {
-            qualityDetails = "Track details is not available, you may listen to streaming service or not currently listen to any song.";
+            qualityDetails = "Track details is not available.";
         }
 
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MediaBrowserActivity.this) //, R.style.SignalPathDialogTheme)
-                .setTitle("Signal Path: "+quality)
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.SignalPathDialogTheme)
+                .setTitle("Signal Path: ") //+quality)
                 .setMessage(qualityDetails) // + text)
-                .setView(view);
-                //.setPositiveButton("OK", (dialogInterface, i) -> {
-                //    dialogInterface.dismiss();
-                //});
+                .setView(view)
+                .setPositiveButton("OK", (dialogInterface, i) -> {
+                    dialogInterface.dismiss();
+                });
         builder.show();
     }
 

@@ -299,45 +299,11 @@ public class AudioTagUtils {
     }
 
     public static Bitmap getResIcon(Context context, AudioTag tag) {
-     /*   Bitmap icon = null;
-      //  int borderColor = context.getColor(R.color.black);
-        //int hraColor = getSampleRateColor(context,item);
-        int hraColor = Color.WHITE;
-        int borderColor = Color.WHITE; //getResolutionColor(context,item);
-       // int bgColor = Color.TRANSPARENT;
-        //int bgColor = getEncodingColor(context, item); //getResolutionColor(context,item);
-        int bgColor = getResolutionColor(context,tag);
-        if(tag.isMQA() ) {
-            icon = AudioTagUtils.createButtonFromText(context, 68,32,"MQA",hraColor,borderColor, bgColor);
-        }else if (isDSD(tag)) {
-            //icon = MediaItemUtils.createButtonFromText(context, 64, 32, item.getMetadata().getDSDRate(), hraColor, hraColor, Color.TRANSPARENT);
-            icon = AudioTagUtils.createButtonFromText(context, 64,32,"HD",hraColor,borderColor,bgColor);
-        } else if (isHiResLossless(tag)) {
-            icon = AudioTagUtils.createButtonFromText(context, 64,32,"HR",hraColor,borderColor,bgColor);
-        }else if (isLossless(tag)) {
-            icon = AudioTagUtils.createButtonFromText(context, 64,32,"PCM",hraColor,borderColor,bgColor);
-        }
-        return icon; */
-
-        // for DSD, MQA only
-/*
-        int borderColor = Color.TRANSPARENT;
-        int qualityColor = Color.TRANSPARENT;
-        int size =24;
-        if(tag.isMQA() ) {
-            return createBitmapFromDrawable(context, size, size,R.drawable.ic_format_mqa_white,borderColor, qualityColor);
-      //  }else if (isDSD(tag)) {
-      //      return createBitmapFromDrawable(context, size, size,R.drawable.ic_format_dsd_white,borderColor, qualityColor);
-      //  } else if (isHiRes(tag)) {
-      //      return createBitmapFromDrawable(context, size, size,R.drawable.ic_format_hires_white,borderColor, qualityColor);
-       // }else if (isLossless(tag)) {
-       //     return createBitmapFromDrawable(context, size, size,R.drawable.ic_format_mp3_black,borderColor, qualityColor);
-       // }else {
-       //     return createBitmapFromDrawable(context, size, size,R.drawable.ic_waves_white,borderColor, qualityColor);
-        } */
         if(tag.isMQA() ) {
             return getMQASamplingRateIcon(context, tag);
-        }else if (isDSD(tag)) {
+        //}else if (isDSD(tag)) {
+       //     return getBitsPerSampleIcon(context, tag);
+        }else if (AudioTagUtils.isHiResOrDSD(tag)) {
             return getBitsPerSampleIcon(context, tag);
         }
 

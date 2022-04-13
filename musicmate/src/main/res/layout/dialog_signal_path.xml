@@ -65,7 +65,7 @@
                     android:id="@+id/panel_source_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Audio Track"
+                    android:text="Track"
                     android:layout_gravity="left"
                     android:textColor="@color/grey400"
                     android:textStyle="bold"/>

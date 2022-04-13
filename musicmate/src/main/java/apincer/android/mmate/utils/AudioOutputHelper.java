@@ -87,7 +87,7 @@ public class AudioOutputHelper {
         MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);
         // text = text+"\nRoute ; name :" + ri.getName() + " & Desc : "+ri.getDescription()+"& type: " + ri.getSupportedTypes();
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        String rate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+        String srcRate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
         // String size = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
         // text = text+"\nBuffer Size and sample rate; Size :" + size + " & SampleRate: " + rate +" & MusicActive: "+audioManager.isMusicActive();
 
@@ -101,10 +101,12 @@ public class AudioOutputHelper {
             // final int type = a.getType();
             //   text = text+"\n Audio Device: "+a.getProductName()+" & SampleRate: "+ Arrays.toString(a.getSampleRates()) +" & type: "+a.getType() +" & toString"+a.toString();
             if ("Phone".equalsIgnoreCase(dName)) {
-                String bps = "16";
+               // String bps = "16";
+                int[] c = a.getEncodings();
+                String bps = getBPSString(c[0]);
                 outputDevice.setName("Android SRC");
                 outputDevice.setCodec(Build.MODEL);
-                outputDevice.setDescription(getDescription(bps, rate));
+                outputDevice.setDescription(getDescription(bps, srcRate));
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
                 break;
@@ -113,6 +115,7 @@ public class AudioOutputHelper {
                 outputDevice.setDescription(Arrays.toString(a.getSampleRates()));
                 int[] c = a.getEncodings();
                 String bps = getBPSString(c[0]);
+                String rate = Arrays.toString(a.getSampleRates()); //a.getSampleRates();
                 outputDevice.setDescription(getDescription(bps, rate));
 
                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
@@ -135,9 +138,11 @@ public class AudioOutputHelper {
                 getA2DP(context, outputDevice, callback);
             } else {
                 // others
+                int[] c = a.getEncodings();
+                String bps = getBPSString(c[0]);
                 outputDevice.setName("Android SRC");
-                String bps = "16";
-                outputDevice.setDescription(getDescription(bps, rate));
+                //String bps = "16";
+                outputDevice.setDescription(getDescription(bps, srcRate));
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
                 break;
@@ -240,6 +245,16 @@ public class AudioOutputHelper {
 
     private static String getDescription(String bitsPerSample, String sampleRate) {
         String bitString = StringUtils.getFormatedBitsPerSample(Integer.parseInt(bitsPerSample));
+        if(sampleRate.startsWith("[")) {
+            sampleRate = sampleRate.substring(1);
+            if(sampleRate.contains(",")) {
+                sampleRate = sampleRate.substring(sampleRate.lastIndexOf(","));
+            }
+        }
+        if(sampleRate.endsWith("]")) {
+            sampleRate = sampleRate.substring(0, sampleRate.length()-1);
+        }
+
         String samString = StringUtils.getFormatedAudioSampleRate(StringUtils.toLong(sampleRate), true);
         return bitString+" / "+samString;
     }

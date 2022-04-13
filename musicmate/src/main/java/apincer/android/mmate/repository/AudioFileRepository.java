@@ -995,6 +995,9 @@ public class AudioFileRepository {
         //if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
         //    return STORAGE_SECONDARY;
        // }
+        if(metadata.isDSD()) {
+            return STORAGE_PRIMARY;
+        }
         if("Thai".equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
         }

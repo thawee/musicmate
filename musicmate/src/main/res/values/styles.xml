@@ -160,6 +160,27 @@
 M2
 <style name="PlayingDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
 -->
+
+    <style name="SignalPathDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/black_transparent_80</item>
+        <item name="elevation">0dp</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/SignalPathTitleTextStyle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/SignalPathBodyTextStyle</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
+    </style>
+
+    <style name="SignalPathTitleTextStyle" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="SignalPathBodyTextStyle" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
     <style name="PlayingDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="colorSurface">@color/grey200_transparent</item>
         <item name="elevation">0dp</item>
