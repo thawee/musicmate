@@ -42,8 +42,8 @@ dependencies {
     //implementation deps.androidx.palette
 
     // Room components
-    implementation deps.androidx.room
-    annotationProcessor deps.androidx.room_compiler
+   // implementation deps.androidx.room
+   // annotationProcessor deps.androidx.room_compiler
 
     implementation deps.google.material
     //implementation deps.google.android_maps_utils

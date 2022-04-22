@@ -94,9 +94,9 @@ public class ScanAudioFileWorker extends Worker {
             return true;
         }else if(ext.equalsIgnoreCase("dsf")) {
             return true;
-      /*  }else if(ext.equalsIgnoreCase("dff")) {
+        }else if(ext.equalsIgnoreCase("dff")) {
             return true;
-        }else if(ext.equalsIgnoreCase("iso")) {
+      /*  }else if(ext.equalsIgnoreCase("iso")) {
             return true; */
         }
         return false;

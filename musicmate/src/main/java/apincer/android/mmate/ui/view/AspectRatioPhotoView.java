@@ -25,11 +25,11 @@ public class AspectRatioPhotoView extends PhotoView {
         super(context, attr, defStyle);
         init(attr);
     }
-
+/*
     public AspectRatioPhotoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(attrs);
-    }
+    } */
 
     private void init(AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.AspectRatioPhotoView);

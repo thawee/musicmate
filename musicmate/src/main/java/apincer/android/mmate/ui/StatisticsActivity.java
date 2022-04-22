@@ -18,18 +18,21 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.github.mikephil.charting.charts.CombinedChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
@@ -147,10 +150,11 @@ public class StatisticsActivity extends AppCompatActivity {
 
             // genre
             List<String> labels = new ArrayList();
-            LineChart chart = setupLineChart(v,labels);
+           // LineChart chart = setupLineChart(v,labels);
+            // setLineChartData(chart, tags, labels);
 
-            setLineChartData(chart, tags, labels);
-
+            CombinedChart chart = setupCombineChart(v, labels);
+            setCombineChartData(chart, tags, labels);
 
             // file type piechart
             setupEncodingChart(v, encList);
@@ -159,6 +163,228 @@ public class StatisticsActivity extends AppCompatActivity {
             setupGroupingTable(v, songs, size, duration, totalSongs, totalSize, totalDuration);
 
             return v;
+        }
+
+        private void setCombineChartData(CombinedChart chart, List<AudioTag> tags, List<String> labels) {
+
+            Map<String, Integer> encMemList = new HashMap<>();
+            Map<String, Integer> encSDList = new HashMap<>();
+            Observable.fromCallable(() -> {
+                for(AudioTag tag: tags) {
+                    String enc = AudioTagUtils.getEncodingType(tag);
+                    if(AudioTagUtils.isOnPrimaryStorage(getContext(), tag)) {
+                        if(encMemList.containsKey(enc)) {
+                            Integer cnt = encMemList.get(enc);
+                            encMemList.remove(enc);
+                            encMemList.put(enc, new Integer((cnt+1)));
+                        }else {
+                            encMemList.put(enc, new Integer(1));
+                        }
+                    }else {
+                        if(encSDList.containsKey(enc)) {
+                            Integer cnt = encSDList.get(enc);
+                            encSDList.remove(enc);
+                            encSDList.put(enc, new Integer((cnt+1)));
+                        }else {
+                            encSDList.put(enc, new Integer(1));
+                        }
+                    }
+                }
+                return true;
+            }).subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new BlockingBaseObserver<Boolean>() {
+                        @Override
+                        public void onNext(@io.reactivex.rxjava3.annotations.NonNull Boolean aBoolean) {
+                           // setLineDataforCombineChart(chart, encMemList, encSDList, labels);
+                            CombinedData data = new CombinedData();
+                            data.setData(setupCombineLineData(encMemList, encSDList, labels));
+                          //  data.setData(setupCombineLineData(encSDList, labels, "Secondary"));
+                            // xAxis.setAxisMaximum(data.getXMax() + 0.25f);
+                            chart.setData(data);
+                            chart.invalidate();
+                        }
+
+                        @Override
+                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+
+                        }
+                    });
+        }
+
+        private LineData setupCombineLineData(Map<String, Integer> encMemList,Map<String, Integer> encSDList, List<String> labels) {
+            LineData d = new LineData();
+/*
+            ArrayList<Entry> entries = new ArrayList<>();
+            int index =0;
+            for(String enc: encList.keySet()) {
+                float val = (float) encList.get(enc);
+                entries.add(new Entry(index + 0.5f,  val, enc));
+                index++;
+            }
+
+            LineDataSet set = new LineDataSet(entries, name);
+            set.setColor(Color.rgb(240, 238, 70));
+            set.setLineWidth(2.5f);
+            set.setCircleColor(Color.rgb(240, 238, 70));
+            set.setCircleRadius(5f);
+            set.setFillColor(Color.rgb(240, 238, 70));
+            set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+            set.setDrawValues(true);
+            set.setValueTextSize(10f);
+            set.setValueTextColor(Color.rgb(240, 238, 70));
+
+            set.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+ */
+            // add data
+            ArrayList<Entry> memValues = new ArrayList<>();
+            ArrayList<Entry> sdValues = new ArrayList<>();
+            int i=0;
+            for(String enc: encMemList.keySet()) {
+                // for (int i = 0; i < count; i++) {
+                float val = 0f;
+                if (encMemList.containsKey(enc)) {
+                    val = (float) encMemList.get(enc);
+                }
+                memValues.add(new Entry(++i, val, enc));
+                val = 0f;
+                if(encSDList.containsKey(enc)) {
+                    val = (float) encSDList.get(enc);
+                }
+                sdValues.add(new Entry(i, val, enc));
+                labels.add(enc);
+            }
+
+            LineDataSet set1;
+
+            // create a dataset and give it a type
+            set1 = new LineDataSet(memValues, "Internal");
+
+            set1.setDrawIcons(false);
+
+            // draw dashed line
+            set1.enableDashedLine(10f, 5f, 0f);
+
+            // black lines and points
+            set1.setColor(Color.GREEN);
+            set1.setCircleColor(Color.GREEN);
+
+            // line thickness and point size
+            set1.setLineWidth(2.0f);
+            set1.setCircleRadius(4f);
+            //set1.setLineWidth(1f);
+            //set1.setCircleRadius(3f);
+
+            // draw points as solid circles
+            set1.setDrawCircleHole(false);
+
+            // customize legend entry
+            set1.setFormLineWidth(1f);
+            set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+            set1.setFormSize(15.f);
+
+            // text size of values
+            set1.setValueTextSize(9f);
+            set1.setValueTextColor(Color.rgb(240, 238, 70));
+
+            // draw selection line as dashed
+            set1.enableDashedHighlightLine(10f, 5f, 0f);
+
+            // set the filled area
+            set1.setDrawFilled(false);
+
+
+            LineDataSet set2;
+
+            // create a dataset and give it a type
+            set2 = new LineDataSet(sdValues, "Secondary");
+
+            set2.setDrawIcons(false);
+
+            // draw dashed line
+            set2.enableDashedLine(10f, 5f, 0f);
+
+            // black lines and points
+            set2.setColor(Color.RED);
+            set2.setCircleColor(Color.RED);
+
+            // line thickness and point size
+            set2.setLineWidth(2.0f);
+            set2.setCircleRadius(4f);
+
+            // draw points as solid circles
+            set2.setDrawCircleHole(false);
+
+            // customize legend entry
+            set2.setFormLineWidth(1f);
+            set2.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+            set2.setFormSize(15.f);
+
+            // text size of values
+            set2.setValueTextSize(9f);
+            set2.setValueTextColor(Color.rgb(255, 255, 255));
+
+            // draw selection line as dashed
+            set2.enableDashedHighlightLine(10f, 5f, 0f);
+
+            // set the filled area
+            set2.setDrawFilled(false);
+
+           // ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+           // dataSets.add(set1); // add the data sets
+           // dataSets.add(set2); // add the data sets
+
+            d.addDataSet(set1);
+            d.addDataSet(set2);
+
+            return d;
+        }
+
+        private CombinedChart setupCombineChart(View v, List<String> labels) {
+            CombinedChart chart = v.findViewById(R.id.combineChart);
+            chart.getDescription().setEnabled(false);
+            chart.setBackgroundColor(Color.BLACK);
+            chart.setDrawGridBackground(false);
+            chart.setDrawBarShadow(false);
+            chart.setHighlightFullBarEnabled(false);
+            chart.setNoDataText("Processing...");
+
+            // draw bars behind lines
+            chart.setDrawOrder(new CombinedChart.DrawOrder[]{
+                    CombinedChart.DrawOrder.BAR, CombinedChart.DrawOrder.BUBBLE, CombinedChart.DrawOrder.LINE, CombinedChart.DrawOrder.SCATTER
+            });
+
+            Legend l = chart.getLegend();
+            l.setYEntrySpace(5f);
+            l.setWordWrapEnabled(true);
+            l.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+            l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+            l.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+            l.setDrawInside(false);
+            l.setTextColor(Color.WHITE);
+
+            YAxis rightAxis = chart.getAxisRight();
+            rightAxis.setDrawGridLines(false);
+            rightAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
+
+            YAxis leftAxis = chart.getAxisLeft();
+            leftAxis.setDrawGridLines(false);
+            leftAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
+            leftAxis.setTextColor(Color.WHITE);
+
+            XAxis xAxis = chart.getXAxis();
+            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+            xAxis.setAxisMinimum(0f);
+            xAxis.setGranularity(1f);
+            xAxis.setTextColor(Color.WHITE);
+           /* xAxis.setValueFormatter(new IAxisValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, AxisBase axis) {
+                    return months[(int) value % months.length];
+                }
+            }); */
+            return chart;
         }
 
         private void setLineChartData(LineChart chart, List<AudioTag> tags, List<String> labels) {
@@ -208,10 +434,15 @@ public class StatisticsActivity extends AppCompatActivity {
             int i=0;
             for(String enc: encMemList.keySet()) {
                 // for (int i = 0; i < count; i++) {
-                float val = (float) encMemList.get(enc);
+                float val = 0f;
+                if (encMemList.containsKey(enc)) {
+                    val = (float) encMemList.get(enc);
+                }
                 memValues.add(new Entry(++i, val, enc));
-
-                val = (float) encSDList.get(enc);
+                val = 0f;
+                if(encSDList.containsKey(enc)) {
+                    val = (float) encSDList.get(enc);
+                }
                 sdValues.add(new Entry(i, val, enc));
                 encLabels.add(enc);
             }
@@ -434,9 +665,10 @@ public class StatisticsActivity extends AppCompatActivity {
             chart.setHoleRadius(42f);
             chart.setTransparentCircleRadius(72f);
 
-            chart.setDrawCenterText(false);
+            chart.setDrawCenterText(true);
             // chart.setCenterTextTypeface(tfLight);
-            //chart.setCenterText("Music");
+            chart.setCenterText("Songs");
+            chart.setCenterTextColor(Color.WHITE);
 
             chart.setRotationAngle(0);
             // enable rotation of the chart by touch

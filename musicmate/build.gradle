@@ -141,7 +141,6 @@ dependencies {
     //implementation("ir.mahozad.android:pie-chart:0.7.0")
     implementation 'com.github.salehyarahmadi:DataTable:v1.0.1'
 
-
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
     implementation deps.ui.refresh_layout_kernel

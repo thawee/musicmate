@@ -11,7 +11,7 @@ ext.versions = [
         compileSdk         : 32,
         buildTools         : '33.0.0-rc2', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "built on " + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.1.2',
@@ -33,7 +33,7 @@ def deps = [:]
 
 def google = [:]
 // https://github.com/material-components/material-components-android/releases
-google.material = "com.google.android.material:material:1.6.0-beta01" //1.5.0"
+google.material = "com.google.android.material:material:1.7.0-alpha01" // 1.6.0-beta01" //1.5.0"
 google.gson = "com.google.code.gson:gson:2.9.0" //2.8.9"
 google.android_maps_utils = "com.google.maps.android:android-maps-utils:2.3.0" //0.5" //23/06/2019
 deps.google = google
@@ -47,7 +47,7 @@ def androidx = [:]
 //https://developer.android.com/jetpack/androidx/releases/activity
 androidx.activity = "androidx.activity:activity:1.6.0-alpha01" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
-androidx.annotation = "androidx.annotation:annotation:1.4.0-alpha01" //1.3.0"
+androidx.annotation = "androidx.annotation:annotation:1.4.0-alpha02" //1.3.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
 androidx.appCompat = "androidx.appcompat:appcompat:1.6.0-alpha01" //1.4.1"
 //https://developer.android.com/jetpack/androidx/releases/cardview
@@ -55,7 +55,7 @@ androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout
 androidx.constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.3"
 //https://developer.android.com/jetpack/androidx/releases/recyclerview
-androidx.recyclerView = "androidx.recyclerview:recyclerview:1.3.0-alpha01" //1.2.1"
+androidx.recyclerView = "androidx.recyclerview:recyclerview:1.3.0-alpha02" //1.2.1"
 //https://developer.android.com/jetpack/androidx/releases/palette
 androidx.palette = "androidx.palette:palette:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/swiperefreshlayout
@@ -70,27 +70,27 @@ androidx.documentFile = "androidx.documentfile:documentfile:1.1.0-alpha01" //1.0
 androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.1.0-beta01"
 // Lifecycle ViewModel and LiveData
 //https://developer.android.com/jetpack/androidx/releases/lifecycle
-androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.5.0-alpha05" //2.4.0"
+androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.5.0-alpha06" //2.4.0"
 //androidx.lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:2.3.1"
-androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.5.0-alpha05" //2.4.0"
-androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.5.0-alpha05" //2.4.0"
+androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.5.0-alpha06" //2.4.0"
+androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.5.0-alpha06" //2.4.0"
 // alternately - if using Java8, use the following instead of lifecycle-compiler
-androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.5.0-alpha05" //2.4.0"
+androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.5.0-alpha06" //2.4.0"
 // optional - ReactiveStreams support for LiveData
-androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.5.0-alpha05" //2.4.0" // use -ktx for Kotlin //23/06/2019
+androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.5.0-alpha06" //2.4.0" // use -ktx for Kotlin //23/06/2019
 // optional - Test helpers for LiveData
 androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.4.0"
 
 
 // Room
-androidx.room = "androidx.room:room-runtime:2.2.0" //23/06/2019
-androidx.room_compiler = "androidx.room:room-compiler:2.2.0" // use kapt for Kotlin //23/06/2019
+androidx.room = "androidx.room:room-runtime:2.4.2" //23/06/2019
+androidx.room_compiler = "androidx.room:room-compiler:2.4.2" // use kapt for Kotlin //23/06/2019
 // optional - RxJava support for Room
-androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.2.0" //23/06/2019
+androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.4.2" //23/06/2019
 // optional - Guava support for Room, including Optional and ListenableFuture
-androidx.room_guava = "androidx.room:room-guava:2.2.0" //23/06/2019
+androidx.room_guava = "androidx.room:room-guava:2.4.4" //23/06/2019
 // Test helpers
-androidx.room_testing = "androidx.room:room-testing:2.2.0" //23/06/2019
+androidx.room_testing = "androidx.room:room-testing:2.4.2" //23/06/2019
 
 // Paging
 //https://developer.android.com/jetpack/androidx/releases/paging
@@ -102,7 +102,7 @@ androidx.paging_rxjava2 = "androidx.paging:paging-rxjava2:3.1.0" //23/06/2019
 
 // Worker
 //https://developer.android.com/jetpack/androidx/releases/work
-androidx.work = "androidx.work:work-runtime:2.8.0-alpha01" //2.7.1"
+androidx.work = "androidx.work:work-runtime:2.8.0-alpha02" //2.7.1"
 
 deps.androidx = androidx
 
@@ -214,7 +214,7 @@ ui.liquidrefreshlayout = 'com.github.mukeshsolanki:liquidrefreshlayout:1.0.3'
 //https://github.com/medyo/StateViews
 ui.stateViews =  'com.github.medyo:state-views:0.2'
 //https://github.com/Baseflow/PhotoView
-ui.photoview = 'com.github.chrisbanes:PhotoView:2.0.0'
+ui.photoview = 'com.github.chrisbanes:PhotoView:2.3.0'
 // https://github.com/VrUnd14/VPAwesomeWidgets
 ui.vpawesomewidgets = 'awesome.vrund.vpawesomewidgets:VPAwesomeWidgets:1.5.2'
 //https://github.com/scwang90/SmartRefreshLayout
@@ -252,7 +252,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.0.0-rc02" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.0.0-rc03" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]

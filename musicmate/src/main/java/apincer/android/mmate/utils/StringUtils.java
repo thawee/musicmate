@@ -394,25 +394,28 @@ public class StringUtils {
         int unitms = 1; //1000;
         long s = milliseconds / unitms % 60;
         long m = milliseconds / unitms / 60 % 60;
-        long h = milliseconds / unitms / 60 / 60 % 24;
-        long d = milliseconds / unitms / 60 / 60 / 24;
+        long h = milliseconds / unitms / 60 / 60;
+        //long h = milliseconds / unitms / 60 / 60 % 24;
+       // long d = milliseconds / unitms / 60 / 60 / 24;
         //String format = "%02d:%02d";
-        String format = "%02d:%02d:%02d:%02d";
-        String formatDayUnit = "%2d Days";
+       // String format = "%02d:%02d:%02d:%02d";
+        String format = "%02d:%02d:%02d";
+       // String formatDayUnit = "%2d Days";
         String formatHrsUnit = "%2d Hrs";
         String formatMinuteUnit = "%2d Min";
         //String formatUnits = "%2d days, %2d hrs, %2d Min.";
         String formatText = "";
 
         if(withUnit) {
-            if(d>0) {
-                formatText = String.format(Locale.getDefault(), formatDayUnit, d);
-            }
+           // if(d>0) {
+           //     formatText = String.format(Locale.getDefault(), formatDayUnit, d);
+           // }
             if(h >0) {
-                if(!StringUtils.isEmpty(formatText)) {
-                    formatText = formatText+", ";
-                }
-                formatText = formatText + String.format(Locale.getDefault(), formatHrsUnit, h);
+                //if(!StringUtils.isEmpty(formatText)) {
+                //    formatText = formatText+", ";
+                //}
+                //formatText = formatText + String.format(Locale.getDefault(), formatHrsUnit, h);
+                formatText = String.format(Locale.getDefault(), formatHrsUnit, h);
             }
             if(m >0) {
                 if(!StringUtils.isEmpty(formatText)) {
@@ -422,7 +425,8 @@ public class StringUtils {
             }
             formatText = StringUtils.trimToEmpty(formatText);
         }else {
-            formatText = String.format(Locale.getDefault(), format, d,h,m, s);
+            //formatText = String.format(Locale.getDefault(), format, d,h,m, s);
+            formatText = String.format(Locale.getDefault(), format, h,m, s);
             while(formatText.startsWith("00:")) {
                 formatText = formatText.substring(formatText.indexOf("00:")+("00:".length()));
             }
