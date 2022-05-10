@@ -159,7 +159,7 @@ public class AudioFileRepository {
                 break;
             }
         }
-        if(coverFile==null) {
+      /*  if(coverFile==null) {
             // check *.png, *.jpg
             File [] files = coverDir.listFiles();
             for(File f : files) {
@@ -168,7 +168,7 @@ public class AudioFileRepository {
                     break;
                 }
             }
-        }
+        } */
         if(coverFile!=null && coverFile.exists()) {
             try {
                 return new FileInputStream(coverFile);
@@ -1300,6 +1300,7 @@ public class AudioFileRepository {
     protected AudioTag[] readMediaTag(String mediaPath) {
             AudioTag metadata = new AudioTag();
             metadata.setPath(mediaPath);
+            metadata.setTitle(FileUtils.getFileName(mediaPath));
             metadata.setFileExtension(FileUtils.getExtension(mediaPath).toUpperCase());
             metadata.setSimpleName(DocumentFileCompat.getBasePath(getContext(), mediaPath));
             metadata.setStorageId(DocumentFileCompat.getStorageId(getContext(), mediaPath));

@@ -233,4 +233,14 @@ public class FileUtils {
         File f = new File(s);
         return f.exists();
     }
+
+    public static String getFileName(String mediaPath) {
+        if(mediaPath==null) {
+            return "";
+        }
+        File file = new File(mediaPath);
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
+    }
 }

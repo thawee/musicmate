@@ -92,12 +92,12 @@ public class ScanAudioFileWorker extends Worker {
             return true;
         }else if(ext.equalsIgnoreCase("aif")) {
             return true;
+        }else if(ext.equalsIgnoreCase("aiff")) {
+            return true;
         }else if(ext.equalsIgnoreCase("dsf")) {
             return true;
         }else if(ext.equalsIgnoreCase("dff")) {
             return true;
-      /*  }else if(ext.equalsIgnoreCase("iso")) {
-            return true; */
         }
         return false;
     }

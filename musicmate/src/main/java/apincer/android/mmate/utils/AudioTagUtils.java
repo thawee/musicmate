@@ -870,6 +870,23 @@ public class AudioTagUtils {
         }
     }
 
+    public static String getAudioEncoding(AudioTag tag) {
+        return tag.getAudioEncoding();
+       /* if(tag.getAudioEncoding()) {
+            return Constants.AUDIO_SQ_DSD;
+        }else if(tag.isMQA()) {
+            return Constants.AUDIO_SQ_PCM_MQA;
+        }else if(isPCMHiRes(tag)) {
+            return Constants.TITLE_HIRES;
+            //}else if(isPCMHiResLossless(tag)) {
+            //    return Constants.TITLE_HR_LOSSLESS;
+        }else if(isPCMLossless(tag)) {
+            return Constants.TITLE_HIFI_LOSSLESS;
+        }else {
+            return Constants.TITLE_HIFI_QUALITY;
+        } */
+    }
+
 /*
     public static int getEncodingColor(final Context context, AudioTag tag) {
         if(item.getTag().isDSD()) {

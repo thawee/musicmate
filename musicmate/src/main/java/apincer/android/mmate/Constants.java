@@ -21,7 +21,6 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-
     public static int QUALITY_SAMPLING_RATE_96 = 96000;
     public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static int QUALITY_SAMPLING_RATE_48 = 48000;
@@ -40,18 +39,18 @@ public final class Constants {
         IMAGE_COVERS.add("folder.png");
         IMAGE_COVERS.add("front.jpg");
         IMAGE_COVERS.add("cover.jpg");
-        IMAGE_COVERS.add("folder.jpeg");
+        IMAGE_COVERS.add("folder.jpg");
         IMAGE_COVERS.add("front.jpeg");
         IMAGE_COVERS.add("cover.jpeg");
         IMAGE_COVERS.add("folder.jpeg");
     }
-
+/*
     public static final List<String> COVER_IMAGE_TYPES = new ArrayList();
     static {
         COVER_IMAGE_TYPES.add("png");
         COVER_IMAGE_TYPES.add("jpg");
         COVER_IMAGE_TYPES.add("jpeg");
-    }
+    } */
 
     public static final List<String> RELATED_FILE_TYPES = new ArrayList();
     static {

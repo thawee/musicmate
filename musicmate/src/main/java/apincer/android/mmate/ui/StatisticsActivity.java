@@ -25,6 +25,9 @@ import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -166,12 +169,11 @@ public class StatisticsActivity extends AppCompatActivity {
         }
 
         private void setCombineChartData(CombinedChart chart, List<AudioTag> tags, List<String> labels) {
-
             Map<String, Integer> encMemList = new HashMap<>();
             Map<String, Integer> encSDList = new HashMap<>();
             Observable.fromCallable(() -> {
                 for(AudioTag tag: tags) {
-                    String enc = AudioTagUtils.getEncodingType(tag);
+                    String enc = AudioTagUtils.getEncodingType(tag); ///getAudioEncoding(tag);
                     if(AudioTagUtils.isOnPrimaryStorage(getContext(), tag)) {
                         if(encMemList.containsKey(enc)) {
                             Integer cnt = encMemList.get(enc);
@@ -199,6 +201,7 @@ public class StatisticsActivity extends AppCompatActivity {
                            // setLineDataforCombineChart(chart, encMemList, encSDList, labels);
                             CombinedData data = new CombinedData();
                             data.setData(setupCombineLineData(encMemList, encSDList, labels));
+                            data.setData(setupCombineBarData(encMemList, encSDList, labels));
                           //  data.setData(setupCombineLineData(encSDList, labels, "Secondary"));
                             // xAxis.setAxisMaximum(data.getXMax() + 0.25f);
                             chart.setData(data);
@@ -210,6 +213,51 @@ public class StatisticsActivity extends AppCompatActivity {
 
                         }
                     });
+        }
+
+        private BarData setupCombineBarData(Map<String, Integer> encMemList, Map<String, Integer> encSDList, List<String> labels) {
+            ArrayList<BarEntry> entries1 = new ArrayList<>();
+            ArrayList<BarEntry> entries2 = new ArrayList<>();
+
+            int i=0;
+            for(String enc: encMemList.keySet()) {
+                float val = 0f;
+                if (encMemList.containsKey(enc)) {
+                    val = (float) encMemList.get(enc);
+                }
+                entries1.add(new BarEntry(++i, val, enc));
+                val = 0f;
+                if(encSDList.containsKey(enc)) {
+                    val = (float) encSDList.get(enc);
+                }
+                entries2.add(new BarEntry(i, val, enc));
+            }
+
+            BarDataSet set1 = new BarDataSet(entries1, "Bar 1");
+            set1.setColor(Color.rgb(60, 220, 78));
+            set1.setValueTextColor(Color.rgb(60, 220, 78));
+            set1.setValueTextSize(10f);
+            set1.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+            BarDataSet set2 = new BarDataSet(entries2, "");
+            set2.setStackLabels(new String[]{"Stack 1", "Stack 2"});
+            set2.setColors(Color.rgb(61, 165, 255), Color.rgb(23, 197, 255));
+            set2.setValueTextColor(Color.rgb(61, 165, 255));
+            set2.setValueTextSize(10f);
+            set2.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+            float groupSpace = 0.06f;
+            float barSpace = 0.02f; // x2 dataset
+            float barWidth = 0.45f; // x2 dataset
+            // (0.45 + 0.02) * 2 + 0.06 = 1.00 -> interval per "group"
+
+            BarData d = new BarData(set1, set2);
+            d.setBarWidth(barWidth);
+
+            // make this BarData object grouped
+            d.groupBars(0, groupSpace, barSpace); // start at x = 0
+
+            return d;
         }
 
         private LineData setupCombineLineData(Map<String, Integer> encMemList,Map<String, Integer> encSDList, List<String> labels) {
