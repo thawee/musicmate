@@ -14,9 +14,7 @@ import android.os.Bundle;
 
 import java.util.List;
 
-import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.BitmapHelper;
-import apincer.android.mmate.utils.StringUtils;
 import timber.log.Timber;
 
 /**
@@ -46,7 +44,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 
     String PLAYER_NAME_FOOBAR2000 = "foobar2000";
     //private MusicListeningService service;
-    private BroadcastHelper broadcastHelper;
+    private final BroadcastHelper broadcastHelper;
     protected String title;
     protected String artist;
     protected String album;

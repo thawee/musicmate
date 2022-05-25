@@ -26,10 +26,10 @@ import timber.log.Timber;
 public class MusixMateApp extends Application  {
     private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
     private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
-    private static Context context;
+    //private static Context context;
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper(new Callback() {
         @Override
-        public void onPlaying(AudioTag song) {
+        public void onPlaying(Context context, AudioTag song) {
             try {
                 BroadcastData data = new BroadcastData()
                         .setAction(BroadcastData.Action.PLAYING)
@@ -45,7 +45,7 @@ public class MusixMateApp extends Application  {
     });
 
     public static AudioTag getPlayingSong() {
-        return broadcastHelper.getPlayingSong();
+        return BroadcastHelper.getPlayingSong();
     }
 
     public static MusicPlayerInfo getPlayerInfo() {
@@ -53,7 +53,7 @@ public class MusixMateApp extends Application  {
     }
 
     public static void playNextSong(Context applicationContext) {
-        broadcastHelper.playNextSong(applicationContext);
+        BroadcastHelper.playNextSong(applicationContext);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class MusixMateApp extends Application  {
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
-        context = this;
+        //context = this;
         broadcastHelper.onCreate(this);
 
        // Timber.plant(new Timber.DebugTree());

@@ -122,10 +122,8 @@ public class AudioOutputHelper {
                 outputDevice.setAddress(a.getAddress());
                 UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
                 HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
-                Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
 
-                while (deviceIterator.hasNext()) {
-                    UsbDevice device = deviceIterator.next();
+                for (UsbDevice device : deviceList.values()) {
                     outputDevice.setName(device.getProductName());
                 }
                 callback.onReady(outputDevice);

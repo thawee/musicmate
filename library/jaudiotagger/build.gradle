@@ -11,14 +11,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    lintOptions {
-        abortOnError true
-    }
     buildTypes {
         release {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lint {
+        abortOnError true
+    }
+    namespace 'org.jaudiotagger'
 }
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

@@ -87,6 +87,11 @@
 					   app:tabMode="scrollable"
 					   app:tabPaddingStart="@dimen/dimen_16_dp"
 					   app:tabPaddingEnd="@dimen/dimen_16_dp"
+					   android:elevation="8dp"
+					   app:layout_constraintEnd_toEndOf="parent"
+					   app:layout_constraintStart_toStartOf="parent"
+					   app:layout_constraintTop_toTopOf="parent"
+					   app:tabIndicatorAnimationMode="elastic"
 					   />
 				   <TextView
 					   android:id="@+id/header_subtitle"
@@ -110,46 +115,11 @@
                    android:background="@color/black" />
            </com.google.android.material.appbar.AppBarLayout>
 
-		   <!--
-		   <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-			   android:id="@+id/swipeRefreshLayout"
-			   android:layout_width="match_parent"
-			   android:layout_height="match_parent"> -->
-			   <!-- This FrameLayout is mandatory ONLY IF sticky header will be enabled. This
-                layout will help to receive the inflated layout at runtime and to display the
-                Refresh circle AND the FastScroller on the top of sticky_header_layout. 
-				android:layout_marginBottom="50dp"
-				-->
-			   <!--
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"> -->
-
-
 			   <RelativeLayout
 				   android:layout_width="match_parent"
 				   android:layout_below="@+id/searchView"
 				   android:layout_height="match_parent">
-			   <!--
-			   <com.simform.refresh.SSPullToRefreshLayout
-				   android:id="@+id/ssPullRefresh"
-				   android:layout_width="match_parent"
-				   android:layout_height="match_parent"
-				   android:background="@color/colorPrimary"
-				   app:layout_constraintBottom_toBottomOf="parent"
-				   app:layout_constraintEnd_toEndOf="parent"
-				   app:layout_constraintStart_toStartOf="parent"
-				   app:layout_constraintTop_toTopOf="parent">
-				   -->
-				   <!--
-				   <com.madapps.liquid.LiquidRefreshLayout
-					   android:id="@+id/refreshLayout"
-					   android:layout_width="match_parent"
-					   android:layout_height="match_parent"
-					   app:AniBackColor="@color/colorAccent"
-					   app:AniForeColor="@color/colorPrimary"
-					   app:CircleSmaller="8"
-					   > -->
+
 					   <com.scwang.smart.refresh.layout.SmartRefreshLayout
 						   android:id="@+id/refreshLayout"
 						   android:layout_width="match_parent"
@@ -199,129 +169,11 @@
 					   <include layout="@layout/view_now_playing"/>
 				   </LinearLayout>
    			</RelativeLayout>
-			   <!--
-			   </com.simform.refresh.SSPullToRefreshLayout>
-			   -->
 
-			   <!--
-						app:fastScrollEnabled="true"
-						app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
-						app:fastScrollVerticalTrackDrawable="@drawable/line_drawable"
-						app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
-						app:fastScrollHorizontalTrackDrawable="@drawable/line_drawable"/>
-
-						app:fastScrollEnabled="true"
-						app:fastScrollHorizontalThumbDrawable="@drawable/fast_scroll_thumb"
-						app:fastScrollHorizontalTrackDrawable="@drawable/fast_scroll_track"
-						app:fastScrollVerticalThumbDrawable="@drawable/fast_scroll_thumb"
-						app:fastScrollVerticalTrackDrawable="@drawable/fast_scroll_track"/> -->
-			   <!--
-					<com.google.android.material.appbar.AppBarLayout
-						android:id="@+id/musicsAppBar"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:background="@color/black"
-						app:layout_constraintTop_toTopOf="parent">
-                        <com.lapism.search.widget.SearchView
-                            android:id="@+id/searchView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@color/black"
-                            app:iconifiedByDefault="true"
-                            app:searchIcon="@drawable/ic_search_white_24dp"
-                            app:queryHint="text to Search" />
-						<View
-							android:layout_width="match_parent"
-							android:layout_height="1dp"
-							android:background="@color/black" />
-					</com.google.android.material.appbar.AppBarLayout>
-					-->
-			   <!--
-                </FrameLayout> -->
-		   <!--
-		   </androidx.swiperefreshlayout.widget.SwipeRefreshLayout> -->
        </LinearLayout>
-
-	   <!--
-		<include layout="@layout/fast_scroller"/>
-		-->
-		<!--
-	<ImageView
-		android:id="@+id/fabCounter"
-		style="@style/Widget.Design.FloatingActionButton"
-		android:layout_width="42dp"
-		android:layout_height="42dp"
-		android:layout_marginEnd="12dp"
-		android:layout_marginBottom="96dp"
-		android:padding="2dp"
-		android:text="12"
-		android:gravity="center"
-		android:visibility="visible"
-		android:textColor="@android:color/black"
-		android:textSize="16sp"
-		android:layout_gravity="bottom|right"
-		/> -->
-    <!--
-	<com.google.android.material.bottomappbar.BottomAppBar
-		android:id="@+id/bottom_app_bar"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_gravity="bottom"
-		app:backgroundTint="@color/colorPrimary_light"
-		app:fabAlignmentMode="center"
-		app:fabCradleMargin="@dimen/dimen_12_dp"
-		app:fabCradleRoundedCornerRadius="@dimen/dimen_12_dp"
-		app:fabCradleVerticalOffset="@dimen/dimen_4_dp"
-		app:hideOnScroll="true"
-		app:layout_scrollFlags="scroll|enterAlways"
-		app:navigationContentDescription="Collection">
-		-->
 
 
     </RelativeLayout>
-<!--
-<com.google.android.material.floatingactionbutton.FloatingActionButton
-		android:id="@+id/fab_playing"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:src="@drawable/ic_center_focus_strong_black_24dp"
-		app:layout_anchor="@id/bottom_app_bar"
-		android:scaleType="center"
-		app:maxImageSize="@dimen/dimen_48_dp"
-		app:tint="@null"
-		app:backgroundTint="@color/now_playing_alpha_80"
-		android:visibility="gone"
-		/>
--->
-	<!--
-	<com.google.android.material.floatingactionbutton.FloatingActionButton
-		android:id="@+id/fab_playing"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:src="@drawable/ic_center_focus_strong_black_24dp"
-		app:layout_anchor="@id/bottom_app_bar"
-		android:scaleType="center"
-		app:maxImageSize="@dimen/dimen_48_dp"
-		app:tint="@null"
-		android:visibility="gone"
-		app:backgroundTint="@color/grey200_transparent"
-		/> -->
-	<!--
-	<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-		android:id="@+id/fab_now_playing"
-		android:layout_width="@dimen/dimen_256_dp"
-		android:layout_height="wrap_content"
-		android:lines="2"
-		app:layout_anchor="@id/bottom_app_bar"
-		app:maxImageSize="@dimen/dimen_48_dp"
-		app:tint="@null"
-		android:visibility="gone"
-		/> -->
-
-	<!--
-
-		app:backgroundTint="@color/now_playing_background"
-	-->
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"

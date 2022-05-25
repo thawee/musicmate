@@ -29,14 +29,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                //do whatever
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {//do whatever
+            finish();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {

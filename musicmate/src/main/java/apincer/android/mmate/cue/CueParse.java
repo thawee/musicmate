@@ -24,7 +24,7 @@ public class CueParse {
 
     private final int CUE_FILE_POS = 0;
 
-    private List<Track> tracks = new ArrayList<Track>();
+    private final List<Track> tracks = new ArrayList<>();
 
     private String albumName;
 
@@ -39,7 +39,7 @@ public class CueParse {
             parseCueFile(getCueFile(folder).get(CUE_FILE_POS));
         } else
             throw new CueParseException(
-                    "There more than one flac or cue file in the folder");;
+                    "There more than one flac or cue file in the folder");
     }
 
     public void parseCueFile(File cueFile) throws CueParseException {
@@ -97,7 +97,7 @@ public class CueParse {
 
     // Cue sheet can have only 1 flac file, otherwise it won't be parsed
     public ArrayList<String> getTrackPaths(File cueFile) {
-        ArrayList<String> paths = new ArrayList<String>();
+        ArrayList<String> paths = new ArrayList<>();
         Pattern path = Pattern.compile("FILE \".*\"");
         Matcher pathMatcher = path.matcher(cueString);
         while (pathMatcher.find()) {
@@ -110,7 +110,7 @@ public class CueParse {
     }
 
     private ArrayList<String> getTracksTitles() {
-        ArrayList<String> titles = new ArrayList<String>();
+        ArrayList<String> titles = new ArrayList<>();
         Pattern title = Pattern.compile("TITLE \".*\"");
         Matcher titleMathcer = title.matcher(cueString);
         while (titleMathcer.find()) {
@@ -121,7 +121,7 @@ public class CueParse {
     }
 
     private ArrayList<String> getTracksPerformers() {
-        ArrayList<String> performers = new ArrayList<String>();
+        ArrayList<String> performers = new ArrayList<>();
         Pattern performer = Pattern.compile("PERFORMER \".*\"");
         Matcher performerMatcher = performer.matcher(cueString);
         while (performerMatcher.find()) {
@@ -133,7 +133,7 @@ public class CueParse {
 
     @SuppressWarnings("deprecation")
     private ArrayList<Integer> getStartIndex() {
-        ArrayList<Integer> startPositions = new ArrayList<Integer>();
+        ArrayList<Integer> startPositions = new ArrayList<>();
         Pattern startIndex = Pattern.compile("INDEX 01.*");
         Matcher startIndexMatcher = startIndex.matcher(cueString);
         while (startIndexMatcher.find()) {
@@ -174,7 +174,7 @@ public class CueParse {
     }
 
     public static ArrayList<File> getCueFile(File parentDir) {
-        ArrayList<File> cueFiles = new ArrayList<File>();
+        ArrayList<File> cueFiles = new ArrayList<>();
         File[] files = parentDir.listFiles();
         for (File file : files) {
             if (!file.isDirectory()) {

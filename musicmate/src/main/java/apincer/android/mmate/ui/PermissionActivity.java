@@ -44,20 +44,18 @@ public class PermissionActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           String []permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case REQUEST_CODE_STORAGE_PERMISSION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if(!SimpleStorage.hasFullDiskAccess(getApplicationContext(), StorageId.PRIMARY)) {
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                        startActivity(intent);
-                    }
-                    finish();
+        if (requestCode == REQUEST_CODE_STORAGE_PERMISSION) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (!SimpleStorage.hasFullDiskAccess(getApplicationContext(), StorageId.PRIMARY)) {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    startActivity(intent);
                 }
-                return;
+                finish();
             }
+            return;
         }
     }
 
@@ -69,14 +67,9 @@ public class PermissionActivity extends AppCompatActivity {
 
         txtTitle.setText("Permissions for using Music Mate application");
         txtConfirm.setText("OK");
-        txtConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ActivityCompat.requestPermissions(PermissionActivity.this,
-                        PermissionUtils.PERMISSIONS_ALL,
-                        REQUEST_CODE_STORAGE_PERMISSION);
-            }
-        });
+        txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
+                PermissionUtils.PERMISSIONS_ALL,
+                REQUEST_CODE_STORAGE_PERMISSION));
 
         // Internet
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());

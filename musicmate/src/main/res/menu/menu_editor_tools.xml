@@ -19,16 +19,21 @@
     <item
         android:icon="@drawable/ic_baseline_audio_file_24"
         android:id="@+id/menu_editor_tool_read_tag"
-        android:title="Read TAG from filename"
+        android:title="Get Tags from file path"
         app:showAsAction="always" />
     <item
         android:icon="@drawable/ic_baseline_auto_fix_normal_24"
         android:id="@+id/menu_editor_tool_format_tag"
-        android:title="Format TAG"
+        android:title="Reformat Tags"
         app:showAsAction="always" />
     <item
             android:icon="@drawable/ic_baseline_add_photo_alternate_24"
             android:id="@+id/menu_editor_tool_pick_coverart"
-            android:title="Pick CoverArt from image"
+            android:title="Pick CoverArt"
             app:showAsAction="always" />
+    <item
+        android:icon="@drawable/ic_outline_info_24"
+        android:id="@+id/menu_editor_tool_info"
+        android:title="Show Tags on file"
+        app:showAsAction="always" />
 </menu>

@@ -15,20 +15,25 @@ import androidx.work.WorkerParameters;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.lang.reflect.Type;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
+import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
+import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.broadcast.BroadcastData;
 
 public class DeleteAudioFileWorker extends Worker {
+    AudioFileRepository repos;
     private DeleteAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
+        repos = AudioFileRepository.newInstance(getApplicationContext());
     }
 
     @NonNull
@@ -39,15 +44,19 @@ public class DeleteAudioFileWorker extends Worker {
         Gson gson = new Gson();
         Type audioTagType = new TypeToken<AudioTag>(){}.getType();
         AudioTag tag = gson.fromJson(s, audioTagType);
-            boolean status = AudioFileRepository.getInstance(getApplicationContext()).deleteMediaItem(tag);
+            boolean status = repos.deleteMediaItem(tag);
             String txt = status?getApplicationContext().getString(R.string.alert_delete_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_delete_fail, tag.getTitle());
 
+        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+        EventBus.getDefault().postSticky(message);
+
+            /*
             BroadcastData data = new BroadcastData()
                     .setAction(BroadcastData.Action.DELETE)
                     .setStatus(status?BroadcastData.Status.COMPLETED: BroadcastData.Status.ERROR)
                     .setTagInfo(tag)
                     .setMessage(txt);
-            sendBroadcast(data);
+            sendBroadcast(data); */
 
         return Result.success();
     }

@@ -59,8 +59,6 @@ import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
-import cn.iwgang.simplifyspan.customspan.CustomClickableSpan;
-import cn.iwgang.simplifyspan.other.OnClickableSpanListener;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
@@ -99,6 +97,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     private volatile boolean isEditing;
     //private BroadcastHelper broadcastHelper;
+    AudioFileRepository repos;// = AudioFileRepository.newInstance(getApplication());
 
     @Override
     public void onBackPressed() {
@@ -109,9 +108,9 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             ApplicationUtils.setSearchCriteria(resultIntent,criteria);
             setResult(RESULT_OK, resultIntent);
         }
-        if(isEditing) {
+        //if(isEditing) {
             // send event notif to list page
-        }
+        //}
     }
 
     @Override
@@ -158,6 +157,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         //broadcastHelper = new BroadcastHelper(this);
+        repos = AudioFileRepository.newInstance(getApplicationContext());
 
         coverArtLayout = findViewById(R.id.panel_cover_art_layout);
         panelLabels = findViewById(R.id.panel_labels);
@@ -177,6 +177,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         mStateView.displayLoadingState();
         final int total =  getEditItems().size();
         final int[] count = {0};
+
         for(AudioTag tag: getEditItems()) {
             if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(tag.getAudioEncoding()))  {
                 String wavePath = tag.getPath();
@@ -184,7 +185,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                 String flacPath = filePath+".flac";
                 String cmd = "-i \""+wavePath+"\" \""+flacPath+"\"";
                 FFmpegKit.executeAsync(cmd, session -> {
-                    AudioFileRepository.getInstance(getApplication()).scanFileAndSaveTag(new File(flacPath));
+                    repos.scanFileAndSaveTag(new File(flacPath));
                     runOnUiThread(() -> {
                         String message = "Convert '"+tag.getTitle()+"' completed in " + session.getDuration() +" ms.";
                         ToastHelper.showActionMessage(TagsActivity.this, mStateView, Constants.STATUS_SUCCESS, message);
@@ -308,7 +309,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             finish();
         });
         if(StringUtils.isEmpty(displayTag.getAlbum())) {
-            albumView.setText("["+AudioTagUtils.getDefaultAlbum(displayTag)+"]");
+            albumView.setText(String.format("[%s]", AudioTagUtils.getDefaultAlbum(displayTag)));
         }else {
             albumView.setText(displayTag.getAlbum());
             albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -360,7 +361,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             genreView.setText(SRC_NONE);
         }
 
-        String matePath = AudioFileRepository.getInstance(getApplication()).buildCollectionPath(displayTag);
+        String matePath = repos.buildCollectionPath(displayTag);
         String sid = displayTag.getStorageId();
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
@@ -473,19 +474,16 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
        // tagSpan.append(new SpecialLabelUnit("Grouping:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?"N/A":displayTag.getGrouping()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER))
-        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
-                            @Override
-                            public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
-                                Intent resultIntent = new Intent();
-                                if(criteria!=null) {
-                                    criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
-                                    criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getGrouping()));
-                                    ApplicationUtils.setSearchCriteria(resultIntent,criteria);
-                                }
-                                setResult(RESULT_OK, resultIntent);
-                                finish();
-                            }
-                        }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
+            Intent resultIntent = new Intent();
+            if(criteria!=null) {
+                criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
+                criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getGrouping()));
+                ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+            }
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                 new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
                // .append(new SpecialLabelUnit(":Grouping"+StringUtils.ARTIST_SEP+"Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
                //  .append(new SpecialLabelUnit(":Grouping | Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
@@ -509,21 +507,18 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                             }
                         }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                         new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?" - ":displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline()); */
-                .appendMultiClickable(new SpecialClickableUnit(tagInfo, new OnClickableSpanListener() {
-                        @Override
-                        public void onClick(TextView tv, CustomClickableSpan clickableSpan) {
-                            if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
-                                Intent resultIntent = new Intent();
-                                if (criteria != null) {
-                                    criteria.setFilterType(Constants.FILTER_TYPE_ALBUM_ARTIST);
-                                    criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getAlbumArtist()));
-                                    ApplicationUtils.setSearchCriteria(resultIntent, criteria);
-                                }
-                                setResult(RESULT_OK, resultIntent);
-                                finish();
-                            }
+                .appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
+                    if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
+                        Intent resultIntent = new Intent();
+                        if (criteria != null) {
+                            criteria.setFilterType(Constants.FILTER_TYPE_ALBUM_ARTIST);
+                            criteria.setFilterText(StringUtils.trimToEmpty(displayTag.getAlbumArtist()));
+                            ApplicationUtils.setSearchCriteria(resultIntent, criteria);
                         }
-                    }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+                        setResult(RESULT_OK, resultIntent);
+                        finish();
+                    }
+                }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                     new SpecialTextUnit(AudioTagUtils.getAlbumArtistOrArtist(displayTag)).setTextSize(14).useTextBold().showUnderline());
 
         tagInfo.setText(tagSpan.build());
@@ -571,9 +566,9 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     AudioTag buildDisplayTag(boolean reload) {
         AudioTag baseItem = editItems.get(0);
         AudioTag displayTag = baseItem;
-        AudioFileRepository fileRepos = AudioFileRepository.getInstance(getApplication());
+       // AudioFileRepository fileRepos = AudioFileRepository.newInstance(getApplication());
         if(reload) {
-            fileRepos.reloadMediaItem(displayTag);
+            repos.reloadMediaItem(displayTag);
         }
         displayTag = displayTag.clone();
         if(editItems.size()==1) {
@@ -583,7 +578,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         for (int i=1;i<editItems.size();i++) {
             AudioTag item = editItems.get(i);
             if(reload) {
-                fileRepos.reloadMediaItem(item);
+                repos.reloadMediaItem(item);
             }
             AudioTag displayTag2 = item;
             if(!StringUtils.equals(displayTag.getTitle(), displayTag2.getTitle())) {

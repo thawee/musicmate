@@ -28,6 +28,7 @@ import timber.log.Timber;
 public class ScanAudioFileWorker extends Worker {
     private static Operation scanOperation;
     private final ThreadPoolExecutor mExecutor;
+    AudioFileRepository repos; // = AudioFileRepository.newInstance(getApplicationContext());
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -42,6 +43,7 @@ public class ScanAudioFileWorker extends Worker {
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
+        repos = AudioFileRepository.newInstance(getApplicationContext());
         HandlerThread thread = new HandlerThread("ScanFilesWorker");
         thread.start();
         mExecutor = new ThreadPoolExecutor(
@@ -49,7 +51,7 @@ public class ScanAudioFileWorker extends Worker {
                 NUMBER_OF_CORES + 4, //8,   // Max pool size
                 KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
                 KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
-                new LinkedBlockingDeque<Runnable>());  // Work Queue
+                new LinkedBlockingDeque<>());  // Work Queue
     }
 
     @NonNull
@@ -96,10 +98,7 @@ public class ScanAudioFileWorker extends Worker {
             return true;
         }else if(ext.equalsIgnoreCase("dsf")) {
             return true;
-        }else if(ext.equalsIgnoreCase("dff")) {
-            return true;
-        }
-        return false;
+        }else return ext.equalsIgnoreCase("dff");
     }
 
     public static void startScan(Context context) {
@@ -123,10 +122,11 @@ public class ScanAudioFileWorker extends Worker {
                 //Timber.i("scanning"+ dir+":"+ new Date());
                 File[] files = dir.listFiles();
                 if(files == null) return;
+
                 for (File f : files) {
                     if(!f.exists()) continue;
                     if(isValidMediaFile(f)) {
-                        AudioFileRepository.getInstance(getApplicationContext()).scanFileAndSaveTag(f);
+                        repos.scanFileAndSaveTag(f);
                     } else if(f.isDirectory()) {
                         ScanRunnable r = new ScanRunnable(f);
                         mExecutor.execute(r);

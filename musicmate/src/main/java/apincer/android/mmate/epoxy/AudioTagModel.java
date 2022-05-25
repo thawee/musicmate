@@ -9,7 +9,7 @@ import android.view.ViewParent;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.*;
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.airbnb.epoxy.EpoxyAttribute;
@@ -21,11 +21,9 @@ import com.airbnb.epoxy.OnModelLongClickListener;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.SearchCriteria;
-//import apincer.android.mmate.broadcast.MusicListeningService;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.AudioTagUtils;
 import coil.Coil;

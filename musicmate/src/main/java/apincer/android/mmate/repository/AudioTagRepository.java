@@ -19,7 +19,6 @@ import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
-import io.objectbox.query.QueryFilter;
 import timber.log.Timber;
 
 public class AudioTagRepository {
@@ -167,12 +166,8 @@ public class AudioTagRepository {
 
     public boolean isMediaOutdated(String path, long lastModified) {
         List<AudioTag> tags = findByPath(path);
-        if(tags.size()==1 && tags.get(0).getLastModified() >= lastModified) {
-            // tag in library already up-to-dated
-            return false;
-        }
-
-        return true;
+        // tag in library already up-to-dated
+        return tags.size() != 1 || tags.get(0).getLastModified() < lastModified;
     }
 
     public long getAudioTagId(AudioTag tag) {
@@ -273,8 +268,8 @@ public class AudioTagRepository {
         return list;
     }
 
-    public synchronized List findMediaTag(SearchCriteria criteria) {
-        List list = new ArrayList();
+    public synchronized List<AudioTag> findMediaTag(SearchCriteria criteria) {
+        List<AudioTag> list = new ArrayList<>();
         if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query(AudioTag_.audioBitsPerSample.equal(1)).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
@@ -289,53 +284,30 @@ public class AudioTagRepository {
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query(AudioTag_.lossless.equal(true).and(AudioTag_.audioBitsPerSample.notEqual(1)))
-                    .filter(new QueryFilter<AudioTag>() {
-                        @Override
-                        public boolean keep(AudioTag tag) {
-                            if (!AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA()) {
-                                return true; // include to results
-                            } else {
-                                return false; // drop from results
-                            }
-                        }
+                    .filter(tag -> {
+                        // drop from results
+                        return !AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
                     })
                     .order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
-                @Override
-                public boolean keep(AudioTag tag) {
-                    if (AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA()) {
-                        return true; // include to results
-                    } else {
-                        return false; // drop from results
-                    }
-                }
+            Query<AudioTag> query = tagBox.query().filter(tag -> {
+                // drop from results
+                return AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
-                @Override
-                public boolean keep(AudioTag tag) {
-                    if (AudioTagUtils.isPCMLossless(tag) && !tag.isMQA()) {
-                    //if (AudioTagUtils.isHiRes(tag) && !tag.isMQA()) {
-                        return true; // include to results
-                    } else {
-                        return false; // drop from results
-                    }
-                }
+            Query<AudioTag> query = tagBox.query().filter(tag -> {
+                //if (AudioTagUtils.isHiRes(tag) && !tag.isMQA()) {
+                // drop from results
+                return AudioTagUtils.isPCMLossless(tag) && !tag.isMQA(); // include to results
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()==SearchCriteria.TYPE.MY_SONGS && Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())){
-            Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
-                @Override
-                public boolean keep(AudioTag tag) {
-                    return !tag.isManaged();
-                }
-            }).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<AudioTag> query = tagBox.query().filter(tag -> !tag.isManaged()).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.GROUPING){
@@ -382,17 +354,11 @@ public class AudioTagRepository {
             }
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.SEARCH) {
-            list = new ArrayList();
+            list = new ArrayList<>();
             // search title only, limit 5 songs
-            Query<AudioTag> query = tagBox.query().filter(new QueryFilter<AudioTag>() {
-                @Override
-                public boolean keep(AudioTag tag) {
-                    if (StringUtils.contains(tag.getTitle(), criteria.getKeyword())) {
-                        return true; // include from results
-                    } else {
-                        return false; // drop to results
-                    }
-                }
+            Query<AudioTag> query = tagBox.query().filter(tag -> {
+                // drop to results
+                return StringUtils.contains(tag.getTitle(), criteria.getKeyword()); // include from results
             }).order(AudioTag_.artist).order(AudioTag_.title).build();
             List titles = query.find();
             if(titles.size() > 0) {
@@ -405,15 +371,9 @@ public class AudioTagRepository {
             query.close();
 
             // search path
-            query = tagBox.query().filter(new QueryFilter<AudioTag>() {
-                @Override
-                public boolean keep(AudioTag tag) {
-                    if (StringUtils.contains(tag.getPath(), criteria.getKeyword())) {
-                        return true; // include from results
-                    } else {
-                        return false; // drop to results
-                    }
-                }
+            query = tagBox.query().filter(tag -> {
+                // drop to results
+                return StringUtils.contains(tag.getPath(), criteria.getKeyword()); // include from results
             }).order(AudioTag_.artist).order(AudioTag_.title).build();
             AudioTag title = new AudioTag();
             title.setTitle("Search Results");

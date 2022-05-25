@@ -1,7 +1,6 @@
 package apincer.android.mmate.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -462,67 +461,59 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                     .setTitle("")
                     .setView(cview)
                     .setCancelable(true)
-                    .setNegativeButton(R.string.alert_btn_cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
+                    .setNegativeButton(R.string.alert_btn_cancel, (dialogInterface, i) -> dialogInterface.dismiss())
+                    .setPositiveButton(R.string.alert_btn_set, (dialogInterface, i) -> {
+                        List<AudioTag> mediaItems = mainActivity.getEditItems();
+                        boolean singleTrack = mediaItems.size()==1;
+
+                        // String artworkPath = recordingItem.getFrontCoverCache();
+                        String title = String.valueOf(tTitle.getText());
+                        String artist = String.valueOf(tArtist.getText());
+                        String album = String.valueOf(tAlbum.getText());
+                        String genre = String.valueOf(tGenre.getText());
+                        String year = String.valueOf(tYear.getText());
+
+                        for(AudioTag item:mediaItems) {
+                            buildPendingTags(item, title, artist, album, genre, year, singleTrack);
                         }
-                    })
-                    .setPositiveButton(R.string.alert_btn_set, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            List<AudioTag> mediaItems = mainActivity.getEditItems();
-                            boolean singleTrack = mediaItems.size()==1;
 
-                            // String artworkPath = recordingItem.getFrontCoverCache();
-                            String title = String.valueOf(tTitle.getText());
-                            String artist = String.valueOf(tArtist.getText());
-                            String album = String.valueOf(tAlbum.getText());
-                            String genre = String.valueOf(tGenre.getText());
-                            String year = String.valueOf(tYear.getText());
+                        String artworkPath = MediaFileRepository.getDownloadPath(getContext(), "MusicMate/" + tag.getAlbumId()).getAbsolutePath();
 
-                            for(AudioTag item:mediaItems) {
-                                buildPendingTags(item, title, artist, album, genre, year, singleTrack);
-                            }
+                       // URL retrofit = MusicBrainz.getCoverart(tag);
+                        ImageRequest rq = new ImageRequest.Builder(getContext())
+                                .data(MusicbrainzCoverArtProvider.getUriForMediaItem(tag))
+                               // .data(retrofit)
+                                .crossfade(true)
+                                .target(new Target() {
+                                    @Override
+                                    public void onStart(@Nullable Drawable drawable) {
 
-                            String artworkPath = MediaFileRepository.getDownloadPath(getContext(), "MusicMate/" + tag.getAlbumId()).getAbsolutePath();
+                                    }
 
-                           // URL retrofit = MusicBrainz.getCoverart(tag);
-                            ImageRequest rq = new ImageRequest.Builder(getContext())
-                                    .data(MusicbrainzCoverArtProvider.getUriForMediaItem(tag))
-                                   // .data(retrofit)
-                                    .crossfade(true)
-                                    .target(new Target() {
-                                        @Override
-                                        public void onStart(@Nullable Drawable drawable) {
+                                    @Override
+                                    public void onError(@Nullable Drawable drawable) {
 
+                                    }
+
+                                    @Override
+                                    public void onSuccess(@NonNull Drawable drawable) {
+                                        try {
+                                            File path = new File(artworkPath);
+                                            path= path.getParentFile();
+                                            if(!path.exists()) path.mkdirs();
+                                            Bitmap bitmap = UIUtils.drawableToBitmap(drawable);
+                                            writePNG(new File(artworkPath), bitmap);
+                                        } catch (Exception e) {
+                                            Timber.e(e);
                                         }
+                                    }
+                                })
+                                .build();
+                        imageLoader.enqueue(rq);
+                        UpdateAudioFileWorker.startWorker(getContext(),mediaItems, artworkPath);
+                        //MediaItemIntentService.startService(getContext(), Constants.COMMAND_SAVE,mediaItems, artworkPath);
 
-                                        @Override
-                                        public void onError(@Nullable Drawable drawable) {
-
-                                        }
-
-                                        @Override
-                                        public void onSuccess(@NonNull Drawable drawable) {
-                                            try {
-                                                File path = new File(artworkPath);
-                                                path= path.getParentFile();
-                                                if(!path.exists()) path.mkdirs();
-                                                Bitmap bitmap = UIUtils.drawableToBitmap(drawable);
-                                                writePNG(new File(artworkPath), bitmap);
-                                            } catch (Exception e) {
-                                                Timber.e(e);
-                                            }
-                                        }
-                                    })
-                                    .build();
-                            imageLoader.enqueue(rq);
-                            UpdateAudioFileWorker.startWorker(getContext(),mediaItems, artworkPath);
-                            //MediaItemIntentService.startService(getContext(), Constants.COMMAND_SAVE,mediaItems, artworkPath);
-
-                            dialogInterface.dismiss();
-                        }
+                        dialogInterface.dismiss();
                     })
                     .create();
 

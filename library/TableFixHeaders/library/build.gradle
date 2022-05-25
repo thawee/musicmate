@@ -9,4 +9,5 @@ android {
         targetSdkVersion versions.targetSdk
 
     }
+    namespace 'com.inqbarna.tablefixheaders'
 }

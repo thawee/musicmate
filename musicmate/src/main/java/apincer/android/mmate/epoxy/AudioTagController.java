@@ -148,9 +148,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             this.criteria = criteria;
 
             SearchCriteria finalCriteria = criteria;
-            Observable<List> observable = Observable.fromCallable(() -> {
-                return tagRepos.findMediaTag(finalCriteria);
-            });
+            Observable<List> observable = Observable.fromCallable(() -> tagRepos.findMediaTag(finalCriteria));
             observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List>() {
                 @Override
                 public void onSubscribe(Disposable d) {
@@ -174,7 +172,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                     loading = false;
                 }
             });
-        };
+        }
     }
 
     public String getHeaderTitle() {
@@ -303,7 +301,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     public void toggleSelections() {
         if(selections.size() == getAdapter().getItemCount()) {
             selections.clear();
-            List list = new ArrayList();
+            List<AudioTag> list = new ArrayList<>();
             for(int i=0; i<getAdapter().getItemCount();i++) {
                 AudioTagModel model = (AudioTagModel) getAdapter().getModelAtPosition(i);
                 list.add(model.tag);
@@ -311,7 +309,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             setData(list);
         }else {
             selections.clear();
-            List list = new ArrayList();
+            List<AudioTag> list = new ArrayList<>();
             for(int i=0; i<getAdapter().getItemCount();i++) {
                 AudioTagModel model = (AudioTagModel) getAdapter().getModelAtPosition(i);
                 selections.add(model.tag);
@@ -350,7 +348,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     }
 
     public List<String> getHeaderTitles(Context context) {
-        List<String> titles = new ArrayList();
+        List<String> titles = new ArrayList<>();
         if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);

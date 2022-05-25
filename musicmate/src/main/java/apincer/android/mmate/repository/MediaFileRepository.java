@@ -7,9 +7,8 @@ import android.os.Environment;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
-import com.anggrayudi.storage.file.StorageId;
 import com.anggrayudi.storage.file.DocumentFileUtils;
-import com.anggrayudi.storage.media.MediaStoreCompat;
+import com.anggrayudi.storage.file.StorageId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;

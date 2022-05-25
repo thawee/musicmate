@@ -118,20 +118,47 @@ public class TagsEditorFragment extends Fragment {
         PopupMenu popup = new PopupMenu(getContext(), fabMainAction);
         popup.getMenuInflater().inflate(R.menu.menu_editor_tools, popup.getMenu());
         UIUtils.makePopForceShowIcon(popup);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if(item.getItemId() == R.id.menu_editor_tool_read_tag) {
-                    doShowReadTagsPreview();
-                }else if(item.getItemId() == R.id.menu_editor_tool_format_tag) {
-                    doFormatTags();
-                }if(item.getItemId() == R.id.menu_editor_tool_pick_coverart) {
-                    doPickCoverart();
-                }
-                 return false;
+        popup.setOnMenuItemClickListener(item -> {
+            if(item.getItemId() == R.id.menu_editor_tool_read_tag) {
+                doShowReadTagsPreview();
+            }else if(item.getItemId() == R.id.menu_editor_tool_format_tag) {
+                doFormatTags();
+            }if(item.getItemId() == R.id.menu_editor_tool_pick_coverart) {
+                doPickCoverart();
+            }if(item.getItemId() == R.id.menu_editor_tool_info) {
+                doShowTagsfromFile();
             }
+             return false;
         });
         popup.show();
+    }
+
+    private void doShowTagsfromFile() {
+        AlertDialog alert = new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme)
+                .setTitle("")
+               // .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+       /* btnOK.setOnClickListener(v -> {
+            List<String> list = mTagListLayout.getTags();
+            MediaTagParser parser = new MediaTagParser();
+            for(AudioTag item:mediaItems) {
+                String mediaPath =  item.getPath();
+                File file = new File(mediaPath);
+                if(!file.exists()) continue;
+                parser.parse(item, list);
+            }
+            viewHolder.bindViewHolder(mainActivity.buildDisplayTag(false));
+
+        */
+        //    alert.dismiss();
+      //  });
+       // btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
     }
 
     @Override
@@ -857,27 +884,19 @@ public class TagsEditorFragment extends Fragment {
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        btnOK.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                List<String> list = mTagListLayout.getTags();
-                MediaTagParser parser = new MediaTagParser();
-                for(AudioTag item:mediaItems) {
-                    String mediaPath =  item.getPath();
-                    File file = new File(mediaPath);
-                    if(!file.exists()) continue;
-                    parser.parse(item, list);
-                }
-                viewHolder.bindViewHolder(mainActivity.buildDisplayTag(false));
-                alert.dismiss();
+        btnOK.setOnClickListener(v -> {
+            List<String> list = mTagListLayout.getTags();
+            MediaTagParser parser = new MediaTagParser();
+            for(AudioTag item:mediaItems) {
+                String mediaPath =  item.getPath();
+                File file = new File(mediaPath);
+                if(!file.exists()) continue;
+                parser.parse(item, list);
             }
+            viewHolder.bindViewHolder(mainActivity.buildDisplayTag(false));
+            alert.dismiss();
         });
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alert.dismiss();
-            }
-        });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
         alert.show();
     }
 

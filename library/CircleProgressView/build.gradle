@@ -22,6 +22,7 @@ android {
     }
     productFlavors {
     }
+    namespace 'at.grabner.circleprogress'
 
 
 }

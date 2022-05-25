@@ -38,7 +38,8 @@ public class BroadcastHelper {
     private volatile static AudioTag playingSong;
     private volatile static MusicPlayerInfo playerInfo;
     private static final List<MusicBroadcastReceiver> receivers = new ArrayList<>();
-    private Callback callback;
+    private final Callback callback;
+    private AudioFileRepository provider; // = AudioFileRepository.newInstance(context);
 
     public BroadcastHelper(@NonNull Callback callback) {
         this.callback = callback;
@@ -61,9 +62,10 @@ public class BroadcastHelper {
     }
 
     private void registerReceiver(Context context, MusicBroadcastReceiver receiver) {
-        if(receiver instanceof MusicBroadcastReceiver) {
+        if(receiver != null) {
             ((MusicBroadcastReceiver)receiver).register(context);
         }
+       // provider = AudioFileRepository.newInstance(context);
         receivers.add(receiver);
     }
 
@@ -71,7 +73,7 @@ public class BroadcastHelper {
         if(!receivers.isEmpty()) {
             for (MusicBroadcastReceiver receiver : receivers) {
                 try {
-                    if(receiver instanceof MusicBroadcastReceiver) {
+                    if(receiver != null) {
                         context.unregisterReceiver((BroadcastReceiver)receiver);
                     }
                 } catch (Exception ex) {
@@ -86,14 +88,17 @@ public class BroadcastHelper {
         currentTitle = StringUtils.trimTitle(currentTitle);
         currentArtist = StringUtils.trimTitle(currentArtist);
         currentAlbum = StringUtils.trimTitle(currentAlbum);
-        AudioFileRepository provider = AudioFileRepository.getInstance(context);
+
+        if(provider ==null) {
+            provider = AudioFileRepository.newInstance(context);
+        }
 
         if(provider!=null) {
             try {
                 AudioTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
                 if(newPlayingSong!=null && !newPlayingSong.equals(playingSong)) {
                     playingSong = newPlayingSong;
-                    callback.onPlaying(playingSong);
+                    callback.onPlaying(context, playingSong);
                 }else {
                     playingSong = null;
                 }
@@ -106,7 +111,7 @@ public class BroadcastHelper {
     }
 
     protected void setPlayerInfo(MusicPlayerInfo playerInfo) {
-        this.playerInfo = playerInfo;
+        BroadcastHelper.playerInfo = playerInfo;
     }
 
     public static void playNextSongOnMatched(Context context, AudioTag item) {

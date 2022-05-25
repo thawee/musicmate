@@ -53,7 +53,7 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
                 CoverArtArchiveClient client = new DefaultCoverArtArchiveClient(true);
                 String path = uri.getPath();
                 if(path.startsWith("/")) {
-                    path = path.substring(1,path.length());
+                    path = path.substring(1);
                 }
                 UUID mbid = UUID.fromString(path);
                 CoverArt coverArt = client.getByMbid(mbid);

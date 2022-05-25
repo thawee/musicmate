@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt' // require for object box
-apply plugin: 'com.mikepenz.aboutlibraries.plugin'
-apply plugin: 'io.objectbox' // Apply last.
+//apply plugin: 'com.android.application'
+//apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-kapt' // require for object box
+//apply plugin: 'com.mikepenz.aboutlibraries.plugin'
+//apply plugin: 'io.objectbox' // Apply last.
 //apply plugin: 'kotlin-kapt'
+
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("kotlin-kapt")
+    id("com.mikepenz.aboutlibraries.plugin")
+    id("io.objectbox")
+}
 
 android {
     compileSdkVersion versions.compileSdk
@@ -30,7 +38,7 @@ android {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
         versionCode 50
-        versionName  "3.0.10 "+ versions.buildDate
+        versionName  "3.0.11 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
@@ -40,15 +48,16 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
             jvmTarget = "1.8"
         }
     }
 
-    lintOptions {
-        abortOnError true
-    }
     ///dexOptions {
        // preDexLibraries = true
        /// jumboMode true
@@ -64,16 +73,21 @@ android {
     buildFeatures {
         dataBinding = true
     }
-
     packagingOptions {
-        exclude 'META-INF/library_release.kotlin_module'
-        exclude 'META-INF/library-core_release.kotlin_module'
+        resources {
+            excludes += ['META-INF/library_release.kotlin_module', 'META-INF/library-core_release.kotlin_module']
+        }
     }
+
     testOptions {
         unitTests {
             includeAndroidResources = true
         }
     }
+    lint {
+        abortOnError true
+    }
+    namespace 'apincer.android.mmate'
 }
 kapt {
     correctErrorTypes = true

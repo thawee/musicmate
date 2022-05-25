@@ -62,7 +62,7 @@ public class AudioFileRepository {
     private static final String MQA_ORIGINAL_SAMPLING_FREQUENCY = "ORFS";
     private static final String MQA_SAMPLE_RATE="MQASAMPLERATE";
 
-    private static AudioFileRepository INSTANCE;
+    //private static AudioFileRepository INSTANCE;
 
     private final Context context;
     private final MediaFileRepository fileRepos;
@@ -71,6 +71,10 @@ public class AudioFileRepository {
     private String STORAGE_SECONDARY;
 
     public static final String ACTION = "com.apincer.mmate.provider.MediaItemProvider";
+
+    public static AudioFileRepository newInstance(Context application) {
+        return new AudioFileRepository(application);
+    }
 
     public Context getContext() {
         return context;
@@ -82,7 +86,7 @@ public class AudioFileRepository {
         STORAGE_SECONDARY = getSecondaryId(context);
         this.fileRepos = new MediaFileRepository(context);
         this.tagRepos = AudioTagRepository.getInstance(); //new AudioTagRepository();
-        INSTANCE = this;
+        //INSTANCE = this;
     }
 
     public static String getSecondaryId(Context context) {
@@ -95,13 +99,13 @@ public class AudioFileRepository {
         }
         return StorageId.PRIMARY;
     }
-
-    public static AudioFileRepository getInstance(Context context) {
+/*
+    public static AudioFileRepository getInstancexxxx(Context context) {
         if(INSTANCE==null) {
             INSTANCE = new AudioFileRepository(context);
         }
         return INSTANCE;
-    }
+    } */
 
     public static InputStream getArtworkAsStream(String mediaPath) {
         InputStream input = getEmbedArtworkAsStream(mediaPath);
