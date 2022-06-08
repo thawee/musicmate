@@ -133,7 +133,7 @@ public final class Constants {
     public static final String TITLE_MQA_AUDIO = "Master Quality Authenticated";
     public static final String TITLE_HIRES = "High-Res Audio";
     public static final String TITLE_HIFI_LOSSLESS = "Lossless Audio";
-    public static final String TITLE_HIFI_QUALITY = "High Quality";
+    public static final String TITLE_HIFI_QUALITY = "Low-Res Audio";
 
   //  public static final String PREF_TAG_ENCODING = "preference_matadata_encodings";
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
@@ -160,6 +160,7 @@ public final class Constants {
     public static final String SRC_JOOX = "Joox";
     public static final String SRC_QOBUZ = "Qobuz";
     public static final String SRC_CD = "CD";
+    public static final String SRC_CD_LOSSLESS = "CD (LossLess)";
     public static final String SRC_SACD = "SACD";
     public static final String SRC_VINYL = "VINYL";
     public static final String SRC_APPLE = "Apple";

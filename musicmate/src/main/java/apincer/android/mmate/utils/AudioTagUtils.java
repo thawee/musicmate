@@ -442,7 +442,7 @@ public class AudioTagUtils {
             return R.drawable.icon_joox;
         } else if (letter.equalsIgnoreCase(Constants.SRC_QOBUZ)) {
             return R.drawable.icon_qobuz;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_CD)) {
+        } else if (letter.equalsIgnoreCase(Constants.SRC_CD) || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
             return R.drawable.icon_cd;
         } else if (letter.equalsIgnoreCase(Constants.SRC_SACD)) {
             return R.drawable.icon_sacd;

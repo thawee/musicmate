@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="420dp"
+    android:layout_marginLeft="@dimen/dimen_24_dp"
+    android:layout_marginRight="@dimen/dimen_24_dp"
+    android:orientation="vertical"
+    android:background="@drawable/shape_round_actionview_black">
+
+    <TextView
+        android:id="@+id/full_filename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dimen_4_dp"
+        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:layout_marginLeft="@dimen/dimen_8_dp"
+        android:layout_marginRight="@dimen/dimen_8_dp"
+        android:paddingRight="@dimen/spacing_medium"
+        android:paddingLeft="@dimen/spacing_medium"
+        android:maxLines="3"
+        android:textSize="10sp"
+        android:gravity="left"
+        android:textColor="@color/grey200"
+        android:background="@drawable/shape_rounded_edittext"
+        tools:text="directory/track - title"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="320dp">
+        <LinearLayout
+            android:id="@+id/contentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        </LinearLayout>
+    </ScrollView>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dimen_32_dp"
+        android:layout_marginLeft="@dimen/dimen_32_dp"
+        android:layout_marginRight="@dimen/dimen_32_dp"
+        android:layout_marginBottom="@dimen/dimen_12_dp">
+
+        <com.skydoves.elasticviews.ElasticLayout
+            android:id="@+id/btn_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="@dimen/spacing_medium"
+            android:layout_gravity="center"
+            android:background="@drawable/shape_border_back">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:paddingLeft="@dimen/dimen_8_dp"
+                android:paddingRight="@dimen/dimen_8_dp"
+                android:text="OK"
+                android:textColor="@color/white" />
+        </com.skydoves.elasticviews.ElasticLayout>
+    </RelativeLayout>
+</LinearLayout>

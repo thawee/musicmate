@@ -63,16 +63,12 @@
 
     <string-array name="default_album_artist" >
         <item>Audiophile</item>
-        <item>Film</item>
-        <item>Denon</item>
+        <item>Soundtracks</item>
         <item>HDTracks</item>
         <item>GMM Grammy</item>
         <item>Chesky Records</item>
         <item>Linn Records</item>
-        <item>RS Group</item>
-        <item>R-Siam</item>
         <item>Remastered</item>
-        <item>Sennheiser</item>
         <item>Various Artists</item>
         <item>Worship Songs</item>
     </string-array>
@@ -90,6 +86,7 @@
         <item>Joox</item>
         <item>Qobuz</item>
         <item>CD</item>
+        <item>CD (LossLess)</item>
         <item>SACD</item>
         <item>VINYL</item>
         <item>Apple</item>
@@ -106,7 +103,7 @@
         <item>Vocal</item>
         <item>Film</item>
         <item>Classical</item>
-        <item>Instrument</item>
+        <item>Classical, Instrument</item>
         <item>Classical, Concertos</item>
         <item>Jazz</item>
         <item>Jazz, Ballads</item>
@@ -116,6 +113,7 @@
         <item>Blues, Country, Folk</item>
         <item>Soul, Funk, R&amp;B</item>
         <item>Pop</item>
+        <item>Pop, Acoustic</item>
         <item>Pop, Dance</item>
         <item>Pop, Rock</item>
         <item>Alternative</item>

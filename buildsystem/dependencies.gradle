@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.2.0', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '7.2.1', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 31,
@@ -18,7 +18,7 @@ ext.versions = [
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.2.0',
+        aboutlibraries     : '10.3.0',
         //versionsCheck      : '0.42.0',
 ]
 
@@ -35,7 +35,7 @@ def deps = [:]
 
 def google = [:]
 // https://github.com/material-components/material-components-android/releases
-google.material = "com.google.android.material:material:1.6.0" // 1.6.0-beta01" //1.5.0"
+google.material = "com.google.android.material:material:1.6.1" // 1.6.0-beta01" //1.5.0"
 google.gson = "com.google.code.gson:gson:2.9.0" //2.8.9"
 google.android_maps_utils = "com.google.maps.android:android-maps-utils:2.3.0" //0.5" //23/06/2019
 deps.google = google
@@ -51,7 +51,7 @@ androidx.activity = "androidx.activity:activity:1.5.0-rc01" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.3.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
-androidx.appCompat = "androidx.appcompat:appcompat:1.4.1"
+androidx.appCompat = "androidx.appcompat:appcompat:1.4.2"
 //https://developer.android.com/jetpack/androidx/releases/cardview
 androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout
@@ -112,7 +112,7 @@ def maps = [:]
 //https://github.com/osmdroid/osmdroid
 maps.osmdroid = "org.osmdroid:osmdroid-android:6.1.13"
 maps.osmdroid_shape = "org.osmdroid:osmdroid-shape:6.1.11"
-maps.osmbonuspack = "com.github.MKergall:osmbonuspack:6.8.0"
+maps.osmbonuspack = "com.github.MKergall:osmbonuspack:6.9.0"
 deps.maps = maps
 
 def retrofit = [:]
@@ -268,7 +268,7 @@ deps.timber = "com.jakewharton.timber:timber:5.0.1"
 deps.junit = "junit:junit:$versions.junit"
 deps.mock_web_server = "com.squareup.okhttp3:mockwebserver:$versions.mockwebserver"
 //https://github.com/ReactiveX/RxAndroid
-deps.rxjava3 = "io.reactivex.rxjava3:rxjava:3.1.4" //10/12/2019
+deps.rxjava3 = "io.reactivex.rxjava3:rxjava:3.1.5" //10/12/2019
 deps.rxjava3_rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.0"
 deps.rxjava2 = "io.reactivex.rxjava2:rxjava:2.2.21" //10/12/2019
 deps.rxjava2_rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1" //10/12/2019

@@ -52,8 +52,8 @@ public class FlacInfoReader
 
             MetadataBlockDataStreamInfo mbdsi = null;
             boolean isLastBlock = false;
-            String mqaEncoder = null;
-            String originalSampleRate = null;
+           // String mqaEncoder = null;
+           // String originalSampleRate = null;
 
             //Search for StreamInfo Block, but even after we found it we still have to continue through all
             //the metadata blocks so that we can find the start of the audio frames which we need to calculate

@@ -1,6 +1,7 @@
 package apincer.android.mmate.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -49,6 +50,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
 import apincer.android.mmate.utils.AudioTagUtils;
@@ -134,30 +136,30 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doShowTagsfromFile() {
+        View cview = getLayoutInflater().inflate(R.layout.view_actionview_show_tags_from_file, null);
+        View okBtn = cview.findViewById(R.id.btn_ok);
+        TextView filenameView = cview.findViewById(R.id.full_filename);
+        filenameView.setText(mediaItems.get(0).getPath());
+        View contentView = cview.findViewById(R.id.contentLayout);
+
+        // add tag to view
+        AudioFileRepository repos = AudioFileRepository.newInstance(getApplicationContext());
+        //repos.
         AlertDialog alert = new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme)
                 .setTitle("")
-               // .setView(cview)
+                .setView(cview)
                 .setCancelable(true)
                 .create();
+        okBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alert.dismiss();
+            }
+        });
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-       /* btnOK.setOnClickListener(v -> {
-            List<String> list = mTagListLayout.getTags();
-            MediaTagParser parser = new MediaTagParser();
-            for(AudioTag item:mediaItems) {
-                String mediaPath =  item.getPath();
-                File file = new File(mediaPath);
-                if(!file.exists()) continue;
-                parser.parse(item, list);
-            }
-            viewHolder.bindViewHolder(mainActivity.buildDisplayTag(false));
-
-        */
-        //    alert.dismiss();
-      //  });
-       // btnCancel.setOnClickListener(v -> alert.dismiss());
         alert.show();
     }
 
