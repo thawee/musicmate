@@ -154,8 +154,12 @@ public class ApplicationUtils {
         Uri uri = MusicFileProvider.getUriForFile(path.getParentFile().getAbsolutePath());
 
         Intent intent = new Intent();
-        intent.setAction(android.content.Intent.ACTION_VIEW);
-        intent.setType("resource/folder");
+       // intent.setAction(android.content.Intent.ACTION_VIEW);
+       // intent.setType("resource/folder");
+
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType("file/*");
+
         intent.setData(uri);
         tagsActivity.startActivity(intent);
     }
