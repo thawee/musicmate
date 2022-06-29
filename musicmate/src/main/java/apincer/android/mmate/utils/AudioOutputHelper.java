@@ -53,7 +53,25 @@ public class AudioOutputHelper {
         }
 
         String name;
+        int bitPerSampling;
+        long samplingRate;
         String description;
+
+        public int getBitPerSampling() {
+            return bitPerSampling;
+        }
+
+        public void setBitPerSampling(int bitPerSampling) {
+            this.bitPerSampling = bitPerSampling;
+        }
+
+        public long getSamplingRate() {
+            return samplingRate;
+        }
+
+        public void setSamplingRate(long samplingRate) {
+            this.samplingRate = samplingRate;
+        }
 
         public String getCodec() {
             return codec;
@@ -92,7 +110,9 @@ public class AudioOutputHelper {
         // text = text+"\nBuffer Size and sample rate; Size :" + size + " & SampleRate: " + rate +" & MusicActive: "+audioManager.isMusicActive();
 
         String dName = String.valueOf(ri.getName());
-        String dType = StringUtils.trimToEmpty(String.valueOf(ri.getDescription()));
+        int devicetype = ri.getDeviceType();
+
+       // String dType = StringUtils.trimToEmpty(String.valueOf(ri.getDescription()));
         //  String deviceName = "";
         //  String deviceSamplingRate = "";
         AudioDeviceInfo[] adi = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
@@ -100,24 +120,18 @@ public class AudioOutputHelper {
         for (AudioDeviceInfo a : adi) {
             // final int type = a.getType();
             //   text = text+"\n Audio Device: "+a.getProductName()+" & SampleRate: "+ Arrays.toString(a.getSampleRates()) +" & type: "+a.getType() +" & toString"+a.toString();
-            if ("Phone".equalsIgnoreCase(dName)) {
-               // String bps = "16";
-                int[] c = a.getEncodings();
-                String bps = getBPSString(c[0]);
-                outputDevice.setName("Android SRC");
-                outputDevice.setCodec(Build.MODEL);
-                outputDevice.setDescription(getDescription(bps, srcRate));
-                outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
-                callback.onReady(outputDevice);
-                break;
-            } else if ("USB".equalsIgnoreCase(dName) || (a.getType() == AudioDeviceInfo.TYPE_USB_DEVICE || a.getType() == AudioDeviceInfo.TYPE_USB_HEADSET)) {
-                outputDevice.setName(dName);
-                outputDevice.setDescription(Arrays.toString(a.getSampleRates()));
-                int[] c = a.getEncodings();
-                String bps = getBPSString(c[0]);
-                String rate = Arrays.toString(a.getSampleRates()); //a.getSampleRates();
-                outputDevice.setDescription(getDescription(bps, rate));
-
+           // if ("Phone".equalsIgnoreCase(dName)) {
+             if (isBuiltInDevice(devicetype) || isWriredDevice(devicetype)) {
+                 setResolutions(outputDevice, a);
+                 outputDevice.setName("Android SRC");
+                 outputDevice.setCodec(Build.MODEL);
+                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+                 callback.onReady(outputDevice);
+                 break;
+                 // } else if ("USB".equalsIgnoreCase(dName) || (a.getType() == AudioDeviceInfo.TYPE_USB_DEVICE || a.getType() == AudioDeviceInfo.TYPE_USB_HEADSET)) {
+             }else if (isUSBDevice(devicetype)) {
+                 outputDevice.setName(dName);
+                setResolutions(outputDevice, a);
                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                 outputDevice.setAddress(a.getAddress());
                 UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
@@ -128,19 +142,24 @@ public class AudioOutputHelper {
                 }
                 callback.onReady(outputDevice);
                 break;
-            } else if (dType.toLowerCase().contains("bluetooth")) {
+                //} else if (dType.toLowerCase().contains("bluetooth")) {
+            }else  if (isBluetoothDevice(devicetype)) {
                 // bluetooth
                 // BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
                 outputDevice.setAddress(a.getAddress());
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
                 getA2DP(context, outputDevice, callback);
-            } else {
+             }else if (isHDMIDevice(devicetype)) {
+                 outputDevice.setName(dName);
+                 setResolutions(outputDevice, a);
+                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
+                 callback.onReady(outputDevice);
+                 break;
+                 //} else if (dType.toLowerCase().contains("bluetooth")) {
+             } else {
                 // others
-                int[] c = a.getEncodings();
-                String bps = getBPSString(c[0]);
                 outputDevice.setName("Android SRC");
-                //String bps = "16";
-                outputDevice.setDescription(getDescription(bps, srcRate));
+                setResolutions(outputDevice, a);
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
                 break;
@@ -148,10 +167,190 @@ public class AudioOutputHelper {
         }
     }
 
+    private static boolean isHDMIDevice(int devicetype) {
+        if( devicetype == AudioDeviceInfo.TYPE_HDMI ||
+                devicetype == AudioDeviceInfo.TYPE_HDMI_ARC) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isUSBDevice(int devicetype) {
+        if( devicetype == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
+                devicetype == AudioDeviceInfo.TYPE_USB_DEVICE) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isWriredDevice(int devicetype) {
+        if( devicetype == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                devicetype == AudioDeviceInfo.TYPE_WIRED_HEADSET) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isBuiltInDevice(int devicetype) {
+        if( devicetype == AudioDeviceInfo.TYPE_BUILTIN_EARPIECE ||
+                devicetype == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isBluetoothDevice(int devicetype) {
+        if( devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Converts an {@link AudioDeviceInfo} object into a human readable representation
+     *
+     * @param adi The AudioDeviceInfo object to be converted to a String
+     * @return String containing all the information from the AudioDeviceInfo object
+     */
+    static String toString(AudioDeviceInfo adi) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Id: ");
+        sb.append(adi.getId());
+        sb.append("\nProduct name: ");
+        sb.append(adi.getProductName());
+        sb.append("\nType: ");
+        sb.append(typeToString(adi.getType()));
+        sb.append("\nIs source: ");
+        sb.append((adi.isSource() ? "Yes" : "No"));
+        sb.append("\nIs sink: ");
+        sb.append((adi.isSink() ? "Yes" : "No"));
+        sb.append("\nChannel counts: ");
+        int[] channelCounts = adi.getChannelCounts();
+        sb.append(intArrayToString(channelCounts));
+        sb.append("\nChannel masks: ");
+        int[] channelMasks = adi.getChannelMasks();
+        sb.append(intArrayToString(channelMasks));
+        sb.append("\nChannel index masks: ");
+        int[] channelIndexMasks = adi.getChannelIndexMasks();
+        sb.append(intArrayToString(channelIndexMasks));
+        sb.append("\nEncodings: ");
+        int[] encodings = adi.getEncodings();
+        sb.append(intArrayToString(encodings));
+        sb.append("\nSample Rates: ");
+        int[] sampleRates = adi.getSampleRates();
+        sb.append(intArrayToString(sampleRates));
+        return sb.toString();
+    }
+
+    /**
+     * Converts the value from {@link AudioDeviceInfo#getType()} into a human
+     * readable string
+     * @param type One of the {@link AudioDeviceInfo}.TYPE_* values
+     *             e.g. AudioDeviceInfo.TYPE_BUILT_IN_SPEAKER
+     * @return string which describes the type of audio device
+     */
+    static String typeToString(int type){
+        switch (type) {
+            case AudioDeviceInfo.TYPE_AUX_LINE:
+                return "aux line-level connectors";
+            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                return "Bluetooth device w/ A2DP profile";
+            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+                return "Bluetooth device w/ telephony";
+            case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE:
+                return "built-in earphone speaker";
+            case AudioDeviceInfo.TYPE_BUILTIN_MIC:
+                return "built-in microphone";
+            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
+                return "built-in speaker";
+            case AudioDeviceInfo.TYPE_BUS:
+                return "BUS";
+            case AudioDeviceInfo.TYPE_DOCK:
+                return "DOCK";
+            case AudioDeviceInfo.TYPE_FM:
+                return "FM";
+            case AudioDeviceInfo.TYPE_FM_TUNER:
+                return "FM tuner";
+            case AudioDeviceInfo.TYPE_HDMI:
+                return "HDMI";
+            case AudioDeviceInfo.TYPE_HDMI_ARC:
+                return "HDMI audio return channel";
+            case AudioDeviceInfo.TYPE_IP:
+                return "IP";
+            case AudioDeviceInfo.TYPE_LINE_DIGITAL:
+                return "line digital";
+            case AudioDeviceInfo.TYPE_TELEPHONY:
+                return "telephony";
+            case AudioDeviceInfo.TYPE_TV_TUNER:
+                return "TV tuner";
+            case AudioDeviceInfo.TYPE_USB_ACCESSORY:
+                return "USB accessory";
+            case AudioDeviceInfo.TYPE_USB_DEVICE:
+                return "USB device";
+            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                return "wired headphones";
+            case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                return "wired headset";
+            default:
+            case AudioDeviceInfo.TYPE_UNKNOWN:
+                return "";
+        }
+    }
+
+    private static void setResolutions(Device outputDevice, AudioDeviceInfo device) {
+        int encoding = intArrayLastIndex(device.getEncodings());
+        int bps = 16;
+        switch (encoding) {
+                case AudioFormat.ENCODING_PCM_8BIT:
+                    bps = 8;
+                    break;
+                case AudioFormat.ENCODING_PCM_16BIT:
+                    bps = 16;
+                    break;
+                case AudioFormat.ENCODING_PCM_FLOAT:
+                    bps = 24;
+                    break;
+                case AudioFormat.ENCODING_PCM_24BIT_PACKED:
+                    bps = 24;
+                    break;
+                case AudioFormat.ENCODING_PCM_32BIT:
+                    bps = 32;
+           // default:
+           //     bps = 16;
+        }
+        outputDevice.setBitPerSampling(bps);
+
+        int rate = intArrayLastIndex(device.getSampleRates());
+        outputDevice.setSamplingRate(rate);
+        String bitString = StringUtils.getFormatedBitsPerSample(bps);
+        String samplingString = StringUtils.getFormatedAudioSampleRate(rate, true);
+        outputDevice.setDescription(bitString+"/"+samplingString);
+    }
+
+    /**
+     * Converts an integer array into a string where each int is separated by a space
+     *
+     * @param integerArray the integer array to convert to a string
+     * @return string containing all the integer values separated by spaces
+     */
+    private static String intArrayToString(int[] integerArray){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < integerArray.length; i++){
+            sb.append(integerArray[i]);
+            if (i != integerArray.length -1) sb.append(" ");
+        }
+        return sb.toString();
+    }
+    private static int intArrayLastIndex(int[] integerArray){
+        return integerArray[integerArray.length-1];
+    }
+
     public static void getA2DP(Context context, Device device, Callback callback) {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
 
+            @SuppressLint("MissingPermission")
             @Override
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
                 List<BluetoothDevice> devices = proxy.getConnectedDevices();
@@ -246,14 +445,14 @@ public class AudioOutputHelper {
         if(sampleRate.startsWith("[")) {
             sampleRate = sampleRate.substring(1);
             if(sampleRate.contains(",")) {
-                sampleRate = sampleRate.substring(sampleRate.lastIndexOf(","));
+                sampleRate = sampleRate.substring(sampleRate.lastIndexOf(",")+1);
             }
         }
         if(sampleRate.endsWith("]")) {
             sampleRate = sampleRate.substring(0, sampleRate.length()-1);
         }
 
-        String samString = StringUtils.getFormatedAudioSampleRate(StringUtils.toLong(sampleRate), true);
+        String samString = StringUtils.getFormatedAudioSampleRate(StringUtils.toLong(StringUtils.trimToEmpty(sampleRate)), true);
         return bitString+" / "+samString;
     }
 }
