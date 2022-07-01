@@ -166,7 +166,10 @@
 					   android:gravity="bottom|center_horizontal"
 					   android:layout_alignParentBottom="true"
 					   android:layout_marginBottom="@dimen/dimen_64_dp">
+					   <!--
 					   <include layout="@layout/view_now_playing"/>
+					   -->
+					   <include layout="@layout/view_now_playing_imgleft"/>
 				   </LinearLayout>
    			</RelativeLayout>
 

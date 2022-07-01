@@ -4,6 +4,7 @@ import static com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -117,13 +118,15 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
            // this.mPlayerView.setVisibility(View.VISIBLE);
               holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
               holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
-   //         holder.mTitle.setTextColor(holder.mContext.getColor(R.color.fab_listening_background));
+              holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
+            //         holder.mTitle.setTextColor(holder.mContext.getColor(R.color.fab_listening_background));
         }else {
           //  holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item));
            // this.mPlayerView.setVisibility(View.GONE);
           //  holder.mTitle.setTextColor(holder.mContext.getColor(R.color.grey100));
             holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
             holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
+            holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD);
         }
 
         // download label
