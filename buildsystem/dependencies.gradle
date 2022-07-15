@@ -283,7 +283,7 @@ deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 deps.storage = "com.anggrayudi:storage:1.4.0"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
-deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1'
+deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1-1.LTS' //4.5.1'
 deps.coverartarchive = 'fm.last:coverartarchive-api:2.1.1'
 //https://github.com/greenrobot/EventBus
 deps.eventbus = 'org.greenrobot:eventbus:3.3.1'

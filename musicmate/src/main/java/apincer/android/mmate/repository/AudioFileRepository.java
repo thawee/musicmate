@@ -1321,4 +1321,18 @@ public class AudioFileRepository {
             }
         }
     }
+
+    public void writeTags(String targetPath, AudioTag tag) {
+        if (targetPath == null || tag == null) {
+            return;
+        }
+
+        File file = new File(targetPath);
+        setupTagOptionsForWriting();
+        AudioFile audioFile = buildAudioFile(file.getAbsolutePath(),"rw");
+
+        // save default tags
+        Tag existingTags = audioFile.getTagOrCreateAndSetDefault();
+        saveTagsToFile(audioFile, existingTags, tag);
+    }
 }

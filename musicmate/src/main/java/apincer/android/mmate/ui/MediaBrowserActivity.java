@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.transition.Slide;
@@ -14,13 +15,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
@@ -33,23 +37,32 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.epoxy.EpoxyViewHolder;
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.FFmpegSession;
+import com.arthenica.ffmpegkit.ReturnCode;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.skydoves.powerspinner.IconSpinnerAdapter;
+import com.skydoves.powerspinner.IconSpinnerItem;
+import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
+import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -66,6 +79,7 @@ import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
+import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.AudioTagUtils;
@@ -76,6 +90,7 @@ import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
+import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.other.SpecialGravity;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
@@ -1131,6 +1146,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 doShowEditActivity(epoxyController.getCurrentSelections());
                 mode.finish();
                 return true;
+            }else if (id == R.id.action_encoding_file) {
+                doEncodingAudioFiles(epoxyController.getCurrentSelections());
+                mode.finish();
+                return true;
             }else if (id == R.id.action_select_all) {
                 epoxyController.toggleSelections();
                 int count = epoxyController.getSelectedItemCount();
@@ -1152,5 +1171,139 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
            // epoxyController.loadSource(null);
            // Tools.setSystemBarColor(MultiSelect.this, R.color.colorPrimary);
         }
+    }
+
+    private void doEncodingAudioFiles(ArrayList<AudioTag> selections) {
+        // convert WAVE to AIFF, FLAC, ALAC
+        // convert AIFF to WAVE, FLAC, ALAC
+        // convert FLAC to ALAC
+        // convert ALAC to FLAC
+
+        View cview = getLayoutInflater().inflate(R.layout.view_actionview_encoding_audio_files, null);
+
+        TextView filename = cview.findViewById(R.id.full_filename);
+        if(selections.size()==1) {
+            filename.setText(selections.get(0).getSimpleName());
+        }else {
+            filename.setText("Selected "+ selections.size());
+        }
+
+        final String[] encoding = {null};
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setEnabled(false);
+        IconSpinnerAdapter adapter = new IconSpinnerAdapter(mEncodingView);
+        ArrayList encodingItems = new ArrayList<>();
+        encodingItems.add(new IconSpinnerItem("AIFF", null));
+       // encodingItems.add(new IconSpinnerItem("ALAC", null));
+        encodingItems.add(new IconSpinnerItem("FLAC", null));
+        encodingItems.add(new IconSpinnerItem("MP3 320kbps", null));
+        adapter.setItems(encodingItems);
+        adapter.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener<IconSpinnerItem>() {
+            @Override
+            public void onItemSelected(int i, @Nullable IconSpinnerItem iconSpinnerItem, int i1, IconSpinnerItem t1) {
+                encoding[0] = String.valueOf(t1.getText());
+                if(StringUtils.isEmpty(encoding[0])) {
+                    btnOK.setEnabled(false);
+                }else {
+                    btnOK.setEnabled(true);
+                    progressBar.setProgress(0);
+                }
+            }
+        });
+        mEncodingView.setSpinnerAdapter(adapter);
+
+        List valueList = new ArrayList();
+        valueList.add(50);
+        valueList.add(25);
+        valueList.add(15);
+        valueList.add(5);
+        valueList.add(3);
+        valueList.add(1);
+        valueList.add(1);
+        int barColor = getColor(R.color.material_color_yellow_800);
+        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        progressBar.setMax(100);
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        btnOK.setOnClickListener(v -> {
+            if(encoding[0] == null) {
+                return;
+            }
+            AtomicInteger cnt = new AtomicInteger();
+            String options = "";
+            String targetExt = encoding[0].toLowerCase();
+            /*if(encoding[0].equals("ALAC")) {
+                // not work on android
+               // options = " -acodec alac ";
+                targetExt = "m4a";
+            }else*/
+            if(encoding[0].contains("MP3")) {
+                options = " -ar 44100 -ab 320k ";
+            }
+            progressBar.setProgress(0);
+            final int size = selections.size();
+            for(AudioTag tag: selections) {
+               // int count = cnt.getAndIncrement();
+                if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
+                    String srcPath = tag.getPath();
+                    String filePath = FileUtils.removeExtension(tag.getPath());
+                    String targetPath = filePath+"."+targetExt; //+".flac";
+                    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
+                 /*   FFmpegSession session = FFmpegKit.execute(cmd);
+                    progressBar.setProgress((count/size)*100);
+                    if (ReturnCode.isSuccess(session.getReturnCode())) {
+                        repos.writeTags(targetPath, tag);
+                        repos.scanFileAndSaveTag(new File(targetPath));
+                    }else {
+                        String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
+                        Timber.d(msg);
+                    } */
+                   /* if(selections.size()==1) {
+                        progressBar.setProgress(100);
+                    }else {
+                        int count = cnt.getAndIncrement();
+                        progressBar.setProgress(count/selections.size()*100);
+                    } */
+
+                    FFmpegKit.executeAsync(cmd, session -> {
+                        if (ReturnCode.isSuccess(session.getReturnCode())) {
+                            repos.writeTags(targetPath, tag);
+                            repos.scanFileAndSaveTag(new File(targetPath));
+                        }else {
+                            String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
+                            Timber.d(msg);
+                        }
+                        runOnUiThread(() -> {
+                            //if(selections.size()==1) {
+                            //    progressBar.setProgress(100);
+                            //}else {
+                                int count = cnt.incrementAndGet();
+                                progressBar.setProgress((count/size)*100);
+                           // }
+                        });
+                    });
+                }else {
+                    int count = cnt.incrementAndGet();
+                    progressBar.setProgress((count/size)*100);
+                }
+            }
+            btnOK.setEnabled(false);
+            //alert.dismiss();
+        });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
     }
 }

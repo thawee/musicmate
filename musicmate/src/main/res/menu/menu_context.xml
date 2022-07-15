@@ -13,6 +13,12 @@
 		android:title="Manage Songs"
 		app:showAsAction="always"/>
 
+	<item
+		android:icon="@drawable/ic_round_audio_file_24"
+		android:id="@+id/action_encoding_file"
+		android:title="File Encoding"
+		app:showAsAction="always"/>
+
     <item
         android:icon="@drawable/ic_edit_white_24dp"
         android:id="@+id/action_edit_metadata"

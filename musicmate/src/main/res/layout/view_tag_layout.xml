@@ -415,28 +415,6 @@
                     </com.skydoves.elasticviews.ElasticLayout>
 
                     <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/btnExplorer"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/shape_border_back_selectable"
-                        android:layout_marginTop="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:layout_marginRight="@dimen/dimen_12_dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="@dimen/dimen_4_dp"
-                            android:paddingBottom="@dimen/dimen_4_dp"
-                            android:paddingLeft="@dimen/dimen_12_dp"
-                            android:paddingRight="@dimen/dimen_12_dp"
-                            android:layout_gravity="center"
-                            android:gravity="center"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold"
-                            android:text="@string/file_explorer_label"/>
-                    </com.skydoves.elasticviews.ElasticLayout>
-
-                    <com.skydoves.elasticviews.ElasticLayout
                         android:id="@+id/btnWebSearch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -459,6 +437,29 @@
                     </com.skydoves.elasticviews.ElasticLayout>
 
                     <com.skydoves.elasticviews.ElasticLayout
+                        android:id="@+id/btnExplorer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/shape_border_back_selectable"
+                        android:layout_marginTop="@dimen/dimen_2_dp"
+                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:layout_marginRight="@dimen/dimen_12_dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="@dimen/dimen_4_dp"
+                            android:paddingBottom="@dimen/dimen_4_dp"
+                            android:paddingLeft="@dimen/dimen_12_dp"
+                            android:paddingRight="@dimen/dimen_12_dp"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:textColor="@android:color/white"
+                            android:textStyle="bold"
+                            android:text="@string/file_explorer_label"/>
+                    </com.skydoves.elasticviews.ElasticLayout>
+
+                    <!--
+                    <com.skydoves.elasticviews.ElasticLayout
                         android:id="@+id/btnFFMPEG"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -478,6 +479,7 @@
                             android:textStyle="bold"
                             android:text="@string/convert_label"/>
                     </com.skydoves.elasticviews.ElasticLayout>
+                    -->
                 </LinearLayout>
 
 

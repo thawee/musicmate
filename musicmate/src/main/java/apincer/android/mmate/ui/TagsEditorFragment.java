@@ -1,8 +1,6 @@
 package apincer.android.mmate.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -11,7 +9,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +19,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -50,7 +46,6 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
 import apincer.android.mmate.utils.AudioTagUtils;
@@ -71,7 +66,7 @@ import timber.log.Timber;
 
 
 public class TagsEditorFragment extends Fragment {
-    public static final int REQUEST_GET_CONTENT_IMAGE = 555;
+   // public static final int REQUEST_GET_CONTENT_IMAGE = 555;
     private TagsActivity mainActivity;
     private List<AudioTag> mediaItems;
     private ViewHolder viewHolder;
@@ -80,7 +75,7 @@ public class TagsEditorFragment extends Fragment {
    // private ImagePicker imagePicker; // = new ImagePicker(this);
     //private Uri coverArtUri;
     private String coverArtPath;
-    private ActivityResultLauncher<Intent> imagePickerLauncher;
+  //  private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     final int DRAWABLE_LEFT = 0;
     final int DRAWABLE_TOP = 1;
@@ -140,22 +135,17 @@ public class TagsEditorFragment extends Fragment {
         View okBtn = cview.findViewById(R.id.btn_ok);
         TextView filenameView = cview.findViewById(R.id.full_filename);
         filenameView.setText(mediaItems.get(0).getPath());
-        View contentView = cview.findViewById(R.id.contentLayout);
+       // View contentView = cview.findViewById(R.id.contentLayout);
 
         // add tag to view
-        AudioFileRepository repos = AudioFileRepository.newInstance(getApplicationContext());
+       // AudioFileRepository repos = AudioFileRepository.newInstance(getApplicationContext());
         //repos.
         AlertDialog alert = new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
                 .setCancelable(true)
                 .create();
-        okBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                alert.dismiss();
-            }
-        });
+        okBtn.setOnClickListener(view -> alert.dismiss());
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners

@@ -173,6 +173,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         setUpTitlePanel();
     }
 
+    /*
     private void doStartFFMpeg( ) {
         mStateView.displayLoadingState();
         final int total =  getEditItems().size();
@@ -197,7 +198,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                 });
             }
         }
-    }
+    } */
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
@@ -238,14 +239,14 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
         findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
         findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
-        if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(displayTag.getAudioEncoding())) {
+      /*  if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(displayTag.getAudioEncoding())) {
             //findViewById(R.id.btnFFMPEG).setVisibility(View.VISIBLE);
             findViewById(R.id.btnFFMPEG).setEnabled(true);
             findViewById(R.id.btnFFMPEG).setOnClickListener(view -> doStartFFMpeg());
         }else {
             // findViewById(R.id.btnFFMPEG).setEnabled(false);
             findViewById(R.id.btnFFMPEG).setVisibility(View.GONE);
-        }
+        } */
     }
 
     private void setUpTitlePanel() {
