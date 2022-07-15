@@ -37,9 +37,11 @@ public final class Constants {
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");
         IMAGE_COVERS.add("folder.png");
+        IMAGE_COVERS.add("artwork.png"); // supported by UAAP
         IMAGE_COVERS.add("front.jpg");
         IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg");
+        IMAGE_COVERS.add("artwork.jpg"); // UAAP
         IMAGE_COVERS.add("front.jpeg");
         IMAGE_COVERS.add("cover.jpeg");
         IMAGE_COVERS.add("folder.jpeg");

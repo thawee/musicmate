@@ -64,6 +64,8 @@
     <string name="alert_btn_cancel">CANCEL</string>
     <string name="alert_btn_set">UPDATE</string>
 
+    <string name="title_many">Selected %1$d songs</string>
+
     <string name="preferences_sub_next_song">Now Playing Song</string>
     <string name="preferences_sub_appearance">Appearance</string>
     <string name="preferences_sub_storage">Storage</string>

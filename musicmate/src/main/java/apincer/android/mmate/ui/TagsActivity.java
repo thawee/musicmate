@@ -269,8 +269,14 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
     }
 
     public void updateTitlePanel() {
-        toolbar.setTitle(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
-        titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+        if(getEditItems().size()>1) {
+            String title = getString(R.string.title_many, getEditItems().size());
+            toolbar.setTitle(title);
+            titleView.setText(title);
+        }else {
+            toolbar.setTitle(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+            titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+        }
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
        // dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);

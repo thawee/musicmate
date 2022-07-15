@@ -1053,10 +1053,9 @@ public class AudioFileRepository {
         if(StringUtils.isEmpty(path)) {
             return false;
         }
-        if(path.indexOf("#") >0) {
+       /* if(path.indexOf("#") >0) {
             path = path.substring(0, path.indexOf("#"));
-        }
-
+        } */
         File file = new File(path);
         if(file.exists() && file.length() == 0) {
             return false;
