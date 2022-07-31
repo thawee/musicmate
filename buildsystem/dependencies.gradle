@@ -47,7 +47,7 @@ deps.apache = apache
 
 def androidx = [:]
 //https://developer.android.com/jetpack/androidx/releases/activity
-androidx.activity = "androidx.activity:activity:1.5.0-rc01" //1.4.0"
+androidx.activity = "androidx.activity:activity:1.5.1" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
@@ -72,27 +72,27 @@ androidx.documentFile = "androidx.documentfile:documentfile:1.0.1"
 androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.1.0-beta01"
 // Lifecycle ViewModel and LiveData
 //https://developer.android.com/jetpack/androidx/releases/lifecycle
-androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.5.0-rc01" //2.4.0"
+androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.5.1" //2.4.0"
 //androidx.lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:2.3.1"
-androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.5.0-rc01" //2.4.0"
-androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.5.0-rc01" //2.4.0"
+androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.5.1" //2.4.0"
+androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.5.1" //2.4.0"
 // alternately - if using Java8, use the following instead of lifecycle-compiler
-androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.5.0-rc01" //2.4.0"
+androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.5.1" //2.4.0"
 // optional - ReactiveStreams support for LiveData
-androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.5.0-rc01" //2.4.0" // use -ktx for Kotlin //23/06/2019
+androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.5.1" //2.4.0" // use -ktx for Kotlin //23/06/2019
 // optional - Test helpers for LiveData
-androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.5.0-rc01"
+androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.5.1"
 
 
 // Room
-androidx.room = "androidx.room:room-runtime:2.4.2" //23/06/2019
-androidx.room_compiler = "androidx.room:room-compiler:2.4.2" // use kapt for Kotlin //23/06/2019
+androidx.room = "androidx.room:room-runtime:2.4.3" //23/06/2019
+androidx.room_compiler = "androidx.room:room-compiler:2.4.3" // use kapt for Kotlin //23/06/2019
 // optional - RxJava support for Room
-androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.4.2" //23/06/2019
+androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.4.3" //23/06/2019
 // optional - Guava support for Room, including Optional and ListenableFuture
 androidx.room_guava = "androidx.room:room-guava:2.4.4" //23/06/2019
 // Test helpers
-androidx.room_testing = "androidx.room:room-testing:2.4.2" //23/06/2019
+androidx.room_testing = "androidx.room:room-testing:2.4.3" //23/06/2019
 
 // Paging
 //https://developer.android.com/jetpack/androidx/releases/paging
