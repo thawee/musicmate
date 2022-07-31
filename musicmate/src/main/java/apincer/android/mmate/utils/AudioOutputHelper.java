@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -99,6 +100,7 @@ public class AudioOutputHelper {
         void onReady(Device device);
     }
 
+    @SuppressLint("MissingPermission")
     public static void getOutputDevice(Context context, Callback callback) {
         Device outputDevice = new Device();
         MediaRouter mr = (MediaRouter) context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
@@ -125,7 +127,7 @@ public class AudioOutputHelper {
            // if ("Phone".equalsIgnoreCase(dName)) {
              if (isBuiltInDevice(devicetype)) {
                  setResolutions(outputDevice, a);
-                 outputDevice.setName("ASRC");
+                 outputDevice.setName("SRC");
                  outputDevice.setCodec(Build.MODEL);
                  outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                  callback.onReady(outputDevice);
@@ -136,11 +138,32 @@ public class AudioOutputHelper {
                  UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
                  HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
                 if(deviceList.isEmpty()) {
-                    setResolutions(outputDevice, a);
-                    outputDevice.setName("ASRC");
+                    // could be bluetooth
+                   // BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(a.getAddress());
+                   /* setResolutions(outputDevice, a);
+                    outputDevice.setName("SRC");
                     outputDevice.setCodec(Build.MODEL);
                     outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
-                    callback.onReady(outputDevice);
+                    callback.onReady(outputDevice);*/
+
+                  /*  BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+                    BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+                    List<BluetoothDevice> devs =  bluetoothManager.getConnectedDevices(BluetoothProfile.A2DP);
+                    for(BluetoothDevice dev: devs) {
+                        dev.getName();
+                    } */
+                   /* BluetoothDevice dev = bluetoothAdapter.getRemoteDevice(a.getAddress());
+                    if(dev != null) {
+                        outputDevice.setAddress(a.getAddress());
+                        outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
+                        outputDevice.setName(dev.getName());
+                        //  getA2DPCodec(bA2dp, dev, outputDevice);
+
+                    }*/
+                    outputDevice.setAddress(a.getAddress());
+                    outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
+                   // outputDevice.setName(ri.getName());
+                    getA2DP(context, outputDevice, callback);
                 }else {
                     setResolutions(outputDevice, a);
                     outputDevice.setResId(R.drawable.ic_baseline_usb_24);
@@ -164,7 +187,7 @@ public class AudioOutputHelper {
                     outputDevice.setName(device.getProductName());
                 }
                 callback.onReady(outputDevice);
-                break;
+               // break;
                 //} else if (dType.toLowerCase().contains("bluetooth")) {
             }else  if (isBluetoothDevice(devicetype)) {
                 // bluetooth
@@ -176,11 +199,11 @@ public class AudioOutputHelper {
                  setResolutions(outputDevice, a);
                  outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                  callback.onReady(outputDevice);
-                 break;
+                // break;
                  //} else if (dType.toLowerCase().contains("bluetooth")) {
              } else {
                 // others
-                outputDevice.setName("ASRC");
+                outputDevice.setName("SRC");
                 setResolutions(outputDevice, a);
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
@@ -369,7 +392,9 @@ public class AudioOutputHelper {
     }
 
     public static void getA2DP(Context context, Device device, Callback callback) {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        //BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
 
             @SuppressLint("MissingPermission")
@@ -378,8 +403,8 @@ public class AudioOutputHelper {
                 List<BluetoothDevice> devices = proxy.getConnectedDevices();
                 BluetoothA2dp bA2dp = (BluetoothA2dp) proxy;
                 for (BluetoothDevice dev : devices) {
-                    if (device.getAddress().equals(dev.getAddress())) {
-                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    //if (device.getAddress().replaceAll(":","").equals(dev.getAddress().replaceAll(":",""))) {
+                       /* if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                             // TODO: Consider calling
                             //    ActivityCompat#requestPermissions
                             // here to request the missing permissions, and then overriding
@@ -388,12 +413,12 @@ public class AudioOutputHelper {
                             // to handle the case where the user grants the permission. See the documentation
                             // for ActivityCompat#requestPermissions for more details.
                             return;
-                        }
+                        } */
                         device.setName(dev.getName());
                         getA2DPCodec(bA2dp, dev, device);
                         callback.onReady(device);
                         break;
-                    }
+                   // }
                    // boolean isPlaying = bA2dp.isA2dpPlaying(device);
                     //if(isPlaying) {
                     //    device.getName();
