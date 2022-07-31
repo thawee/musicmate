@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="240dp"
     android:layout_height="64dp"
-    android:layout_marginLeft="@dimen/dimen_24_dp"
+    android:layout_marginLeft="@dimen/dimen_32_dp"
     android:background="@drawable/shape_now_playing_background">
     <RelativeLayout
         android:id="@+id/now_playing_block"
@@ -130,10 +130,10 @@
             android:layout_alignParentRight="true"
             android:layout_marginStart="@dimen/dimen_2_dp"
             android:layout_marginLeft="@dimen/dimen_1_dp"
-            android:layout_marginTop="@dimen/dimen_4_dp"
-            android:layout_marginEnd="@dimen/dimen_2_dp"
+            android:layout_marginTop="@dimen/dimen_8_dp"
+            android:layout_marginEnd="@dimen/dimen_8_dp"
             android:layout_marginRight="@dimen/dimen_8_dp"
-            android:layout_marginBottom="@dimen/dimen_4_dp"
+            android:layout_marginBottom="@dimen/dimen_8_dp"
             android:src="@drawable/ic_album_black_24dp"/>
 
         <LinearLayout
