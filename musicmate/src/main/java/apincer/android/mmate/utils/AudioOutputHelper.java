@@ -1,6 +1,5 @@
 package apincer.android.mmate.utils;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
@@ -8,7 +7,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioDeviceInfo;
@@ -17,11 +15,7 @@ import android.media.AudioManager;
 import android.media.MediaRouter;
 import android.os.Build;
 
-import androidx.core.app.ActivityCompat;
-
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import apincer.android.mmate.R;
@@ -128,6 +122,7 @@ public class AudioOutputHelper {
              if (isBuiltInDevice(devicetype)) {
                  setResolutions(outputDevice, a);
                  outputDevice.setName("SRC");
+                 outputDevice.setCodec("SRC");
                  outputDevice.setCodec(Build.MODEL);
                  outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                  callback.onReady(outputDevice);
@@ -139,30 +134,8 @@ public class AudioOutputHelper {
                  HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
                 if(deviceList.isEmpty()) {
                     // could be bluetooth
-                   // BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(a.getAddress());
-                   /* setResolutions(outputDevice, a);
-                    outputDevice.setName("SRC");
-                    outputDevice.setCodec(Build.MODEL);
-                    outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
-                    callback.onReady(outputDevice);*/
-
-                  /*  BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-                    BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-                    List<BluetoothDevice> devs =  bluetoothManager.getConnectedDevices(BluetoothProfile.A2DP);
-                    for(BluetoothDevice dev: devs) {
-                        dev.getName();
-                    } */
-                   /* BluetoothDevice dev = bluetoothAdapter.getRemoteDevice(a.getAddress());
-                    if(dev != null) {
-                        outputDevice.setAddress(a.getAddress());
-                        outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
-                        outputDevice.setName(dev.getName());
-                        //  getA2DPCodec(bA2dp, dev, outputDevice);
-
-                    }*/
                     outputDevice.setAddress(a.getAddress());
                     outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
-                   // outputDevice.setName(ri.getName());
                     getA2DP(context, outputDevice, callback);
                 }else {
                     setResolutions(outputDevice, a);
@@ -172,6 +145,7 @@ public class AudioOutputHelper {
                         outputDevice.setName(device.getProductName());
                     }
                 }
+                 outputDevice.setCodec(outputDevice.getName());
                  callback.onReady(outputDevice);
                  break;
                  //} else if (dType.toLowerCase().contains("bluetooth")) {
@@ -186,6 +160,7 @@ public class AudioOutputHelper {
                 for (UsbDevice device : deviceList.values()) {
                     outputDevice.setName(device.getProductName());
                 }
+                 outputDevice.setCodec("USB DAC");
                 callback.onReady(outputDevice);
                // break;
                 //} else if (dType.toLowerCase().contains("bluetooth")) {
@@ -196,6 +171,7 @@ public class AudioOutputHelper {
                 getA2DP(context, outputDevice, callback);
              }else if (isHDMIDevice(devicetype)) {
                  outputDevice.setName("HDMI");
+                 outputDevice.setCodec("HDMI");
                  setResolutions(outputDevice, a);
                  outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                  callback.onReady(outputDevice);
@@ -204,6 +180,7 @@ public class AudioOutputHelper {
              } else {
                 // others
                 outputDevice.setName("SRC");
+                outputDevice.setCodec("SRC");
                 setResolutions(outputDevice, a);
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
                 callback.onReady(outputDevice);
@@ -465,7 +442,7 @@ public class AudioOutputHelper {
             endIndex = text.indexOf(")",startIndex);
             String bitsPerSample = text.substring(startIndex+1, endIndex);
 
-            device1.setDescription(getDescription(bitsPerSample, sampleRate));
+            device1.setDescription(codecName +" " +getDescription(bitsPerSample, sampleRate));
 
         //    codec = codecName+"("+bitsPerSample+"-"+sampleRate+")"; //object.toString();
         } catch(Exception ex) {
@@ -500,6 +477,6 @@ public class AudioOutputHelper {
         }
 
         String samString = StringUtils.getFormatedAudioSampleRate(StringUtils.toLong(StringUtils.trimToEmpty(sampleRate)), true);
-        return bitString+" / "+samString;
+        return bitString+"/"+samString;
     }
 }

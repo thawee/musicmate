@@ -252,7 +252,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
                 nowPlayingOutput.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
-                nowPlayingOutputName.setText(device.getName());
+                //nowPlayingOutputName.setText(device.getName());
+                nowPlayingOutputName.setText(device.getCodec());
             });
 
             runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
@@ -846,12 +847,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
             outputIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
             outputText.setText(device.getDescription());
+            outputlabel.setText(device.getName());
 //                outputName.setText(device.getCodec());
-            if(StringUtils.isEmpty(device.getCodec())) {
-                outputlabel.setText(String.format("Output: %s", device.getName()));
-            }else {
-                outputlabel.setText(String.format("Output: %s (%s)", device.getName(), device.getCodec()));
-            }
+           // if(StringUtils.isEmpty(device.getCodec())) {
+           //     outputlabel.setText(String.format("Output: %s", device.getName()));
+           // }else {
+            //    outputlabel.setText(String.format("Output: %s (%s)", device.getName(), device.getCodec()));
+           // }
         });
         if(StringUtils.isEmpty(qualityDetails)) {
             qualityDetails = "Track details is not available.";
