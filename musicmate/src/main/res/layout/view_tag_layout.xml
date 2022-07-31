@@ -24,7 +24,8 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingTop="@dimen/dimen_1_dp"
-        android:paddingStart="20dp">
+        android:paddingStart="@dimen/dimen_2_dp"
+        android:paddingEnd="@dimen/dimen_2_dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -280,19 +281,30 @@
                 android:singleLine="true" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/dimen_8_dp"
+            android:layout_marginStart="@dimen/dimen_16_dp"
+            android:layout_marginEnd="@dimen/dimen_16_dp"
+            android:background="@drawable/shape_btn_background"
+            >
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="45dp"
-            android:layout_marginTop="@dimen/dimen_8_dp"
-            android:layout_gravity="">
+            android:layout_marginStart="@dimen/dimen_16_dp"
+            android:layout_marginEnd="@dimen/dimen_16_dp"
+            android:layout_marginTop="@dimen/dimen_1_dp"
+            android:layout_gravity="center">
 
             <com.skydoves.elasticviews.ElasticLayout
                 android:id="@+id/btnDelete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:layout_marginTop="@dimen/dimen_24_dp"
                 android:background="@drawable/shape_border_back_selectable"
                 android:paddingLeft="@dimen/dimen_12_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
@@ -323,10 +335,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:layout_gravity="center"
+                android:layout_alignParentTop="true"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="@dimen/dimen_8_dp"
                 android:background="@drawable/shape_border_back_selectable"
-                android:gravity="center"
+                android:gravity="center_horizontal"
                 android:paddingLeft="@dimen/dimen_12_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
                 android:paddingRight="@dimen/dimen_12_dp"
@@ -356,7 +369,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:layout_marginTop="@dimen/dimen_24_dp"
                 android:background="@drawable/shape_border_back_selectable"
                 android:paddingLeft="@dimen/dimen_12_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
@@ -380,9 +393,79 @@
                     android:layout_gravity="right"
                     android:src="@drawable/ic_round_gpp_good_24" />
             </com.skydoves.elasticviews.ElasticLayout>
-        </RelativeLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/btnEdit"
+                android:layout_centerInParent="true"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                >
+                <com.skydoves.elasticviews.ElasticLayout
+                    android:id="@+id/btnWebSearch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_border_back_selectable"
+                    android:layout_marginBottom="@dimen/dimen_12_dp"
+                    android:layout_marginRight="@dimen/dimen_12_dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/dimen_4_dp"
+                        android:paddingBottom="@dimen/dimen_4_dp"
+                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        android:text="@string/websearch_label"/>
+                </com.skydoves.elasticviews.ElasticLayout>
+                <com.skydoves.elasticviews.ElasticLayout
+                    android:id="@+id/btnAspect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_border_back_selectable"
+                    android:layout_marginRight="@dimen/dimen_12_dp"
+                    android:layout_marginBottom="@dimen/dimen_4_dp">
 
-                <LinearLayout
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingTop="@dimen/dimen_4_dp"
+                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingBottom="@dimen/dimen_4_dp"
+                        android:text="@string/aspect_label"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold" />
+                </com.skydoves.elasticviews.ElasticLayout>
+                <com.skydoves.elasticviews.ElasticLayout
+                android:id="@+id/btnExplorer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_border_back_selectable"
+                android:layout_marginBottom="@dimen/dimen_4_dp"
+                android:layout_marginRight="@dimen/dimen_12_dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="@dimen/dimen_4_dp"
+                    android:paddingBottom="@dimen/dimen_4_dp"
+                    android:paddingLeft="@dimen/dimen_12_dp"
+                    android:paddingRight="@dimen/dimen_12_dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:text="@string/file_explorer_label"/>
+            </com.skydoves.elasticviews.ElasticLayout>
+            </LinearLayout>
+        </RelativeLayout>
+<!--
+        <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -457,7 +540,7 @@
                             android:textStyle="bold"
                             android:text="@string/file_explorer_label"/>
                     </com.skydoves.elasticviews.ElasticLayout>
-
+                  -->
                     <!--
                     <com.skydoves.elasticviews.ElasticLayout
                         android:id="@+id/btnFFMPEG"
@@ -480,9 +563,10 @@
                             android:text="@string/convert_label"/>
                     </com.skydoves.elasticviews.ElasticLayout>
                     -->
+            <!--
                 </LinearLayout>
-
-
+-->
+        </LinearLayout>
             <!--
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -534,6 +618,7 @@
                 android:layout_gravity="center"/>
         </LinearLayout> -->
     </LinearLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
