@@ -229,7 +229,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .crossfade(false)
                     .allowHardware(false)
                     //.transformations(new CircleCropTransformation())
-                    .transformations(new RoundedCornersTransformation(86,86,86,86))
+                   // .transformations(new RoundedCornersTransformation(86,86,86,86))
+                    .transformations(new RoundedCornersTransformation(24,24,24,24))
                     .target(nowPlayingCoverArt)
                     .build();
             fabLoader.enqueue(fabRequest);

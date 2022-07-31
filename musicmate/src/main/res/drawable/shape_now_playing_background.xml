@@ -16,10 +16,10 @@
 
     <!-- The radius makes the corners rounded -->
     <corners
-        android:bottomRightRadius="24dp"
-        android:topRightRadius="24dp"
-        android:bottomLeftRadius="24dp"
-        android:topLeftRadius="24dp">
+        android:bottomRightRadius="8dp"
+        android:topRightRadius="8dp"
+        android:bottomLeftRadius="30dp"
+        android:topLeftRadius="30dp">
     </corners>
 
 </shape>
