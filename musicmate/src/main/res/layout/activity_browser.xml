@@ -158,23 +158,21 @@
 
 					   </sakout.mehdi.StateViews.StateView>
 
-
-				   <LinearLayout
+				   <com.skydoves.elasticviews.ElasticLayout
 					   android:id="@+id/now_playing_panel"
-					   android:layout_width="match_parent"
+					   android:layout_width="wrap_content"
 					   android:layout_height="wrap_content"
-					   android:gravity="bottom|center_horizontal"
 					   android:layout_alignParentBottom="true"
-					   android:layout_marginBottom="@dimen/dimen_64_dp">
-					   <!--
-					   <include layout="@layout/view_now_playing"/>
-					   -->
+					   android:layout_alignParentRight="true"
+					   android:layout_marginRight="@dimen/dimen_48_dp"
+					   android:layout_marginBottom="@dimen/dimen_64_dp"
+					   android:padding="@dimen/dimen_1_dp"
+					   android:background="@drawable/shape_now_playing_background_l1">
 					   <include layout="@layout/view_now_playing_imgleft"/>
-				   </LinearLayout>
+				   </com.skydoves.elasticviews.ElasticLayout>
    			</RelativeLayout>
 
        </LinearLayout>
-
 
     </RelativeLayout>
 

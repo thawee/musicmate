@@ -30,6 +30,9 @@
 
     <color name="search_bar_color_start">#cb5ed9</color>
 
+    <color name="colorPrimaryDark_transparent_25">#40303F9F</color>
+    <color name="colorPrimaryDark_transparent_80">#CC303F9F</color>
+
     <!-- Menu Background -->
 
     <color name="blue_accent200">#2979FF</color>
