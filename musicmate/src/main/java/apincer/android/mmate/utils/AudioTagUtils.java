@@ -703,7 +703,7 @@ public class AudioTagUtils {
         // Text draws from the baselineAdd some top padding to center vertically.
         Rect textMathRect = new Rect();
         mLetterPaint.getTextBounds(bps, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() / 8f;
+        float mLetterTop = textMathRect.height() / 10f;
         float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
         myCanvas.drawText(bps,
                 bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),

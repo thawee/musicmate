@@ -118,7 +118,7 @@ public class AudioOutputHelper {
 
         int devicetype = ri.getDeviceType();
         String deviceName = String.valueOf(ri.getName()).toLowerCase();
-
+        String deviceDesc = String.valueOf(ri.getDescription()).toLowerCase();
         //if(devicetype == AudioDeviceInfo.TYPE_UNKNOWN) {
         //    devicetype = ri.getSupportedTypes();
        // }
@@ -176,7 +176,7 @@ public class AudioOutputHelper {
                     outputDevice.setName(device.getProductName());
                     foundDevice = true;
                 }
-            }else  if (isBluetoothDevice(devicetype, deviceName)) {
+            }else  if (isBluetoothDevice(devicetype, deviceName,deviceDesc)) {
                 // bluetooth
                 outputDevice.setAddress(a.getAddress());
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
@@ -207,7 +207,7 @@ public class AudioOutputHelper {
     private static boolean isHDMIDevice(int devicetype, String deviceName) {
         if(( devicetype == AudioDeviceInfo.TYPE_HDMI ||
                 devicetype == AudioDeviceInfo.TYPE_HDMI_ARC) ||
-                (devicetype == AudioDeviceInfo.TYPE_UNKNOWN &&
+                ((devicetype == AudioDeviceInfo.TYPE_UNKNOWN || isWriredDevice(devicetype)) &&
                         deviceName.contains("hdmi"))) {
             return true;
         }
@@ -217,7 +217,7 @@ public class AudioOutputHelper {
     private static boolean isUSBDevice(int devicetype, String deviceName) {
         if( (devicetype == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
                 devicetype == AudioDeviceInfo.TYPE_USB_DEVICE) ||
-                (devicetype == AudioDeviceInfo.TYPE_UNKNOWN &&
+                ((devicetype == AudioDeviceInfo.TYPE_UNKNOWN || isWriredDevice(devicetype)) &&
                         deviceName.contains("usb"))) {
             return true;
         }
@@ -240,10 +240,10 @@ public class AudioOutputHelper {
         return false;
     }
 
-    private static boolean isBluetoothDevice(int devicetype, String deviceName) {
+    private static boolean isBluetoothDevice(int devicetype, String name, String deviceName) {
         if( (devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
                 devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) ||
-        (devicetype == AudioDeviceInfo.TYPE_UNKNOWN && deviceName.contains("bluetooth"))) {
+        ((devicetype == AudioDeviceInfo.TYPE_UNKNOWN || isWriredDevice(devicetype)) && (deviceName.contains("bluetooth"))||name.contains("bluetooth"))) {
             return true;
         }
         return false;
@@ -371,16 +371,12 @@ public class AudioOutputHelper {
     }
 
     public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
-        int width = 256; //128;
+        int width = 128;
         int height = 96;
-        // int borderColor = context.getColor(R.color.grey400);
-        //  int textColor = context.getColor(R.color.black);
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
-        //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
         String codec = dev.getCodec();
-        String bps = StringUtils.getFormatedBitsPerSample(dev.getBitPerSampling());
-        String samplingRate = StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),true);
+        String rate =  dev.getBitPerSampling()+"/"+StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),false);
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 2;
@@ -420,16 +416,13 @@ public class AudioOutputHelper {
         paint.setAntiAlias(true);
         paint.setColor(whiteColor);
         paint.setStyle(Paint.Style.FILL);
-        //.setStyle(Paint.Style.STROKE);
-        //paint.setStrokeWidth(borderWidth);
         // Finally, draw the rectangle on the canvas
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
         int letterTextSize = 30; //28;
-        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
         Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
 
-        // draw codecs , black color
+        // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
         mLetterPaint.setTypeface(font);
@@ -437,25 +430,10 @@ public class AudioOutputHelper {
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(bps, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() / 8f;
+        mLetterPaint.getTextBounds(codec, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 10f;
         float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
         myCanvas.drawText(codec,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
-                mLetterPaint);
-
-        // draw bit per , black color
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(bps, 128, 1, textMathRect);
-        mLetterTop = textMathRect.height() / 8f;
-        mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
-        myCanvas.drawText(bps,
                 bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
                 mLetterPaint);
 
@@ -467,10 +445,10 @@ public class AudioOutputHelper {
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         textMathRect = new Rect();
-        mLetterPaint.getTextBounds(samplingRate, 128, 1, textMathRect);
+        mLetterPaint.getTextBounds(rate, 0, 1, textMathRect);
         mLetterTop = mLetterTop +(textMathRect.height() / 2f);
         mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
-        myCanvas.drawText(samplingRate,
+        myCanvas.drawText(rate,
                 bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
                 mLetterPaint);
 

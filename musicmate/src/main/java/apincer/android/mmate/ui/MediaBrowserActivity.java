@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.epoxy.EpoxyViewHolder;
 import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.ReturnCode;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -138,8 +137,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
    // private TextView nowPlayingSubtitle;
     private ImageView nowPlayingType;
     private ImageView nowPlayingPlayer;
-    private ImageView nowPlayingOutput;
-    private TextView nowPlayingOutputName;
+    private ImageView nowPlayingOutputDevice;
+   // private ImageView nowPlayingOutput;
+   // private TextView nowPlayingOutputName;
 
     // header panel
     TabLayout headerTab;
@@ -251,9 +251,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
             nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
-                nowPlayingOutput.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+               // nowPlayingOutput.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
                 //nowPlayingOutputName.setText(device.getName());
-                nowPlayingOutputName.setText(device.getCodec());
+               // nowPlayingOutputName.setText(device.getCodec());
+                nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device));
             });
 
             runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
@@ -503,8 +504,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        // nowPlayingSubtitle = findViewById(R.id.now_playing_subtitle);
         nowPlayingType = findViewById(R.id.now_playing_file_type);
         nowPlayingPlayer = findViewById(R.id.now_playing_player);
-        nowPlayingOutput = findViewById(R.id.now_playing_output);
-        nowPlayingOutputName = findViewById(R.id.now_playing_output_name);
+        nowPlayingOutputDevice = findViewById(R.id.now_playing_device);
+        //nowPlayingOutput = findViewById(R.id.now_playing_output);
+        //nowPlayingOutputName = findViewById(R.id.now_playing_output_name);
         nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
         nowPlayingView.setOnClickListener(view1 -> scrollToListening());
         nowPlayingView.setOnLongClickListener(view1 -> doPlayNextSong());
