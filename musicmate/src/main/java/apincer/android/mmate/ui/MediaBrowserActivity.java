@@ -810,7 +810,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         LayoutInflater inflater = getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_signal_path, null);
         ImageView sourceIcon =  view.findViewById(R.id.panel_source_img);
-        TextView sourceLabel = view.findViewById(R.id.panel_source_label);
+       // TextView sourceLabel = view.findViewById(R.id.panel_source_label);
         TextView sourceText =  view.findViewById(R.id.panel_source_text);
         ImageView playerIcon =  view.findViewById(R.id.panel_player_img);
         TextView playerText =  view.findViewById(R.id.panel_player_text);
@@ -847,7 +847,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
 
         AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
-            outputIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+           // outputIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
+            outputIcon.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), device));
             outputText.setText(device.getDescription());
             outputlabel.setText(device.getName());
 //                outputName.setText(device.getCodec());
@@ -1190,7 +1191,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(selections.size()==1) {
             filename.setText(selections.get(0).getSimpleName());
         }else {
-            filename.setText("Selected "+ selections.size());
+            filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to target encoding.");
         }
 
         final String[] encoding = {null};

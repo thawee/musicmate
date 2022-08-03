@@ -24,14 +24,15 @@
 
                 <ImageView
                     android:id="@+id/panel_source_img"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
+                    android:layout_width="@dimen/dimen_40_dp"
+                    android:layout_height="24dp"
+                    android:scaleType="fitXY"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginRight="@dimen/dimen_4_dp"/>
+                    android:layout_marginRight="@dimen/dimen_4_dp" />
                 <View
                     android:layout_width="1dp"
                     android:layout_height="match_parent"
-                    android:background="@android:color/white"
+                    android:background="@color/grey300"
                     android:layout_marginRight="16dp"
                     android:layout_marginLeft="16dp"/>
                 <!--
@@ -60,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
-
+<!--
                 <TextView
                     android:id="@+id/panel_source_label"
                     android:layout_width="wrap_content"
@@ -69,7 +70,7 @@
                     android:layout_gravity="left"
                     android:textColor="@color/grey400"
                     android:textStyle="bold"/>
-
+-->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -90,7 +91,7 @@
                         android:maxLines="1"
                         android:autoSizeTextType="uniform"
                         android:layout_gravity="left"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/grey300"
                         android:textSize="26sp"/>
                 </LinearLayout>
             </LinearLayout>
@@ -116,7 +117,7 @@
             <View
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="@android:color/white"
+                android:background="@color/grey300"
                 android:layout_marginRight="16dp"
                 android:layout_marginLeft="16dp"/>
 <!--
@@ -145,7 +146,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
-
+<!--
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -153,7 +154,7 @@
                 android:layout_gravity="left"
                 android:textColor="@color/grey400"
                 android:textStyle="bold"/>
-
+-->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -174,7 +175,7 @@
                     android:maxLines="1"
                     android:autoSizeTextType="uniform"
                     android:layout_gravity="left"
-                    android:textColor="@android:color/white"
+                    android:textColor="@color/grey300"
                     android:textSize="26sp"/>
 
             </LinearLayout>
@@ -195,8 +196,9 @@
 
             <ImageView
                 android:id="@+id/panel_output_img"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="@dimen/dimen_32_dp"
+                android:layout_width="@dimen/dimen_40_dp"
+                android:layout_height="27dp"
+                android:scaleType="fitXY"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginRight="@dimen/dimen_4_dp"/>
 <!--
@@ -232,7 +234,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left"
                 android:text="Output Device"
-                android:textColor="@color/grey400"
+                android:textColor="@color/grey300"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -251,10 +253,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Output"
-                    android:maxLines="3"
+                    android:maxLines="1"
                     android:autoSizeTextType="uniform"
                     android:gravity="left|center_horizontal"
-                    android:textColor="@android:color/white"
+                    android:textColor="@color/grey300"
                     android:textSize="26sp"/>
 
             </LinearLayout>

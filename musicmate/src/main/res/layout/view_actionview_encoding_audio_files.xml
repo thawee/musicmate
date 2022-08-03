@@ -19,7 +19,6 @@
         android:layout_marginRight="@dimen/dimen_8_dp"
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
-        android:maxLines="3"
         android:textSize="14sp"
         android:text="Audio File Encoding"
         android:gravity="center_horizontal"
@@ -35,10 +34,11 @@
         android:layout_marginRight="@dimen/dimen_8_dp"
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
+        android:lines="2"
         android:maxLines="3"
         android:textSize="10sp"
-        android:gravity="left"
-        android:textColor="@color/grey200"
+        android:gravity="center"
+        android:textColor="@color/white"
         android:background="@drawable/shape_rounded_edittext"
         tools:text="directory/track - title"/>
 

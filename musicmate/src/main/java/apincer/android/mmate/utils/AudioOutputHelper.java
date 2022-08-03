@@ -118,7 +118,8 @@ public class AudioOutputHelper {
 
         int devicetype = ri.getDeviceType();
         String deviceName = String.valueOf(ri.getName()).toLowerCase();
-        String deviceDesc = String.valueOf(ri.getDescription()).toLowerCase();
+        String desc = ri.getDescription()==null?String.valueOf(ri.getName()):String.valueOf(ri.getDescription());
+        String deviceDesc = desc.toLowerCase();
         //if(devicetype == AudioDeviceInfo.TYPE_UNKNOWN) {
         //    devicetype = ri.getSupportedTypes();
        // }
@@ -166,7 +167,7 @@ public class AudioOutputHelper {
              }else*/
             if (isUSBDevice(devicetype, deviceName)) {
                 // USB
-                setResolutions(outputDevice, a);
+                setResolutions(outputDevice, a, desc);
                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                 outputDevice.setAddress(a.getAddress());
                 UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
@@ -185,7 +186,7 @@ public class AudioOutputHelper {
             }else if (isHDMIDevice(devicetype, deviceName)) {
                  outputDevice.setName(String.valueOf(ri.getName()));
                  outputDevice.setCodec("HDMI");
-                 setResolutions(outputDevice, a);
+                 setResolutions(outputDevice, a, desc);
                  outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                  foundDevice = true;
              }
@@ -195,7 +196,7 @@ public class AudioOutputHelper {
                 //AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
                 //AudioDeviceInfo.TYPE_WIRED_HEADPHONES
                 //AudioDeviceInfo.TYPE_WIRED_HEADSET
-                setResolutions(outputDevice, a);
+                setResolutions(outputDevice, a, desc);
                 outputDevice.setCodec("SRC");
                 outputDevice.setName(Build.MODEL);
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
@@ -340,7 +341,7 @@ public class AudioOutputHelper {
         }
     }
 
-    private static void setResolutions(Device outputDevice, AudioDeviceInfo device) {
+    private static void setResolutions(Device outputDevice, AudioDeviceInfo device, String desc) {
         int encoding = intArrayLastIndex(device.getEncodings());
         int bps = 16;
         switch (encoding) {
@@ -367,7 +368,8 @@ public class AudioOutputHelper {
         outputDevice.setSamplingRate(rate);
         String bitString = StringUtils.getFormatedBitsPerSample(bps);
         String samplingString = StringUtils.getFormatedAudioSampleRate(rate, true);
-        outputDevice.setDescription(bitString+"/"+samplingString);
+        //outputDevice.setDescription(bitString+"/"+samplingString);
+        outputDevice.setDescription(desc);
     }
 
     public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
@@ -546,8 +548,9 @@ public class AudioOutputHelper {
             startIndex = text.indexOf("(", startIndex);
             endIndex = text.indexOf(")",startIndex);
             String bitsPerSample = text.substring(startIndex+1, endIndex);
-
-            device1.setDescription(codecName +" " +getDescription(bitsPerSample, sampleRate));
+            device1.setBitPerSampling(Integer.parseInt((bitsPerSample)));
+            device1.setSamplingRate(StringUtils.toLong(sampleRate));
+            device1.setDescription(getDescription(bitsPerSample, sampleRate));
 
         //    codec = codecName+"("+bitsPerSample+"-"+sampleRate+")"; //object.toString();
         } catch(Exception ex) {

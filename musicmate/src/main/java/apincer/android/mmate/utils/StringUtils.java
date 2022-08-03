@@ -369,7 +369,7 @@ public class StringUtils {
 
     public static String formatSongSize(long size) {
         if(size ==0) {
-            return " EMPTY ";
+            return " - ";
         }
         return java.text.NumberFormat.getInstance().format(size) +" songs";
     }
@@ -444,7 +444,7 @@ public class StringUtils {
     }
 
     public static String getFormatedBitsPerSample(int bit) {
-            return String.format(Locale.getDefault(), "%d-bit", bit);
+            return String.format(Locale.getDefault(), "%d-Bit", bit);
     }
 
     public static String getFormatedAudioSampleRate(long rate,boolean includeUnit) {
