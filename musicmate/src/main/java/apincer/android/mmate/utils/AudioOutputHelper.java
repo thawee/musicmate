@@ -7,6 +7,12 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioDeviceInfo;
@@ -14,11 +20,16 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.MediaRouter;
 import android.os.Build;
+import android.text.TextPaint;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import java.util.HashMap;
 import java.util.List;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
+import apincer.android.mmate.objectbox.AudioTag;
 import timber.log.Timber;
 
 public class AudioOutputHelper {
@@ -105,21 +116,19 @@ public class AudioOutputHelper {
         // String size = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
         // text = text+"\nBuffer Size and sample rate; Size :" + size + " & SampleRate: " + rate +" & MusicActive: "+audioManager.isMusicActive();
 
-        //String dName = String.valueOf(ri.getName());
         int devicetype = ri.getDeviceType();
-        if(devicetype == AudioDeviceInfo.TYPE_UNKNOWN) {
-            devicetype = ri.getSupportedTypes();
-        }
-       // String dType = StringUtils.trimToEmpty(String.valueOf(ri.getDescription()));
-        //  String deviceName = "";
-        //  String deviceSamplingRate = "";
+        String deviceName = String.valueOf(ri.getName()).toLowerCase();
+
+        //if(devicetype == AudioDeviceInfo.TYPE_UNKNOWN) {
+        //    devicetype = ri.getSupportedTypes();
+       // }
         AudioDeviceInfo[] adi = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
         //  text = text+"\nAudio Devices:";
         for (AudioDeviceInfo a : adi) {
             // final int type = a.getType();
             //   text = text+"\n Audio Device: "+a.getProductName()+" & SampleRate: "+ Arrays.toString(a.getSampleRates()) +" & type: "+a.getType() +" & toString"+a.toString();
            // if ("Phone".equalsIgnoreCase(dName)) {
-             if (isBuiltInDevice(devicetype)) {
+            /* if (isBuiltInDevice(devicetype)) {
                  setResolutions(outputDevice, a);
                  outputDevice.setName("SRC");
                  outputDevice.setCodec("SRC");
@@ -128,8 +137,13 @@ public class AudioOutputHelper {
                  callback.onReady(outputDevice);
                  break;
                  // } else if ("USB".equalsIgnoreCase(dName) || (a.getType() == AudioDeviceInfo.TYPE_USB_DEVICE || a.getType() == AudioDeviceInfo.TYPE_USB_HEADSET)) {
-             }else if (isWriredDevice(devicetype)) {
+             }else*/
+            boolean foundDevice = false;
+            /*if (isUnkownDevice(devicetype)) {
                  //outputDevice.setName(dName);
+                String deviceName = String.valueOf(ri.getName()).toLowerCase();
+                // check type from name
+                if("".equalsIgnoreCase())
                  UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
                  HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
                 if(deviceList.isEmpty()) {
@@ -137,69 +151,74 @@ public class AudioOutputHelper {
                     outputDevice.setAddress(a.getAddress());
                     outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
                     getA2DP(context, outputDevice, callback);
+                    foundDevice = false;
                 }else {
+                    // could be USB DAC
                     setResolutions(outputDevice, a);
                     outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                     outputDevice.setAddress(a.getAddress());
+                    outputDevice.setCodec("DAC");
                     for (UsbDevice device : deviceList.values()) {
                         outputDevice.setName(device.getProductName());
+                        foundDevice = true;
                     }
                 }
-                 outputDevice.setCodec(outputDevice.getName());
-                 callback.onReady(outputDevice);
-                 break;
-                 //} else if (dType.toLowerCase().contains("bluetooth")) {
-             }else if (isUSBDevice(devicetype)) {
-                // outputDevice.setName(dName);
+             }else*/
+            if (isUSBDevice(devicetype, deviceName)) {
+                // USB
                 setResolutions(outputDevice, a);
                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                 outputDevice.setAddress(a.getAddress());
                 UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
                 HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
-
+                outputDevice.setCodec("DAC");
                 for (UsbDevice device : deviceList.values()) {
                     outputDevice.setName(device.getProductName());
+                    foundDevice = true;
                 }
-                 outputDevice.setCodec("USB DAC");
-                callback.onReady(outputDevice);
-               // break;
-                //} else if (dType.toLowerCase().contains("bluetooth")) {
-            }else  if (isBluetoothDevice(devicetype)) {
+            }else  if (isBluetoothDevice(devicetype, deviceName)) {
                 // bluetooth
                 outputDevice.setAddress(a.getAddress());
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
                 getA2DP(context, outputDevice, callback);
-             }else if (isHDMIDevice(devicetype)) {
-                 outputDevice.setName("HDMI");
+                foundDevice = false;
+            }else if (isHDMIDevice(devicetype, deviceName)) {
+                 outputDevice.setName(String.valueOf(ri.getName()));
                  outputDevice.setCodec("HDMI");
                  setResolutions(outputDevice, a);
                  outputDevice.setResId(R.drawable.ic_baseline_usb_24);
-                 callback.onReady(outputDevice);
-                // break;
-                 //} else if (dType.toLowerCase().contains("bluetooth")) {
-             } else {
-                // others
-                outputDevice.setName("SRC");
-                outputDevice.setCodec("SRC");
+                 foundDevice = true;
+             }
+            if(!foundDevice) {
+                // built-in and others
+                //AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
+                //AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                //AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                //AudioDeviceInfo.TYPE_WIRED_HEADSET
                 setResolutions(outputDevice, a);
+                outputDevice.setCodec("SRC");
+                outputDevice.setName(Build.MODEL);
                 outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
-                callback.onReady(outputDevice);
-                break;
             }
+            callback.onReady(outputDevice);
         }
     }
 
-    private static boolean isHDMIDevice(int devicetype) {
-        if( devicetype == AudioDeviceInfo.TYPE_HDMI ||
-                devicetype == AudioDeviceInfo.TYPE_HDMI_ARC) {
+    private static boolean isHDMIDevice(int devicetype, String deviceName) {
+        if(( devicetype == AudioDeviceInfo.TYPE_HDMI ||
+                devicetype == AudioDeviceInfo.TYPE_HDMI_ARC) ||
+                (devicetype == AudioDeviceInfo.TYPE_UNKNOWN &&
+                        deviceName.contains("hdmi"))) {
             return true;
         }
         return false;
     }
 
-    private static boolean isUSBDevice(int devicetype) {
-        if( devicetype == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
-                devicetype == AudioDeviceInfo.TYPE_USB_DEVICE) {
+    private static boolean isUSBDevice(int devicetype, String deviceName) {
+        if( (devicetype == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
+                devicetype == AudioDeviceInfo.TYPE_USB_DEVICE) ||
+                (devicetype == AudioDeviceInfo.TYPE_UNKNOWN &&
+                        deviceName.contains("usb"))) {
             return true;
         }
         return false;
@@ -221,9 +240,10 @@ public class AudioOutputHelper {
         return false;
     }
 
-    private static boolean isBluetoothDevice(int devicetype) {
-        if( devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
-                devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
+    private static boolean isBluetoothDevice(int devicetype, String deviceName) {
+        if( (devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) ||
+        (devicetype == AudioDeviceInfo.TYPE_UNKNOWN && deviceName.contains("bluetooth"))) {
             return true;
         }
         return false;
@@ -348,6 +368,113 @@ public class AudioOutputHelper {
         String bitString = StringUtils.getFormatedBitsPerSample(bps);
         String samplingString = StringUtils.getFormatedAudioSampleRate(rate, true);
         outputDevice.setDescription(bitString+"/"+samplingString);
+    }
+
+    public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
+        int width = 256; //128;
+        int height = 96;
+        // int borderColor = context.getColor(R.color.grey400);
+        //  int textColor = context.getColor(R.color.black);
+        int whiteColor = context.getColor(R.color.white);
+        int blackColor = context.getColor(R.color.black);
+        //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        String codec = dev.getCodec();
+        String bps = StringUtils.getFormatedBitsPerSample(dev.getBitPerSampling());
+        String samplingRate = StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),true);
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 2;
+        int cornerRadius = 4;
+        Rect bounds = new Rect(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw black box
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw top white box
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                (myCanvas.getHeight()/2) - 2 // Bottom
+        );
+        // int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        //.setStyle(Paint.Style.STROKE);
+        //paint.setStrokeWidth(borderWidth);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        int letterTextSize = 30; //28;
+        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+
+        // draw codecs , black color
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(bps, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 8f;
+        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
+        myCanvas.drawText(codec,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        // draw bit per , black color
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(bps, 128, 1, textMathRect);
+        mLetterTop = textMathRect.height() / 8f;
+        mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
+        myCanvas.drawText(bps,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        // draw sampling rate, white color
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(samplingRate, 128, 1, textMathRect);
+        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
+        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
+        myCanvas.drawText(samplingRate,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        return myBitmap;
     }
 
     /**

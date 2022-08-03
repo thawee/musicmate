@@ -158,7 +158,7 @@
 
 					   </sakout.mehdi.StateViews.StateView>
 
-				   <com.skydoves.elasticviews.ElasticLayout
+				   <LinearLayout
 					   android:id="@+id/now_playing_panel"
 					   android:layout_width="wrap_content"
 					   android:layout_height="wrap_content"
@@ -169,7 +169,7 @@
 					   android:padding="@dimen/dimen_1_dp"
 					   android:background="@drawable/shape_now_playing_background_l1">
 					   <include layout="@layout/view_now_playing_imgleft"/>
-				   </com.skydoves.elasticviews.ElasticLayout>
+				   </LinearLayout>
    			</RelativeLayout>
 
        </LinearLayout>

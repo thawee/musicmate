@@ -158,10 +158,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
-            android:layout_marginLeft="@dimen/dimen_6_dp"
+            android:layout_marginLeft="@dimen/dimen_4_dp"
             android:layout_marginTop="@dimen/dimen_4_dp"
             android:layout_marginRight="@dimen/dimen_2_dp"
-            android:layout_marginBottom="@dimen/dimen_2_dp"
+            android:layout_marginBottom="@dimen/dimen_1_dp"
             android:layout_toLeftOf="@id/now_playing_coverart"
             android:orientation="vertical">
 
@@ -171,20 +171,20 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_marginLeft="@dimen/dimen_5_dp"
                 android:layout_marginEnd="@dimen/dimen_2_dp"
                 android:layout_marginRight="@dimen/dimen_2_dp"
                 android:background="@drawable/shape_now_playing_title_background"
                 android:ellipsize="end"
                 android:gravity="center"
                 android:lines="1"
-                android:paddingLeft="@dimen/dimen_4_dp"
+                android:paddingLeft="@dimen/dimen_5_dp"
                 android:paddingTop="@dimen/dimen_2_dp"
                 android:paddingRight="@dimen/dimen_4_dp"
-                android:paddingBottom="@dimen/dimen_2_dp"
+                android:paddingBottom="@dimen/dimen_1_dp"
                 android:text="Title"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                android:textColor="@color/grey200" />
+                android:textColor="@color/black" />
         </LinearLayout>
     </RelativeLayout>
 </LinearLayout>

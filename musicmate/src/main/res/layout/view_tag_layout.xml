@@ -399,7 +399,7 @@
                 android:layout_below="@+id/btnEdit"
                 android:layout_centerInParent="true"
                 android:orientation="horizontal"
-                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginTop="@dimen/dimen_12_dp"
                 >
                 <com.skydoves.elasticviews.ElasticLayout
                     android:id="@+id/btnWebSearch"
