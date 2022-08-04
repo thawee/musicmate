@@ -27,9 +27,7 @@ import androidx.core.content.res.ResourcesCompat;
 import java.util.HashMap;
 import java.util.List;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.AudioTag;
 import timber.log.Timber;
 
 public class AudioOutputHelper {
@@ -181,7 +179,7 @@ public class AudioOutputHelper {
                 // bluetooth
                 outputDevice.setAddress(a.getAddress());
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
-                getA2DP(context, outputDevice, callback);
+                getA2DP(context, outputDevice, callback, desc);
                 foundDevice = false;
             }else if (isHDMIDevice(devicetype, deviceName)) {
                  outputDevice.setName(String.valueOf(ri.getName()));
@@ -475,7 +473,7 @@ public class AudioOutputHelper {
         return integerArray[integerArray.length-1];
     }
 
-    public static void getA2DP(Context context, Device device, Callback callback) {
+    public static void getA2DP(Context context, Device device, Callback callback, String desc) {
         //BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -499,7 +497,7 @@ public class AudioOutputHelper {
                             return;
                         } */
                         device.setName(dev.getName());
-                        getA2DPCodec(bA2dp, dev, device);
+                        getA2DPCodec(bA2dp, dev, device, desc);
                         callback.onReady(device);
                         break;
                    // }
@@ -518,7 +516,7 @@ public class AudioOutputHelper {
     }
 
     @SuppressLint("PrivateApi")
-    private static void getA2DPCodec(BluetoothA2dp bA2dp, BluetoothDevice device, Device device1) {
+    private static void getA2DPCodec(BluetoothA2dp bA2dp, BluetoothDevice device, Device device1, String desc) {
         device1.setCodec("");
         device1.setDescription("N/A");
         if (bA2dp == null || device == null) return ;
@@ -550,7 +548,8 @@ public class AudioOutputHelper {
             String bitsPerSample = text.substring(startIndex+1, endIndex);
             device1.setBitPerSampling(Integer.parseInt((bitsPerSample)));
             device1.setSamplingRate(StringUtils.toLong(sampleRate));
-            device1.setDescription(getDescription(bitsPerSample, sampleRate));
+           // device1.setDescription(getDescription(bitsPerSample, sampleRate));
+            device1.setDescription(desc);
 
         //    codec = codecName+"("+bitsPerSample+"-"+sampleRate+")"; //object.toString();
         } catch(Exception ex) {

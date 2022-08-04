@@ -136,6 +136,7 @@ public final class Constants {
     public static final String TITLE_HIRES = "Hi-Res Audio";
     public static final String TITLE_HIFI_LOSSLESS = "Lossless Audio";
     public static final String TITLE_HIFI_QUALITY = "Lo-Res Audio";
+    public static final String TITLE_MASTER_AUDIO = "Master Audio";
 
   //  public static final String PREF_TAG_ENCODING = "preference_matadata_encodings";
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";

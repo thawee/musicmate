@@ -238,16 +238,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
 
             nowPlayingTitle.setText(song.getTitle());
+            nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
+        /*
             if(song.isMQA()) {
                 nowPlayingType.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), song));
                 nowPlayingType.setVisibility(View.VISIBLE);
             }else if(song.isLossless() || AudioTagUtils.isDSD(song)) {
                 nowPlayingType.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), song));
+                //nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
                 nowPlayingType.setVisibility(View.VISIBLE);
             }else {
                 nowPlayingType.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), song));
                 nowPlayingType.setVisibility(View.VISIBLE);
-            }
+            } */
             //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
             nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
@@ -810,36 +813,30 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         LayoutInflater inflater = getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_signal_path, null);
         ImageView sourceIcon =  view.findViewById(R.id.panel_source_img);
-       // TextView sourceLabel = view.findViewById(R.id.panel_source_label);
         TextView sourceText =  view.findViewById(R.id.panel_source_text);
         ImageView playerIcon =  view.findViewById(R.id.panel_player_img);
         TextView playerText =  view.findViewById(R.id.panel_player_text);
         ImageView outputIcon =  view.findViewById(R.id.panel_output_img);
         TextView outputText =  view.findViewById(R.id.panel_output_text);
-       // TextView outputName = view.findViewById(R.id.panel_output_name);
         TextView outputlabel = view.findViewById(R.id.panel_output_label);
-        //sourceIcon.setText(tag==null?"":tag.getAudioEncoding());
         String quality = "";
         String qualityDetails = "";
         if(tag != null) {
-           // sourceText.setText(tag.getAudioBitCountAndSampleRate());
-            if(tag.isMQA()) {
+            sourceIcon.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), tag));
+           /* if(tag.isMQA()) {
                 sourceIcon.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
             }else if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
                 sourceIcon.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
             }else {
                 sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-            }
-           // sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getApplicationContext(),tag));
+            } */
             quality = AudioTagUtils.getTrackQuality(tag);
             qualityDetails = AudioTagUtils.getTrackQualityDetails(tag);
-            //sourceLabel.setText("Source: "+quality);
             sourceText.setText(quality);
         }else {
             sourceText.setText("-");
         }
         if(playerInfo != null) {
-           // playerIcon.setText("");
             playerText.setText(playerInfo.getPlayerName());
             playerIcon.setImageDrawable(playerInfo.getPlayerIconDrawable());
         }else {
@@ -847,23 +844,18 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
 
         AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
-           // outputIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
             outputIcon.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), device));
-            outputText.setText(device.getDescription());
-            outputlabel.setText(device.getName());
-//                outputName.setText(device.getCodec());
-           // if(StringUtils.isEmpty(device.getCodec())) {
-           //     outputlabel.setText(String.format("Output: %s", device.getName()));
-           // }else {
-            //    outputlabel.setText(String.format("Output: %s (%s)", device.getName(), device.getCodec()));
-           // }
+          /*  outputText.setText(device.getDescription());
+            outputlabel.setText(device.getName());*/
+            outputText.setText(device.getName());
+            outputlabel.setText(device.getDescription());
         });
         if(StringUtils.isEmpty(qualityDetails)) {
             qualityDetails = "Track details is not available.";
         }
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.SignalPathDialogTheme)
-                .setTitle("Signal Path: ") //+quality)
+                .setTitle("Signal Path \u266A") //+quality)
                 .setMessage(qualityDetails) // + text)
                 .setView(view)
                 .setPositiveButton("OK", (dialogInterface, i) -> dialogInterface.dismiss());
