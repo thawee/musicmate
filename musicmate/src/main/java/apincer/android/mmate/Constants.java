@@ -123,6 +123,7 @@ public final class Constants {
 //    public static final String AUDIO_SQ_HIFI = "Hi-Fi";
    // public static final String AUDIO_SQ_HIFI_LOSSLESS = "Lossless Audio";
    // public static final String AUDIO_SQ_HIFI_QUALITY = "High Quality";
+    //public static final String AUDIO_SQ = "PCM";
     public static final String AUDIO_SQ_PCM = "PCM";
 
     public static final String TITLE_DUPLICATE = "Duplicate Songs";
@@ -133,9 +134,9 @@ public final class Constants {
     //public static final String TITLE_HR_LOSSLESS = "High-Res Audio";
     //public static final String TITLE_HR_MASTER="High-Res Master";
     public static final String TITLE_MQA_AUDIO = "Master Quality Authenticated";
-    public static final String TITLE_HIRES = "Hi-Res Audio";
-    public static final String TITLE_HIFI_LOSSLESS = "Lossless Audio";
-    public static final String TITLE_HIFI_QUALITY = "Lo-Res Audio";
+    public static final String TITLE_HIRES = "Hi-Res Lossless";
+    public static final String TITLE_HIFI_LOSSLESS = "Lossless";
+    public static final String TITLE_HIFI_QUALITY = "High Quality";
     public static final String TITLE_MASTER_AUDIO = "Master Audio";
 
   //  public static final String PREF_TAG_ENCODING = "preference_matadata_encodings";

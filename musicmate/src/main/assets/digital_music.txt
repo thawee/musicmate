@@ -9,7 +9,7 @@ Format: FLAC, ALAC, WAVE, AIFF
 Resolution: 16bit/48kHz, 24bit/48kHz
 Recommended Genre: Pop, Animation, Rock
 
-Hi-Res Audio
+Hi-Res Lossless Audio
 Enjoy and Listening the rich music which reproduces fine details of musical instruments.
 Distinguish each string vibration of the stringed instrument.
 Format: FLAC, ALAC, WAVE, AIFF

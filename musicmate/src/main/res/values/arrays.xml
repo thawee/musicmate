@@ -100,6 +100,7 @@
     </string-array>
 
     <string-array name="default_genres">
+        <item>Alternative</item>
         <item>Vocal</item>
         <item>Film</item>
         <item>Classical</item>
@@ -110,13 +111,16 @@
         <item>Jazz, Bossa Nova</item>
         <item>Jazz, Contemporary</item>
         <item>Jazz, Vocal</item>
-        <item>Blues, Country, Folk</item>
-        <item>Soul, Funk, R&amp;B</item>
+        <item>Blues</item>
+        <item>Country</item>
+        <item>Folk</item>
+        <item>Funk</item>
+        <item>Soul</item>
+        <item>R&amp;B</item>
         <item>Pop</item>
         <item>Pop, Acoustic</item>
         <item>Pop, Dance</item>
         <item>Pop, Rock</item>
-        <item>Alternative</item>
         <item>Pop, Indie</item>
         <item>Rock</item>
         <item>Rock, Hard Rock</item>
@@ -125,7 +129,8 @@
         <item>Reggae, Ska</item>
         <item>Electronic, Ambiance</item>
         <item>Latin</item>
-        <item>Hip Hop, EDM</item>
+        <item>Hip Hop</item>
+        <item>EDM</item>
         <item>Rap</item>
         <item>Luk Thung</item>
         <item>Luk Thung, Mor Lum</item>

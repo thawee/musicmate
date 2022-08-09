@@ -190,8 +190,8 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {
                 if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
                     return Constants.TITLE_DSD_AUDIO;
-                }else if(Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_MQA_AUDIO;
+               // }else if(Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword())) {
+                    //return Constants.TITLE_MQA_AUDIO;
                 // }else {
                 //    return criteria.getKeyword();
               //  }
@@ -353,9 +353,9 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
-        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
+       /* }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword())) {
-            titles.add(Constants.TITLE_MQA_AUDIO);
+            titles.add(Constants.TITLE_MQA_AUDIO);*/
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
             titles.add(Constants.TITLE_DSD_AUDIO);
@@ -364,6 +364,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
             titles.add(Constants.TITLE_HIFI_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
+            titles.add(Constants.AUDIO_SQ_PCM_MQA);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
             List<String> tabs = tagRepos.getGroupingList(context);
             for(String tab: tabs) {

@@ -547,6 +547,10 @@ public class AudioOutputHelper {
             endIndex = text.indexOf(")",startIndex);
             String bitsPerSample = text.substring(startIndex+1, endIndex);
             device1.setBitPerSampling(Integer.parseInt((bitsPerSample)));
+            // bps for bluetooth is 24 bits
+            if(device1.getBitPerSampling()>24) {
+                device1.setBitPerSampling(24);
+            }
             device1.setSamplingRate(StringUtils.toLong(sampleRate));
            // device1.setDescription(getDescription(bitsPerSample, sampleRate));
             device1.setDescription(desc);
