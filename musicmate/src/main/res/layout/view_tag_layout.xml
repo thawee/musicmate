@@ -62,8 +62,9 @@
                     android:text="Artist"
                     android:maxLines="2"
                     android:gravity="right"
-                    android:paddingRight="@dimen/dimen_4_dp"
+                    android:layout_marginRight="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
+                    android:fontFamily="@font/mn_kaewkanlaya"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="16sp"
@@ -105,6 +106,7 @@
                     android:gravity="left"
                     android:paddingLeft="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
+                    android:fontFamily="@font/mn_kaewkanlaya"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="16sp"
@@ -117,20 +119,46 @@
             android:gravity="center_horizontal"
             android:layout_marginTop="@dimen/dimen_4_dp"
             android:layout_marginBottom="@dimen/dimen_4_dp"
-            android:orientation="vertical">
+            android:orientation="horizontal">
+            <!--
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\u2282"
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:paddingLeft="@dimen/dimen_4_dp"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:textColor="@color/grey200"
+                android:textStyle="bold"/> -->
             <TextView
                 android:id="@+id/panel_genre"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Genre"
                 android:maxLines="1"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_4_dp"
+                android:fontFamily="@font/fc_friday_medium"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
                 android:background="@drawable/selectable_link"/>
+            <!--
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\u2283"
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:paddingLeft="@dimen/dimen_4_dp"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:textColor="@color/grey200"
+                android:textStyle="bold"/> -->
+            <!--
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -140,7 +168,7 @@
                 android:gravity="left|center_horizontal"
                 android:layout_gravity="center_horizontal"
                 android:textColor="@color/grey400"
-                android:textStyle="bold"/>
+                android:textStyle="bold"/> -->
         </LinearLayout>
 
             <LinearLayout
@@ -161,6 +189,7 @@
                     android:paddingLeft="@dimen/dimen_4_dp"
                     android:paddingBottom="@dimen/dimen_8_dp"
                     android:layout_marginBottom="@dimen/dimen_2_dp"
+                    android:fontFamily="@font/k2d_regular"
                     android:background="@color/transparent"/>
                     <!--
                 <RelativeLayout
@@ -239,6 +268,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingTop="@dimen/dimen_4_dp"
+                    android:fontFamily="@font/k2d_bold"
                     android:textSize="8sp"
                     android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
                     android:gravity="center|bottom"
@@ -273,6 +303,7 @@
                 android:textColor="@android:color/white"
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:paddingTop="@dimen/dimen_1_dp"
+                android:fontFamily="@font/k2d_regular"
                 android:textSize="10sp"
                 android:text="file path"
                 android:ellipsize="start"

@@ -72,6 +72,12 @@
     <string name="MetaDataEncoding">Metadata Encoding</string>
     <string name="MetaDataEncodingSummary">Choose the encoding to include in options list on encoding menu</string>
 
+    <!-- symbol -->
+    <!--
+        <string name="symbol_audiophile">\u222D</string>
+    -->
+    <string name="symbol_audiophile">\u24B6</string>
+
     <!-- Action -->
 
     <!-- Action Mode -->

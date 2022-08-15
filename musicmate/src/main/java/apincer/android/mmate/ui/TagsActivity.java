@@ -68,7 +68,8 @@ import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
 
-public class TagsActivity extends AppCompatActivity { //implements Callback {
+public class TagsActivity extends AppCompatActivity {
+    private static final String UNKNOWN_GENRE = "Unknown Genre"; //implements Callback {
     private static ArrayList<AudioTag> editItems = new ArrayList<>();
     private volatile AudioTag displayTag;
     private ImageView coverArtView;
@@ -278,7 +279,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
             toolbar.setTitle(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
             titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
         }
-        artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist()));
+        artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist())+" ");
         hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
        // dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
         //mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
@@ -365,7 +366,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                 finish();
             });
         }else {
-            genreView.setText(SRC_NONE);
+            genreView.setText(UNKNOWN_GENRE);
         }
 
         String matePath = repos.buildCollectionPath(displayTag);
@@ -496,7 +497,7 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
                //  .append(new SpecialLabelUnit(":Grouping | Genre:", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.BOTTOM))
                // .append(new SpecialTextUnit("   |   ").setTextSize(14).useTextBold())
               //  .append(new SpecialTextUnit("    \u20df    ").setTextSize(14).useTextBold())
-                .append(new SpecialTextUnit(" "+StringUtils.SEP_SUBTITLE+" ").setTextSize(14).useTextBold())
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold())
                // .append(StringUtils.ARTIST_SEP)
                // .append(new SpecialLabelUnit("Genre>", labelColor, UIUtils.sp2px(getApplication(),10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.isEmpty(displayTag.getGenre())?"N/A":displayTag.getGenre()).setTextSize(14).useTextBold().setGravity(tagInfo.getPaint(), SpecialGravity.CENTER));
@@ -534,27 +535,15 @@ public class TagsActivity extends AppCompatActivity { //implements Callback {
         int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
         SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
         spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor).setTextSize(10));
+
+        spannableEnc.append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
+
         if((!StringUtils.isEmpty(displayTag.getSource())) && !SRC_NONE.equals(displayTag.getSource())) {
             spannableEnc.append(new SpecialTextUnit(displayTag.getSource(),encColor).setTextSize(10))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
         }
 
-        spannableEnc.append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
-                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
-      /*  String mqaSampleRate = "";
-        if(displayTag.isMQA()) {
-           // String mqaLabel = "MQA";
-            String mqaRate = displayTag.getMQASampleRate();
-            long rate = AudioTagUtils.parseMQASampleRate(mqaRate);
-           // if (rate >0 && rate != displayTag.getAudioSampleRate()) {
-           //     mqaLabel = mqaLabel + " " + StringUtils.getFormatedAudioSampleRate(rate, true);
-          //  }
-            if (rate >0) {
-                mqaSampleRate = "/" + StringUtils.getFormatedAudioSampleRate(rate, true);
-            }
-           // spannableEnc.append(new SpecialTextUnit(mqaLabel,encColor).setTextSize(10))
-           //         .append(new SpecialTextUnit(" | ",encColor).setTextSize(10));
-        } */
         spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))

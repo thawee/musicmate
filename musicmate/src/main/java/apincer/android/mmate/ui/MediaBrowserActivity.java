@@ -237,7 +237,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
 
-            nowPlayingTitle.setText(song.getTitle());
+            nowPlayingTitle.setText(StringUtils.SYMBOL_MUSIC_NOTE+song.getTitle());
             nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
         /*
             if(song.isMQA()) {

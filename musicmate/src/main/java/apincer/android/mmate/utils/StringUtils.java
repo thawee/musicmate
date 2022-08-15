@@ -19,14 +19,26 @@ public class StringUtils {
     // ◈  \u25C8
     // ☾
     // ☽
+    // \u9404    \\
+    // ⊢ \u22A2
+    // ⊣ \u22a3
+    // ♯♯
+    // ⟣ \u27E3
+    // ⟢ \
+    // Ⓖ \u24BC
+    //
+
     //public static final String ARTIST_SEP = " \u00bb "; //"" -/- "; ·
-    public static final String SEP_SUBTITLE = " \u266A\u266A "; //"" \u2022\u266A\u2022 ";
-    public static final String SEP_TITLE = "\u00b7 "; //""\u266A "; //""\u00b7 ";
-    public static final String SEP_LEFT = "\u263E "; //""\u00b7\u255E "; //"" \u00ab ";
-    public static final String SEP_RIGHT = " \u263D"; //"" \u2561\u00b7"; //"" \u00bb ";
-    public static final String SYMBOL_ATTENTION = " \u266F\u266F";
+    public static final String SEP_SUBTITLE = " \u25C8 "; //"" \u266A\u266A "; //"" \u2022\u266A\u2022 ";
+    public static final String SEP_TITLE = "\u1931 "; //""\u1690 "; //""\u2E1F "; //""\u00b7 "; //""\u266A "; //""\u00b7 ";
+    public static final String SEP_LEFT = "\u27E3 "; //""\u22A2 "; //""\u263E "; //""\u00b7\u255E "; //"" \u00ab ";
+    public static final String SEP_RIGHT = " \u27E2"; //"" \u22A3"; //"" \u263D"; //"" \u2561\u00b7"; //"" \u00bb ";
+    public static final String SYMBOL_ATTENTION = " \u2249"; //"" \u266F\u266F"; // path diff
     public static final String SYMBOL_ENC_SEP = " \u25C8 ";
+    public static final String SYMBOL_SEP = " \u25C8 "; //"" \u2051 "; //"" \u17C7 ";
     public static final String SYMBOL_HEADER_SEP = " \u25C8 ";
+    public static final String SYMBOL_GENRE = " \u24BC ";
+    public static final String SYMBOL_MUSIC_NOTE = " \u266A ";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";

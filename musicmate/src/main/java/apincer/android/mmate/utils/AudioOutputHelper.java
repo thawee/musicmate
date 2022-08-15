@@ -420,7 +420,7 @@ public class AudioOutputHelper {
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
         int letterTextSize = 30; //28;
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -437,7 +437,8 @@ public class AudioOutputHelper {
                 bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
                 mLetterPaint);
 
-        // draw sampling rate, white color
+        // draw sampling rate, white
+        font =  ResourcesCompat.getFont(context, R.font.adca_font);
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);

@@ -612,7 +612,7 @@ public class AudioTagUtils {
         // if album empty, add single
         String defaultAlbum = Constants.DEFAULT_ALBUM_TEXT;
         if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
-            defaultAlbum = getFirstArtist(tag.getArtist())+" - Single";
+            defaultAlbum = "Single"; //getFirstArtist(tag.getArtist())+" - Single";
         }else {
             defaultAlbum = StringUtils.trimToEmpty(tag.getAlbum());
         }

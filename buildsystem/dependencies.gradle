@@ -51,7 +51,7 @@ androidx.activity = "androidx.activity:activity:1.5.1" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
-androidx.appCompat = "androidx.appcompat:appcompat:1.4.2"
+androidx.appCompat = "androidx.appcompat:appcompat:1.5.0"
 //https://developer.android.com/jetpack/androidx/releases/cardview
 androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout

@@ -100,17 +100,14 @@
     </string-array>
 
     <string-array name="default_genres">
+        <item>Acoustic</item>
         <item>Alternative</item>
         <item>Vocal</item>
         <item>Film</item>
         <item>Classical</item>
-        <item>Classical, Instrument</item>
-        <item>Classical, Concertos</item>
+        <item>Instrument</item>
+        <item>Concertos</item>
         <item>Jazz</item>
-        <item>Jazz, Ballads</item>
-        <item>Jazz, Bossa Nova</item>
-        <item>Jazz, Contemporary</item>
-        <item>Jazz, Vocal</item>
         <item>Blues</item>
         <item>Country</item>
         <item>Folk</item>
@@ -118,7 +115,6 @@
         <item>Soul</item>
         <item>R&amp;B</item>
         <item>Pop</item>
-        <item>Pop, Acoustic</item>
         <item>Pop, Dance</item>
         <item>Pop, Rock</item>
         <item>Pop, Indie</item>

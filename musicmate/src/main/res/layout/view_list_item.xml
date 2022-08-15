@@ -33,6 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:text="@{title}"
+            android:fontFamily="@font/mn_kaewkanlaya"
             android:textStyle="bold"
             android:layout_weight="1"
             android:textColor="@color/grey100"
@@ -44,7 +45,9 @@
             android:id="@+id/item_subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/k2d_regular"
             android:text="@{subtitle}"
+            android:textStyle="bold"
             android:textColor="@color/grey300"
             android:singleLine="true"  />
 
@@ -152,18 +155,18 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:scaleType="fitXY"/>
-        <!--
+
         <ImageView
             android:id="@+id/item_audiophile_label"
-            android:layout_width="16dp"
-            android:layout_height="@dimen/dimen_8_dp"
+            android:layout_width="@dimen/dimen_24_dp"
+            android:layout_height="@dimen/dimen_16_dp"
             android:layout_marginLeft="@dimen/dimen_4_dp"
             android:layout_marginBottom="6dp"
             android:layout_gravity="bottom|left"
             app:tint="@color/audiophile_background"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_audiophile"/> -->
-        <TextView
+            android:src="@drawable/ic_audiophile"/>
+       <!-- <TextView
             android:id="@+id/item_audiophile_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -171,10 +174,10 @@
             android:layout_marginRight="@dimen/dimen_8_dp"
             android:layout_marginLeft="@dimen/dimen_8_dp"
             android:layout_marginBottom="6dp"
-            android:text="\u222D"
+            android:text="@string/symbol_audiophile"
             android:textColor="@color/audiophile_background"
             android:textStyle="bold|italic"
-            />
+            /> -->
         <!--
         <com.skydoves.androidribbon.RibbonView
             android:id="@+id/item_audiophile_label"
