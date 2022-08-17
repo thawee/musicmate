@@ -170,7 +170,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         //}
 
         // show enc i.e. MQA, DSD
-        Bitmap resBitmap = AudioTagUtils.getResIcon(holder.mContext, tag);
+        Bitmap resBitmap = AudioTagUtils.getHiResIcon(holder.mContext, tag);
         if(resBitmap != null) {
             holder.mAudioENCView.setVisibility(View.VISIBLE);
             holder.mAudioENCView.setImageBitmap(resBitmap);
@@ -214,6 +214,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                 //holder.mBitrateView.setImageBitmap(AudioTagUtils.getBitRateIcon(holder.mContext,tag));
             holder.mBitrateView.setImageBitmap(AudioTagUtils.getDSDSampleRateIcon(holder.mContext,tag));
         }else */
+
+        /*
         if(!tag.isLossless() && !tag.isDSD()) { // && !AudioTagUtils.isHiRes(tag)) { // && !(metadata.isMQA() || metadata.isPCMHiRes192() || metadata.isPCMHiRes88_96() || metadata.isPCMHiRes44())) {
             holder.mBitrateView.setVisibility(View.VISIBLE);
             //holder.mBitrate.setText(StringUtils.getFormatedAudioBitRate(metadata.getAudioBitRate()));
@@ -221,11 +223,13 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             holder.mBitrateView.setImageBitmap(AudioTagUtils.getBitRateIcon(holder.mContext,tag));
         }else {
             holder.mBitrateView.setVisibility(View.GONE);
-        }
+        } */
+        holder.mBitrateView.setVisibility(View.GONE);
 
             // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
-            holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));
-            // holder.mDurationView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 80, 32, getMetadata().getAudioDurationAsString(), textColor,borderColor, qualityColor));
+           // holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));
+           holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getResolutionIcon(holder.mContext, tag));
+           // holder.mDurationView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 80, 32, getMetadata().getAudioDurationAsString(), textColor,borderColor, qualityColor));
             holder.mDurationView.setImageBitmap(AudioTagUtils.getDurationIcon(holder.mContext, tag));
             // holder.mFileSizeView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 100, 32, getMetadata().getMediaSize(), textColor,borderColor, qualityColor));
             holder.mFileSizeView.setImageBitmap(AudioTagUtils.getFileSizeIcon(holder.mContext, tag));

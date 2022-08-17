@@ -165,6 +165,72 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
+    public static Bitmap createBitmapFromTextK2D(Context context, int width, int height, String text, int textColor, int borderColor, int backgroundColor) {
+
+        if(StringUtils.isEmpty(text)) return null;
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 2;
+        int cornerRadius = 4;
+        Rect bounds = new Rect(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(backgroundColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        padding = 1;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+        int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(borderColor);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(borderWidth);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        //int letterTextSize = 20;
+        int letterTextSize = 20;
+        // int letterTextSize = 18;
+        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        //Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(textColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(text, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 2f;
+        myCanvas.drawText(text,
+                bounds.exactCenterX(), mLetterTop + bounds.exactCenterY(),
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
     public static Bitmap createButtonFromText(Context context, int width, int height, String text, int textColor, int borderColor, int backgroundColor) {
         //DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         //int width = displayMetrics.widthPixels;
@@ -297,12 +363,10 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
-    public static Bitmap getResIcon(Context context, AudioTag tag) {
+    public static Bitmap getHiResIcon(Context context, AudioTag tag) {
         if(tag.isMQA() ) {
             return getMQASamplingRateIcon(context, tag);
-        //}else if (isDSD(tag)) {
-       //     return getBitsPerSampleIcon(context, tag);
-        }else if (AudioTagUtils.isHiResOrDSD(tag)) {
+        }else if (isHiResOrDSD(tag) || is24Bits(tag)) {
             return getBitsPerSampleIcon(context, tag);
         }
 
@@ -370,6 +434,16 @@ public class AudioTagUtils {
 
         return icon;
     }
+
+    public static Bitmap getResolutionIcon(Context context, AudioTag tag) {
+        int borderColor = context.getColor(R.color.black);
+        int textColor = context.getColor(R.color.black);
+        int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        Bitmap icon = AudioTagUtils.createBitmapFromTextK2D(context, Constants.INFO_RESOLUTIONS_WIDTH, Constants.INFO_RESOLUTIONS_HEIGHT, tag.getAudioResolutions(), textColor,borderColor, qualityColor);
+
+        return icon;
+    }
+
     public static Bitmap getDurationIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
@@ -513,7 +587,7 @@ public class AudioTagUtils {
       //  int qualityColor = item.getSampleRateColor(context);
         //int bgColor = getEncodingColor(context, tag);
         int bgColor = getResolutionColor(context, tag);
-        Bitmap icon = AudioTagUtils.createBitmapFromText(context, 60, 32, tag.getAudioEncoding(), textColor,borderColor, bgColor); //context.getColor(getEncodingColorId(item)));
+        Bitmap icon = AudioTagUtils.createBitmapFromTextK2D(context, 60, 32, tag.getAudioEncoding(), textColor,borderColor, bgColor); //context.getColor(getEncodingColorId(item)));
 
         return icon;
     }
@@ -637,13 +711,16 @@ public class AudioTagUtils {
         int blackColor = context.getColor(R.color.black);
      //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
         String bps = "";
+        String samplingRate= "";
         if(tag.isDSD()) {
             int rateModulation = (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
-             bps = "DSD"+rateModulation;
+             bps = "DSD";
+             samplingRate = String.valueOf(rateModulation);
         }else {
              bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
+            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
         }
-        String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
+        // samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
       //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
       //  return icon;
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -980,10 +1057,11 @@ public class AudioTagUtils {
                 mLetterPaint);
 
         // draw sampling rate, white color
+        font =  ResourcesCompat.getFont(context, R.font.led_font);
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextSize(letterTextSize+4);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         textMathRect = new Rect();

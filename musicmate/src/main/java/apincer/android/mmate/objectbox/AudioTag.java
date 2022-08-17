@@ -491,6 +491,40 @@ public class AudioTag implements Cloneable , Parcelable {
         //return "";
     }
 
+    public String getAudioResolutions() {
+        //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
+       //// String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
+       // text = text+" / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+
+       // return text;
+
+        //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
+       // if(audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD) {
+            String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
+            text = text+StringUtils.SYMBOL_RES_SEP+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+            text = text+StringUtils.SYMBOL_RES_SEP+StringUtils.getFormatedAudioBitRate(audioBitRate);
+            return text;
+            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+"x "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+"x "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
+            //return "x"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
+            //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
+            //return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+      /*  } else if(isLossless()) {
+           //return "PCM "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+           //return "PCM "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" / "+ audioBitsPerSample+"bit";
+           // return getAudioEncoding()+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" "+ audioBitsPerSample+" bit";
+            //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" "+ audioBitsPerSample+" bit";
+            return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+        }else {
+            // MP3, AAC, stream quality
+            //return getAudioEncoding() + " " +StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+            //return getAudioEncoding() + " " +StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
+          //  return StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
+           // return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
+            return audioBitsPerSample+" bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
+        } */
+    }
+
     public String getAudioBitCountAndSampleRate() {
         //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
         String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);

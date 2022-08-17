@@ -69,15 +69,26 @@
 
             <ImageView
                 android:id="@+id/item_sampling_rate"
+                android:layout_width="@dimen/dimen_info_resolution_dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:layout_toRightOf="@id/item_type_icon"
+                android:background="@drawable/shape_now_playing_title_background"
+                android:padding="1dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/shape_bottom_background" />
+            <!--
+            <ImageView
+                android:id="@+id/item_sampling_rate"
                 android:layout_width="@dimen/dimen_info_sample_rate_dp"
                 android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:layout_toRightOf="@id/item_type_icon"
+                android:background="@drawable/shape_now_playing_title_background"
                 android:padding="1dp"
                 android:scaleType="fitXY"
-                android:background="@drawable/shape_now_playing_title_background"
                 android:src="@drawable/shape_bottom_background" />
-
+-->
             <ImageView
                 android:id="@+id/item_bitrate"
                 android:layout_width="66dp"

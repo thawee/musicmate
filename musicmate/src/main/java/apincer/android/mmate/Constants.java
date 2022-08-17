@@ -18,10 +18,10 @@ public final class Constants {
     public static final String FILTER_TYPE_GENRE = "Genre";
     public static final String FILTER_TYPE_GROUPING = "Grouping";
     public static final String FILTER_TYPE_PATH = "Folder";
-    public static final String FILTER_TYPE_ALBUM_ARTIST = "AlbumArtist";
+    public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-    public static int QUALITY_SAMPLING_RATE_96 = 96000;
+   // public static int QUALITY_SAMPLING_RATE_96 = 96000;
     public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static int QUALITY_SAMPLING_RATE_48 = 48000;
     public static int QUALITY_SAMPLING_RATE_44 = 44100;
@@ -157,6 +157,8 @@ public final class Constants {
    // public static final String PREF_SHOW_PCM_AUDIO_IN_COLLECTION = "preference_show_pcm_in_collection";
    // public static final String PREF_SHOW_AUDIO_SAMPLE_RATE_IN_COLLECTION = "preference_show_sample_rate_in_collection";
 
+    public static final int INFO_RESOLUTIONS_WIDTH = 280;
+    public static final int INFO_RESOLUTIONS_HEIGHT = 32;
     public static final int INFO_SAMPLE_RATE_WIDTH = 180; //164;
     public static final int INFO_HEIGHT = 32;
 

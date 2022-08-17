@@ -46,6 +46,7 @@ public class StringUtils {
     public static final String UNTITLED_CAP = "<Untitled>";
     public static final String MULTI_VALUES = "<multiple>";
     public static final String CHARSET_ISO8859_1 = "ISO-8859-1";
+    public static final String SYMBOL_RES_SEP = " \u25C8 ";
 
     public static String encodeText(String text, String encode) {
         if(StringUtils.isEmpty(encode)) {
@@ -449,22 +450,22 @@ public class StringUtils {
     public static String getFormatedAudioBitRate(long audioBitRate) {
         if(audioBitRate>1000000) {
             double dBitrate = audioBitRate/1000000.00;
-            return String.format(Locale.getDefault(), "%.1f Mbps", dBitrate);
+            return String.format(Locale.getDefault(), "%.1fMbps", dBitrate);
         }else {
-            return String.format(Locale.getDefault(), "%d Kbps", audioBitRate);
+            return String.format(Locale.getDefault(), "%dKbps", audioBitRate);
         }
     }
 
     public static String getFormatedBitsPerSample(int bit) {
-            return String.format(Locale.getDefault(), "%d-Bit", bit);
+            return String.format(Locale.getDefault(), "%dbits", bit);
     }
 
     public static String getFormatedAudioSampleRate(long rate,boolean includeUnit) {
-        String unit = " kHz";
+        String unit = "kHz";
         String str="";
         double factor = 1000.00;
         if(rate > 1000000) {
-            unit = " MHz";
+            unit = "MHz";
             factor = 1000000.00;
             double s = rate / factor;
             str = String.format(Locale.getDefault(),"%.1f", s);

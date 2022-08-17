@@ -254,7 +254,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.1.0" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.2.0" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]

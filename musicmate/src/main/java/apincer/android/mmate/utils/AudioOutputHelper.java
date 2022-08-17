@@ -438,11 +438,11 @@ public class AudioOutputHelper {
                 mLetterPaint);
 
         // draw sampling rate, white
-        font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        font =  ResourcesCompat.getFont(context, R.font.led_font);
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextSize(letterTextSize+4);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         textMathRect = new Rect();
