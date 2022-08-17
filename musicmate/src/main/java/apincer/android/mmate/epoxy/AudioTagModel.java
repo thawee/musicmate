@@ -228,7 +228,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
             // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
            // holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));
-           holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getResolutionIcon(holder.mContext, tag));
+           holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getAudioResolutionsIcon(holder.mContext, tag));
            // holder.mDurationView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 80, 32, getMetadata().getAudioDurationAsString(), textColor,borderColor, qualityColor));
             holder.mDurationView.setImageBitmap(AudioTagUtils.getDurationIcon(holder.mContext, tag));
             // holder.mFileSizeView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 100, 32, getMetadata().getMediaSize(), textColor,borderColor, qualityColor));

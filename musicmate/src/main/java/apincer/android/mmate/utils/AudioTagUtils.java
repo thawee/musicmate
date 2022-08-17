@@ -435,7 +435,7 @@ public class AudioTagUtils {
         return icon;
     }
 
-    public static Bitmap getResolutionIcon(Context context, AudioTag tag) {
+    public static Bitmap getAudioResolutionsIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
         int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
@@ -703,7 +703,7 @@ public class AudioTagUtils {
     }
 
     public static Bitmap getBitsPerSampleIcon(Context context,  AudioTag tag) {
-        int width = 128;
+        int width = 132; //128;
         int height = 96;
        // int borderColor = context.getColor(R.color.grey400);
       //  int textColor = context.getColor(R.color.black);
@@ -717,7 +717,8 @@ public class AudioTagUtils {
              bps = "DSD";
              samplingRate = String.valueOf(rateModulation);
         }else {
-             bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
+            // bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
+            bps = String.valueOf(tag.getAudioBitsPerSample());
             samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
         }
         // samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
@@ -769,13 +770,13 @@ public class AudioTagUtils {
 
         int letterTextSize = 30; //28;
        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
         mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextSize(letterTextSize+2);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         Rect textMathRect = new Rect();
@@ -787,6 +788,7 @@ public class AudioTagUtils {
                 mLetterPaint);
 
         // draw sampling rate, white color
+        font =  ResourcesCompat.getFont(context, R.font.adca_font);
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
@@ -796,7 +798,7 @@ public class AudioTagUtils {
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
         mLetterTop = mLetterTop +(textMathRect.height() / 2f);
-        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
+        mPositionY= (float) (bounds.exactCenterY()+(bounds.exactCenterY()/2.5));
         myCanvas.drawText(samplingRate,
                 bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
                 mLetterPaint);

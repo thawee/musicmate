@@ -158,7 +158,7 @@ public final class Constants {
    // public static final String PREF_SHOW_AUDIO_SAMPLE_RATE_IN_COLLECTION = "preference_show_sample_rate_in_collection";
 
     public static final int INFO_RESOLUTIONS_WIDTH = 280;
-    public static final int INFO_RESOLUTIONS_HEIGHT = 32;
+    public static final int INFO_RESOLUTIONS_HEIGHT = 28;
     public static final int INFO_SAMPLE_RATE_WIDTH = 180; //164;
     public static final int INFO_HEIGHT = 32;
 
