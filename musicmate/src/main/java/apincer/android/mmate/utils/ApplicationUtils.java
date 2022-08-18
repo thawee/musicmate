@@ -5,7 +5,6 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
@@ -30,13 +29,13 @@ public class ApplicationUtils {
     public static void startAspect(Activity activity, AudioTag tag) {
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
         if (intent != null) {
-            ApplicationInfo ai = null;
+          /*  ApplicationInfo ai = null;
             try {
                 ai =  activity.getPackageManager().getApplicationInfo("com.andrewkhandr.aspect",0);  //MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
             } catch (PackageManager.NameNotFoundException e) {
                 e.printStackTrace();
             }
-            if (ai != null) {
+            if (ai != null) { */
                 intent.setAction(Intent.ACTION_SEND);
                 MimeTypeMap mime = MimeTypeMap.getSingleton();
 
@@ -47,7 +46,7 @@ public class ApplicationUtils {
                 intent.setDataAndType(apkURI, type);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 activity.startActivity(intent);
-            }
+            //}
         }
     }
 
@@ -149,8 +148,8 @@ public class ApplicationUtils {
         return isPlugged;
     }
 
-    public static void startFileExplorer(TagsActivity tagsActivity, AudioTag displayTag) {
-        File path = new File(displayTag.getPath());
+    public static void startFileExplorer(TagsActivity activity, AudioTag displayTag) {
+       /* File path = new File(displayTag.getPath());
         Uri uri = MusicFileProvider.getUriForFile(path.getParentFile().getAbsolutePath());
 
         Intent intent = new Intent();
@@ -161,7 +160,43 @@ public class ApplicationUtils {
         intent.setType("file/*");
 
         intent.setData(uri);
-        tagsActivity.startActivity(intent);
+ */
+        File filePath = new File(displayTag.getPath());
+        Intent intent = activity.getPackageManager().getLaunchIntentForPackage("pl.solidexplorer2");
+        if (intent != null) {
+           /* ApplicationInfo ai = null;
+            try {
+                ai = activity.getPackageManager().getApplicationInfo("pl.solidexplorer2", 0);  //MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+            if (ai != null) { */
+                intent.setAction(Intent.ACTION_VIEW);
+                MimeTypeMap mime = MimeTypeMap.getSingleton();
+
+                String path = filePath.getParentFile().getAbsolutePath();
+                String type = mime.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(path));
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                Uri apkURI = MusicFileProvider.getUriForFile(path);
+                intent.setDataAndType(apkURI, type);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                activity.startActivity(intent);
+                return;
+           // }
+        } else {
+                intent = new Intent();
+                MimeTypeMap mime = MimeTypeMap.getSingleton();
+                // intent.setAction(android.content.Intent.ACTION_VIEW);
+                // intent.setType("resource/folder");
+
+                intent.setAction(Intent.ACTION_VIEW);
+                String path = filePath.getParentFile().getAbsolutePath();
+                String type = mime.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(path));
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                Uri uri = MusicFileProvider.getUriForFile(path);
+                intent.setDataAndType(uri, type);
+                activity.startActivity(intent);
+        }
     }
 
     public static SearchCriteria getSearchCriteria(Intent intent) {

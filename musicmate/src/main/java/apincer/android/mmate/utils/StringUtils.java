@@ -480,6 +480,23 @@ public class StringUtils {
         return str;
     }
 
+    public static String getFormatedAudioSampleRateAbvUnit(long rate) {
+        String unit = " k";
+        String str="";
+        double factor = 1000.00;
+        if(rate > 1000000) {
+            unit = " M";
+            factor = 1000000.00;
+            double s = rate / factor;
+            str = String.format(Locale.getDefault(),"%.1f", s);
+        }else {
+            double s = rate / factor;
+            str = String.format(Locale.getDefault(),"%.1f", s);
+            str = str.replace(".0", "");
+        }
+        return str + unit;
+    }
+
     public static String formatStorageSizeGB(long size) {
         double s = size*1.00;
         s = s/StorageVolume.GB_IN_BYTES;

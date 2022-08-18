@@ -715,11 +715,11 @@ public class AudioTagUtils {
         if(tag.isDSD()) {
             int rateModulation = (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
              bps = "DSD";
-             samplingRate = String.valueOf(rateModulation);
+             samplingRate = "x"+rateModulation;
         }else {
             // bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
-            bps = String.valueOf(tag.getAudioBitsPerSample());
-            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
+            bps = tag.getAudioBitsPerSample()+"B";
+            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
         }
         // samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
       //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
@@ -789,6 +789,8 @@ public class AudioTagUtils {
 
         // draw sampling rate, white color
         font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        //font =  ResourcesCompat.getFont(context, R.font.fff_forward);
+        letterTextSize = 30;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
@@ -816,11 +818,11 @@ public class AudioTagUtils {
         int blackColor = context.getColor(R.color.black);
         //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
         String mqaLabel = "MQA";
-        String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
+        String samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
         String mqaRate = tag.getMQASampleRate();
         long rate = AudioTagUtils.parseMQASampleRate(mqaRate);
         if (rate >0) {
-            samplingRate = StringUtils.getFormatedAudioSampleRate(rate, true);
+            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(rate);
         }
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -1059,11 +1061,13 @@ public class AudioTagUtils {
                 mLetterPaint);
 
         // draw sampling rate, white color
-        font =  ResourcesCompat.getFont(context, R.font.led_font);
+        //font =  ResourcesCompat.getFont(context, R.font.led_font);
+        font =  ResourcesCompat.getFont(context, R.font.fff_forward);
+        letterTextSize = 20;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize+4);
+        mLetterPaint.setTextSize(letterTextSize);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         textMathRect = new Rect();
