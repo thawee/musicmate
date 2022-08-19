@@ -49,6 +49,7 @@ import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.utils.FileUtils;
 import timber.log.Timber;
 
@@ -633,6 +634,9 @@ public class AudioFileRepository {
             mediaTag.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
             if(tag instanceof FlacTag) {
                 // check MQA Tag
+                detectMQA(mediaTag, mediaTag.getPath());
+
+                /*
                 if(tag.hasField(MQA_ENCODER) ||
                         tag.hasField(MQA_ORIGINAL_SAMPLING_FREQUENCY) ||
                         tag.hasField(MQA_ORIGINAL_SAMPLE_RATE) ||
@@ -647,7 +651,7 @@ public class AudioFileRepository {
                         mediaTag.setMQASampleRate(tag.getFirst(MQA_SAMPLE_RATE));
                     }else {
                         mediaTag.setMQASampleRate(String.valueOf(mediaTag.getAudioSampleRate()));
-                    }
+                    } */
                 }
             }
             if(!(tag instanceof WavTag)) {
@@ -665,7 +669,24 @@ public class AudioFileRepository {
             readCommentTag(mediaTag,getId3TagValue(tag, FieldKey.COMMENT));
             return true;
         }
-        return false;
+
+    private void detectMQA(AudioTag tag, String path) {
+        if(tag.isMQA()) return; //prevent re check
+        try {
+            NativeLib lib = new NativeLib();
+            String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(path));
+            // MQA Studio|96000
+            // MQA|96000
+            if (mqaInfo.toLowerCase().contains("mqa")) {
+                tag.setMQA(true);
+                if (mqaInfo.toLowerCase().contains("studio")) {
+                    tag.setMQAStudio(true);
+                }
+                tag.setMQASampleRate(mqaInfo.substring(mqaInfo.indexOf("|")));
+            }
+        }catch (Exception ex) {
+            Timber.e(ex);
+        }
     }
 
     private int getId3TagIntValue(Tag tag, FieldKey key) {
@@ -855,14 +876,21 @@ public class AudioFileRepository {
                 filename.append(StringUtils.formatTitle(metadata.getGrouping())).append(File.separator);
             }
 
+            /*
             String encSuffix = "";
             if (metadata.isMQA()) {
                 encSuffix="-MQA";
             }else if (AudioTagUtils.isPCMHiRes(metadata)) {
                 encSuffix="-HRA";
-            }
+            } */
 
-            if(AudioTagUtils.isDSD(metadata)) {
+            if (metadata.isMQA()) {
+                //encSuffix="-MQA";
+                filename.append(Constants.MEDIA_PATH_MQA);
+            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
+                //encSuffix="-HRA";
+                filename.append(Constants.MEDIA_PATH_HRA);
+            }else if(AudioTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
                 //filename.append("-");
                 filename.append(AudioTagUtils.getDSDSampleRateModulation(metadata));
@@ -874,25 +902,25 @@ public class AudioFileRepository {
            //     filename.append(Constants.MEDIA_PATH_HR);
             }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ALAC);
-                filename.append(encSuffix);
+               // filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_FLAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_FLAC);
-                filename.append(encSuffix);
+               // filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_WAVE.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_WAVE);
-                filename.append(encSuffix);
+              //  filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_AIFF.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_AIFF);
-                filename.append(encSuffix);
+               // filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_AAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ACC);
-                filename.append(encSuffix);
+              //  filename.append(encSuffix);
             }else if (Constants.MEDIA_ENC_MP3.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_MP3);
-                filename.append(encSuffix);
+              //  filename.append(encSuffix);
             }else {
                 filename.append(Constants.MEDIA_PATH_OTHER);
-                filename.append(encSuffix);
+              //  filename.append(encSuffix);
             }
             filename.append(File.separator);
 

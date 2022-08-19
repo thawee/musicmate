@@ -172,8 +172,9 @@
             android:layout_width="@dimen/dimen_24_dp"
             android:layout_height="@dimen/dimen_16_dp"
             android:layout_marginLeft="@dimen/dimen_4_dp"
-            android:layout_marginBottom="6dp"
-            android:layout_gravity="bottom|left"
+            android:layout_marginRight="@dimen/dimen_4_dp"
+            android:layout_marginBottom="@dimen/dimen_4_dp"
+            android:layout_gravity="bottom|right"
             app:tint="@color/audiophile_background"
             android:scaleType="fitXY"
             android:src="@drawable/ic_audiophile"/>

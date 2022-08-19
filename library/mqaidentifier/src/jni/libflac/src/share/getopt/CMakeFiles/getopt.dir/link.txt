@@ -1,0 +1,2 @@
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar qc libgetopt.a CMakeFiles/getopt.dir/getopt.c.o CMakeFiles/getopt.dir/getopt1.c.o
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib libgetopt.a

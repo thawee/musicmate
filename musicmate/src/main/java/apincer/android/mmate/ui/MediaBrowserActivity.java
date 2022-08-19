@@ -88,6 +88,7 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.ScanAudioFileWorker;
+import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -473,7 +474,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        });
 
        mSearchView.setOnSearchClickListener(v -> {
-           String query = String.valueOf(mSearchView.getQuery());
+           //String query = String.valueOf(mSearchView.getQuery());
            SearchCriteria criteria = epoxyController.getCriteria();
            doStartRefresh(criteria);
            //epoxyController.loadSource(criteria);
@@ -806,6 +807,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
       //  text = text+"\n Player: "+service.getPlayerName();
         AudioTag tag = MusixMateApp.getPlayingSong();
         MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
+
+       // NativeLib lib = new NativeLib();
+       // String mqaInfo = lib.getMQAInfo(tag.getPath());
 
         // file
         // player

@@ -105,6 +105,7 @@ public final class Constants {
 
     public static final String MEDIA_PATH_DSD = "DSD"; // DSD
     public static final String MEDIA_PATH_MQA = "MQA"; //MQA
+    public static final String MEDIA_PATH_HRA = "HRA"; //HRA
    // public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
    // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
     public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless

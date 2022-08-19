@@ -213,6 +213,7 @@ dependencies {
     implementation project(':library:androidtagview')
    // debugImplementation project(':library:crashreporter')
     implementation project(':library:MaterialEditText')
+    implementation project(':library:mqaidentifier')
 }
 
 aboutLibraries {

@@ -1,0 +1,2 @@
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/jni/libflac/src/libFLAC/CMakeFiles/CheckASM_NASM/CMakeFiles/rebuild_cache.dir
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/jni/libflac/src/libFLAC/CMakeFiles/CheckASM_NASM/CMakeFiles/edit_cache.dir

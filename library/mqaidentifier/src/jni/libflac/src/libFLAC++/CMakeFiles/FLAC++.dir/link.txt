@@ -1,0 +1,2 @@
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar qc libFLAC++.a CMakeFiles/FLAC++.dir/metadata.cpp.o CMakeFiles/FLAC++.dir/stream_decoder.cpp.o CMakeFiles/FLAC++.dir/stream_encoder.cpp.o
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib libFLAC++.a

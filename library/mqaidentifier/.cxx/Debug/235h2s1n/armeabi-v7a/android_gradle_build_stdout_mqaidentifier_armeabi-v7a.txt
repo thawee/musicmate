@@ -1,0 +1,9 @@
+ninja: Entering directory `/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/235h2s1n/armeabi-v7a'
+[1/2] Building CXX object CMakeFiles/mqaidentifier.dir/api.cpp.o
+FAILED: CMakeFiles/mqaidentifier.dir/api.cpp.o 
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ --target=armv7-none-linux-androideabi30 --gcc-toolchain=/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64 --sysroot=/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dmqaidentifier_EXPORTS -I/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../../jni/flac/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -march=armv7-a -mthumb -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/mqaidentifier.dir/api.cpp.o -MF CMakeFiles/mqaidentifier.dir/api.cpp.o.d -o CMakeFiles/mqaidentifier.dir/api.cpp.o -c /Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/api.cpp
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/api.cpp:23:21: error: invalid operands to binary expression ('const char [4]' and 'const char *')
+        mqa = "MQA" + (id.isMQAStudio() ? " Studio" : "")+"|"+id.originalSampleRate();
+              ~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.
+ninja: build stopped: subcommand failed.

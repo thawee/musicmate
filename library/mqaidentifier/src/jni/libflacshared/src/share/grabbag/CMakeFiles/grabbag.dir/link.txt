@@ -1,0 +1,2 @@
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar qc libgrabbag.a CMakeFiles/grabbag.dir/alloc.c.o CMakeFiles/grabbag.dir/cuesheet.c.o CMakeFiles/grabbag.dir/file.c.o CMakeFiles/grabbag.dir/picture.c.o CMakeFiles/grabbag.dir/replaygain.c.o CMakeFiles/grabbag.dir/seektable.c.o CMakeFiles/grabbag.dir/snprintf.c.o
+/Users/thawee.p/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib libgrabbag.a
