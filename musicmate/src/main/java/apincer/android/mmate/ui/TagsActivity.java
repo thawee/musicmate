@@ -547,6 +547,8 @@ public class TagsActivity extends AppCompatActivity {
         spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
+                .append(new SpecialTextUnit(StringUtils.getFormatedAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(10))
                // .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
                 //.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10)) //.append(new SpecialLabelUnit(" | ", Color.GRAY, sp2px(10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                 //.append(new SpecialTextUnit(StringUtils.getFormatedChannels(displayTag.getAudioChannels()),encColor).setTextSize(10))

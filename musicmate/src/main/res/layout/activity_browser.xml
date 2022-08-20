@@ -165,7 +165,7 @@
 					   android:layout_alignParentBottom="true"
 					   android:layout_alignParentRight="true"
 					   android:layout_marginRight="@dimen/dimen_48_dp"
-					   android:layout_marginBottom="@dimen/dimen_64_dp"
+					   android:layout_marginBottom="@dimen/dimen_96_dp"
 					   android:padding="@dimen/dimen_1_dp"
 					   android:background="@drawable/shape_now_playing_background_l1">
 					   <include layout="@layout/view_now_playing_imgleft"/>

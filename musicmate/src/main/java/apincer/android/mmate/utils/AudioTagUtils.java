@@ -393,6 +393,26 @@ public class AudioTagUtils {
         }
     }
 
+    public static Drawable getResolutionBackground(Context context, AudioTag tag) {
+        // DSD - DSD
+        // Hi-Res Lossless - >= 24 bits and >= 48 kHz
+        // Lossless - >= 24 bits and >= 48 kHz
+        // High Quality - compress
+        if(isDSD(tag)) {
+            return context.getDrawable(R.drawable.shape_background_hd);
+            // }else if(tag.isMQA()) {
+            //     return context.getColor(R.color.quality_hd);
+        }else if(isPCMHiRes(tag)) {
+            return context.getDrawable(R.drawable.shape_background_hd);
+        }else if(is24Bits(tag)) {
+            return context.getDrawable(R.drawable.shape_background_hd);
+        }else if(isPCMLossless(tag)){
+            return context.getDrawable(R.drawable.shape_background_lossless);
+        }else {
+            return context.getDrawable(R.drawable.shape_background_unknown);
+        }
+    }
+
     public static boolean is24Bits(AudioTag tag) {
         return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
@@ -818,6 +838,9 @@ public class AudioTagUtils {
         int blackColor = context.getColor(R.color.black);
         //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
         String mqaLabel = "MQA";
+        if(tag.isMQAStudio()) {
+            mqaLabel = "Studio";
+        }
         String samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
         String mqaRate = tag.getMQASampleRate();
         long rate = AudioTagUtils.parseMQASampleRate(mqaRate);

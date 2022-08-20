@@ -27,6 +27,7 @@ import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.StringUtils;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
@@ -161,13 +162,12 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         imageLoader.enqueue(request);
 
         // show file type i.e. DxD, FLAC, ALAC, MP3
-        Bitmap typeBitmap = AudioTagUtils.getFileFormatIcon(holder.mContext, tag);
+       // Bitmap typeBitmap = AudioTagUtils.getFileFormatIcon(holder.mContext, tag);
         //if(typeBitmap != null) {
-        holder.mFileTypeView.setVisibility(View.VISIBLE);
-        holder.mFileTypeView.setImageBitmap(typeBitmap);
-        //}else{
-        //    holder.mFileTypeView.setVisibility(View.GONE);
-        //}
+       // holder.mFileTypeView.setVisibility(View.VISIBLE);
+       // holder.mFileTypeView.setImageBitmap(typeBitmap);
+        holder.mFileTypeView.setText(tag.getAudioEncoding());
+        holder.mFileTypeView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
 
         // show enc i.e. MQA, DSD
         Bitmap resBitmap = AudioTagUtils.getHiResIcon(holder.mContext, tag);
@@ -224,15 +224,27 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         }else {
             holder.mBitrateView.setVisibility(View.GONE);
         } */
-        holder.mBitrateView.setVisibility(View.GONE);
+       // holder.mBitrateView.setVisibility(View.GONE);
 
-            // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
+        // Audio resolution
+        holder.mSamplingRateView.setText(tag.getAudioResolutions());
+        holder.mSamplingRateView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+
+        // duration
+        holder.mDurationView.setText(tag.getAudioDurationAsString());
+        holder.mDurationView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+
+        // file size
+        holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
+        holder.mFileSizeView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+
+        // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
            // holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));
-           holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getAudioResolutionsIcon(holder.mContext, tag));
+       //////    holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getAudioResolutionsIcon(holder.mContext, tag));
            // holder.mDurationView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 80, 32, getMetadata().getAudioDurationAsString(), textColor,borderColor, qualityColor));
-            holder.mDurationView.setImageBitmap(AudioTagUtils.getDurationIcon(holder.mContext, tag));
+       ///     holder.mDurationView.setImageBitmap(AudioTagUtils.getDurationIcon(holder.mContext, tag));
             // holder.mFileSizeView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 100, 32, getMetadata().getMediaSize(), textColor,borderColor, qualityColor));
-            holder.mFileSizeView.setImageBitmap(AudioTagUtils.getFileSizeIcon(holder.mContext, tag));
+       ////     holder.mFileSizeView.setImageBitmap(AudioTagUtils.getFileSizeIcon(holder.mContext, tag));
 
             // holder.mFileFormat.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 60, 32, getMetadata().getAudioEncoding(), Color.WHITE ,Color.WHITE, holder.getContext().getColor(getEncodingColorId())));
            // holder.mFileFormat.setImageBitmap(AudioTagUtils.getFileFormatIcon(holder.mContext, tag));
@@ -259,13 +271,14 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         View mTitleLayout;
         TextView mTitle;
         TextView mSubtitle;
-        ImageView mSamplingRateView;
-        ImageView mBitrateView;
-        ImageView mDurationView;
-        ImageView mFileSizeView;
+        TextView mSamplingRateView;
+       // ImageView mBitrateView;
+        TextView mDurationView;
+        TextView mFileSizeView;
         ImageView mCoverArtView;
         ImageView mFileSourceView;
-        ImageView mFileTypeView;
+       // ImageView mFileTypeView;
+        TextView mFileTypeView;
         Context mContext;
         //ImageView mNotificationView;
         ImageView mPlayerView;
@@ -284,13 +297,13 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
-            this.mBitrateView = view.findViewById(R.id.item_bitrate);
+           // this.mBitrateView = view.findViewById(R.id.item_bitrate);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             // this.mAudioQualityView = view.findViewById(R.id.item_sq_icon);
             this.mAudioENCView = view.findViewById(R.id.item_enc_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
-            this.mFileTypeView = view.findViewById(R.id.item_type_icon);
+            this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
            // this.mNotificationView = view.findViewById(R.id.item_notification);
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
