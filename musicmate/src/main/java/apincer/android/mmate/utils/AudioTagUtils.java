@@ -34,10 +34,6 @@ public class AudioTagUtils {
     }
 
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, Bitmap icon, int borderColor, int backgroundColor) {
-        //DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        //int width = displayMetrics.widthPixels;
-        // Bitmap icon =  BitmapFactory.decodeResource(getResources(), drawableId);
-
         if(icon!=null) {
             if (width < icon.getWidth() || height < icon.getHeight()) {
                 width = icon.getWidth() + (int) (icon.getWidth() * .1);
@@ -366,8 +362,13 @@ public class AudioTagUtils {
     public static Bitmap getHiResIcon(Context context, AudioTag tag) {
         if(tag.isMQA() ) {
             return getMQASamplingRateIcon(context, tag);
-        }else if (isHiResOrDSD(tag) || is24Bits(tag)) {
-            return getBitsPerSampleIcon(context, tag);
+      /*  }else if (isHiResOrDSD(tag) || is24Bits(tag)) {
+            return getHiResPCMIcon(context, tag); //getBitsPerSampleIcon(context, tag);
+        }*/
+        }else if (isPCMHiRes(tag)) {
+            return getHiResPCMIcon(context, tag); //getBitsPerSampleIcon(context, tag);
+        }else if (tag.isDSD()) {
+            return getHiResDSDIcon(context, tag);
         }
 
         return null;
@@ -445,7 +446,7 @@ public class AudioTagUtils {
                 ((tag.getAudioBitsPerSample() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48))); // ||
                 // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
     }
-
+/*
     public static Bitmap getSampleRateIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
@@ -472,6 +473,7 @@ public class AudioTagUtils {
 
         return icon;
     }
+*/
 
     public static String getFormattedTitle(Context context, AudioTag tag) {
         String title =  StringUtils.trimToEmpty(tag.getTitle());
@@ -518,6 +520,7 @@ public class AudioTagUtils {
         }
     }
 
+    /*
     public static Bitmap getFileSizeIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
@@ -525,7 +528,7 @@ public class AudioTagUtils {
         Bitmap icon = AudioTagUtils.createBitmapFromText(context, 100, 32, StringUtils.formatStorageSize(tag.getFileSize()), textColor,borderColor, qualityColor);
 
         return icon;
-    }
+    } */
 
     public static int getSourceRescId(String letter) {
         //String letter = item.getSource();
@@ -600,7 +603,7 @@ public class AudioTagUtils {
         } */
         //return null;
     }
-
+/*
     public static Bitmap getFileFormatIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.black);
         int textColor = context.getColor(R.color.black);
@@ -619,7 +622,7 @@ public class AudioTagUtils {
 
         return icon;
     }
-
+*/
     public static boolean isOnDownloadDir(AudioTag tag) {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
@@ -828,6 +831,221 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
+    public static Bitmap getHiResDSDIcon(Context context,  AudioTag tag) {
+        if(!tag.isDSD()) return null;
+        int width = 128;
+        int height = 96;
+        // int borderColor = context.getColor(R.color.grey400);
+        //  int textColor = context.getColor(R.color.black);
+        int whiteColor = context.getColor(R.color.white);
+        int blackColor = context.getColor(R.color.black);
+        //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        String label = "DSD";
+        int rateModulation = (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
+        String samplingRate = "x "+rateModulation;
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 2;
+        int cornerRadius = 4;
+        Rect bounds = new Rect(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw black box
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw top white box
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                //(myCanvas.getHeight()/2) - 2 // Bottom
+                (myCanvas.getHeight()/3)
+        );
+        // int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        // draw orval
+        rectangle = new RectF(
+                padding, // Left
+                (myCanvas.getHeight()/3) -4, // Top
+                myCanvas.getWidth() - padding, // Right
+                (myCanvas.getHeight()/2) - 2 // Bottom
+        );
+        // int borderWidth = 2;
+        paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawOval(rectangle, paint);
+
+        int letterTextSize = 30; //28;
+        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+
+        // draw bit per , black color
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 8f;
+        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
+        myCanvas.drawText(label,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        // draw sampling rate, white color
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
+        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
+        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
+        myCanvas.drawText(samplingRate,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
+    public static Bitmap getHiResPCMIcon(Context context,  AudioTag tag) {
+        if(tag.isMQA() || tag.isDSD()) return null;
+        int width = 128;
+        int height = 96;
+        // int borderColor = context.getColor(R.color.grey400);
+        //  int textColor = context.getColor(R.color.black);
+        int whiteColor = context.getColor(R.color.white);
+        int blackColor = context.getColor(R.color.black);
+        //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        String label = "PCM";
+        String samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 2;
+        int cornerRadius = 4;
+        Rect bounds = new Rect(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw black box
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw top white box
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                //(myCanvas.getHeight()/2) - 2 // Bottom
+                (myCanvas.getHeight()/3)
+        );
+        // int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        // draw orval
+        rectangle = new RectF(
+                padding, // Left
+                (myCanvas.getHeight()/3) -4, // Top
+                myCanvas.getWidth() - padding, // Right
+                (myCanvas.getHeight()/2) - 2 // Bottom
+        );
+        // int borderWidth = 2;
+        paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawOval(rectangle, paint);
+
+        int letterTextSize = 30; //28;
+        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+
+        // draw bit per , black color
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 8f;
+        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
+        myCanvas.drawText(label,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        // draw sampling rate, white color
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
+        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
+        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
+        myCanvas.drawText(samplingRate,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
     public static Bitmap getMQASamplingRateIcon(Context context,  AudioTag tag) {
         if(!tag.isMQA()) return null;
         int width = 128;
@@ -838,14 +1056,15 @@ public class AudioTagUtils {
         int blackColor = context.getColor(R.color.black);
         //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
         String mqaLabel = "MQA";
-        if(tag.isMQAStudio()) {
-            mqaLabel = "Studio";
-        }
         String samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
-        String mqaRate = tag.getMQASampleRate();
-        long rate = AudioTagUtils.parseMQASampleRate(mqaRate);
-        if (rate >0) {
-            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(rate);
+        if(tag.isMQAStudio()) {
+            samplingRate = "Studio";
+        }else {
+            String mqaRate = tag.getMQASampleRate();
+            long rate = AudioTagUtils.parseMQASampleRate(mqaRate);
+            if (rate >0) {
+                samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(rate);
+            }
         }
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -942,7 +1161,7 @@ public class AudioTagUtils {
 
         return myBitmap;
     }
-
+/*
     public static Bitmap getAudiophileIcon(Context context, AudioTag tag) {
         int borderColor = context.getColor(R.color.grey400);
         int textColor = context.getColor(R.color.black);
@@ -951,7 +1170,7 @@ public class AudioTagUtils {
         Bitmap icon = AudioTagUtils.createBitmapFromText(context, 128, 36, "Audiophile", textColor,borderColor, qualityColor);
 
         return icon;
-    }
+    } */
 
     public static boolean isOnPrimaryStorage(Context context, AudioTag tag) {
         return StorageId.PRIMARY.equals(DocumentFileCompat.getStorageId(context, tag.getPath()));
@@ -971,23 +1190,6 @@ public class AudioTagUtils {
         }else {
             return Constants.TITLE_HIFI_QUALITY;
         }
-    }
-
-    public static String getAudioEncoding(AudioTag tag) {
-        return tag.getAudioEncoding();
-       /* if(tag.getAudioEncoding()) {
-            return Constants.AUDIO_SQ_DSD;
-        }else if(tag.isMQA()) {
-            return Constants.AUDIO_SQ_PCM_MQA;
-        }else if(isPCMHiRes(tag)) {
-            return Constants.TITLE_HIRES;
-            //}else if(isPCMHiResLossless(tag)) {
-            //    return Constants.TITLE_HR_LOSSLESS;
-        }else if(isPCMLossless(tag)) {
-            return Constants.TITLE_HIFI_LOSSLESS;
-        }else {
-            return Constants.TITLE_HIFI_QUALITY;
-        } */
     }
 
     public static Bitmap getEncodingSamplingRateIcon(Context context, AudioTag tag) {

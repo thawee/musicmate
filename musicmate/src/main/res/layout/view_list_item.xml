@@ -137,13 +137,13 @@
 
             <ImageView
                 android:id="@+id/item_enc_icon"
-                android:layout_width="28dp"
-                android:layout_height="18dp"
+                android:layout_width="21dp"
+                android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_sampling_rate"
                 android:padding="1dp"
-                android:scaleType="fitXY"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_format_mqa_white" />
 
             <ImageView
