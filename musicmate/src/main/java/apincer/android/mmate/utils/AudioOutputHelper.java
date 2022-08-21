@@ -376,7 +376,8 @@ public class AudioOutputHelper {
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         String codec = dev.getCodec();
-        String rate =  dev.getBitPerSampling()+"/"+StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),false);
+        //String rate =  dev.getBitPerSampling()+"/"+StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),false);
+        String rate =  StringUtils.getFormatedAudioSampleRateAbvUnit(dev.getSamplingRate());
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 2;
@@ -439,8 +440,8 @@ public class AudioOutputHelper {
 
         // draw sampling rate, white
         //font =  ResourcesCompat.getFont(context, R.font.led_font);
-        font =  ResourcesCompat.getFont(context, R.font.fff_forward);
-        letterTextSize = 20;
+        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        letterTextSize = 30;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);

@@ -424,7 +424,7 @@ public class AudioTagUtils {
         rectangle = new RectF(
                 (float) (myCanvas.getWidth()/1.8),//padding, // Left
                 0, // Top
-                myCanvas.getWidth() - padding, // Right
+                myCanvas.getWidth(), // - padding, // Right
                 //(myCanvas.getHeight()/2) - 2 // Bottom
                 myCanvas.getHeight()-padding
         );
@@ -434,7 +434,7 @@ public class AudioTagUtils {
         paint.setColor(greyColor);
         paint.setStyle(Paint.Style.FILL);
         // Finally, draw the rectangle on the canvas
-        myCanvas.drawRoundRect(rectangle, cornerRadius*2,cornerRadius/2, paint);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
         int letterTextSize = 52; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
@@ -1327,19 +1327,22 @@ public class AudioTagUtils {
         if(tag.isDSD()) {
             int rateModulation = (int) (tag.getAudioSampleRate() / Constants.QUALITY_SAMPLING_RATE_44);
             encoding = "DSD" + rateModulation;
-            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
+            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
+            //samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
         } else if(tag.isMQA()) {
             // MQA
             encoding = "MQA";
-            long mqaRate = StringUtils.toLong(tag.getMQASampleRate());
-            if(mqaRate == tag.getAudioSampleRate()) {
-                samplingRate = tag.getAudioBitsPerSample()+"/"+StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
-            }else {
-                samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(), false) + "/" + StringUtils.getFormatedAudioSampleRate(mqaRate, false);
-            }
+            long mqaRate = parseMQASampleRate(tag.getMQASampleRate());
+            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(mqaRate);
+            //if(mqaRate == tag.getAudioSampleRate()) {
+            //    samplingRate = tag.getAudioBitsPerSample()+"/"+StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
+            //}else {
+            //samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(), false) + "/" + StringUtils.getFormatedAudioSampleRate(mqaRate, false);
+            //}
         }else {
             encoding = tag.getAudioEncoding();
-            samplingRate = tag.getAudioBitsPerSample()+"/"+StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
+           // samplingRate = tag.getAudioBitsPerSample()+"/"+StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
+            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
         }
         //String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
         //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
@@ -1409,8 +1412,8 @@ public class AudioTagUtils {
 
         // draw sampling rate, white color
         //font =  ResourcesCompat.getFont(context, R.font.led_font);
-        font =  ResourcesCompat.getFont(context, R.font.fff_forward);
-        letterTextSize = 20;
+        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        letterTextSize = 30;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
