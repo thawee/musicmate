@@ -84,9 +84,9 @@ public class TagsActivity extends AppCompatActivity {
   //  private TextView genreView;
     private ImageView audiophileView;
     private ImageView hiresView;
-    private ImageView mqaView;
+   // private ImageView mqaView;
     //private ImageView dsdView;
-    private ImageView ico24bitView;
+    private ImageView encResView;
     private MaterialRatingBar ratingView;
    // private TextView qualityView;
     private View coverArtLayout;
@@ -263,9 +263,9 @@ public class TagsActivity extends AppCompatActivity {
         pathIcon = findViewById(R.id.panel_path_storage_icon);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
-        mqaView = findViewById(R.id.icon_mqa);
+        //mqaView = findViewById(R.id.icon_mqa);
         //dsdView = findViewById(R.id.icon_dsd);
-        ico24bitView = findViewById(R.id.icon_24bit);
+        encResView = findViewById(R.id.icon_enc_res);
         ratingView = findViewById(R.id.icon_rating);
        // qualityView = findViewById(R.id.icon_quality_text);
     }
@@ -280,24 +280,30 @@ public class TagsActivity extends AppCompatActivity {
             titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
         }
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist())+" ");
-        hiresView.setVisibility(AudioTagUtils.isHiResOrDSD(displayTag)?View.VISIBLE:View.GONE);
+        if(AudioTagUtils.isHiResOrDSD(displayTag) || displayTag.isMQA()) {
+            hiresView.setVisibility(View.VISIBLE);
+            hiresView.setImageBitmap(AudioTagUtils.getHiResIcon(getApplicationContext(),displayTag));
+        }else {
+            hiresView.setVisibility(View.GONE);
+        }
        // dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
         //mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+        /*
         // MQA
         if(displayTag.isMQA()) {
             mqaView.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), displayTag));
             mqaView.setVisibility(View.VISIBLE);
         }else {
             mqaView.setVisibility(View.GONE);
-        }
+        } */
 
         //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
         if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
-            ico24bitView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
-            ico24bitView.setVisibility(View.VISIBLE);
+            encResView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
+            encResView.setVisibility(View.VISIBLE);
         }else {
-            ico24bitView.setVisibility(View.GONE);
+            encResView.setVisibility(View.GONE);
         }
 
         ratingView.setRating(displayTag.getRating());

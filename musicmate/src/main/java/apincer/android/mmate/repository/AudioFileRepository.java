@@ -682,7 +682,7 @@ public class AudioFileRepository {
                 if (mqaInfo.toLowerCase().contains("studio")) {
                     tag.setMQAStudio(true);
                 }
-                tag.setMQASampleRate(mqaInfo.substring(mqaInfo.indexOf("|")));
+                tag.setMQASampleRate(mqaInfo.substring(mqaInfo.indexOf("|")+1));
             }
         }catch (Exception ex) {
             Timber.e(ex);

@@ -64,5 +64,5 @@
     <dimen name="dimen_6_dp">6dp</dimen>
     <dimen name="dimen_5_dp">5dp</dimen>
     <dimen name="dimen_40_dp">40dp</dimen>
-    <dimen name="dimen_info_resolution_dp">130dp</dimen>
+    <dimen name="dimen_info_resolution_dp">132dp</dimen>
 </resources>
