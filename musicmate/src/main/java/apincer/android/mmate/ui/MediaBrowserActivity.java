@@ -88,7 +88,6 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.ScanAudioFileWorker;
-import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;

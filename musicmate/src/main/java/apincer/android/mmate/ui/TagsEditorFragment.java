@@ -66,16 +66,12 @@ import timber.log.Timber;
 
 
 public class TagsEditorFragment extends Fragment {
-   // public static final int REQUEST_GET_CONTENT_IMAGE = 555;
     private TagsActivity mainActivity;
     private List<AudioTag> mediaItems;
     private ViewHolder viewHolder;
     private FloatingActionButton fabSaveAction;
     private FloatingActionButton fabMainAction;
-   // private ImagePicker imagePicker; // = new ImagePicker(this);
-    //private Uri coverArtUri;
     private String coverArtPath;
-  //  private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     final int DRAWABLE_LEFT = 0;
     final int DRAWABLE_TOP = 1;
@@ -85,14 +81,6 @@ public class TagsEditorFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-       // imagePicker = new ImagePicker(this);
-       /* imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getResultCode() == Activity.RESULT_OK) {
-                Uri uri = result.getData().getData();
-                // Use the uri to load the image
-                setCoverArtUri(uri);
-            }
-        }); */
     }
 
     @Override
@@ -135,11 +123,8 @@ public class TagsEditorFragment extends Fragment {
         View okBtn = cview.findViewById(R.id.btn_ok);
         TextView filenameView = cview.findViewById(R.id.full_filename);
         filenameView.setText(mediaItems.get(0).getPath());
-       // View contentView = cview.findViewById(R.id.contentLayout);
 
         // add tag to view
-       // AudioFileRepository repos = AudioFileRepository.newInstance(getApplicationContext());
-        //repos.
         AlertDialog alert = new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
@@ -169,24 +154,6 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doPickCoverart() {
-       // Intent myIntent = new Intent(MediaBrowserActivity.this, TagsActivity.class);
-      //   imagePicker = new ImagePickerActivityClass(getContext(), this, requireActivity().getActivityResultRegistry(), null, this);
-        //set to true if you want all features(crop,rotate,zoomIn,zoomOut)
-        //by Default it's value is set to false (only crop feature is enabled)
-        // imagePicker.cropOptions(true);
-       // editorLauncher.launch(myIntent);
-
-        //Gallery
-      /*  imagePicker.pickFromStorage(new Function1<ImageResult<? extends Uri>, Unit>() {
-            @Override
-            public Unit invoke(ImageResult<? extends Uri> imageResult) {
-                if (imageResult instanceof ImageResult.Success) {
-                    Uri uri = ((ImageResult.Success<Uri>) imageResult).getValue();
-                    setCoverArtUri(uri);
-                }
-                return null;
-            }
-        }); */
         CoCo.with(this)
                     .pick()
                // .then()
@@ -203,28 +170,6 @@ public class TagsEditorFragment extends Fragment {
                         setCoverArtPath(pickResult.getLocalPath());
                     }
                 });
-
-      //  imagePicker.choosePhotoFromGallery();
-        String [] mimetypes = {"image/png",
-                "image/jpg",
-                "image/jpeg"};
-      /*  Intent myIntent = ImagePicker.with(getActivity())
-                .crop()
-                .maxResultSize(1024, 1024, true)	//Final image resolution will be less than 620 x 620
-                .galleryOnly()	//User can only select image from Gallery
-                .galleryMimeTypes(mimetypes)
-                .createIntent();	//Default Request Code is ImagePicker.REQUEST_CODE
-        imagePickerLauncher.launch(myIntent); */
-
-       /* ImagePicker.with(this)
-                .galleryMimeTypes(new String[]{"image/png", "image/jpg", "image/jpeg"})
-                .galleryOnly()	//User can only select image from Gallery
-                .cropSquare()	    	//Crop image(Optional), Check Customization for more option
-                .compress(1024)			//Final image size will be less than 1 MB(Optional)
-                .maxResultSize(1080, 1080)	//Final image resolution will be less than 1080 x 1080(Optional)
-                //  Path: /data/data/package/cache/ImagePicker
-                .saveDir(new File(mainActivity.getCacheDir(), "ImagePicker"))
-                .start(); */
     }
 
     private void setCoverArtPath(String path) {
@@ -333,13 +278,6 @@ public class TagsEditorFragment extends Fragment {
     private String getText(TextView textView) {
         return StringUtils.trimToEmpty(String.valueOf(textView.getText()));
     }
-/*
-    public void setCoverArtUri(Uri coverArtUri) {
-            this.coverArtUri = coverArtUri;
-            viewHolder.coverartChanged = coverArtUri!=null;
-            doPreviewCoverArt();
-            toggleSaveFabAction();
-    } */
 
     private void doPreviewCoverArt() {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
@@ -409,45 +347,16 @@ public class TagsEditorFragment extends Fragment {
             List<String> srcs = Constants.getSourceList(getContext());
            // Collections.sort(srcs);
             for(String src : srcs) {
-                int rescId = AudioTagUtils.getSourceRescId(src);
+               /* int rescId = AudioTagUtils.getSourceRescId(src);
                 if(rescId == -1) {
                     mMediaSourceItems.add(new IconSpinnerItem(src, null));
                 }else {
                     mMediaSourceItems.add(new IconSpinnerItem(src, ContextCompat.getDrawable(getContext(), rescId)));
-                }
-                /*
-                if(src.equals(Constants.SRC_APPLE)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_itune)));
-                }else if(src.equals(Constants.SRC_CD)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_CD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-                }else if(src.equals(Constants.SRC_JOOX)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_JOOX, ContextCompat.getDrawable(getContext(), R.drawable.icon_joox)));
-                }else if(src.equals(Constants.SRC_QOBUZ)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_QOBUZ, ContextCompat.getDrawable(getContext(), R.drawable.icon_qobuz)));
-                }else if(src.equals(Constants.SRC_SACD)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SACD, ContextCompat.getDrawable(getContext(), R.drawable.icon_sacd)));
-                }else if(src.equals(Constants.SRC_SPOTIFY)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SPOTIFY, ContextCompat.getDrawable(getContext(), R.drawable.icon_spotify)));
-                }else if(src.equals(Constants.SRC_TIDAL)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_TIDAL, ContextCompat.getDrawable(getContext(), R.drawable.icon_tidal)));
-                }else if(src.equals(Constants.SRC_VINYL)) {
-                    mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
-                }else {
-                    mMediaSourceItems.add(new IconSpinnerItem(src, null));
                 } */
-               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_2L, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_APPLE, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_CD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_HD_TRACKS, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_JOOX, ContextCompat.getDrawable(getContext(), R.drawable.icon_joox)));
-              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_NATIVE_DSD, ContextCompat.getDrawable(getContext(), R.drawable.icon_cd)));
-              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_QOBUZ, ContextCompat.getDrawable(getContext(), R.drawable.icon_qobuz)));
-              //  mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SACD, ContextCompat.getDrawable(getContext(), R.drawable.icon_sacd)));
-               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_SPOTIFY, ContextCompat.getDrawable(getContext(), R.drawable.icon_spotify)));
-                //mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_TIDAL, ContextCompat.getDrawable(getContext(), R.drawable.icon_tidal)));
-               // mMediaSourceItems.add(new IconSpinnerItem(Constants.SRC_VINYL, ContextCompat.getDrawable(getContext(), R.drawable.icon_vinyl)));
+                Bitmap ico = AudioTagUtils.getSourceIcon(getContext(),src);
+                mMediaSourceItems.add(new IconSpinnerItem(src,BitmapHelper.bitmapToDrawable(getContext(), ico)));
             }
-           // mMediaSourceItems.add(0, new IconSpinnerItem(Constants.SRC_NONE, null));
+
             adapter.setItems(mMediaSourceItems);
             mMediaSourceView.setSpinnerAdapter(adapter);
             mMediaSourceView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {
@@ -483,9 +392,6 @@ public class TagsEditorFragment extends Fragment {
 
             // album
             mAlbumView = setupTextEdit(view, R.id.tag_album);
-           // ArrayAdapter<String> albumAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.select_dialog_item,repository.getAlbumList().toArray(new String[0]));
-           // mAlbumView.setThreshold(2);//will start working from second character
-          //  mAlbumView.setAdapter(albumAdapter); //setting the adapter data into the AutoCompleteTextView
 
             // album artist
             mAlbumArtistView = setupAutoCompleteTextView(view, R.id.tag_album_artist);

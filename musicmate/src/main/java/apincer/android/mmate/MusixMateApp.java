@@ -26,7 +26,7 @@ import timber.log.Timber;
 public class MusixMateApp extends Application  {
     private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
     private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
-    //private static Context context;
+
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper(new Callback() {
         @Override
         public void onPlaying(Context context, AudioTag song) {
@@ -69,10 +69,7 @@ public class MusixMateApp extends Application  {
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
-        //context = this;
         broadcastHelper.onCreate(this);
-
-       // Timber.plant(new Timber.DebugTree());
 
         //initialize ObjectBox is when your app starts
         ObjectBox.init(this);
@@ -108,7 +105,6 @@ public class MusixMateApp extends Application  {
                 .build());
 */
         // TURN OFF log for JAudioTagger
-       // if (BuildConfig.DEBUG) {
             jAudioTaggerLogger1.setLevel(Level.SEVERE);
             jAudioTaggerLogger2.setLevel(Level.SEVERE);
             //Timber.plant(new DebugTree());
@@ -116,8 +112,6 @@ public class MusixMateApp extends Application  {
         //    jAudioTaggerLogger1.setLevel(Level.SEVERE);
         //    jAudioTaggerLogger2.setLevel(Level.SEVERE);
        // }
-
-      //  CrashReporter.initialize(this, CrashUtil.getDefaultPath());
 
 /*
         BlockCanary.install(this, new BlockCanaryContext() {

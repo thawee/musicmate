@@ -16,26 +16,12 @@
 
 package apincer.android.mmate.utils;
 
-import static android.content.Context.ACTIVITY_SERVICE;
-
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
-import android.os.BatteryManager;
-import android.os.Build;
-import android.os.Environment;
-
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.List;
 
 import timber.log.Timber;
 

@@ -248,7 +248,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
             // holder.mFileFormat.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), 60, 32, getMetadata().getAudioEncoding(), Color.WHITE ,Color.WHITE, holder.getContext().getColor(getEncodingColorId())));
            // holder.mFileFormat.setImageBitmap(AudioTagUtils.getFileFormatIcon(holder.mContext, tag));
-            Bitmap srcBmp = AudioTagUtils.getSourceIcon(holder.mContext, tag);
+            Bitmap srcBmp = AudioTagUtils.getSourceIcon(holder.mContext, tag.getSource());
             if(srcBmp!=null) {
                 holder.mFileSourceView.setImageBitmap(srcBmp);
                 holder.mFileSourceView.setVisibility(View.VISIBLE);

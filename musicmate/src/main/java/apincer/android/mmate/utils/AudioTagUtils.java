@@ -661,7 +661,7 @@ public class AudioTagUtils {
             return R.drawable.icon_joox;
         } else if (letter.equalsIgnoreCase(Constants.SRC_QOBUZ)) {
             return R.drawable.icon_qobuz;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_CD) || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
+        } else if (letter.equalsIgnoreCase(Constants.SRC_CD)) { // || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
             return R.drawable.icon_cd;
         } else if (letter.equalsIgnoreCase(Constants.SRC_SACD)) {
             return R.drawable.icon_sacd;
@@ -679,22 +679,32 @@ public class AudioTagUtils {
 
         return -1;
     }
-    public static Bitmap getSourceIcon(Context context, AudioTag item) {
+    public static Bitmap getSourceIcon(Context context, String source) {
         int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
-        String letter = item.getSource();
+        String letter = source; //item.getSource();
         if(StringUtils.isEmpty(letter)) {
             letter = Constants.SRC_NONE;
         }
         int size =24;
-        int rescId = getSourceRescId(item.getSource());
+        int rescId = getSourceRescId(letter);
         if(Constants.SRC_NONE.equals(letter)) {
            return null;
         }else if(rescId ==-1) {
-            int width = 128;
+            int width = 48;
             int height = 48;
             int whiteColor = Color.WHITE;
-            letter = StringUtils.getChars(letter,8);
+            if(letter.equalsIgnoreCase(Constants.SRC_HD_TRACKS)) {
+                letter = "HD";
+            }else if(letter.equalsIgnoreCase(Constants.SRC_2L)) {
+                letter = "2L";
+            }else if(letter.equalsIgnoreCase(Constants.SRC_NATIVE_DSD)) {
+                letter = "ND";
+            }else if(letter.equalsIgnoreCase(Constants.SRC_ONKYO)) {
+                letter = "e";
+            }else {
+                letter = StringUtils.getChars(letter, 1);
+            }
             return createButtonFromText (context, width, height, letter, whiteColor, borderColor,qualityColor);
         }else {
             return createBitmapFromDrawable(context, size, size,rescId,qualityColor, qualityColor);

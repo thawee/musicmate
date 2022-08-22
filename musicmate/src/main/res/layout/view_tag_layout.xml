@@ -30,7 +30,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_12_dp"
+            android:layout_marginTop="@dimen/dimen_8_dp"
             android:layout_marginLeft="@dimen/dimen_24_dp"
             android:layout_marginRight="@dimen/dimen_24_dp"
             android:layout_marginBottom="@dimen/dimen_4_dp"
@@ -64,10 +64,10 @@
                     android:gravity="right"
                     android:layout_marginRight="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
-                    android:fontFamily="@font/mn_kaewkanlaya"
+                    android:fontFamily="@font/k2d_regular"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:background="@drawable/selectable_link"/>
 
             </LinearLayout>
@@ -106,10 +106,10 @@
                     android:gravity="left"
                     android:paddingLeft="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
-                    android:fontFamily="@font/mn_kaewkanlaya"
+                    android:fontFamily="@font/k2d_regular"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:background="@drawable/selectable_link"/>
             </LinearLayout>
         </LinearLayout>
@@ -187,7 +187,7 @@
                     android:paddingTop="@dimen/dimen_2_dp"
                     android:paddingRight="@dimen/dimen_4_dp"
                     android:paddingLeft="@dimen/dimen_4_dp"
-                    android:paddingBottom="@dimen/dimen_8_dp"
+                    android:paddingBottom="@dimen/dimen_6_dp"
                     android:layout_marginBottom="@dimen/dimen_2_dp"
                     android:fontFamily="@font/k2d_regular"
                     android:background="@color/transparent"/>

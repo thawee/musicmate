@@ -33,7 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:text="@{title}"
-            android:fontFamily="@font/mn_kaewkanlaya"
+            android:fontFamily="@font/k2d_bold"
             android:textStyle="bold"
             android:layout_weight="1"
             android:textColor="@color/grey100"
