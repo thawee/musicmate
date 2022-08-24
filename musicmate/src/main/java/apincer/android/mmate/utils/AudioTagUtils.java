@@ -381,7 +381,7 @@ public class AudioTagUtils {
         int width = 340;
         int height = 96;
         int whiteColor = context.getColor(R.color.white);
-        int greyColor = context.getColor(R.color.grey800);
+        //int greyColor = context.getColor(R.color.grey800);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = getResolutionColor(context,tag);
         String label = "PCM";
@@ -431,7 +431,7 @@ public class AudioTagUtils {
         // int borderWidth = 2;
         Paint paint =  new Paint();
         paint.setAntiAlias(true);
-        paint.setColor(greyColor);
+        paint.setColor(blackColor);
         paint.setStyle(Paint.Style.FILL);
         // Finally, draw the rectangle on the canvas
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
@@ -477,7 +477,7 @@ public class AudioTagUtils {
 
         // draw sampling rate, white color
         font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
-        letterTextSize = 84;
+        letterTextSize = 82;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
         mLetterPaint.setTypeface(font);

@@ -384,7 +384,7 @@ public class StringUtils {
         if(size ==0) {
             return " - ";
         }
-        return java.text.NumberFormat.getInstance().format(size) +" songs";
+        return java.text.NumberFormat.getInstance().format(size);
     }
 
     public static String formatTitle(CharSequence text) {

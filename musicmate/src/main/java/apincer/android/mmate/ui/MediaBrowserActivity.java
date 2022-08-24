@@ -37,6 +37,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.epoxy.EpoxyViewHolder;
+import com.anggrayudi.storage.SimpleStorageHelper;
+import com.anggrayudi.storage.file.DocumentFileCompat;
+import com.anggrayudi.storage.file.StorageId;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.ReturnCode;
 import com.google.android.material.bottomappbar.BottomAppBar;
@@ -54,9 +57,18 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -76,6 +88,7 @@ import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.repository.MediaFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
@@ -89,6 +102,7 @@ import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
+import apincer.android.storage.StorageUtils;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.other.SpecialGravity;
@@ -237,7 +251,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
 
-            nowPlayingTitle.setText(StringUtils.SYMBOL_MUSIC_NOTE+song.getTitle());
+           // nowPlayingTitle.setText(StringUtils.SYMBOL_MUSIC_NOTE+song.getTitle());
+        nowPlayingTitle.setText(song.getTitle());
             nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
         /*
             if(song.isMQA()) {
@@ -1151,6 +1166,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 doEncodingAudioFiles(epoxyController.getCurrentSelections());
                 mode.finish();
                 return true;
+            }else if (id == R.id.action_export_playlist) {
+                doExportAsPlaylist(epoxyController.getCurrentSelections());
+                mode.finish();
+                return true;
             }else if (id == R.id.action_select_all) {
                 epoxyController.toggleSelections();
                 int count = epoxyController.getSelectedItemCount();
@@ -1171,6 +1190,45 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             mHeaderPanel.setVisibility(View.VISIBLE);
            // epoxyController.loadSource(null);
            // Tools.setSystemBarColor(MultiSelect.this, R.color.colorPrimary);
+        }
+    }
+
+    private void doExportAsPlaylist(ArrayList<AudioTag> currentSelections) {
+        /*
+        #EXTM3U
+        #PLAYLIST: The title of the playlist
+
+        #EXTINF:111, Sample artist name - Sample track title
+        C:\Music\SampleMusic.mp3
+
+        #EXTINF:222,Example Artist name - Example track title
+        C:\Music\ExampleMusic.mp3
+         */
+        Writer out = null;
+        try {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String path = "/Playlist/"+searchCriteria.getKeyword()+"_"+currentSelections.size()+"_"+simpleDateFormat.format(new Date())+".m3u";
+            path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
+            File filepath = new File(path);
+            File folder = filepath.getParentFile();
+            if(!folder.exists()) {
+                folder.mkdirs();
+            }
+            out = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(filepath,true), "UTF-8"));
+            out.write("#EXRM3U\n");
+            out.write("#PLAYLIST: MusicMate Playlist\n\n");
+
+            for (AudioTag tag:currentSelections) {
+                out.write("#EXTINF:"+tag.getAudioDuration()+","+tag.getArtist()+","+tag.getTitle()+"\n");
+                out.write(tag.getPath()+"\n\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                out.close();
+            }catch (Exception ex) {}
         }
     }
 

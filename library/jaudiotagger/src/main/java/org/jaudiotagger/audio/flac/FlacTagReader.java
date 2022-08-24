@@ -22,7 +22,6 @@ import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.flac.metadatablock.MetadataBlockDataPicture;
 import org.jaudiotagger.audio.flac.metadatablock.MetadataBlockHeader;
 import org.jaudiotagger.logging.Hex;
-import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.InvalidFrameException;
 import org.jaudiotagger.tag.TagField;
 import org.jaudiotagger.tag.TagTextField;
@@ -31,7 +30,6 @@ import org.jaudiotagger.tag.vorbiscomment.VorbisCommentReader;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -160,13 +158,13 @@ public class FlacTagReader
                 tag = VorbisCommentTag.createNewTag();
             }
             FlacTag flacTag = new FlacTag(tag, images);
-            updateMQAInfo(flacTag);
+            //updateMQAInfo(flacTag);
 			
             return flacTag;
         }
     }
 
-
+/*
 	private void updateMQAInfo(FlacTag tag) {
 		try { 
 		
@@ -187,76 +185,12 @@ public class FlacTagReader
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-	}
+	} */
 
-
-	private void checkMQA(ByteBuffer audioData) {
-		// TODO Auto-generated method stub
-		audioData.flip();
-		  BigInteger CONST_ONE = new BigInteger("1", 10);
-	        BigInteger MQA = new BigInteger("be0498c88", 16);
-	        BigInteger MASK = new BigInteger("FFFFFFFFF", 16);
-	        System.out.println(MQA.toString(16));
-	        System.out.println(MQA.toString(2));
-	        
-	        BigInteger buff = new BigInteger("0",10);
-	        BigInteger buff1 = new BigInteger("0",10);
-	        try {
-	        	int bitsPerSample= 16;
-				int pos = bitsPerSample - 16; //(this->decoder.bps - 16u); // aim for 16th bit
-	            for (int i = 0; i < audioData.capacity(); i += 2) {
-	            	//byte[] b = new byte[2];
-	            	//buffer.get(b, i, 2);
-	            	//System.out.println(Long.toBinaryString(buff));	
-	               // buff |= ((buffer[i] ^ buffer[i+1]) >> pos) & 1L;
-	            	byte [] byte0 = new byte[1]; 
-	            	byte [] byte1 = new byte[1]; 
-	            	byte0[0] = audioData.get(i);
-	            	byte1[0] = audioData.get(i+1);
-	                BigInteger b = new BigInteger(byte0);
-	                BigInteger b1 = new BigInteger(byte1);
-	                b = b.xor(b1).shiftRight(pos).and(CONST_ONE);
-	                buff = buff.or(b);
-	               // System.out.println(Long.toBinaryString(buff.longValue()));
-	               // System.out.println(Long.toHexString(MQA));	
-	               // System.out.println(Long.toHexString(MASK));	
-	               // System.out.println(Long.toHexString(buff));	
-	               // System.out.println(buff.toString(16));	
-	               // System.out.println(buff.toString(2));
-	               // System.out.println(Long.toBinaryString(buff));	
-	              /*  if(!buff1.equals(buff)) {
-	                	System.out.println("");
-	                    System.out.println("check MQA: "+MQA.toString(16)+" :: "+buff.toString(16));
-	                } */
-	                //if (buff == MQA) { // <== MQA magic word
-	                if (MQA.equals(buff)) { // <== MQA magic word
-	                   // result.MQADetection = p;
-	                   // return result;
-	                	System.out.println("Found MQA");	
-	                	return;
-	                } else {
-	                   // buff = (buff << 1L) & MASK;
-	                	if(!buff1.equals(buff)) {
-	                	 System.out.println("<= "+buff.toString(2));
-	                	}
-	                	buff = buff.shiftLeft(1).and(MASK);
-	                	if(!buff1.equals(buff)) {
-	                	 System.out.println("=> "+buff.toString(2));
-	                	}
-	                }
-	            }
-	        	}catch(Exception ex) {
-	        		ex.printStackTrace();
-	        	}
-	       // }
-	        
-	        System.out.println("NOT MQA");	
-	}
-
-    private static final String MQA_ENCODER="MQAENCODER";
-    private static final String MQA_ORIGINAL_SAMPLE_RATE="ORIGINALSAMPLERATE";
-    private static final String MQA_ORIGINAL_SAMPLING_FREQUENCY = "ORFS";
-    private static final String MQA_SAMPLE_RATE="MQASAMPLERATE";
+    //private static final String MQA_ENCODER="MQAENCODER";
+    //private static final String MQA_ORIGINAL_SAMPLE_RATE="ORIGINALSAMPLERATE";
+    //private static final String MQA_ORIGINAL_SAMPLING_FREQUENCY = "ORFS";
+    //private static final String MQA_SAMPLE_RATE="MQASAMPLERATE";
     
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[]{};
 	
