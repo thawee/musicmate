@@ -122,7 +122,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     ActivityResultLauncher<Intent> editorLauncher;
 
-    AudioFileRepository repos;// = AudioFileRepository.newInstance(getApplication());
+    AudioFileRepository repos;
 
     private BottomAppBar bottomAppBar;
 
@@ -139,15 +139,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private RefreshLayout refreshLayout;
     private StateView mStateView;
     private View nowPlayingView;
-    //private View nowPlayingPanel;
     private ImageView nowPlayingCoverArt;
     private TextView nowPlayingTitle;
-   // private TextView nowPlayingSubtitle;
     private ImageView nowPlayingType;
     private ImageView nowPlayingPlayer;
     private ImageView nowPlayingOutputDevice;
-   // private ImageView nowPlayingOutput;
-   // private TextView nowPlayingOutputName;
 
     // header panel
     TabLayout headerTab;
@@ -160,7 +156,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private ActionMode actionMode;
 
     //selected song to scroll
-    //private AudioTag selectedTag;
     private AudioTag lastPlaying;
     private boolean onSetup = true;
 
@@ -209,10 +204,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 	
 	private void doShowNowPlayingSongFAB(AudioTag song) {
-        ///  if(nowPlayingView.getVisibility() == View.VISIBLE) {
-        //prevent show now playing popup and fab as the same time
-        //     return;
-        //  }
         if (song == null) {
             song = MusixMateApp.getPlayingSong();
         }
@@ -221,15 +212,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doHideNowPlayingSongFAB();
             return;
         }
-          /*  ImageLoader fabLoader = Coil.imageLoader(getApplicationContext());
-            ImageRequest fabRequest = new ImageRequest.Builder(getApplicationContext())
-                    .data(EmbedCoverArtProvider.getUriForMediaItem(song))
-                    .crossfade(false)
-                    .allowHardware(false)
-                    .transformations(new CircleCropTransformation())
-                    .target(fabPlayingAction)
-                    .build();
-            fabLoader.enqueue(fabRequest); */
+
             ImageLoader fabLoader = Coil.imageLoader(this);
             ImageRequest fabRequest = new ImageRequest.Builder(this)
                     .data(EmbedCoverArtProvider.getUriForMediaItem(song))
@@ -242,30 +225,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .target(nowPlayingCoverArt)
                     .build();
             fabLoader.enqueue(fabRequest);
-
-        //nowPlayingSubtitle.setText(AudioTagUtils.getFormattedSubtitle(song));
-
-           // nowPlayingTitle.setText(StringUtils.SYMBOL_MUSIC_NOTE+song.getTitle());
-        nowPlayingTitle.setText(song.getTitle());
+            nowPlayingTitle.setText(song.getTitle());
             nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
-        /*
-            if(song.isMQA()) {
-                nowPlayingType.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), song));
-                nowPlayingType.setVisibility(View.VISIBLE);
-            }else if(song.isLossless() || AudioTagUtils.isDSD(song)) {
-                nowPlayingType.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), song));
-                //nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
-                nowPlayingType.setVisibility(View.VISIBLE);
-            }else {
-                nowPlayingType.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), song));
-                nowPlayingType.setVisibility(View.VISIBLE);
-            } */
-            //player.setImageDrawable(MusicListeningService.getInstance().getPlayerIconDrawable());
             nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
-               // nowPlayingOutput.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), device.getResId()));
-                //nowPlayingOutputName.setText(device.getName());
-               // nowPlayingOutputName.setText(device.getCodec());
                 nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device));
             });
 
@@ -277,6 +240,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         @Override
                         public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
+                            epoxyController.notifyPlayingStatus();
                         }
                     })
                     .start());
