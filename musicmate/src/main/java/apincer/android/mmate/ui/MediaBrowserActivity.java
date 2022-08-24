@@ -37,7 +37,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.epoxy.EpoxyViewHolder;
-import com.anggrayudi.storage.SimpleStorageHelper;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
 import com.arthenica.ffmpegkit.FFmpegKit;
@@ -59,11 +58,8 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -88,7 +84,6 @@ import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
-import apincer.android.mmate.repository.MediaFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
@@ -102,7 +97,6 @@ import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
-import apincer.android.storage.StorageUtils;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.other.SpecialGravity;
@@ -1193,7 +1187,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void doExportAsPlaylist(ArrayList<AudioTag> currentSelections) {
+    private void doExportAsPlaylist(List<AudioTag> currentSelections) {
         /*
         #EXTM3U
         #PLAYLIST: The title of the playlist

@@ -33,7 +33,7 @@ import apincer.android.mmate.epoxy.MusicBrainzController;
 import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
 import apincer.android.mmate.musicbrainz.MusicBrainz;
 import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.MediaFileRepository;
+import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.ui.view.LinearDividerItemDecoration;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -477,7 +477,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                             buildPendingTags(item, title, artist, album, genre, year, singleTrack);
                         }
 
-                        String artworkPath = MediaFileRepository.getDownloadPath(getContext(), "MusicMate/" + tag.getAlbumId()).getAbsolutePath();
+                        String artworkPath = FileSystem.getDownloadPath(getContext(), "MusicMate/" + tag.getAlbumId()).getAbsolutePath();
 
                        // URL retrofit = MusicBrainz.getCoverart(tag);
                         ImageRequest rq = new ImageRequest.Builder(getContext())

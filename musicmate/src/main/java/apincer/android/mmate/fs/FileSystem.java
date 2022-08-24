@@ -1,4 +1,4 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.fs;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -23,11 +23,11 @@ import java.nio.channels.FileChannel;
 
 import timber.log.Timber;
 
-public class MediaFileRepository {
-
+public class FileSystem {
+    private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     private Context mContext;
 
-    MediaFileRepository(Context context) {
+    public FileSystem(Context context) {
         super();
         this.mContext = context;
     }
@@ -63,7 +63,7 @@ public class MediaFileRepository {
                 outStream = DocumentFileUtils.openOutputStream(targetDoc, getContext());
                 if (outStream != null) {
                     // Both for SAF and for Kitkat, write to output stream.
-                    byte[] buffer = new byte[16384]; // MAGIC_NUMBER
+                    byte[] buffer = new byte[DEFAULT_BUFFER_SIZE]; // MAGIC_NUMBER
                     int bytesRead;
                     while ((bytesRead = inStream.read(buffer)) != -1) {
                         outStream.write(buffer, 0, bytesRead);
@@ -93,7 +93,7 @@ public class MediaFileRepository {
         try {
             is = new FileInputStream(source);
             os = new FileOutputStream(dest);
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int length;
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
@@ -159,7 +159,7 @@ public class MediaFileRepository {
 
         try {
             out = new FileOutputStream(file);
-            byte[] buf = new byte[1024];
+            byte[] buf = new byte[DEFAULT_BUFFER_SIZE];
             int len;
             while((len=in.read(buf))>0){
                 out.write(buf,0,len);

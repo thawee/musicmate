@@ -44,6 +44,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.cue.CueParse;
 import apincer.android.mmate.cue.Track;
+import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicMateArtwork;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.utils.AudioTagUtils;
@@ -58,15 +59,13 @@ import timber.log.Timber;
  * Created by e1022387 on 5/10/2017.
  */
 public class AudioFileRepository {
-    private static final String MQA_ENCODER="MQAENCODER";
+   /* private static final String MQA_ENCODER="MQAENCODER";
     private static final String MQA_ORIGINAL_SAMPLE_RATE="ORIGINALSAMPLERATE";
     private static final String MQA_ORIGINAL_SAMPLING_FREQUENCY = "ORFS";
-    private static final String MQA_SAMPLE_RATE="MQASAMPLERATE";
-
-    //private static AudioFileRepository INSTANCE;
+    private static final String MQA_SAMPLE_RATE="MQASAMPLERATE"; */
 
     private final Context context;
-    private final MediaFileRepository fileRepos;
+    private final FileSystem fileRepos;
     private final AudioTagRepository tagRepos;
     private String STORAGE_PRIMARY = StorageId.PRIMARY;
     private String STORAGE_SECONDARY;
@@ -85,9 +84,8 @@ public class AudioFileRepository {
         super();
         this.context = context;
         STORAGE_SECONDARY = getSecondaryId(context);
-        this.fileRepos = new MediaFileRepository(context);
-        this.tagRepos = AudioTagRepository.getInstance(); //new AudioTagRepository();
-        //INSTANCE = this;
+        this.fileRepos = new FileSystem(context);
+        this.tagRepos = AudioTagRepository.getInstance();
     }
 
     public static String getSecondaryId(Context context) {
@@ -100,13 +98,6 @@ public class AudioFileRepository {
         }
         return StorageId.PRIMARY;
     }
-/*
-    public static AudioFileRepository getInstancexxxx(Context context) {
-        if(INSTANCE==null) {
-            INSTANCE = new AudioFileRepository(context);
-        }
-        return INSTANCE;
-    } */
 
     public static InputStream getArtworkAsStream(String mediaPath) {
         InputStream input = getEmbedArtworkAsStream(mediaPath);
@@ -164,16 +155,7 @@ public class AudioFileRepository {
                 break;
             }
         }
-      /*  if(coverFile==null) {
-            // check *.png, *.jpg
-            File [] files = coverDir.listFiles();
-            for(File f : files) {
-                if(Constants.COVER_IMAGE_TYPES.contains(FileUtils.getExtension(f).toLowerCase())) {
-                    coverFile = f;
-                    break;
-                }
-            }
-        } */
+
         if(coverFile!=null && coverFile.exists()) {
             try {
                 return new FileInputStream(coverFile);
@@ -347,7 +329,6 @@ public class AudioFileRepository {
     }
 
     private boolean isValidTagValue(String newTag) {
-        // && !StringUtils.trimToEmpty(oldTag).equals(newTag)) {
         return !StringUtils.MULTI_VALUES.equalsIgnoreCase(newTag);
     }
 

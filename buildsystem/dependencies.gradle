@@ -110,7 +110,7 @@ deps.androidx = androidx
 
 def maps = [:]
 //https://github.com/osmdroid/osmdroid
-maps.osmdroid = "org.osmdroid:osmdroid-android:6.1.13"
+maps.osmdroid = "org.osmdroid:osmdroid-android:6.1.14"
 maps.osmdroid_shape = "org.osmdroid:osmdroid-shape:6.1.11"
 maps.osmbonuspack = "com.github.MKergall:osmbonuspack:6.9.0"
 deps.maps = maps

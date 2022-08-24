@@ -24,7 +24,6 @@ import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.anggrayudi.storage.file.StorageId;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -45,6 +44,7 @@ import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
+import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -141,7 +141,8 @@ public class TagsActivity extends AppCompatActivity {
 
     private TextView tagInfo;
     private TextView pathInfo;
-    private ImageView pathIcon;
+    private TextView pathDrive;
+    //private ImageView pathIcon;
     private SearchCriteria criteria;
 
     public List<AudioTag> getEditItems() {
@@ -257,7 +258,8 @@ public class TagsActivity extends AppCompatActivity {
        // groupingView = findViewById(R.id.panel_grouping);
        // genreView = findViewById(R.id.panel_tag);
         pathInfo = findViewById(R.id.panel_path);
-        pathIcon = findViewById(R.id.panel_path_storage_icon);
+        pathDrive = findViewById(R.id.panel_path_drive);
+       // pathIcon = findViewById(R.id.panel_path_storage_icon);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
         //mqaView = findViewById(R.id.icon_mqa);
@@ -377,6 +379,7 @@ public class TagsActivity extends AppCompatActivity {
         String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
             mateInd = " "+StringUtils.SYMBOL_ATTENTION;
+            pathDrive.setTextColor(getColor(R.color.warningColor));
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
@@ -385,12 +388,13 @@ public class TagsActivity extends AppCompatActivity {
         SpannableString content = new SpannableString(simplePath + mateInd);
         content.setSpan(new UnderlineSpan(), 0, simplePath.length(), 0);
         pathInfo.setText(content);
+        pathDrive.setText(FileSystem.getStorageName(sid));
         //pathInfo.setText(simplePath + mateInd);
 
        // int bgColor = getApplication().getColor(R.color.grey600);//Color.TRANSPARENT;
        // int textColor = getApplication().getColor(R.color.grey200);
        // int borderColor = getApplication().getColor(R.color.black_transparent_40);
-        if(StorageId.PRIMARY.equals(sid)) {
+       /* if(StorageId.PRIMARY.equals(sid)) {
            // Bitmap bpm = AudioTagUtils.createBitmapFromTextSquare(getApplicationContext(),48,24," PH ",textColor,borderColor,bgColor);
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(BitmapHelper.bitmapToDrawable(getApplication(),bpm),null,null,null);
         //    pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_memory_white_24dp),null,null,null);
@@ -402,7 +406,7 @@ public class TagsActivity extends AppCompatActivity {
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_sd_storage_white_24dp),null,null,null);
            // pathInfo.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_round_sd_card_16,0,0,0);
             pathIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_round_sd_card_16));
-        }
+        } */
 
        // pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
 
@@ -563,11 +567,9 @@ public class TagsActivity extends AppCompatActivity {
         encInfo.setText(spannableEnc.build());
     }
 
-    //
-    AudioTag buildDisplayTag(boolean reload) {
+    protected AudioTag buildDisplayTag(boolean reload) {
         AudioTag baseItem = editItems.get(0);
         AudioTag displayTag = baseItem;
-       // AudioFileRepository fileRepos = AudioFileRepository.newInstance(getApplication());
         if(reload) {
             repos.reloadMediaItem(displayTag);
         }
