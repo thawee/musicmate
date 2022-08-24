@@ -222,7 +222,6 @@ public class TagsActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
-      //  tagsEditorFragment = new TagsEditorFragment();
         adapter.addNewTab(tagsEditorFragment, "Editor");
         adapter.addNewTab(new TagsMusicBrainzFragment(), "MusicBrainz");
         viewPager.setAdapter(adapter);
@@ -238,14 +237,6 @@ public class TagsActivity extends AppCompatActivity {
         findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
         findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
         findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
-      /*  if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(displayTag.getAudioEncoding())) {
-            //findViewById(R.id.btnFFMPEG).setVisibility(View.VISIBLE);
-            findViewById(R.id.btnFFMPEG).setEnabled(true);
-            findViewById(R.id.btnFFMPEG).setOnClickListener(view -> doStartFFMpeg());
-        }else {
-            // findViewById(R.id.btnFFMPEG).setEnabled(false);
-            findViewById(R.id.btnFFMPEG).setVisibility(View.GONE);
-        } */
     }
 
     private void setUpTitlePanel() {
@@ -255,18 +246,12 @@ public class TagsActivity extends AppCompatActivity {
         genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
         tagInfo = findViewById(R.id.panel_tag);
-       // groupingView = findViewById(R.id.panel_grouping);
-       // genreView = findViewById(R.id.panel_tag);
         pathInfo = findViewById(R.id.panel_path);
         pathDrive = findViewById(R.id.panel_path_drive);
-       // pathIcon = findViewById(R.id.panel_path_storage_icon);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
-        //mqaView = findViewById(R.id.icon_mqa);
-        //dsdView = findViewById(R.id.icon_dsd);
         encResView = findViewById(R.id.icon_enc_res);
         ratingView = findViewById(R.id.icon_rating);
-       // qualityView = findViewById(R.id.icon_quality_text);
     }
 
     public void updateTitlePanel() {
@@ -285,19 +270,7 @@ public class TagsActivity extends AppCompatActivity {
         }else {
             hiresView.setVisibility(View.GONE);
         }
-       // dsdView.setVisibility(AudioTagUtils.isDSD(displayTag)?View.VISIBLE:View.GONE);
-        //mqaView.setVisibility(displayTag.isMQA()?View.VISIBLE:View.GONE);
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
-        /*
-        // MQA
-        if(displayTag.isMQA()) {
-            mqaView.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), displayTag));
-            mqaView.setVisibility(View.VISIBLE);
-        }else {
-            mqaView.setVisibility(View.GONE);
-        } */
-
-        //if(AudioTagUtils.is24Bits(displayTag) || AudioTagUtils.isDSD(displayTag)) {
         if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
             encResView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
             encResView.setVisibility(View.VISIBLE);
@@ -307,8 +280,6 @@ public class TagsActivity extends AppCompatActivity {
 
         ratingView.setRating(displayTag.getRating());
         ratingView.setFocusable(false);
-      //  qualityView.setText(AudioTagUtils.getTrackQuality(displayTag));
-       // qualityView.setTextColor(AudioTagUtils.getResolutionColor(getApplicationContext(), displayTag));
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -316,7 +287,7 @@ public class TagsActivity extends AppCompatActivity {
             if(criteria!=null) {
                 criteria.setFilterType(Constants.FILTER_TYPE_ARTIST);
                 criteria.setFilterText(displayTag.getArtist());
-                ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                ApplicationUtils.setSearchCriteria(resultIntent,criteria);
             }
             setResult(RESULT_OK, resultIntent);
             finish();
@@ -338,24 +309,6 @@ public class TagsActivity extends AppCompatActivity {
                 finish();
             });
         }
-        /*
-        if(!StringUtils.isEmpty(displayTag.getAlbumArtist())) {
-            albumArtistView.setText(displayTag.getAlbumArtist());
-            albumArtistView.setPaintFlags(albumArtistView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            albumArtistView.setOnClickListener(view -> {
-                // filter by album
-                Intent resultIntent = new Intent();
-                if (criteria != null) {
-                    criteria.setFilterType(Constants.FILTER_TYPE_ALBUM_ARTIST);
-                    criteria.setFilterText(displayTag.getAlbumArtist());
-                    ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-                }
-                setResult(RESULT_OK, resultIntent);
-                finish();
-            });
-        }else {
-            albumArtistView.setText(AudioTagUtils.getAlbumArtistOrArtist(displayTag));
-        } */
         if(!StringUtils.isEmpty(displayTag.getGenre())) {
             genreView.setText(displayTag.getGenre());
             genreView.setPaintFlags(genreView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);

@@ -175,7 +175,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .setMessage(text)
                 .setPositiveButton("DELETE", (dialogInterface, i) -> {
                     DeleteAudioFileWorker.startWorker(getApplicationContext(), itemsList);
-                  //  MediaItemIntentService.startService(getApplicationContext(),Constants.COMMAND_DELETE,itemsList);
                     dialogInterface.dismiss();
                     epoxyController.loadSource();
                 })
@@ -203,10 +202,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         dlg.show();
     }
 	
-	private void doShowNowPlayingSongFAB(AudioTag song) {
-        if (song == null) {
+	private void doShowNowPlayingSongFAB(final AudioTag song) {
+        /*if (song == null) {
             song = MusixMateApp.getPlayingSong();
-        }
+        }*/
 
         if (song == null || nowPlayingView == null) {
             doHideNowPlayingSongFAB();
@@ -240,7 +239,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         @Override
                         public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
-                            epoxyController.notifyPlayingStatus();
+                            epoxyController.notifyModelChanged(song);
+                            //epoxyController.notifyPlayingStatus();
                         }
                     })
                     .start());
@@ -352,7 +352,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             SearchCriteria criteria = null;
             if (result.getData() != null) {
                 // if retrun criteria, use it otherwise provide null
-                criteria = ApplicationUtils.getSearchCriteria(result.getData()); //result.getData().getParcelableExtra(Constants.KEY_SEARCH_CRITERIA);
+                criteria = ApplicationUtils.getSearchCriteria(result.getData());
             }
             SearchCriteria finalCriteria = criteria;
             backFromEditor = true;
@@ -446,10 +446,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        });
 
        mSearchView.setOnSearchClickListener(v -> {
-           //String query = String.valueOf(mSearchView.getQuery());
            SearchCriteria criteria = epoxyController.getCriteria();
            doStartRefresh(criteria);
-           //epoxyController.loadSource(criteria);
        });
 
         mSearchViewSwitch.setOnClickListener(v -> {
@@ -467,22 +465,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
         });
         rightMenu.setOnClickListener(v -> doShowRightMenus());
-         // FAB
-       /// fabPlayingAction = findViewById(R.id.fab_now_playing);
-       // UIUtils.getTintedDrawable(fabPlayingAction.getDrawable(), getColor(R.color.now_playing));
-      ///  fabPlayingAction.setOnClickListener(view1 -> scrollToListening());
-      ///  fabPlayingAction.setOnLongClickListener(view1 -> doPlayNextSong());
-
         // Now Playing
         nowPlayingView = findViewById(R.id.now_playing_panel);
-        //nowPlayingPanel = findViewById(R.id.now_playing_block);
         nowPlayingTitle = findViewById(R.id.now_playing_title);
-       // nowPlayingSubtitle = findViewById(R.id.now_playing_subtitle);
         nowPlayingType = findViewById(R.id.now_playing_file_type);
         nowPlayingPlayer = findViewById(R.id.now_playing_player);
         nowPlayingOutputDevice = findViewById(R.id.now_playing_device);
-        //nowPlayingOutput = findViewById(R.id.now_playing_output);
-        //nowPlayingOutputName = findViewById(R.id.now_playing_output_name);
         nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
         nowPlayingView.setOnClickListener(view1 -> scrollToListening());
         nowPlayingView.setOnLongClickListener(view1 -> doPlayNextSong());
@@ -494,7 +482,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             headerTab.setVisibility(View.VISIBLE);
                 mSearchBar.setVisibility(View.GONE);
                 mSearchView.setQuery("", false);
-           // }
             doStartRefresh(null);
         }
     }
@@ -650,7 +637,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
 
-            AudioTag tag = MusixMateApp.getPlayingSong(); //MusicListeningService.getInstance().getPlayingSong();
+            AudioTag tag = MusixMateApp.getPlayingSong();
             if(tag!=null) {
                 doShowNowPlayingSongFAB(null);
             }
@@ -667,11 +654,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
-          //  ToastHelper.showBroadcastData(MediaBrowserActivity.this, null, event);
             if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
-                // refresh tag
-               // epoxyController.notifyModelChanged(event.getItem());
-                //  }
                 // re-load library
                 new Timer().schedule(new TimerTask() {
                     @Override
@@ -1066,6 +1049,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void onPlaying(AudioTag song) {
+        if(lastPlaying!=null) {
+            epoxyController.notifyModelChanged(lastPlaying);
+        }
         if(song!=null) {
             doShowNowPlayingSongFAB(song);
             if(Preferences.isOpenNowPlaying(getBaseContext())) {
@@ -1259,7 +1245,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if(encoding[0] == null) {
                 return;
             }
-            AtomicInteger cnt = new AtomicInteger();
+            final int [] cnt = new int[1];
+            cnt[0]=1;
+           // AtomicInteger cnt = new AtomicInteger();
             String options = "";
             String targetExt = encoding[0].toLowerCase();
             /*if(encoding[0].equals("ALAC")) {
@@ -1307,14 +1295,22 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             //if(selections.size()==1) {
                             //    progressBar.setProgress(100);
                             //}else {
-                                int count = cnt.incrementAndGet();
-                                progressBar.setProgress((count/size)*100);
+                            cnt[0]=cnt[0]+1;
+                            //    int count = cnt.incrementAndGet();
+                            progressBar.setProgress((cnt[0]/size)*100);
                            // }
                         });
                     });
+                    try {
+                        // sleep for 2 ms
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }else {
-                    int count = cnt.incrementAndGet();
-                    progressBar.setProgress((count/size)*100);
+                    //int count = cnt.incrementAndGet();
+                    cnt[0]=cnt[0]+1;
+                    progressBar.setProgress((cnt[0]/size)*100);
                 }
             }
             btnOK.setEnabled(false);
