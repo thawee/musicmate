@@ -24,7 +24,6 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
@@ -49,7 +48,6 @@ import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
-import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -69,7 +67,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -92,6 +89,7 @@ import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
@@ -119,6 +117,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
     private static final int MENU_ID_QUALITY_PCM = 55550000;
+    private static final int MAX_PROGRESS_BLOCK = 10;
+    private static final int MAX_PROGRESS = 100;
 
     ActivityResultLauncher<Intent> editorLauncher;
 
@@ -176,7 +176,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .setPositiveButton("DELETE", (dialogInterface, i) -> {
                     DeleteAudioFileWorker.startWorker(getApplicationContext(), itemsList);
                     dialogInterface.dismiss();
-                    epoxyController.loadSource();
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss())
                 .show();
@@ -196,17 +195,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .setPositiveButton("Import", (dialogInterface, i) -> {
                     dialogInterface.dismiss();
                     ImportAudioFileWorker.startWorker(getApplicationContext(), itemsList);
-                    epoxyController.loadSource();
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss()).create();
         dlg.show();
     }
 	
 	private void doShowNowPlayingSongFAB(final AudioTag song) {
-        /*if (song == null) {
-            song = MusixMateApp.getPlayingSong();
-        }*/
-
         if (song == null || nowPlayingView == null) {
             doHideNowPlayingSongFAB();
             return;
@@ -240,7 +234,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
                             epoxyController.notifyModelChanged(song);
-                            //epoxyController.notifyPlayingStatus();
                         }
                     })
                     .start());
@@ -654,7 +647,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
-            if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
+           // if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
                 // re-load library
                 new Timer().schedule(new TimerTask() {
                     @Override
@@ -663,9 +656,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         epoxyController.loadSource();
                     }
                 }, 300);
-            }else {
-                epoxyController.notifyModelChanged(event.getItem());
-            }
+          //  }else {
+         //       epoxyController.notifyModelChanged(event.getItem());
+         //   }
         }catch (Exception e) {
             Timber.e(e);
         }
@@ -1167,6 +1160,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 out.write("#EXTINF:"+tag.getAudioDuration()+","+tag.getArtist()+","+tag.getTitle()+"\n");
                 out.write(tag.getPath()+"\n\n");
             }
+            ToastHelper.showActionMessage(MediaBrowserActivity.this, "", "Playlist '"+path+"' is created.");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -1188,7 +1182,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(selections.size()==1) {
             filename.setText(selections.get(0).getSimpleName());
         }else {
-            filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to target encoding.");
+            filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to desired encoding.");
         }
 
         final String[] encoding = {null};
@@ -1203,33 +1197,32 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         encodingItems.add(new IconSpinnerItem("AIFF", null));
        // encodingItems.add(new IconSpinnerItem("ALAC", null));
         encodingItems.add(new IconSpinnerItem("FLAC", null));
-        encodingItems.add(new IconSpinnerItem("MP3 320kbps", null));
+        encodingItems.add(new IconSpinnerItem("MP3 (320 kbps)", null));
         adapter.setItems(encodingItems);
-        adapter.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener<IconSpinnerItem>() {
-            @Override
-            public void onItemSelected(int i, @Nullable IconSpinnerItem iconSpinnerItem, int i1, IconSpinnerItem t1) {
-                encoding[0] = String.valueOf(t1.getText());
-                if(StringUtils.isEmpty(encoding[0])) {
-                    btnOK.setEnabled(false);
-                }else {
-                    btnOK.setEnabled(true);
-                    progressBar.setProgress(0);
-                }
+        adapter.setOnSpinnerItemSelectedListener((i, iconSpinnerItem, i1, t1) -> {
+            encoding[0] = String.valueOf(t1.getText());
+            if(StringUtils.isEmpty(encoding[0])) {
+                btnOK.setEnabled(false);
+            }else {
+                btnOK.setEnabled(true);
+                progressBar.setProgress(0);
             }
         });
         mEncodingView.setSpinnerAdapter(adapter);
+        mEncodingView.setText("FLAC");
+        encoding[0]="FLAC";
+        btnOK.setEnabled(true);
 
+        int block = selections.size()>MAX_PROGRESS_BLOCK?MAX_PROGRESS_BLOCK:selections.size();
+        int sizeInBlock = MAX_PROGRESS/block;
         List valueList = new ArrayList();
-        valueList.add(50);
-        valueList.add(25);
-        valueList.add(15);
-        valueList.add(5);
-        valueList.add(3);
-        valueList.add(1);
-        valueList.add(1);
-        int barColor = getColor(R.color.material_color_yellow_800);
+        for(int i=0; i< block;i++) {
+            valueList.add(sizeInBlock);
+        }
+        final float rate = selections.size()/100; // pcnt per 1 song
+        int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax(100);
+        progressBar.setMax(MAX_PROGRESS);
 
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
@@ -1259,6 +1252,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 options = " -ar 44100 -ab 320k ";
             }
             progressBar.setProgress(0);
+            progressBar.invalidate();
             final int size = selections.size();
             for(AudioTag tag: selections) {
                // int count = cnt.getAndIncrement();
@@ -1295,25 +1289,25 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             //if(selections.size()==1) {
                             //    progressBar.setProgress(100);
                             //}else {
-                            cnt[0]=cnt[0]+1;
+                           // cnt[0]=cnt[0]+1;
                             //    int count = cnt.incrementAndGet();
-                            progressBar.setProgress((cnt[0]/size)*100);
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct+rate));
+                            progressBar.invalidate();
                            // }
                         });
                     });
-                    try {
-                        // sleep for 2 ms
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }else {
                     //int count = cnt.incrementAndGet();
-                    cnt[0]=cnt[0]+1;
-                    progressBar.setProgress((cnt[0]/size)*100);
+                    //cnt[0]=cnt[0]+1;
+                    //progressBar.setProgress((cnt[0]/size)*100);
+                    int pct = progressBar.getProgress();
+                    progressBar.setProgress((int) (pct+rate));
+                    progressBar.invalidate();
                 }
             }
             btnOK.setEnabled(false);
+            btnOK.setVisibility(View.GONE);
             //alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());

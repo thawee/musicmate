@@ -33,7 +33,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:fontFamily="@font/k2d_bold"
+                android:fontFamily="@font/itim_regular"
                 android:maxLines="1"
                 android:paddingTop="1dp"
                 android:text="@{title}"

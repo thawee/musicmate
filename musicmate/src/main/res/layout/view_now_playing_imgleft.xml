@@ -222,7 +222,7 @@
                 android:layout_marginRight="@dimen/dimen_1_dp"
                 android:layout_marginBottom="@dimen/dimen_1_dp"
                 android:ellipsize="end"
-                android:fontFamily="@font/k2d_regular"
+                android:fontFamily="@font/itim_regular"
                 android:gravity="center"
                 android:lines="1"
                 android:paddingLeft="@dimen/dimen_4_dp"

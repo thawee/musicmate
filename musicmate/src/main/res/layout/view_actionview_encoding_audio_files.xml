@@ -20,7 +20,7 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
         android:textSize="14sp"
-        android:text="Audio File Encoding"
+        android:text="Encoding music files"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>
@@ -112,7 +112,7 @@
         android:layout_height="@dimen/dimen_32_dp"
         android:layout_marginLeft="@dimen/dimen_32_dp"
         android:layout_marginRight="@dimen/dimen_32_dp"
-        android:layout_marginBottom="@dimen/dimen_12_dp">
+        android:layout_marginBottom="@dimen/dimen_24_dp">
         <com.skydoves.elasticviews.ElasticLayout
             android:id="@+id/btn_cancel"
             android:layout_width="wrap_content"

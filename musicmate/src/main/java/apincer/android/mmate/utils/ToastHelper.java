@@ -50,7 +50,7 @@ public class ToastHelper {
     } */
 
 
-    public static void showActionMessage(Activity activity, View view, String status, String message) {
+    public static void showActionMessage(Activity activity, String status, String message) {
         //Toast toastMessage = null;
      /*   if(toastMessage!= null) {
             toastMessage.cancel();
