@@ -799,12 +799,12 @@ public class AudioTagUtils {
         public static String getTrackQuality(AudioTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
+        }else if(tag.isMQAStudio()) {
+            return Constants.TITLE_MASTER_STUDIO_AUDIO;
         }else if(tag.isMQA()) {
             return Constants.TITLE_MASTER_AUDIO;
         }else if(isPCMHiRes(tag)) {
             return Constants.TITLE_HIRES;
-        //}else if(isPCMHiResLossless(tag)) {
-        //    return Constants.TITLE_HR_LOSSLESS;
         }else if(isPCMLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
@@ -818,17 +818,17 @@ public class AudioTagUtils {
 
     public static String getTrackQualityDetails(AudioTag tag) {
         if(tag.isDSD()) {
-            return "You can hear the detail and wide range of the music, its warm tone is very enjoyable.";
+            return "Enjoy rich music which the detail and wide range of the music, its warm tone is very enjoyable.";
+        }else if(tag.isMQAStudio()) {
+            return "Enjoy the original recordings, directly from mastering engineers, producers or artists to their listeners.";
         }else if(tag.isMQA()) {
-            return "Enjoy the original sound, directly from the studio master, in the highest quality.";
+            return "Enjoy the original recordings, directly from the master recordings, in the highest quality.";
         }else if(isPCMHiRes(tag)) {
-            return "Enjoy and Listening the rich music which reproduces fine details of musical instruments.";
+            return "Enjoy rich music which reproduces fine details of musical instruments.";
         }else if(isPCMLossless(tag)) {
-            return "Reproduce details of music smooth as CD quality that you can hear.";
- //       }else if(tag.isLossless()) {
-  //          return "Same as CD sound quality, audio is digitalized and compressed in order to be stored on CD.";
+            return "Enjoy music which reproduce details of music smooth as CD quality that you can hear.";
         }else {
-            return "Best compromise between data usage and sound fidelity.";
+            return "Enjoy music which compromise between data usage and sound fidelity.";
         }
     }
 

@@ -810,7 +810,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .setTitle("Signal Path \u266A") //+quality)
                 .setMessage(qualityDetails) // + text)
                 .setView(view)
-                .setPositiveButton("OK", (dialogInterface, i) -> dialogInterface.dismiss());
+                .setPositiveButton("Dismiss", (dialogInterface, i) -> dialogInterface.dismiss());
         builder.show();
     }
 

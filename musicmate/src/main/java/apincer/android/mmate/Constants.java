@@ -101,11 +101,12 @@ public final class Constants {
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
-    public static final String TITLE_MQA_AUDIO = "Master Quality Authenticated";
+    //public static final String TITLE_MQA_AUDIO = "Master Quality Authenticated";
     public static final String TITLE_HIRES = "Hi-Res Lossless";
     public static final String TITLE_HIFI_LOSSLESS = "Lossless";
     public static final String TITLE_HIFI_QUALITY = "High Quality";
-    public static final String TITLE_MASTER_AUDIO = "Master Audio";
+    public static final String TITLE_MASTER_AUDIO = "Master Recordings";
+    public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";

@@ -21,3 +21,15 @@ You can hear the detail and wide range of the music, its warm tone is very enjoy
 Format: DSF, DFF
 Resolution: DSD 64, DSD 128, DSD 256 or Higher
 Recommended Genre: Classic, Jazz, Vocals
+
+MQA Authentication
+MQA is a superb technology for distributing high-quality recordings, to bring listeners
+the sound of the studio and older recordings from the Archive.
+
+The MQA ‘Studio’ (blue light) gives confirmation directly from mastering engineers,
+producers or artists to their listeners. MQA Studio authenticates that the sound you are
+hearing is exactly as played in the studio when the music was completed and, by implication,
+that this is also the definitive version of the recording at that point in time.
+
+A second level, ‘MQA’ (green light) is available to indicate that although the stream is
+genuine, provenance may be uncertain or that it is not yet the final release.

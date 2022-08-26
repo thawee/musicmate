@@ -64,13 +64,26 @@
     <string-array name="default_album_artist" >
         <item>Audiophile</item>
         <item>Soundtracks</item>
-        <item>HDTracks</item>
-        <item>GMM Grammy</item>
-        <item>Chesky Records</item>
-        <item>Linn Records</item>
         <item>Remastered</item>
         <item>Various Artists</item>
         <item>Worship Songs</item>
+        <!-- audio recording company -->
+        <item>GMM Grammy</item>
+        <item>Audioquest</item>
+        <item>HD Tracks</item>
+        <item>Reference Recordings</item>
+        <item>Chesky Records</item>
+        <item>Linn Records</item>
+        <item>Sheffield Lab</item>
+        <item>Clearaudio</item>
+        <item>Stockfisch</item>
+        <item>Telarc Records</item>
+        <item>Opus3</item>
+        <item>JVC</item>
+        <item>Lasting Impression Music</item>
+        <item>First Impression Music</item>
+        <item>Three Blind Mice</item>
+        <item>Classic Records</item>
     </string-array>
 
     <array name="auto_size_text_sizes">
@@ -102,7 +115,6 @@
         <item>Acoustic</item>
         <item>Alternative</item>
         <item>Vocal</item>
-        <item>Film</item>
         <item>Classical</item>
         <item>Instrument</item>
         <item>Concertos</item>
@@ -118,9 +130,9 @@
         <item>Pop, Rock</item>
         <item>Pop, Indie</item>
         <item>Rock</item>
-        <item>Rock, Hard Rock</item>
+        <item>Hard Rock</item>
         <item>Rock, Metal</item>
-        <item>Rock, Soft Rock</item>
+        <item>Soft Rock</item>
         <item>Reggae, Ska</item>
         <item>Electronic, Ambiance</item>
         <item>Latin</item>
