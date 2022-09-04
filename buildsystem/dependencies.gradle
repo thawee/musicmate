@@ -18,7 +18,7 @@ ext.versions = [
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.4.0-b02', //''10.3.1',
+        aboutlibraries     : '10.4.0', //''10.3.1',
         //versionsCheck      : '0.42.0',
 ]
 
@@ -171,7 +171,8 @@ ui.color_match_tabs_android = "com.github.Yalantis:ColorMatchTabsAndroid:1.0.1" 
 ui.floating_arc_menu = "com.github.BrotherV:Floating-ArcMenu:1.1.0.2" //23/06/2019
 ui.circleimageview = "de.hdodenhof:circleimageview:3.0.0" //23/06/2019
 ui.lapism_searchview = "com.lapism:searchview:28.0.0" //23/06/2019
-ui.lapism_search = "com.lapism:search:1.0.0" //26/01/2020
+//https://github.com/lapism/search
+ui.lapism_search = "io.github.lapism:search:1.2.1"
 ui.jellytoolbar = "com.github.yalantis:jellytoolbar:v1.0"
 //https://github.com/florent37/ShapeOfView
 ui.shapeofview = "io.github.florent37:shapeofview:1.4.7" //23/06/2019

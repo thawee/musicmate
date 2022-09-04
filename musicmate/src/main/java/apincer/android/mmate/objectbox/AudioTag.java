@@ -92,6 +92,36 @@ public class AudioTag implements Cloneable , Parcelable {
     protected String mqaSampleRate;
     protected String audioChannels; // 2, 4
 
+    public String getLoudnessIntegrated() {
+        return loudnessIntegrated;
+    }
+
+    public void setLoudnessIntegrated(String loudnessIntegrated) {
+        this.loudnessIntegrated = loudnessIntegrated;
+    }
+
+    public String getLoudnessRange() {
+        return loudnessRange;
+    }
+
+    public void setLoudnessRange(String loudnessRange) {
+        this.loudnessRange = loudnessRange;
+    }
+
+    public String getLoudnessTruePeek() {
+        return loudnessTruePeek;
+    }
+
+    public void setLoudnessTruePeek(String loudnessTruePeek) {
+        this.loudnessTruePeek = loudnessTruePeek;
+    }
+
+    // loudness
+    protected String loudnessIntegrated; // average loudness, negative value unit of LUFS
+    protected String loudnessRange; // Dynamic Range, LU
+    protected String loudnessTruePeek; // unit of dB
+
+
     public String getAudioChannels() {
         return audioChannels;
     }
@@ -189,9 +219,12 @@ public class AudioTag implements Cloneable , Parcelable {
         source = in.readString();
         cueSheet = in.readByte() != 0;
         audiophile = in.readByte() != 0;
+        loudnessIntegrated=in.readString();
+        loudnessRange=in.readString();
+        loudnessTruePeek=in.readString();
     }
 
-    public static final Creator<AudioTag> CREATOR = new Creator<AudioTag>() {
+    public static final Parcelable.Creator<AudioTag> CREATOR = new Creator<AudioTag>() {
         @Override
         public AudioTag createFromParcel(Parcel in) {
             return new AudioTag(in);
@@ -582,6 +615,10 @@ public class AudioTag implements Cloneable , Parcelable {
         tag.audioChannels=audioChannels;
         tag.lossless=lossless;
 
+        tag.loudnessIntegrated=loudnessIntegrated;
+        tag.loudnessRange=loudnessRange;
+        tag.loudnessTruePeek=loudnessTruePeek;
+
         tag.title=title;
         tag.album=album;
         tag.artist=artist;
@@ -647,6 +684,10 @@ public class AudioTag implements Cloneable , Parcelable {
         this.storageId = tag.storageId;
         this.storageName = tag.storageName;
         this.simpleName = tag.simpleName;
+
+        this.loudnessRange = tag.loudnessRange;
+        this.loudnessIntegrated=tag.loudnessIntegrated;
+        this.loudnessTruePeek=tag.loudnessTruePeek;
     }
 
     @Override
@@ -690,6 +731,9 @@ public class AudioTag implements Cloneable , Parcelable {
         parcel.writeString(source);
         parcel.writeByte((byte) (cueSheet ? 1 : 0));
         parcel.writeByte((byte) (audiophile ? 1 : 0));
+        parcel.writeString(loudnessIntegrated);
+        parcel.writeString(loudnessRange);
+        parcel.writeString(loudnessTruePeek);
     }
 
     public AudioTag getOriginTag() {

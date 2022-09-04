@@ -75,28 +75,44 @@
                 android:textColor="@color/black"
                 android:textSize="9sp"
                 android:textStyle="bold" />
-            <!--
-            <ImageView
-                android:id="@+id/item_type_icon"
-                android:layout_width="32dp"
+            <TextView
+                android:id="@+id/item_bit_per_sampling"
+                android:layout_width="@dimen/dimen_32_dp"
                 android:layout_height="16dp"
                 android:layout_gravity="center"
-                android:padding="1dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_graphic_eq_black_24dp" />
--->
-            <!--
-            <ImageView
-                android:id="@+id/item_sampling_rate"
-                android:layout_width="@dimen/dimen_info_resolution_dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
+                android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_type_label"
-                android:background="@drawable/shape_now_playing_title_background"
-                android:padding="1dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/shape_bottom_background" />
-                -->
+                android:background="@drawable/shape_background_unknown"
+                android:fontFamily="@font/k2d_bold"
+                android:gravity="center"
+                android:lines="1"
+                android:maxLines="1"
+                android:paddingLeft="@dimen/dimen_2_dp"
+                android:paddingRight="@dimen/dimen_2_dp"
+                android:text="24bits"
+                android:textColor="@color/black"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/item_sampling_rate"
+                android:layout_width="@dimen/dimen_42_dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_toRightOf="@id/item_bit_per_sampling"
+                android:background="@drawable/shape_background_unknown"
+                android:fontFamily="@font/k2d_bold"
+                android:gravity="center"
+                android:lines="1"
+                android:maxLines="1"
+                android:paddingLeft="@dimen/dimen_2_dp"
+                android:paddingRight="@dimen/dimen_2_dp"
+                android:text="44.1kHz"
+                android:textColor="@color/black"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+            <!--
             <TextView
                 android:id="@+id/item_sampling_rate"
                 android:layout_width="@dimen/dimen_info_resolution_dp"
@@ -114,7 +130,7 @@
                 android:text="24bits - 44.1kHz - 800kbps"
                 android:textColor="@color/black"
                 android:textSize="9sp"
-                android:textStyle="bold" />
+                android:textStyle="bold" /> -->
             <!--
             <ImageView
                 android:id="@+id/item_sampling_rate"
@@ -140,11 +156,21 @@
                 android:src="@drawable/shape_bottom_background" /> -->
 
             <ImageView
-                android:id="@+id/item_enc_icon"
+                android:id="@+id/item_hires_icon"
                 android:layout_width="@dimen/dimen_52_dp"
                 android:layout_height="16dp"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_sampling_rate"
+                android:paddingLeft="@dimen/dimen_2_dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_format_mqa_white" />
+
+            <ImageView
+                android:id="@+id/item_loudness_icon"
+                android:layout_width="@dimen/dimen_40_dp"
+                android:layout_height="16dp"
+                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_toRightOf="@id/item_hires_icon"
                 android:paddingLeft="@dimen/dimen_2_dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_format_mqa_white" />
@@ -155,7 +181,7 @@
                 android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
-                android:layout_toRightOf="@id/item_enc_icon"
+                android:layout_toRightOf="@id/item_loudness_icon"
                 android:padding="1dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/icon_cd" />

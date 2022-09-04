@@ -34,6 +34,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -271,12 +272,14 @@ public class TagsActivity extends AppCompatActivity {
             hiresView.setVisibility(View.GONE);
         }
         audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
-        if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
+        /*if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
             encResView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
             encResView.setVisibility(View.VISIBLE);
         }else {
             encResView.setVisibility(View.GONE);
-        }
+        }*/
+        encResView.setImageBitmap(AudioTagUtils.getLoudnessIcon(getApplicationContext(), displayTag));
+        encResView.setVisibility(View.VISIBLE);
 
         ratingView.setRating(displayTag.getRating());
         ratingView.setFocusable(false);
@@ -364,14 +367,19 @@ public class TagsActivity extends AppCompatActivity {
        // pathInfo.setPaintFlags(pathInfo.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
 
         pathInfo.setOnClickListener(view -> {
-            Intent resultIntent = new Intent();
-            if(criteria!=null) {
+            if (criteria != null && displayTag.getPath() != null) {
+                Intent resultIntent = new Intent();
                 criteria.setFilterType(Constants.FILTER_TYPE_PATH);
-                criteria.setFilterText(displayTag.getPath());
-                ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                File file = new File(displayTag.getPath());
+                if (!file.isDirectory()) {
+                    file = file.getParentFile();
+                }
+                String filterPath = file.getAbsolutePath() + File.separator;
+                criteria.setFilterText(filterPath);
+                ApplicationUtils.setSearchCriteria(resultIntent, criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                setResult(RESULT_OK, resultIntent);
+                finish();
             }
-            setResult(RESULT_OK, resultIntent);
-            finish();
         });
 
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());

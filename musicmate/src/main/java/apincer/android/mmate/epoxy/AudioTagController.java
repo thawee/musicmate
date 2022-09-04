@@ -10,7 +10,6 @@ import com.airbnb.epoxy.EpoxyViewHolder;
 import com.airbnb.epoxy.OnModelBuildFinishedListener;
 import com.airbnb.epoxy.TypedEpoxyController;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,22 +52,26 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
 
     @Override
     protected void buildModels(List<AudioTag> audioTags) {
-       // header
-       //         .title("My Photos")
-       //         .addTo(this);
         totalDuration =0;
         totalSize = 0;
-        String filterPath = "";
-        if(Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
-            File file = new File(criteria.getFilterText());
-            if (!file.isDirectory()) {
-                file = file.getParentFile();
-            }
-            filterPath = file.getAbsolutePath()+File.separator;
-        }
         boolean noFilters = StringUtils.isEmpty(criteria.getFilterType()) && StringUtils.isEmpty(criteria.getFilterText());
-        for (AudioTag tag : audioTags) {
-            if(!noFilters) {
+        if(noFilters) {
+            for (AudioTag tag : audioTags) {
+                new AudioTagModel_()
+                        .id(tag.getId())
+                        .tag(tag)
+                        .controller(this)
+                        .clickListener(clickListener)
+                        .longClickListener(longClickListener)
+                        .addTo(this);
+                // model.onClickListener(clickListener);
+                // model.onLongClickListener(longClickListener);
+                // add(model);
+                totalDuration = totalDuration + tag.getAudioDuration();
+                totalSize = totalSize + tag.getFileSize();
+            }
+        }else {
+            for (AudioTag tag : audioTags) {
                 if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
                     if (!StringUtils.equals(tag.getAlbum(), criteria.getFilterText())) {
                         continue;
@@ -90,23 +93,23 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                         continue;
                     }
                 } else if (Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
-                    if (!tag.getPath().startsWith(filterPath)) {
+                    if (!tag.getPath().startsWith(criteria.getFilterText())) {
                         continue;
                     }
                 }
+                new AudioTagModel_()
+                        .id(tag.getId())
+                        .tag(tag)
+                        .controller(this)
+                        .clickListener(clickListener)
+                        .longClickListener(longClickListener)
+                        .addTo(this);
+                // model.onClickListener(clickListener);
+                // model.onLongClickListener(longClickListener);
+                // add(model);
+                totalDuration = totalDuration + tag.getAudioDuration();
+                totalSize = totalSize + tag.getFileSize();
             }
-            new AudioTagModel_()
-                    .id(tag.getId())
-                    .tag(tag)
-                    .controller(this)
-                    .clickListener(clickListener)
-                    .longClickListener(longClickListener)
-                    .addTo(this);
-           // model.onClickListener(clickListener);
-           // model.onLongClickListener(longClickListener);
-           // add(model);
-            totalDuration = totalDuration + tag.getAudioDuration();
-            totalSize = totalSize + tag.getFileSize();
         }
     }
 
@@ -351,6 +354,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         List<String> titles = new ArrayList<>();
         if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
             titles.add(Constants.TITLE_ALL_SONGS);
+           // titles.add(Constants.TITLE_AUDIOPHILE);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
        /* }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&

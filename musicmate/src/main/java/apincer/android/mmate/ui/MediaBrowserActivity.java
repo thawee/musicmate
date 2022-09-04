@@ -131,10 +131,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private AudioTagController epoxyController;
 
     private Snackbar mExitSnackbar;
-    private View mSearchBar;
+    //private View mSearchBar;
     private View mHeaderPanel;
     private SearchView mSearchView;
-    private ImageView mSearchViewSwitch;
+    //private ImageView mSearchViewSwitch;
 
     private RefreshLayout refreshLayout;
     private StateView mStateView;
@@ -256,19 +256,25 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void doStartRefresh(SearchCriteria criteria) {
         if(criteria == null) {
-            searchCriteria = epoxyController.getCriteria();
+            //  searchCriteria = epoxyController.getCriteria();
+            //}else
+            if (epoxyController.getCriteria() != null) {
+                searchCriteria = epoxyController.getCriteria();; //new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+            } else {
+                searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+            }
         }else {
-            searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+            searchCriteria = criteria;
         }
         refreshLayout.autoRefresh();
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
-        if(type == null) {
-            searchCriteria = epoxyController.getCriteria();
-        }else {
+        //if(type == null) {
+        ////    searchCriteria = epoxyController.getCriteria();
+        //}else {
             searchCriteria = new SearchCriteria(type);
-        }
+       // }
         searchCriteria.setKeyword(keyword);
         refreshLayout.autoRefresh();
     }
@@ -288,10 +294,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             actionMode.finish();
         }
 
-        if(mSearchBar.getVisibility() == View.VISIBLE) {
+        if(mSearchView.isShown()) {
+            mSearchView.setIconified(true);
+        }
+
+       /* if(mSearchBar.getVisibility() == View.VISIBLE) {
             doHideSearch();
             return;
-        }
+        } */
 
         if(epoxyController.hasFilter()) {
             epoxyController.clearFilter();
@@ -367,7 +377,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             public void onTabSelected(TabLayout.Tab tab) {
                 if(!onSetup) {
                     epoxyController.loadSource(Objects.requireNonNull(tab.getText()).toString());
-                    doStartRefresh(null, tab.getText().toString());
+                    SearchCriteria criteria = epoxyController.getCriteria();
+                    criteria.setFilterType("");
+                    criteria.setFilterText("");
+                    criteria.setKeyword(tab.getText().toString());
+                    doStartRefresh(criteria);
                 }
             }
 
@@ -402,20 +416,22 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         //set bottom bar to Action bar as it is similar like Toolbar
         setSupportActionBar(bottomAppBar);
-        TextView label = bottomAppBar.findViewById(R.id.navigation_collections_label);
+       // TextView label = bottomAppBar.findViewById(R.id.navigation_collections_label);
         ImageView leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
         UIUtils.getTintedDrawable(leftMenu.getDrawable(), Color.WHITE);
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
-        ImageView searchMenu = bottomAppBar.findViewById(R.id.navigation_search);
+        mSearchView = bottomAppBar.findViewById(R.id.searchView);
+       // ImageView searchMenu = bottomAppBar.findViewById(R.id.navigation_search);
 
         UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
-        mSearchBar = findViewById(R.id.searchBar);
+        /*
+       // mSearchBar = findViewById(R.id.searchBar);
         mSearchView = findViewById(R.id.searchView);
-        mSearchViewSwitch = findViewById(R.id.searchViewSwitch);
+       // mSearchViewSwitch = findViewById(R.id.searchViewSwitch);
 
-        mSearchBar.setVisibility(View.GONE);
-
+       // mSearchBar.setVisibility(View.GONE);
+        */
        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
            @Override
            public boolean onQueryTextSubmit(String query) {
@@ -431,32 +447,49 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
            @Override
            public boolean onQueryTextChange(String newText) {
-              // if(newText!= null && newText.length()>=2) {
-              //     return mLibraryAdapter.searchItems(newText);
-              // }
+              /* if(newText!= null && newText.length()>2) {
+                   SearchCriteria criteria = epoxyController.getCriteria();
+                   criteria.searchFor(newText);
+                   doStartRefresh(criteria);
+               //    return mLibraryAdapter.searchItems(newText);
+               }*/
                return false;
            }
        });
 
        mSearchView.setOnSearchClickListener(v -> {
            SearchCriteria criteria = epoxyController.getCriteria();
+           criteria.searchFor(String.valueOf(mSearchView.getQuery()));
            doStartRefresh(criteria);
+           //doStartRefresh(criteria);
        });
 
-        mSearchViewSwitch.setOnClickListener(v -> {
+       /* mSearchView.setOnClickListener(v -> {
            // onBackPressed();
-            doHideSearch();
+            //doHideSearch();
+            doStartRefresh(null);
+            mSearchView.setIconified(true);
+        }); */
+        mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                SearchCriteria criteria = epoxyController.getCriteria();
+                criteria.resetSearch();
+                doStartRefresh(null);
+               // mSearchView.setIconified(true);
+                return false;
+            }
         });
 
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
-        label.setOnClickListener(v -> doShowLeftMenus());
-        searchMenu.setOnClickListener(v -> {
+       // label.setOnClickListener(v -> doShowLeftMenus());
+       /* searchMenu.setOnClickListener(v -> {
             if(mSearchBar.getVisibility()==View.GONE) {
                 doShowSearch();
             }else {
                 doHideSearch();
             }
-        });
+        }); */
         rightMenu.setOnClickListener(v -> doShowRightMenus());
         // Now Playing
         nowPlayingView = findViewById(R.id.now_playing_panel);
@@ -471,12 +504,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doHideSearch() {
-        if(mSearchBar.getVisibility() == View.VISIBLE) {
+       /* if(mSearchBar.getVisibility() == View.VISIBLE) {
             headerTab.setVisibility(View.VISIBLE);
                 mSearchBar.setVisibility(View.GONE);
                 mSearchView.setQuery("", false);
             doStartRefresh(null);
-        }
+        } */
     }
 	
 	private boolean doPlayNextSong() {
@@ -485,11 +518,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 	}
 
     private void doShowSearch() {
-        headerTab.setVisibility(View.GONE);
+       /* headerTab.setVisibility(View.GONE);
         mSearchBar.setVisibility(View.VISIBLE);
         mSearchView.requestFocus();
         UIUtils.showKeyboard(getApplicationContext(), mSearchView);
-        doStopRefresh();
+        doStopRefresh(); */
     }
 
     private void doShowLeftMenus() {
@@ -685,6 +718,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
         return super.onCreateOptionsMenu(menu);
+        /*super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_main_browser,menu);
+        SearchView searchView = (SearchView) menu.findItem( R.id.action_search).getActionView();
+        return true; */
     }
 
     @Override public boolean onOptionsItemSelected(MenuItem item) {
@@ -694,7 +731,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }else if(item.getItemId() == R.id.menu_all_music) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
-
+            return true;
+        }else if(item.getItemId() == R.id.menu_audiophile) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.AUDIOPHILE, null);
             return true;
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
@@ -702,7 +742,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             return true;
         } else if(item.getItemId() == MENU_ID_QUALITY) {
             doHideSearch();
-
             doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, (String)item.getTitle());
             return true;
 
@@ -737,9 +776,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }else if(item.getItemId() == R.id.navigation_settings) {
             doShowRightMenus();
             return true;
-        } else if(item.getItemId() == R.id.navigation_search) {
-            doShowSearch();
-            return true;
+       // } else if(item.getItemId() == R.id.navigation_search) {
+       //     doShowSearch();
+       //     return true;
         } else if(item.getItemId() == R.id.menu_signal_path) {
             doShowSignalPath();
             return true;
@@ -754,10 +793,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
       //  text = "Song "+tag.getTitle() +"; BPS: "+tag.getAudioBitsPerSample() +" & SampleRate: "+tag.getAudioSampleRate();
       //  text = text+"\n Player: "+service.getPlayerName();
         AudioTag tag = MusixMateApp.getPlayingSong();
-        MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
 
-       // NativeLib lib = new NativeLib();
-       // String mqaInfo = lib.getMQAInfo(tag.getPath());
+        MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
 
         // file
         // player
@@ -773,7 +810,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         TextView outputlabel = view.findViewById(R.id.panel_output_label);
         String quality = "";
         String qualityDetails = "";
-        if(tag != null) {
+        if(tag != null && !StringUtils.isEmpty(tag.getPath())) {
             sourceIcon.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), tag));
            /* if(tag.isMQA()) {
                 sourceIcon.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));

@@ -33,3 +33,18 @@ that this is also the definitive version of the recording at that point in time.
 
 A second level, ‘MQA’ (green light) is available to indicate that although the stream is
 genuine, provenance may be uncertain or that it is not yet the final release.
+
+Loudness Meter
+Integrated
+
+    Shows the average loudness measured from start to stop. The period of measurement is shown in the Time display.
+    The recommended value for the integrated loudness is -23 LUFS. This absolute value is the reference point for
+    the relative LU scale where -23 LUFS equals 0 LU.
+Range
+
+    Shows the dynamic range of the audio measured from start to stop. This value helps you to decide how much
+    dynamic compression you can apply. The recommended range for highly dynamic audio, such as film music, is 20 LU.
+True Peak
+
+    Shows the true peak level of the audio. The maximum permitted true peak level in production is -1 dB.
+

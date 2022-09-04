@@ -1,14 +1,12 @@
 package apincer.android.mmate.work;
 
 import android.content.Context;
-import android.content.Intent;
 
 import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -25,7 +23,6 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.broadcast.BroadcastData;
 
 public class UpdateAudioFileWorker extends Worker {
     AudioFileRepository repos;
@@ -60,11 +57,11 @@ public class UpdateAudioFileWorker extends Worker {
 
         return Result.success();
     }
-
+/*
     protected void sendBroadcast(final BroadcastData data){
         Intent intent = data.getIntent();
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-    }
+    } */
 
     public static void startWorker(Context context, List<AudioTag> files, String artworkPath) {
         Gson gson = new Gson();
@@ -75,9 +72,10 @@ public class UpdateAudioFileWorker extends Worker {
                     .putString(Constants.KEY_MEDIA_TAG, s)
                     .putString(Constants.KEY_COVER_ART_PATH, artworkPath)
                     .build();
-            WorkRequest workRequest = new OneTimeWorkRequest.Builder(UpdateAudioFileWorker.class)
+            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(UpdateAudioFileWorker.class)
                     .setInputData(inputData).build();
-            WorkManager.getInstance(context).enqueue(workRequest);
+           // WorkManager.getInstance(context).enqueue(workRequest);
+            WorkManager.getInstance(context).enqueueUniqueWork("UpdateWorker", ExistingWorkPolicy.APPEND, workRequest);
         }
     }
 }

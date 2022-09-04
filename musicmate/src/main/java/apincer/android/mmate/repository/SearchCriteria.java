@@ -81,7 +81,8 @@ public class SearchCriteria implements Parcelable {
     }
 
     public void searchFor(String searchFor) {
-        if(type != TYPE.SEARCH || type != TYPE.SEARCH_BY_ALBUM || type != TYPE.SEARCH_BY_ARTIST) {
+        //if(type != TYPE.SEARCH || type != TYPE.SEARCH_BY_ALBUM || type != TYPE.SEARCH_BY_ARTIST) {
+        if(type != TYPE.SEARCH) {
             previousType = type;
             previousKeyword = keyword;
         }

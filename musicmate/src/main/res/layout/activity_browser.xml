@@ -41,6 +41,7 @@
                android:layout_height="wrap_content"
                android:background="@color/black"
                app:layout_constraintTop_toTopOf="parent">
+			   <!--
 			   <LinearLayout
 				   android:id="@+id/searchBar"
 				   android:layout_width="match_parent"
@@ -67,7 +68,17 @@
 				   app:closeIcon="@drawable/ic_clear_white_24dp"
 				   app:searchIcon="@drawable/ic_search_white_24dp"
 				   />
-			   </LinearLayout>
+			   </LinearLayout> -->
+			   <!-- Simple MaterialToolbar extension -->
+
+			   <!--
+			   <androidx.appcompat.widget.Toolbar
+				   android:id="@+id/toolBar"
+				   android:layout_width="match_parent"
+				   android:layout_height="?attr/actionBarSize"
+				   app:logo="@drawable/ic_launcher_background"
+				   app:layout_scrollFlags="scroll|enterAlways|snap"/>
+-->
 			   <LinearLayout
 				   android:id="@+id/header_panel"
 				   android:layout_width="match_parent"
@@ -109,6 +120,7 @@
 					   android:layout_height="1dp"
 					   android:background="@drawable/divider_header_horizontal" />
 			   </LinearLayout>
+
                <View
                    android:layout_width="match_parent"
                    android:layout_height="1dp"
@@ -212,7 +224,7 @@
                 android:paddingLeft="@dimen/dimen_12_dp"
                 android:contentDescription="@string/app_name"
                 android:src="@drawable/ic_view_carousel_black_24dp" />
-
+<!--
             <TextView
                 style="?android:attr/borderlessButtonStyle"
                 android:id="@+id/navigation_collections_label"
@@ -225,7 +237,7 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:gravity="center"
                 android:text="Collection"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF" /> -->
             <!--
                         <TextView
                             style="?android:attr/borderlessButtonStyle"
@@ -241,6 +253,7 @@
                             android:text="@string/app_name"
                             android:textColor="#FFFFFF" />
                             -->
+			<!--
             <ImageView
                 android:id="@+id/navigation_search"
                 android:layout_width="@dimen/dimen_24_dp"
@@ -252,6 +265,18 @@
                 android:contentDescription="@string/app_name"
                 android:layout_toLeftOf="@id/navigation_settings"
                 android:src="@drawable/ic_search_white_24dp" />
+                -->
+			<androidx.appcompat.widget.SearchView
+				android:id="@+id/searchView"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="@dimen/dimen_56_dp"
+				android:layout_marginRight="@dimen/dimen_48_dp"
+				android:padding="4dp"
+				app:closeIcon="@drawable/ic_clear_white_24dp"
+				app:iconifiedByDefault="true"
+				app:queryHint="@string/search_view_query_input_hint"
+				app:searchIcon="@drawable/ic_search_white_24dp" />
             <ImageView
                 android:id="@+id/navigation_settings"
                 android:layout_width="wrap_content"

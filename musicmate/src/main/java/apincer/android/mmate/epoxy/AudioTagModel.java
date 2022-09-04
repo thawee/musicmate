@@ -5,6 +5,7 @@ import static com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.ImageView;
@@ -24,7 +25,6 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.AudioTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -55,17 +55,18 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         return new Holder();
     }
 
+    /*
     @Override
     public void bind(Holder holder) {
         // Implement this to bind the properties to the view
        // holder.button.setText(text);
        // holder.button.setOnClickListener(clickListener);
-        if(tag.getResultType() == SearchCriteria.RESULT_TYPE.ARTIST || tag.getResultType() == SearchCriteria.RESULT_TYPE.ALBUM) {
-            bindGroupingView(holder);
-        }else {
+       // if(tag.getResultType() == SearchCriteria.RESULT_TYPE.ARTIST || tag.getResultType() == SearchCriteria.RESULT_TYPE.ALBUM) {
+       //     bindGroupingView(holder);
+       // }else {
             bindTagView(holder);
-        }
-    }
+       // }
+    } */
 
     @Override
     public boolean equals(Object o) {
@@ -90,9 +91,10 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         return tag.hashCode();
     }
 
-    private void bindTagView(Holder holder) {
+    @Override
+    public void bind(Holder holder) {
         // When user scrolls, this line binds the correct selection status
-         holder.rootView.setActivated(controller.isSelected(tag));
+        holder.rootView.setActivated(controller.isSelected(tag));
 
         // Background, when bound the first time
         AudioTag listeningItem = MusixMateApp.getPlayingSong(); // MusicListeningService.getInstance().getPlayingSong();
@@ -101,82 +103,88 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         holder.rootView.setOnClickListener(clickListener);
         holder.rootView.setOnLongClickListener(longClickListener);
 
-        if(tag.isAudiophile()) {
+        if (tag.isAudiophile()) {
             holder.mAudiophileLabelView.setVisibility(View.VISIBLE);
-          //  holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_audiophile_background));
-         //   holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_audiophile_background));
-        }else {
+            //  holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_audiophile_background));
+            //   holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_audiophile_background));
+        } else {
             holder.mAudiophileLabelView.setVisibility(View.GONE);
-          //  holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
-          //  holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
+            //  holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
+            //  holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
         }
 
-        if(isListening) {
+        if (isListening) {
             //mTitleLayout
             // set border
-           // holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item_border));
-           // this.mPlayerView.setImageBitmap(AudioTagUtils.createBitmapFromDrawable(getContext(), 1, 1, MusicListeningService.getInstance().getPlayerIconDrawable(), Color.WHITE, Color.TRANSPARENT));
-           // this.mPlayerView.setVisibility(View.VISIBLE);
-              holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
-              holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
-              holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
+            // holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item_border));
+            // this.mPlayerView.setImageBitmap(AudioTagUtils.createBitmapFromDrawable(getContext(), 1, 1, MusicListeningService.getInstance().getPlayerIconDrawable(), Color.WHITE, Color.TRANSPARENT));
+            // this.mPlayerView.setVisibility(View.VISIBLE);
+            holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
+            holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
+            holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
             //         holder.mTitle.setTextColor(holder.mContext.getColor(R.color.fab_listening_background));
-        }else {
-          //  holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item));
-           // this.mPlayerView.setVisibility(View.GONE);
-          //  holder.mTitle.setTextColor(holder.mContext.getColor(R.color.grey100));
+        } else {
+            //  holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item));
+            // this.mPlayerView.setVisibility(View.GONE);
+            //  holder.mTitle.setTextColor(holder.mContext.getColor(R.color.grey100));
             holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
             holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
             holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD);
         }
 
         // download label
-        if(tag.isManaged()) {
+        if (tag.isManaged()) {
             holder.mNewLabelView.setVisibility(View.GONE);
-        }else if(AudioTagUtils.isOnDownloadDir(tag)) {
+        } else if (AudioTagUtils.isOnDownloadDir(tag)) {
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_red_900);
-           // holder.mNewLabelView.setPrimaryTextColorResource(R.color.material_color_yellow_500);
+            // holder.mNewLabelView.setPrimaryTextColorResource(R.color.material_color_yellow_500);
             holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey200);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
             holder.mNewLabelView.setVisibility(View.VISIBLE);
         } else {
             //holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
-           // holder.mNewLabelView.setPrimaryTextColorResource(R.color.material_color_yellow_500);
+            // holder.mNewLabelView.setPrimaryTextColorResource(R.color.material_color_yellow_500);
             holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey800);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
             holder.mNewLabelView.setVisibility(View.VISIBLE);
         }
 /***
-        mNotificationView.setImageBitmap(AudioTagUtils.getSourceIcon(getContext(), item));
-*/
+ mNotificationView.setImageBitmap(AudioTagUtils.getSourceIcon(getContext(), item));
+ */
         // Show AlbumArt
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-               // .size(800, 800)
+                // .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
-                .transformations(new RoundedCornersTransformation(12,12,12,12))
+                .transformations(new RoundedCornersTransformation(12, 12, 12, 12))
                 .build();
         imageLoader.enqueue(request);
 
         // show file type i.e. DxD, FLAC, ALAC, MP3
-       // Bitmap typeBitmap = AudioTagUtils.getFileFormatIcon(holder.mContext, tag);
+        // Bitmap typeBitmap = AudioTagUtils.getFileFormatIcon(holder.mContext, tag);
         //if(typeBitmap != null) {
-       // holder.mFileTypeView.setVisibility(View.VISIBLE);
-       // holder.mFileTypeView.setImageBitmap(typeBitmap);
-        holder.mFileTypeView.setText(tag.getAudioEncoding());
-        holder.mFileTypeView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+        // holder.mFileTypeView.setVisibility(View.VISIBLE);
+        // holder.mFileTypeView.setImageBitmap(typeBitmap);
 
         // show enc i.e. MQA, DSD
-        Bitmap resBitmap = AudioTagUtils.getHiResIcon(holder.mContext, tag);
-        if(resBitmap != null) {
-            holder.mAudioENCView.setVisibility(View.VISIBLE);
-            holder.mAudioENCView.setImageBitmap(resBitmap);
-        }else{
-            holder.mAudioENCView.setVisibility(View.GONE);
+        holder.mAudioHiResView.setVisibility(View.GONE);
+        if((tag.isMQA() || AudioTagUtils.isPCMHiRes(tag) ||tag.isDSD())) {
+            Bitmap resBitmap = AudioTagUtils.getHiResIcon(holder.mContext, tag);
+            if (resBitmap != null) {
+                holder.mAudioHiResView.setVisibility(View.VISIBLE);
+                holder.mAudioHiResView.setImageBitmap(resBitmap);
+            }
         }
+        if(!tag.isDSD() && !(StringUtils.isEmpty(tag.getLoudnessIntegrated()))) {
+            holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
+            holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
+        }else {
+            holder.mAudioLoudnessView.setVisibility(View.GONE);
+        }
+
         /* Bitmap resBitmap = AudioTagUtils.getResIcon(holder.mContext, tag);
         if(resBitmap != null) {
             this.mAudioMQAView.setVisibility(View.VISIBLE);
@@ -226,17 +234,26 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         } */
        // holder.mBitrateView.setVisibility(View.GONE);
 
+        Drawable resolutionBackground = AudioTagUtils.getResolutionBackground(holder.mContext, tag);
+
+        // file type
+        holder.mFileTypeView.setText(tag.getAudioEncoding());
+        holder.mFileTypeView.setBackground(resolutionBackground);
+
         // Audio resolution
-        holder.mSamplingRateView.setText(tag.getAudioResolutions());
-        holder.mSamplingRateView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+        holder.mBitPerSamplingView.setText(StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()));
+        holder.mBitPerSamplingView.setBackground(resolutionBackground);
+
+        holder.mSamplingRateView.setText(StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true));
+        holder.mSamplingRateView.setBackground(resolutionBackground);
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
-        holder.mDurationView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+        holder.mDurationView.setBackground(resolutionBackground);
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-        holder.mFileSizeView.setBackground(AudioTagUtils.getResolutionBackground(holder.mContext, tag));
+        holder.mFileSizeView.setBackground(resolutionBackground);
 
         // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
            // holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));
@@ -256,9 +273,9 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                 holder.mFileSourceView.setVisibility(View.GONE);
             }
     }
-
+/*
     private void bindGroupingView(Holder holder) {
-    }
+    } */
 
     @Override
     protected int getDefaultLayout() {
@@ -271,6 +288,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         View mTitleLayout;
         TextView mTitle;
         TextView mSubtitle;
+        TextView mBitPerSamplingView;
         TextView mSamplingRateView;
        // ImageView mBitrateView;
         TextView mDurationView;
@@ -283,7 +301,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         //ImageView mNotificationView;
         ImageView mPlayerView;
         // ImageView mAudioQualityView;
-        ImageView mAudioENCView;
+        ImageView mAudioHiResView;
+        ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
         View mAudiophileLabelView;
 
@@ -296,12 +315,13 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
+            this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
             this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
            // this.mBitrateView = view.findViewById(R.id.item_bitrate);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             // this.mAudioQualityView = view.findViewById(R.id.item_sq_icon);
-            this.mAudioENCView = view.findViewById(R.id.item_enc_icon);
+            this.mAudioHiResView = view.findViewById(R.id.item_hires_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
@@ -309,6 +329,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
             this.mAudiophileLabelView = view.findViewById(R.id.item_audiophile_label);
+            this.mAudioLoudnessView = view.findViewById(R.id.item_loudness_icon);
         }
     }
 }

@@ -1,14 +1,12 @@
 package apincer.android.mmate.work;
 
 import android.content.Context;
-import android.content.Intent;
 
 import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -23,7 +21,6 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 
@@ -60,11 +57,11 @@ public class DeleteAudioFileWorker extends Worker {
 
         return Result.success();
     }
-
+/*
     protected void sendBroadcast(final BroadcastData data){
         Intent intent = data.getIntent();
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-    }
+    }*/
 
     public static void startWorker(Context context, List<AudioTag> files) {
         Gson gson = new Gson();
@@ -74,9 +71,10 @@ public class DeleteAudioFileWorker extends Worker {
             Data inputData = (new Data.Builder())
                     .putString(Constants.KEY_MEDIA_TAG, s)
                     .build();
-            WorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class)
+            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class)
                     .setInputData(inputData).build();
-            WorkManager.getInstance(context).enqueue(workRequest);
+           // WorkManager.getInstance(context).enqueue(workRequest);
+            WorkManager.getInstance(context).enqueueUniqueWork("DeleteWorker", ExistingWorkPolicy.APPEND, workRequest);
         }
     }
 }

@@ -84,6 +84,14 @@
         <item>First Impression Music</item>
         <item>Three Blind Mice</item>
         <item>Classic Records</item>
+        <item>Proprius Records</item>
+        <item>Impex Records</item>
+        <item>Groove Note</item>
+        <item>Pope Music</item>
+        <item>Analogue Productions</item>
+        <item>Mobile Fidelity Sound Lab</item>
+        <item>TopMusic</item>
+        <item>Premonition Records</item>
     </string-array>
 
     <array name="auto_size_text_sizes">
@@ -147,6 +155,8 @@
         <item>Thai</item>
         <item>English</item>
         <item>World</item>
+        <!--
         <item>Laos</item>
+        -->
     </string-array>
 </resources>

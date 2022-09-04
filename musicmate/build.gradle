@@ -151,6 +151,7 @@ dependencies {
     implementation deps.ui.androidribbon
     implementation deps.ui.coco
     implementation deps.ui.androidAboutPage
+    //implementation deps.ui.lapism_search
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     //implementation("ir.mahozad.android:pie-chart:0.7.0")
     implementation 'com.github.salehyarahmadi:DataTable:v1.0.1'
@@ -219,6 +220,7 @@ dependencies {
 aboutLibraries {
     // define the path configuration files are located in. E.g. additional libraries, licenses to add to the target .json
     configPath = "buildsystem"
+    //excludeFields = ["licenses","funding"]
 
     // Enable the duplication mode, allows to merge, or link dependencies which relate
     duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.LINK
@@ -240,7 +242,7 @@ aboutLibraries {
             ~"commons-io:commons-io",
             ~"commons-logging:commons-logging",
             ~"commons-codec:commons-codec",
-            ~"org.apache..*",
+            ~"org.apache.*",
             ~"io.coil-kt:coil-base",
             ~"com.airbnb.android:epoxy-annotations",
             ~"io.objectbox:objectbox-kotlin",
@@ -252,7 +254,11 @@ aboutLibraries {
             ~"com.mikepenz:fastadapter",
             ~"com.squareup.okio:okio",
             ~"com.squareup.okhttp3:okhttp",
-            ~"com.squareup.retrofit2:converter-gson"
+            ~"com.squareup.retrofit2:converter-gson",
+            ~"io.github.scwang90:refresh-header-classics",
+            ~"io.github.scwang90:refresh-footer-classics",
+            ~"io.github.scwang90:refresh-drawable-paint",
+            ~"com.afollestad.material-dialogs:*"
     ]
 }
 

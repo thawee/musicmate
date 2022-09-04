@@ -1,13 +1,11 @@
 package apincer.android.mmate.work;
 
 import android.content.Context;
-import android.os.HandlerThread;
 
 import androidx.annotation.NonNull;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.Operation;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -26,7 +24,7 @@ import apincer.android.mmate.repository.AudioTagRepository;
 import timber.log.Timber;
 
 public class ScanAudioFileWorker extends Worker {
-    private static Operation scanOperation;
+   // private static Operation scanOperation;
     private final ThreadPoolExecutor mExecutor;
     AudioFileRepository repos; // = AudioFileRepository.newInstance(getApplicationContext());
     /**
@@ -35,7 +33,7 @@ public class ScanAudioFileWorker extends Worker {
      **/
     private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
     // Sets the amount of time an idle thread waits before terminating
-    private static final int KEEP_ALIVE_TIME = 1000;
+    private static final int KEEP_ALIVE_TIME = 600; //1000;
     // Sets the Time Unit to Milliseconds
     private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
 
@@ -44,11 +42,11 @@ public class ScanAudioFileWorker extends Worker {
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = AudioFileRepository.newInstance(getApplicationContext());
-        HandlerThread thread = new HandlerThread("ScanFilesWorker");
-        thread.start();
+       // HandlerThread thread = new HandlerThread("ScanFilesWorker");
+       // thread.start();
         mExecutor = new ThreadPoolExecutor(
                 NUMBER_OF_CORES, // + 5,   // Initial pool size
-                NUMBER_OF_CORES + 4, //8,   // Max pool size
+                NUMBER_OF_CORES, // + 4, //8,   // Max pool size
                 KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
                 KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
                 new LinkedBlockingDeque<>());  // Work Queue
@@ -76,9 +74,11 @@ public class ScanAudioFileWorker extends Worker {
             }
         }
         AudioTagRepository.cleanMusicMate();
+        ScanLoudnessWorker.startScan(getApplicationContext());
 
         return Result.success();
     }
+
 
     private boolean isValidMediaFile(File file) {
         if(!file.exists()) return false;
@@ -102,12 +102,12 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     public static void startScan(Context context) {
-        if(scanOperation == null || scanOperation.getResult().isDone() || scanOperation.getResult().isCancelled()) {
-            WorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                    .setInitialDelay(10, TimeUnit.SECONDS)
+       // if(scanOperation == null || scanOperation.getResult().isDone() || scanOperation.getResult().isCancelled()) {
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
+                    .setInitialDelay(4, TimeUnit.SECONDS)
                     .build();
-            scanOperation = WorkManager.getInstance(context).enqueue(workRequest);
-        }
+         WorkManager.getInstance(context).enqueueUniqueWork("ScanWorker", ExistingWorkPolicy.KEEP,workRequest);
+       // }
     }
 
     private final class ScanRunnable  implements Runnable {
