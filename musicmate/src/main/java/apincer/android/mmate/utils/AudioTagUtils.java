@@ -965,7 +965,145 @@ public class AudioTagUtils {
     }
 
     public static Bitmap getLoudnessIcon(Context context,  AudioTag tag) {
-       int width = 156; //132;
+        int width = 288; // for 48
+        int height = 96; // 16
+        int greyColor = context.getColor(R.color.grey200);
+        int darkGreyColor = context.getColor(R.color.grey400);
+        int whiteColor = context.getColor(R.color.white);
+        int blackColor = context.getColor(R.color.black);
+        int qualityColor = context.getColor(R.color.material_color_green_800); //getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        String range = StringUtils.trim(tag.getLoudnessRange(),"--");
+        String integrated= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 0;
+        int cornerRadius = 8;
+        Rect bounds = new Rect(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw grey border
+        RectF rectangle = new RectF(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(darkGreyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw big black box
+        padding = 2;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth()- padding, // Right
+                (myCanvas.getHeight() - padding) // Bottom
+        );
+        // int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(blackColor);
+        paint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        // draw LRA grey box
+        int jointCornerRadius = 14;
+        padding = 8;
+        rectangle = new RectF(
+                padding, //(myCanvas.getWidth()/2) + padding, // Left
+                padding, // Top
+                (myCanvas.getWidth()/2), // + padding, //myCanvas.getWidth() - padding, // Right
+                (float) (myCanvas.getHeight() - (myCanvas.getHeight()/2.7)) // Bottom
+        );
+        // int borderWidth = 2;
+        paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(greyColor);
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,jointCornerRadius, paint);
+
+        // draw Integrated grey box
+        rectangle = new RectF(
+                (myCanvas.getWidth()/2) + (padding*2),//padding, //(myCanvas.getWidth()/2) + padding, // Left
+                padding, // Top
+                (myCanvas.getWidth() - padding), //myCanvas.getWidth() - padding, // Right
+                (float) (myCanvas.getHeight() - (myCanvas.getHeight()/2.7)) // Bottom
+        );
+        // int borderWidth = 2;
+        paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(greyColor);
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,jointCornerRadius, paint);
+
+        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
+        int letterTextSize = 50; //28;
+        padding = 4;
+
+        // draw LRA text, black color
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(range, 0, 1, textMathRect);
+        float mLetterTop = (textMathRect.height() / 2f);
+        float mPositionY= (float) (bounds.exactCenterY()/1.5);
+        myCanvas.drawText(range,
+                bounds.left+ (bounds.exactCenterX()/2)+padding,
+                bounds.top+mPositionY +mLetterTop,
+                mLetterPaint);
+
+        // draw integrated loudness text, black color
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(integrated, 0, 1, textMathRect);
+        mLetterTop = textMathRect.height(); // /1.5f;
+        //mPositionY = (float) (bounds.exactCenterY()/1.5);
+        myCanvas.drawText(integrated,
+                (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)), //left
+                (float) (bounds.top+mPositionY +mLetterTop+(padding*3.5)), // top
+                mLetterPaint);
+
+        // draw integrated loudness value, white color
+        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        String unit = "L    U    F    S";
+        letterTextSize = 24;
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(unit, 0, 1, textMathRect);
+        mLetterTop = (textMathRect.height() / 2f);
+        mPositionY= (float) (bounds.exactCenterY()+(bounds.exactCenterY()/1.6));
+        myCanvas.drawText(unit,
+                (float) (bounds.left+ (bounds.exactCenterX())), //left
+                mLetterTop + mPositionY, //bounds.exactCenterY(), //top
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
+    public static Bitmap getLoudnessIcon2(Context context,  AudioTag tag) {
+        int width = 156; //132;
         int height = 96;
         int greyColor = context.getColor(R.color.grey200);
         int darkGreyColor = context.getColor(R.color.grey400);
@@ -1064,7 +1202,7 @@ public class AudioTagUtils {
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(unit, 0, 1, textMathRect);
-       // mLetterTop = textMathRect.height() / 10f;
+        // mLetterTop = textMathRect.height() / 10f;
         mPositionY= bounds.exactCenterY();
         myCanvas.drawText(unit,
                 (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)),

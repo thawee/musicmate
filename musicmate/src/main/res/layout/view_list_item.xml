@@ -158,7 +158,7 @@
 
             <ImageView
                 android:id="@+id/item_loudness_icon"
-                android:layout_width="@dimen/dimen_32_dp"
+                android:layout_width="@dimen/dimen_48_dp"
                 android:layout_height="16dp"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_sampling_rate"
