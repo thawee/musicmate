@@ -971,7 +971,7 @@ public class AudioTagUtils {
         int darkGreyColor = context.getColor(R.color.grey400);
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
-        //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
+        int qualityColor = context.getColor(R.color.material_color_green_800); //getResolutionColor(context,tag); //getSampleRateColor(context,item);
         String range = StringUtils.trim(tag.getLoudnessRange(),"--");
         String integrated= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
 
@@ -1021,9 +1021,9 @@ public class AudioTagUtils {
         int greyCornerRadius = 12;
         rectangle = new RectF(
                 padding*4, //(myCanvas.getWidth()/2) + padding, // Left
-                padding, // Top
+                padding*4, // Top
                 (myCanvas.getWidth()/2) + padding, //myCanvas.getWidth() - padding, // Right
-                (float) (myCanvas.getHeight() - (myCanvas.getHeight()/1.8)) // Bottom
+                (float) (myCanvas.getHeight() - (myCanvas.getHeight()/2)) // Bottom
         );
         // int borderWidth = 2;
         paint =  new Paint();
@@ -1033,13 +1033,12 @@ public class AudioTagUtils {
         myCanvas.drawRoundRect(rectangle, greyCornerRadius,greyCornerRadius, paint);
 
         int letterTextSize = 36; //28;
-        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
         //Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
         Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
 
         // draw LRA , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setColor(qualityColor);
         mLetterPaint.setTypeface(font);
         mLetterPaint.setTextSize(letterTextSize);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
@@ -1050,15 +1049,14 @@ public class AudioTagUtils {
         float mPositionY= (float) (bounds.exactCenterY()/1.5);
         myCanvas.drawText(range,
                 bounds.left+ (bounds.exactCenterX()/2)+padding,
-                bounds.top+mPositionY+padding, //bounds.exactCenterY(),
+                bounds.top+mPositionY+(padding*3), //bounds.exactCenterY(),
                 mLetterPaint);
 
         // draw integrated loudness unit , white color
         //font =  ResourcesCompat.getFont(context, R.font.adca_font);
-        font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
+        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
         String unit = "LUFS";
-        //font =  ResourcesCompat.getFont(context, R.font.fff_forward);
-        letterTextSize = 24;
+        letterTextSize = 22;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
@@ -1074,9 +1072,8 @@ public class AudioTagUtils {
                 mLetterPaint);
 
         // draw integrated loudness value, white color
-        //font =  ResourcesCompat.getFont(context, R.font.adca_font);
         font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
-        letterTextSize = 36;
+        letterTextSize = 32;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
