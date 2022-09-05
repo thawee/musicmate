@@ -630,7 +630,7 @@ public class AudioFileRepository {
     }
 
     private void detectMQA(AudioTag tag) {
-        if((!Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getAudioEncoding())) || tag.isMQA()) return; //prevent re check
+        if((!Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getAudioEncoding())) || tag.isMqaDeepScan()) return; //prevent re check
         try {
             NativeLib lib = new NativeLib();
             String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(tag.getPath()));
@@ -643,6 +643,7 @@ public class AudioFileRepository {
                 }
                 tag.setMQASampleRate(mqaInfo.substring(mqaInfo.indexOf("|")+1));
             }
+            tag.setMqaDeepScan(true);
         }catch (Exception ex) {
             Timber.e(ex);
         }

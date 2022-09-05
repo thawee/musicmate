@@ -4,7 +4,6 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
@@ -73,8 +72,8 @@ public class DeleteAudioFileWorker extends Worker {
                     .build();
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class)
                     .setInputData(inputData).build();
-           // WorkManager.getInstance(context).enqueue(workRequest);
-            WorkManager.getInstance(context).enqueueUniqueWork("DeleteWorker", ExistingWorkPolicy.APPEND, workRequest);
+            WorkManager.getInstance(context).enqueue(workRequest);
+           // WorkManager.getInstance(context).enqueueUniqueWork("DeleteWorker", ExistingWorkPolicy.APPEND, workRequest);
         }
     }
 }

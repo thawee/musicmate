@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:484918294143487076",
-      "lastPropertyId": "48:5877258797371094739",
+      "lastPropertyId": "49:1235169584139990991",
       "name": "AudioTag",
       "properties": [
         {
@@ -193,6 +193,11 @@
           "id": "48:5877258797371094739",
           "name": "loudnessTruePeek",
           "type": 9
+        },
+        {
+          "id": "49:1235169584139990991",
+          "name": "mqaDeepScan",
+          "type": 1
         }
       ],
       "relations": []

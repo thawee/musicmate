@@ -20,14 +20,16 @@ import io.objectbox.query.Query;
 import timber.log.Timber;
 
 public class AudioTagRepository {
-    private static final Box<AudioTag> tagBox = ObjectBox.get().boxFor(AudioTag.class);
-    public static List<String> lossyAudioFormatList = new ArrayList<>();
+    private static Box<AudioTag> tagBox;
+    public static List<String> lossyAudioFormatList;
     private static AudioTagRepository INSTANCE;
 
     private AudioTagRepository() {
+        lossyAudioFormatList = new ArrayList<>();
         lossyAudioFormatList.add("MP3");
         lossyAudioFormatList.add("AAC");
         lossyAudioFormatList.add("WMA");
+        tagBox = ObjectBox.get().boxFor(AudioTag.class);
     }
 
     public static AudioTagRepository getInstance() {

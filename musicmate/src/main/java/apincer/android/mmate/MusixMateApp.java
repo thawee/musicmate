@@ -8,6 +8,7 @@ import android.graphics.Color;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
 
@@ -60,6 +61,7 @@ public class MusixMateApp extends Application  {
     public void onTerminate() {
         super.onTerminate();
         broadcastHelper.onTerminate(this);
+        WorkManager.getInstance(getApplicationContext()).cancelAllWork();
     }
 
     @Override public void onCreate() {
@@ -72,6 +74,7 @@ public class MusixMateApp extends Application  {
         broadcastHelper.onCreate(this);
 
         //initialize ObjectBox is when your app starts
+
         ObjectBox.init(this);
 
         StateViewsBuilder

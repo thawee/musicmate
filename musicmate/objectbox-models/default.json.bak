@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:484918294143487076",
-      "lastPropertyId": "45:4133727572810150350",
+      "lastPropertyId": "48:5877258797371094739",
       "name": "AudioTag",
       "properties": [
         {
@@ -177,6 +177,21 @@
         {
           "id": "45:4133727572810150350",
           "name": "audioChannels",
+          "type": 9
+        },
+        {
+          "id": "46:4376500579207012296",
+          "name": "loudnessIntegrated",
+          "type": 9
+        },
+        {
+          "id": "47:8144429498286600173",
+          "name": "loudnessRange",
+          "type": 9
+        },
+        {
+          "id": "48:5877258797371094739",
+          "name": "loudnessTruePeek",
           "type": 9
         }
       ],

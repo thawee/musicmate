@@ -75,6 +75,13 @@ public class ScanAudioFileWorker extends Worker {
         }
         AudioTagRepository.cleanMusicMate();
         ScanLoudnessWorker.startScan(getApplicationContext());
+        while (!mExecutor.getQueue().isEmpty()){
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+            }
+        }
+       // mExecutor.shutdown();
 
         return Result.success();
     }

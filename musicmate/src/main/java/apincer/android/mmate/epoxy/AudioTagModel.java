@@ -178,7 +178,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                 holder.mAudioHiResView.setImageBitmap(resBitmap);
             }
         }
-        if(!tag.isDSD() && !(StringUtils.isEmpty(tag.getLoudnessIntegrated()))) {
+        if(!tag.isDSD()) { // && !(StringUtils.isEmpty(tag.getLoudnessIntegrated()))) {
             holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
             holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
         }else {

@@ -87,6 +87,16 @@ public class AudioTag implements Cloneable , Parcelable {
     // audio information
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
     protected boolean lossless;
+    protected boolean mqaDeepScan;
+
+    public boolean isMqaDeepScan() {
+        return mqaDeepScan;
+    }
+
+    public void setMqaDeepScan(boolean mqaDeepScan) {
+        this.mqaDeepScan = mqaDeepScan;
+    }
+
     protected boolean mqa;
     protected boolean mqaStudio;
     protected String mqaSampleRate;
@@ -194,6 +204,7 @@ public class AudioTag implements Cloneable , Parcelable {
         fileExtension = in.readString();
         audioEncoding = in.readString();
         lossless = in.readByte() != 0;
+        mqaDeepScan = in.readByte() != 0;
         mqa = in.readByte() != 0;
         mqaStudio = in.readByte() != 0;
         mqaSampleRate = in.readString();
@@ -636,6 +647,7 @@ public class AudioTag implements Cloneable , Parcelable {
         tag.audiophile =audiophile;
         tag.rating = rating;
 
+        tag.mqaDeepScan = mqaDeepScan;
         tag.mqa = mqa;
         tag.mqaStudio = mqaStudio;
         tag.mqaSampleRate = mqaSampleRate;
@@ -685,6 +697,11 @@ public class AudioTag implements Cloneable , Parcelable {
         this.storageName = tag.storageName;
         this.simpleName = tag.simpleName;
 
+        this.mqa = tag.mqa;
+        this.mqaDeepScan = tag.mqaDeepScan;
+        this.mqaStudio = tag.mqaStudio;
+        this.mqaSampleRate = tag.mqaSampleRate;
+
         this.loudnessRange = tag.loudnessRange;
         this.loudnessIntegrated=tag.loudnessIntegrated;
         this.loudnessTruePeek=tag.loudnessTruePeek;
@@ -706,6 +723,7 @@ public class AudioTag implements Cloneable , Parcelable {
         parcel.writeString(fileExtension);
         parcel.writeString(audioEncoding);
         parcel.writeByte((byte) (lossless ? 1 : 0));
+        parcel.writeByte((byte) (mqaDeepScan ? 1 : 0));
         parcel.writeByte((byte) (mqa ? 1 : 0));
         parcel.writeByte((byte) (mqaStudio ? 1 : 0));
         parcel.writeString(mqaSampleRate);

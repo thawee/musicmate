@@ -1,15 +1,11 @@
 package apincer.android.mmate.work;
 
 import android.content.Context;
-import android.content.Intent;
 
 import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -20,21 +16,40 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.broadcast.BroadcastData;
+import timber.log.Timber;
 
 public class ImportAudioFileWorker extends Worker {
     AudioFileRepository repos;
+    private final ThreadPoolExecutor mExecutor;
+    /**
+     * Gets the number of available cores
+     * (not always the same as the maximum number of cores)
+     **/
+    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
+    // Sets the amount of time an idle thread waits before terminating
+    private static final int KEEP_ALIVE_TIME = 600; //1000;
+    // Sets the Time Unit to Milliseconds
+    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
+
     private ImportAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = AudioFileRepository.newInstance(getApplicationContext());
+        mExecutor = new ThreadPoolExecutor(
+                1, // + 5,   // Initial pool size
+                NUMBER_OF_CORES, // + 4, //8,   // Max pool size
+                KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
+                KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
+                new LinkedBlockingDeque<>());  // Work Queue
     }
 
     @NonNull
@@ -43,43 +58,61 @@ public class ImportAudioFileWorker extends Worker {
         Data inputData = getInputData();
         String s =inputData.getString(Constants.KEY_MEDIA_TAG);
         Gson gson = new Gson();
-        Type audioTagType = new TypeToken<AudioTag>(){}.getType();
-        AudioTag tag = gson.fromJson(s, audioTagType);
-            boolean status = repos.importAudioFile(tag);
-            String txt = status?getApplicationContext().getString(R.string.alert_organize_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_organize_fail, tag.getTitle());
+        Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
+        List<AudioTag> tags = gson.fromJson(s, audioTagType);
+        for (AudioTag tag:tags) {
+            ImportRunnable r = new ImportRunnable(tag);
+            mExecutor.execute(r);
+        }
 
-        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-        EventBus.getDefault().postSticky(message);
-
-            /*
-            BroadcastData data = new BroadcastData()
-                    .setAction(BroadcastData.Action.IMPORT)
-                    .setStatus(status?BroadcastData.Status.COMPLETED: BroadcastData.Status.ERROR)
-                    .setTagInfo(tag)
-                    .setMessage(txt);
-            sendBroadcast(data); */
+        while (!mExecutor.getQueue().isEmpty()){
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+            }
+        }
+       // mExecutor.shutdown();
 
         return Result.success();
     }
 
-    /*
-    protected void sendBroadcast(final BroadcastData data){
-        Intent intent = data.getIntent();
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-    }*/
-
     public static void startWorker(Context context, List<AudioTag> files) {
         Gson gson = new Gson();
-        Type audioTagType = new TypeToken<AudioTag>(){}.getType();
-        for(AudioTag tag: files) {
-            String s = gson.toJson(tag, audioTagType);
+        Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
+       /* for(AudioTag tag: files) {
+            JsonObject tagObject = new JsonObject();
+            tagObject.addProperty("tagid", tag.getId());
+            listObject.
+        }*/
+
+            String s = gson.toJson(files, audioTagType);
             Data inputData = (new Data.Builder())
                     .putString(Constants.KEY_MEDIA_TAG, s)
                     .build();
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ImportAudioFileWorker.class)
                     .setInputData(inputData).build();
-           // WorkManager.getInstance(context).enqueue(workRequest);
-            WorkManager.getInstance(context).enqueueUniqueWork("ImportWorker", ExistingWorkPolicy.APPEND, workRequest);
+            WorkManager.getInstance(context).enqueue(workRequest);
+           // WorkManager.getInstance(context).enqueueUniqueWork("ImportWorker", ExistingWorkPolicy.APPEND, workRequest);
+       // }
+    }
+
+    private final class ImportRunnable  implements Runnable {
+        private final AudioTag tag;
+
+        private ImportRunnable(AudioTag tag) {
+            this.tag = tag;
+        }
+        @Override
+        public void run() {
+            try {
+                boolean status = repos.importAudioFile(tag);
+              //  String txt = status?getApplicationContext().getString(R.string.alert_organize_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_organize_fail, tag.getTitle());
+
+                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+                EventBus.getDefault().postSticky(message);
+            } catch (Exception e) {
+                Timber.e(e);
+            }
         }
     }
 }
