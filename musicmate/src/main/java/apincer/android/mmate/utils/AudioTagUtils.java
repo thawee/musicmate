@@ -143,7 +143,7 @@ public class AudioTagUtils {
        //int letterTextSize = 20;
         int letterTextSize = 24;
        // int letterTextSize = 18;
-        Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.djb_get_digital_6g5g);
         //Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(textColor);
@@ -275,7 +275,7 @@ public class AudioTagUtils {
         //int letterTextSize = 20;
         int letterTextSize = 24;
         // int letterTextSize = 18;
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
         //Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(textColor);
@@ -341,8 +341,7 @@ public class AudioTagUtils {
         int letterTextSize = 20;
        // int letterTextSize = 16;
         // int letterTextSize = 18;
-        Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
-        //Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif7_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.square_sans_serif_7);
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(textColor);
         mLetterPaint.setTypeface(font);
@@ -438,7 +437,7 @@ public class AudioTagUtils {
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
         int letterTextSize = 52; //28;
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -945,7 +944,7 @@ public class AudioTagUtils {
                 mLetterPaint);
 
         // draw sampling rate, white color
-        font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        font =  ResourcesCompat.getFont(context, R.font.adca);
         //font =  ResourcesCompat.getFont(context, R.font.fff_forward);
         letterTextSize = 30;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -1169,7 +1168,7 @@ public class AudioTagUtils {
 
         int letterTextSize = 30; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -1276,7 +1275,7 @@ public class AudioTagUtils {
 
         int letterTextSize = 30; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -1392,7 +1391,7 @@ public class AudioTagUtils {
 
         int letterTextSize = 30; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
