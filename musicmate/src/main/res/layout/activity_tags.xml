@@ -75,11 +75,11 @@
                             android:text="Title"
                             android:textAllCaps="false"
                             android:maxLines="1"
-                            android:fontFamily="@font/k2d_bold"
+                            android:fontFamily="@font/sfthonburi_bold"
                             android:textColor="@android:color/white"
                             android:gravity="center_horizontal"
                             android:layout_gravity="center_horizontal"
-                            android:textSize="16sp"/>
+                            android:textSize="14sp"/>
 <!--
                         <ImageView
                             android:id="@+id/panel_new"

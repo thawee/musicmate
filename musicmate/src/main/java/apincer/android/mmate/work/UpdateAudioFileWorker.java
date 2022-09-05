@@ -33,7 +33,7 @@ public class UpdateAudioFileWorker extends Worker {
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
      **/
-    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
+    private static final int NUMBER_OF_CORES = 4; //Runtime.getRuntime().availableProcessors();
     // Sets the amount of time an idle thread waits before terminating
     private static final int KEEP_ALIVE_TIME = 600; //1000;
     // Sets the Time Unit to Milliseconds

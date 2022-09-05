@@ -438,7 +438,6 @@ public class AudioTagUtils {
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
         int letterTextSize = 52; //28;
-        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
         Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
 
         // draw bit per , black color
@@ -477,7 +476,8 @@ public class AudioTagUtils {
         }
 
         // draw sampling rate, black color
-        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        //font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
         letterTextSize = 70; //82;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
@@ -966,23 +966,20 @@ public class AudioTagUtils {
     }
 
     public static Bitmap getLoudnessIcon(Context context,  AudioTag tag) {
-        if(StringUtils.isEmpty(tag.getLoudnessIntegrated())) {
-            return null;
-        }
-        int width = 156; //132;
+       int width = 156; //132;
         int height = 96;
-        // int borderColor = context.getColor(R.color.grey400);
+        int greyColor = context.getColor(R.color.grey200);
         //  int textColor = context.getColor(R.color.black);
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
-        String range = StringUtils.trim(tag.getLoudnessRange(),"00");
-        String integrated= StringUtils.trim(tag.getLoudnessIntegrated(),"00");
+        String range = StringUtils.trim(tag.getLoudnessRange(),"--");
+        String integrated= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 0;
-        int cornerRadius = 4;
+        int cornerRadius = 8;
         Rect bounds = new Rect(
                 padding, // Left
                 padding, // Top
@@ -991,7 +988,7 @@ public class AudioTagUtils {
         );
 
         // Initialize a new Round Rect object
-        // draw white box
+        // draw big grey box
         RectF rectangle = new RectF(
                 0, // Left
                 0, // Top
@@ -1001,7 +998,7 @@ public class AudioTagUtils {
 
         Paint bgPaint =  new Paint();
         bgPaint.setAntiAlias(true);
-        bgPaint.setColor(whiteColor);
+        bgPaint.setColor(greyColor);
         bgPaint.setStyle(Paint.Style.FILL);
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
 
@@ -1020,10 +1017,11 @@ public class AudioTagUtils {
         paint.setStyle(Paint.Style.FILL);
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
-        // draw LRA white box
+        // draw LRA grey box
         padding = 2;
+        int greyCornerRadius = 8;
         rectangle = new RectF(
-                padding, //(myCanvas.getWidth()/2) + padding, // Left
+                padding*4, //(myCanvas.getWidth()/2) + padding, // Left
                 padding, // Top
                 (myCanvas.getWidth()/2) + padding, //myCanvas.getWidth() - padding, // Right
                 (float) (myCanvas.getHeight() - (myCanvas.getHeight()/1.8)) // Bottom
@@ -1031,40 +1029,34 @@ public class AudioTagUtils {
         // int borderWidth = 2;
         paint =  new Paint();
         paint.setAntiAlias(true);
-        paint.setColor(whiteColor);
+        paint.setColor(greyColor);
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+        myCanvas.drawRoundRect(rectangle, greyCornerRadius,greyCornerRadius, paint);
 
         int letterTextSize = 36; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        //Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
 
-        // draw bit per , black color
+        // draw LRA , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
         mLetterPaint.setTypeface(font);
         mLetterPaint.setTextSize(letterTextSize);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        /*Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(range, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() / 10f;
-        float mPositionY= bounds.exactCenterY();
-        myCanvas.drawText(range,
-                (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)),
-                mPositionY-(mPositionY/4), //bounds.exactCenterY(),
-                mLetterPaint); */
+        padding = 4;
         Rect textMathRect = new Rect();
         mLetterPaint.getTextBounds(range, 0, 1, textMathRect);
         float mLetterTop = (textMathRect.height() / 2f);
         float mPositionY= (float) (bounds.exactCenterY()/1.5);
         myCanvas.drawText(range,
-                bounds.left+ (bounds.exactCenterX()/2),
-                bounds.top+mPositionY, //bounds.exactCenterY(),
+                bounds.left+ (bounds.exactCenterX()/2)+padding,
+                bounds.top+mPositionY+padding, //bounds.exactCenterY(),
                 mLetterPaint);
 
         // draw integrated loudness unit , white color
-        font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        //font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
         String unit = "LUFS";
         //font =  ResourcesCompat.getFont(context, R.font.fff_forward);
         letterTextSize = 24;
@@ -1073,28 +1065,19 @@ public class AudioTagUtils {
         mLetterPaint.setTypeface(font);
         mLetterPaint.setTextSize(letterTextSize);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-       /* textMathRect = new Rect();
-        mLetterPaint.getTextBounds(unit, 0, 1, textMathRect);
-        mLetterTop = (textMathRect.height() / 2f);
-        mPositionY= (float) (bounds.exactCenterY()/1.5);
-        myCanvas.drawText(unit,
-                bounds.left+ (bounds.exactCenterX()/2),
-                bounds.top+mPositionY, //bounds.exactCenterY(),
-                mLetterPaint);*/
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(unit, 0, 1, textMathRect);
-        mLetterTop = textMathRect.height() / 10f;
+       // mLetterTop = textMathRect.height() / 10f;
         mPositionY= bounds.exactCenterY();
         myCanvas.drawText(unit,
-                (float) (bounds.exactCenterX()+(bounds.exactCenterX()/1.8)),
-                mPositionY-(mPositionY/4), //bounds.exactCenterY(),
+                (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)),
+                (float) (mPositionY-(mPositionY/3)), //bounds.exactCenterY(),
                 mLetterPaint);
 
         // draw integrated loudness value, white color
-        font =  ResourcesCompat.getFont(context, R.font.adca_font);
-        //font =  ResourcesCompat.getFont(context, R.font.fff_forward);
-        letterTextSize = 38;
+        //font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
+        letterTextSize = 36;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
         mLetterPaint.setTypeface(font);
@@ -1553,7 +1536,8 @@ public class AudioTagUtils {
 
         int letterTextSize = 30; //28;
         // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        //Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
+        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
 
         // draw bit per , black color
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);

@@ -440,7 +440,8 @@ public class AudioOutputHelper {
 
         // draw sampling rate, white
         //font =  ResourcesCompat.getFont(context, R.font.led_font);
-        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        //font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
         letterTextSize = 30;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);

@@ -33,12 +33,12 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:fontFamily="@font/itim_regular"
+                android:fontFamily="@font/sfthonburi_bold"
                 android:maxLines="1"
                 android:paddingTop="1dp"
                 android:text="@{title}"
                 android:textColor="@color/grey100"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -46,11 +46,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="marquee"
-                android:fontFamily="@font/k2d_regular"
+                android:fontFamily="@font/sfthonburi_regular"
                 android:singleLine="true"
                 android:text="@{subtitle}"
                 android:textColor="@color/grey300"
-                android:textSize="11sp"
+                android:textSize="10sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -67,7 +67,7 @@
                 android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:background="@drawable/shape_background_unknown"
-                android:fontFamily="@font/k2d_bold"
+                android:fontFamily="@font/oswald_bold"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_2_dp"
                 android:paddingRight="@dimen/dimen_2_dp"
@@ -75,6 +75,7 @@
                 android:textColor="@color/black"
                 android:textSize="9sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:id="@+id/item_bit_per_sampling"
                 android:layout_width="@dimen/dimen_32_dp"
@@ -83,7 +84,7 @@
                 android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_type_label"
                 android:background="@drawable/shape_background_unknown"
-                android:fontFamily="@font/k2d_bold"
+                android:fontFamily="@font/oswald_bold"
                 android:gravity="center"
                 android:lines="1"
                 android:maxLines="1"
@@ -102,7 +103,7 @@
                 android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_bit_per_sampling"
                 android:background="@drawable/shape_background_unknown"
-                android:fontFamily="@font/k2d_bold"
+                android:fontFamily="@font/oswald_bold"
                 android:gravity="center"
                 android:lines="1"
                 android:maxLines="1"
@@ -218,6 +219,7 @@
                     android:paddingLeft="@dimen/dimen_1_dp"
                     android:paddingRight="@dimen/dimen_1_dp"
                     android:text="50.00 MB"
+                    android:fontFamily="@font/oswald_bold"
                     android:textColor="@color/black"
                     android:textSize="9sp"
                     android:textStyle="bold" />
@@ -233,6 +235,7 @@
                     android:paddingLeft="@dimen/dimen_2_dp"
                     android:paddingRight="@dimen/dimen_2_dp"
                     android:text="50.00 MB"
+                    android:fontFamily="@font/oswald_bold"
                     android:textColor="@color/black"
                     android:textSize="9sp"
                     android:textStyle="bold" />
