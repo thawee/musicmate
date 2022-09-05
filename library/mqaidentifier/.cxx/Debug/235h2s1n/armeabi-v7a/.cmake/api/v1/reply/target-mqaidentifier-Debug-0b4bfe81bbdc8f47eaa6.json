@@ -11,7 +11,8 @@
 		"commands" : 
 		[
 			"add_library",
-			"INCLUDE_DIRECTORIES"
+			"target_link_libraries",
+			"include_directories"
 		],
 		"files" : 
 		[
@@ -31,7 +32,13 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 34,
+				"line" : 79,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 89,
 				"parent" : 0
 			}
 		]
@@ -54,8 +61,8 @@
 			"includes" : 
 			[
 				{
-					"backtrace" : 2,
-					"path" : "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../../jni/flac/include"
+					"backtrace" : 3,
+					"path" : "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../jniLibs/include"
 				}
 			],
 			"language" : "CXX",
@@ -77,6 +84,16 @@
 			{
 				"fragment" : "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a -Wl,--exclude-libs,libatomic.a -static-libstdc++ -Wl,--build-id -Wl,--fatal-warnings -Wl,--exclude-libs,libunwind.a -Wl,--no-undefined -Qunused-arguments",
 				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../jniLibs/lib/libFLAC.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../jniLibs/lib/libFLAC++.so",
+				"role" : "libraries"
 			},
 			{
 				"fragment" : "-llog",
@@ -122,7 +139,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "api.cpp",
+			"path" : "mqaid.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
