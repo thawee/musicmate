@@ -968,7 +968,7 @@ public class AudioTagUtils {
        int width = 156; //132;
         int height = 96;
         int greyColor = context.getColor(R.color.grey200);
-        //  int textColor = context.getColor(R.color.black);
+        int darkGreyColor = context.getColor(R.color.grey400);
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
@@ -997,7 +997,7 @@ public class AudioTagUtils {
 
         Paint bgPaint =  new Paint();
         bgPaint.setAntiAlias(true);
-        bgPaint.setColor(greyColor);
+        bgPaint.setColor(darkGreyColor);
         bgPaint.setStyle(Paint.Style.FILL);
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
 
@@ -1018,7 +1018,7 @@ public class AudioTagUtils {
 
         // draw LRA grey box
         padding = 2;
-        int greyCornerRadius = 8;
+        int greyCornerRadius = 12;
         rectangle = new RectF(
                 padding*4, //(myCanvas.getWidth()/2) + padding, // Left
                 padding, // Top
