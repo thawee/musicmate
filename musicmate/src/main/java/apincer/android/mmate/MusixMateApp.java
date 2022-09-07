@@ -12,6 +12,10 @@ import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,8 +49,33 @@ public class MusixMateApp extends Application  {
         }
     });
 
+    private static Map<String, List<AudioTag>> pendingQueue = new HashMap();
+
     public static AudioTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
+    }
+
+    public static List<AudioTag> getPendingItems(String name) {
+        List<AudioTag> list = new ArrayList();
+        synchronized (pendingQueue) {
+            if (pendingQueue.containsKey(name)) {
+                list.addAll(pendingQueue.get(name));
+                pendingQueue.remove(name);
+            }
+        }
+        return list;
+    }
+
+    public static void putPendingItems(String name, List<AudioTag> tags) {
+        synchronized (pendingQueue) {
+            if (pendingQueue.containsKey(name)) {
+                List list = pendingQueue.get(name);
+                list.addAll(tags);
+                pendingQueue.put(name, tags);
+            } else {
+                pendingQueue.put(name, tags);
+            }
+        }
     }
 
     public static MusicPlayerInfo getPlayerInfo() {

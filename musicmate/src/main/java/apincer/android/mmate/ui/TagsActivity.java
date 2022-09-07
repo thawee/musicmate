@@ -44,7 +44,6 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
-import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
@@ -251,7 +250,7 @@ public class TagsActivity extends AppCompatActivity {
         pathDrive = findViewById(R.id.panel_path_drive);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
-        encResView = findViewById(R.id.icon_enc_res);
+        encResView = findViewById(R.id.icon_loudness);
         ratingView = findViewById(R.id.icon_rating);
     }
 
@@ -265,22 +264,31 @@ public class TagsActivity extends AppCompatActivity {
             titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
         }
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist())+" ");
-        if(AudioTagUtils.isHiResOrDSD(displayTag) || displayTag.isMQA()) {
-            hiresView.setVisibility(View.VISIBLE);
-            hiresView.setImageBitmap(AudioTagUtils.getHiResIcon(getApplicationContext(),displayTag));
-        }else {
-            hiresView.setVisibility(View.GONE);
-        }
-        audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
-        /*if(displayTag.isLossless() || AudioTagUtils.isDSD(displayTag)) {
-            encResView.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), displayTag));
-            encResView.setVisibility(View.VISIBLE);
-        }else {
-            encResView.setVisibility(View.GONE);
-        }*/
-        encResView.setImageBitmap(AudioTagUtils.getLoudnessIcon(getApplicationContext(), displayTag));
-        encResView.setVisibility(View.VISIBLE);
+       // if(AudioTagUtils.isHiResOrDSD(displayTag) || displayTag.isMQA()) {
+            //hiresView.setVisibility(View.VISIBLE);
+        //    hiresView.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(),displayTag));
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), displayTag))
+                .crossfade(false)
+                .target(hiresView)
+                .build();
+        imageLoader.enqueue(request);
 
+        audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+
+        if(displayTag.isDSD()) {
+            encResView.setVisibility(View.GONE);
+        }else {
+            //encResView.setImageBitmap(AudioTagUtils.getLoudnessIcon(getApplicationContext(), displayTag));
+            request = new ImageRequest.Builder(getApplicationContext())
+                    .data(AudioTagUtils.getCachedLoudnessIcon(getApplicationContext(), displayTag))
+                    .crossfade(false)
+                    .target(encResView)
+                    .build();
+            imageLoader.enqueue(request);
+            encResView.setVisibility(View.VISIBLE);
+        }
         ratingView.setRating(displayTag.getRating());
         ratingView.setFocusable(false);
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
@@ -382,11 +390,9 @@ public class TagsActivity extends AppCompatActivity {
             }
         });
 
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-               // .allowHardware(false)
+        request = new ImageRequest.Builder(getApplicationContext())
+                //.data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
+                .data(AudioTagUtils.getCachedCoverArt(getApplicationContext(), displayTag))
                 .size(1024,1024)
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)

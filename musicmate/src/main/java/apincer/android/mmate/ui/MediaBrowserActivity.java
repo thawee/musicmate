@@ -219,8 +219,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .build();
             fabLoader.enqueue(fabRequest);
             nowPlayingTitle.setText(song.getTitle());
-            nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
-            nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+            //nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
+       // nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), song))
+                .crossfade(false)
+                .target(nowPlayingType)
+                .build();
+        imageLoader.enqueue(request);
+        nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
                 nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device));
             });
@@ -811,7 +819,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         String quality = "";
         String qualityDetails = "";
         if(tag != null && !StringUtils.isEmpty(tag.getPath())) {
-            sourceIcon.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), tag));
+            ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+            ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                    .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), tag))
+                    .crossfade(false)
+                    .target(sourceIcon)
+                    .build();
+            imageLoader.enqueue(request);
+            //sourceIcon.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), tag));
            /* if(tag.isMQA()) {
                 sourceIcon.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
             }else if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {

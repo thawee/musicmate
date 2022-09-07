@@ -3,24 +3,20 @@ package apincer.android.mmate.work;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import org.greenrobot.eventbus.EventBus;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
@@ -54,11 +50,12 @@ public class DeleteAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Data inputData = getInputData();
+       /* Data inputData = getInputData();
         String s =inputData.getString(Constants.KEY_MEDIA_TAG);
         Gson gson = new Gson();
         Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
-        List<AudioTag> tags = gson.fromJson(s, audioTagType);
+        List<AudioTag> tags = gson.fromJson(s, audioTagType);*/
+        List<AudioTag> tags = MusixMateApp.getPendingItems("Delete");
         for (AudioTag tag:tags) {
             DeleteRunnable r = new DeleteRunnable(tag);
             mExecutor.execute(r);
@@ -74,15 +71,16 @@ public class DeleteAudioFileWorker extends Worker {
     }
 
     public static void startWorker(Context context, List<AudioTag> files) {
-        Gson gson = new Gson();
+       /* Gson gson = new Gson();
         Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
         //for(AudioTag tag: files) {
             String s = gson.toJson(files, audioTagType);
             Data inputData = (new Data.Builder())
                     .putString(Constants.KEY_MEDIA_TAG, s)
-                    .build();
-            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class)
-                    .setInputData(inputData).build();
+                    .build();*/
+        MusixMateApp.putPendingItems("Delete", files);
+            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class).build();
+                  //  .setInputData(inputData).build();
             WorkManager.getInstance(context).enqueue(workRequest);
            // WorkManager.getInstance(context).enqueueUniqueWork("DeleteWorker", ExistingWorkPolicy.APPEND, workRequest);
        // }

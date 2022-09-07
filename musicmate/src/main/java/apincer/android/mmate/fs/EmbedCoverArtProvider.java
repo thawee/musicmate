@@ -17,6 +17,7 @@ import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 import timber.log.Timber;
 
+@Deprecated
 public final class EmbedCoverArtProvider extends ContentProvider {
         public static Uri getUriForMediaItem(AudioTag item) {
             return new Builder().scheme("content").authority("apincer.android.mmate.embed.coverart.provider").path(item.getPath()).build();

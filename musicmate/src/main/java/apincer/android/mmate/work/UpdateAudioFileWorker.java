@@ -9,18 +9,15 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import org.greenrobot.eventbus.EventBus;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
@@ -56,11 +53,12 @@ public class UpdateAudioFileWorker extends Worker {
     @Override
     public Result doWork() {
         Data inputData = getInputData();
-        String s = inputData.getString(Constants.KEY_MEDIA_TAG);
+       // String s = inputData.getString(Constants.KEY_MEDIA_TAG);
         String artworkPath = inputData.getString(Constants.KEY_COVER_ART_PATH);
-        Gson gson = new Gson();
-        Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
-        List<AudioTag> tags = gson.fromJson(s, audioTagType);
+       // Gson gson = new Gson();
+       // Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
+       // List<AudioTag> tags = gson.fromJson(s, audioTagType);
+        List<AudioTag> tags = MusixMateApp.getPendingItems("Update");
 
         for (AudioTag tag:tags) {
             UpdateRunnable r = new UpdateRunnable(tag, artworkPath);
@@ -78,16 +76,17 @@ public class UpdateAudioFileWorker extends Worker {
     }
 
     public static void startWorker(Context context, List<AudioTag> files, String artworkPath) {
-        Gson gson = new Gson();
+       /* Gson gson = new Gson();
         Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
        // for(AudioTag tag: files) {
-            String s = gson.toJson(files, audioTagType);
+            String s = gson.toJson(files, audioTagType); */
             Data inputData = (new Data.Builder())
-                    .putString(Constants.KEY_MEDIA_TAG, s)
+                    //.putString(Constants.KEY_MEDIA_TAG, artworkPath)
                     .putString(Constants.KEY_COVER_ART_PATH, artworkPath)
                     .build();
-            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(UpdateAudioFileWorker.class)
-                    .setInputData(inputData).build();
+            MusixMateApp.putPendingItems("Update", files);
+            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(UpdateAudioFileWorker.class).build();
+                   // .setInputData(inputData).build();
             WorkManager.getInstance(context).enqueue(workRequest);
            // WorkManager.getInstance(context).enqueueUniqueWork("UpdateWorker", ExistingWorkPolicy.APPEND, workRequest);
         //}

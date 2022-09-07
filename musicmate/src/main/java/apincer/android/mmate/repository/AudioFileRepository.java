@@ -194,7 +194,7 @@ public class AudioFileRepository {
         return null;
     }
 
-    public byte[] getArtworkAsByte(AudioTag mediaItem) {
+    public static byte[] getArtworkAsByte(AudioTag mediaItem) {
         InputStream ins = getArtworkAsStream(mediaItem);
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

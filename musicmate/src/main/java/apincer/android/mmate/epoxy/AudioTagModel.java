@@ -155,7 +155,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         // Show AlbumArt
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                .data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                //.data(EmbedCoverArtProvider.getUriForMediaItem(tag))
+                .data(AudioTagUtils.getCachedCoverArt(holder.mContext, tag))
                 // .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
@@ -170,16 +171,28 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         // holder.mFileTypeView.setImageBitmap(typeBitmap);
 
         // show enc i.e. MQA, DSD
-        holder.mAudioHiResView.setVisibility(View.GONE);
-        if((tag.isMQA() || AudioTagUtils.isPCMHiRes(tag) ||tag.isDSD())) {
-            Bitmap resBitmap = AudioTagUtils.getHiResIcon(holder.mContext, tag);
+        request = new ImageRequest.Builder(holder.mContext)
+                .data(AudioTagUtils.getCachedEncResolutionIcon(holder.mContext, tag))
+                .crossfade(false)
+                .target(holder.mAudioHiResView)
+                .build();
+        imageLoader.enqueue(request);
+        /*
+            Bitmap resBitmap = AudioTagUtils.getEncodingSamplingRateIcon(holder.mContext, tag);
             if (resBitmap != null) {
                 holder.mAudioHiResView.setVisibility(View.VISIBLE);
                 holder.mAudioHiResView.setImageBitmap(resBitmap);
-            }
-        }
-        if(!tag.isDSD()) { // && !(StringUtils.isEmpty(tag.getLoudnessIntegrated()))) {
-            holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
+            }*/
+
+        // Loudness
+        if(!tag.isDSD()) {
+            request = new ImageRequest.Builder(holder.mContext)
+                    .data(AudioTagUtils.getCachedLoudnessIcon(holder.mContext, tag))
+                    .crossfade(false)
+                    .target(holder.mAudioLoudnessView)
+                    .build();
+            imageLoader.enqueue(request);
+           // holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
             holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
         }else {
             holder.mAudioLoudnessView.setVisibility(View.GONE);
@@ -244,8 +257,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         holder.mBitPerSamplingView.setText(StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()));
         holder.mBitPerSamplingView.setBackground(resolutionBackground);
 
-        holder.mSamplingRateView.setText(StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true));
-        holder.mSamplingRateView.setBackground(resolutionBackground);
+        //holder.mSamplingRateView.setText(StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true));
+        //holder.mSamplingRateView.setBackground(resolutionBackground);
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
@@ -289,7 +302,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         TextView mTitle;
         TextView mSubtitle;
         TextView mBitPerSamplingView;
-        TextView mSamplingRateView;
+       // TextView mSamplingRateView;
        // ImageView mBitrateView;
         TextView mDurationView;
         TextView mFileSizeView;
@@ -316,7 +329,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
-            this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
+           // this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
            // this.mBitrateView = view.findViewById(R.id.item_bitrate);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);

@@ -175,6 +175,7 @@ dependencies {
     implementation deps.guava
     implementation deps.ffmpeg
     implementation deps.coverartarchive
+    implementation deps.essentials
 
     //retrofit and json Librariess
     implementation deps.google.gson

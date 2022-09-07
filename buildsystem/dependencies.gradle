@@ -288,6 +288,8 @@ deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1-1.LTS' //4.5.1'
 deps.coverartarchive = 'fm.last:coverartarchive-api:2.1.1'
 //https://github.com/greenrobot/EventBus
 deps.eventbus = 'org.greenrobot:eventbus:3.3.1'
+//https://github.com/greenrobot/essentials
+deps.essentials = "org.greenrobot:essentials:3.1.0"
 //https://github.com/Karumi/Dexter
 deps.dexter = 'com.karumi:dexter:6.2.3'
 ext.deps = deps
