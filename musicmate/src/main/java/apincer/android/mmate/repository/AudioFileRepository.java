@@ -416,6 +416,7 @@ public class AudioFileRepository {
     private AudioTag[] readMetadata(AudioTag metadata) {
         try {
             String path = metadata.getPath();
+            metadata = tagRepos.getAudioTagById(metadata);
             if(isValidJAudioTagger(path)) {
                 AudioFile audioFile = buildAudioFile(path, "r");
 
@@ -649,8 +650,9 @@ public class AudioFileRepository {
         }
     }
 
-    private boolean detectLoudness(AudioTag tag) {
+    public boolean detectLoudness(AudioTag tag) {
         if(!StringUtils.isEmpty(tag.getLoudnessIntegrated())) return false; //prevent re check
+        //if(!StringUtils.isEmpty(tag.getLoudnessTruePeek())) return false; //prevent re check
         if(tag.isDSD()) return false; // not support DSD
         try {
 /*
@@ -664,20 +666,28 @@ public class AudioFileRepository {
     Threshold: -40.6 LUFS
     LRA low:   -30.0 LUFS
     LRA high:  -17.0 LUFS
+
+  True peak:
+    Peak:        0.5 dBFS[Parsed_ebur128_0 @ 0x7b44c68950]
+
 */
-            String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
+            //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
+            String cmd = "-nostats -i \""+tag.getPath()+"\" -filter_complex ebur128=peak=true -f null -";
+            //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
             // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
             FFmpegSession session = FFmpegKit.execute(cmd);
             String output = session.getOutput();
-            String startTag = "[Parsed_ebur128";
-            int foundTag = output.indexOf(startTag);
+            String startTag = "Integrated loudness:";
+            int foundTag = output.lastIndexOf(startTag);
             if(foundTag>0) {
-                int startIndex = output.indexOf("Summary:", foundTag);
-                String data = output.substring(startIndex+8);
+                //int startIndex = output.indexOf("Summary:", foundTag);
+                String data = output.substring(foundTag);
                 String integrated = data.substring(data.indexOf("I:")+3, data.indexOf("LUFS"));
                 String range = data.substring(data.indexOf("LRA:")+5, data.indexOf("LU\n"));
+                String peak = data.substring(data.indexOf("Peak:")+6, data.indexOf("dBFS"));
                 tag.setLoudnessIntegrated(StringUtils.trimToEmpty(integrated));
                 tag.setLoudnessRange(StringUtils.trimToEmpty(range));
+                tag.setLoudnessTruePeek(StringUtils.trimToEmpty(peak));
             }
             return true;
         }catch (Exception ex) {

@@ -36,3 +36,6 @@
 0	6	0	clean	dffbb0c6dd99ef40
 21	5213	1662462273	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	3249a85d269fde2c
 5213	5964	1662462274	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/235h2s1n/obj/arm64-v8a/libmqaidentifier.so	8548b593b3697de6
+0	12	0	clean	dffbb0c6dd99ef40
+2	1869	1662822600	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	3249a85d269fde2c
+1869	2252	1662822601	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/235h2s1n/obj/arm64-v8a/libmqaidentifier.so	8548b593b3697de6

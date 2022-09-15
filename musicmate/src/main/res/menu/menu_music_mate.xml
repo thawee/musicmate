@@ -35,13 +35,13 @@
         android:icon="@drawable/ic_round_settings_24"
         android:title="Settings"
         app:showAsAction="always" />
-
+<!--
 	<item
 		android:id="@+id/menu_storage"
 		android:icon="@drawable/ic_round_library_music_24"
-		android:title="Music Folders"
+		android:title="Scan Music"
 		app:showAsAction="always" />
-
+-->
 	<item
 		android:id="@+id/menu_sd_permission"
 		android:icon="@drawable/ic_round_perm_data_setting_24"

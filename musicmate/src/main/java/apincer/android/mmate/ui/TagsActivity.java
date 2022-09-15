@@ -55,6 +55,7 @@ import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
+import apincer.android.mmate.work.ScanLoudnessWorker;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
@@ -206,7 +207,7 @@ public class TagsActivity extends AppCompatActivity {
             criteria = event.getSearchCriteria();
             editItems.clear();
             editItems.addAll(event.getItems());
-            displayTag = buildDisplayTag(editItems.size()==1); // reload for single song, not re-load tags from media file
+            displayTag = buildDisplayTag(true); // reload for single song, not re-load tags from media file
 
             updateTitlePanel();
             setUpPageViewer();
@@ -280,13 +281,13 @@ public class TagsActivity extends AppCompatActivity {
         if(displayTag.isDSD()) {
             encResView.setVisibility(View.GONE);
         }else {
-            //encResView.setImageBitmap(AudioTagUtils.getLoudnessIcon(getApplicationContext(), displayTag));
-            request = new ImageRequest.Builder(getApplicationContext())
+            encResView.setImageBitmap(AudioTagUtils.getLoudnessIcon(getApplicationContext(), displayTag));
+            /*request = new ImageRequest.Builder(getApplicationContext())
                     .data(AudioTagUtils.getCachedLoudnessIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
                     .target(encResView)
                     .build();
-            imageLoader.enqueue(request);
+            imageLoader.enqueue(request);*/
             encResView.setVisibility(View.VISIBLE);
         }
         ratingView.setRating(displayTag.getRating());
@@ -340,16 +341,16 @@ public class TagsActivity extends AppCompatActivity {
 
         String matePath = repos.buildCollectionPath(displayTag);
         String sid = displayTag.getStorageId();
-        String mateInd = "";
+       // String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            mateInd = " "+StringUtils.SYMBOL_ATTENTION;
+            //mateInd = " "+StringUtils.SYMBOL_ATTENTION;
             pathDrive.setTextColor(getColor(R.color.warningColor));
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
-        SpannableString content = new SpannableString(simplePath + mateInd);
+        SpannableString content = new SpannableString(simplePath);// + mateInd);
         content.setSpan(new UnderlineSpan(), 0, simplePath.length(), 0);
         pathInfo.setText(content);
         pathDrive.setText(FileSystem.getStorageName(sid));
@@ -537,13 +538,14 @@ public class TagsActivity extends AppCompatActivity {
     protected AudioTag buildDisplayTag(boolean reload) {
         AudioTag baseItem = editItems.get(0);
         AudioTag displayTag = baseItem;
-        if(reload) {
-            repos.reloadMediaItem(displayTag);
+        //if(reload) {
+        if(editItems.size()==1) {
+            if(reload) {
+                repos.reloadMediaItem(displayTag);
+            }
+            return displayTag.clone();
         }
         displayTag = displayTag.clone();
-        if(editItems.size()==1) {
-            return displayTag;
-        }
 
         for (int i=1;i<editItems.size();i++) {
             AudioTag item = editItems.get(i);

@@ -51,7 +51,7 @@ androidx.activity = "androidx.activity:activity:1.5.1" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
-androidx.appCompat = "androidx.appcompat:appcompat:1.5.0"
+androidx.appCompat = "androidx.appcompat:appcompat:1.5.1"
 //https://developer.android.com/jetpack/androidx/releases/cardview
 androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout
@@ -229,6 +229,8 @@ ui.coco ='com.github.soulqw:CoCo:1.1.2'
 ui.androidAboutPage = 'io.github.medyo:android-about-page:2.0.0'
 //https://github.com/Tapadoo/Alerter
 ui.alerter = 'com.github.tapadoo:alerter:7.2.4'
+//https://github.com/abdulrehmank7/trapezium-view
+ui.trapezium = 'com.github.abdulrehmank7:trapezium-view:1.01'
 deps.ui = ui
 
 def epoxy = [:]
@@ -255,7 +257,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.2.0" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.2.1" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]

@@ -8,6 +8,9 @@ import android.graphics.Color;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +29,8 @@ import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.objectbox.ObjectBox;
+import apincer.android.mmate.work.ScanAudioFileWorker;
+import apincer.android.mmate.work.ScanLoudnessWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 import timber.log.Timber;
 
@@ -48,6 +54,7 @@ public class MusixMateApp extends Application  {
             }
         }
     });
+    private static final long MY_SCHEDULE_TIME = 10;
 
     private static Map<String, List<AudioTag>> pendingQueue = new HashMap();
 
@@ -211,5 +218,30 @@ public class MusixMateApp extends Application  {
 
             }
         }).start(); */
+
+        // scan music on startup
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                //.setRequiresStorageNotLow(true)
+                //.setRequiresDeviceIdle(true)
+                .build();
+        Constraints constraints2 = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                //.setRequiresStorageNotLow(true)
+                //.setRequiresDeviceIdle(true)
+                .build();
+        PeriodicWorkRequest scansongs = new PeriodicWorkRequest.Builder(ScanAudioFileWorker.class, MY_SCHEDULE_TIME, TimeUnit.MINUTES)
+                .addTag("ScanSongs")
+                .setConstraints(constraints)
+                .build();
+        PeriodicWorkRequest loudness = new PeriodicWorkRequest.Builder(ScanLoudnessWorker.class, MY_SCHEDULE_TIME, TimeUnit.MINUTES)
+                .addTag("ScanLoudness")
+                .setConstraints(constraints2)
+                .build();
+        WorkManager instance = WorkManager.getInstance(getApplicationContext());
+        instance.cancelAllWork();
+        instance.pruneWork();
+        instance.enqueueUniquePeriodicWork("ScanSongs", ExistingPeriodicWorkPolicy.REPLACE, scansongs);
+        instance.enqueueUniquePeriodicWork("ScanLoudness", ExistingPeriodicWorkPolicy.KEEP, loudness);
     }
 }

@@ -61,7 +61,8 @@ public class AudioTagRepository {
             List<AudioTag> list = tagBox.getAll();
             for(int i=0; i<list.size();i++) {
                 AudioTag mdata = list.get(i);
-                if(!AudioFileRepository.isMediaFileExist(mdata.getPath())) {
+                String path = mdata.getPath();
+                if(!AudioFileRepository.isMediaFileExist(path)) {
                     tagBox.remove(mdata);
                 }
             }

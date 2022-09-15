@@ -23,7 +23,6 @@ import com.airbnb.epoxy.OnModelLongClickListener;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.AudioTagUtils;
@@ -185,14 +184,14 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             }*/
 
         // Loudness
-        if(!tag.isDSD()) {
-            request = new ImageRequest.Builder(holder.mContext)
+        if(!tag.isDSD() && !StringUtils.isEmpty(tag.getLoudnessIntegrated())) {
+           /* request = new ImageRequest.Builder(holder.mContext)
                     .data(AudioTagUtils.getCachedLoudnessIcon(holder.mContext, tag))
                     .crossfade(false)
                     .target(holder.mAudioLoudnessView)
                     .build();
-            imageLoader.enqueue(request);
-           // holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
+            imageLoader.enqueue(request);*/
+            holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
             holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
         }else {
             holder.mAudioLoudnessView.setVisibility(View.GONE);

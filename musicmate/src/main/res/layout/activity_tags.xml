@@ -253,7 +253,7 @@
 
                     <ImageView
                         android:id="@+id/icon_loudness"
-                        android:layout_width="@dimen/dimen_48_dp"
+                        android:layout_width="@dimen/dimen_78_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_marginRight="@dimen/dimen_2_dp"
                         android:layout_marginBottom="@dimen/dimen_4_dp"
@@ -261,13 +261,12 @@
                         android:paddingBottom="@dimen/dimen_2_dp"
                         android:layout_gravity="right|center_vertical"
                         android:gravity="right|center_vertical"
-                        android:scaleType="fitXY"
                         android:layout_alignParentRight="true"
                         android:src="@drawable/ic_format_hires" />
 
                     <ImageView
                         android:id="@+id/icon_hires"
-                        android:layout_width="78dp"
+                        android:layout_width="@dimen/dimen_78_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_gravity="right|center_vertical"
                         android:layout_marginRight="@dimen/dimen_2_dp"

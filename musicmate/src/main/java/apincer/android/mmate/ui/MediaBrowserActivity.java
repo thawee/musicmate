@@ -77,7 +77,6 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.epoxy.AudioTagController;
-import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
@@ -93,7 +92,7 @@ import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
-import apincer.android.mmate.work.ScanAudioFileWorker;
+import apincer.android.mmate.work.ScanLoudnessWorker;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -206,9 +205,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             return;
         }
 
-            ImageLoader fabLoader = Coil.imageLoader(this);
+           // ImageLoader fabLoader = Coil.imageLoader(this);
+        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest fabRequest = new ImageRequest.Builder(this)
-                    .data(EmbedCoverArtProvider.getUriForMediaItem(song))
+                   // .data(EmbedCoverArtProvider.getUriForMediaItem(song))
+                    .data(AudioTagUtils.getCachedCoverArt(getApplicationContext(), song))
                     .size(256,256)
                     .crossfade(false)
                     .allowHardware(false)
@@ -217,15 +218,17 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .transformations(new RoundedCornersTransformation(24,24,24,24))
                     .target(nowPlayingCoverArt)
                     .build();
-            fabLoader.enqueue(fabRequest);
+        imageLoader.enqueue(fabRequest);
             nowPlayingTitle.setText(song.getTitle());
+
             //nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
        // nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+        imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), song))
                 .crossfade(false)
                 .target(nowPlayingType)
+                //.transformations(new RoundedCornersTransformation(4,4,4,4))
                 .build();
         imageLoader.enqueue(request);
         nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
@@ -236,7 +239,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
                     .scaleX(1f).scaleY(1f)
                     .alpha(1f).setDuration(250)
-                    .setStartDelay(200L)
+                    .setStartDelay(10L)
                     .setListener(new ViewPropertyAnimatorListenerAdapter() {
                         @Override
                         public void onAnimationStart(@NonNull View view) {
@@ -245,7 +248,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         }
                     })
                     .start());
-
     }
 	
 	private void doHideNowPlayingSongFAB() {
@@ -406,7 +408,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void initMediaItemList(Intent startIntent) {
-        ScanAudioFileWorker.startScan(getApplicationContext());
+        //ScanAudioFileWorker.startScan(getApplicationContext());
         SearchCriteria criteria = null;
 
         if (startIntent.getExtras() != null) {
@@ -790,6 +792,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         } else if(item.getItemId() == R.id.menu_signal_path) {
             doShowSignalPath();
             return true;
+       /* } else if(item.getItemId() == R.id.menu_storage) {
+            doDeepScan();
+            return true;*/
         }
         return super.onOptionsItemSelected(item);
     }
@@ -868,7 +873,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void doShowEditActivity(AudioTag mediaItem) {
         if(AudioFileRepository.isMediaFileExist(mediaItem)) {
-
             ArrayList<AudioTag> tagList = new ArrayList<>();
             tagList.add(mediaItem);
             AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
@@ -1022,8 +1026,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if(broadcastData!=null) {
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     AudioTag tag = broadcastData.getTagInfo();
+                    ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                     onPlaying(tag);
-               // }else {
+
+                    // }else {
                   //  ToastHelper.showBroadcastData(MediaBrowserActivity.this, fabPlayingAction, broadcastData);
                   /*  ToastHelper.showBroadcastData(MediaBrowserActivity.this, null, broadcastData);
                     if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
@@ -1097,17 +1103,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(lastPlaying!=null) {
             epoxyController.notifyModelChanged(lastPlaying);
         }
+
         if(song!=null) {
             doShowNowPlayingSongFAB(song);
-            if(Preferences.isOpenNowPlaying(getBaseContext())) {
+            if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
                 scrollToSong(song);
-                if (lastPlaying == null || (lastPlaying != null && !lastPlaying.equals(song))) {
                     if(timer!=null) {
-                        //try {
                             timer.cancel();
-                       // }catch (Exception ex) {
-                            // IGNORE
-                      //  }
                     }
                     timer = new Timer();
                     timer.schedule(new TimerTask() {
@@ -1115,12 +1117,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         public void run() {
                             runOnUiThread(() -> doShowEditActivity(song));
                         }
-                    }, 3500); // 3 seconds
-                }
+                    }, 1500); // 1.5 seconds
             }
         }
         lastPlaying = song;
-        //selectedTag = null;
     }
 
     private class ActionModeCallback implements ActionMode.Callback {

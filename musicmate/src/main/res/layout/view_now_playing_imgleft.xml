@@ -60,7 +60,7 @@
 
                 <ImageView
                     android:id="@+id/now_playing_file_type"
-                    android:layout_width="@dimen/dimen_52_dp"
+                    android:layout_width="@dimen/dimen_64_dp"
                     android:layout_height="@dimen/dimen_24_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
                     android:scaleType="fitXY"

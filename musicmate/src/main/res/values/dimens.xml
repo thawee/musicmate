@@ -66,4 +66,5 @@
     <dimen name="dimen_40_dp">40dp</dimen>
     <dimen name="dimen_info_resolution_dp">132dp</dimen>
     <dimen name="dimen_42_dp">42dp</dimen>
+    <dimen name="dimen_78_dp">78dp</dimen>
 </resources>

@@ -31,7 +31,7 @@ public class ScanAudioFileWorker extends Worker {
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
      **/
-    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
+    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors()/2;
     // Sets the amount of time an idle thread waits before terminating
     private static final int KEEP_ALIVE_TIME = 600; //1000;
     // Sets the Time Unit to Milliseconds
@@ -74,7 +74,7 @@ public class ScanAudioFileWorker extends Worker {
             }
         }
         AudioTagRepository.cleanMusicMate();
-        ScanLoudnessWorker.startScan(getApplicationContext());
+        //ScanLoudnessWorker.startScan(getApplicationContext());
         while (!mExecutor.getQueue().isEmpty()){
             try {
                 Thread.sleep(10000);
@@ -108,7 +108,7 @@ public class ScanAudioFileWorker extends Worker {
         }else return ext.equalsIgnoreCase("dff");
     }
 
-    public static void startScan(Context context) {
+    public static void startScanxx(Context context) {
        // if(scanOperation == null || scanOperation.getResult().isDone() || scanOperation.getResult().isCancelled()) {
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
                     .setInitialDelay(4, TimeUnit.SECONDS)
