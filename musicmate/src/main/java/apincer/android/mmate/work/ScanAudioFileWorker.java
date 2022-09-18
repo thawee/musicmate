@@ -77,7 +77,7 @@ public class ScanAudioFileWorker extends Worker {
         //ScanLoudnessWorker.startScan(getApplicationContext());
         while (!mExecutor.getQueue().isEmpty()){
             try {
-                Thread.sleep(5000);
+                Thread.sleep(60000); // 1 mins
             } catch (InterruptedException e) {
             }
         }

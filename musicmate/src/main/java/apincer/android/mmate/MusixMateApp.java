@@ -223,10 +223,7 @@ public class MusixMateApp extends Application  {
 
         // scan music on startup
 
-       /* PeriodicWorkRequest scansongs = new PeriodicWorkRequest.Builder(ScanAudioFileWorker.class, SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
-                .addTag("ScanSongs")
-                .setConstraints(constraints)
-                .build(); */
+
         WorkManager instance = WorkManager.getInstance(getApplicationContext());
         instance.cancelAllWork();
         instance.pruneWork();
@@ -240,18 +237,22 @@ public class MusixMateApp extends Application  {
                 //.setRequiresStorageNotLow(true)
                 //.setRequiresDeviceIdle(true)
                 .build();
-
+    /*
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
                 .setInitialDelay(6, TimeUnit.SECONDS)
                 .setConstraints(constraints)
                 .build();
-        instance.enqueue(workRequest);
+        instance.enqueue(workRequest); */
+        PeriodicWorkRequest scansongs = new PeriodicWorkRequest.Builder(ScanAudioFileWorker.class, SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
+                .addTag("ScanSongs")
+                .setConstraints(constraints)
+                .build();
+        instance.enqueueUniquePeriodicWork("ScanSongs", ExistingPeriodicWorkPolicy.KEEP, scansongs);
 
         PeriodicWorkRequest loudness = new PeriodicWorkRequest.Builder(ScanLoudnessWorker.class, LOUDNESS_SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
                 .addTag("ScanLoudness")
                 .setConstraints(constraints2)
                 .build();
-        //instance.enqueueUniquePeriodicWork("ScanSongs", ExistingPeriodicWorkPolicy.KEEP, scansongs);
         instance.enqueueUniquePeriodicWork("ScanLoudness", ExistingPeriodicWorkPolicy.KEEP, loudness);
     }
 }

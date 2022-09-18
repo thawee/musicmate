@@ -416,7 +416,9 @@ public class AudioFileRepository {
     private AudioTag[] readMetadata(AudioTag metadata) {
         try {
             String path = metadata.getPath();
-            metadata = tagRepos.getAudioTagById(metadata);
+            //if(metadata.getId() >0 ) {
+            //    metadata = tagRepos.getAudioTagById(metadata);
+            //}
             if(isValidJAudioTagger(path)) {
                 AudioFile audioFile = buildAudioFile(path, "r");
 

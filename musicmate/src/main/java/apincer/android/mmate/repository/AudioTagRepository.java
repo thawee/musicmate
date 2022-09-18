@@ -188,8 +188,13 @@ public class AudioTagRepository {
 
     public boolean isMediaOutdated(String path, long lastModified) {
         List<AudioTag> tags = findByPath(path);
+        if(tags ==null || tags.size()<1) {
+            // found new file
+            return true;
+        }
+
         // tag in library already up-to-dated
-        return tags.size() != 1 || tags.get(0).getLastModified() < lastModified;
+        return tags.get(0).getLastModified() < lastModified;
     }
 
     public AudioTag getAudioTagById(AudioTag md) {
