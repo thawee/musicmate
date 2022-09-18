@@ -672,7 +672,7 @@ public class AudioFileRepository {
 
 */
             //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
-            String cmd = "-nostats -i \""+tag.getPath()+"\" -filter_complex ebur128=peak=true -f null -";
+            String cmd = " -i \""+tag.getPath()+"\" -filter_complex ebur128=peak=true -f null -";
             //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
             // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
             FFmpegSession session = FFmpegKit.execute(cmd);

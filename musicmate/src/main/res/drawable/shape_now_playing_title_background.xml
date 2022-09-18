@@ -17,9 +17,9 @@
     <!-- The radius makes the corners rounded -->
     <corners
         android:bottomRightRadius="4dp"
-        android:topRightRadius="18dp"
+        android:topRightRadius="8dp"
         android:bottomLeftRadius="4dp"
-        android:topLeftRadius="22dp">
+        android:topLeftRadius="24dp">
     </corners>
 
 </shape>

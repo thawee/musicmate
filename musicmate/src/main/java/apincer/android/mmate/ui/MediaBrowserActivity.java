@@ -690,18 +690,21 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
-           // if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
+            //if(AudioTagEditResultEvent.ACTION_UPDATE.equals(event.getAction())) {
+            //    AudioTag tag = event.getItem();
+            //    epoxyController.notifyModelChanged(tag);
+            //}else {
                 // re-load library
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
+               // new Timer().schedule(new TimerTask() {
+                   // @Override
+                   // public void run() {
                         // this code will be executed after 1 seconds
                         epoxyController.loadSource();
-                    }
-                }, 300);
+              //      }
+              //  }, 300);
           //  }else {
          //       epoxyController.notifyModelChanged(event.getItem());
-         //   }
+           // }
         }catch (Exception e) {
             Timber.e(e);
         }
@@ -1028,25 +1031,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     AudioTag tag = broadcastData.getTagInfo();
                     ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                     onPlaying(tag);
-
-                    // }else {
-                  //  ToastHelper.showBroadcastData(MediaBrowserActivity.this, fabPlayingAction, broadcastData);
-                  /*  ToastHelper.showBroadcastData(MediaBrowserActivity.this, null, broadcastData);
-                    if(broadcastData.getAction() != BroadcastData.Action.DELETE) {
-                        // refresh tag
-                        epoxyController.notifyModelChanged(broadcastData.getTagInfo());
-                        //  }
-                        // re-load library
-                        new Timer().schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                // this code will be executed after 1 seconds
-                                epoxyController.loadSource();
-                            }
-                        }, 1000);
-                    }else {
-                        epoxyController.notifyModelChanged(broadcastData.getTagInfo());
-                    } */
                 }
             }
         }

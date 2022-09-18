@@ -1143,12 +1143,12 @@ public class AudioTagUtils {
                 double intg =NumberFormat.getInstance().parse(il).doubleValue();
                 if(intg < -23.0) {
                     // for studio -23 or less
-                    qualityColor = context.getColor(R.color.white);
+                    qualityColor = context.getColor(R.color.grey300);
                 }else if (intg <= -11.0) {
                     // for streaming -11 to -23
                     // spotify, -14 lufs
                     // apple music, -16 lufs
-                    qualityColor = context.getColor(R.color.grey200);
+                    qualityColor = context.getColor(R.color.grey400);
                 }else {
                     qualityColor = context.getColor(R.color.warningColor);
                 }
@@ -1202,7 +1202,7 @@ public class AudioTagUtils {
         paint =  new Paint();
         paint.setAntiAlias(true);
         paint.setDither(true);
-        paint.setColor(darkGreyColor);
+        paint.setColor(greyColor);
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
         myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
 
@@ -1217,7 +1217,7 @@ public class AudioTagUtils {
         // int borderWidth = 2;
         paint =  new Paint();
         paint.setAntiAlias(true);
-        paint.setColor(darkGreyColor);
+        paint.setColor(greyColor);
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
         myCanvas.drawRoundRect(rectangle, cornerRadius,jointCornerRadius, paint);
 

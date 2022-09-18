@@ -31,7 +31,7 @@ public class ScanAudioFileWorker extends Worker {
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
      **/
-    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors()/2;
+    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
     // Sets the amount of time an idle thread waits before terminating
     private static final int KEEP_ALIVE_TIME = 600; //1000;
     // Sets the Time Unit to Milliseconds
@@ -45,7 +45,7 @@ public class ScanAudioFileWorker extends Worker {
        // HandlerThread thread = new HandlerThread("ScanFilesWorker");
        // thread.start();
         mExecutor = new ThreadPoolExecutor(
-                NUMBER_OF_CORES, // + 5,   // Initial pool size
+                NUMBER_OF_CORES/2, // + 5,   // Initial pool size
                 NUMBER_OF_CORES, // + 4, //8,   // Max pool size
                 KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
                 KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
@@ -77,11 +77,11 @@ public class ScanAudioFileWorker extends Worker {
         //ScanLoudnessWorker.startScan(getApplicationContext());
         while (!mExecutor.getQueue().isEmpty()){
             try {
-                Thread.sleep(10000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
             }
         }
-       // mExecutor.shutdown();
+        mExecutor.shutdown();
 
         return Result.success();
     }

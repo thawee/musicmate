@@ -94,7 +94,7 @@
                 android:textColor="@color/black"
                 android:textSize="9sp"
                 android:textStyle="bold" />
-<!--
+            <!--
             <TextView
                 android:id="@+id/item_sampling_rate"
                 android:layout_width="@dimen/dimen_42_dp"
@@ -158,7 +158,6 @@
                 android:src="@drawable/shape_bottom_background" /> -->
 
 
-
             <ImageView
                 android:id="@+id/item_hires_icon"
                 android:layout_width="@dimen/dimen_52_dp"
@@ -218,11 +217,11 @@
                     android:layout_width="36dp"
                     android:layout_height="16dp"
                     android:background="@drawable/shape_background_unknown"
+                    android:fontFamily="@font/oswald_bold"
                     android:gravity="center"
                     android:paddingLeft="@dimen/dimen_1_dp"
                     android:paddingRight="@dimen/dimen_1_dp"
                     android:text="50.00 MB"
-                    android:fontFamily="@font/oswald_bold"
                     android:textColor="@color/black"
                     android:textSize="9sp"
                     android:textStyle="bold" />
@@ -234,11 +233,11 @@
                     android:layout_marginLeft="@dimen/dimen_1_dp"
                     android:layout_marginRight="@dimen/dimen_1_dp"
                     android:background="@drawable/shape_background_unknown"
+                    android:fontFamily="@font/oswald_bold"
                     android:gravity="center"
                     android:paddingLeft="@dimen/dimen_2_dp"
                     android:paddingRight="@dimen/dimen_2_dp"
                     android:text="50.00 MB"
-                    android:fontFamily="@font/oswald_bold"
                     android:textColor="@color/black"
                     android:textSize="9sp"
                     android:textStyle="bold" />

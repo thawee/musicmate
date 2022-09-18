@@ -25,10 +25,10 @@
                 <ImageView
                     android:id="@+id/panel_source_img"
                     android:layout_width="@dimen/dimen_40_dp"
-                    android:layout_height="24dp"
-                    android:scaleType="fitXY"
+                    android:layout_height="16dp"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginRight="@dimen/dimen_4_dp" />
+                    android:layout_marginRight="@dimen/dimen_4_dp"
+                    android:scaleType="fitXY" />
                 <View
                     android:layout_width="1dp"
                     android:layout_height="match_parent"

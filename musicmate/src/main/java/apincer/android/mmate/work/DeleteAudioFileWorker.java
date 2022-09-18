@@ -11,7 +11,7 @@ import androidx.work.WorkerParameters;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -39,12 +39,13 @@ public class DeleteAudioFileWorker extends Worker {
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = AudioFileRepository.newInstance(getApplicationContext());
-        mExecutor = new ThreadPoolExecutor(
+        mExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_CORES);
+        /*mExecutor = new ThreadPoolExecutor(
                 1, // + 5,   // Initial pool size
                 NUMBER_OF_CORES, // + 4, //8,   // Max pool size
                 KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
                 KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
-                new LinkedBlockingDeque<>());  // Work Queue
+                new LinkedBlockingDeque<>());  // Work Queue */
     }
 
     @NonNull
@@ -99,7 +100,7 @@ public class DeleteAudioFileWorker extends Worker {
                 //String txt = status?getApplicationContext().getString(R.string.alert_delete_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_delete_fail, tag.getTitle());
 
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().postSticky(message);
+                EventBus.getDefault().post(message);
             } catch (Exception e) {
                 Timber.e(e);
             }
