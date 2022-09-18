@@ -181,7 +181,7 @@
 					   android:layout_marginBottom="@dimen/dimen_96_dp"
 					   android:padding="@dimen/dimen_1_dp"
 					   android:background="@drawable/shape_now_playing_background_l1">
-					   <include layout="@layout/view_now_playing_imgleft"/>
+					   <include layout="@layout/view_now_playing"/>
 				   </LinearLayout>
    			</RelativeLayout>
 

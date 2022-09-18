@@ -18,14 +18,14 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="@dimen/dimen_48_dp"
+                android:layout_width="@dimen/dimen_56_dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
                 <ImageView
                     android:id="@+id/panel_source_img"
-                    android:layout_width="@dimen/dimen_40_dp"
-                    android:layout_height="16dp"
+                    android:layout_width="@dimen/dimen_52_dp"
+                    android:layout_height="18dp"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginRight="@dimen/dimen_4_dp"
                     android:scaleType="fitXY" />
@@ -33,6 +33,7 @@
                     android:layout_width="1dp"
                     android:layout_height="match_parent"
                     android:background="@color/grey300"
+                    android:layout_marginTop="@dimen/dimen_8_dp"
                     android:layout_marginRight="16dp"
                     android:layout_marginLeft="16dp"/>
                 <!--
@@ -53,8 +54,8 @@
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
                 android:background="@color/grey600"
-                android:layout_marginRight="16dp"
-                android:layout_marginLeft="16dp"/>
+                android:layout_marginRight="@dimen/dimen_8_dp"
+                android:layout_marginLeft="@dimen/dimen_8_dp"/>
 
             <LinearLayout
                 android:layout_width="0dip"
@@ -104,7 +105,7 @@
         android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="@dimen/dimen_48_dp"
+            android:layout_width="@dimen/dimen_56_dp"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
@@ -112,7 +113,7 @@
                 android:id="@+id/panel_player_img"
                 android:layout_width="@dimen/dimen_32_dp"
                 android:layout_height="@dimen/dimen_32_dp"
-                android:layout_gravity="center_horizontal"
+                android:layout_gravity="center"
                 android:layout_marginRight="@dimen/dimen_4_dp"/>
             <View
                 android:layout_width="1dp"
@@ -138,8 +139,8 @@
             android:layout_width="1dp"
             android:layout_height="match_parent"
             android:background="@color/grey600"
-            android:layout_marginRight="16dp"
-            android:layout_marginLeft="16dp"/>
+            android:layout_marginRight="@dimen/dimen_8_dp"
+            android:layout_marginLeft="@dimen/dimen_8_dp"/>
 
         <LinearLayout
             android:layout_width="0dip"
@@ -190,7 +191,7 @@
         android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="@dimen/dimen_48_dp"
+            android:layout_width="@dimen/dimen_56_dp"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
@@ -219,8 +220,8 @@
             android:layout_width="1dp"
             android:layout_height="match_parent"
             android:background="@color/grey600"
-            android:layout_marginRight="16dp"
-            android:layout_marginLeft="16dp"/>
+            android:layout_marginRight="@dimen/dimen_8_dp"
+            android:layout_marginLeft="@dimen/dimen_8_dp"/>
 
         <LinearLayout
             android:layout_width="0dip"
