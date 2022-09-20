@@ -373,6 +373,112 @@ public class AudioOutputHelper {
     public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
         int width = 128;
         int height = 96;
+        int darkGreyColor = context.getColor(R.color.grey900);
+        int whiteColor = context.getColor(R.color.white);
+        int blackColor = context.getColor(R.color.black);
+        String codec = dev.getCodec();
+        String rate =  dev.getBitPerSampling()+"/"+StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),false);
+        //String rate =  StringUtils.getFormatedAudioSampleRateAbvUnit(dev.getSamplingRate());
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 2;
+        int cornerRadius = 4;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw outer dark grey block
+        RectF rectangle = new RectF(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(darkGreyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw black box
+        padding = 4;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw top white box
+        padding = 12;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                (myCanvas.getHeight()/2) - 2 // Bottom
+        );
+        // int borderWidth = 2;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(whiteColor);
+        paint.setStyle(Paint.Style.FILL);
+        // Finally, draw the rectangle on the canvas
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
+
+        int letterTextSize = 30; //28;
+        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
+
+        // draw bit per , black color
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(codec, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 10f;
+        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
+        myCanvas.drawText(codec,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        // draw sampling rate, white
+        //font =  ResourcesCompat.getFont(context, R.font.led_font);
+        //font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
+        font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
+        letterTextSize = 30;
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(rate, 0, 1, textMathRect);
+        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
+        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
+        myCanvas.drawText(rate,
+                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
+    public static Bitmap getOutputDeviceIcon2(Context context, Device dev) {
+        int width = 128;
+        int height = 96;
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         String codec = dev.getCodec();
