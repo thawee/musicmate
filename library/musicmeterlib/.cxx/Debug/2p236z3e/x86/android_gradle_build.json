@@ -1,0 +1,38 @@
+{
+  "buildFiles": [
+    "/Users/thawee.p/Workspaces/musicmate/library/musicmeterlib/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/thawee.p/Library/Android/sdk/cmake/3.18.1/bin/ninja",
+      "-C",
+      "/Users/thawee.p/Workspaces/musicmate/library/musicmeterlib/.cxx/Debug/2p236z3e/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/thawee.p/Library/Android/sdk/cmake/3.18.1/bin/ninja",
+    "-C",
+    "/Users/thawee.p/Workspaces/musicmate/library/musicmeterlib/.cxx/Debug/2p236z3e/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "musicmeterlib::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86",
+      "artifactName": "musicmeterlib",
+      "output": "/Users/thawee.p/Workspaces/musicmate/library/musicmeterlib/build/intermediates/cxx/Debug/2p236z3e/obj/x86/libmusicmeterlib.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/Users/thawee.p/Library/Android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang.lld",
+      "cppCompilerExecutable": "/Users/thawee.p/Library/Android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++.lld"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}
