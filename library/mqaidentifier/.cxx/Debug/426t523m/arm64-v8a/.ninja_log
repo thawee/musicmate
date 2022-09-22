@@ -1,3 +1,10 @@
 # ninja log v5
 0	5813	1663659211	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	5dc2c2a677c4d22f
 5816	6158	1663659211	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/426t523m/obj/arm64-v8a/libmqaidentifier.so	a43493a00a3d752c
+0	19	0	clean	dffbb0c6dd99ef40
+0	6	0	clean	dffbb0c6dd99ef40
+21	2734	1663812156	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	5dc2c2a677c4d22f
+2734	3225	1663812156	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/426t523m/obj/arm64-v8a/libmqaidentifier.so	a43493a00a3d752c
+0	6	0	clean	dffbb0c6dd99ef40
+1	1656	1663812497	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	5dc2c2a677c4d22f
+1656	1828	1663812497	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/426t523m/obj/arm64-v8a/libmqaidentifier.so	a43493a00a3d752c
