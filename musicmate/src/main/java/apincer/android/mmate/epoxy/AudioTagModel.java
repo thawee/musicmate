@@ -159,7 +159,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                 // .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
-                .transformations(new RoundedCornersTransformation(12, 12, 12, 12))
+                .transformations(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request);
 

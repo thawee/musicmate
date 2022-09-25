@@ -30,7 +30,7 @@ public class UpdateAudioFileWorker extends Worker {
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
      **/
-    private static final int NUMBER_OF_CORES = 4; //Runtime.getRuntime().availableProcessors();
+    private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
     // Sets the amount of time an idle thread waits before terminating
     private static final int KEEP_ALIVE_TIME = 600; //1000;
     // Sets the Time Unit to Milliseconds
@@ -42,7 +42,7 @@ public class UpdateAudioFileWorker extends Worker {
         super(context, parameters);
         repos = AudioFileRepository.newInstance(getApplicationContext());
         mExecutor = new ThreadPoolExecutor(
-                1, // + 5,   // Initial pool size
+                NUMBER_OF_CORES/2, // + 5,   // Initial pool size
                 NUMBER_OF_CORES, // + 4, //8,   // Max pool size
                 KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
                 KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
