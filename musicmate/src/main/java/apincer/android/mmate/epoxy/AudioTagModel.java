@@ -253,8 +253,8 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         holder.mFileTypeView.setBackground(resolutionBackground);
 
         // Audio resolution
-        holder.mBitPerSamplingView.setText(StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()));
-        holder.mBitPerSamplingView.setBackground(resolutionBackground);
+        //holder.mBitPerSamplingView.setText(StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()));
+        //holder.mBitPerSamplingView.setBackground(resolutionBackground);
 
         //holder.mSamplingRateView.setText(StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true));
         //holder.mSamplingRateView.setBackground(resolutionBackground);
@@ -300,7 +300,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         View mTitleLayout;
         TextView mTitle;
         TextView mSubtitle;
-        TextView mBitPerSamplingView;
+       // TextView mBitPerSamplingView;
        // TextView mSamplingRateView;
        // ImageView mBitrateView;
         TextView mDurationView;
@@ -327,7 +327,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
-            this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
+           // this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
            // this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
            // this.mBitrateView = view.findViewById(R.id.item_bitrate);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);

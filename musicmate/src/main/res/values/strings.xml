@@ -89,7 +89,7 @@
     <!-- Extras -->
 
     <!-- internal defaults -->
-
+    <string name="welcome_text">Manage music files your way, enjoy listening to your music :D</string>
     <string name="changelog_text">2.0.1 - update to androidx</string>
 
     <string name="app_permission">Storage Access</string>

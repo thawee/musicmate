@@ -62,13 +62,16 @@
             app:showAsAction="always" />
     -->
 	<item
-		android:id="@+id/menu_statistics"
-		android:icon="@drawable/ic_outline_auto_graph_24"
-		android:title="Statistics"
+		android:id="@+id/menu_about_libraries"
+		android:icon="@drawable/ic_outline_code_24"
+		android:title="Third-Party Libraries"
 		app:showAsAction="always" />
+
 	<item
 		android:id="@+id/menu_about_music_mate"
 		android:icon="@drawable/ic_round_copyright_24"
 		android:title="About"
 		app:showAsAction="always" />
+
+
 </menu>

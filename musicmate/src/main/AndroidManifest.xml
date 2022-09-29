@@ -106,7 +106,7 @@
         </activity>
 
         <activity
-            android:name="apincer.android.mmate.ui.StatisticsActivity"
+            android:name="apincer.android.mmate.ui.LibrariesActivity"
             android:theme="@style/AboutAppTheme"
             android:screenOrientation="portrait"
             android:label="@string/app_name">
@@ -124,11 +124,12 @@
             android:authorities="apincer.android.mmate.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
-        <provider
+       <!-- <provider
             android:name="apincer.android.mmate.fs.EmbedCoverArtProvider"
             android:authorities="apincer.android.mmate.embed.coverart.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
+            -->
         <provider
             android:name="apincer.android.mmate.fs.MusicbrainzCoverArtProvider"
             android:authorities="apincer.android.mmate.musicbrainz.coverart.provider"

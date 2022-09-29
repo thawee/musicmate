@@ -45,6 +45,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
+import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
@@ -770,10 +771,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             Intent myIntent = new Intent(MediaBrowserActivity.this, SettingsActivity.class);
             startActivity(myIntent);
             return true;
-        }else if(item.getItemId() == R.id.menu_statistics) {
+       /* }else if(item.getItemId() == R.id.menu_statistics) {
             Intent myIntent = new Intent(MediaBrowserActivity.this, StatisticsActivity.class);
             startActivity(myIntent);
-            return true;
+            return true; */
         } else if(item.getItemId() == R.id.menu_sd_permission) {
             //setUpPermissionSAF();
             Intent myIntent = new Intent(MediaBrowserActivity.this, PermissionActivity.class);
@@ -782,6 +783,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         } else if(item.getItemId() == R.id.menu_notification_access) {
             Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             startActivity(intent);
+            return true;
+        }else if(item.getItemId() == R.id.menu_about_libraries) {
+            doShowAboutLibraries();
             return true;
         }else if(item.getItemId() == R.id.menu_about_music_mate) {
             doShowAboutApp();
@@ -915,6 +919,24 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private void doShowAboutApp() {
         Intent myIntent = new Intent(MediaBrowserActivity.this, AboutActivity.class);
         startActivity(myIntent);
+    }
+
+    private void doShowAboutLibraries() {
+       // Intent myIntent = new Intent(MediaBrowserActivity.this, LibrariesActivity.class);
+       // startActivity(myIntent);
+        new LibsBuilder()
+                .withAboutAppName("Music Mate")
+                .withAboutIconShown(true)
+                .withAboutVersionShown(true)
+                .withAboutVersionShownCode(false)
+                .withAboutVersionShownName(true)
+                .withEdgeToEdge(false)
+                .withLicenseShown(true)
+                .withLicenseDialog(false)
+                .withSearchEnabled(false)
+                .withSortEnabled(true)
+                .withActivityTitle("Third-Party Libraries")
+                .start(this);
     }
 
     private void setUpSwipeToRefresh() {

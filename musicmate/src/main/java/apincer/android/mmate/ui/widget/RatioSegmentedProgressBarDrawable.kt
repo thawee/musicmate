@@ -64,6 +64,7 @@ class RatioSegmentedProgressBarDrawable(
 
     override fun setAlpha(alpha: Int) {}
 
+    @Suppress("OverrideDeprecatedMigration")
     override fun getOpacity(): Int {
         return PixelFormat.TRANSLUCENT
     }
