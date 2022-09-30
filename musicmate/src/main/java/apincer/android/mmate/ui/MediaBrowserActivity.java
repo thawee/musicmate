@@ -1277,7 +1277,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         for(int i=0; i< block;i++) {
             valueList.add(sizeInBlock);
         }
-        final float rate = selections.size()/100; // pcnt per 1 song
+        final float rate = 100/selections.size(); // pcnt per 1 song
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax(MAX_PROGRESS);
@@ -1298,20 +1298,58 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
             final int [] cnt = new int[1];
             cnt[0]=1;
-           // AtomicInteger cnt = new AtomicInteger();
             String options = "";
             String targetExt = encoding[0].toLowerCase();
-            /*if(encoding[0].equals("ALAC")) {
-                // not work on android
-               // options = " -acodec alac ";
-                targetExt = "m4a";
-            }else*/
             if(encoding[0].contains("MP3")) {
                 options = " -ar 44100 -ab 320k ";
             }
             progressBar.setProgress(0);
-            progressBar.invalidate();
-            final int size = selections.size();
+            //progressBar.invalidate();
+            /*
+            String finalOptions = options;
+            Observable.fromCallable(() -> {
+                        for(AudioTag tag: selections) {
+                            // int count = cnt.getAndIncrement();
+                            if (!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding())) {
+                                String srcPath = tag.getPath();
+                                String filePath = FileUtils.removeExtension(tag.getPath());
+                                String targetPath = filePath + "." + targetExt; //+".flac";
+                                String cmd = "-i \"" + srcPath + "\" " + finalOptions + " \"" + targetPath + "\"";
+                                FFmpegSession session = FFmpegKit.execute(cmd);
+
+                                if (ReturnCode.isSuccess(session.getReturnCode())) {
+                                    repos.writeTags(targetPath, tag);
+                                    repos.scanFileAndSaveTag(new File(targetPath));
+                                } else {
+                                    String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
+                                    Timber.d(msg);
+                                }
+                            }
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct+rate));
+                            });
+                        }
+                        return true;
+                    }).subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new BlockingBaseObserver<Boolean>() {
+
+                        @Override
+                        public void onNext(@io.reactivex.rxjava3.annotations.NonNull Boolean aBoolean) {
+                           // int pct = progressBar.getProgress();
+                            progressBar.setProgress(100);
+                            progressBar.invalidate();
+                        }
+
+                        @Override
+                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+
+                        }
+                    }); */
+
+
+            //final int size = selections.size();
             for(AudioTag tag: selections) {
                // int count = cnt.getAndIncrement();
                 if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
@@ -1351,17 +1389,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             //    int count = cnt.incrementAndGet();
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct+rate));
-                            progressBar.invalidate();
+                           // progressBar.invalidate();
                            // }
                         });
                     });
                 }else {
-                    //int count = cnt.incrementAndGet();
-                    //cnt[0]=cnt[0]+1;
-                    //progressBar.setProgress((cnt[0]/size)*100);
                     int pct = progressBar.getProgress();
                     progressBar.setProgress((int) (pct+rate));
-                    progressBar.invalidate();
+                   // progressBar.invalidate();
                 }
             }
             btnOK.setEnabled(false);
