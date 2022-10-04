@@ -6,8 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -26,6 +24,9 @@ import java.util.Locale;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.balsikandar.crashreporter.utils.Constants.CHANNEL_NOTIFICATION_ID;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 public class CrashUtil {
 

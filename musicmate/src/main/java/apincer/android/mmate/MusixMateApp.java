@@ -4,16 +4,17 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.StrictMode;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 
 import java.util.ArrayList;
@@ -109,10 +110,14 @@ public class MusixMateApp extends Application  {
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
+        if (BuildConfig.DEBUG) {
+            //initialise reporter with external path
+            CrashReporter.initialize(this);
+        }
+
         broadcastHelper.onCreate(this);
 
         //initialize ObjectBox is when your app starts
-
         ObjectBox.init(this);
 
         StateViewsBuilder
@@ -135,7 +140,7 @@ public class MusixMateApp extends Application  {
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
         // to detect not expected thread
-/*        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                 .detectAll()
                 .penaltyLog()
                 .build());
@@ -144,7 +149,7 @@ public class MusixMateApp extends Application  {
                 .detectAll()
                 .penaltyLog()
                 .build());
-*/
+
         // TURN OFF log for JAudioTagger
             jAudioTaggerLogger1.setLevel(Level.SEVERE);
             jAudioTaggerLogger2.setLevel(Level.SEVERE);

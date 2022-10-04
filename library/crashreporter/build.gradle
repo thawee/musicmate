@@ -10,7 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+      //  testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
     buildTypes {
@@ -22,11 +22,16 @@ android {
 }
 
 dependencies {
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    api 'com.android.support:recyclerview-v7:' + rootProject.ext.support_version
-    api 'com.android.support:appcompat-v7:' + rootProject.ext.support_version
-    api 'com.android.support:design:' + rootProject.ext.support_version
+   // androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+   //     exclude group: 'com.android.support', module: 'support-annotations'
+   // })
+   // api 'com.android.support:recyclerview-v7:' + rootProject.ext.support_version
+   // api 'com.android.support:appcompat-v7:' + rootProject.ext.support_version
+   // api 'com.android.support:design:' + rootProject.ext.support_version
+    implementation deps.google.material
+    implementation deps.androidx.recyclerView
+    implementation deps.androidx.appCompat
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
     testImplementation 'junit:junit:4.12'
 }

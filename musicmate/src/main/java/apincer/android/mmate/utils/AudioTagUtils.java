@@ -635,7 +635,7 @@ public class AudioTagUtils {
         int bgBlackColor = context.getColor(R.color.black_transparent_80);
         int qualityColor = getResolutionColor(context,tag);
         int mqaColor = context.getColor(R.color.green);
-        String label = "PCM";
+        String label = "--";
         String labelBPS = "";
         boolean longEnc = false;
         //String bpsLabel = String.valueOf(tag.getAudioBitsPerSample());
@@ -739,10 +739,11 @@ public class AudioTagUtils {
 
         // draw enc, black color
         // AAC, MPEG, PCM 16, PCM 24, MQA, DSD
-        Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
+        Typeface font = ResourcesCompat.getFont(context, R.font.adca);
 
         if(longEnc) {
             // PCM xx
+            font =  ResourcesCompat.getFont(context, R.font.adca);
             int letterTextSize = 34; //42;
 
             // draw label pcm
@@ -757,11 +758,12 @@ public class AudioTagUtils {
             float mLetterTop = textMathRect.height() / 3f;
             float mPositionY= (float) (bounds.exactCenterY()-(bounds.exactCenterY()/4.8));
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2.4)),
-                    mLetterTop + mPositionY, //bounds.exactCenterY(),
+                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2.8)), // left
+                    mLetterTop + mPositionY, //bounds.exactCenterY(), //top
                     mLetterPaint);
 
             // draw bps
+            font =  ResourcesCompat.getFont(context, R.font.adca);
             int bpsSise = 48;
             font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
             mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -781,6 +783,7 @@ public class AudioTagUtils {
 
         }else {
             // MQA, DSD, AAC, MPEG
+            font =  ResourcesCompat.getFont(context, R.font.adca);
             int letterTextSize = 48; //28;
             Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             mLetterPaint.setColor(whiteColor);
@@ -793,8 +796,8 @@ public class AudioTagUtils {
             float mLetterTop = textMathRect.height() / 3f;
             float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/1.7)),
-                    mLetterTop + mPositionY, //bounds.exactCenterY(),
+                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)), // left
+                    mLetterTop + mPositionY, //bounds.exactCenterY(), //top
                     mLetterPaint);
         }
 
@@ -808,15 +811,15 @@ public class AudioTagUtils {
         mqaPaint.setAntiAlias(true);
         mqaPaint.setColor(qualityColor);
         mqaPaint.setStyle(Paint.Style.FILL);
-        float leftRec = (float) (myCanvas.getWidth()/1.8)+28;
+        float leftRec = (float) (myCanvas.getWidth()/1.8)+12;
         float rightRec = myCanvas.getWidth() - 18;
         if(longEnc) {
-            leftRec = (float) (myCanvas.getWidth()/1.8)+12;
+            leftRec = (float) (myCanvas.getWidth()/1.8)+8;
             rightRec = myCanvas.getWidth() - 14;
         }
         rectangle = new RectF(
                 leftRec,//padding, // Left
-                myCanvas.getHeight()-34,//(((myCanvas.getHeight()/3) *2)), // Top
+                myCanvas.getHeight()-36,//(((myCanvas.getHeight()/3) *2)), // Top
                 rightRec, // Right
                 myCanvas.getHeight()-22 // Bottom
         );

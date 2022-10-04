@@ -1,15 +1,13 @@
-buildscript {
-  repositories {
-      jcenter()
-  }
- // dependencies {
- //     classpath 'com.android.tools.build:gradle:2.0.0'
- // }
-}
+apply plugin: 'com.android.library'
 
-allprojects {
-    repositories {
-        jcenter()
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+
+    defaultConfig {
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+
     }
+    namespace 'com.inqbarna.tablefixheaders'
 }
-

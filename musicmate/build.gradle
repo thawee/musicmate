@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-//apply plugin: 'com.android.application'
-//apply plugin: 'kotlin-android'
-//apply plugin: 'kotlin-kapt' // require for object box
-//apply plugin: 'com.mikepenz.aboutlibraries.plugin'
-//apply plugin: 'io.objectbox' // Apply last.
-//apply plugin: 'kotlin-kapt'
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -37,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 54
-        versionName  "3.2.1 "+ versions.buildDate
+        versionCode 55
+        versionName  "3.3.0 "+ versions.buildDate
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
@@ -101,7 +94,7 @@ project.android.buildTypes.all { buildType ->
                     requireAbstractEpoxyModels  : "true",
                     implicitlyAddAutoModels     : "true",
                     logEpoxyTimings     : "false",
-                    enableParallelEpoxyProcessing     : "false",
+                    enableParallelEpoxyProcessing     : "true",
             ]
 }
 
@@ -152,9 +145,8 @@ dependencies {
     implementation deps.ui.coco
     implementation deps.ui.androidAboutPage
     //implementation deps.ui.lapism_search
-    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-    //implementation("ir.mahozad.android:pie-chart:0.7.0")
-    implementation 'com.github.salehyarahmadi:DataTable:v1.0.1'
+    implementation deps.ui.mpandroidchart
+    implementation deps.ui.datatables
 
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
@@ -166,6 +158,7 @@ dependencies {
     implementation deps.ui.shapeofview
     implementation deps.ui.photoview;
     implementation deps.ui.alerter
+    implementation deps.ui.htmleditor
 
     //others
    // implementation deps.dexter
@@ -181,23 +174,16 @@ dependencies {
     implementation deps.google.gson
     implementation deps.retrofit.runtime
     implementation deps.retrofit.gson
-    //implementation deps.retrofit.mock
 
     // Glide (Image Loader & Caching)
    // implementation deps.glide.runtime
    // annotationProcessor deps.glide.compiler
-
-   // implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     // Coil
     implementation deps.coil.runtime2
    // implementation "com.github.Commit451.coil-transformations:transformations:1.1.2"
     //implementation "com.github.Commit451.coil-transformations:transformations-gpu:1.1.2"
   //  implementation('de.esoco:coroutines:0.9.1')
-
-    // https://mvnrepository.com/artifact/com.github.NightWhistler/HtmlSpanner
-   // implementation 'com.github.NightWhistler:HtmlSpanner:0.4'
-    implementation 'com.github.irshulx:laser-native-editor:3.0.4'
 
     // Logging and Debugging
    // implementation deps.timber
@@ -217,7 +203,7 @@ dependencies {
     implementation project(':library:justdsd')
     implementation project(':library:library')
     implementation project(':library:androidtagview')
-   // debugImplementation project(':library:crashreporter')
+    debugImplementation project(':library:crashreporter')
     implementation project(':library:MaterialEditText')
     implementation project(':library:mqaidentifier')
 }
