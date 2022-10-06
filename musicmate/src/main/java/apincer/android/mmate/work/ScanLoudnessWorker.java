@@ -72,8 +72,6 @@ public class ScanLoudnessWorker extends Worker {
                 } catch (Exception e) {
                     Timber.e(e);
                 }
-             // ScanRunnable r = new ScanRunnable(tag);
-           // mExecutor.execute(r);
         }else {
             AudioTagRepository tagrepos = AudioTagRepository.getInstance();
             List<AudioTag> tags = tagrepos.getAudioTagWithoutLoudness();

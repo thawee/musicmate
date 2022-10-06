@@ -6,6 +6,7 @@ import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
+import com.arthenica.ffmpegkit.Log;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -24,9 +25,6 @@ import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisAlbumArtistSaveOptions;
 import org.jaudiotagger.tag.wav.WavTag;
 import org.jetbrains.annotations.NotNull;
-import org.justcodecs.dsd.DISOFormat;
-import org.justcodecs.dsd.Scarletbook;
-import org.justcodecs.dsd.Utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -431,9 +429,9 @@ public class AudioFileRepository {
                     metadata.setLastModified(audioFile.getFile().lastModified());
                 }
                 return readCueSheet(metadata);
-            }else if(isValidJustDSD(path)){
+           /* }else if(isValidJustDSD(path)){
                 // sacd iso
-                return readJustDSD(path, metadata);
+                return readJustDSD(path, metadata); */
             }
             return null;
         } catch (Exception |OutOfMemoryError oom) {
@@ -504,8 +502,8 @@ public class AudioFileRepository {
         return mList;
     }
 
+    /*
     private AudioTag[] readJustDSD(String path, AudioTag metadata) {
-        // FIXME:
         try {
             if(isMediaFileExist(path) && isValidJustDSD(path)) {
                 File iso = new File(path);
@@ -591,7 +589,7 @@ public class AudioFileRepository {
 
     private boolean isValidJustDSD(String path) {
         return path.toLowerCase().endsWith(".iso");
-    }
+    } */
 
     private boolean readJAudioTagger(AudioFile audioFile, AudioTag mediaTag) {
         Tag tag = audioFile.getTag(); //TagOrCreateDefault();
@@ -653,9 +651,12 @@ public class AudioFileRepository {
     }
 
     public boolean detectLoudness(AudioTag tag) {
-        if(!StringUtils.isEmpty(tag.getLoudnessIntegrated())) return false; //prevent re check
-        //if(!StringUtils.isEmpty(tag.getLoudnessTruePeek())) return false; //prevent re check
         if(tag.isDSD()) return false; // not support DSD
+        String lint = StringUtils.trimToEmpty(tag.getLoudnessIntegrated());
+        if(!("-70.0".equals(lint) || StringUtils.isEmpty(lint))) {
+            return false; // recheck if default value;
+        }
+
         try {
 /*
    -i "%a" -af ebur128 -f null --i "%a" -af ebur128 -f null -
@@ -678,12 +679,14 @@ public class AudioFileRepository {
             //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
             // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
             FFmpegSession session = FFmpegKit.execute(cmd);
-            String output = session.getOutput();
-            String startTag = "Integrated loudness:";
-            int foundTag = output.lastIndexOf(startTag);
-            if(foundTag>0) {
+           // String output2 = session.getOutput();
+            String data = getFFmpegOutputData(session);
+            String keyword = "Integrated loudness:";
+
+            int startTag = data.lastIndexOf(keyword);
+            if(startTag>0) {
                 //int startIndex = output.indexOf("Summary:", foundTag);
-                String data = output.substring(foundTag);
+                //String data = output.substring(startTag);
                 String integrated = data.substring(data.indexOf("I:")+3, data.indexOf("LUFS"));
                 String range = data.substring(data.indexOf("LRA:")+5, data.indexOf("LU\n"));
                 String peak = data.substring(data.indexOf("Peak:")+6, data.indexOf("dBFS"));
@@ -696,6 +699,26 @@ public class AudioFileRepository {
             Timber.e(ex);
         }
         return false;
+    }
+
+    private String getFFmpegOutputData(FFmpegSession session) {
+        List<Log> logs = session.getLogs();
+        StringBuffer buff = new StringBuffer();
+        String keyword = "Integrated loudness:";
+        String keyword2 = "-70.0 LUFS";
+        boolean foundTag = false;
+        for(Log log: logs) {
+            String msg = StringUtils.trimToEmpty(log.getMessage());
+            if(!foundTag) { // finding start keyword
+                if (msg.contains(keyword) && !msg.contains(keyword2)) {
+                    foundTag = true;
+                }
+            }
+            if(!foundTag) continue;;
+            buff.append(msg);
+        }
+
+        return buff.toString();
     }
 
     private int getId3TagIntValue(Tag tag, FieldKey key) {
@@ -1329,7 +1352,6 @@ public class AudioFileRepository {
             }
             // call new API
             saveTag(item);
-            //readMetadata(item.getMetadata());
             saveMediaArtwork(item, artwork);
             status = true;
         }catch (Exception|OutOfMemoryError ex) {
@@ -1376,8 +1398,7 @@ public class AudioFileRepository {
     }
 
     public void deepScanMediaItem(AudioTag tag) {
-        tag = tagRepos.getAudioTagById(tag);
-       // detectMQA(tag);
+        tag = tagRepos.getAudioTagById(tag); // re-read tag from db
         if(detectLoudness(tag)) {
             tagRepos.saveTag(tag);
         }

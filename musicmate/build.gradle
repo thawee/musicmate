@@ -30,8 +30,9 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 55
-        versionName  "3.3.0 "+ versions.buildDate
+        versionCode 56
+        versionName  "3.3.1"+ versions.buildDate
+        ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
 		renderscriptSupportModeEnabled true
@@ -94,7 +95,7 @@ project.android.buildTypes.all { buildType ->
                     requireAbstractEpoxyModels  : "true",
                     implicitlyAddAutoModels     : "true",
                     logEpoxyTimings     : "false",
-                    enableParallelEpoxyProcessing     : "true",
+                   // enableParallelEpoxyProcessing     : "true",
             ]
 }
 
@@ -198,9 +199,8 @@ dependencies {
 
     // Local Library
     //https://bitbucket.org/ijabz/jaudiotagger/src/master/
-    //implementation project(':library:jaudiotagger226')
     implementation project(':library:jaudiotagger')
-    implementation project(':library:justdsd')
+    //implementation project(':library:justdsd')
     implementation project(':library:library')
     implementation project(':library:androidtagview')
     debugImplementation project(':library:crashreporter')

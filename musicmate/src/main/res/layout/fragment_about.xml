@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:layout_marginTop="@dimen/dimen_12_dp"
-        android:textSize="12sp"
+        android:textSize="18sp"
         android:textColor="@color/white"
         android:textStyle="bold"
         android:text="@string/app_statistics"/>
@@ -169,7 +169,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:layout_marginTop="@dimen/dimen_12_dp"
-        android:textSize="12sp"
+        android:textSize="18sp"
         android:textColor="@color/white"
         android:textStyle="bold"
         android:text="Digital Music"/>
@@ -185,6 +185,7 @@
         android:paddingRight="10dp"
         android:layout_height="wrap_content"
         android:paddingBottom="10dp"
+        android:layout_margin="@dimen/dimen_8_dp"
         android:scrollbars="vertical"
         />
 </LinearLayout>

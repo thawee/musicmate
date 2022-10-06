@@ -4,7 +4,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.StrictMode;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -139,6 +138,7 @@ public class MusixMateApp extends Application  {
                 .setButtonTextColor(Color.parseColor("#FFFFFF"))
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
+        /*
         // to detect not expected thread
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                 .detectAll()
@@ -149,15 +149,11 @@ public class MusixMateApp extends Application  {
                 .detectAll()
                 .penaltyLog()
                 .build());
+         */
 
         // TURN OFF log for JAudioTagger
             jAudioTaggerLogger1.setLevel(Level.SEVERE);
             jAudioTaggerLogger2.setLevel(Level.SEVERE);
-            //Timber.plant(new DebugTree());
-       // } else {
-        //    jAudioTaggerLogger1.setLevel(Level.SEVERE);
-        //    jAudioTaggerLogger2.setLevel(Level.SEVERE);
-       // }
 
 /*
         BlockCanary.install(this, new BlockCanaryContext() {
@@ -234,13 +230,9 @@ public class MusixMateApp extends Application  {
         instance.pruneWork();
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
-                //.setRequiresStorageNotLow(true)
-                //.setRequiresDeviceIdle(true)
                 .build();
         Constraints constraints2 = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
-                //.setRequiresStorageNotLow(true)
-                //.setRequiresDeviceIdle(true)
                 .build();
     /*
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)

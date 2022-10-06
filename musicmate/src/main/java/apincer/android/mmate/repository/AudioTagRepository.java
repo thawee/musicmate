@@ -209,7 +209,7 @@ public class AudioTagRepository {
             // tag in library already up-to-dated
             return tags.get(0).getId();
         }else {
-           //TODO support cue or iso
+           //TODO support cue sheet
             // check trackNo
             for(AudioTag t: tags)  {
                 if(!t.isCueSheet()) {

@@ -201,9 +201,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 	
 	private void doShowNowPlayingSongFAB(final AudioTag song) {
-        if (song == null || nowPlayingView == null) {
+        if (song == null) {
             doHideNowPlayingSongFAB();
             return;
+        }
+        if(nowPlayingView == null) {
+            setUpNowPlayingView();
         }
 
            // ImageLoader fabLoader = Coil.imageLoader(this);
@@ -346,6 +349,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         setUpEditorLauncher();
         setUpPermissions();
         setUpHeaderPanel();
+        setUpNowPlayingView();
         setUpBottomAppBar();
         setUpRecycleView();
         setUpSwipeToRefresh();
@@ -502,6 +506,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }
         }); */
         rightMenu.setOnClickListener(v -> doShowRightMenus());
+
+    }
+
+    private void setUpNowPlayingView() {
         // Now Playing
         nowPlayingView = findViewById(R.id.now_playing_panel);
         nowPlayingTitle = findViewById(R.id.now_playing_title);
@@ -1112,8 +1120,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         if(song!=null) {
             doShowNowPlayingSongFAB(song);
+            scrollToSong(song);
             if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
-                scrollToSong(song);
                     if(timer!=null) {
                             timer.cancel();
                     }

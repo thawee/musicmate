@@ -55,7 +55,6 @@ import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
-import apincer.android.mmate.work.ScanLoudnessWorker;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
@@ -207,7 +206,7 @@ public class TagsActivity extends AppCompatActivity {
             criteria = event.getSearchCriteria();
             editItems.clear();
             editItems.addAll(event.getItems());
-            displayTag = buildDisplayTag(true); // reload for single song, not re-load tags from media file
+            displayTag = buildDisplayTag(false); // reload for single song, not re-load tags from media file
 
             updateTitlePanel();
             setUpPageViewer();
@@ -549,9 +548,9 @@ public class TagsActivity extends AppCompatActivity {
 
         for (int i=1;i<editItems.size();i++) {
             AudioTag item = editItems.get(i);
-            if(reload) {
-                repos.reloadMediaItem(item);
-            }
+            //if(reload) {
+            //    repos.reloadMediaItem(item);
+            //}
             AudioTag displayTag2 = item;
             if(!StringUtils.equals(displayTag.getTitle(), displayTag2.getTitle())) {
                 displayTag.setTitle(StringUtils.MULTI_VALUES);

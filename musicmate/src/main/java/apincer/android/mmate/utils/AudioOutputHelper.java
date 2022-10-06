@@ -598,7 +598,6 @@ public class AudioOutputHelper {
                 for (BluetoothDevice dev : devices) {
                     //if (device.getAddress().replaceAll(":","").equals(dev.getAddress().replaceAll(":",""))) {
                        /* if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                            // TODO: Consider calling
                             //    ActivityCompat#requestPermissions
                             // here to request the missing permissions, and then overriding
                             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
