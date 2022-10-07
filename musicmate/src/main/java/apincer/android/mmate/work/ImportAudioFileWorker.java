@@ -69,7 +69,10 @@ public class ImportAudioFileWorker extends Worker {
             } catch (InterruptedException e) {
             }
         }
-       // mExecutor.shutdown();
+       // AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, null);
+       // EventBus.getDefault().post(message);
+
+        // mExecutor.shutdown();
 
         return Result.success();
     }
@@ -108,7 +111,8 @@ public class ImportAudioFileWorker extends Worker {
               //  String txt = status?getApplicationContext().getString(R.string.alert_organize_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_organize_fail, tag.getTitle());
 
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().post(message);
+           //     AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, null);
+                EventBus.getDefault().postSticky(message);
             } catch (Exception e) {
                 Timber.e(e);
             }

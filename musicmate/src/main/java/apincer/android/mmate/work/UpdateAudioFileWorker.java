@@ -106,7 +106,7 @@ public class UpdateAudioFileWorker extends Worker {
                 boolean status = repos.saveAudioFile(tag, artworkPath);
                // String txt = status?getApplicationContext().getString(R.string.alert_write_tag_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_write_tag_fail, tag.getTitle());
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().post(message);
+                EventBus.getDefault().postSticky(message);
             } catch (Exception e) {
                 Timber.e(e);
             }

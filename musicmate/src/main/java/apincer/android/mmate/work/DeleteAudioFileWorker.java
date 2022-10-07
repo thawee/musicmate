@@ -24,22 +24,22 @@ import timber.log.Timber;
 
 public class DeleteAudioFileWorker extends Worker {
     AudioFileRepository repos;
-    private final ThreadPoolExecutor mExecutor;
+   // private final ThreadPoolExecutor mExecutor;
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
      **/
-    private static final int NUMBER_OF_CORES = 2; //Runtime.getRuntime().availableProcessors();
+   // private static final int NUMBER_OF_CORES = 2; //Runtime.getRuntime().availableProcessors();
     // Sets the amount of time an idle thread waits before terminating
-    private static final int KEEP_ALIVE_TIME = 600; //1000;
+    //private static final int KEEP_ALIVE_TIME = 600; //1000;
     // Sets the Time Unit to Milliseconds
-    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
+   // private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
     private DeleteAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = AudioFileRepository.newInstance(getApplicationContext());
-        mExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_CORES);
+        //mExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_CORES);
         /*mExecutor = new ThreadPoolExecutor(
                 1, // + 5,   // Initial pool size
                 NUMBER_OF_CORES, // + 4, //8,   // Max pool size
@@ -51,13 +51,8 @@ public class DeleteAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-       /* Data inputData = getInputData();
-        String s =inputData.getString(Constants.KEY_MEDIA_TAG);
-        Gson gson = new Gson();
-        Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
-        List<AudioTag> tags = gson.fromJson(s, audioTagType);*/
-        List<AudioTag> tags = MusixMateApp.getPendingItems("Delete");
-        for (AudioTag tag:tags) {
+       List<AudioTag> tags = MusixMateApp.getPendingItems("Delete");
+       /* for (AudioTag tag:tags) {
             DeleteRunnable r = new DeleteRunnable(tag);
             mExecutor.execute(r);
         }
@@ -67,7 +62,17 @@ public class DeleteAudioFileWorker extends Worker {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
             }
+        } */
+        for (AudioTag tag:tags) {
+            try {
+                boolean status = repos.deleteMediaItem(tag);
+            } catch (Exception e) {
+                Timber.e(e);
+            }
         }
+       // AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, Constants.STATUS_SUCCESS, null);
+       // EventBus.getDefault().post(message);
+
         return Result.success();
     }
 
@@ -100,7 +105,8 @@ public class DeleteAudioFileWorker extends Worker {
                 //String txt = status?getApplicationContext().getString(R.string.alert_delete_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_delete_fail, tag.getTitle());
 
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().post(message);
+                //AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, null);
+                EventBus.getDefault().postSticky(message);
             } catch (Exception e) {
                 Timber.e(e);
             }

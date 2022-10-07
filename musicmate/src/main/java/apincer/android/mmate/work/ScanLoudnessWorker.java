@@ -15,6 +15,8 @@ import androidx.work.WorkerParameters;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -22,6 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.AudioTag;
 import apincer.android.mmate.repository.AudioFileRepository;
 import apincer.android.mmate.repository.AudioTagRepository;
@@ -69,6 +72,8 @@ public class ScanLoudnessWorker extends Worker {
               AudioTag tag = gson.fromJson(s, audioTagType);
                 try {
                     repos.deepScanMediaItem(tag);
+                    AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                    EventBus.getDefault().postSticky(message);
                 } catch (Exception e) {
                     Timber.e(e);
                 }

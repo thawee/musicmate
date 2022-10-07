@@ -708,12 +708,20 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                    // @Override
                    // public void run() {
                         // this code will be executed after 1 seconds
-                        epoxyController.loadSource();
+                      ///  epoxyController.loadSource();
               //      }
               //  }, 300);
-          //  }else {
-         //       epoxyController.notifyModelChanged(event.getItem());
-           // }
+            if(event.getItem()!=null) {
+                if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
+                    epoxyController.notifyModelRemoved(event.getItem());
+                }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
+                    epoxyController.notifyModelMoved(event.getItem());
+                }else {
+                    epoxyController.notifyModelChanged(event.getItem());
+                }
+            }else {
+                epoxyController.loadSource();
+            }
         }catch (Exception e) {
             Timber.e(e);
         }
@@ -952,7 +960,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         refreshLayout.setOnRefreshListener(refreshlayout -> epoxyController.loadSource(searchCriteria));
     }
 
-    protected void setUpRecycleView() {
+    private void setUpRecycleView() {
         epoxyController = new AudioTagController(this, this);
         epoxyController.addModelBuildListener(result -> {
             doStopRefresh();
@@ -993,7 +1001,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        doShowNowPlayingSongFAB(null);
+                        doShowNowPlayingSongFAB(MusixMateApp.getPlayingSong());
                     }else {
 						doHideNowPlayingSongFAB();
                     }

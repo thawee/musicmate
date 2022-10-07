@@ -146,7 +146,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
 
         if(loading) return;
 
-        synchronized (this) {
+       // synchronized (this) {
             loading = true;
             this.criteria = criteria;
 
@@ -175,7 +175,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                     loading = false;
                 }
             });
-        }
+       // }
     }
 
     public String getHeaderTitle() {
@@ -341,6 +341,18 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         }
     }
 
+    public void notifyModelRemoved(AudioTag tag) {
+        if(tag!= null) {
+            List<AudioTag> list = getCurrentData();
+            for(AudioTag item: list) {
+                if(tag.equals(item)) {
+                    list.remove(item);
+                }
+            }
+            setData(list);
+        }
+    }
+
     public boolean hasFilter() {
         if(criteria==null) return false;
         return !StringUtils.isEmpty(criteria.getFilterType());
@@ -394,6 +406,14 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         int cnt = getAdapter().getItemCount();
         for(int i=0; i < cnt;i++) {
             notifyModelChanged(i);
+        }
+    }
+
+    public void notifyModelMoved(AudioTag item) {
+        if(hasFilter()) {
+            notifyModelChanged(item);
+        }else {
+            loadSource();
         }
     }
 }
