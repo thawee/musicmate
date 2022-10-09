@@ -269,18 +269,29 @@ public class TagsActivity extends AppCompatActivity {
         //    hiresView.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(),displayTag));
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), displayTag))
+                .data(AudioTagUtils.getEncResolutionIcon(getApplicationContext(), displayTag))
                 .crossfade(false)
                 .target(hiresView)
                 .build();
         imageLoader.enqueue(request);
 
-        audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+        //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
+        if (displayTag.isAudiophile()) {
+            request = new ImageRequest.Builder(getApplicationContext())
+                    .data(AudioTagUtils.getAudiophileRecordsIcon(getApplicationContext()))
+                    .crossfade(false)
+                    .target(audiophileView)
+                    .build();
+            imageLoader.enqueue(request);
+            audiophileView.setVisibility(View.VISIBLE);
+        } else {
+            audiophileView.setVisibility(View.GONE);
+        }
 
         if(displayTag.isDSD()) {
             encResView.setVisibility(View.GONE);
         }else {
-            encResView.setImageBitmap(AudioTagUtils.getLoudnessIcon(getApplicationContext(), displayTag));
+            encResView.setImageBitmap(AudioTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
             /*request = new ImageRequest.Builder(getApplicationContext())
                     .data(AudioTagUtils.getCachedLoudnessIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
@@ -392,7 +403,7 @@ public class TagsActivity extends AppCompatActivity {
 
         request = new ImageRequest.Builder(getApplicationContext())
                 //.data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-                .data(AudioTagUtils.getCachedCoverArt(getApplicationContext(), displayTag))
+                .data(AudioTagUtils.getCoverArt(getApplicationContext(), displayTag))
                 .size(1024,1024)
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)

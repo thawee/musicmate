@@ -94,6 +94,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
     public void bind(Holder holder) {
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(controller.isSelected(tag));
+        ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
 
         // Background, when bound the first time
         AudioTag listeningItem = MusixMateApp.getPlayingSong(); // MusicListeningService.getInstance().getPlayingSong();
@@ -103,6 +104,13 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         holder.rootView.setOnLongClickListener(longClickListener);
 
         if (tag.isAudiophile()) {
+            ImageRequest request = new ImageRequest.Builder(holder.mContext)
+                    .data(AudioTagUtils.getAudiophileRecordsIcon(holder.mContext))
+                    .crossfade(false)
+                    .target(holder.mAudiophileLabelView)
+                    .build();
+            imageLoader.enqueue(request);
+          //  holder.mAudiophileLabelView.setImageBitmap(AudioTagUtils.createAudiophileRecordsIcon(holder.mContext));
             holder.mAudiophileLabelView.setVisibility(View.VISIBLE);
             //  holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_audiophile_background));
             //   holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_audiophile_background));
@@ -152,10 +160,9 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
  mNotificationView.setImageBitmap(AudioTagUtils.getSourceIcon(getContext(), item));
  */
         // Show AlbumArt
-        ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 //.data(EmbedCoverArtProvider.getUriForMediaItem(tag))
-                .data(AudioTagUtils.getCachedCoverArt(holder.mContext, tag))
+                .data(AudioTagUtils.getCoverArt(holder.mContext, tag))
                 // .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
@@ -171,7 +178,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
         // show enc i.e. MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
-                .data(AudioTagUtils.getCachedEncResolutionIcon(holder.mContext, tag))
+                .data(AudioTagUtils.getEncResolutionIcon(holder.mContext, tag))
                 .crossfade(false)
                 .target(holder.mAudioHiResView)
                 .build();
@@ -191,7 +198,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                     .target(holder.mAudioLoudnessView)
                     .build();
             imageLoader.enqueue(request);*/
-            holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.getLoudnessIcon(holder.mContext, tag));
+            holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.createLoudnessIcon(holder.mContext, tag));
             holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
         }else {
             holder.mAudioLoudnessView.setVisibility(View.GONE);
@@ -261,11 +268,11 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
-        holder.mDurationView.setBackground(resolutionBackground);
+       // holder.mDurationView.setBackground(resolutionBackground);
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-        holder.mFileSizeView.setBackground(resolutionBackground);
+       // holder.mFileSizeView.setBackground(resolutionBackground);
 
         // holder.mSamplingRateView.setImageBitmap(MediaItemUtils.createBitmapFromText(holder.getContext(), Constants.INFO_SAMPLE_RATE_WIDTH, 32, getMetadata().getAudioBitCountAndSampleRate(), textColor,borderColor, qualityColor));
            // holder.mSamplingRateView.setImageBitmap(AudioTagUtils.getSampleRateIcon(holder.mContext, tag));
@@ -316,7 +323,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         ImageView mAudioHiResView;
         ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
-        View mAudiophileLabelView;
+        ImageView mAudiophileLabelView;
 
         @Override
         protected void bindView(View view) {

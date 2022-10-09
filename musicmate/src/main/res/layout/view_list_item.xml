@@ -182,6 +182,17 @@
 
             <ImageView
                 android:id="@+id/item_audiophile_label"
+                android:layout_width="@dimen/dimen_46_dp"
+                android:layout_height="@dimen/dimen_16_dp"
+                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_marginRight="@dimen/dimen_2_dp"
+                android:layout_gravity="center"
+                android:layout_toRightOf="@id/item_loudness_icon"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_audiophile"/>
+            <!--
+            <ImageView
+                android:id="@+id/item_audiophile_label"
                 android:layout_width="@dimen/dimen_24_dp"
                 android:layout_height="@dimen/dimen_16_dp"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
@@ -194,6 +205,7 @@
                 app:tint="@color/audiophile_background"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_audiophile"/>
+                -->
 
             <ImageView
                 android:id="@+id/item_src_icon"

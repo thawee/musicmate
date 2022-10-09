@@ -239,7 +239,7 @@
 
                     <ImageView
                         android:id="@+id/icon_audiophile"
-                        android:layout_width="@dimen/dimen_42_dp"
+                        android:layout_width="@dimen/dimen_70_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_gravity="right|center_vertical"
                         android:layout_marginRight="@dimen/dimen_2_dp"
@@ -247,9 +247,7 @@
                         android:gravity="right|center_vertical"
                         android:paddingTop="@dimen/dimen_2_dp"
                         android:paddingBottom="@dimen/dimen_2_dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/ic_audiophile"
-                        app:tint="@color/audiophile_background"/>
+                        android:src="@drawable/ic_audiophile"/>
 
                     <ImageView
                         android:id="@+id/icon_loudness"

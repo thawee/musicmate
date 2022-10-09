@@ -4,7 +4,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -625,7 +627,7 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
-    private static Bitmap getEncodingSamplingRateIcon(Context context, AudioTag tag) {
+    private static Bitmap createEncodingSamplingRateIcon(Context context, AudioTag tag) {
         int width = 340;
         int height = 96;
         int whiteColor = context.getColor(R.color.white);
@@ -689,7 +691,7 @@ public class AudioTagUtils {
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
 
         //draw back color
-        padding = 8;
+        padding = 4;
         rectangle = new RectF(
                 padding, // Left
                 padding, // Top
@@ -1201,6 +1203,161 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
+    public static Bitmap createAudiophileRecordsIcon(Context context) {
+        int width = 280; // 16x46, 24x70
+        int height = 96;
+        int greyColor = context.getColor(R.color.grey200);
+        int bgColor = context.getColor(R.color.material_color_blue_grey_900);
+        int recordsColor = context.getColor(R.color.audiophile_label2);
+        int blackColor = context.getColor(R.color.black);
+        int qualityColor = context.getColor(R.color.audiophile_label1);
+        String label1 = "Audiophile";
+        String label2 = "R e c o r d s";
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding = 0;
+        int cornerRadius = 12;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw border dark grey
+        RectF rectangle = new RectF(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(greyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        //draw back color
+        padding = 4;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw audiophile background
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(bgColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw grey shade colors
+        int []colors = new int[6];
+/*        colors[5] = context.getColor(R.color.grey200);
+        colors[4] = context.getColor(R.color.grey300);
+        colors[3] = context.getColor(R.color.grey400);
+        colors[2] = context.getColor(R.color.grey500);
+        colors[1] = context.getColor(R.color.grey600);
+        colors[0] = context.getColor(R.color.grey800);
+
+ */
+
+        colors[5] = context.getColor(R.color.material_color_blue_grey_300);
+        colors[4] = context.getColor(R.color.material_color_blue_grey_400);
+        colors[3] = context.getColor(R.color.material_color_blue_grey_500);
+        colors[2] = context.getColor(R.color.material_color_blue_grey_600);
+        colors[1] = context.getColor(R.color.material_color_blue_grey_700);
+        colors[0] = context.getColor(R.color.material_color_blue_grey_800);
+
+        int barWidth = 6;
+        int rndNo =0;
+        padding=8;
+        int bottomPos = height-padding-4;
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            Path path = new Path();
+            path.moveTo(12+(rndNo*barWidth), padding);
+            path.lineTo(12+(rndNo*barWidth), bottomPos-(rndNo*barWidth));
+            path.lineTo( width-padding, bottomPos-(rndNo*barWidth));
+
+            float radius = 36.0f;
+
+            CornerPathEffect cornerPathEffect =
+                    new CornerPathEffect(radius);
+
+            paint.setPathEffect(cornerPathEffect);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
+        // draw label "Records", grey color
+        Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+            int letterTextSize = 24; //28;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            mLetterPaint.setColor(recordsColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setDither(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(label2, 0, 1, textMathRect);
+            float mLetterTop = textMathRect.height() ;
+            float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+            myCanvas.drawText(label2,
+                    (float) (bounds.width()-(textMathRect.width()*6)), // left
+                    mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
+                    mLetterPaint);
+
+        // draw label "Audiophile", quality color
+        font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+        letterTextSize = 40; //82;
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(qualityColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setDither(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label1, 0, 1, textMathRect);
+        mLetterTop = (textMathRect.height() / 5f);
+        mPositionY= bounds.exactCenterY();//+(bounds.exactCenterY()/4);
+        myCanvas.drawText(label1,
+                (float) (bounds.exactCenterX())+20, //left
+                mPositionY - mLetterTop, //bounds.exactCenterY(), // top
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
     public static int getResolutionColor(Context context, AudioTag tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
@@ -1335,7 +1492,7 @@ public class AudioTagUtils {
         return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
     }
 
-    public static File getCachedCoverArt( Context context, AudioTag tag) {
+    public static File getCoverArt( Context context, AudioTag tag) {
         //PH|SD_AR|R_album|filename.png
         File dir = context.getExternalCacheDir();
         String sid = tag.getStorageId();
@@ -1371,7 +1528,7 @@ public class AudioTagUtils {
         return pathFile;
     }
 
-    public static File getCachedEncResolutionIcon( Context context, AudioTag tag) {
+    public static File getEncResolutionIcon( Context context, AudioTag tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
         String path = "/Icons/";
@@ -1398,7 +1555,32 @@ public class AudioTagUtils {
                 dir = pathFile.getParentFile();
                 dir.mkdirs();
 
-                Bitmap bitmap = getEncodingSamplingRateIcon(context, tag);
+                Bitmap bitmap = createEncodingSamplingRateIcon(context, tag);
+                byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
+                if(is!=null) {
+                    IOUtils.write(is, new FileOutputStream(pathFile));
+                }
+            } catch (Exception e) {
+                Timber.e(e);
+            }
+        }
+        return pathFile;
+    }
+
+    public static File getAudiophileRecordsIcon( Context context) {
+        //AudiophileRecords.png
+        File dir = context.getExternalCacheDir();
+        String path = "/Icons/AudiophileRecords.png";
+
+        File pathFile = new File(dir, path);
+        if(!pathFile.exists()) {
+        //if(true) {
+            // create file
+            try {
+                dir = pathFile.getParentFile();
+                dir.mkdirs();
+
+                Bitmap bitmap = createAudiophileRecordsIcon(context);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
                 if(is!=null) {
                     IOUtils.write(is, new FileOutputStream(pathFile));
@@ -1703,7 +1885,7 @@ public class AudioTagUtils {
         return myBitmap;
     }*/
 
-    public static Bitmap getLoudnessIcon(Context context,  AudioTag tag) {
+    public static Bitmap createLoudnessIcon(Context context,  AudioTag tag) {
         int width = 340; // for xx
         int height = 96; // 16
         int greyColor = context.getColor(R.color.grey200);

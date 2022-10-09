@@ -213,7 +213,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest fabRequest = new ImageRequest.Builder(this)
                    // .data(EmbedCoverArtProvider.getUriForMediaItem(song))
-                    .data(AudioTagUtils.getCachedCoverArt(getApplicationContext(), song))
+                    .data(AudioTagUtils.getCoverArt(getApplicationContext(), song))
                     .size(256,256)
                     .crossfade(false)
                     .allowHardware(false)
@@ -229,7 +229,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        // nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
         imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), song))
+                .data(AudioTagUtils.getEncResolutionIcon(getApplicationContext(), song))
                 .crossfade(false)
                 .target(nowPlayingType)
                 //.transformations(new RoundedCornersTransformation(4,4,4,4))
@@ -849,7 +849,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(tag != null && !StringUtils.isEmpty(tag.getPath())) {
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                    .data(AudioTagUtils.getCachedEncResolutionIcon(getApplicationContext(), tag))
+                    .data(AudioTagUtils.getEncResolutionIcon(getApplicationContext(), tag))
                     .crossfade(false)
                     .target(sourceIcon)
                     .build();
