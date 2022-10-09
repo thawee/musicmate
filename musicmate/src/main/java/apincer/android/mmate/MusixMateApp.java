@@ -232,13 +232,13 @@ public class MusixMateApp extends Application  {
                 .build();
 
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
+                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
                 .setConstraints(constraints)
                 .build();
         instance.enqueue(workRequest);
 
         workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
-                .setInitialDelay(LOUDNESS_SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
+                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build();
         instance.enqueue(workRequest);

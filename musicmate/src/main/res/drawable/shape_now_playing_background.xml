@@ -5,7 +5,7 @@
     <!-- View background color
      @color/grey900-->
     <solid
-        android:color="@color/now_playing_alpha_80" >
+        android:color="@color/now_playing" >
     </solid>
 
     <!-- View border color and width -->

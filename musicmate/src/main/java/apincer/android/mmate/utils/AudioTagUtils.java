@@ -628,7 +628,7 @@ public class AudioTagUtils {
     }
 
     private static Bitmap createEncodingSamplingRateIcon(Context context, AudioTag tag) {
-        int width = 340;
+        int width = 340; // 24x85, 16x56, 18x63
         int height = 96;
         int whiteColor = context.getColor(R.color.white);
         int greyColor = context.getColor(R.color.grey200);

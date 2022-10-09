@@ -371,8 +371,10 @@ public class AudioOutputHelper {
     }
 
     public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
-        int width = 128;
+        int width = 128;  // 16x21, 24x32
         int height = 96;
+
+        int greyColor = context.getColor(R.color.grey200);
         int darkGreyColor = context.getColor(R.color.grey900);
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
