@@ -9,8 +9,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Constraints;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import com.balsikandar.crashreporter.CrashReporter;
@@ -231,16 +230,20 @@ public class MusixMateApp extends Application  {
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
                 .build();
-        Constraints constraints2 = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .build();
-    /*
+
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                .setInitialDelay(6, TimeUnit.SECONDS)
+                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build();
-        instance.enqueue(workRequest); */
-        PeriodicWorkRequest scansongs = new PeriodicWorkRequest.Builder(ScanAudioFileWorker.class, SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
+        instance.enqueue(workRequest);
+
+        workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
+                .setInitialDelay(LOUDNESS_SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
+                .setConstraints(constraints)
+                .build();
+        instance.enqueue(workRequest);
+
+       /* PeriodicWorkRequest scansongs = new PeriodicWorkRequest.Builder(ScanAudioFileWorker.class, SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
                 .addTag("ScanSongs")
                 .setConstraints(constraints)
                 .build();
@@ -251,5 +254,7 @@ public class MusixMateApp extends Application  {
                 .setConstraints(constraints2)
                 .build();
         instance.enqueueUniquePeriodicWork("ScanLoudness", ExistingPeriodicWorkPolicy.KEEP, loudness);
+
+        */
     }
 }

@@ -632,7 +632,7 @@ public class AudioTagUtils {
         int height = 96;
         int whiteColor = context.getColor(R.color.white);
         int greyColor = context.getColor(R.color.grey200);
-        int darkGreyColor = context.getColor(R.color.grey900);
+        //int darkGreyColor = context.getColor(R.color.grey900);
         int blackColor = context.getColor(R.color.black);
         int bgBlackColor = context.getColor(R.color.black_transparent_80);
         int qualityColor = getResolutionColor(context,tag);
@@ -745,7 +745,8 @@ public class AudioTagUtils {
 
         if(longEnc) {
             // PCM xx
-            font =  ResourcesCompat.getFont(context, R.font.adca);
+            //font =  ResourcesCompat.getFont(context, R.font.adca);
+            font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
             int letterTextSize = 34; //42;
 
             // draw label pcm
