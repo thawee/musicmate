@@ -1227,6 +1227,7 @@ public class AudioTagUtils {
         );
 
         // Initialize a new Round Rect object
+        /*
         // draw border dark grey
         RectF rectangle = new RectF(
                 0, // Left
@@ -1240,17 +1241,17 @@ public class AudioTagUtils {
         bgPaint.setColor(greyColor);
         bgPaint.setStyle(Paint.Style.FILL);
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
-
+*/
         //draw back color
-        padding = 4;
-        rectangle = new RectF(
+        padding = 0;
+        RectF rectangle = new RectF(
                 padding, // Left
                 padding, // Top
                 myCanvas.getWidth() - padding, // Right
                 myCanvas.getHeight() - padding // Bottom
         );
 
-        bgPaint =  new Paint();
+        Paint bgPaint =  new Paint();
         bgPaint.setAntiAlias(true);
         bgPaint.setColor(blackColor);
         bgPaint.setStyle(Paint.Style.FILL);
@@ -1272,7 +1273,7 @@ public class AudioTagUtils {
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
 
         // draw grey shade colors
-        int []colors = new int[6];
+        int []colors = new int[7];
 /*        colors[5] = context.getColor(R.color.grey200);
         colors[4] = context.getColor(R.color.grey300);
         colors[3] = context.getColor(R.color.grey400);
@@ -1282,12 +1283,13 @@ public class AudioTagUtils {
 
  */
 
-        colors[5] = context.getColor(R.color.material_color_blue_grey_300);
-        colors[4] = context.getColor(R.color.material_color_blue_grey_400);
-        colors[3] = context.getColor(R.color.material_color_blue_grey_500);
-        colors[2] = context.getColor(R.color.material_color_blue_grey_600);
-        colors[1] = context.getColor(R.color.material_color_blue_grey_700);
-        colors[0] = context.getColor(R.color.material_color_blue_grey_800);
+        colors[6] = context.getColor(R.color.material_color_blue_grey_300);
+        colors[5] = context.getColor(R.color.material_color_blue_grey_400);
+        colors[4] = context.getColor(R.color.material_color_blue_grey_500);
+        colors[3] = context.getColor(R.color.material_color_blue_grey_600);
+        colors[2] = context.getColor(R.color.material_color_blue_grey_700);
+        colors[1] = context.getColor(R.color.material_color_blue_grey_800);
+        colors[0] = context.getColor(R.color.material_color_blue_grey_900);
 
         int barWidth = 6;
         int rndNo =0;
@@ -1332,7 +1334,7 @@ public class AudioTagUtils {
             float mLetterTop = textMathRect.height() ;
             float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
             myCanvas.drawText(label2,
-                    (float) (bounds.width()-(textMathRect.width()*6)), // left
+                    (float) (bounds.width()-(textMathRect.width()*6.5)), // left
                     mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
                     mLetterPaint);
 
@@ -1349,11 +1351,11 @@ public class AudioTagUtils {
         // Text draws from the baselineAdd some top padding to center vertically.
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(label1, 0, 1, textMathRect);
-        mLetterTop = (textMathRect.height() / 5f);
-        mPositionY= bounds.exactCenterY();//+(bounds.exactCenterY()/4);
+       // mLetterTop = (textMathRect.height() / 6f);
+        mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
         myCanvas.drawText(label1,
                 (float) (bounds.exactCenterX())+20, //left
-                mPositionY - mLetterTop, //bounds.exactCenterY(), // top
+                mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
                 mLetterPaint);
 
         return myBitmap;

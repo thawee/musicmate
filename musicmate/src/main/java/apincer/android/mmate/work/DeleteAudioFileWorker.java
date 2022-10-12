@@ -11,9 +11,6 @@ import androidx.work.WorkerParameters;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -24,52 +21,35 @@ import timber.log.Timber;
 
 public class DeleteAudioFileWorker extends Worker {
     AudioFileRepository repos;
-   // private final ThreadPoolExecutor mExecutor;
-    /**
-     * Gets the number of available cores
-     * (not always the same as the maximum number of cores)
-     **/
-   // private static final int NUMBER_OF_CORES = 2; //Runtime.getRuntime().availableProcessors();
-    // Sets the amount of time an idle thread waits before terminating
-    //private static final int KEEP_ALIVE_TIME = 600; //1000;
-    // Sets the Time Unit to Milliseconds
-   // private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
+
     private DeleteAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = AudioFileRepository.newInstance(getApplicationContext());
-        //mExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_CORES);
-        /*mExecutor = new ThreadPoolExecutor(
-                1, // + 5,   // Initial pool size
-                NUMBER_OF_CORES, // + 4, //8,   // Max pool size
-                KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
-                KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
-                new LinkedBlockingDeque<>());  // Work Queue */
     }
 
     @NonNull
     @Override
     public Result doWork() {
        List<AudioTag> tags = MusixMateApp.getPendingItems("Delete");
-       /* for (AudioTag tag:tags) {
-            DeleteRunnable r = new DeleteRunnable(tag);
-            mExecutor.execute(r);
+        for (AudioTag tag:tags) {
+            MusicMateExecutors.maintain(new DeleteRunnable(tag));
         }
-
+/*
         while (!mExecutor.getQueue().isEmpty()){
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
             }
-        } */
+        }
         for (AudioTag tag:tags) {
             try {
                 boolean status = repos.deleteMediaItem(tag);
             } catch (Exception e) {
                 Timber.e(e);
             }
-        }
+        } */
        // AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, Constants.STATUS_SUCCESS, null);
        // EventBus.getDefault().post(message);
 
@@ -77,19 +57,10 @@ public class DeleteAudioFileWorker extends Worker {
     }
 
     public static void startWorker(Context context, List<AudioTag> files) {
-       /* Gson gson = new Gson();
-        Type audioTagType = new TypeToken<List<AudioTag>>(){}.getType();
-        //for(AudioTag tag: files) {
-            String s = gson.toJson(files, audioTagType);
-            Data inputData = (new Data.Builder())
-                    .putString(Constants.KEY_MEDIA_TAG, s)
-                    .build();*/
         MusixMateApp.putPendingItems("Delete", files);
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class).build();
                   //  .setInputData(inputData).build();
             WorkManager.getInstance(context).enqueue(workRequest);
-           // WorkManager.getInstance(context).enqueueUniqueWork("DeleteWorker", ExistingWorkPolicy.APPEND, workRequest);
-       // }
     }
 
     private final class DeleteRunnable  implements Runnable {

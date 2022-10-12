@@ -402,18 +402,12 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         return  ((AudioTagModel_)holder.getModel()).tag();
     }
 
-    public void notifyPlayingStatus() {
-        int cnt = getAdapter().getItemCount();
-        for(int i=0; i < cnt;i++) {
-            notifyModelChanged(i);
-        }
-    }
-
     public void notifyModelMoved(AudioTag item) {
+        // if match filter, notify change
+        // else, notify remove
+        notifyModelChanged(item);
         if(hasFilter()) {
-            notifyModelChanged(item);
-        }else {
-            loadSource();
+            setData(getCurrentData()); // re-build data models, re-filter
         }
     }
 }

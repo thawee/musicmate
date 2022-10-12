@@ -358,7 +358,7 @@
         android:layout_marginRight="@dimen/dimen_4_dp"
         android:padding="@dimen/dimen_2_dp"
         android:src="@mipmap/ic_launcher"
-        android:background="@drawable/shape_border_grey"/>
+        android:background="@drawable/shape_border_playing"/>
 <!--
     <TextView
         android:id="@+id/item_audiophile_label"
