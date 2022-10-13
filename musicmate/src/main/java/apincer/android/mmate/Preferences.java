@@ -7,11 +7,6 @@ import androidx.preference.PreferenceManager;
 
 public class Preferences {
     private static final String TAG = Preferences.class.getSimpleName();
-    public static boolean isShowNotification(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_SHOW_NOTIFICATION,true);
-    }
 
     public static boolean isShowStorageSpace(Context context) {
         SharedPreferences prefs =
@@ -35,12 +30,6 @@ public class Preferences {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_PREFIX_TRACK_NUMBER_ON_TITLE,false);
-    }
-
-    public static boolean isShowGroupings(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_SHOW_GROUPINGS_IN_COLLECTION,true);
     }
 
     public static boolean isVibrateOnNextSong(Context context) {

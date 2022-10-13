@@ -285,5 +285,7 @@
     <color name="audiophile_label2">#ffffff</color>
 
     <color name="audiophile">#FFFFFF</color>
+    <color name="mqa_master">#4CAF50</color>
+    <color name="mqa_studio">#2196F3</color>
 
 </resources>
