@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="48dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/shape_item_background"
         android:orientation="vertical">
 
@@ -38,7 +38,7 @@
                 android:paddingTop="1dp"
                 android:text="@{title}"
                 android:textColor="@color/grey100"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -245,7 +245,7 @@
                     android:id="@+id/item_duration"
                     android:layout_width="36dp"
                     android:layout_height="16dp"
-                    android:background="@drawable/shape_background_unknown"
+                    android:background="@drawable/shape_background_time"
                     android:fontFamily="@font/oswald_bold"
                     android:gravity="center"
                     android:paddingLeft="@dimen/dimen_1_dp"
@@ -261,7 +261,7 @@
                     android:layout_height="16dp"
                     android:layout_marginLeft="@dimen/dimen_2_dp"
                     android:layout_marginRight="@dimen/dimen_4_dp"
-                    android:background="@drawable/shape_background_unknown"
+                    android:background="@drawable/shape_background_time"
                     android:fontFamily="@font/oswald_bold"
                     android:gravity="center"
                     android:paddingLeft="@dimen/dimen_2_dp"
