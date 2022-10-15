@@ -44,7 +44,6 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.fs.EmbedCoverArtProvider;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
@@ -156,8 +155,6 @@ public class TagsEditorFragment extends Fragment {
     private void doPickCoverart() {
         CoCo.with(this)
                     .pick()
-               // .then()
-               // .crop()
                 .start(new CoCoAdapter<PickResult>() {
                     @Override
                     public void onFailed(@NonNull Exception exception) {
@@ -508,8 +505,9 @@ public class TagsEditorFragment extends Fragment {
 
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-                    .size(640, 640)
+                //.data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
+                //    .size(640, 640)
+                    .data(MusicTagUtils.getCoverArt(getContext(), displayTag))
                 //.allowHardware(false)
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)

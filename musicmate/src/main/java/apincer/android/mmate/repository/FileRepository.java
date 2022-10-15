@@ -1155,7 +1155,7 @@ public class FileRepository {
         if("Thai".equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
         }
-        if(Constants.QUALITY_SAMPLING_RATE_192 <= metadata.getAudioSampleRate()) {
+        if(metadata.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_192) {
             return STORAGE_PRIMARY;
         }
        // if("Classical".equalsIgnoreCase(metadata.getGrouping())) {

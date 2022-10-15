@@ -22,30 +22,12 @@ import timber.log.Timber;
 
 public class UpdateAudioFileWorker extends Worker {
     FileRepository repos;
-   // private final ThreadPoolExecutor mExecutor;
-    /**
-     * Gets the number of available cores
-     * (not always the same as the maximum number of cores)
-     **/
-   // private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
-    // Sets the amount of time an idle thread waits before terminating
-   // private static final int KEEP_ALIVE_TIME = 600; //1000;
-    // Sets the Time Unit to Milliseconds
-   // private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
 
     private UpdateAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = FileRepository.newInstance(getApplicationContext());
-       /* mExecutor = new ThreadPoolExecutor(
-                NUMBER_OF_CORES/2, // + 5,   // Initial pool size
-                NUMBER_OF_CORES, // + 4, //8,   // Max pool size
-                KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
-                KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
-                new LinkedBlockingDeque<>());  // Work Queue
-
-        */
     }
 
     @NonNull
@@ -56,19 +38,8 @@ public class UpdateAudioFileWorker extends Worker {
         List<MusicTag> tags = MusixMateApp.getPendingItems("Update");
 
         for (MusicTag tag:tags) {
-            MusicMateExecutors.maintain(new UpdateRunnable(tag, artworkPath));
-            //UpdateRunnable r = new UpdateRunnable(tag, artworkPath);
-            //mExecutor.execute(r);
+            MusicMateExecutors.update(new UpdateRunnable(tag, artworkPath));
         }
-/*
-        while (!mExecutor.getQueue().isEmpty()){
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-            }
-        }
-
- */
 
         return Result.success();
     }

@@ -231,7 +231,9 @@ ui.androidAboutPage = 'io.github.medyo:android-about-page:2.0.0'
 ui.alerter = 'com.github.tapadoo:alerter:7.2.4'
 //https://github.com/abdulrehmank7/trapezium-view
 ui.trapezium = 'com.github.abdulrehmank7:trapezium-view:1.01'
+//https://github.com/PhilJay/MPAndroidChart
 ui.mpandroidchart = 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+//https://github.com/salehyarahmadi/DataTable
 ui.datatables = 'com.github.salehyarahmadi:DataTable:v1.0.1'
 ui.htmleditor = 'com.github.irshulx:laser-native-editor:3.0.4'
 deps.ui = ui

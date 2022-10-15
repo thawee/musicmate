@@ -34,19 +34,8 @@ public class ImportAudioFileWorker extends Worker {
     public Result doWork() {
         List<MusicTag> tags = MusixMateApp.getPendingItems("Import");
         for (MusicTag tag:tags) {
-            MusicMateExecutors.maintain(new ImportRunnable(tag));
+            MusicMateExecutors.update(new ImportRunnable(tag));
         }
-/*
-        while (!mExecutor.getQueue().isEmpty()){
-            try {
-                Thread.sleep(10000); // 10 seconds
-            } catch (InterruptedException e) {
-            }
-        } */
-       // AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, null);
-       // EventBus.getDefault().post(message);
-
-        // mExecutor.shutdown();
 
         return Result.success();
     }

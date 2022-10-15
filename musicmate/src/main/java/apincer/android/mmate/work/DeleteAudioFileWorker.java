@@ -34,25 +34,8 @@ public class DeleteAudioFileWorker extends Worker {
     public Result doWork() {
        List<MusicTag> tags = MusixMateApp.getPendingItems("Delete");
         for (MusicTag tag:tags) {
-            MusicMateExecutors.maintain(new DeleteRunnable(tag));
+            MusicMateExecutors.update(new DeleteRunnable(tag));
         }
-/*
-        while (!mExecutor.getQueue().isEmpty()){
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-            }
-        }
-        for (AudioTag tag:tags) {
-            try {
-                boolean status = repos.deleteMediaItem(tag);
-            } catch (Exception e) {
-                Timber.e(e);
-            }
-        } */
-       // AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, Constants.STATUS_SUCCESS, null);
-       // EventBus.getDefault().post(message);
-
         return Result.success();
     }
 

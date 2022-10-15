@@ -144,8 +144,6 @@ dependencies {
     implementation deps.ui.stateViews
     implementation deps.ui.androidribbon
     implementation deps.ui.coco
-    implementation deps.ui.androidAboutPage
-    //implementation deps.ui.lapism_search
     implementation deps.ui.mpandroidchart
     implementation deps.ui.datatables
 
@@ -169,7 +167,7 @@ dependencies {
     implementation deps.guava
     implementation deps.ffmpeg
     implementation deps.coverartarchive
-    implementation deps.essentials
+   // implementation deps.essentials
 
     //retrofit and json Librariess
     implementation deps.google.gson
@@ -249,7 +247,8 @@ aboutLibraries {
             ~"io.github.scwang90:refresh-header-classics",
             ~"io.github.scwang90:refresh-footer-classics",
             ~"io.github.scwang90:refresh-drawable-paint",
-            ~"com.afollestad.material-dialogs:*"
+            ~"com.afollestad.*",
+            ~"com.github.bumptech.*"
     ]
 }
 

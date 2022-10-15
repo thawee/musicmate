@@ -1,0 +1,7 @@
+{
+  "uniqueId": "com.github.PhilJay:MPAndroidChart",
+  "name": "MPAndroidChart",
+  "developers":[{"name":"PhilJay"}],
+  "description": "A powerful Android chart view",
+  "website": "https://github.com/PhilJay/MPAndroidChart"
+}

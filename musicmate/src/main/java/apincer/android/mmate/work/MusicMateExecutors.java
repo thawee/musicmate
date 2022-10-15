@@ -25,7 +25,6 @@ public class MusicMateExecutors {
     private static volatile MusicMateExecutors mInstance;
 
     private MusicMateExecutors(Executor mScannerThread, Executor mMaintainThread, Executor mainThread) {
-
         this.mScannerThread = mScannerThread;
         this.mMaintainThread = mMaintainThread;
         this.mMainThread = mainThread;
@@ -41,7 +40,7 @@ public class MusicMateExecutors {
     }
 
     private MusicMateExecutors() {
-        this(Executors.newFixedThreadPool(NUMBER_OF_CORES), Executors.newFixedThreadPool(NUMBER_OF_CORES),
+        this(Executors.newFixedThreadPool(2), Executors.newFixedThreadPool(NUMBER_OF_CORES),
                 new MainThreadExecutor());
         /*mExecutor = new ThreadPoolExecutor(
                 1, // + 5,   // Initial pool size
@@ -51,26 +50,26 @@ public class MusicMateExecutors {
                 new LinkedBlockingDeque<>());  // Work Queue */
     }
 
-    public Executor scanner() {
+    public Executor single() {
         return mScannerThread;
     }
 
-    public Executor maintain() {
+    public Executor update() {
         return mMaintainThread;
     }
 
-    public Executor mainThread() {
+    public Executor main() {
         return mMainThread;
     }
 
-    public static void scan(@NonNull Runnable command) {
-        getInstance().scanner().execute(command);
+    public static void single(@NonNull Runnable command) {
+        getInstance().single().execute(command);
     }
-    public static void maintain(@NonNull Runnable command) {
-        getInstance().maintain().execute(command);
+    public static void update(@NonNull Runnable command) {
+        getInstance().update().execute(command);
     }
-    public static void xMain(@NonNull Runnable command) {
-        getInstance().mainThread().execute(command);
+    public static void main(@NonNull Runnable command) {
+        getInstance().main().execute(command);
     }
 
     private static class MainThreadExecutor implements Executor {

@@ -33,7 +33,7 @@ public class ScanAudioFileWorker extends Worker {
         for (String sid : storageIds) {
             File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
             if(file.exists()) {
-                MusicMateExecutors.scan(new ScanRunnable(file));
+                MusicMateExecutors.update(new ScanRunnable(file));
                 //ScanRunnable r = new ScanRunnable(file);
                 //mExecutor.execute(r);
             }
@@ -41,46 +41,16 @@ public class ScanAudioFileWorker extends Worker {
             if(file.exists()) {
                 //ScanRunnable r = new ScanRunnable(file);
                 //mExecutor.execute(r);
-                MusicMateExecutors.scan(new ScanRunnable(file));
+                MusicMateExecutors.update(new ScanRunnable(file));
             }
             file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
             if(file.exists()) {
                 //ScanRunnable r = new ScanRunnable(file);
                 //mExecutor.execute(r);
-                MusicMateExecutors.scan(new ScanRunnable(file));
+                MusicMateExecutors.update(new ScanRunnable(file));
             }
         }
         MusicTagRepository.cleanMusicMate();
-
-        /*
-        for (String sid : storageIds) {
-            File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
-            if(file.exists()) {
-                ScanRunnable r = new ScanRunnable(file);
-                mExecutor.execute(r);
-            }
-            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Download"));
-            if(file.exists()) {
-                ScanRunnable r = new ScanRunnable(file);
-                mExecutor.execute(r);
-            }
-            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
-            if(file.exists()) {
-                ScanRunnable r = new ScanRunnable(file);
-                mExecutor.execute(r);
-            }
-        }
-        AudioTagRepository.cleanMusicMate();
-        //ScanLoudnessWorker.startScan(getApplicationContext());
-        while (!mExecutor.getQueue().isEmpty()){
-            try {
-                Thread.sleep(60000); // 1 mins
-            } catch (InterruptedException e) {
-            }
-        }
-        mExecutor.shutdown();
-
-         */
 
         return Result.success();
     }
@@ -127,7 +97,7 @@ public class ScanAudioFileWorker extends Worker {
                     if(isValidMediaFile(f)) {
                         repos.scanFileAndSaveTag(f);
                     } else if(f.isDirectory()) {
-                        MusicMateExecutors.scan(new ScanRunnable(f));
+                        MusicMateExecutors.update(new ScanRunnable(f));
                        // ScanRunnable r = new ScanRunnable(f);
                        // mExecutor.execute(r);
                     }

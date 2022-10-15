@@ -1,0 +1,6 @@
+{
+  "uniqueId": "com.github.irshulx:laser-native-editor",
+  "name": "Android-WYSIWYG-Editor",
+  "description": "A text editor written in Android using native components in the content tree. Integrate easily to work with web based WYSIWYG's",
+  "website": "https://github.com/irshu355/Android-WYSIWYG-Editor"
+}
