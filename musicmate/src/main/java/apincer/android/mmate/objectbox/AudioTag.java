@@ -658,9 +658,10 @@ public class AudioTag implements Cloneable , Parcelable {
         return managed;
     }
 
+    /*
     public boolean isHDA() {
         return isLossless() && getAudioBitsPerSample()>= Constants.QUALITY_BIT_DEPTH_HD && getAudioSampleRate()>= Constants.QUALITY_SAMPLING_RATE_44;
-    }
+    }*/
 
     public void cloneFrom(AudioTag tag) {
         this.id = tag.id;

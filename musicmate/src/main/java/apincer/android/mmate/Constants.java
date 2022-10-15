@@ -21,6 +21,7 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
+    public static final long QUALITY_SAMPLING_RATE_192 = 192000;
     public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static final String SRC_HD_TRACKS = "HDTracks";
     public static final String SRC_2L = "2L";
@@ -39,15 +40,15 @@ public final class Constants {
     static {
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");
-        IMAGE_COVERS.add("folder.png");
+       // IMAGE_COVERS.add("folder.png"); // not supported by UAPP
         IMAGE_COVERS.add("artwork.png"); // supported by UAAP
         IMAGE_COVERS.add("front.jpg");
         IMAGE_COVERS.add("cover.jpg");
-        IMAGE_COVERS.add("folder.jpg");
+       // IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
         IMAGE_COVERS.add("artwork.jpg"); // UAAP
         IMAGE_COVERS.add("front.jpeg");
         IMAGE_COVERS.add("cover.jpeg");
-        IMAGE_COVERS.add("folder.jpeg");
+      //  IMAGE_COVERS.add("folder.jpeg"); // not supported by UAPP
     }
 
     public static final List<String> RELATED_FILE_TYPES = new ArrayList();
@@ -110,17 +111,17 @@ public final class Constants {
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
-    public static final String PREF_SHOW_GROUPINGS_IN_COLLECTION = "preference_show_groupings_in_collection";
-    public static final String PREF_SHOW_NOTIFICATION = "preference_notification";
+   // public static final String PREF_SHOW_GROUPINGS_IN_COLLECTION = "preference_show_groupings_in_collection";
+   // public static final String PREF_SHOW_NOTIFICATION = "preference_notification";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
     public static final String PREF_FOLLOW_NOW_PLAYING = "preference_follow_now_playing";
     public static final String PREF_OPEN_NOW_PLAYING = "preference_open_now_playing";
 
-    public static final int INFO_RESOLUTIONS_WIDTH = 280;
-    public static final int INFO_RESOLUTIONS_HEIGHT = 28;
-    public static final int INFO_SAMPLE_RATE_WIDTH = 180; //164;
-    public static final int INFO_HEIGHT = 32;
+   // public static final int INFO_RESOLUTIONS_WIDTH = 280;
+   // public static final int INFO_RESOLUTIONS_HEIGHT = 28;
+   // public static final int INFO_SAMPLE_RATE_WIDTH = 180; //164;
+   // public static final int INFO_HEIGHT = 32;
 
     // Source
     public static final String SRC_JOOX = "Joox";

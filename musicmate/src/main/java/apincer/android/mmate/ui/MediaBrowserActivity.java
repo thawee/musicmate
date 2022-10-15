@@ -1391,7 +1391,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
                     FFmpegKit.executeAsync(cmd, session -> {
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
-                            repos.writeTags(targetPath, tag);
+                            repos.saveTags(targetPath, tag);
                             repos.scanFileAndSaveTag(new File(targetPath));
                         }else {
                             String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());

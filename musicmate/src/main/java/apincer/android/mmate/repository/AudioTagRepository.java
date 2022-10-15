@@ -201,6 +201,7 @@ public class AudioTagRepository {
         return tagBox.get(md.getId());
     }
 
+    /*
     public long getAudioTagId(AudioTag tag) {
         List<AudioTag> tags = findByPath(tag.getPath());
         if(tags.size()==0) {
@@ -221,7 +222,7 @@ public class AudioTagRepository {
         }
 
         return 0;
-    }
+    }*/
 
     public List<AudioTag> findByPath(String path) {
         Query<AudioTag> query = tagBox.query(AudioTag_.path.equal(path)).build();
@@ -229,68 +230,6 @@ public class AudioTagRepository {
         query.close();
         return list;
     }
-/*
-    private static String parseSampleRateString(String keyword) {
-        String []text = keyword.split(" ");
-        int rate = 0;
-        float val = 0;
-        try {
-            val = NumberFormat.getInstance().parse(text[0]).floatValue();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        if("kHz".equalsIgnoreCase(text[1])) {
-            rate = (int) (val*1000);
-        }else if("MHz".equalsIgnoreCase(text[1])) {
-            rate = (int) (val*1000000);
-        }
-        return String.valueOf(rate);
-    }*/
-
-    /*
-    private int parseSamplingRate(String samplingRate) {
-        int sampleRate = 0;
-        String str = "";
-
-        for(char ch: samplingRate.toCharArray()) {
-            if(Character.isDigit(ch)) {
-                str = str+ch;
-            }else if(!Character.isDigit(ch)){
-                break;
-            }
-        }
-        try {
-            sampleRate = Integer.parseInt(str);
-        }catch (Exception ex){
-            Timber.e(ex);
-        }
-        return sampleRate;
-    }
-
-    private int parseSamplingRate(String samplingRate, boolean bitdept) {
-        int sampleRate = 0;
-        String str = "";
-        boolean start = bitdept;
-        for(char ch: samplingRate.toCharArray()) {
-            if(start && ch=='/') {
-                break; //
-            }else if(!start && ch=='/') {
-                start = true;
-                continue;
-            }
-            if(start && Character.isDigit(ch)) {
-                str = str+ch;
-            }else if(start && !Character.isDigit(ch)){
-                break;
-            }
-        }
-        try {
-            sampleRate = Integer.parseInt(str);
-        }catch (Exception ex){
-            Timber.e(ex);
-        }
-        return sampleRate;
-    } */
 
     public List<AudioTag> findMediaByTitle(String title) throws SQLException {
         Query<AudioTag> query = tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
@@ -331,9 +270,7 @@ public class AudioTagRepository {
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
             Query<AudioTag> query = tagBox.query().filter(tag -> {
-                //if (AudioTagUtils.isHiRes(tag) && !tag.isMQA()) {
-                // drop from results
-                return AudioTagUtils.isPCMLossless(tag) && !tag.isMQA(); // include to results
+                return AudioTagUtils.isPCMLossless(tag) && !tag.isMQA(); // not include MQA to results
             }).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
@@ -361,7 +298,6 @@ public class AudioTagRepository {
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
-        //}else if(criteria.getType()== SearchCriteria.TYPE.MY_SONGS && Constants.TITLE_AUDIOPHILE.equals(criteria.getKeyword())){
             Query<AudioTag> query = tagBox.query(AudioTag_.audiophile.equal(true)).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
@@ -429,7 +365,6 @@ public class AudioTagRepository {
             query.close();
         } else {
             // for MY_SONGS and others
-          //  return tagBox.getAll();
             Query<AudioTag> query = tagBox.query().order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();

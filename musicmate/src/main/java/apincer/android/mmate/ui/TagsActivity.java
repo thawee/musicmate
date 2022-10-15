@@ -546,14 +546,12 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     protected AudioTag buildDisplayTag(boolean reload) {
-        AudioTag baseItem = editItems.get(0);
-        AudioTag displayTag = baseItem;
+       // AudioTag baseItem = editItems.get(0);
+        AudioTag displayTag = editItems.get(0);
         //if(reload) {
-        if(editItems.size()==1) {
-            if(reload) {
-                repos.reloadMediaItem(displayTag);
-            }
-            return displayTag.clone();
+        if(editItems.size()==1 && reload) {
+            repos.readAudioTagFromFile(displayTag);
+        //    return displayTag.clone();
         }
         displayTag = displayTag.clone();
 
