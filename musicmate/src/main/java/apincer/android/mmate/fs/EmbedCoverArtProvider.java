@@ -12,14 +12,14 @@ import androidx.annotation.Nullable;
 
 import java.io.InputStream;
 
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 import timber.log.Timber;
 
 @Deprecated
 public final class EmbedCoverArtProvider extends ContentProvider {
-        public static Uri getUriForMediaItem(AudioTag item) {
+        public static Uri getUriForMediaItem(MusicTag item) {
             return new Builder().scheme("content").authority("apincer.android.mmate.embed.coverart.provider").path(item.getPath()).build();
         }
 
@@ -47,7 +47,7 @@ public final class EmbedCoverArtProvider extends ContentProvider {
 
     public ParcelFileDescriptor openFile(Uri uri, String str) {
             try {
-                InputStream is = AudioFileRepository.getArtworkAsStream(uri.getPath());
+                InputStream is = FileRepository.getArtworkAsStream(uri.getPath());
                 if(is!=null) {
                     return ParcelFileDescriptorUtil.pipeFrom(is);
                 }

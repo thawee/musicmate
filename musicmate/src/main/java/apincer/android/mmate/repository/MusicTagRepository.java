@@ -10,36 +10,36 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.objectbox.AudioTag_;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.objectbox.MusicTag_;
 import apincer.android.mmate.objectbox.ObjectBox;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 import timber.log.Timber;
 
-public class AudioTagRepository {
-    private static Box<AudioTag> tagBox;
+public class MusicTagRepository {
+    private static Box<MusicTag> tagBox;
     public static List<String> lossyAudioFormatList;
-    private static AudioTagRepository INSTANCE;
+    private static MusicTagRepository INSTANCE;
 
-    private AudioTagRepository() {
+    private MusicTagRepository() {
         lossyAudioFormatList = new ArrayList<>();
         lossyAudioFormatList.add("MP3");
         lossyAudioFormatList.add("AAC");
         lossyAudioFormatList.add("WMA");
-        tagBox = ObjectBox.get().boxFor(AudioTag.class);
+        tagBox = ObjectBox.get().boxFor(MusicTag.class);
     }
 
-    public static AudioTagRepository getInstance() {
+    public static MusicTagRepository getInstance() {
         if(INSTANCE==null) {
-            INSTANCE = new AudioTagRepository();
+            INSTANCE = new MusicTagRepository();
         }
         return INSTANCE;
     }
 
-    public void saveTag(AudioTag tag) {
+    public void saveTag(MusicTag tag) {
         ObjectBox.get().runInTx(() -> {
             if(tag.getId()!=0) {
                 tagBox.remove(tag);
@@ -48,7 +48,7 @@ public class AudioTagRepository {
         });
     }
 
-    public void removeTag(AudioTag tag) {
+    public void removeTag(MusicTag tag) {
         ObjectBox.get().runInTx(() -> {
             if (tag.getId() != 0) {
                 tagBox.remove(tag);
@@ -58,11 +58,11 @@ public class AudioTagRepository {
 
     public static void cleanMusicMate() {
         try {
-            List<AudioTag> list = tagBox.getAll();
+            List<MusicTag> list = tagBox.getAll();
             for(int i=0; i<list.size();i++) {
-                AudioTag mdata = list.get(i);
+                MusicTag mdata = list.get(i);
                 String path = mdata.getPath();
-                if(!AudioFileRepository.isMediaFileExist(path)) {
+                if(!FileRepository.isMediaFileExist(path)) {
                     tagBox.remove(mdata);
                 }
             }
@@ -73,7 +73,7 @@ public class AudioTagRepository {
 
     public List<String> getGenreList(Context context) {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.genre).distinct().findStrings();
+        String[] names = tagBox.query().build().property(MusicTag_.genre).distinct().findStrings();
         if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
@@ -97,7 +97,7 @@ public class AudioTagRepository {
 
     public List<String> getDefaultGenreList(Context context) {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.genre).distinct().findStrings();
+        String[] names = tagBox.query().build().property(MusicTag_.genre).distinct().findStrings();
         if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
@@ -129,7 +129,7 @@ public class AudioTagRepository {
 
     public List<String> getGroupingList(Context context) {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.grouping).distinct().findStrings();
+        String[] names = tagBox.query().build().property(MusicTag_.grouping).distinct().findStrings();
         if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
@@ -152,7 +152,7 @@ public class AudioTagRepository {
 
     public List<String> getArtistList() {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.artist).distinct().findStrings();
+        String[] names = tagBox.query().build().property(MusicTag_.artist).distinct().findStrings();
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
@@ -178,7 +178,7 @@ public class AudioTagRepository {
 
     public List<String> getAlbumList() {
         List<String> list = new ArrayList<>();
-        String[] names = tagBox.query().build().property(AudioTag_.album).distinct().findStrings();
+        String[] names = tagBox.query().build().property(MusicTag_.album).distinct().findStrings();
         if(names!=null) {
             list.addAll(Arrays.asList(names));
         }
@@ -186,18 +186,44 @@ public class AudioTagRepository {
         return list;
     }
 
-    public boolean isMediaOutdated(String path, long lastModified) {
-        List<AudioTag> tags = findByPath(path);
-        if(tags ==null || tags.size()<1) {
+    public boolean checkSACDOutdated(String path, long lastModified) {
+        List<MusicTag> tags = findByPath(path);
+        if(tags == null || tags.isEmpty()) {
             // found new file
             return true;
         }
-
-        // tag in library already up-to-dated
-        return tags.get(0).getLastModified() < lastModified;
+        if(tags.get(0).getLastModified() < lastModified) {
+            // found updated, remove old tags, and re scan
+            for (MusicTag tag: tags) {
+                removeTag(tag);
+            }
+            return true;
+        }
+        return false;
     }
 
-    public AudioTag getAudioTagById(AudioTag md) {
+    public boolean checkJAudioTaggerOutdated(String path, long lastModified) {
+        List<MusicTag> tags = findByPath(path);
+        if(tags == null || tags.isEmpty()) {
+            // found new file
+            return true;
+        }else if (tags.size() == 1) {
+            if(tags.get(0).getLastModified() < lastModified) {
+                // tag in library already up-to-dated
+                removeTag(tags.get(0));
+                return true;
+            }
+            return false;
+        }else {
+            // found >1, could be duplicated, clean up
+            for (MusicTag tag: tags) {
+                removeTag(tag);
+            }
+        }
+        return true;
+    }
+
+    public MusicTag getAudioTagById(MusicTag md) {
         return tagBox.get(md.getId());
     }
 
@@ -224,90 +250,90 @@ public class AudioTagRepository {
         return 0;
     }*/
 
-    public List<AudioTag> findByPath(String path) {
-        Query<AudioTag> query = tagBox.query(AudioTag_.path.equal(path)).build();
-        List<AudioTag> list = query.find();
+    public List<MusicTag> findByPath(String path) {
+        Query<MusicTag> query = tagBox.query(MusicTag_.path.equal(path)).build();
+        List<MusicTag> list = query.find();
         query.close();
         return list;
     }
 
-    public List<AudioTag> findMediaByTitle(String title) throws SQLException {
-        Query<AudioTag> query = tagBox.query(AudioTag_.title.contains(title).or(AudioTag_.path.contains(title))).build();
-        List<AudioTag> list = query.find();
+    public List<MusicTag> findMediaByTitle(String title) throws SQLException {
+        Query<MusicTag> query = tagBox.query(MusicTag_.title.contains(title).or(MusicTag_.path.contains(title))).build();
+        List<MusicTag> list = query.find();
         query.close();
         return list;
     }
 
-    public synchronized List<AudioTag> findMediaTag(SearchCriteria criteria) {
-        List<AudioTag> list = new ArrayList<>();
+    public synchronized List<MusicTag> findMediaTag(SearchCriteria criteria) {
+        List<MusicTag> list = new ArrayList<>();
         if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query(AudioTag_.audioBitsPerSample.equal(1)).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query(MusicTag_.audioBitsPerSample.equal(1)).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query(AudioTag_.mqa.equal(true)).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query(MusicTag_.mqa.equal(true)).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_QUALITY.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query(AudioTag_.lossless.notEqual(true).and(AudioTag_.audioBitsPerSample.notEqual(1))).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query(MusicTag_.lossless.notEqual(true).and(MusicTag_.audioBitsPerSample.notEqual(1))).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query(AudioTag_.lossless.equal(true).and(AudioTag_.audioBitsPerSample.notEqual(1)))
+            Query<MusicTag> query = tagBox.query(MusicTag_.lossless.equal(true).and(MusicTag_.audioBitsPerSample.notEqual(1)))
                     .filter(tag -> {
                         // drop from results
-                        return !AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
+                        return !MusicTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
                     })
-                    .order(AudioTag_.title).order(AudioTag_.artist).build();
+                    .order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query().filter(tag -> {
+            Query<MusicTag> query = tagBox.query().filter(tag -> {
                 // drop from results
-                return AudioTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
-            }).order(AudioTag_.title).order(AudioTag_.artist).build();
+                return MusicTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
+            }).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
-            Query<AudioTag> query = tagBox.query().filter(tag -> {
-                return AudioTagUtils.isPCMLossless(tag) && !tag.isMQA(); // not include MQA to results
-            }).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query().filter(tag -> {
+                return MusicTagUtils.isPCMLossless(tag) && !tag.isMQA(); // not include MQA to results
+            }).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()==SearchCriteria.TYPE.MY_SONGS && Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())){
-            Query<AudioTag> query = tagBox.query().filter(tag -> !tag.isManaged()).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query().filter(tag -> !tag.isManaged()).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.GROUPING){
-            Query<AudioTag> query;
+            Query<MusicTag> query;
             if(StringUtils.isEmpty(criteria.getKeyword()) || StringUtils.EMPTY.equalsIgnoreCase(criteria.getKeyword())) {
-                query = tagBox.query(AudioTag_.grouping.isNull().or(AudioTag_.grouping.equal(""))).order(AudioTag_.title).order(AudioTag_.artist).build();
+                query = tagBox.query(MusicTag_.grouping.isNull().or(MusicTag_.grouping.equal(""))).order(MusicTag_.title).order(MusicTag_.artist).build();
             }else {
-                query = tagBox.query(AudioTag_.grouping.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
+                query = tagBox.query(MusicTag_.grouping.equal(criteria.getKeyword())).order(MusicTag_.title).order(MusicTag_.artist).build();
             }
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.GENRE){
-            Query<AudioTag> query;
+            Query<MusicTag> query;
             if(StringUtils.isEmpty(criteria.getKeyword()) || StringUtils.EMPTY.equalsIgnoreCase(criteria.getKeyword())) {
-                query = tagBox.query(AudioTag_.genre.isNull().or(AudioTag_.genre.equal(""))).order(AudioTag_.title).order(AudioTag_.artist).build();
+                query = tagBox.query(MusicTag_.genre.isNull().or(MusicTag_.genre.equal(""))).order(MusicTag_.title).order(MusicTag_.artist).build();
             }else {
-                query = tagBox.query(AudioTag_.genre.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
+                query = tagBox.query(MusicTag_.genre.equal(criteria.getKeyword())).order(MusicTag_.title).order(MusicTag_.artist).build();
             }
            // Query<AudioTag> query = tagBox.query(AudioTag_.genre.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
-            Query<AudioTag> query = tagBox.query(AudioTag_.audiophile.equal(true)).order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query(MusicTag_.audiophile.equal(true)).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.MY_SONGS && Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())){
-            Query<AudioTag> query = tagBox.query().order(AudioTag_.title).order(AudioTag_.artist).build();
-            List<AudioTag> audioTags = query.find();
+            Query<MusicTag> query = tagBox.query().order(MusicTag_.title).order(MusicTag_.artist).build();
+            List<MusicTag> audioTags = query.find();
             String title = "";
             String artist = "";
-            AudioTag prvTag = null;
-            for (AudioTag tag: audioTags) {
+            MusicTag prvTag = null;
+            for (MusicTag tag: audioTags) {
                 if(StringUtils.isEmpty(title)) {
                     title = tag.getTitle();
                 }else if((StringUtils.similarity(title, tag.getTitle()) > Constants.MIN_TITLE)) {// ||
@@ -350,13 +376,13 @@ public class AudioTagRepository {
             query.close(); */
 
             // search path
-            Query<AudioTag> query = tagBox.query(AudioTag_.title.contains(criteria.getKeyword()) //.filter(tag -> {
+            Query<MusicTag> query = tagBox.query(MusicTag_.title.contains(criteria.getKeyword()) //.filter(tag -> {
                 // drop to results
             //    return StringUtils.contains(tag.getPath(), criteria.getKeyword()); // include from results
             //})
-                    .or(AudioTag_.artist.contains(criteria.getKeyword())))
+                    .or(MusicTag_.artist.contains(criteria.getKeyword())))
                 //.order(AudioTag_.artist).order(AudioTag_.title).build();
-                    .order(AudioTag_.title).build();
+                    .order(MusicTag_.title).build();
            /* AudioTag title = new AudioTag();
             title.setTitle("Search Results");
             title.setId(888888888);
@@ -365,27 +391,27 @@ public class AudioTagRepository {
             query.close();
         } else {
             // for MY_SONGS and others
-            Query<AudioTag> query = tagBox.query().order(AudioTag_.title).order(AudioTag_.artist).build();
+            Query<MusicTag> query = tagBox.query().order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
         }
         return list;
     }
 
-    public void populateAudioTag(AudioTag md) {
-        AudioTag tag = tagBox.get(md.getId());
+    public void populateAudioTag(MusicTag md) {
+        MusicTag tag = tagBox.get(md.getId());
         if(tag != null) {
             md.cloneFrom(tag);
         }
     }
 
-    public List<AudioTag> getAllMusics() {
+    public List<MusicTag> getAllMusics() {
         return tagBox.getAll();
     }
 
-    public List<AudioTag> getAudioTagWithoutLoudness() {
-        Query<AudioTag> query = tagBox.query(AudioTag_.loudnessIntegrated.isNull().or(AudioTag_.loudnessIntegrated.equal(""))).build();
-        List<AudioTag> list = query.find();
+    public List<MusicTag> getAudioTagWithoutLoudness() {
+        Query<MusicTag> query = tagBox.query(MusicTag_.loudnessIntegrated.isNull().or(MusicTag_.loudnessIntegrated.equal(""))).build();
+        List<MusicTag> list = query.find();
         query.close();
         return list;
     }

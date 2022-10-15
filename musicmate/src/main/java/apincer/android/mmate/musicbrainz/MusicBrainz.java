@@ -1,7 +1,5 @@
 package apincer.android.mmate.musicbrainz;
 
-import android.provider.MediaStore;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -16,7 +14,7 @@ import apincer.android.mmate.musicbrainz.recording.ArtistCreditItem;
 import apincer.android.mmate.musicbrainz.recording.Recording;
 import apincer.android.mmate.musicbrainz.recording.RecordingsItem;
 import apincer.android.mmate.musicbrainz.recording.ReleasesItem;
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -51,8 +49,8 @@ public class MusicBrainz {
                 .build();
     }
 
-    public static List<AudioTag> findSongInfo(String title, String artist, String album) {
-        final List<AudioTag> songs = new ArrayList<>();
+    public static List<MusicTag> findSongInfo(String title, String artist, String album) {
+        final List<MusicTag> songs = new ArrayList<>();
          try {
              Recording recording = fetchRecordings(title, artist, album);
             // if(!StringUtils.isEmpty(title)) {
@@ -69,7 +67,7 @@ public class MusicBrainz {
             if(recording==null) return songs;
 
             for(RecordingsItem item  : recording.getRecordings()) {
-                AudioTag song = new AudioTag();
+                MusicTag song = new MusicTag();
                         song.setMusicBrainzId(item.getId());
                         song.setTitle(item.getTitle());
                         parseArtist(song, item);
@@ -124,7 +122,7 @@ public class MusicBrainz {
         return null;
     }
 
-    public static URL getCoverart(AudioTag album) {
+    public static URL getCoverart(MusicTag album) {
         try {
             Retrofit retrofit = createCoverRetrofit();
             EndpointInterface eIntf = retrofit.create(EndpointInterface.class);
@@ -154,7 +152,7 @@ public class MusicBrainz {
         return null;
     }
 
-    private static void parseArtist(AudioTag song, RecordingsItem item) {
+    private static void parseArtist(MusicTag song, RecordingsItem item) {
         List<ArtistCreditItem> artistCreditList = item.getArtistCredit();
         if(artistCreditList!=null && artistCreditList.size()>0) {
             for(ArtistCreditItem artistCreditItem:artistCreditList) {
@@ -168,7 +166,7 @@ public class MusicBrainz {
         }
     }
 
-    private static void parseAlbum(AudioTag song, RecordingsItem item) {
+    private static void parseAlbum(MusicTag song, RecordingsItem item) {
         List<ReleasesItem> releaseList = item.getReleases();
         if(releaseList!=null && releaseList.size()>0) {
             ReleasesItem release =  releaseList.get(0);

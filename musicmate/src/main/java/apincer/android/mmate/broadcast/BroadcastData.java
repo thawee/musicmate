@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 
 /**
  * Class which contains all the data passed in broadcast intents to notify task progress, errors,
@@ -30,7 +30,7 @@ public class BroadcastData implements Parcelable {
     }
 
     private Status status;
-    private AudioTag tagInfo;
+    private MusicTag tagInfo;
     private Action action;
     private String message = "";
 
@@ -79,7 +79,7 @@ public class BroadcastData implements Parcelable {
         status = Status.values()[in.readInt()];
         action = Action.values()[in.readInt()];
         message = in.readString();
-        tagInfo = in.readParcelable(AudioTag.class.getClassLoader());
+        tagInfo = in.readParcelable(MusicTag.class.getClassLoader());
     }
 
     @Override
@@ -118,11 +118,11 @@ public class BroadcastData implements Parcelable {
         return message;
     }
 
-    public AudioTag getTagInfo() {
+    public MusicTag getTagInfo() {
         return tagInfo;
     }
 
-    public BroadcastData setTagInfo(AudioTag tagInfo) {
+    public BroadcastData setTagInfo(MusicTag tagInfo) {
         this.tagInfo = tagInfo;
         return this;
     }

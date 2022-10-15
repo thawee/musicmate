@@ -36,10 +36,10 @@ import java.util.Map;
 
 import apincer.android.mmate.BuildConfig;
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import ir.androidexception.datatable.DataTable;
@@ -88,7 +88,7 @@ public class AboutActivity extends AppCompatActivity {
             TextView version = v.findViewById(R.id.app_version);
             version.setText(BuildConfig.VERSION_NAME);
 
-            List< AudioTag> tags = AudioTagRepository.getInstance().getAllMusics();
+            List<MusicTag> tags = MusicTagRepository.getInstance().getAllMusics();
 
             Map<String, Integer> encList = new HashMap<>();
             Map<String, Integer> songs = new HashMap<>();
@@ -97,8 +97,8 @@ public class AboutActivity extends AppCompatActivity {
             long totalSongs = 0;
             long totalSize=0;
             long totalDuration =0;
-            for(AudioTag tag: tags) {
-                String enc = AudioTagUtils.getEncodingType(tag);
+            for(MusicTag tag: tags) {
+                String enc = MusicTagUtils.getEncodingType(tag);
                 if(encList.containsKey(enc)) {
                     Integer cnt = encList.get(enc);
                     encList.remove(enc);

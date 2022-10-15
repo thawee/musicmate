@@ -3,11 +3,11 @@ package apincer.android.mmate.utils;
 import java.io.File;
 import java.util.List;
 
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.utils.FileUtils;
 
 public class MediaTagParser {
-    public void parse(AudioTag tag, List<String> patterns) {
+    public void parse(MusicTag tag, List<String> patterns) {
        if(patterns.size()<=0) {
             return;
         }
@@ -114,13 +114,13 @@ public class MediaTagParser {
     String artistEnd="]";
 
     @Deprecated
-    public boolean parse(AudioTag item, READ_MODE mode) {
+    public boolean parse(MusicTag item, READ_MODE mode) {
         File file = new File(item.getPath());
         if(!file.exists()) {
             return false;
         }
 
-        AudioTag tag = item.clone();
+        MusicTag tag = item.clone();
         String text = FileUtils.removeExtension(file);
         if(mode==READ_MODE.SIMPLE) {
             // filename
@@ -223,7 +223,7 @@ public class MediaTagParser {
         }
     } */
 
-    private String parseArtist(AudioTag tag, String text) {
+    private String parseArtist(MusicTag tag, String text) {
         if(text.startsWith(artistBegin) && text.indexOf(artistEnd)>1) {
             tag.setArtist(text.substring(text.indexOf(artistBegin)+artistBegin.length(), text.indexOf(artistEnd)));
             text = text.substring(text.indexOf(artistEnd)+artistEnd.length());
@@ -237,7 +237,7 @@ public class MediaTagParser {
         return StringUtils.trimToEmpty(text);
     }
 
-    private String parseTrackNumber(AudioTag tag, String text) {String trackNo = "";
+    private String parseTrackNumber(MusicTag tag, String text) {String trackNo = "";
         int i =0;
         for(;i<text.length();i++) {
             char ch = text.charAt(i);

@@ -13,17 +13,17 @@ import org.jaudiotagger.audio.generic.Utils;
 import java.io.File;
 import java.util.List;
 
-import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTagRepository;
 import timber.log.Timber;
 
 public class ScanAudioFileWorker extends Worker {
-    AudioFileRepository repos;
+    FileRepository repos;
     private ScanAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
     }
 
     @NonNull
@@ -50,7 +50,7 @@ public class ScanAudioFileWorker extends Worker {
                 MusicMateExecutors.scan(new ScanRunnable(file));
             }
         }
-        AudioTagRepository.cleanMusicMate();
+        MusicTagRepository.cleanMusicMate();
 
         /*
         for (String sid : storageIds) {
@@ -104,7 +104,9 @@ public class ScanAudioFileWorker extends Worker {
             return true;
         }else if(ext.equalsIgnoreCase("dsf")) {
             return true;
-        }else return ext.equalsIgnoreCase("dff");
+        }else if(ext.equalsIgnoreCase("dff")) {
+            return true;
+        }else return ext.equalsIgnoreCase("iso");
     }
 
     private final class ScanRunnable  implements Runnable {

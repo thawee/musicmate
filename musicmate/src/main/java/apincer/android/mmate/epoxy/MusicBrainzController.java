@@ -7,13 +7,13 @@ import com.airbnb.epoxy.TypedEpoxyController;
 
 import java.util.List;
 
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 
-public class MusicBrainzController extends TypedEpoxyController<List<AudioTag>> {
+public class MusicBrainzController extends TypedEpoxyController<List<MusicTag>> {
     View.OnClickListener clickListener;
     @Override
-    protected void buildModels(List<AudioTag> audioTags) {
-        for (AudioTag tag : audioTags) {
+    protected void buildModels(List<MusicTag> audioTags) {
+        for (MusicTag tag : audioTags) {
             new MusicBrainzModel_()
                     .id(tag.getId())
                     .tag(tag)
@@ -27,7 +27,7 @@ public class MusicBrainzController extends TypedEpoxyController<List<AudioTag>> 
         this.clickListener = clickListener;
     }
 
-    public AudioTag getAudioTag(EpoxyViewHolder holder) {
+    public MusicTag getAudioTag(EpoxyViewHolder holder) {
         return ((MusicBrainzModel_)holder.getModel()).tag();
     }
 }

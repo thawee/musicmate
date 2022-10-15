@@ -32,7 +32,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.epoxy.MusicBrainzController;
 import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
 import apincer.android.mmate.musicbrainz.MusicBrainz;
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.ui.view.LinearDividerItemDecoration;
 import apincer.android.mmate.utils.StringUtils;
@@ -217,9 +217,9 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
     }
 
     private void buildKeywords() {
-        List<AudioTag> list = mainActivity.getEditItems();
+        List<MusicTag> list = mainActivity.getEditItems();
         if(!list.isEmpty()) {
-            AudioTag item = list.get(0);
+            MusicTag item = list.get(0);
             if(list.size()==1) {
                 songTitle = item.getTitle();
                 if(StringUtils.isEmpty(songTitle)) {
@@ -254,7 +254,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
     }
 
     public void doSearch() {
-        Observable<List<AudioTag>> observable = Observable.fromCallable(() -> {
+        Observable<List<MusicTag>> observable = Observable.fromCallable(() -> {
            // if(mainActivity.getEditItems().size()>0) {
                 keywordTitle = chipTitle.isChecked()?songTitle:null;
                 keywordArtist = chipArtist.isChecked()?songArtist:null;
@@ -265,7 +265,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
           //  }
            // return true;
         });
-        observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<AudioTag>>() {
+        observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<MusicTag>>() {
             @Override
             public void onSubscribe(Disposable d) {
                 mStateView.displayLoadingState();
@@ -274,7 +274,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
             }
 
             @Override
-            public void onNext(List<AudioTag> actionResult) {
+            public void onNext(List<MusicTag> actionResult) {
                 if(actionResult.isEmpty()) {
                    // vEmptyView.setVisibility(View.VISIBLE);
                     mRecyclerView.setVisibility(View.GONE);
@@ -405,8 +405,8 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
        // return false;
    // }
 
-    private void buildPendingTags(AudioTag item, String title, String artist, String album, String genre, String year, boolean singleTrack) {
-        AudioTag tagUpdate = item;
+    private void buildPendingTags(MusicTag item, String title, String artist, String album, String genre, String year, boolean singleTrack) {
+        MusicTag tagUpdate = item;
         if(singleTrack) {
             tagUpdate.setTitle(StringUtils.trimToEmpty(title));
         }
@@ -432,7 +432,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
         RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(view);
         if(h instanceof EpoxyViewHolder) {
             EpoxyViewHolder holder = (EpoxyViewHolder)h;
-            AudioTag tag = controller.getAudioTag(holder); // ((MusicBrainzModel_)holder.getModel()).tag();
+            MusicTag tag = controller.getAudioTag(holder); // ((MusicBrainzModel_)holder.getModel()).tag();
             View cview = getActivity().getLayoutInflater().inflate(R.layout.view_actionview_tags_from_musicbrainz, null);
             TextView tTitle = cview.findViewById(R.id.title);
             tTitle.setText(tag.getTitle());
@@ -463,7 +463,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                     .setCancelable(true)
                     .setNegativeButton(R.string.alert_btn_cancel, (dialogInterface, i) -> dialogInterface.dismiss())
                     .setPositiveButton(R.string.alert_btn_set, (dialogInterface, i) -> {
-                        List<AudioTag> mediaItems = mainActivity.getEditItems();
+                        List<MusicTag> mediaItems = mainActivity.getEditItems();
                         boolean singleTrack = mediaItems.size()==1;
 
                         // String artworkPath = recordingItem.getFrontCoverCache();
@@ -473,7 +473,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                         String genre = String.valueOf(tGenre.getText());
                         String year = String.valueOf(tYear.getText());
 
-                        for(AudioTag item:mediaItems) {
+                        for(MusicTag item:mediaItems) {
                             buildPendingTags(item, title, artist, album, genre, year, singleTrack);
                         }
 

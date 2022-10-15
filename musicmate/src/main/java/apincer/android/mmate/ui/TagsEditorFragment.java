@@ -45,10 +45,10 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.EmbedCoverArtProvider;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MediaTagParser;
@@ -67,7 +67,7 @@ import timber.log.Timber;
 
 public class TagsEditorFragment extends Fragment {
     private TagsActivity mainActivity;
-    private List<AudioTag> mediaItems;
+    private List<MusicTag> mediaItems;
     private ViewHolder viewHolder;
     private FloatingActionButton fabSaveAction;
     private FloatingActionButton fabMainAction;
@@ -209,7 +209,7 @@ public class TagsEditorFragment extends Fragment {
 
         startProgressBar();
         if(viewHolder.tagChanged) {
-            for(AudioTag item:mediaItems) {
+            for(MusicTag item:mediaItems) {
                 buildPendingTags(item);
             }
         }
@@ -229,12 +229,12 @@ public class TagsEditorFragment extends Fragment {
         UIUtils.hideKeyboard(getActivity());
     }
 
-    private void buildPendingTags(AudioTag tagUpdate) {
+    private void buildPendingTags(MusicTag tagUpdate) {
         // update new tag with data from UI
         if(!viewHolder.tagChanged) {
             return;
         }
-        AudioTag tag = tagUpdate.clone();
+        MusicTag tag = tagUpdate.clone();
         tagUpdate.setOriginTag(tag);
 
         tagUpdate.setTitle(buildTag(viewHolder.mTitleView, tagUpdate.getTitle()));
@@ -292,7 +292,7 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private class ViewHolder {
-        private AudioTag displayTag;
+        private MusicTag displayTag;
         private EditText mTitleView;
         private AutoCompleteTextView mArtistView;
         private EditText mAlbumView;
@@ -322,7 +322,7 @@ public class TagsEditorFragment extends Fragment {
             tagChanged = false;
             coverartChanged = false;
             mTextWatcher =new ViewTextWatcher();
-            AudioTagRepository repository = AudioTagRepository.getInstance();  //new AudioTagRepository();
+            MusicTagRepository repository = MusicTagRepository.getInstance();  //new AudioTagRepository();
 
             mEditorCardView = view.findViewById(R.id.editorCardView);
             mEditorPanel = view.findViewById(R.id.editorPanel);
@@ -353,7 +353,7 @@ public class TagsEditorFragment extends Fragment {
                 }else {
                     mMediaSourceItems.add(new IconSpinnerItem(src, ContextCompat.getDrawable(getContext(), rescId)));
                 } */
-                Bitmap ico = AudioTagUtils.getSourceIcon(getContext(),src);
+                Bitmap ico = MusicTagUtils.getSourceIcon(getContext(),src);
                 mMediaSourceItems.add(new IconSpinnerItem(src,BitmapHelper.bitmapToDrawable(getContext(), ico)));
             }
 
@@ -493,7 +493,7 @@ public class TagsEditorFragment extends Fragment {
             mEditorCardView.clearFocus();
         }
 
-        public void bindViewHolder(AudioTag mediaTag) {
+        public void bindViewHolder(MusicTag mediaTag) {
             // music mate info
             this.displayTag = mediaTag;
             if(mediaTag.isAudiophile()) {
@@ -617,8 +617,8 @@ public class TagsEditorFragment extends Fragment {
     private void doFormatTags() {
        // hideFabMenus();
         startProgressBar();
-        for(AudioTag tag:mediaItems) {
-            AudioTag mItem = tag.clone();
+        for(MusicTag tag:mediaItems) {
+            MusicTag mItem = tag.clone();
             tag.setOriginTag(mItem);
             tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
             if(!StringUtils.isEmpty(tag.getArtist()) && tag.getArtist().contains(",")) {
@@ -638,7 +638,7 @@ public class TagsEditorFragment extends Fragment {
             }
             // if album empty, add single
             if(StringUtils.isEmpty(tag.getAlbum())) {
-                tag.setAlbum(AudioTagUtils.getDefaultAlbum(tag));
+                tag.setAlbum(MusicTagUtils.getDefaultAlbum(tag));
             }
         }
         // set updated item on main activity
@@ -758,8 +758,8 @@ public class TagsEditorFragment extends Fragment {
             try {
                 List<String> list = mTagListLayout.getTags();// that will return TagModel List
                 MediaTagParser parser = new MediaTagParser();
-                AudioTag item = mediaItems.get(0);
-                AudioTag mdata = item.clone();
+                MusicTag item = mediaItems.get(0);
+                MusicTag mdata = item.clone();
                 parser.parse(mdata, list);
                 if (mdata != null) {
                     title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
@@ -785,7 +785,7 @@ public class TagsEditorFragment extends Fragment {
         btnOK.setOnClickListener(v -> {
             List<String> list = mTagListLayout.getTags();
             MediaTagParser parser = new MediaTagParser();
-            for(AudioTag item:mediaItems) {
+            for(MusicTag item:mediaItems) {
                 String mediaPath =  item.getPath();
                 File file = new File(mediaPath);
                 if(!file.exists()) continue;

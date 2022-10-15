@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.StringUtils;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -24,20 +24,20 @@ import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
-    private AudioTagRepository tagRepos;
+public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
+    private MusicTagRepository tagRepos;
     private SearchCriteria criteria;
     private long totalDuration = 0;
     private long totalSize = 0;
     private View.OnClickListener clickListener;
     private View.OnLongClickListener longClickListener;
-    private ArrayList<AudioTag> selections;
-    private ArrayList<AudioTag> lastSelections;
+    private ArrayList<MusicTag> selections;
+    private ArrayList<MusicTag> lastSelections;
     private OnModelBuildFinishedListener listener;
     public static volatile boolean loading  = false;
 
-    public AudioTagController(View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
-        tagRepos = AudioTagRepository.getInstance(); //new AudioTagRepository();
+    public MusicTagController(View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
+        tagRepos = MusicTagRepository.getInstance(); //new AudioTagRepository();
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
         selections = new ArrayList<>();
@@ -51,13 +51,13 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     }
 
     @Override
-    protected void buildModels(List<AudioTag> audioTags) {
+    protected void buildModels(List<MusicTag> audioTags) {
         totalDuration =0;
         totalSize = 0;
         boolean noFilters = StringUtils.isEmpty(criteria.getFilterType()) && StringUtils.isEmpty(criteria.getFilterText());
         if(noFilters) {
-            for (AudioTag tag : audioTags) {
-                new AudioTagModel_()
+            for (MusicTag tag : audioTags) {
+                new MusicTagModel_()
                         .id(tag.getId())
                         .tag(tag)
                         .controller(this)
@@ -71,7 +71,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                 totalSize = totalSize + tag.getFileSize();
             }
         }else {
-            for (AudioTag tag : audioTags) {
+            for (MusicTag tag : audioTags) {
                 if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
                     if (!StringUtils.equals(tag.getAlbum(), criteria.getFilterText())) {
                         continue;
@@ -97,7 +97,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
                         continue;
                     }
                 }
-                new AudioTagModel_()
+                new MusicTagModel_()
                         .id(tag.getId())
                         .tag(tag)
                         .controller(this)
@@ -245,8 +245,8 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         return totalSize;
     }
 
-    private AudioTagModel_ buildModel(AudioTag tag) {
-        return new AudioTagModel_()
+    private MusicTagModel_ buildModel(MusicTag tag) {
+        return new MusicTagModel_()
                 .id(tag.getId())
                 .controller(this)
                 .tag(tag);
@@ -256,7 +256,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         return criteria;
     }
 
-    public void toggleSelection(AudioTag tag) {
+    public void toggleSelection(MusicTag tag) {
         if(selections.contains(tag)) {
             selections.remove(tag);
         }else {
@@ -268,7 +268,7 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         return selections.size();
     }
 
-    public List<AudioTag> getLastSelections() {
+    public List<MusicTag> getLastSelections() {
         return lastSelections;
     }
 
@@ -276,18 +276,18 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         lastSelections.clear();
         lastSelections.addAll(selections);
         selections.clear();
-        for(AudioTag tag: lastSelections) {
+        for(MusicTag tag: lastSelections) {
             notifyModelChanged(tag);
         }
     }
 
-    public boolean isSelected(AudioTag tag) {
+    public boolean isSelected(MusicTag tag) {
         return selections.contains(tag);
     }
 
-    public ArrayList<AudioTag> getCurrentSelections() {
-        ArrayList<AudioTag> tags = new ArrayList<>();
-        for(AudioTag tag: selections) {
+    public ArrayList<MusicTag> getCurrentSelections() {
+        ArrayList<MusicTag> tags = new ArrayList<>();
+        for(MusicTag tag: selections) {
             tags.add(tag);
         }
         return tags;
@@ -304,17 +304,17 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
     public void toggleSelections() {
         if(selections.size() == getAdapter().getItemCount()) {
             selections.clear();
-            List<AudioTag> list = new ArrayList<>();
+            List<MusicTag> list = new ArrayList<>();
             for(int i=0; i<getAdapter().getItemCount();i++) {
-                AudioTagModel model = (AudioTagModel) getAdapter().getModelAtPosition(i);
+                MusicTagModel model = (MusicTagModel) getAdapter().getModelAtPosition(i);
                 list.add(model.tag);
             }
             setData(list);
         }else {
             selections.clear();
-            List<AudioTag> list = new ArrayList<>();
+            List<MusicTag> list = new ArrayList<>();
             for(int i=0; i<getAdapter().getItemCount();i++) {
-                AudioTagModel model = (AudioTagModel) getAdapter().getModelAtPosition(i);
+                MusicTagModel model = (MusicTagModel) getAdapter().getModelAtPosition(i);
                 selections.add(model.tag);
                 list.add(model.tag);
             }
@@ -322,17 +322,17 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         }
     }
 
-    public int getAudioTagPosition(AudioTag tag) {
-        AudioTagModel_ model = buildModel(tag);
+    public int getAudioTagPosition(MusicTag tag) {
+        MusicTagModel_ model = buildModel(tag);
         return getAdapter().getModelPosition(model);
     }
 
-    public void notifyModelChanged(AudioTag tag) {
+    public void notifyModelChanged(MusicTag tag) {
        if(tag!= null) {
-            AudioTagModel_ model = buildModel(tag);
+           MusicTagModel_ model = buildModel(tag);
             int position = getAdapter().getModelPosition(model);
             if (position != RecyclerView.NO_POSITION) {
-                AudioTagModel_ md = (AudioTagModel_) getAdapter().getModelAtPosition(position);
+                MusicTagModel_ md = (MusicTagModel_) getAdapter().getModelAtPosition(position);
                 if (md != null) {
                     tagRepos.populateAudioTag(md.tag());
                 }
@@ -341,10 +341,10 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         }
     }
 
-    public void notifyModelRemoved(AudioTag tag) {
+    public void notifyModelRemoved(MusicTag tag) {
         if(tag!= null) {
-            List<AudioTag> list = getCurrentData();
-            for(AudioTag item: list) {
+            List<MusicTag> list = getCurrentData();
+            for(MusicTag item: list) {
                 if(tag.equals(item)) {
                     list.remove(item);
                 }
@@ -398,11 +398,11 @@ public class AudioTagController extends TypedEpoxyController<List<AudioTag>> {
         return titles;
     }
 
-    public AudioTag getAudioTag(EpoxyViewHolder holder) {
-        return  ((AudioTagModel_)holder.getModel()).tag();
+    public MusicTag getAudioTag(EpoxyViewHolder holder) {
+        return  ((MusicTagModel_)holder.getModel()).tag();
     }
 
-    public void notifyModelMoved(AudioTag item) {
+    public void notifyModelMoved(MusicTag item) {
         // if match filter, notify change
         // else, notify remove
         notifyModelChanged(item);

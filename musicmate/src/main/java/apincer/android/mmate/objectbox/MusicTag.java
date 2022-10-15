@@ -16,7 +16,7 @@ import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.StringUtils;
 
 @Entity
-public class AudioTag implements Cloneable , Parcelable {
+public class MusicTag implements Cloneable , Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(id);
@@ -24,7 +24,7 @@ public class AudioTag implements Cloneable , Parcelable {
 
     //
     @Transient
-    private AudioTag originTag;
+    private MusicTag originTag;
     @Transient private String musicBrainzId;
     @Transient private String artistId;
     @Transient private String albumId;
@@ -60,8 +60,8 @@ public class AudioTag implements Cloneable , Parcelable {
     @Override
     public boolean equals(@Nullable Object obj) {
         if(obj==null) return false;
-        if(obj instanceof  AudioTag) {
-            return (id == ((AudioTag)obj).id)?true:false;
+        if(obj instanceof MusicTag) {
+            return (id == ((MusicTag)obj).id)?true:false;
         }
         return false;
     }
@@ -167,7 +167,7 @@ public class AudioTag implements Cloneable , Parcelable {
     protected String albumArtist="";
 
 
-    public AudioTag() {
+    public MusicTag() {
     }
 
     public int getRating() {
@@ -194,8 +194,8 @@ public class AudioTag implements Cloneable , Parcelable {
         this.mqaSampleRate = mqaSampleRate;
     }
 
-    protected AudioTag(Parcel in) {
-        originTag = in.readParcelable(AudioTag.class.getClassLoader());
+    protected MusicTag(Parcel in) {
+        originTag = in.readParcelable(MusicTag.class.getClassLoader());
         id = in.readLong();
         path = in.readString();
         lastModified = in.readLong();
@@ -235,15 +235,15 @@ public class AudioTag implements Cloneable , Parcelable {
         loudnessTruePeek=in.readString();
     }
 
-    public static final Parcelable.Creator<AudioTag> CREATOR = new Creator<AudioTag>() {
+    public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
         @Override
-        public AudioTag createFromParcel(Parcel in) {
-            return new AudioTag(in);
+        public MusicTag createFromParcel(Parcel in) {
+            return new MusicTag(in);
         }
 
         @Override
-        public AudioTag[] newArray(int size) {
-            return new AudioTag[size];
+        public MusicTag[] newArray(int size) {
+            return new MusicTag[size];
         }
     };
 
@@ -473,6 +473,9 @@ public class AudioTag implements Cloneable , Parcelable {
     public boolean isDSD() {
         return audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD;
     }
+    public boolean isSACDISO() {
+        return Constants.MEDIA_ENC_SACD.equalsIgnoreCase(getAudioEncoding());
+    }
 /*
     public boolean isDSD64() {
         return ( isDSD() && getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_DSD64);
@@ -608,8 +611,8 @@ public class AudioTag implements Cloneable , Parcelable {
     }
 
     @Override
-    public AudioTag clone() {
-        AudioTag tag = new AudioTag();
+    public MusicTag clone() {
+        MusicTag tag = new MusicTag();
         tag.id = id;
         tag.path = path;
         tag.storageId = storageId;
@@ -663,7 +666,7 @@ public class AudioTag implements Cloneable , Parcelable {
         return isLossless() && getAudioBitsPerSample()>= Constants.QUALITY_BIT_DEPTH_HD && getAudioSampleRate()>= Constants.QUALITY_SAMPLING_RATE_44;
     }*/
 
-    public void cloneFrom(AudioTag tag) {
+    public void cloneFrom(MusicTag tag) {
         this.id = tag.id;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
@@ -755,11 +758,11 @@ public class AudioTag implements Cloneable , Parcelable {
         parcel.writeString(loudnessTruePeek);
     }
 
-    public AudioTag getOriginTag() {
+    public MusicTag getOriginTag() {
         return originTag;
     }
 
-    public void setOriginTag(AudioTag originTag) {
+    public void setOriginTag(MusicTag originTag) {
         this.originTag = originTag;
     }
 }

@@ -45,11 +45,11 @@ import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
@@ -67,8 +67,8 @@ import timber.log.Timber;
 
 public class TagsActivity extends AppCompatActivity {
     private static final String UNKNOWN_GENRE = "Unknown Genre"; //implements Callback {
-    private static ArrayList<AudioTag> editItems = new ArrayList<>();
-    private volatile AudioTag displayTag;
+    private static ArrayList<MusicTag> editItems = new ArrayList<>();
+    private volatile MusicTag displayTag;
     private ImageView coverArtView;
     private TabLayout tabLayout;
     private Toolbar toolbar;
@@ -95,7 +95,7 @@ public class TagsActivity extends AppCompatActivity {
     private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     private volatile boolean isEditing;
     //private BroadcastHelper broadcastHelper;
-    AudioFileRepository repos;// = AudioFileRepository.newInstance(getApplication());
+    FileRepository repos;// = AudioFileRepository.newInstance(getApplication());
 
     @Override
     public void onBackPressed() {
@@ -145,7 +145,7 @@ public class TagsActivity extends AppCompatActivity {
     //private ImageView pathIcon;
     private SearchCriteria criteria;
 
-    public List<AudioTag> getEditItems() {
+    public List<MusicTag> getEditItems() {
         return editItems;
     }
 
@@ -156,7 +156,7 @@ public class TagsActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         //broadcastHelper = new BroadcastHelper(this);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
 
         coverArtLayout = findViewById(R.id.panel_cover_art_layout);
         panelLabels = findViewById(R.id.panel_labels);
@@ -260,8 +260,8 @@ public class TagsActivity extends AppCompatActivity {
             toolbar.setTitle(title);
             titleView.setText(title);
         }else {
-            toolbar.setTitle(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
-            titleView.setText(AudioTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+            toolbar.setTitle(MusicTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+            titleView.setText(MusicTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
         }
         artistView.setText(StringUtils.trimToEmpty(displayTag.getArtist())+" ");
        // if(AudioTagUtils.isHiResOrDSD(displayTag) || displayTag.isMQA()) {
@@ -269,7 +269,7 @@ public class TagsActivity extends AppCompatActivity {
         //    hiresView.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(),displayTag));
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(AudioTagUtils.getEncResolutionIcon(getApplicationContext(), displayTag))
+                .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), displayTag))
                 .crossfade(false)
                 .target(hiresView)
                 .build();
@@ -278,7 +278,7 @@ public class TagsActivity extends AppCompatActivity {
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         if (displayTag.isAudiophile()) {
             request = new ImageRequest.Builder(getApplicationContext())
-                    .data(AudioTagUtils.getAudiophileRecordsIcon(getApplicationContext()))
+                    .data(MusicTagUtils.getAudiophileRecordsIcon(getApplicationContext()))
                     .crossfade(false)
                     .target(audiophileView)
                     .build();
@@ -291,7 +291,7 @@ public class TagsActivity extends AppCompatActivity {
         if(displayTag.isDSD()) {
             encResView.setVisibility(View.GONE);
         }else {
-            encResView.setImageBitmap(AudioTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
+            encResView.setImageBitmap(MusicTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
             /*request = new ImageRequest.Builder(getApplicationContext())
                     .data(AudioTagUtils.getCachedLoudnessIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
@@ -315,7 +315,7 @@ public class TagsActivity extends AppCompatActivity {
             finish();
         });
         if(StringUtils.isEmpty(displayTag.getAlbum())) {
-            albumView.setText(String.format("[%s]", AudioTagUtils.getDefaultAlbum(displayTag)));
+            albumView.setText(String.format("[%s]", MusicTagUtils.getDefaultAlbum(displayTag)));
         }else {
             albumView.setText(displayTag.getAlbum());
             albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -403,7 +403,7 @@ public class TagsActivity extends AppCompatActivity {
 
         request = new ImageRequest.Builder(getApplicationContext())
                 //.data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-                .data(AudioTagUtils.getCoverArt(getApplicationContext(), displayTag))
+                .data(MusicTagUtils.getCoverArt(getApplicationContext(), displayTag))
                 .size(1024,1024)
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)
@@ -512,7 +512,7 @@ public class TagsActivity extends AppCompatActivity {
                         finish();
                     }
                 }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                    new SpecialTextUnit(AudioTagUtils.getAlbumArtistOrArtist(displayTag)).setTextSize(14).useTextBold().showUnderline());
+                    new SpecialTextUnit(MusicTagUtils.getAlbumArtistOrArtist(displayTag)).setTextSize(14).useTextBold().showUnderline());
 
         tagInfo.setText(tagSpan.build());
 
@@ -545,9 +545,9 @@ public class TagsActivity extends AppCompatActivity {
         encInfo.setText(spannableEnc.build());
     }
 
-    protected AudioTag buildDisplayTag(boolean reload) {
+    protected MusicTag buildDisplayTag(boolean reload) {
        // AudioTag baseItem = editItems.get(0);
-        AudioTag displayTag = editItems.get(0);
+        MusicTag displayTag = editItems.get(0);
         //if(reload) {
         if(editItems.size()==1 && reload) {
             repos.readAudioTagFromFile(displayTag);
@@ -556,11 +556,11 @@ public class TagsActivity extends AppCompatActivity {
         displayTag = displayTag.clone();
 
         for (int i=1;i<editItems.size();i++) {
-            AudioTag item = editItems.get(i);
+            MusicTag item = editItems.get(i);
             //if(reload) {
             //    repos.reloadMediaItem(item);
             //}
-            AudioTag displayTag2 = item;
+            MusicTag displayTag2 = item;
             if(!StringUtils.equals(displayTag.getTitle(), displayTag2.getTitle())) {
                 displayTag.setTitle(StringUtils.MULTI_VALUES);
             }
@@ -667,7 +667,7 @@ public class TagsActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    public void onPlaying(AudioTag tag) {
+    public void onPlaying(MusicTag tag) {
         if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
             try {
                 editItems.clear();
@@ -758,7 +758,7 @@ public class TagsActivity extends AppCompatActivity {
                 BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
                 if (broadcastData != null) {
                     if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
-                        AudioTag tag = broadcastData.getTagInfo();
+                        MusicTag tag = broadcastData.getTagInfo();
                         onPlaying(tag);
                     /*    if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
                             AudioTag tag = broadcastData.getTagInfo();

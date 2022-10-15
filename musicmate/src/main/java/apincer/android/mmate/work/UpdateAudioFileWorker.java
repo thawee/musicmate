@@ -16,12 +16,12 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import timber.log.Timber;
 
 public class UpdateAudioFileWorker extends Worker {
-    AudioFileRepository repos;
+    FileRepository repos;
    // private final ThreadPoolExecutor mExecutor;
     /**
      * Gets the number of available cores
@@ -37,7 +37,7 @@ public class UpdateAudioFileWorker extends Worker {
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
        /* mExecutor = new ThreadPoolExecutor(
                 NUMBER_OF_CORES/2, // + 5,   // Initial pool size
                 NUMBER_OF_CORES, // + 4, //8,   // Max pool size
@@ -53,9 +53,9 @@ public class UpdateAudioFileWorker extends Worker {
     public Result doWork() {
         Data inputData = getInputData();
         String artworkPath = inputData.getString(Constants.KEY_COVER_ART_PATH);
-        List<AudioTag> tags = MusixMateApp.getPendingItems("Update");
+        List<MusicTag> tags = MusixMateApp.getPendingItems("Update");
 
-        for (AudioTag tag:tags) {
+        for (MusicTag tag:tags) {
             MusicMateExecutors.maintain(new UpdateRunnable(tag, artworkPath));
             //UpdateRunnable r = new UpdateRunnable(tag, artworkPath);
             //mExecutor.execute(r);
@@ -73,7 +73,7 @@ public class UpdateAudioFileWorker extends Worker {
         return Result.success();
     }
 
-    public static void startWorker(Context context, List<AudioTag> files, String artworkPath) {
+    public static void startWorker(Context context, List<MusicTag> files, String artworkPath) {
             Data inputData = (new Data.Builder())
                     .putString(Constants.KEY_COVER_ART_PATH, artworkPath)
                     .build();
@@ -86,10 +86,10 @@ public class UpdateAudioFileWorker extends Worker {
     }
 
     private final class UpdateRunnable  implements Runnable {
-        private final AudioTag tag;
+        private final MusicTag tag;
         private final String artworkPath;
 
-        private UpdateRunnable(AudioTag tag,String artworkPath) {
+        private UpdateRunnable(MusicTag tag, String artworkPath) {
             this.tag = tag;
             this.artworkPath = artworkPath;
         }

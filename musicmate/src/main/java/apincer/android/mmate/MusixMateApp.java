@@ -27,7 +27,7 @@ import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.objectbox.ObjectBox;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import apincer.android.mmate.work.ScanLoudnessWorker;
@@ -40,7 +40,7 @@ public class MusixMateApp extends Application  {
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper(new Callback() {
         @Override
-        public void onPlaying(Context context, AudioTag song) {
+        public void onPlaying(Context context, MusicTag song) {
             try {
                 BroadcastData data = new BroadcastData()
                         .setAction(BroadcastData.Action.PLAYING)
@@ -57,14 +57,14 @@ public class MusixMateApp extends Application  {
     private static final long SCAN_SCHEDULE_TIME = 5;
     private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
-    private static Map<String, List<AudioTag>> pendingQueue = new HashMap();
+    private static Map<String, List<MusicTag>> pendingQueue = new HashMap();
 
-    public static AudioTag getPlayingSong() {
+    public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
     }
 
-    public static List<AudioTag> getPendingItems(String name) {
-        List<AudioTag> list = new ArrayList();
+    public static List<MusicTag> getPendingItems(String name) {
+        List<MusicTag> list = new ArrayList();
         synchronized (pendingQueue) {
             if (pendingQueue.containsKey(name)) {
                 list.addAll(pendingQueue.get(name));
@@ -74,7 +74,7 @@ public class MusixMateApp extends Application  {
         return list;
     }
 
-    public static void putPendingItems(String name, List<AudioTag> tags) {
+    public static void putPendingItems(String name, List<MusicTag> tags) {
         synchronized (pendingQueue) {
             if (pendingQueue.containsKey(name)) {
                 List list = pendingQueue.get(name);

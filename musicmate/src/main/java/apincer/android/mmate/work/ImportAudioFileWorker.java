@@ -15,25 +15,25 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import timber.log.Timber;
 
 public class ImportAudioFileWorker extends Worker {
-    AudioFileRepository repos;
+    FileRepository repos;
 
     private ImportAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
     }
 
     @NonNull
     @Override
     public Result doWork() {
-        List<AudioTag> tags = MusixMateApp.getPendingItems("Import");
-        for (AudioTag tag:tags) {
+        List<MusicTag> tags = MusixMateApp.getPendingItems("Import");
+        for (MusicTag tag:tags) {
             MusicMateExecutors.maintain(new ImportRunnable(tag));
         }
 /*
@@ -51,16 +51,16 @@ public class ImportAudioFileWorker extends Worker {
         return Result.success();
     }
 
-    public static void startWorker(Context context, List<AudioTag> files) {
+    public static void startWorker(Context context, List<MusicTag> files) {
         MusixMateApp.putPendingItems("Import", files);
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ImportAudioFileWorker.class).build();
             WorkManager.getInstance(context).enqueue(workRequest);
     }
 
     private final class ImportRunnable  implements Runnable {
-        private final AudioTag tag;
+        private final MusicTag tag;
 
-        private ImportRunnable(AudioTag tag) {
+        private ImportRunnable(MusicTag tag) {
             this.tag = tag;
         }
         @Override

@@ -20,13 +20,13 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.fs.MusicFileProvider;
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.TagsActivity;
 
 public class ApplicationUtils {
 
-    public static void startAspect(Activity activity, AudioTag tag) {
+    public static void startAspect(Activity activity, MusicTag tag) {
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
         if (intent != null) {
           /*  ApplicationInfo ai = null;
@@ -84,7 +84,7 @@ public class ApplicationUtils {
 
     }
 
-    public static void webSearch(Activity activity, AudioTag item) {
+    public static void webSearch(Activity activity, MusicTag item) {
         try {
             String text = "";
             // title and artist
@@ -148,7 +148,7 @@ public class ApplicationUtils {
         return isPlugged;
     }
 
-    public static void startFileExplorer(TagsActivity activity, AudioTag displayTag) {
+    public static void startFileExplorer(TagsActivity activity, MusicTag displayTag) {
        /* File path = new File(displayTag.getPath());
         Uri uri = MusicFileProvider.getUriForFile(path.getParentFile().getAbsolutePath());
 

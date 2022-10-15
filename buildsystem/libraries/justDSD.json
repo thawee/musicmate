@@ -1,0 +1,8 @@
+{
+  "uniqueId": "JustDSD",
+  "name": "JustDSD",
+  "artifactVersion": "18 Aug 2022",
+  "developers":[{"name":"drogatkin"}],
+  "description": "Decoders and convertors for different DSD music formats",
+  "website": "https://github.com/drogatkin/JustDSD"
+}

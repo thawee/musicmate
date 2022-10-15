@@ -83,6 +83,7 @@ public final class Constants {
     public static final String MEDIA_PATH_DSD = "DSD"; // DSD
     public static final String MEDIA_PATH_MQA = "MQA"; //MQA
     public static final String MEDIA_PATH_HRA = "HRA"; //HRA
+    public static final String MEDIA_PATH_SACD = "SACD";
    // public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
    // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
     public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless
@@ -133,9 +134,6 @@ public final class Constants {
     public static final String SRC_SPOTIFY = "Spotify";
     public static final String SRC_TIDAL = "Tidal";
     public static final String SRC_YOUTUBE = "Youtube";
-   // public static final String SRC_2L = "2L";
-   // public static final String SRC_HD_TRACKS = "HDTracks";
-   // public static final String SRC_NATIVE_DSD = "NativeDSD";
     public static final String SRC_NONE = "-";
 
  public static List<String> getSourceList(Context context) {

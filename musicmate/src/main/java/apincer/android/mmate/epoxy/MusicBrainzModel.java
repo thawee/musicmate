@@ -17,8 +17,8 @@ import com.airbnb.epoxy.EpoxyModelWithHolder;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.utils.MusicTagUtils;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
@@ -27,7 +27,7 @@ import coil.transform.RoundedCornersTransformation;
 @EpoxyModelClass(layout = R.layout.view_list_item_musicbrainz)
 public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzModel.Holder> {
     @EpoxyAttribute(DoNotHash)
-    AudioTag tag;
+    MusicTag tag;
     @EpoxyAttribute(DoNotHash)
     View.OnClickListener clickListener;
 
@@ -45,7 +45,7 @@ public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzM
     public void bind(MusicBrainzModel.Holder holder) {
         holder.rootView.setOnClickListener(clickListener);
         holder.mTitle.setText(tag.getTitle());
-        holder.mSubtitle1.setText(AudioTagUtils.getFormattedSubtitle(tag));
+        holder.mSubtitle1.setText(MusicTagUtils.getFormattedSubtitle(tag));
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 .data(MusicbrainzCoverArtProvider.getUriForMediaItem(tag))

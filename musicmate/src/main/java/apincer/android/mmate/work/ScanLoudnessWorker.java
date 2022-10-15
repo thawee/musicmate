@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTagRepository;
 import timber.log.Timber;
 
 public class ScanLoudnessWorker extends Worker {
@@ -31,7 +31,7 @@ public class ScanLoudnessWorker extends Worker {
     private static final String TAG = "ScanLoudnessWorker";
     // private static Operation scanOperation;
    // private final ThreadPoolExecutor mExecutor;
-    AudioFileRepository repos; // = AudioFileRepository.newInstance(getApplicationContext());
+    FileRepository repos; // = AudioFileRepository.newInstance(getApplicationContext());
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -46,7 +46,7 @@ public class ScanLoudnessWorker extends Worker {
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
        /* HandlerThread thread = new HandlerThread("ScanFilesWorker");
         thread.start(); */
        /* mExecutor = new ThreadPoolExecutor(
@@ -66,8 +66,8 @@ public class ScanLoudnessWorker extends Worker {
         if(inputData!=null && inputData.getString(Constants.KEY_MEDIA_TAG)!=null) {
              String s = inputData.getString(Constants.KEY_MEDIA_TAG);
              Gson gson = new Gson();
-             Type audioTagType = new TypeToken<AudioTag>(){}.getType();
-              AudioTag tag = gson.fromJson(s, audioTagType);
+             Type audioTagType = new TypeToken<MusicTag>(){}.getType();
+              MusicTag tag = gson.fromJson(s, audioTagType);
                 try {
                     repos.deepScanMediaItem(tag);
                     AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
@@ -76,9 +76,9 @@ public class ScanLoudnessWorker extends Worker {
                     Timber.e(e);
                 }
         }else {
-            AudioTagRepository repos = AudioTagRepository.getInstance();
-            List<AudioTag> tags = repos.getAudioTagWithoutLoudness();
-            for (AudioTag tag : tags) {
+            MusicTagRepository repos = MusicTagRepository.getInstance();
+            List<MusicTag> tags = repos.getAudioTagWithoutLoudness();
+            for (MusicTag tag : tags) {
                 MusicMateExecutors.scan(new ScanRunnable(tag));
                // ScanRunnable r = new ScanRunnable(tag);
                // mExecutor.execute(r);
@@ -97,9 +97,9 @@ public class ScanLoudnessWorker extends Worker {
     }
 
 
-    public static void startScan(Context context, AudioTag tag) {
+    public static void startScan(Context context, MusicTag tag) {
         Gson gson = new Gson();
-        Type audioTagType = new TypeToken<AudioTag>(){}.getType();
+        Type audioTagType = new TypeToken<MusicTag>(){}.getType();
         String s = gson.toJson(tag, audioTagType);
         Data inputData = (new Data.Builder())
                 .putString(Constants.KEY_MEDIA_TAG, s)
@@ -113,9 +113,9 @@ public class ScanLoudnessWorker extends Worker {
     }
 
     private final class ScanRunnable  implements Runnable {
-        private final AudioTag tag;
+        private final MusicTag tag;
 
-        private ScanRunnable(AudioTag tag) {
+        private ScanRunnable(MusicTag tag) {
             this.tag = tag;
         }
         @Override

@@ -15,25 +15,25 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import timber.log.Timber;
 
 public class DeleteAudioFileWorker extends Worker {
-    AudioFileRepository repos;
+    FileRepository repos;
 
     private DeleteAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
     }
 
     @NonNull
     @Override
     public Result doWork() {
-       List<AudioTag> tags = MusixMateApp.getPendingItems("Delete");
-        for (AudioTag tag:tags) {
+       List<MusicTag> tags = MusixMateApp.getPendingItems("Delete");
+        for (MusicTag tag:tags) {
             MusicMateExecutors.maintain(new DeleteRunnable(tag));
         }
 /*
@@ -56,7 +56,7 @@ public class DeleteAudioFileWorker extends Worker {
         return Result.success();
     }
 
-    public static void startWorker(Context context, List<AudioTag> files) {
+    public static void startWorker(Context context, List<MusicTag> files) {
         MusixMateApp.putPendingItems("Delete", files);
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class).build();
                   //  .setInputData(inputData).build();
@@ -64,9 +64,9 @@ public class DeleteAudioFileWorker extends Worker {
     }
 
     private final class DeleteRunnable  implements Runnable {
-        private final AudioTag tag;
+        private final MusicTag tag;
 
-        private DeleteRunnable(AudioTag tag) {
+        private DeleteRunnable(MusicTag tag) {
             this.tag = tag;
         }
         @Override

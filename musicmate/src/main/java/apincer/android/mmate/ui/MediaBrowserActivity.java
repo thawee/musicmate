@@ -77,16 +77,16 @@ import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.epoxy.AudioTagController;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
-import apincer.android.mmate.repository.AudioTagRepository;
+import apincer.android.mmate.epoxy.MusicTagController;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
@@ -122,13 +122,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     ActivityResultLauncher<Intent> editorLauncher;
 
-    AudioFileRepository repos;
+    FileRepository repos;
 
     private BottomAppBar bottomAppBar;
 
     private ResideMenu mResideMenu;
 
-    private AudioTagController epoxyController;
+    private MusicTagController epoxyController;
 
     private Snackbar mExitSnackbar;
     //private View mSearchBar;
@@ -156,13 +156,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private ActionMode actionMode;
 
     //selected song to scroll
-    private AudioTag lastPlaying;
+    private MusicTag lastPlaying;
     private boolean onSetup = true;
 
     private SearchCriteria searchCriteria;
     private boolean backFromEditor;
 
-    private void doDeleteMediaItems(List<AudioTag> itemsList) {
+    private void doDeleteMediaItems(List<MusicTag> itemsList) {
         String text = "Delete ";
         if(itemsList.size()>1) {
             text = text + itemsList.size() + " songs?";
@@ -181,7 +181,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .show();
     }
 
-    private void doMoveMediaItems(List<AudioTag> itemsList) {
+    private void doMoveMediaItems(List<MusicTag> itemsList) {
         String text = "Import ";
         if(itemsList.size()>1) {
             text = text + itemsList.size() + " songs to Music Directory?";
@@ -200,7 +200,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         dlg.show();
     }
 	
-	private void doShowNowPlayingSongFAB(final AudioTag song) {
+	private void doShowNowPlayingSongFAB(final MusicTag song) {
         if (song == null) {
             doHideNowPlayingSongFAB();
             return;
@@ -213,7 +213,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest fabRequest = new ImageRequest.Builder(this)
                    // .data(EmbedCoverArtProvider.getUriForMediaItem(song))
-                    .data(AudioTagUtils.getCoverArt(getApplicationContext(), song))
+                    .data(MusicTagUtils.getCoverArt(getApplicationContext(), song))
                     .size(256,256)
                     .crossfade(false)
                     .allowHardware(false)
@@ -229,7 +229,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        // nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
         imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(AudioTagUtils.getEncResolutionIcon(getApplicationContext(), song))
+                .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), song))
                 .crossfade(false)
                 .target(nowPlayingType)
                 //.transformations(new RoundedCornersTransformation(4,4,4,4))
@@ -343,7 +343,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        repos = AudioFileRepository.newInstance(getApplicationContext());
+        repos = FileRepository.newInstance(getApplicationContext());
         initActivityTransitions();
         setContentView(R.layout.activity_browser);
         setUpEditorLauncher();
@@ -363,7 +363,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void setUpEditorLauncher() {
         editorLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            for(AudioTag tag: epoxyController.getLastSelections()) {
+            for(MusicTag tag: epoxyController.getLastSelections()) {
                 epoxyController.notifyModelChanged(tag);
             }
 
@@ -636,7 +636,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private boolean scrollToListening() {
         return scrollToSong(MusixMateApp.getPlayingSong());
     }
-    private boolean scrollToSong(AudioTag tag) {
+    private boolean scrollToSong(MusicTag tag) {
         if (tag == null) return false;
 
         try {
@@ -682,7 +682,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
 
-            AudioTag tag = MusixMateApp.getPlayingSong();
+            MusicTag tag = MusixMateApp.getPlayingSong();
             if(tag!=null) {
                 doShowNowPlayingSongFAB(null);
             }
@@ -777,11 +777,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, AudioTagRepository.getInstance().getDefaultGroupingList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getInstance().getDefaultGroupingList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GENRE, AudioTagRepository.getInstance().getGenreList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getInstance().getGenreList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_settings) {
             Intent myIntent = new Intent(MediaBrowserActivity.this, SettingsActivity.class);
@@ -828,7 +828,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
        // AudioTag tag = service.getPlayingSong();
       //  text = "Song "+tag.getTitle() +"; BPS: "+tag.getAudioBitsPerSample() +" & SampleRate: "+tag.getAudioSampleRate();
       //  text = text+"\n Player: "+service.getPlayerName();
-        AudioTag tag = MusixMateApp.getPlayingSong();
+        MusicTag tag = MusixMateApp.getPlayingSong();
 
         MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
 
@@ -849,7 +849,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(tag != null && !StringUtils.isEmpty(tag.getPath())) {
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                    .data(AudioTagUtils.getEncResolutionIcon(getApplicationContext(), tag))
+                    .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), tag))
                     .crossfade(false)
                     .target(sourceIcon)
                     .build();
@@ -862,8 +862,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             }else {
                 sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
             } */
-            quality = AudioTagUtils.getTrackQuality(tag);
-            qualityDetails = AudioTagUtils.getTrackQualityDetails(tag);
+            quality = MusicTagUtils.getTrackQuality(tag);
+            qualityDetails = MusicTagUtils.getTrackQualityDetails(tag);
             sourceText.setText(quality);
         }else {
             sourceText.setText("-");
@@ -894,9 +894,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         builder.show();
     }
 
-    private void doShowEditActivity(AudioTag mediaItem) {
-        if(AudioFileRepository.isMediaFileExist(mediaItem)) {
-            ArrayList<AudioTag> tagList = new ArrayList<>();
+    private void doShowEditActivity(MusicTag mediaItem) {
+        if(FileRepository.isMediaFileExist(mediaItem)) {
+            ArrayList<MusicTag> tagList = new ArrayList<>();
             tagList.add(mediaItem);
             AudioTagEditEvent message = new AudioTagEditEvent("edit", epoxyController.getCriteria(), tagList);
             EventBus.getDefault().postSticky(message);
@@ -905,10 +905,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void doShowEditActivity(List<AudioTag> selections) {
-        ArrayList<AudioTag> tagList = new ArrayList<>();
-        for(AudioTag tag: selections) {
-            if(AudioFileRepository.isMediaFileExist(tag)) {
+    private void doShowEditActivity(List<MusicTag> selections) {
+        ArrayList<MusicTag> tagList = new ArrayList<>();
+        for(MusicTag tag: selections) {
+            if(FileRepository.isMediaFileExist(tag)) {
                 tagList.add(tag);
             }else {
             new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.AlertDialogTheme)
@@ -961,7 +961,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void setUpRecycleView() {
-        epoxyController = new AudioTagController(this, this);
+        epoxyController = new MusicTagController(this, this);
         epoxyController.addModelBuildListener(result -> {
             doStopRefresh();
             updateHeaderPanel();
@@ -1066,7 +1066,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
             if(broadcastData!=null) {
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
-                    AudioTag tag = broadcastData.getTagInfo();
+                    MusicTag tag = broadcastData.getTagInfo();
                     ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                     onPlaying(tag);
                 }
@@ -1092,7 +1092,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(view);
         if(h instanceof EpoxyViewHolder) {
             EpoxyViewHolder holder = (EpoxyViewHolder) h;
-            AudioTag tag = epoxyController.getAudioTag(holder);// ((AudioTagModel_)holder.getModel()).tag();
+            MusicTag tag = epoxyController.getAudioTag(holder);// ((AudioTagModel_)holder.getModel()).tag();
             enableActionMode(tag);
             return true;
         }
@@ -1100,14 +1100,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         return false;
     }
 
-    private void enableActionMode(AudioTag tag) {
+    private void enableActionMode(MusicTag tag) {
         if (actionMode == null) {
             actionMode = startSupportActionMode(actionModeCallback);
         }
         toggleSelection(tag);
     }
 
-    private void toggleSelection(AudioTag tag) {
+    private void toggleSelection(MusicTag tag) {
         epoxyController.toggleSelection(tag);
         int count = epoxyController.getSelectedItemCount();
 
@@ -1121,7 +1121,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         epoxyController.notifyModelChanged(position);
     }
 
-    public void onPlaying(AudioTag song) {
+    public void onPlaying(MusicTag song) {
         if(lastPlaying!=null) {
             epoxyController.notifyModelChanged(lastPlaying);
         }
@@ -1204,7 +1204,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void doExportAsPlaylist(List<AudioTag> currentSelections) {
+    private void doExportAsPlaylist(List<MusicTag> currentSelections) {
         /*
         #EXTM3U
         #PLAYLIST: The title of the playlist
@@ -1230,7 +1230,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             out.write("#EXRM3U\n");
             out.write("#PLAYLIST: MusicMate Playlist\n\n");
 
-            for (AudioTag tag:currentSelections) {
+            for (MusicTag tag:currentSelections) {
                 out.write("#EXTINF:"+tag.getAudioDuration()+","+tag.getArtist()+","+tag.getTitle()+"\n");
                 out.write(tag.getPath()+"\n\n");
             }
@@ -1244,7 +1244,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void doEncodingAudioFiles(ArrayList<AudioTag> selections) {
+    private void doEncodingAudioFiles(ArrayList<MusicTag> selections) {
         // convert WAVE to AIFF, FLAC, ALAC
         // convert AIFF to WAVE, FLAC, ALAC
         // convert FLAC to ALAC
@@ -1366,7 +1366,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
 
             //final int size = selections.size();
-            for(AudioTag tag: selections) {
+            for(MusicTag tag: selections) {
                // int count = cnt.getAndIncrement();
                 if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
                     String srcPath = tag.getPath();
@@ -1391,7 +1391,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
                     FFmpegKit.executeAsync(cmd, session -> {
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
-                            repos.saveTags(targetPath, tag);
+                            repos.saveJAudioTagger(targetPath, tag);
                             repos.scanFileAndSaveTag(new File(targetPath));
                         }else {
                             String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());

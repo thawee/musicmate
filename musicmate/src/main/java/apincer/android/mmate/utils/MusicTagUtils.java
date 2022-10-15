@@ -28,11 +28,11 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import timber.log.Timber;
 
-public class AudioTagUtils {
+public class MusicTagUtils {
 
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, int drawableId, int borderColor, int backgroundColor) {
         Bitmap icon = BitmapHelper.getBitmapFromVectorDrawable(context, drawableId);
@@ -166,7 +166,7 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
-    private static Bitmap createEncodingSamplingRateIcon(Context context, AudioTag tag) {
+    private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
         int width = 340; // 24x85, 16x56, 18x63
         int height = 96;
         int whiteColor = context.getColor(R.color.white);
@@ -569,7 +569,7 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
-    public static int getResolutionColor(Context context, AudioTag tag) {
+    public static int getResolutionColor(Context context, MusicTag tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
         // Lossless - >= 24 bits and >= 48 kHz
@@ -589,7 +589,7 @@ public class AudioTagUtils {
         }
     }
 
-    public static Drawable getResolutionBackground(Context context, AudioTag tag) {
+    public static Drawable getResolutionBackground(Context context, MusicTag tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
         // Lossless - >= 24 bits and >= 48 kHz
@@ -609,22 +609,22 @@ public class AudioTagUtils {
         }
     }
 
-    public static boolean is24Bits(AudioTag tag) {
+    public static boolean is24Bits(MusicTag tag) {
         return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
 
-    public static boolean isDSD(AudioTag tag) {
+    public static boolean isDSD(MusicTag tag) {
         return tag.getAudioBitsPerSample()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
-    public static boolean isPCMHiRes(AudioTag tag) {
+    public static boolean isPCMHiRes(MusicTag tag) {
         // > 24/88
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
         return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
     }
 
-    public static boolean isPCMLossless(AudioTag tag) {
+    public static boolean isPCMLossless(MusicTag tag) {
         // 16/48
         // 24/48
         return ( tag.isLossless() &&
@@ -632,7 +632,7 @@ public class AudioTagUtils {
                 // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
     }
 
-    public static String getFormattedTitle(Context context, AudioTag tag) {
+    public static String getFormattedTitle(Context context, MusicTag tag) {
         String title =  StringUtils.trimToEmpty(tag.getTitle());
         if(Preferences.isShowTrackNumber(context)) {
             String track = StringUtils.trimToEmpty(tag.getTrack());
@@ -649,7 +649,7 @@ public class AudioTagUtils {
         return title;
     }
 
-    public static String getFormattedSubtitle(AudioTag tag) {
+    public static String getFormattedSubtitle(MusicTag tag) {
         String album = StringUtils.trimTitle(tag.getAlbum());
         String artist = StringUtils.trimTitle(tag.getArtist());
         if (StringUtils.isEmpty(artist)) {
@@ -665,7 +665,7 @@ public class AudioTagUtils {
         return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
     }
 
-    public static File getCoverArt( Context context, AudioTag tag) {
+    public static File getCoverArt( Context context, MusicTag tag) {
         //PH|SD_AR|R_album|filename.png
         File dir = context.getExternalCacheDir();
         String sid = tag.getStorageId();
@@ -690,7 +690,7 @@ public class AudioTagUtils {
                 dir = pathFile.getParentFile();
                 dir.mkdirs();
 
-                byte []is = AudioFileRepository.getArtworkAsByte(tag);
+                byte []is = FileRepository.getArtworkAsByte(tag);
                 if(is!=null) {
                     IOUtils.write(is, new FileOutputStream(pathFile));
                 }
@@ -701,7 +701,7 @@ public class AudioTagUtils {
         return pathFile;
     }
 
-    public static File getEncResolutionIcon( Context context, AudioTag tag) {
+    public static File getEncResolutionIcon( Context context, MusicTag tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
         String path = "/Icons/";
@@ -765,7 +765,7 @@ public class AudioTagUtils {
         return pathFile;
     }
 
-    public static String getAlbumArtistOrArtist(AudioTag tag) {
+    public static String getAlbumArtistOrArtist(MusicTag tag) {
         String albumArtist = StringUtils.trimTitle(tag.getAlbumArtist());
         if (StringUtils.isEmpty(albumArtist)) {
             albumArtist = StringUtils.trimTitle("["+tag.getArtist()+"]");
@@ -835,7 +835,7 @@ public class AudioTagUtils {
             return createBitmapFromDrawable(context, size, size,rescId,qualityColor, qualityColor);
         }
     }
-    public static boolean isOnDownloadDir(AudioTag tag) {
+    public static boolean isOnDownloadDir(MusicTag tag) {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
@@ -846,11 +846,11 @@ public class AudioTagUtils {
         return 0;
     }
 
-    public static int getDSDSampleRateModulation(AudioTag tag) {
+    public static int getDSDSampleRateModulation(MusicTag tag) {
         return (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
     }
 
-        public static String getTrackQuality(AudioTag tag) {
+        public static String getTrackQuality(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
         }else if(tag.isMQAStudio()) {
@@ -870,7 +870,7 @@ public class AudioTagUtils {
         //DSD
     }
 
-    public static String getTrackQualityDetails(AudioTag tag) {
+    public static String getTrackQualityDetails(MusicTag tag) {
         if(tag.isDSD()) {
             return "Enjoy rich music which the detail and wide range of the music, its warm tone is very enjoyable.";
         }else if(tag.isMQAStudio()) {
@@ -886,12 +886,12 @@ public class AudioTagUtils {
         }
     }
 
-    public static boolean isHiResOrDSD(AudioTag tag) {
+    public static boolean isHiResOrDSD(MusicTag tag) {
        // return is24Bits(tag) || isDSD(tag);
         return isPCMHiRes(tag) || isDSD(tag);
     }
 
-    public static String getDefaultAlbum(AudioTag tag) {
+    public static String getDefaultAlbum(MusicTag tag) {
         // if album empty, add single
         String defaultAlbum = Constants.DEFAULT_ALBUM_TEXT;
         if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
@@ -1020,7 +1020,7 @@ public class AudioTagUtils {
         return myBitmap;
     }*/
 
-    public static Bitmap createLoudnessIcon(Context context,  AudioTag tag) {
+    public static Bitmap createLoudnessIcon(Context context,  MusicTag tag) {
         int width = 340; // for xx
         int height = 96; // 16
         int greyColor = context.getColor(R.color.grey200);
@@ -1189,7 +1189,7 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
-    public static Bitmap createLoudnessIcon1(Context context,  AudioTag tag) {
+    public static Bitmap createLoudnessIcon1(Context context,  MusicTag tag) {
         int width = 340; // for xx
         int height = 96; // 16
         int greyColor = context.getColor(R.color.grey200);
@@ -1361,11 +1361,11 @@ public class AudioTagUtils {
         return myBitmap;
     }
 
-    public static boolean isOnPrimaryStorage(Context context, AudioTag tag) {
+    public static boolean isOnPrimaryStorage(Context context, MusicTag tag) {
         return StorageId.PRIMARY.equals(DocumentFileCompat.getStorageId(context, tag.getPath()));
     }
 
-    public static String getEncodingType(AudioTag tag) {
+    public static String getEncodingType(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.AUDIO_SQ_DSD;
         }else if(tag.isMQA()) {

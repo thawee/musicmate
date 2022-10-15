@@ -48,9 +48,9 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioTagRepository;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -100,7 +100,7 @@ public class StatisticsActivity extends AppCompatActivity {
         public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_statistics, container, false);
 
-            List< AudioTag> tags = AudioTagRepository.getInstance().getAllMusics();
+            List<MusicTag> tags = MusicTagRepository.getInstance().getAllMusics();
 
             Map<String, Integer> encList = new HashMap<>();
             Map<String, Integer> songs = new HashMap<>();
@@ -109,8 +109,8 @@ public class StatisticsActivity extends AppCompatActivity {
             long totalSongs = 0;
             long totalSize=0;
             long totalDuration =0;
-            for(AudioTag tag: tags) {
-                String enc = AudioTagUtils.getEncodingType(tag);
+            for(MusicTag tag: tags) {
+                String enc = MusicTagUtils.getEncodingType(tag);
                 if(encList.containsKey(enc)) {
                     Integer cnt = encList.get(enc);
                     encList.remove(enc);
@@ -167,13 +167,13 @@ public class StatisticsActivity extends AppCompatActivity {
             return v;
         }
 
-        private void setCombineChartData(CombinedChart chart, List<AudioTag> tags, List<String> labels) {
+        private void setCombineChartData(CombinedChart chart, List<MusicTag> tags, List<String> labels) {
             Map<String, Integer> encMemList = new HashMap<>();
             Map<String, Integer> encSDList = new HashMap<>();
             Observable.fromCallable(() -> {
-                for(AudioTag tag: tags) {
-                    String enc = AudioTagUtils.getEncodingType(tag); ///getAudioEncoding(tag);
-                    if(AudioTagUtils.isOnPrimaryStorage(getContext(), tag)) {
+                for(MusicTag tag: tags) {
+                    String enc = MusicTagUtils.getEncodingType(tag); ///getAudioEncoding(tag);
+                    if(MusicTagUtils.isOnPrimaryStorage(getContext(), tag)) {
                         if(encMemList.containsKey(enc)) {
                             Integer cnt = encMemList.get(enc);
                             encMemList.remove(enc);
@@ -434,13 +434,13 @@ public class StatisticsActivity extends AppCompatActivity {
             return chart;
         }
 
-        private void setLineChartData(LineChart chart, List<AudioTag> tags, List<String> labels) {
+        private void setLineChartData(LineChart chart, List<MusicTag> tags, List<String> labels) {
             Map<String, Integer> encMemList = new HashMap<>();
             Map<String, Integer> encSDList = new HashMap<>();
             Observable.fromCallable(() -> {
-                for(AudioTag tag: tags) {
-                    String enc = AudioTagUtils.getEncodingType(tag);
-                    if(AudioTagUtils.isOnPrimaryStorage(getContext(), tag)) {
+                for(MusicTag tag: tags) {
+                    String enc = MusicTagUtils.getEncodingType(tag);
+                    if(MusicTagUtils.isOnPrimaryStorage(getContext(), tag)) {
                         if(encMemList.containsKey(enc)) {
                             Integer cnt = encMemList.get(enc);
                             encMemList.remove(enc);

@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Preferences;
-import apincer.android.mmate.objectbox.AudioTag;
-import apincer.android.mmate.repository.AudioFileRepository;
+import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.StringUtils;
 import timber.log.Timber;
 
@@ -35,17 +35,17 @@ public class BroadcastHelper {
     public static final ComponentName PAAPI_PLAYER_SERVICE_COMPONENT_NAME = new ComponentName(PAAPI_PACKAGE_NAME, PAAPI_PLAYER_SERVICE_NAME);
 
 
-    private volatile static AudioTag playingSong;
+    private volatile static MusicTag playingSong;
     private volatile static MusicPlayerInfo playerInfo;
     private static final List<MusicBroadcastReceiver> receivers = new ArrayList<>();
     private final Callback callback;
-    private AudioFileRepository provider; // = AudioFileRepository.newInstance(context);
+    private FileRepository provider; // = AudioFileRepository.newInstance(context);
 
     public BroadcastHelper(@NonNull Callback callback) {
         this.callback = callback;
     }
 
-    public static AudioTag getPlayingSong() {
+    public static MusicTag getPlayingSong() {
         return playingSong;
     }
 
@@ -90,12 +90,12 @@ public class BroadcastHelper {
         currentAlbum = StringUtils.trimTitle(currentAlbum);
 
         if(provider ==null) {
-            provider = AudioFileRepository.newInstance(context);
+            provider = FileRepository.newInstance(context);
         }
 
         if(provider!=null) {
             try {
-                AudioTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
+                MusicTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
                 if(newPlayingSong!=null && !newPlayingSong.equals(playingSong)) {
                     playingSong = newPlayingSong;
                     callback.onPlaying(context, playingSong);
@@ -114,7 +114,7 @@ public class BroadcastHelper {
         BroadcastHelper.playerInfo = playerInfo;
     }
 
-    public static void playNextSongOnMatched(Context context, AudioTag item) {
+    public static void playNextSongOnMatched(Context context, MusicTag item) {
         if(item.equals(getPlayingSong())) {
             playNextSong(context);
         }

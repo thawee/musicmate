@@ -1,6 +1,6 @@
 package apincer.android.mmate.broadcast;
 
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 
 public class AudioTagEditResultEvent {
 
@@ -18,15 +18,15 @@ public class AudioTagEditResultEvent {
 
     public final String action;
     public final String status;
-    public final AudioTag item;
+    public final MusicTag item;
 
-    public AudioTagEditResultEvent(String message, String status, AudioTag item) {
+    public AudioTagEditResultEvent(String message, String status, MusicTag item) {
         this.action = message;
         this.status = status;
         this.item = item;
     }
 
-    public AudioTag getItem() {
+    public MusicTag getItem() {
         return item;
     }
 }

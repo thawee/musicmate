@@ -18,9 +18,9 @@ public class MusicMateExecutors {
      **/
     private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
     // Sets the amount of time an idle thread waits before terminating
-    private static final int KEEP_ALIVE_TIME = 60000;
+   // private static final int KEEP_ALIVE_TIME = 60000;
     // Sets the Time Unit to Milliseconds
-    private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
+  //  private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
 
     private static volatile MusicMateExecutors mInstance;
 

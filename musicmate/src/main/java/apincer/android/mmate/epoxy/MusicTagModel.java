@@ -21,9 +21,9 @@ import com.airbnb.epoxy.OnModelLongClickListener;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.AudioTag;
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.ui.view.TriangleLabelView;
-import apincer.android.mmate.utils.AudioTagUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import coil.Coil;
 import coil.ImageLoader;
@@ -31,13 +31,13 @@ import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
 
 @EpoxyModelClass (layout = R.layout.view_list_item)
-public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.Holder> {
+public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.Holder> {
 
     // Declare your model properties like this
     @EpoxyAttribute(DoNotHash)
-    AudioTag tag;
+    MusicTag tag;
     @EpoxyAttribute(DoNotHash)
-    AudioTagController controller;
+    MusicTagController controller;
     @EpoxyAttribute(DoNotHash)
     View.OnClickListener clickListener;
     @EpoxyAttribute(DoNotHash)
@@ -70,13 +70,13 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         if (o == this) {
             return true;
         }
-        if (!(o instanceof AudioTagModel_)) {
+        if (!(o instanceof MusicTagModel_)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-        AudioTagModel_ that = (AudioTagModel_) o;
+        MusicTagModel_ that = (MusicTagModel_) o;
         if (((tag == null) != (that.tag == null))) {
             return false;
         }
@@ -95,7 +95,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
 
         // Background, when bound the first time
-        AudioTag listeningItem = MusixMateApp.getPlayingSong();
+        MusicTag listeningItem = MusixMateApp.getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
 
         holder.rootView.setOnClickListener(clickListener);
@@ -103,7 +103,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
         if (tag.isAudiophile()) {
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                    .data(AudioTagUtils.getAudiophileRecordsIcon(holder.mContext))
+                    .data(MusicTagUtils.getAudiophileRecordsIcon(holder.mContext))
                     .crossfade(false)
                     .target(holder.mAudiophileLabelView)
                     .build();
@@ -135,7 +135,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
         // download label
         if (tag.isManaged()) {
             holder.mNewLabelView.setVisibility(View.GONE);
-        } else if (AudioTagUtils.isOnDownloadDir(tag)) {
+        } else if (MusicTagUtils.isOnDownloadDir(tag)) {
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_red_900);
             holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey200);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
@@ -151,7 +151,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
  */
         // Show AlbumArt
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                .data(AudioTagUtils.getCoverArt(holder.mContext, tag))
+                .data(MusicTagUtils.getCoverArt(holder.mContext, tag))
                 // .size(800, 800)
                 .crossfade(true)
                 .target(holder.mCoverArtView)
@@ -161,7 +161,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
         // show enc i.e. PCM, MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
-                .data(AudioTagUtils.getEncResolutionIcon(holder.mContext, tag))
+                .data(MusicTagUtils.getEncResolutionIcon(holder.mContext, tag))
                 .crossfade(false)
                 .target(holder.mAudioHiResView)
                 .build();
@@ -175,16 +175,16 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
                     .target(holder.mAudioLoudnessView)
                     .build();
             imageLoader.enqueue(request);*/
-            holder.mAudioLoudnessView.setImageBitmap(AudioTagUtils.createLoudnessIcon(holder.mContext, tag));
+            holder.mAudioLoudnessView.setImageBitmap(MusicTagUtils.createLoudnessIcon(holder.mContext, tag));
             holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
         }else {
             holder.mAudioLoudnessView.setVisibility(View.GONE);
         }
 
-            holder.mTitle.setText(AudioTagUtils.getFormattedTitle(holder.mContext, tag));
-            holder.mSubtitle.setText(AudioTagUtils.getFormattedSubtitle(tag));
+            holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
+            holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
-        Drawable resolutionBackground = AudioTagUtils.getResolutionBackground(holder.mContext, tag);
+        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
 
         // file type
         holder.mFileTypeView.setText(tag.getAudioEncoding());
@@ -196,7 +196,7 @@ public abstract class AudioTagModel extends EpoxyModelWithHolder<AudioTagModel.H
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-            Bitmap srcBmp = AudioTagUtils.getSourceIcon(holder.mContext, tag.getSource());
+            Bitmap srcBmp = MusicTagUtils.getSourceIcon(holder.mContext, tag.getSource());
             if(srcBmp!=null) {
                 holder.mFileSourceView.setImageBitmap(srcBmp);
                 holder.mFileSourceView.setVisibility(View.VISIBLE);

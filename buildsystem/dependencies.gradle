@@ -286,7 +286,7 @@ deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019
 //deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
 deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 //https://github.com/anggrayudi/SimpleStorage
-deps.storage = "com.anggrayudi:storage:1.4.1"
+deps.storage = "com.anggrayudi:storage:1.5.0"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
 //deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1-1.LTS' //4.5.1' // lts support android 4.1, nonw-lts support android 7
