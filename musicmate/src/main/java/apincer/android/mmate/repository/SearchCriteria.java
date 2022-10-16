@@ -120,7 +120,7 @@ public class SearchCriteria implements Parcelable {
     public TYPE getType() {
         return type;
     }
-    private TYPE type = TYPE.MY_SONGS;
+    private TYPE type;
     private TYPE previousType;
     protected String previousKeyword;
 }

@@ -33,21 +33,19 @@ public class ScanAudioFileWorker extends Worker {
         for (String sid : storageIds) {
             File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
             if(file.exists()) {
-                MusicMateExecutors.update(new ScanRunnable(file));
-                //ScanRunnable r = new ScanRunnable(file);
-                //mExecutor.execute(r);
+                MusicMateExecutors.scan(new ScanRunnable(file));
             }
             file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Download"));
             if(file.exists()) {
                 //ScanRunnable r = new ScanRunnable(file);
                 //mExecutor.execute(r);
-                MusicMateExecutors.update(new ScanRunnable(file));
+                MusicMateExecutors.scan(new ScanRunnable(file));
             }
             file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
             if(file.exists()) {
                 //ScanRunnable r = new ScanRunnable(file);
                 //mExecutor.execute(r);
-                MusicMateExecutors.update(new ScanRunnable(file));
+                MusicMateExecutors.scan(new ScanRunnable(file));
             }
         }
         MusicTagRepository.cleanMusicMate();
@@ -97,7 +95,7 @@ public class ScanAudioFileWorker extends Worker {
                     if(isValidMediaFile(f)) {
                         repos.scanFileAndSaveTag(f);
                     } else if(f.isDirectory()) {
-                        MusicMateExecutors.update(new ScanRunnable(f));
+                        MusicMateExecutors.scan(new ScanRunnable(f));
                        // ScanRunnable r = new ScanRunnable(f);
                        // mExecutor.execute(r);
                     }

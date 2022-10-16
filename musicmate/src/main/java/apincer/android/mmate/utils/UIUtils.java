@@ -119,7 +119,7 @@ public class UIUtils  {
             throw new IllegalArgumentException("Unsupported drawable type");
         }
     }
-
+/*
     public static int getStatusBarHeight(Context context) {
         int result = 0;
         int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -127,7 +127,7 @@ public class UIUtils  {
             result = context.getResources().getDimensionPixelSize(resourceId);
         }
         return result;
-    }
+    }*/
 
     /**
      * Convert a dp float value to pixels

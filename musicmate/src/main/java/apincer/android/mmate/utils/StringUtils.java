@@ -1,5 +1,7 @@
 package apincer.android.mmate.utils;
 
+import android.annotation.SuppressLint;
+
 import java.io.UnsupportedEncodingException;
 import java.text.BreakIterator;
 import java.util.List;
@@ -201,7 +203,8 @@ public class StringUtils {
         }
     }
 	
-	public static boolean startsWith(String s1, String s2) {
+	@SuppressLint("SuspiciousIndentation")
+    public static boolean startsWith(String s1, String s2) {
 	    if(isEmpty(s1) && !isEmpty(s2)) return false; // first is null
         if(isEmpty(s2)) return true; // do not compare
         s1 = trimToEmpty(s1);

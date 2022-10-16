@@ -60,11 +60,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -93,7 +95,7 @@ import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
-import apincer.android.mmate.work.ScanLoudnessWorker;
+import apincer.android.mmate.work.MusicMateExecutors;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -225,8 +227,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         imageLoader.enqueue(fabRequest);
             nowPlayingTitle.setText(song.getTitle());
 
-            //nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
-       // nowPlayingType.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), song));
         imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), song))
@@ -273,7 +273,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             //  searchCriteria = epoxyController.getCriteria();
             //}else
             if (epoxyController.getCriteria() != null) {
-                searchCriteria = epoxyController.getCriteria();; //new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+                searchCriteria = epoxyController.getCriteria(); //new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
             } else {
                 searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
             }
@@ -311,11 +311,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(mSearchView.isShown()) {
             mSearchView.setIconified(true);
         }
-
-       /* if(mSearchBar.getVisibility() == View.VISIBLE) {
-            doHideSearch();
-            return;
-        } */
 
         if(epoxyController.hasFilter()) {
             epoxyController.clearFilter();
@@ -440,19 +435,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
-        /*
-       // mSearchBar = findViewById(R.id.searchBar);
-        mSearchView = findViewById(R.id.searchView);
-       // mSearchViewSwitch = findViewById(R.id.searchViewSwitch);
-
-       // mSearchBar.setVisibility(View.GONE);
-        */
        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
            @Override
            public boolean onQueryTextSubmit(String query) {
-              //// if(query!= null && query.length()>=2) {
-               //    return mLibraryAdapter.searchItems(query);
-              // }
                SearchCriteria criteria = epoxyController.getCriteria();
                criteria.searchFor(query);
                doStartRefresh(criteria);
@@ -462,12 +447,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
            @Override
            public boolean onQueryTextChange(String newText) {
-              /* if(newText!= null && newText.length()>2) {
-                   SearchCriteria criteria = epoxyController.getCriteria();
-                   criteria.searchFor(newText);
-                   doStartRefresh(criteria);
-               //    return mLibraryAdapter.searchItems(newText);
-               }*/
                return false;
            }
        });
@@ -479,32 +458,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
            //doStartRefresh(criteria);
        });
 
-       /* mSearchView.setOnClickListener(v -> {
-           // onBackPressed();
-            //doHideSearch();
+        mSearchView.setOnCloseListener(() -> {
+            SearchCriteria criteria = epoxyController.getCriteria();
+            criteria.resetSearch();
             doStartRefresh(null);
-            mSearchView.setIconified(true);
-        }); */
-        mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                SearchCriteria criteria = epoxyController.getCriteria();
-                criteria.resetSearch();
-                doStartRefresh(null);
-               // mSearchView.setIconified(true);
-                return false;
-            }
+           // mSearchView.setIconified(true);
+            return false;
         });
 
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
-       // label.setOnClickListener(v -> doShowLeftMenus());
-       /* searchMenu.setOnClickListener(v -> {
-            if(mSearchBar.getVisibility()==View.GONE) {
-                doShowSearch();
-            }else {
-                doHideSearch();
-            }
-        }); */
         rightMenu.setOnClickListener(v -> doShowRightMenus());
 
     }
@@ -523,26 +485,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doHideSearch() {
-       /* if(mSearchBar.getVisibility() == View.VISIBLE) {
-            headerTab.setVisibility(View.VISIBLE);
-                mSearchBar.setVisibility(View.GONE);
-                mSearchView.setQuery("", false);
-            doStartRefresh(null);
-        } */
     }
 	
 	private boolean doPlayNextSong() {
         MusixMateApp.playNextSong(getApplicationContext());
         return true;
 	}
-
-    private void doShowSearch() {
-       /* headerTab.setVisibility(View.GONE);
-        mSearchBar.setVisibility(View.VISIBLE);
-        mSearchView.requestFocus();
-        UIUtils.showKeyboard(getApplicationContext(), mSearchView);
-        doStopRefresh(); */
-    }
 
     private void doShowLeftMenus() {
         if(Preferences.isShowStorageSpace(getApplicationContext())) {
@@ -1043,9 +991,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             SearchCriteria criteria = epoxyController.getCriteria();
             if (!StringUtils.isEmpty(criteria.getFilterType())) {
                 String filterType = criteria.getFilterType();
-                spannable.appendMultiClickable(new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> {
-                    epoxyController.clearFilter();
-                }).setNormalTextColor(getColor(R.color.grey200)), new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10));
+                spannable.appendMultiClickable(new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> epoxyController.clearFilter()).setNormalTextColor(getColor(R.color.grey200)), new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10));
             }
             spannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
                     .append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey200), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).showBorder(Color.BLACK, 2).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
@@ -1067,8 +1013,17 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if(broadcastData!=null) {
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     MusicTag tag = broadcastData.getTagInfo();
-                    ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                     onPlaying(tag);
+                    //ScanLoudnessWorker.startScan(getApplicationContext(), tag);
+                    MusicMateExecutors.scan(() -> {
+                        try {
+                            repos.deepScanMediaItem(tag);
+                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                            EventBus.getDefault().postSticky(message);
+                        } catch (Exception e) {
+                            Timber.e(e);
+                        }
+                    });
                 }
             }
         }
@@ -1217,7 +1172,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
          */
         Writer out = null;
         try {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.US);
             String path = "/Playlist/"+searchCriteria.getKeyword()+"_"+currentSelections.size()+"_"+simpleDateFormat.format(new Date())+".m3u";
             path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
             File filepath = new File(path);
@@ -1226,7 +1181,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 folder.mkdirs();
             }
             out = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(filepath,true), "UTF-8"));
+                    new FileOutputStream(filepath,true), StandardCharsets.UTF_8));
             out.write("#EXRM3U\n");
             out.write("#PLAYLIST: MusicMate Playlist\n\n");
 
@@ -1267,7 +1222,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         btnOK.setEnabled(false);
         IconSpinnerAdapter adapter = new IconSpinnerAdapter(mEncodingView);
-        ArrayList encodingItems = new ArrayList<>();
+        ArrayList<IconSpinnerItem> encodingItems = new ArrayList<>();
         encodingItems.add(new IconSpinnerItem("AIFF", null));
        // encodingItems.add(new IconSpinnerItem("ALAC", null));
         encodingItems.add(new IconSpinnerItem("FLAC", null));
@@ -1287,7 +1242,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         encoding[0]="FLAC";
         btnOK.setEnabled(true);
 
-        int block = selections.size()>MAX_PROGRESS_BLOCK?MAX_PROGRESS_BLOCK:selections.size();
+        int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         int sizeInBlock = MAX_PROGRESS/block;
         List valueList = new ArrayList();
         for(int i=0; i< block;i++) {

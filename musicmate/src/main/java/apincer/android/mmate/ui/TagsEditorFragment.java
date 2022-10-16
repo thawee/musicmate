@@ -67,7 +67,6 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
-import kotlin.Unit;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import timber.log.Timber;
 
@@ -86,13 +85,7 @@ public class TagsEditorFragment extends Fragment {
     final int DRAWABLE_BOTTOM = 3;
 
     private final ActivityResultLauncher<PickVisualMediaRequest> launcher = registerForActivityResult(
-            new ActivityResultContracts.PickVisualMedia(), new ActivityResultCallback<Uri>() {
-                @Override
-                public void onActivityResult(Uri uri) {
-                    doSelectedCoverArt(uri);
-
-                }
-            }
+            new ActivityResultContracts.PickVisualMedia(), uri -> doSelectedCoverArt(uri)
     );
 
     public TagsEditorFragment() {
@@ -160,14 +153,14 @@ public class TagsEditorFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mainActivity = (TagsActivity) getActivity();
         mediaItems = mainActivity.getEditItems();
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
         viewHolder.resetState();
@@ -317,28 +310,28 @@ public class TagsEditorFragment extends Fragment {
 
     private class ViewHolder {
         private MusicTag displayTag;
-        private EditText mTitleView;
-        private AutoCompleteTextView mArtistView;
-        private EditText mAlbumView;
-        private AutoCompleteTextView mAlbumArtistView;
-        private AutoCompleteTextView mGenreView;
-        private EditText mYearView;
-        private EditText mComposerView;
-        private AutoCompleteTextView mGroupingView;
-        private EditText mCommentView;
-        private EditText mTrackView;
-        private EditText mDiscView;
-        private View mEditorCardView;
-        private TriStateToggleButton mAudiophileButton;
-        private MaterialRatingBar mRatingBar;
-        private PowerSpinnerView mMediaSourceView;
-        private List<IconSpinnerItem> mMediaSourceItems;
-        private View mEditorPanel;
-        private TextView mPathNameView;
-        private TextView mFileNameView;
-        private ImageView mCoverArt;
+        private final EditText mTitleView;
+        private final AutoCompleteTextView mArtistView;
+        private final EditText mAlbumView;
+        private final AutoCompleteTextView mAlbumArtistView;
+        private final AutoCompleteTextView mGenreView;
+        private final EditText mYearView;
+        private final EditText mComposerView;
+        private final AutoCompleteTextView mGroupingView;
+        private final EditText mCommentView;
+        private final EditText mTrackView;
+        private final EditText mDiscView;
+        private final View mEditorCardView;
+        private final TriStateToggleButton mAudiophileButton;
+        private final MaterialRatingBar mRatingBar;
+        private final PowerSpinnerView mMediaSourceView;
+        private final List<IconSpinnerItem> mMediaSourceItems;
+        private final View mEditorPanel;
+        private final TextView mPathNameView;
+        private final TextView mFileNameView;
+        private final ImageView mCoverArt;
 
-        private ViewTextWatcher mTextWatcher;
+        private final ViewTextWatcher mTextWatcher;
         protected volatile boolean tagChanged;
         protected volatile boolean coverartChanged;
 

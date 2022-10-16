@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.Size;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -17,6 +19,7 @@ import org.json.JSONObject;
 
 import timber.log.Timber;
 
+@RequiresApi(api = Build.VERSION_CODES.S)
 public class PermissionUtils {
 
     public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,

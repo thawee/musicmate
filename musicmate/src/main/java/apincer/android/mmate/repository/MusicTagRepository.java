@@ -82,14 +82,7 @@ public class MusicTagRepository {
                     list.add(group);
                 }
             }
-            //list.addAll(Arrays.asList(names));
         }
-        /*String[] genres =  context.getResources().getStringArray(R.array.default_genres);
-        for(String genre: genres) {
-            if(!list.contains(genre)) {
-                list.add(genre);
-            }
-        } */
 
         Collections.sort(list);
         return list;
@@ -162,10 +155,6 @@ public class MusicTagRepository {
 
     public List<String> getDefaultAlbumArtistList(Context context) {
         List<String> list = new ArrayList<>();
-       // String[] names = tagBox.query().build().property(AudioTag_.albumArtist).distinct().findStrings();
-        //if(names!=null) {
-       //     list.addAll(Arrays.asList(names));
-       // }
         String[] names =  context.getResources().getStringArray(R.array.default_album_artist);
         for(String name: names) {
             if(!list.contains(name)) {
@@ -227,29 +216,6 @@ public class MusicTagRepository {
         return tagBox.get(md.getId());
     }
 
-    /*
-    public long getAudioTagId(AudioTag tag) {
-        List<AudioTag> tags = findByPath(tag.getPath());
-        if(tags.size()==0) {
-            return 0;
-        }else if(tags.size()==1) {
-            // tag in library already up-to-dated
-            return tags.get(0).getId();
-        }else {
-           //TODO support cue sheet
-            // check trackNo
-            for(AudioTag t: tags)  {
-                if(!t.isCueSheet()) {
-                    removeTag(t);
-                }else if(t.getTrack().equals(tag.getTrack())){
-                    return t.getId();
-                }
-            }
-        }
-
-        return 0;
-    }*/
-
     public List<MusicTag> findByPath(String path) {
         Query<MusicTag> query = tagBox.query(MusicTag_.path.equal(path)).build();
         List<MusicTag> list = query.find();
@@ -291,12 +257,6 @@ public class MusicTagRepository {
             Query<MusicTag> query = tagBox.query().filter(tag -> {
                 // drop from results
                 return MusicTagUtils.isPCMHiRes(tag) && !tag.isMQA(); // include to results
-            }).order(MusicTag_.title).order(MusicTag_.artist).build();
-            list = query.find();
-            query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
-            Query<MusicTag> query = tagBox.query().filter(tag -> {
-                return MusicTagUtils.isPCMLossless(tag) && !tag.isMQA(); // not include MQA to results
             }).order(MusicTag_.title).order(MusicTag_.artist).build();
             list = query.find();
             query.close();
@@ -383,10 +343,6 @@ public class MusicTagRepository {
                     .or(MusicTag_.artist.contains(criteria.getKeyword())))
                 //.order(AudioTag_.artist).order(AudioTag_.title).build();
                     .order(MusicTag_.title).build();
-           /* AudioTag title = new AudioTag();
-            title.setTitle("Search Results");
-            title.setId(888888888);
-            list.add(title); */
             list.addAll(query.find());
             query.close();
         } else {

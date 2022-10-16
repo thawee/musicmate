@@ -52,19 +52,6 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         return new Holder();
     }
 
-    /*
-    @Override
-    public void bind(Holder holder) {
-        // Implement this to bind the properties to the view
-       // holder.button.setText(text);
-       // holder.button.setOnClickListener(clickListener);
-       // if(tag.getResultType() == SearchCriteria.RESULT_TYPE.ARTIST || tag.getResultType() == SearchCriteria.RESULT_TYPE.ALBUM) {
-       //     bindGroupingView(holder);
-       // }else {
-            bindTagView(holder);
-       // }
-    } */
-
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -146,9 +133,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
             holder.mNewLabelView.setVisibility(View.VISIBLE);
         }
-/***
- mNotificationView.setImageBitmap(AudioTagUtils.getSourceIcon(getContext(), item));
- */
+
         // Show AlbumArt
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 .data(MusicTagUtils.getCoverArt(holder.mContext, tag))

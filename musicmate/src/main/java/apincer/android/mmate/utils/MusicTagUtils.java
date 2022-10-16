@@ -13,6 +13,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.TextPaint;
 
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
@@ -28,7 +29,6 @@ import java.text.NumberFormat;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
-import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import timber.log.Timber;
@@ -87,9 +87,6 @@ public class MusicTagUtils {
         // Finally, draw the rectangle on the canvas
         myCanvas.drawRoundRect(rectangle, 4,4, paint);
 
-
-        //int letterTextSize = 20;
-        //Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
         if(icon!=null) {
             Paint iconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             float centerX = (width - icon.getWidth()) * 0.5f;
@@ -596,17 +593,17 @@ public class MusicTagUtils {
         // Lossless - >= 24 bits and >= 48 kHz
         // High Quality - compress
         if(isDSD(tag)) {
-            return context.getDrawable(R.drawable.shape_background_hd);
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
             // }else if(tag.isMQA()) {
             //     return context.getColor(R.color.quality_hd);
         }else if(isPCMHiRes(tag)) {
-            return context.getDrawable(R.drawable.shape_background_hd);
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
         }else if(is24Bits(tag)) {
-            return context.getDrawable(R.drawable.shape_background_24bits);
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
         }else if(isPCMLossless(tag)){
-            return context.getDrawable(R.drawable.shape_background_lossless);
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
         }else {
-            return context.getDrawable(R.drawable.shape_background_unknown);
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_unknown);
         }
     }
 
@@ -898,7 +895,7 @@ public class MusicTagUtils {
 
     public static String getDefaultAlbum(MusicTag tag) {
         // if album empty, add single
-        String defaultAlbum = Constants.DEFAULT_ALBUM_TEXT;
+        String defaultAlbum;
         if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
             defaultAlbum = "Single"; //getFirstArtist(tag.getArtist())+" - Single";
         }else {

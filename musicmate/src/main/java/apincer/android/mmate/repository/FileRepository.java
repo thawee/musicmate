@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
@@ -62,8 +63,8 @@ public class FileRepository {
     private final Context context;
     private final FileSystem fileRepos;
     private final MusicTagRepository tagRepos;
-    private String STORAGE_PRIMARY = StorageId.PRIMARY;
-    private String STORAGE_SECONDARY;
+    private final String STORAGE_PRIMARY = StorageId.PRIMARY;
+    private final String STORAGE_SECONDARY;
 
     public static FileRepository newInstance(Context application) {
         return new FileRepository(application);
@@ -218,7 +219,7 @@ public class FileRepository {
             try {
                 if(isMediaFileExist(path) && isValidJAudioTagger(path)) {
                     setupTagOptionsForReading();
-                    if(mode!=null && mode.indexOf("w")>=0) {
+                    if(mode!=null && mode.contains("w")) {
                         setupTagOptionsForWriting();
                     }
                     AudioFile audioFile = AudioFileIO.read(new File(path));
@@ -578,11 +579,11 @@ public class FileRepository {
                         mList[t].setAlbum(album);
                         mList[t].setGenre(genre);
                         mList[t].setYear(year);
-                        mList[t].setTrack(String.format("%02d", t + 1));
+                        mList[t].setTrack(String.format(Locale.US, "%02d", t + 1));
 
-                        mList[t].setTitle(String.format("%s", Utils.nvl(StringUtils.normalizeName(tracks[t].get("title")), "NA")));
+                        mList[t].setTitle(String.format(Locale.US,"%s", Utils.nvl(StringUtils.normalizeName(tracks[t].get("title")), "NA")));
                         if (tracks[t].get("performer") != null) {
-                            mList[t].setArtist(String.format("%s", StringUtils.normalizeName(tracks[t].get("performer"))));
+                            mList[t].setArtist(String.format(Locale.US,"%s", StringUtils.normalizeName(tracks[t].get("performer"))));
                         }
 
                         if (dsf.textDuration > 0) {
@@ -613,7 +614,7 @@ public class FileRepository {
                     metadata.setLastModified(lastModified);
                     metadata.setFileSize(length);
                     metadata.setAudioDuration((dsf.atoc.minutes * 60) + dsf.atoc.seconds);
-                    metadata.setTrack(String.format("%02d", 1));
+                    metadata.setTrack(String.format(Locale.US,"%02d", 1));
                     readJSON(metadata);
                     mList[0] = metadata;
                 }
@@ -835,7 +836,7 @@ public class FileRepository {
                     foundTag = true;
                 }
             }
-            if(!foundTag) continue;;
+            if(!foundTag) continue;
             buff.append(msg);
         }
 

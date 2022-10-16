@@ -25,14 +25,14 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
-    private MusicTagRepository tagRepos;
+    private final MusicTagRepository tagRepos;
     private SearchCriteria criteria;
     private long totalDuration = 0;
     private long totalSize = 0;
-    private View.OnClickListener clickListener;
-    private View.OnLongClickListener longClickListener;
-    private ArrayList<MusicTag> selections;
-    private ArrayList<MusicTag> lastSelections;
+    private final View.OnClickListener clickListener;
+    private final View.OnLongClickListener longClickListener;
+    private final ArrayList<MusicTag> selections;
+    private final ArrayList<MusicTag> lastSelections;
     private OnModelBuildFinishedListener listener;
     public static volatile boolean loading  = false;
 
@@ -64,9 +64,6 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                         .clickListener(clickListener)
                         .longClickListener(longClickListener)
                         .addTo(this);
-                // model.onClickListener(clickListener);
-                // model.onLongClickListener(longClickListener);
-                // add(model);
                 totalDuration = totalDuration + tag.getAudioDuration();
                 totalSize = totalSize + tag.getFileSize();
             }
@@ -104,9 +101,6 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                         .clickListener(clickListener)
                         .longClickListener(longClickListener)
                         .addTo(this);
-                // model.onClickListener(clickListener);
-                // model.onLongClickListener(longClickListener);
-                // add(model);
                 totalDuration = totalDuration + tag.getAudioDuration();
                 totalSize = totalSize + tag.getFileSize();
             }
@@ -144,10 +138,10 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             }
         }
 
-        if(loading) return;
+       // if(loading) return;
 
        // synchronized (this) {
-            loading = true;
+          //  loading = true;
             this.criteria = criteria;
 
             SearchCriteria finalCriteria = criteria;

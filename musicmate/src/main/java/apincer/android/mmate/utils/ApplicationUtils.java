@@ -103,30 +103,10 @@ public class ApplicationUtils {
             Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
             activity.startActivity(gSearchIntent);
 
-         //   Intent viewSearch = new Intent(Intent.ACTION_WEB_SEARCH);
-          //  viewSearch.putExtra(SearchManager.QUERY, search);
-          //  activity.startActivity(viewSearch);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        /*
-        Uri uri = Uri.parse("http://www.google.com/#q=" + Search);
-        Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
-        searchIntent.putExtra(SearchManager.QUERY, uri);
-        startActivity(searchIntent);
-        */
     }
-
-    /*
-    boolean isServiceRunning(Context context, Class<?> serviceClass){
-        ActivityManager manager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> mRunningServices = manager.getRunningServices(Integer.MAX_VALUE);
-        for(ActivityManager.RunningServiceInfo appService : mRunningServices){
-            if(serviceClass.getName().equals(appService.service.getClassName()))
-                return true;
-        }
-        return false;
-    } */
 
     public static boolean isIntentAvailable(Context context, Intent intent)
     {
@@ -149,28 +129,10 @@ public class ApplicationUtils {
     }
 
     public static void startFileExplorer(TagsActivity activity, MusicTag displayTag) {
-       /* File path = new File(displayTag.getPath());
-        Uri uri = MusicFileProvider.getUriForFile(path.getParentFile().getAbsolutePath());
 
-        Intent intent = new Intent();
-       // intent.setAction(android.content.Intent.ACTION_VIEW);
-       // intent.setType("resource/folder");
-
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        intent.setType("file/*");
-
-        intent.setData(uri);
- */
         File filePath = new File(displayTag.getPath());
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("pl.solidexplorer2");
         if (intent != null) {
-           /* ApplicationInfo ai = null;
-            try {
-                ai = activity.getPackageManager().getApplicationInfo("pl.solidexplorer2", 0);  //MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-            if (ai != null) { */
                 intent.setAction(Intent.ACTION_VIEW);
                 MimeTypeMap mime = MimeTypeMap.getSingleton();
 
@@ -181,13 +143,11 @@ public class ApplicationUtils {
                 intent.setDataAndType(apkURI, type);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 activity.startActivity(intent);
-                return;
+                //return;
            // }
         } else {
                 intent = new Intent();
                 MimeTypeMap mime = MimeTypeMap.getSingleton();
-                // intent.setAction(android.content.Intent.ACTION_VIEW);
-                // intent.setType("resource/folder");
 
                 intent.setAction(Intent.ACTION_VIEW);
                 String path = filePath.getParentFile().getAbsolutePath();

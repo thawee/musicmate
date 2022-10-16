@@ -67,7 +67,7 @@ import timber.log.Timber;
 
 public class TagsActivity extends AppCompatActivity {
     private static final String UNKNOWN_GENRE = "Unknown Genre"; //implements Callback {
-    private static ArrayList<MusicTag> editItems = new ArrayList<>();
+    private static final ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
     private TabLayout tabLayout;

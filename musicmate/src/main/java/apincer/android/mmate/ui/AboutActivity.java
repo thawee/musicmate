@@ -102,32 +102,32 @@ public class AboutActivity extends AppCompatActivity {
                 if(encList.containsKey(enc)) {
                     Integer cnt = encList.get(enc);
                     encList.remove(enc);
-                    encList.put(enc, new Integer((cnt+1)));
+                    encList.put(enc, cnt + 1);
                 }else {
-                    encList.put(enc, new Integer(1));
+                    encList.put(enc, 1);
                 }
 
                 String grouping = StringUtils.trim(tag.getGrouping(), " - ");
                 if(songs.containsKey(grouping)) {
                     Integer cnt = songs.get(grouping);
                     songs.remove(grouping);
-                    songs.put(grouping, new Integer((cnt+1)));
+                    songs.put(grouping, (cnt + 1));
                 }else {
-                    songs.put(grouping, new Integer(1));
+                    songs.put(grouping, 1);
                 }
                 if(size.containsKey(grouping)) {
                     Long cnt = size.get(grouping);
                     size.remove(grouping);
-                    size.put(grouping, new Long((cnt+tag.getFileSize())));
+                    size.put(grouping, (cnt + tag.getFileSize()));
                 }else {
-                    size.put(grouping, new Long(tag.getFileSize()));
+                    size.put(grouping, tag.getFileSize());
                 }
                 if(duration.containsKey(grouping)) {
                     Long cnt = duration.get(grouping);
                     duration.remove(grouping);
-                    duration.put(grouping, new Long(cnt+tag.getAudioDuration()));
+                    duration.put(grouping, cnt + tag.getAudioDuration());
                 }else {
-                    duration.put(grouping, new Long(tag.getAudioDuration()));
+                    duration.put(grouping, tag.getAudioDuration());
                 }
                 totalSongs++;
                 totalSize=totalSize+tag.getFileSize();

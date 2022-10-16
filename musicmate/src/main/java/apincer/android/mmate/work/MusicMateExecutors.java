@@ -1,4 +1,5 @@
 package apincer.android.mmate.work;
+
 import android.os.Handler;
 import android.os.Looper;
 
@@ -6,12 +7,11 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class MusicMateExecutors {
     private final Executor mMaintainThread;
-    private final Executor mScannerThread;
-    private final Executor mMainThread;
+    private final Executor mSingleThread;
+    private final Executor mScanThread;
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -25,9 +25,9 @@ public class MusicMateExecutors {
     private static volatile MusicMateExecutors mInstance;
 
     private MusicMateExecutors(Executor mScannerThread, Executor mMaintainThread, Executor mainThread) {
-        this.mScannerThread = mScannerThread;
+        this.mSingleThread = mScannerThread;
         this.mMaintainThread = mMaintainThread;
-        this.mMainThread = mainThread;
+        this.mScanThread = mainThread;
     }
 
     public static MusicMateExecutors getInstance() {
@@ -40,8 +40,8 @@ public class MusicMateExecutors {
     }
 
     private MusicMateExecutors() {
-        this(Executors.newFixedThreadPool(2), Executors.newFixedThreadPool(NUMBER_OF_CORES),
-                new MainThreadExecutor());
+        this(Executors.newSingleThreadExecutor(), Executors.newFixedThreadPool(NUMBER_OF_CORES),
+                Executors.newFixedThreadPool(NUMBER_OF_CORES)); // new MainThreadExecutor());
         /*mExecutor = new ThreadPoolExecutor(
                 1, // + 5,   // Initial pool size
                 NUMBER_OF_CORES, // + 4, //8,   // Max pool size
@@ -51,15 +51,15 @@ public class MusicMateExecutors {
     }
 
     public Executor single() {
-        return mScannerThread;
+        return mSingleThread;
     }
 
     public Executor update() {
         return mMaintainThread;
     }
 
-    public Executor main() {
-        return mMainThread;
+    public Executor scan() {
+        return mScanThread;
     }
 
     public static void single(@NonNull Runnable command) {
@@ -68,8 +68,8 @@ public class MusicMateExecutors {
     public static void update(@NonNull Runnable command) {
         getInstance().update().execute(command);
     }
-    public static void main(@NonNull Runnable command) {
-        getInstance().main().execute(command);
+    public static void scan(@NonNull Runnable command) {
+        getInstance().scan().execute(command);
     }
 
     private static class MainThreadExecutor implements Executor {

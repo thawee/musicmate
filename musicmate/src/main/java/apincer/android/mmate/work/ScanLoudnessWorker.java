@@ -46,13 +46,16 @@ public class ScanLoudnessWorker extends Worker {
              Gson gson = new Gson();
              Type audioTagType = new TypeToken<MusicTag>(){}.getType();
               MusicTag tag = gson.fromJson(s, audioTagType);
-                try {
-                    repos.deepScanMediaItem(tag);
-                    AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
-                    EventBus.getDefault().postSticky(message);
-                } catch (Exception e) {
-                    Timber.e(e);
-                }
+              //MusicMateExecutors.main(() -> {
+                  try {
+                        repos.deepScanMediaItem(tag);
+                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                        EventBus.getDefault().postSticky(message);
+
+                  } catch (Exception e) {
+                      Timber.e(e);
+                  }
+             // });
         }else {
             MusicTagRepository repos = MusicTagRepository.getInstance();
             List<MusicTag> tags = repos.getAudioTagWithoutLoudness();
