@@ -32,7 +32,7 @@ public final class Constants {
     public static int QUALITY_BIT_DEPTH_HD = 24;
     public static int QUALITY_BIT_DEPTH_DSD = 1;
     public static String FIELD_SEP = ";";
-   public static double MIN_TITLE_ONLY = 0.90;
+  // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;
    public static double MIN_ARTIST = 0.70;
 
@@ -56,10 +56,12 @@ public final class Constants {
         RELATED_FILE_TYPES.add("png");
         RELATED_FILE_TYPES.add("jpg");
         RELATED_FILE_TYPES.add("jpeg");
-        RELATED_FILE_TYPES.add("cue");
+       // RELATED_FILE_TYPES.add("cue");
         RELATED_FILE_TYPES.add("lrc");
         RELATED_FILE_TYPES.add("pdf");
         RELATED_FILE_TYPES.add("md5");
+        RELATED_FILE_TYPES.add("txt");
+        RELATED_FILE_TYPES.add("json"); // tags, override to embed iso
     }
 
     public static String STATUS_SUCCESS="success";

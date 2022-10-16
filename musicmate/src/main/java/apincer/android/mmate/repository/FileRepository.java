@@ -36,7 +36,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,16 +92,16 @@ public class FileRepository {
         return StorageId.PRIMARY;
     }
 
+    /*
     public static InputStream getArtworkAsStream(String mediaPath) {
         InputStream input = getEmbedArtworkAsStream(mediaPath);
         if (input == null) {
             input = getFolderArtworkAsStream(mediaPath);
         }
         return input;
-    }
+    } */
 
-    // called by glide
-    public static InputStream getArtworkAsStream(MusicTag item) {
+    private static InputStream getArtworkAsStream(MusicTag item) {
         InputStream input = getEmbedArtworkAsStream(item);
         if (input == null) {
             input = getFolderArtworkAsStream(item);
@@ -110,7 +109,7 @@ public class FileRepository {
         return input;
     }
 
-    public static InputStream getFolderArtworkAsStream(MusicTag mediaItem) {
+    private static InputStream getFolderArtworkAsStream(MusicTag mediaItem) {
         // try loading from folder
         // front.png, front.jpg
         // cover.png, cover.jpg
@@ -132,7 +131,7 @@ public class FileRepository {
             return null;
     }
 
-
+/*
     public static InputStream getFolderArtworkAsStream(String mediaPath) {
         // try loading from folder
         // front.png, front.jpg
@@ -158,37 +157,42 @@ public class FileRepository {
             }
         }
         return null;
-    }
+    } */
 
+    /*
     public static InputStream getEmbedArtworkAsStream(String mediaPath) {
         try {
-            AudioFile audioFile = buildAudioFile(mediaPath, "r");
+            if(isValidJAudioTagger(mediaPath)) {
+                AudioFile audioFile = buildAudioFile(mediaPath, "r");
 
-            if (audioFile == null) {
-                return null;
-            }
-            Artwork artwork = audioFile.getTagOrCreateDefault().getFirstArtwork();
-            if (null != artwork) {
-                byte[] artworkData = artwork.getBinaryData();
-                return new ByteArrayInputStream(artworkData);
+                if (audioFile == null) {
+                    return null;
+                }
+                Artwork artwork = audioFile.getTagOrCreateDefault().getFirstArtwork();
+                if (null != artwork) {
+                    byte[] artworkData = artwork.getBinaryData();
+                    return new ByteArrayInputStream(artworkData);
+                }
             }
         }catch(Exception ex) {
             Timber.e(ex);
         }
         return null;
-    }
+    }*/
 
-    public static InputStream getEmbedArtworkAsStream(MusicTag mediaItem) {
+    private static InputStream getEmbedArtworkAsStream(MusicTag mediaItem) {
         try {
-            AudioFile audioFile = buildAudioFile(mediaItem.getPath(), "r");
+            if(isValidJAudioTagger(mediaItem.getPath())) {
+                AudioFile audioFile = buildAudioFile(mediaItem.getPath(), "r");
 
-            if (audioFile == null) {
-                return null;
-            }
-            Artwork artwork = audioFile.getTagOrCreateDefault().getFirstArtwork();
-            if (null != artwork) {
-                byte[] artworkData = artwork.getBinaryData();
-                return new ByteArrayInputStream(artworkData);
+                if (audioFile == null) {
+                    return null;
+                }
+                Artwork artwork = audioFile.getTagOrCreateDefault().getFirstArtwork();
+                if (null != artwork) {
+                    byte[] artworkData = artwork.getBinaryData();
+                    return new ByteArrayInputStream(artworkData);
+                }
             }
         }catch(Exception ex) {
             ex.printStackTrace();
@@ -294,6 +298,7 @@ public class FileRepository {
         }
     }
 
+    /*
     public boolean saveArtworkToFile(MusicTag item, String filePath) {
         boolean isFileSaved = false;
         try {
@@ -317,7 +322,7 @@ public class FileRepository {
             Timber.e(e);
         }
         return isFileSaved;
-    }
+    } */
 
     private boolean isValidTagValue(String newTag) {
         return !StringUtils.MULTI_VALUES.equalsIgnoreCase(newTag);
@@ -1468,6 +1473,7 @@ public class FileRepository {
         return metadata;
     }
 
+    /*
     public void readAudioTagFromFile(MusicTag tag) {
         // re-load from file
         if(!isValidJAudioTagger(tag.getPath())) {
@@ -1477,7 +1483,7 @@ public class FileRepository {
             tag.cloneFrom(newTag);
             tag.setId(id);
         }
-    }
+    }*/
 
     public void saveJAudioTagger(String targetPath, MusicTag tag) {
         if (targetPath == null || tag == null) {

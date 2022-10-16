@@ -169,7 +169,7 @@ public class TagsEditorFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewHolder.bindViewHolder(mainActivity.buildDisplayTag(true));
+        viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
         viewHolder.resetState();
         toggleSaveFabAction();
     }
@@ -248,7 +248,7 @@ public class TagsEditorFragment extends Fragment {
 
         viewHolder.resetState();
         toggleSaveFabAction();
-        mainActivity.buildDisplayTag(false);
+        mainActivity.buildDisplayTag();
         mainActivity.updateTitlePanel();
         UIUtils.hideKeyboard(getActivity());
     }
@@ -667,7 +667,7 @@ public class TagsEditorFragment extends Fragment {
             }
         }
         // set updated item on main activity
-        viewHolder.bindViewHolder(mainActivity.buildDisplayTag(false));
+        viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
         stopProgressBar();
         toggleSaveFabAction();
     }
@@ -816,7 +816,7 @@ public class TagsEditorFragment extends Fragment {
                 if(!file.exists()) continue;
                 parser.parse(item, list);
             }
-            viewHolder.bindViewHolder(mainActivity.buildDisplayTag(false));
+            viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
             alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());

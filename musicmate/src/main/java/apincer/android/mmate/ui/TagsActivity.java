@@ -206,7 +206,7 @@ public class TagsActivity extends AppCompatActivity {
             criteria = event.getSearchCriteria();
             editItems.clear();
             editItems.addAll(event.getItems());
-            displayTag = buildDisplayTag(false); // reload for single song, not re-load tags from media file
+            displayTag = buildDisplayTag();
 
             updateTitlePanel();
             setUpPageViewer();
@@ -545,21 +545,15 @@ public class TagsActivity extends AppCompatActivity {
         encInfo.setText(spannableEnc.build());
     }
 
-    protected MusicTag buildDisplayTag(boolean reload) {
-       // AudioTag baseItem = editItems.get(0);
+    protected MusicTag buildDisplayTag() {
         MusicTag displayTag = editItems.get(0);
-        //if(reload) {
-        if(editItems.size()==1 && reload) {
-            repos.readAudioTagFromFile(displayTag);
-        //    return displayTag.clone();
+        if(editItems.size()==1) {
+            return displayTag.clone();
         }
-        displayTag = displayTag.clone();
 
+        displayTag = displayTag.clone();
         for (int i=1;i<editItems.size();i++) {
             MusicTag item = editItems.get(i);
-            //if(reload) {
-            //    repos.reloadMediaItem(item);
-            //}
             MusicTag displayTag2 = item;
             if(!StringUtils.equals(displayTag.getTitle(), displayTag2.getTitle())) {
                 displayTag.setTitle(StringUtils.MULTI_VALUES);
@@ -672,7 +666,7 @@ public class TagsActivity extends AppCompatActivity {
             try {
                 editItems.clear();
                 editItems.add(tag);
-                displayTag = buildDisplayTag(true);
+                displayTag = buildDisplayTag();
                 updateTitlePanel();
                 setUpPageViewer();
             } catch (Exception e) {
