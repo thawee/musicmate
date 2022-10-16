@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,6 +20,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -31,14 +36,16 @@ import androidx.palette.graphics.Palette;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.qw.photo.CoCo;
-import com.qw.photo.callback.CoCoAdapter;
-import com.qw.photo.pojo.PickResult;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,10 +54,10 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.ui.widget.TriStateToggleButton;
-import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MediaTagParser;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.UpdateAudioFileWorker;
@@ -60,6 +67,7 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
+import kotlin.Unit;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import timber.log.Timber;
 
@@ -76,6 +84,20 @@ public class TagsEditorFragment extends Fragment {
     final int DRAWABLE_TOP = 1;
     final int DRAWABLE_RIGHT = 2;
     final int DRAWABLE_BOTTOM = 3;
+
+    private final ActivityResultLauncher<PickVisualMediaRequest> launcher = registerForActivityResult(
+            new ActivityResultContracts.PickVisualMedia(), new ActivityResultCallback<Uri>() {
+                @Override
+                public void onActivityResult(Uri uri) {
+                    doSelectedCoverArt(uri);
+
+                }
+            }
+    );
+
+    public TagsEditorFragment() {
+
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -153,27 +175,32 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doPickCoverart() {
-        CoCo.with(this)
-                    .pick()
-                .start(new CoCoAdapter<PickResult>() {
-                    @Override
-                    public void onFailed(@NonNull Exception exception) {
-                        super.onFailed(exception);
-                    }
-
-                    @Override
-                    public void onSuccess(PickResult pickResult) {
-                        super.onSuccess(pickResult);
-                        setCoverArtPath(pickResult.getLocalPath());
-                    }
-                });
+        ActivityResultContracts.PickVisualMedia.VisualMediaType mediaType = (ActivityResultContracts.PickVisualMedia.VisualMediaType) ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE;
+        PickVisualMediaRequest request = new PickVisualMediaRequest.Builder()
+                .setMediaType(mediaType)
+                .build();
+        launcher.launch(request);
     }
 
-    private void setCoverArtPath(String path) {
-        this.coverArtPath = path;
-        viewHolder.coverartChanged = coverArtPath!=null;
-        doPreviewCoverArt();
-        toggleSaveFabAction();
+    private void doSelectedCoverArt(Uri uri) {
+        try {
+            // get content and save to local file
+            String type = getApplicationContext().getContentResolver().getType(uri);
+            type = type.replace('/', '.');
+            type = type.replace("*", ".png");
+            InputStream ins = getApplicationContext().getContentResolver().openInputStream(uri);
+            File dir = getApplicationContext().getExternalCacheDir();
+            File path = new File(dir, "tmp."+type);
+            IOUtils.copy(ins, new FileOutputStream(path));
+
+            // preview
+            this.coverArtPath = path.getAbsolutePath();
+            viewHolder.coverartChanged = true;
+            doPreviewCoverArt(coverArtPath);
+            toggleSaveFabAction();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void startProgressBar() {
@@ -276,7 +303,7 @@ public class TagsEditorFragment extends Fragment {
         return StringUtils.trimToEmpty(String.valueOf(textView.getText()));
     }
 
-    private void doPreviewCoverArt() {
+    private void doPreviewCoverArt(String coverArtPath) {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(new File(coverArtPath))
@@ -507,7 +534,7 @@ public class TagsEditorFragment extends Fragment {
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 //.data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
                 //    .size(640, 640)
-                    .data(MusicTagUtils.getCoverArt(getContext(), displayTag))
+                    .data(MusicTagUtils.getCoverArt(requireContext(), displayTag))
                 //.allowHardware(false)
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)

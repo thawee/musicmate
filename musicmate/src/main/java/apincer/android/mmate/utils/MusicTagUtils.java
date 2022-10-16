@@ -18,6 +18,7 @@ import androidx.core.content.res.ResourcesCompat;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -667,8 +668,12 @@ public class MusicTagUtils {
 
     public static File getCoverArt( Context context, MusicTag tag) {
         //PH|SD_AR|R_album|filename.png
+        //md5 digest
         File dir = context.getExternalCacheDir();
-        String sid = tag.getStorageId();
+        File songDir = new File(tag.getPath());
+        songDir = songDir.getParentFile();
+        String path = DigestUtils.md5Hex(songDir.getAbsolutePath())+".png";
+        /*String sid = tag.getStorageId();
         String path = FileSystem.getStorageName(sid);
         if(!StringUtils.isEmpty(tag.getAlbumArtist())) {
             path = path +"_"+StringUtils.trimToEmpty(tag.getAlbumArtist());
@@ -680,7 +685,7 @@ public class MusicTagUtils {
         }else {
             path = path +"_"+StringUtils.trimToEmpty(tag.getTitle())+".png";
         }
-        path = path.replaceAll("/", "_");
+        path = path.replaceAll("/", "_");*/
         path = "/CoverArts/"+path;
 
         File pathFile = new File(dir, path);
