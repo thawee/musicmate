@@ -33,10 +33,6 @@ import java.nio.ByteBuffer;
 
 import apincer.android.mmate.R;
 
-/**
- * Created by Administrator on 11/9/17.
- */
-
 public class BitmapHelper {
     private static final float BITMAP_SCALE = 1f;
     private static final float BLUR_RADIUS = 15f;
@@ -77,7 +73,7 @@ public class BitmapHelper {
     }
 
 
-    public static final Bitmap applyReflection(Bitmap bitmap) {
+    public static Bitmap applyReflection(Bitmap bitmap) {
         // gap space between original and reflected
         final int reflectionGap = 1;
         // get image size
@@ -130,7 +126,7 @@ public class BitmapHelper {
     }
 
 
-    public static final Bitmap getReflection(Bitmap bitmap) {
+    public static Bitmap getReflection(Bitmap bitmap) {
         // gap space between original and reflected
         final int reflectionGap = 1;
         // get image size
@@ -143,11 +139,10 @@ public class BitmapHelper {
 
         // create a Bitmap with the flip matrix applied to it.
         // we only want the bottom half of the image
-        int newHeight = height; //height/ 2;
         //  Bitmap reflectionImage = Bitmap.createBitmap(bitmap, 0, height/ 2,
         //          width, height / 2, matrix, false);
-        Bitmap reflectionImage = Bitmap.createBitmap(bitmap, 0, newHeight,
-                width, newHeight, matrix, false);
+        Bitmap reflectionImage = Bitmap.createBitmap(bitmap, 0, height,
+                width, height, matrix, false);
 
         // create a new bitmap with same width but taller to fit reflection
         // Bitmap bitmapWithReflection = Bitmap.createBitmap(width,
@@ -232,24 +227,8 @@ public class BitmapHelper {
 
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
-        //options.inPreferredConfig = Bitmap.Config.RGB_565;
-        //options.inDither = true;
-        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
 
-        /*
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream);
-        bitmap.recycle();
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-        data = stream.toByteArray();
-        Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-        //bitmap.recycle();
-
-        Util.closeSilently(stream);
-*/
-        return bitmap;
+        return BitmapFactory.decodeByteArray(data, 0, data.length, options);
     }
 
     public static Bitmap decodeBitmapFromStream(InputStream inputStream, int reqWidth, int reqHeight) {
@@ -507,13 +486,6 @@ public class BitmapHelper {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable)drawable).getBitmap();
         }
-/*
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-*/
-		
 		int width = drawable.getIntrinsicWidth();
         width = width > 0 ? width : 256; // Replaced the 1 by a 96
         int height = drawable.getIntrinsicHeight();
@@ -561,8 +533,6 @@ public class BitmapHelper {
         paint.setStrokeWidth(stroke);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
-        //paint.setStrokeJoin(Paint.Join.ROUND);
-        //paint.setPathEffect(new CornerPathEffect(10) );
 
         //Paint for text values.
         Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -595,18 +565,15 @@ public class BitmapHelper {
         }
         int sweepAngle = (percentage*275) / 100;
 
-        //canvas.drawArc(arc, 135, 200, false, paint);
         canvas.drawArc(arc, 135, sweepAngle, false, paint);
         //Draw text value.
         canvas.drawText(percentage + "%", bitmap.getWidth() / 2, (bitmap.getHeight() - mTextPaint.ascent()) / 2, mTextPaint);
 
         //Draw widget title.
-       // mTextPaint.setTextSize((int) textSize);
         mTextPaint.setTextSize((int) (context.getResources().getDimension(R.dimen.widget_text_large_value) / density));
         if(bottomText != null && bottomText.trim().length()>0) {
             canvas.drawText(bottomText, bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
         }
-        //canvas.drawText(context.getString(R.string.widget_text_arc_battery), bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
 
         return  bitmap;
     }
@@ -624,8 +591,6 @@ public class BitmapHelper {
         paint.setStrokeWidth(stroke);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
-        //paint.setStrokeJoin(Paint.Join.ROUND);
-        //paint.setPathEffect(new CornerPathEffect(10) );
 
         //Paint for text values.
         Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -642,23 +607,6 @@ public class BitmapHelper {
         //First draw full arc as background.
         paint.setColor(Color.argb(75, 255, 255, 255));
         canvas.drawArc(arc, 135, 275, false, paint);
-        //Then draw arc progress with actual value.
-       /* if(changedColor) {
-            if (percentage > 95) {
-                paint.setColor(context.getColor(R.color.storage4));
-            }else if (percentage > 90) {
-                paint.setColor(context.getColor(R.color.storage3));
-            }else if(percentage > 80) {
-                paint.setColor(context.getColor(R.color.storage2));
-            }else {
-                paint.setColor(context.getColor(R.color.storage1));
-            }
-        }else {
-            paint.setColor(Color.WHITE);
-        }
-        int sweepAngle = (percentage*275) / 100;
-
-        */
 
         paint.setColor(Color.WHITE);
 
@@ -667,14 +615,7 @@ public class BitmapHelper {
         //Draw text value.
         canvas.drawText(String.valueOf(text.toUpperCase().charAt(0)), bitmap.getWidth() / 2, (bitmap.getHeight() - mTextPaint.ascent()) / 2, mTextPaint);
 
-        //Draw widget title.
-        // mTextPaint.setTextSize((int) textSize);
         mTextPaint.setTextSize((int) (context.getResources().getDimension(R.dimen.widget_text_large_value) / density));
-        //if(bottomText != null && bottomText.trim().length()>0) {
-        //    canvas.drawText(bottomText, bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
-        //}
-        //canvas.drawText(context.getString(R.string.widget_text_arc_battery), bitmap.getWidth() / 2, bitmap.getHeight()-(stroke+padding), mTextPaint);
-
         return  bitmap;
     }
 

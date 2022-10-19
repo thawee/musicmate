@@ -113,9 +113,8 @@ public class MusicTagRepository {
     }
 	
 	public List<String> getDefaultGroupingList(Context context) {
-        List<String> list = new ArrayList<>();
         String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
-        list.addAll(Arrays.asList(groupings));
+        List<String> list = new ArrayList<>(Arrays.asList(groupings));
         Collections.sort(list);
         return list;
     }
@@ -321,7 +320,6 @@ public class MusicTagRepository {
             }
             query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.SEARCH) {
-            list = new ArrayList<>();
             // search title only, limit 5 songs
             /*Query<AudioTag> query = tagBox.query().filter(tag -> {
                 // drop to results
@@ -345,7 +343,7 @@ public class MusicTagRepository {
                     .or(MusicTag_.artist.contains(criteria.getKeyword())))
                 //.order(AudioTag_.artist).order(AudioTag_.title).build();
                     .order(MusicTag_.title).build();
-            list.addAll(query.find());
+            list = new ArrayList<>(query.find());
             query.close();
         } else {
             // for MY_SONGS and others

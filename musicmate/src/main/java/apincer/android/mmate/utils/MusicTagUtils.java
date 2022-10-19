@@ -173,7 +173,7 @@ public class MusicTagUtils {
         int bgBlackColor = context.getColor(R.color.grey900);
         int qualityColor = getResolutionColor(context,tag);
         int barColor = context.getColor(R.color.material_color_blue_grey_200);
-        String label = "--";
+        String label;
         String labelBPS = "";
         boolean isPCM = false;
         String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
@@ -201,7 +201,7 @@ public class MusicTagUtils {
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
-        int padding = 0;
+        int padding;
         int cornerRadius = 12;
         Rect bounds = new Rect(
                 0, // Left
@@ -447,7 +447,7 @@ public class MusicTagUtils {
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
-        int padding = 0;
+        int padding;
         int cornerRadius = 12;
         Rect bounds = new Rect(
                 0, // Left
@@ -676,19 +676,7 @@ public class MusicTagUtils {
         File songDir = new File(tag.getPath());
         songDir = songDir.getParentFile();
         String path = DigestUtils.md5Hex(songDir.getAbsolutePath())+".png";
-        /*String sid = tag.getStorageId();
-        String path = FileSystem.getStorageName(sid);
-        if(!StringUtils.isEmpty(tag.getAlbumArtist())) {
-            path = path +"_"+StringUtils.trimToEmpty(tag.getAlbumArtist());
-        }else {
-            path = path +"_"+StringUtils.trimToEmpty(tag.getArtist());
-        }
-        if(!StringUtils.isEmpty(tag.getAlbum()))  {
-            path = path +"_"+StringUtils.trimToEmpty(tag.getAlbum())+".png";
-        }else {
-            path = path +"_"+StringUtils.trimToEmpty(tag.getTitle())+".png";
-        }
-        path = path.replaceAll("/", "_");*/
+
         path = "/CoverArts/"+path;
 
         File pathFile = new File(dir, path);
@@ -895,10 +883,11 @@ public class MusicTagUtils {
         }
     }
 
+    /*
     public static boolean isHiResOrDSD(MusicTag tag) {
        // return is24Bits(tag) || isDSD(tag);
         return isPCMHiRes(tag) || isDSD(tag);
-    }
+    }*/
 
     public static String getDefaultAlbum(MusicTag tag) {
         // if album empty, add single
@@ -1229,7 +1218,7 @@ public class MusicTagUtils {
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
-        int padding = 0;
+        int padding;
         int cornerRadius = 8;
         int overflowRadius = 12;
         //int bottomMargin = 18;

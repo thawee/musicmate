@@ -53,14 +53,14 @@ public class MusixMateApp extends Application  {
     private static final long SCAN_SCHEDULE_TIME = 5;
     private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
-    private static final Map<String, List<MusicTag>> pendingQueue = new HashMap();
+    private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
     }
 
     public static List<MusicTag> getPendingItems(String name) {
-        List<MusicTag> list = new ArrayList();
+        List<MusicTag> list = new ArrayList<>();
         synchronized (pendingQueue) {
             if (pendingQueue.containsKey(name)) {
                 list.addAll(pendingQueue.get(name));
@@ -73,7 +73,8 @@ public class MusixMateApp extends Application  {
     public static void putPendingItems(String name, List<MusicTag> tags) {
         synchronized (pendingQueue) {
             if (pendingQueue.containsKey(name)) {
-                List list = pendingQueue.get(name);
+                List<MusicTag> list = pendingQueue.get(name);
+                assert list != null;
                 list.addAll(tags);
                 pendingQueue.put(name, tags);
             } else {
@@ -238,19 +239,5 @@ public class MusixMateApp extends Application  {
                 .setConstraints(constraints)
                 .build();
         instance.enqueue(workRequest);
-
-       /* PeriodicWorkRequest scansongs = new PeriodicWorkRequest.Builder(ScanAudioFileWorker.class, SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
-                .addTag("ScanSongs")
-                .setConstraints(constraints)
-                .build();
-        instance.enqueueUniquePeriodicWork("ScanSongs", ExistingPeriodicWorkPolicy.KEEP, scansongs);
-
-        PeriodicWorkRequest loudness = new PeriodicWorkRequest.Builder(ScanLoudnessWorker.class, LOUDNESS_SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
-                .addTag("ScanLoudness")
-                .setConstraints(constraints2)
-                .build();
-        instance.enqueueUniquePeriodicWork("ScanLoudness", ExistingPeriodicWorkPolicy.KEEP, loudness);
-
-        */
     }
 }

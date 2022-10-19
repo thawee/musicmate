@@ -371,10 +371,7 @@ public class StringUtils {
            s = s/StorageVolume.GB_IN_BYTES;
            unit = "GB";
         }
-        //double s = bytes / StorageVolume.GB_IN_BYTES;
-        String str = String.format(Locale.getDefault(),"%.2f "+unit, s);
-        //str = str.replace(".0", "");
-        return str;
+        return String.format(Locale.getDefault(),"%.2f "+unit, s);
     }
 
     public static String formatNumber(long size) {
@@ -403,8 +400,6 @@ public class StringUtils {
             str = str.replace("/","_");
         }
         return convertToStartCase(trimToEmpty(str));
-       // char [] delimiters = {' ','.','(','[',';'};
-       // return StringUtils.capitalize(str, delimiters);
     }
 
     public static String formatDuration(long milliseconds, boolean withUnit) {
@@ -412,26 +407,13 @@ public class StringUtils {
         long s = milliseconds / unitms % 60;
         long m = milliseconds / unitms / 60 % 60;
         long h = milliseconds / unitms / 60 / 60;
-        //long h = milliseconds / unitms / 60 / 60 % 24;
-       // long d = milliseconds / unitms / 60 / 60 / 24;
-        //String format = "%02d:%02d";
-       // String format = "%02d:%02d:%02d:%02d";
         String format = "%02d:%02d:%02d";
-       // String formatDayUnit = "%2d Days";
         String formatHrsUnit = "%2d Hrs";
         String formatMinuteUnit = "%2d Min";
-        //String formatUnits = "%2d days, %2d hrs, %2d Min.";
         String formatText = "";
 
         if(withUnit) {
-           // if(d>0) {
-           //     formatText = String.format(Locale.getDefault(), formatDayUnit, d);
-           // }
             if(h >0) {
-                //if(!StringUtils.isEmpty(formatText)) {
-                //    formatText = formatText+", ";
-                //}
-                //formatText = formatText + String.format(Locale.getDefault(), formatHrsUnit, h);
                 formatText = String.format(Locale.getDefault(), formatHrsUnit, h);
             }
             if(m >0) {
@@ -442,7 +424,6 @@ public class StringUtils {
             }
             formatText = StringUtils.trimToEmpty(formatText);
         }else {
-            //formatText = String.format(Locale.getDefault(), format, d,h,m, s);
             formatText = String.format(Locale.getDefault(), format, h,m, s);
             while(formatText.startsWith("00:")) {
                 formatText = formatText.substring(formatText.indexOf("00:")+("00:".length()));
@@ -466,7 +447,7 @@ public class StringUtils {
 
     public static String getFormatedAudioSampleRate(long rate,boolean includeUnit) {
         String unit = "kHz";
-        String str="";
+        String str;
         double factor = 1000.00;
         if(rate > 1000000) {
             unit = "MHz";
@@ -486,7 +467,7 @@ public class StringUtils {
 
     public static String getFormatedAudioSampleRateAbvUnit(long rate) {
         String unit = " k";
-        String str="";
+        String str;
         double factor = 1000.00;
         if(rate > 1000000) {
             unit = " M";
@@ -506,8 +487,7 @@ public class StringUtils {
         s = s/StorageVolume.GB_IN_BYTES;
 
         //double s = bytes / StorageVolume.GB_IN_BYTES;
-        String str = String.format(Locale.getDefault(),"%.2f", s);
-        return str;
+        return String.format(Locale.getDefault(),"%.2f", s);
     }
 
     public static long toLong(String sampleRate) {

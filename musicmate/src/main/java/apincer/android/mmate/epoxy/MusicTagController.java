@@ -113,13 +113,13 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
         }
         loadSource(criteria);
     }
-
+/*
     public void loadSource(boolean resetSearch) {
         if(criteria!=null && resetSearch) {
             criteria.resetSearch();
         }
         loadSource(criteria);
-    }
+    } */
 
     public void loadSource(String keyword) {
         if(criteria == null) {
@@ -280,11 +280,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     }
 
     public ArrayList<MusicTag> getCurrentSelections() {
-        ArrayList<MusicTag> tags = new ArrayList<>();
-        for(MusicTag tag: selections) {
-            tags.add(tag);
-        }
-        return tags;
+        return new ArrayList<>(selections);
     }
 
     public void clearFilter() {
@@ -338,11 +334,8 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     public void notifyModelRemoved(MusicTag tag) {
         if(tag!= null) {
             List<MusicTag> list = getCurrentData();
-            for(MusicTag item: list) {
-                if(tag.equals(item)) {
-                    list.remove(item);
-                }
-            }
+            assert list != null;
+            list.removeIf(tag::equals);
             setData(list);
         }
     }
@@ -377,14 +370,10 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             titles.add(Constants.AUDIO_SQ_PCM_MQA);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
             List<String> tabs = tagRepos.getGroupingList(context);
-            for(String tab: tabs) {
-                titles.add(tab);
-            }
+            titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
             List<String> tabs = tagRepos.getGenreList(context);
-            for(String tab: tabs) {
-                titles.add(tab);
-            }
+            titles.addAll(tabs);
         }else {
             titles.add(getHeaderTitle());
         }

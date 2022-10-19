@@ -1,7 +1,6 @@
 package apincer.android.mmate.utils;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -27,7 +26,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.VectorDrawable;
-import android.os.Build;
 import android.os.IBinder;
 import android.text.Spannable;
 import android.text.style.ForegroundColorSpan;
@@ -88,7 +86,6 @@ public class UIUtils  {
     public static final int INVALID_COLOR = -1;
     public static int colorAccent = INVALID_COLOR;
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static Bitmap getBitmap(VectorDrawable vectorDrawable) {
         Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(),
                 vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -119,15 +116,6 @@ public class UIUtils  {
             throw new IllegalArgumentException("Unsupported drawable type");
         }
     }
-/*
-    public static int getStatusBarHeight(Context context) {
-        int result = 0;
-        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = context.getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }*/
 
     /**
      * Convert a dp float value to pixels
@@ -179,16 +167,14 @@ public class UIUtils  {
 
     public static void getTintedDrawable(@NonNull SearchView searchView, @ColorInt int color) {
         try {
-            Field searchField = SearchView.class
+            @SuppressLint("DiscouragedPrivateApi") Field searchField = SearchView.class
                     .getDeclaredField("mSearchButton");
             searchField.setAccessible(true);
             ImageView searchBtn = (ImageView) searchField.get(searchView);
             Drawable wrapDrawable = DrawableCompat.wrap(searchBtn.getDrawable());
             DrawableCompat.setTint(wrapDrawable, color);
             DrawableCompat.setTintMode(wrapDrawable, PorterDuff.Mode.SRC_IN);
-        } catch (NoSuchFieldException e) {
-            Timber.e(e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             Timber.e(e);
         }
     }
@@ -293,8 +279,6 @@ public class UIUtils  {
         if ((!StringUtils.isEmpty(originalText)) && (i != -1)) {
             Spannable spanText = Spannable.Factory.getInstance().newSpannable(originalText);
             if (i != -1 && !StringUtils.isEmpty(constraint)) {
-                //spanText.setSpan(new BackgroundColorSpan(color), i, i + constraint.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                //spanText.setSpan(new ForegroundColorSpan(Color.BLACK), i, i + constraint.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 spanText.setSpan(new ForegroundColorSpan(color), i, i + constraint.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
             textView.setText(spanText, TextView.BufferType.SPANNABLE);
@@ -456,7 +440,6 @@ public class UIUtils  {
     /**
      * A helper class for providing a shadow on sheets
      */
-    @TargetApi(21)
     public static class ShadowOutline extends ViewOutlineProvider {
 
         int width;
@@ -556,7 +539,7 @@ public class UIUtils  {
             //gd.setCornerRadii(new float[] {4,4,4,4,8,8,8,8});
             gd.setCornerRadii(new float[] {corner,corner,corner,corner,corner,corner,corner,corner});
             // get density to scale bitmap for device
-            float dp = context.getResources().getDisplayMetrics().density;
+           // float dp = context.getResources().getDisplayMetrics().density;
 
             // create bitmap based on width and height of widget
             Bitmap bitmap = Bitmap.createBitmap(Math.round(width), Math.round(height),
@@ -691,7 +674,6 @@ public class UIUtils  {
     /**
      * Returns {@code null} if this couldn't be determined.
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @SuppressLint("PrivateApi")
     public static Boolean hasNavigationBar() {
         try {
@@ -706,25 +688,6 @@ public class UIUtils  {
             return null;
         }
     }
-
-    /*
-    public static boolean hasSoftKeys(WindowManager windowManager){
-        Display d = windowManager.getDefaultDisplay();
-
-        DisplayMetrics realDisplayMetrics = new DisplayMetrics();
-        d.getRealMetrics(realDisplayMetrics);
-
-        int realHeight = realDisplayMetrics.heightPixels;
-        int realWidth = realDisplayMetrics.widthPixels;
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        d.getMetrics(displayMetrics);
-
-        int displayHeight = displayMetrics.heightPixels;
-        int displayWidth = displayMetrics.widthPixels;
-
-        return (realWidth - displayWidth) > 0 || (realHeight - displayHeight) > 0;
-    } */
 
     public static void buildStoragesUsed(Application application, LinearLayout vStoragesLayout) {
         if (vStoragesLayout == null) return;
@@ -768,14 +731,14 @@ public class UIUtils  {
                 barColor = application.getColor(R.color.material_color_green_800);
             }
 
-            List valueList = new ArrayList();
-            valueList.add(50);
-            valueList.add(25);
-            valueList.add(15);
-            valueList.add(5);
-            valueList.add(3);
-            valueList.add(1);
-            valueList.add(1);
+            List<Long> valueList = new ArrayList<>();
+            valueList.add(50L);
+            valueList.add(25L);
+            valueList.add(15L);
+            valueList.add(5L);
+            valueList.add(3L);
+            valueList.add(1L);
+            valueList.add(1L);
             progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
             progressBar.setMax(100);
             progressBar.setProgress((int) pcnt);
@@ -794,34 +757,21 @@ public class UIUtils  {
         float floatPerc = percentage / 100;
         float[] position = {0, floatPerc, floatPerc + 0.0001f, 1};
         Shader.TileMode tileMode = Shader.TileMode.REPEAT;
-        LinearGradient linGrad = new LinearGradient(0, 0, 0, view.getHeight(), colors, position, tileMode);
-        Shader shaderGradient = linGrad;
+        Shader shaderGradient = new LinearGradient(0, 0, 0, view.getHeight(), colors, position, tileMode);
         view.getPaint().setShader(shaderGradient);
     }
 
     public static int getScreenWidth(@NonNull Activity activity) {
-       // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
             Insets insets = windowMetrics.getWindowInsets()
                     .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
             return windowMetrics.getBounds().width() - insets.left - insets.right;
-      /*  } else {
-            DisplayMetrics displayMetrics = new DisplayMetrics();
-            activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-            return displayMetrics.widthPixels;
-        } */
     }
 
     public static int getScreenHeight(@NonNull Activity activity) {
-       // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
             Insets insets = windowMetrics.getWindowInsets()
                     .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
             return windowMetrics.getBounds().height() - insets.top - insets.bottom;
-       /* } else {
-            DisplayMetrics displayMetrics = new DisplayMetrics();
-            activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-            return displayMetrics.heightPixels;
-        } */
     }
 }

@@ -4,6 +4,7 @@ import static apincer.android.mmate.Constants.SRC_NONE;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -555,41 +556,40 @@ public class TagsActivity extends AppCompatActivity {
         displayTag = displayTag.clone();
         for (int i=1;i<editItems.size();i++) {
             MusicTag item = editItems.get(i);
-            MusicTag displayTag2 = item;
-            if(!StringUtils.equals(displayTag.getTitle(), displayTag2.getTitle())) {
+            if(!StringUtils.equals(displayTag.getTitle(), item.getTitle())) {
                 displayTag.setTitle(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getTrack(), displayTag2.getTrack())) {
+            if(!StringUtils.equals(displayTag.getTrack(), item.getTrack())) {
                 displayTag.setTrack(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getAlbum(), displayTag2.getAlbum())) {
+            if(!StringUtils.equals(displayTag.getAlbum(), item.getAlbum())) {
                 displayTag.setAlbum(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getArtist(), displayTag2.getArtist())) {
+            if(!StringUtils.equals(displayTag.getArtist(), item.getArtist())) {
                 displayTag.setArtist(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getAlbumArtist(), displayTag2.getAlbumArtist())) {
+            if(!StringUtils.equals(displayTag.getAlbumArtist(), item.getAlbumArtist())) {
                 displayTag.setAlbumArtist(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getGenre(), displayTag2.getGenre())) {
+            if(!StringUtils.equals(displayTag.getGenre(), item.getGenre())) {
                 displayTag.setGenre(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getYear(), displayTag2.getYear())) {
+            if(!StringUtils.equals(displayTag.getYear(), item.getYear())) {
                 displayTag.setYear(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getDisc(), displayTag2.getDisc())) {
+            if(!StringUtils.equals(displayTag.getDisc(), item.getDisc())) {
                 displayTag.setDisc(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getComment(), displayTag2.getComment())) {
+            if(!StringUtils.equals(displayTag.getComment(), item.getComment())) {
                 displayTag.setComment(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getComposer(), displayTag2.getComposer())) {
+            if(!StringUtils.equals(displayTag.getComposer(), item.getComposer())) {
                 displayTag.setComposer(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getGrouping(), displayTag2.getGrouping())) {
+            if(!StringUtils.equals(displayTag.getGrouping(), item.getGrouping())) {
                 displayTag.setGrouping(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getSource(), displayTag2.getSource())) {
+            if(!StringUtils.equals(displayTag.getSource(), item.getSource())) {
                 displayTag.setSource("Unknown");
             }
         }
@@ -598,7 +598,7 @@ public class TagsActivity extends AppCompatActivity {
 
     public int getStatusBarHeight() {
         int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        @SuppressLint({"DiscouragedApi", "InternalInsetResource"}) int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
             result = getResources().getDimensionPixelSize(resourceId);
         }

@@ -74,7 +74,7 @@ public class MediaTagParser {
                         }
                     }
                     if(nextIndex < text.length()) {
-                        text = text.substring(nextIndex, text.length());
+                        text = text.substring(nextIndex);
                     }else {
                         text = "";
                     }
@@ -156,72 +156,6 @@ public class MediaTagParser {
 
         return true;
     }
-/*
-    @Deprecated
-    public void parsePattern(MediaItem item, List<TagModel> patterns) {
-        if(patterns.size()<=0) {
-            return;
-        }
-
-        MediaMetadata tag = item.getPendingMetadataOrCreate();
-        String text = item.getPath();
-        //remove extension
-        if(text.lastIndexOf(".") > 0) {
-            text = text.substring(0, text.lastIndexOf("."));
-        }
-
-        // detect valid string
-        String firstTag = patterns.get(0).getTagText();
-        // find tagsCount
-        // int tagsCount = 0;
-        int firstTagIndex = text.length();
-        for (TagModel model: patterns) {
-            if(firstTag.equals(model.getTagText())) {
-                //  tagsCount++;
-                firstTagIndex = text.lastIndexOf(firstTag, firstTagIndex-1);
-            }
-        }
-
-        text = text.substring(firstTagIndex);
-
-        for(int i=0;i< patterns.size();i++) {
-            TagModel curTag = patterns.get(i);
-            String nextTagText = "";
-            String tagType = curTag.getTagText();
-            int nextTagSeq = i+1;
-            if((nextTagSeq) < patterns.size()) {
-                // last tag
-                nextTagText = patterns.get(nextTagSeq).getTagText();
-            }
-
-            int textLen = text.length();
-            if("title".equalsIgnoreCase(tagType)) {
-                int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                tag.setTitle(text.substring(0, nextTagIndex));
-                text = text.substring(nextTagIndex, textLen);
-            }else if("artist".equalsIgnoreCase(tagType)) {
-                int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                tag.setArtist(text.substring(0, nextTagIndex));
-                text = text.substring(nextTagIndex, textLen);
-            } else if("album".equalsIgnoreCase(tagType)) {
-                int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                tag.setAlbum(text.substring(0, nextTagIndex));
-                text = text.substring(nextTagIndex, textLen);
-            }else if("trackno".equalsIgnoreCase(tagType)) {
-                int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                tag.setTrack(text.substring(0, nextTagIndex));
-                text = text.substring(nextTagIndex, textLen);
-            }else if ("sp".equals(tagType)){
-                // eat space(s)
-                text = text.trim();
-            }else {
-                // eat tag type from text
-                if((text.length()-tagType.length()) >0) {
-                    text = text.substring(tagType.length());
-                }
-            }
-        }
-    } */
 
     private String parseArtist(MusicTag tag, String text) {
         if(text.startsWith(artistBegin) && text.indexOf(artistEnd)>1) {

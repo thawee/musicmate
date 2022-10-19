@@ -1,9 +1,5 @@
 package apincer.android.mmate.ui;
 
-/**
- * Created by Administrator on 8/26/17.
- */
-
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -19,9 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.CombinedChart;
-import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -36,8 +30,6 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
-import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.util.ArrayList;
@@ -77,21 +69,18 @@ public class StatisticsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                //do whatever
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {//do whatever
+            finish();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     public static class StatisticsFragment extends Fragment {
         protected Context context;
 
         @Override
-        public void onAttach(Context context) {
+        public void onAttach(@NonNull Context context) {
             super.onAttach(context);
             this.context = context;
         }
@@ -114,32 +103,32 @@ public class StatisticsActivity extends AppCompatActivity {
                 if(encList.containsKey(enc)) {
                     Integer cnt = encList.get(enc);
                     encList.remove(enc);
-                    encList.put(enc, new Integer((cnt+1)));
+                    encList.put(enc, (cnt + 1));
                 }else {
-                    encList.put(enc, new Integer(1));
+                    encList.put(enc, 1);
                 }
 
                 String grouping = StringUtils.trim(tag.getGrouping(), " - ");
                 if(songs.containsKey(grouping)) {
                     Integer cnt = songs.get(grouping);
                     songs.remove(grouping);
-                    songs.put(grouping, new Integer((cnt+1)));
+                    songs.put(grouping, (cnt + 1));
                 }else {
-                    songs.put(grouping, new Integer(1));
+                    songs.put(grouping, 1);
                 }
                 if(size.containsKey(grouping)) {
                     Long cnt = size.get(grouping);
                     size.remove(grouping);
-                    size.put(grouping, new Long((cnt+tag.getFileSize())));
+                    size.put(grouping, (cnt + tag.getFileSize()));
                 }else {
-                    size.put(grouping, new Long(tag.getFileSize()));
+                    size.put(grouping, tag.getFileSize());
                 }
                 if(duration.containsKey(grouping)) {
                     Long cnt = duration.get(grouping);
                     duration.remove(grouping);
-                    duration.put(grouping, new Long(cnt+tag.getAudioDuration()));
+                    duration.put(grouping, cnt + tag.getAudioDuration());
                 }else {
-                    duration.put(grouping, new Long(tag.getAudioDuration()));
+                    duration.put(grouping, tag.getAudioDuration());
                 }
                 totalSongs++;
                 totalSize=totalSize+tag.getFileSize();
@@ -148,12 +137,10 @@ public class StatisticsActivity extends AppCompatActivity {
 
             // storage
             LinearLayout panel = v.findViewById(R.id.storage_bar);
-            UIUtils.buildStoragesUsed(getActivity().getApplication(), panel);
+            UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel);
 
             // genre
-            List<String> labels = new ArrayList();
-           // LineChart chart = setupLineChart(v,labels);
-            // setLineChartData(chart, tags, labels);
+            List<String> labels = new ArrayList<>();
 
             CombinedChart chart = setupCombineChart(v, labels);
             setCombineChartData(chart, tags, labels);
@@ -177,17 +164,17 @@ public class StatisticsActivity extends AppCompatActivity {
                         if(encMemList.containsKey(enc)) {
                             Integer cnt = encMemList.get(enc);
                             encMemList.remove(enc);
-                            encMemList.put(enc, new Integer((cnt+1)));
+                            encMemList.put(enc, (cnt + 1));
                         }else {
-                            encMemList.put(enc, new Integer(1));
+                            encMemList.put(enc, 1);
                         }
                     }else {
                         if(encSDList.containsKey(enc)) {
                             Integer cnt = encSDList.get(enc);
                             encSDList.remove(enc);
-                            encSDList.put(enc, new Integer((cnt+1)));
+                            encSDList.put(enc, (cnt + 1));
                         }else {
-                            encSDList.put(enc, new Integer(1));
+                            encSDList.put(enc, 1);
                         }
                     }
                 }
@@ -434,6 +421,7 @@ public class StatisticsActivity extends AppCompatActivity {
             return chart;
         }
 
+        /*
         private void setLineChartData(LineChart chart, List<MusicTag> tags, List<String> labels) {
             Map<String, Integer> encMemList = new HashMap<>();
             Map<String, Integer> encSDList = new HashMap<>();
@@ -472,8 +460,9 @@ public class StatisticsActivity extends AppCompatActivity {
 
                         }
                     });
-        }
+        } */
 
+        /*
         private void setLineChartData(LineChart chart, Map<String, Integer> encMemList, Map<String, Integer> encSDList, List<String> encLabels) {
             // add data
             ArrayList<Entry> memValues = new ArrayList<>();
@@ -586,8 +575,9 @@ public class StatisticsActivity extends AppCompatActivity {
             l.setDrawInside(false);
             l.setTextColor(Color.WHITE);
             chart.invalidate();
-        }
+        } */
 
+        /*
         private LineChart setupLineChart(View v, List<String> labels) {
             LineChart chart = v.findViewById(R.id.genreChart);
             // background color
@@ -648,7 +638,7 @@ public class StatisticsActivity extends AppCompatActivity {
             }
 
             return chart;
-        }
+        } */
 
         private void setupGroupingTable(View v, Map<String, Integer> songs, Map<String, Long> size, Map<String, Long> duration, long totalSongs, long totalSize, long totalDuration) {
             DataTable dataTable = v.findViewById(R.id.data_table);
@@ -690,7 +680,7 @@ public class StatisticsActivity extends AppCompatActivity {
             // dataTable.setTypeface(typeface);
             dataTable.setHeader(header);
             dataTable.setRows(rows);
-            dataTable.inflate(getContext());
+            dataTable.inflate(requireContext());
         }
 
         private void setupEncodingChart(View v, Map<String, Integer> encList) {

@@ -70,7 +70,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -266,9 +266,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .build();
         imageLoader.enqueue(request);
         nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
-            AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
-                nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device));
-            });
+            AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device)));
 
             runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
                     .scaleX(1f).scaleY(1f)
@@ -658,11 +656,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(BroadcastData.BROADCAST_ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(operationReceiver, filter);
-
-            MusicTag tag = MusixMateApp.getPlayingSong();
-            if(tag!=null) {
-                doShowNowPlayingSongFAB(null);
-            }
+        doShowNowPlayingSongFAB(MusixMateApp.getPlayingSong());
     }
 
     @Override
@@ -725,10 +719,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
         return super.onCreateOptionsMenu(menu);
-        /*super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.menu_main_browser,menu);
-        SearchView searchView = (SearchView) menu.findItem( R.id.action_search).getActionView();
-        return true; */
     }
 
     @Override public boolean onOptionsItemSelected(MenuItem item) {
@@ -800,11 +790,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doShowSignalPath() {
-       // String text = "";
-       // MusicListeningService service = MusicListeningService.getInstance();
-       // AudioTag tag = service.getPlayingSong();
-      //  text = "Song "+tag.getTitle() +"; BPS: "+tag.getAudioBitsPerSample() +" & SampleRate: "+tag.getAudioSampleRate();
-      //  text = text+"\n Player: "+service.getPlayerName();
         MusicTag tag = MusixMateApp.getPlayingSong();
 
         MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
@@ -821,7 +806,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         ImageView outputIcon =  view.findViewById(R.id.panel_output_img);
         TextView outputText =  view.findViewById(R.id.panel_output_text);
         TextView outputlabel = view.findViewById(R.id.panel_output_label);
-        String quality = "";
+        String quality;
         String qualityDetails = "";
         if(tag != null && !StringUtils.isEmpty(tag.getPath())) {
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
@@ -831,14 +816,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     .target(sourceIcon)
                     .build();
             imageLoader.enqueue(request);
-            //sourceIcon.setImageBitmap(AudioTagUtils.getEncodingSamplingRateIcon(getApplicationContext(), tag));
-           /* if(tag.isMQA()) {
-                sourceIcon.setImageBitmap(AudioTagUtils.getMQASamplingRateIcon(getApplicationContext(), tag));
-            }else if(tag.isLossless() || AudioTagUtils.isDSD(tag)) {
-                sourceIcon.setImageBitmap(AudioTagUtils.getBitsPerSampleIcon(getApplicationContext(), tag));
-            }else {
-                sourceIcon.setImageBitmap(AudioTagUtils.getFileFormatIcon(getBaseContext(), tag));
-            } */
             quality = MusicTagUtils.getTrackQuality(tag);
             qualityDetails = MusicTagUtils.getTrackQualityDetails(tag);
             sourceText.setText(quality);
@@ -854,8 +831,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
             outputIcon.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), device));
-          /*  outputText.setText(device.getDescription());
-            outputlabel.setText(device.getName());*/
             outputText.setText(device.getName());
             outputlabel.setText(device.getDescription());
         });
@@ -915,9 +890,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doShowAboutLibraries() {
-       // Intent myIntent = new Intent(MediaBrowserActivity.this, LibrariesActivity.class);
-       // startActivity(myIntent);
-        new LibsBuilder()
+       new LibsBuilder()
                 .withAboutAppName("Music Mate")
                 .withAboutIconShown(true)
                 .withAboutVersionShown(true)
@@ -955,18 +928,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(epoxyController.getAdapter());
         mRecyclerView.setHasFixedSize(true); //Size of RV will not change
-            // NOTE: Use default item animator 'canReuseUpdatedViewHolder()' will return true if
-            // a Payload is provided. FlexibleAdapter is actually sending Payloads onItemChange.
-            //mRecyclerView.setItemAnimator(new DefaultItemAnimator());
-       // RecyclerView.ItemDecoration itemDecoration = new LinearDividerItemDecoration(this, getColor(R.color.item_divider),1);
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
-     //   RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, R.drawable.shadow_below);
-		
-      //  mRecyclerView.addItemDecoration(itemDecoration);
-		
-       // FastScrollRecyclerViewItemDecoration decoration = new FastScrollRecyclerViewItemDecoration(this);
-	//	mRecyclerView.addItemDecoration(decoration);
+
         new FastScrollerBuilder(mRecyclerView)
                 .useMd2Style()
                 .setPadding(0,0,8,0)
@@ -1066,7 +1030,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if (epoxyController.getSelectedItemCount() > 0) {
                 enableActionMode(epoxyController.getAudioTag(holder));
             } else {
-                doShowEditActivity(Arrays.asList(epoxyController.getAudioTag(holder)));
+                doShowEditActivity(Collections.singletonList(epoxyController.getAudioTag(holder)));
             }
         }
     }
@@ -1183,8 +1147,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             epoxyController.clearSelections();
             actionMode = null;
             mHeaderPanel.setVisibility(View.VISIBLE);
-           // epoxyController.loadSource(null);
-           // Tools.setSystemBarColor(MultiSelect.this, R.color.colorPrimary);
         }
     }
 
@@ -1273,9 +1235,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         int sizeInBlock = MAX_PROGRESS/block;
-        List valueList = new ArrayList();
+        List<Long> valueList = new ArrayList<>();
         for(int i=0; i< block;i++) {
-            valueList.add(sizeInBlock);
+            valueList.add((long) sizeInBlock);
         }
         final float rate = 100/selections.size(); // pcnt per 1 song
         int barColor = getColor(R.color.material_color_green_400);
@@ -1296,82 +1258,21 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             if(encoding[0] == null) {
                 return;
             }
-            final int [] cnt = new int[1];
-            cnt[0]=1;
+
             String options = "";
             String targetExt = encoding[0].toLowerCase();
             if(encoding[0].contains("MP3")) {
                 options = " -ar 44100 -ab 320k ";
             }
             progressBar.setProgress(0);
-            //progressBar.invalidate();
-            /*
-            String finalOptions = options;
-            Observable.fromCallable(() -> {
-                        for(AudioTag tag: selections) {
-                            // int count = cnt.getAndIncrement();
-                            if (!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding())) {
-                                String srcPath = tag.getPath();
-                                String filePath = FileUtils.removeExtension(tag.getPath());
-                                String targetPath = filePath + "." + targetExt; //+".flac";
-                                String cmd = "-i \"" + srcPath + "\" " + finalOptions + " \"" + targetPath + "\"";
-                                FFmpegSession session = FFmpegKit.execute(cmd);
 
-                                if (ReturnCode.isSuccess(session.getReturnCode())) {
-                                    repos.writeTags(targetPath, tag);
-                                    repos.scanFileAndSaveTag(new File(targetPath));
-                                } else {
-                                    String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
-                                    Timber.d(msg);
-                                }
-                            }
-                            runOnUiThread(() -> {
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct+rate));
-                            });
-                        }
-                        return true;
-                    }).subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new BlockingBaseObserver<Boolean>() {
-
-                        @Override
-                        public void onNext(@io.reactivex.rxjava3.annotations.NonNull Boolean aBoolean) {
-                           // int pct = progressBar.getProgress();
-                            progressBar.setProgress(100);
-                            progressBar.invalidate();
-                        }
-
-                        @Override
-                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-
-                        }
-                    }); */
-
-
-            //final int size = selections.size();
             for(MusicTag tag: selections) {
-               // int count = cnt.getAndIncrement();
                 if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
                     String srcPath = tag.getPath();
                     String filePath = FileUtils.removeExtension(tag.getPath());
                     String targetPath = filePath+"."+targetExt; //+".flac";
                     String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
-                 /*   FFmpegSession session = FFmpegKit.execute(cmd);
-                    progressBar.setProgress((count/size)*100);
-                    if (ReturnCode.isSuccess(session.getReturnCode())) {
-                        repos.writeTags(targetPath, tag);
-                        repos.scanFileAndSaveTag(new File(targetPath));
-                    }else {
-                        String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
-                        Timber.d(msg);
-                    } */
-                   /* if(selections.size()==1) {
-                        progressBar.setProgress(100);
-                    }else {
-                        int count = cnt.getAndIncrement();
-                        progressBar.setProgress(count/selections.size()*100);
-                    } */
+
                     FFmpegKit.executeAsync(cmd, session -> {
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
                             repos.saveJAudioTagger(targetPath, tag);

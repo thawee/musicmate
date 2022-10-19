@@ -3,17 +3,16 @@ package apincer.android.mmate.objectbox;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
+import apincer.android.mmate.Constants;
+import apincer.android.mmate.utils.StringUtils;
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 import io.objectbox.annotation.Transient;
-
-import apincer.android.mmate.Constants;
-import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.utils.StringUtils;
 
 @Entity
 public class MusicTag implements Cloneable , Parcelable {
@@ -61,7 +60,7 @@ public class MusicTag implements Cloneable , Parcelable {
     public boolean equals(@Nullable Object obj) {
         if(obj==null) return false;
         if(obj instanceof MusicTag) {
-            return (id == ((MusicTag)obj).id)?true:false;
+            return id == ((MusicTag) obj).id;
         }
         return false;
     }
@@ -154,17 +153,6 @@ public class MusicTag implements Cloneable , Parcelable {
     protected long audioSampleRate; //44100,48000,88200,96000,192000
     protected long audioBitRate; //128, 256, 320 kbps
     protected long audioDuration;
-
-    /*
-    public boolean isAudiophile() {
-        return audiophile;
-    }
-
-    public void setAudiophile(boolean audiophile) {
-        this.audiophile = audiophile;
-    }
-
-     */
 
     // tags information
     protected String title= "";
@@ -268,16 +256,17 @@ public class MusicTag implements Cloneable , Parcelable {
         this.id = id;
     }
 
+    /*
     public SearchCriteria.RESULT_TYPE getResultType() {
         return resultType;
     }
 
     public void setResultType(SearchCriteria.RESULT_TYPE resultType) {
         this.resultType = resultType;
-    }
+    } */
 
-    @Transient
-    protected SearchCriteria.RESULT_TYPE resultType = SearchCriteria.RESULT_TYPE.ALL;
+  //  @Transient
+  //  protected SearchCriteria.RESULT_TYPE resultType = SearchCriteria.RESULT_TYPE.ALL;
 
     public void setManaged(boolean managed) {
         this.managed = managed;
@@ -543,6 +532,7 @@ public class MusicTag implements Cloneable , Parcelable {
         return path;
     }
 
+    /*
     public String getDSDRate() {
         //if(audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD) {
             //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44);
@@ -550,7 +540,9 @@ public class MusicTag implements Cloneable , Parcelable {
         //}
         //return "";
     }
+     */
 
+    /*
     public String getAudioResolutions() {
         //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
        //// String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
@@ -569,51 +561,18 @@ public class MusicTag implements Cloneable , Parcelable {
             //return "x"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
             //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
             //return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-      /*  } else if(isLossless()) {
-           //return "PCM "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-           //return "PCM "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" / "+ audioBitsPerSample+"bit";
-           // return getAudioEncoding()+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" "+ audioBitsPerSample+" bit";
-            //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" "+ audioBitsPerSample+" bit";
-            return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-        }else {
-            // MP3, AAC, stream quality
-            //return getAudioEncoding() + " " +StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-            //return getAudioEncoding() + " " +StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-          //  return StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-           // return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            return audioBitsPerSample+" bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-        } */
     }
 
+     */
+
+    /*
     public String getAudioBitCountAndSampleRate() {
         //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
         String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
         text = text+" / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
 
         return text;
-        /*
-        //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
-        if(audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD) {
-            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+"x "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+"x "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            //return "x"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-        } else if(isLossless()) {
-           //return "PCM "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-           //return "PCM "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" / "+ audioBitsPerSample+"bit";
-           // return getAudioEncoding()+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" "+ audioBitsPerSample+" bit";
-            //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true) +" "+ audioBitsPerSample+" bit";
-            return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-        }else {
-            // MP3, AAC, stream quality
-            //return getAudioEncoding() + " " +StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-            //return getAudioEncoding() + " " +StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-          //  return StringUtils.getFormatedAudioBitRate(getAudioBitRate())+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-           // return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            return audioBitsPerSample+" bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-        } */
-    }
+    } */
 
     public String getAudioDurationAsString() {
             return StringUtils.formatDuration(audioDuration, false);
@@ -623,6 +582,7 @@ public class MusicTag implements Cloneable , Parcelable {
         return audioDuration;
     }
 
+    @NonNull
     @Override
     public MusicTag clone() {
         MusicTag tag = new MusicTag();
@@ -673,11 +633,6 @@ public class MusicTag implements Cloneable , Parcelable {
     public boolean isManaged() {
         return managed;
     }
-
-    /*
-    public boolean isHDA() {
-        return isLossless() && getAudioBitsPerSample()>= Constants.QUALITY_BIT_DEPTH_HD && getAudioSampleRate()>= Constants.QUALITY_SAMPLING_RATE_44;
-    }*/
 
     public void cloneFrom(MusicTag tag) {
         this.id = tag.id;

@@ -3,6 +3,7 @@ package apincer.android.mmate.ui;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.LayoutInflater;
@@ -67,9 +68,11 @@ public class PermissionActivity extends AppCompatActivity {
 
         txtTitle.setText("Permissions for using Music Mate application");
         txtConfirm.setText("OK");
-        txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
-                PermissionUtils.PERMISSIONS_ALL,
-                REQUEST_CODE_STORAGE_PERMISSION));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
+                    PermissionUtils.PERMISSIONS_ALL,
+                    REQUEST_CODE_STORAGE_PERMISSION));
+        }
 
         // Internet
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());

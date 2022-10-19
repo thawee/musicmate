@@ -25,7 +25,7 @@ import timber.log.Timber;
 
 public class FileSystem {
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-    private Context mContext;
+    private final Context mContext;
 
     public FileSystem(Context context) {
         super();
@@ -250,54 +250,14 @@ public class FileSystem {
         return DocumentFileUtils.forceDelete(docFile,getContext());
     }
 
-    /*
-    private boolean isValidMediaByExtension(String ext) {
-        if(ext == null) return false;
 
-        if(ext.equalsIgnoreCase("mp3")) {
-            return true;
-        }else if(ext.equalsIgnoreCase("m4a")) {
-            return true;
-        }else if(ext.equalsIgnoreCase("flac")) {
-            return true;
-        }else if(ext.equalsIgnoreCase("wav")) {
-            return true;
-        }else if(ext.equalsIgnoreCase("aif")) {
-            return true;
-        }else if(ext.equalsIgnoreCase("dsf")) {
-            return true;
-       // }else if(ext.equalsIgnoreCase("dff")) {
-       //     return true;
-        }else return ext.equalsIgnoreCase("iso");
-    } */
-
-
-    /*
-    public boolean mkdirs(File file) {
-        if(file==null)
-            return false;
-        if (file.exists()) {
-            // nothing to create.
-            return file.isDirectory();
-        }
-
-        // Try the normal way
-        return file.mkdirs(); */
-       /* if(!file.mkdirs()) {
-            com.anggrayudi.storage.file.DocumentFileUtils.m
-            return DocumentFileUtils.mkdirs(getContext(), file);
-        }else {
-            return true;
-        } */
-    //}
-
-    @Deprecated
     /**
      * Check if a file is writable. Detects write issues on external SD card.
      *
      * @param file The file
      * @return true if the file is writable.
      */
+    @Deprecated
     public static boolean isWritable(final File file) {
         if (file == null) {
             return false;
@@ -364,13 +324,6 @@ public class FileSystem {
         File download = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return new File(download, path);
     }
-/*
-    public static MediaFileRepository getInstance(Context context) {
-        if(INSTANCE ==null && context!=null) {
-            INSTANCE = new MediaFileRepository();
-        }
-        return INSTANCE;
-    } */
 
     public static String getStorageName(String storageId) {
         if(StorageId.PRIMARY.equals(storageId)) {

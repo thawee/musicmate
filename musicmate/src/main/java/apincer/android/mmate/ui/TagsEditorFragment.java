@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -53,7 +54,6 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
-import apincer.android.mmate.ui.widget.TriStateToggleButton;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MediaTagParser;
@@ -84,7 +84,7 @@ public class TagsEditorFragment extends Fragment {
     final int DRAWABLE_BOTTOM = 3;
 
     private final ActivityResultLauncher<PickVisualMediaRequest> launcher = registerForActivityResult(
-            new ActivityResultContracts.PickVisualMedia(), uri -> doSelectedCoverArt(uri)
+            new ActivityResultContracts.PickVisualMedia(), this::doSelectedCoverArt
     );
 
     public TagsEditorFragment() {
@@ -113,7 +113,7 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doShowPopupMenu() {
-        PopupMenu popup = new PopupMenu(getContext(), fabMainAction);
+        PopupMenu popup = new PopupMenu(requireContext(), fabMainAction);
         popup.getMenuInflater().inflate(R.menu.menu_editor_tools, popup.getMenu());
         UIUtils.makePopForceShowIcon(popup);
         popup.setOnMenuItemClickListener(item -> {
@@ -138,7 +138,7 @@ public class TagsEditorFragment extends Fragment {
         filenameView.setText(mediaItems.get(0).getPath());
 
         // add tag to view
-        AlertDialog alert = new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme)
+        AlertDialog alert = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
                 .setCancelable(true)
@@ -207,10 +207,11 @@ public class TagsEditorFragment extends Fragment {
         //}
     }
 
+    /*
     private void setupProgressBar(View view) {
         //mMaterialProgressBar = view.findViewById(R.id.progress_bar);
         //mMaterialProgressBar.setVisibility(View.GONE);
-    }
+    } */
 
     private void setupFab(View view) {
         fabSaveAction = view.findViewById(R.id.fab_save_media);
@@ -282,6 +283,7 @@ public class TagsEditorFragment extends Fragment {
         return oldVal;
     }
 
+    /*
     private boolean buildTag(TriStateToggleButton view, boolean oldVal) {
         if(view.getToggleStatus() == TriStateToggleButton.ToggleStatus.off) {
             return false;
@@ -290,7 +292,7 @@ public class TagsEditorFragment extends Fragment {
         }else {
             return oldVal;
         }
-    }
+    } */
 
     private String getText(TextView textView) {
         return StringUtils.trimToEmpty(String.valueOf(textView.getText()));
@@ -337,6 +339,7 @@ public class TagsEditorFragment extends Fragment {
         protected volatile boolean tagChanged;
         protected volatile boolean coverartChanged;
 
+        @SuppressLint("ClickableViewAccessibility")
         public ViewHolder(View view) {
             tagChanged = false;
             coverartChanged = false;
@@ -502,11 +505,12 @@ public class TagsEditorFragment extends Fragment {
             return textInput;
         }
 
+        /*
         private PowerSpinnerView setupPowerSpinner(View view, int viewId) {
             PowerSpinnerView  textInput = view.findViewById(viewId);
             textInput.addTextChangedListener(mTextWatcher);
             return textInput;
-        }
+        } */
 
         private AutoCompleteTextView setupAutoCompleteTextView(View view, int viewId) {
             AutoCompleteTextView  textInput = view.findViewById(viewId);

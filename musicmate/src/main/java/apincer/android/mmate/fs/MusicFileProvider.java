@@ -53,10 +53,9 @@ public final class MusicFileProvider extends ContentProvider {
             if ("rwt".equals(str)) {
                 return 1006632960;
             }
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("Invalid mode: ");
-            stringBuilder.append(str);
-            throw new IllegalArgumentException(stringBuilder.toString());
+            String stringBuilder = "Invalid mode: " +
+                    str;
+            throw new IllegalArgumentException(stringBuilder);
         }
 
         public int delete(Uri uri, String str, String[] strArr) {
@@ -94,9 +93,6 @@ public final class MusicFileProvider extends ContentProvider {
 
         public Cursor query(Uri uri, String[] strArr, String str, String[] strArr2, String str2) {
             File a = getFileForUri(uri);
-           // if (strArr == null) {
-           //     strArr = a;
-           // }
             if(strArr ==null) {
                 throw new UnsupportedOperationException("Query operation is not supported currently.");
             }
@@ -115,7 +111,7 @@ public final class MusicFileProvider extends ContentProvider {
                     str3 = "_size";
                     strArr3[i] = str3;
                     i2 = i + 1;
-                    objArr[i] = Long.valueOf(a.length());
+                    objArr[i] = a.length();
                 } else if("_data".equals(obj)){
                     str3 = "_data";
                     strArr3[i] = str3;

@@ -2,8 +2,10 @@ package apincer.android.mmate.epoxy;
 
 import static com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewParent;
@@ -30,6 +32,7 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
 
+@SuppressLint("NonConstantResourceId")
 @EpoxyModelClass (layout = R.layout.view_list_item)
 public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.Holder> {
 
@@ -101,22 +104,14 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         }
 
         if (isListening) {
-            //mTitleLayout
-            // set border
-            // holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item_border));
+            //show music player icon
+            // set italic
             holder.mPlayerView.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             holder.mPlayerView.setVisibility(View.VISIBLE);
-           // holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
-           // holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_now_playing_background));
-           // holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
-            //         holder.mTitle.setTextColor(holder.mContext.getColor(R.color.fab_listening_background));
+            holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
         } else {
-            //  holder.rootView.setBackground(ContextCompat.getDrawable(holder.mContext,R.drawable.selector_item));
             holder.mPlayerView.setVisibility(View.GONE);
-            //  holder.mTitle.setTextColor(holder.mContext.getColor(R.color.grey100));
-           // holder.mTitleLayout.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
-           // holder.mCoverArtFrame.setBackground(ContextCompat.getDrawable(holder.mContext, R.drawable.shape_item_background));
-           // holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD);
+            holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD);
         }
 
         // download label
@@ -166,8 +161,8 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             holder.mAudioLoudnessView.setVisibility(View.GONE);
         }
 
-            holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
-            holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
+        holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
+        holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
         Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
 
@@ -177,7 +172,6 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
-       // holder.mDurationView.setBackground(resolutionBackground);
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));

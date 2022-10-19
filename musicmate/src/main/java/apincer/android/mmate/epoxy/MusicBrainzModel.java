@@ -2,6 +2,7 @@ package apincer.android.mmate.epoxy;
 
 import static com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewParent;
@@ -24,6 +25,7 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
 
+@SuppressLint("NonConstantResourceId")
 @EpoxyModelClass(layout = R.layout.view_list_item_musicbrainz)
 public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzModel.Holder> {
     @EpoxyAttribute(DoNotHash)
@@ -33,7 +35,7 @@ public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzM
 
     @Override
     protected Holder createNewHolder(@NonNull ViewParent parent) {
-        return new MusicBrainzModel.Holder();
+        return new Holder();
     }
 
     @Override
@@ -72,6 +74,7 @@ public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzM
         if (((tag == null) != (that.tag == null))) {
             return false;
         }
+        assert tag != null;
         return tag.equals(that.tag);
     }
 
@@ -80,7 +83,7 @@ public abstract class MusicBrainzModel extends EpoxyModelWithHolder<MusicBrainzM
         return tag.hashCode();
     }
 
-    public class Holder extends EpoxyHolder {
+    public static class Holder extends EpoxyHolder {
         View rootView;
         TextView mTitle;
         TextView mSubtitle1;
