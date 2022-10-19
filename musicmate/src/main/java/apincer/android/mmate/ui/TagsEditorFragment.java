@@ -379,6 +379,7 @@ public class TagsEditorFragment extends Fragment {
             IconSpinnerAdapter adapter = new IconSpinnerAdapter(mMediaSourceView);
             mMediaSourceItems = new ArrayList<>();
             List<String> srcs = Constants.getSourceList(requireContext());
+            mMediaSourceItems.add(new IconSpinnerItem("",null));
             for(String src : srcs) {
                 Bitmap ico = MusicTagUtils.getSourceIcon(getContext(),src);
                 mMediaSourceItems.add(new IconSpinnerItem(src,BitmapHelper.bitmapToDrawable(requireContext(), ico)));

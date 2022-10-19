@@ -103,7 +103,6 @@
     </array>
 
     <string-array name="default_source">
-        <item>-</item>
         <item>Joox</item>
         <item>Qobuz</item>
         <item>CD</item>

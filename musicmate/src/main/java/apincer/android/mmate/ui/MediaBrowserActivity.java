@@ -5,8 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -25,6 +28,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +38,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.ViewPropertyAnimatorListenerAdapter;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -90,6 +95,8 @@ import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
+import apincer.android.mmate.utils.BitmapHelper;
+import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -108,7 +115,7 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
-import coil.transform.RoundedCornersTransformation;
+import coil.target.Target;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
@@ -143,6 +150,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private RefreshLayout refreshLayout;
     private StateView mStateView;
     private View nowPlayingView;
+    private View nowPlayingPanel;
+    private View nowPlayingIconView;
+    private View nowPlayingTitlePanel;
     private ImageView nowPlayingCoverArt;
     private TextView nowPlayingTitle;
     private ImageView nowPlayingType;
@@ -213,28 +223,46 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             setUpNowPlayingView();
         }
 
-           // ImageLoader fabLoader = Coil.imageLoader(this);
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-            ImageRequest fabRequest = new ImageRequest.Builder(this)
-                   // .data(EmbedCoverArtProvider.getUriForMediaItem(song))
-                    .data(MusicTagUtils.getCoverArt(getApplicationContext(), song))
-                    .size(256,256)
-                    .crossfade(false)
-                    .allowHardware(false)
-                    //.transformations(new CircleCropTransformation())
-                   // .transformations(new RoundedCornersTransformation(86,86,86,86))
-                    .transformations(new RoundedCornersTransformation(24,24,24,24))
-                    .target(nowPlayingCoverArt)
-                    .build();
-        imageLoader.enqueue(fabRequest);
-            nowPlayingTitle.setText(song.getTitle());
+        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+                .data(MusicTagUtils.getCoverArt(this, song))
+                .allowHardware(false)
+                .placeholder(R.drawable.progress)
+                .error(R.drawable.ic_broken_image_black_24dp)
+                .target(new Target() {
+                    @Override
+                    public void onStart(@Nullable Drawable drawable) {
+                    }
+
+                    @Override
+                    public void onError(@Nullable Drawable drawable) {
+                    }
+
+                    @Override
+                    public void onSuccess(@NonNull Drawable drawable) {
+                        try {
+                            nowPlayingCoverArt.setImageDrawable(drawable);
+                            Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
+                            Palette palette = Palette.from(bmp).generate();
+                            int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
+                            int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
+                            nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
+                            nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor,80)));
+                            nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor,80)));
+                        }catch (Exception ex) {
+                            Timber.e(ex);
+                        }
+                    }
+                })
+                .build();
+        imageLoader.enqueue(request);
+        nowPlayingTitle.setText(song.getTitle());
 
         imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
+        request = new ImageRequest.Builder(getApplicationContext())
                 .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), song))
                 .crossfade(false)
                 .target(nowPlayingType)
-                //.transformations(new RoundedCornersTransformation(4,4,4,4))
                 .build();
         imageLoader.enqueue(request);
         nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
@@ -272,8 +300,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
     private void doStartRefresh(SearchCriteria criteria) {
         if(criteria == null) {
-            //  searchCriteria = epoxyController.getCriteria();
-            //}else
             if (epoxyController.getCriteria() != null) {
                 searchCriteria = epoxyController.getCriteria(); //new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
             } else {
@@ -286,11 +312,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
-        //if(type == null) {
-        ////    searchCriteria = epoxyController.getCriteria();
-        //}else {
-            searchCriteria = new SearchCriteria(type);
-       // }
+        searchCriteria = new SearchCriteria(type);
         searchCriteria.setKeyword(keyword);
         refreshLayout.autoRefresh();
     }
@@ -477,6 +499,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private void setUpNowPlayingView() {
         // Now Playing
         nowPlayingView = findViewById(R.id.now_playing_panel);
+        nowPlayingPanel = findViewById(R.id.now_playing_panel_inner);
+        nowPlayingIconView = findViewById(R.id.now_playing_icon_panel);
+        nowPlayingTitlePanel = findViewById(R.id.now_playing_title_panel);
         nowPlayingTitle = findViewById(R.id.now_playing_title);
         nowPlayingType = findViewById(R.id.now_playing_file_type);
         nowPlayingPlayer = findViewById(R.id.now_playing_player);

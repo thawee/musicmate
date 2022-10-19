@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
     <LinearLayout
+    android:id="@+id/now_playing_panel_inner"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="256dp"
@@ -70,7 +71,8 @@
                     android:id="@+id/now_playing_player"
                     android:layout_width="@dimen/dimen_16_dp"
                     android:layout_height="@dimen/dimen_16_dp"
-                    android:layout_margin="@dimen/dimen_1_dp" />
+                    android:padding="@dimen/dimen_2_dp"
+                    android:background="@drawable/shape_border_playing"/>
             </LinearLayout>
 
             <TextView
@@ -153,7 +155,7 @@
                 android:text="Title"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
                 android:textColor="@color/white"
-                android:textStyle="bold" />
+                android:textStyle="italic|bold" />
         </LinearLayout>
     </RelativeLayout>
 </LinearLayout>
