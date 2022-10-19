@@ -12,7 +12,8 @@ import java.util.List;
  */
 
 public final class Constants {
-    public static final String AUDIOPHILE = "Audiophile";
+    public static final String QUALITY_AUDIOPHILE = "Audiophile";
+    public static final String QUALITY_RECOMMENDED = "Recommended";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";

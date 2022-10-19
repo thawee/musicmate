@@ -276,9 +276,10 @@ public class TagsActivity extends AppCompatActivity {
         imageLoader.enqueue(request);
 
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
-        if (displayTag.isAudiophile()) {
+        //if (displayTag.isAudiophile()) {
+        if (!StringUtils.isEmpty(displayTag.getSourceQuality())) {
             request = new ImageRequest.Builder(getApplicationContext())
-                    .data(MusicTagUtils.getAudiophileRecordsIcon(getApplicationContext()))
+                    .data(MusicTagUtils.getSourceQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
                     .target(audiophileView)
                     .build();

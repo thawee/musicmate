@@ -29,7 +29,7 @@ class RatioSegmentedProgressBarDrawable(
 
     override fun onBoundsChange(bounds: Rect) {
         super.onBoundsChange(bounds)
-        sumOfSegmentWidth = bounds!!.width() - (gapWidth * (numOfSegment - 1))
+        sumOfSegmentWidth = bounds.width() - (gapWidth * (numOfSegment - 1))
     }
 
     override fun onLevelChange(level: Int): Boolean {

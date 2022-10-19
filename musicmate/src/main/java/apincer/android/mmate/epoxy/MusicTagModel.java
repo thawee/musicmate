@@ -88,9 +88,9 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         holder.rootView.setOnClickListener(clickListener);
         holder.rootView.setOnLongClickListener(longClickListener);
 
-        if (tag.isAudiophile()) {
+        if (!StringUtils.isEmpty(tag.getSourceQuality())) {
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                    .data(MusicTagUtils.getAudiophileRecordsIcon(holder.mContext))
+                    .data(MusicTagUtils.getSourceQualityIcon(holder.mContext, tag))
                     .crossfade(false)
                     .target(holder.mAudiophileLabelView)
                     .build();

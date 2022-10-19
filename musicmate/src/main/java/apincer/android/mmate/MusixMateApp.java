@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.broadcast.Callback;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.objectbox.ObjectBox;
@@ -38,26 +37,23 @@ public class MusixMateApp extends Application  {
     private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
     private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
 
-    private static final BroadcastHelper broadcastHelper = new BroadcastHelper(new Callback() {
-        @Override
-        public void onPlaying(Context context, MusicTag song) {
-            try {
-                BroadcastData data = new BroadcastData()
-                        .setAction(BroadcastData.Action.PLAYING)
-                        .setStatus(BroadcastData.Status.COMPLETED)
-                        .setTagInfo(song)
-                        .setMessage("");
-                Intent intent = data.getIntent();
-                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-            }catch (Exception ex) {
-                Timber.e(ex);
-            }
+    private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
+        try {
+            BroadcastData data = new BroadcastData()
+                    .setAction(BroadcastData.Action.PLAYING)
+                    .setStatus(BroadcastData.Status.COMPLETED)
+                    .setTagInfo(song)
+                    .setMessage("");
+            Intent intent = data.getIntent();
+            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        }catch (Exception ex) {
+            Timber.e(ex);
         }
     });
     private static final long SCAN_SCHEDULE_TIME = 5;
     private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
-    private static Map<String, List<MusicTag>> pendingQueue = new HashMap();
+    private static final Map<String, List<MusicTag>> pendingQueue = new HashMap();
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();

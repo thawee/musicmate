@@ -17,6 +17,7 @@
 package co.lujun.androidtagview;
 
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -42,6 +43,7 @@ import static co.lujun.androidtagview.Utils.dp2px;
  * Author: lujun(http://blog.lujun.co)
  * Date: 2015-12-31 11:47
  */
+@SuppressLint("ViewConstructor")
 public class TagView extends View {
 
     /** Border width*/

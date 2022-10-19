@@ -434,7 +434,7 @@ public class MusicTagUtils {
         canvas.drawPath(path, paint);
     }
 
-    public static Bitmap createAudiophileRecordsIcon(Context context) {
+    public static Bitmap createSourceQualityIcon(Context context, String qualityText) {
         int width = 280; // 16x46, 24x70
         int height = 96;
        // int greyColor = context.getColor(R.color.grey200);
@@ -442,7 +442,7 @@ public class MusicTagUtils {
         int recordsColor = context.getColor(R.color.audiophile_label2);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.audiophile_label1);
-        String label1 = "Audiophile";
+        String label1 = StringUtils.trimToEmpty(qualityText); //;"Audiophile";
         String label2 = "R e c o r d s";
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -546,7 +546,13 @@ public class MusicTagUtils {
 
         // draw label "Audiophile", quality color
         font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-        letterTextSize = 40; //82;
+        if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
+            // Audiophile
+            letterTextSize = 40; //82;
+        }else {
+            letterTextSize = 30; //82;
+            qualityColor = recordsColor;
+        }
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(qualityColor);
         mLetterPaint.setTypeface(font);
@@ -742,10 +748,11 @@ public class MusicTagUtils {
         return pathFile;
     }
 
-    public static File getAudiophileRecordsIcon( Context context) {
+    public static File getSourceQualityIcon(Context context, MusicTag tag) {
         //AudiophileRecords.png
         File dir = context.getExternalCacheDir();
-        String path = "/Icons/AudiophileRecords.png";
+        String quality = StringUtils.trimToEmpty(tag.getSourceQuality());
+        String path = "/Icons/Quality"+quality+"Records.png";
 
         File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
@@ -755,7 +762,7 @@ public class MusicTagUtils {
                 dir = pathFile.getParentFile();
                 dir.mkdirs();
 
-                Bitmap bitmap = createAudiophileRecordsIcon(context);
+                Bitmap bitmap = createSourceQualityIcon(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
                 if(is!=null) {
                     IOUtils.write(is, new FileOutputStream(pathFile));

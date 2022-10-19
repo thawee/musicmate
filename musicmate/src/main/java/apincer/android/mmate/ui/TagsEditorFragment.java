@@ -20,7 +20,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -48,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
@@ -69,7 +69,6 @@ import coil.request.ImageRequest;
 import coil.target.Target;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import timber.log.Timber;
-
 
 public class TagsEditorFragment extends Fragment {
     private TagsActivity mainActivity;
@@ -156,7 +155,7 @@ public class TagsEditorFragment extends Fragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mainActivity = (TagsActivity) getActivity();
-        mediaItems = mainActivity.getEditItems();
+        mediaItems = Objects.requireNonNull(mainActivity).getEditItems();
     }
 
     @Override
@@ -243,7 +242,7 @@ public class TagsEditorFragment extends Fragment {
         toggleSaveFabAction();
         mainActivity.buildDisplayTag();
         mainActivity.updateTitlePanel();
-        UIUtils.hideKeyboard(getActivity());
+        UIUtils.hideKeyboard(requireActivity());
     }
 
     private void buildPendingTags(MusicTag tagUpdate) {
@@ -266,7 +265,8 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setYear(buildTag(viewHolder.mYearView, tagUpdate.getYear()));
         tagUpdate.setDisc(buildTag(viewHolder.mDiscView, tagUpdate.getDisc()));
         tagUpdate.setSource(buildTag(viewHolder.mMediaSourceView, tagUpdate.getSource()));
-        tagUpdate.setAudiophile(buildTag(viewHolder.mAudiophileButton, tagUpdate.isAudiophile()));
+        tagUpdate.setSourceQuality(buildTag(viewHolder.mMediaSourceQualityView, tagUpdate.getSourceQuality()));
+       // tagUpdate.setSourceQuality(buildTag(viewHolder.mAudiophileButton, tagUpdate.isAudiophile()));
         tagUpdate.setRating(buildTag(viewHolder.mRatingBar, tagUpdate.getRating()));
     }
 
@@ -322,10 +322,12 @@ public class TagsEditorFragment extends Fragment {
         private final EditText mTrackView;
         private final EditText mDiscView;
         private final View mEditorCardView;
-        private final TriStateToggleButton mAudiophileButton;
+        //private final TriStateToggleButton mAudiophileButton;
         private final MaterialRatingBar mRatingBar;
         private final PowerSpinnerView mMediaSourceView;
         private final List<IconSpinnerItem> mMediaSourceItems;
+        private final PowerSpinnerView mMediaSourceQualityView;
+        private final List<IconSpinnerItem> mMediaSourceQualityItems;
         private final View mEditorPanel;
         private final TextView mPathNameView;
         private final TextView mFileNameView;
@@ -339,7 +341,7 @@ public class TagsEditorFragment extends Fragment {
             tagChanged = false;
             coverartChanged = false;
             mTextWatcher =new ViewTextWatcher();
-            MusicTagRepository repository = MusicTagRepository.getInstance();  //new AudioTagRepository();
+            MusicTagRepository repository = MusicTagRepository.getInstance();
 
             mEditorCardView = view.findViewById(R.id.editorCardView);
             mEditorPanel = view.findViewById(R.id.editorPanel);
@@ -352,26 +354,34 @@ public class TagsEditorFragment extends Fragment {
                 toggleSaveFabAction();
             });
 
+            /*
             mAudiophileButton = view.findViewById(R.id.media_audiophile);
             mAudiophileButton.setOnToggleChanged((toggleStatus, booleanToggleStatus, toggleIntValue) -> {
                 tagChanged = true;
                 toggleSaveFabAction();
+            });*/
+            mMediaSourceQualityView = view.findViewById(R.id.media_source_quality);
+            IconSpinnerAdapter qualityAdapter = new IconSpinnerAdapter(mMediaSourceQualityView);
+            mMediaSourceQualityItems = new ArrayList<>();
+            mMediaSourceQualityItems.add(new IconSpinnerItem("",null));
+            mMediaSourceQualityItems.add(new IconSpinnerItem(Constants.QUALITY_AUDIOPHILE, null));
+            mMediaSourceQualityItems.add(new IconSpinnerItem(Constants.QUALITY_RECOMMENDED, null));
+            qualityAdapter.setItems(mMediaSourceQualityItems);
+            mMediaSourceQualityView.setSpinnerAdapter(qualityAdapter);
+            mMediaSourceQualityView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {
+                //if(StringUtils.trimToEmpty(displayTag.getSourceQuality()).equalsIgnoreCase(mMediaSourceQualityItems.get(mMediaSourceQualityView.getSelectedIndex()).getText())) {
+                    tagChanged = true;
+                    toggleSaveFabAction();
+               // }
             });
 
             mMediaSourceView = view.findViewById(R.id.media_source);
             IconSpinnerAdapter adapter = new IconSpinnerAdapter(mMediaSourceView);
             mMediaSourceItems = new ArrayList<>();
-            List<String> srcs = Constants.getSourceList(getContext());
-           // Collections.sort(srcs);
+            List<String> srcs = Constants.getSourceList(requireContext());
             for(String src : srcs) {
-               /* int rescId = AudioTagUtils.getSourceRescId(src);
-                if(rescId == -1) {
-                    mMediaSourceItems.add(new IconSpinnerItem(src, null));
-                }else {
-                    mMediaSourceItems.add(new IconSpinnerItem(src, ContextCompat.getDrawable(getContext(), rescId)));
-                } */
                 Bitmap ico = MusicTagUtils.getSourceIcon(getContext(),src);
-                mMediaSourceItems.add(new IconSpinnerItem(src,BitmapHelper.bitmapToDrawable(getContext(), ico)));
+                mMediaSourceItems.add(new IconSpinnerItem(src,BitmapHelper.bitmapToDrawable(requireContext(), ico)));
             }
 
             adapter.setItems(mMediaSourceItems);
@@ -390,7 +400,7 @@ public class TagsEditorFragment extends Fragment {
             // artist
             mArtistView = setupAutoCompleteTextView(view, R.id.tag_artist);
             List<String> list = repository.getArtistList();
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
+            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
             mArtistView.setThreshold(2);
@@ -412,8 +422,8 @@ public class TagsEditorFragment extends Fragment {
 
             // album artist
             mAlbumArtistView = setupAutoCompleteTextView(view, R.id.tag_album_artist);
-            list = repository.getDefaultAlbumArtistList(getContext());
-            arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
+            list = repository.getDefaultAlbumArtistList(requireContext());
+            arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
             mAlbumArtistView.setThreshold(2);
@@ -441,7 +451,7 @@ public class TagsEditorFragment extends Fragment {
             // genre
             mGenreView = setupAutoCompleteTextView(view,R.id.tag_genre);
             list = repository.getDefaultGenreList(getContext());
-            arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
+            arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
            // mGenreView.setThreshold(1);
@@ -460,8 +470,8 @@ public class TagsEditorFragment extends Fragment {
 
             // grouping
             mGroupingView = setupAutoCompleteTextView(view, R.id.tag_group);
-            list = repository.getDefaultGroupingList(getContext());
-            arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.dialog_item_list, list);
+            list = repository.getDefaultGroupingList(requireContext());
+            arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
             mGroupingView.setThreshold(1);
@@ -513,22 +523,30 @@ public class TagsEditorFragment extends Fragment {
         public void bindViewHolder(MusicTag mediaTag) {
             // music mate info
             this.displayTag = mediaTag;
-            if(mediaTag.isAudiophile()) {
+           /* if(mediaTag.isAudiophile()) {
                 mAudiophileButton.setToggleStatus(TriStateToggleButton.ToggleStatus.on);
             }else {
                 mAudiophileButton.setToggleStatus(TriStateToggleButton.ToggleStatus.mid);
+            }*/
+            int sIndex =0;
+            for(int indx=0; indx < mMediaSourceQualityItems.size();indx++) {
+                IconSpinnerItem item = mMediaSourceQualityItems.get(indx);
+                if(item.getText().equals(mediaTag.getSourceQuality())) {
+                    sIndex = indx;
+                    break;
+                }
             }
+            mMediaSourceQualityView.selectItemByIndex(sIndex);
+
             mRatingBar.setRating(mediaTag.getRating());
             File file = new File(mediaTag.getPath());
-            mPathNameView.setText(file.getParentFile().getAbsolutePath());
+            mPathNameView.setText(Objects.requireNonNull(file.getParentFile()).getAbsolutePath());
             mFileNameView.setText(file.getName());
 
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                //.data(EmbedCoverArtProvider.getUriForMediaItem(displayTag))
-                //    .size(640, 640)
                     .data(MusicTagUtils.getCoverArt(requireContext(), displayTag))
-                //.allowHardware(false)
+                .allowHardware(false)
                 .placeholder(R.drawable.progress)
                 .error(R.drawable.ic_broken_image_black_24dp)
                 .target(new Target() {
@@ -547,7 +565,7 @@ public class TagsEditorFragment extends Fragment {
                             mCoverArt.setImageDrawable(drawable);
                             Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
                             Palette palette = Palette.from(bmp).generate();
-                            int frameColor = palette.getMutedColor(ContextCompat.getColor(getContext() ,R.color.bgColor));
+                            int frameColor = palette.getMutedColor(ContextCompat.getColor(requireContext(),R.color.bgColor));
                             mEditorPanel.setBackgroundColor(ColorUtils.TranslateDark(frameColor, 80));
                         }catch (Exception ex) {
                             Timber.e(ex);
@@ -613,7 +631,7 @@ public class TagsEditorFragment extends Fragment {
                     .setStartDelay(300L)
                     .setListener(new ViewPropertyAnimatorListenerAdapter() {
                         @Override
-                        public void onAnimationStart(View view) {
+                        public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
                         }
                     })
@@ -624,7 +642,7 @@ public class TagsEditorFragment extends Fragment {
                     .alpha(0f).setDuration(100)
                     .setListener(new ViewPropertyAnimatorListenerAdapter() {
                         @Override
-                        public void onAnimationEnd(View view) {
+                        public void onAnimationEnd(@NonNull View view) {
                             view.setVisibility(View.GONE);
                         }
                     })
@@ -725,7 +743,7 @@ public class TagsEditorFragment extends Fragment {
         TagContainerLayout mTagListLayout = cview.findViewById(R.id.tagcontainerLayout);
         mTagListLayout.setTheme(ColorFactory.NONE);
         mTagListLayout.setTagBackgroundColor(Color.TRANSPARENT);
-        List<String> tags = new ArrayList<String>();
+        List<String> tags = new ArrayList<>();
         tags.add("/");
         tags.add("track");
         tags.add("-");
@@ -779,19 +797,17 @@ public class TagsEditorFragment extends Fragment {
                 MusicTag item = mediaItems.get(0);
                 MusicTag mdata = item.clone();
                 parser.parse(mdata, list);
-                if (mdata != null) {
-                    title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
-                    artist.setText(StringUtils.trimToEmpty(mdata.getArtist()));
-                    album.setText(StringUtils.trimToEmpty(mdata.getAlbum()));
-                    track.setText(StringUtils.trimToEmpty(mdata.getTrack()));
-                    //item.setOriginTag(null); // clear pending tag
-                }
+                title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
+                artist.setText(StringUtils.trimToEmpty(mdata.getArtist()));
+                album.setText(StringUtils.trimToEmpty(mdata.getAlbum()));
+                track.setText(StringUtils.trimToEmpty(mdata.getTrack()));
+                //item.setOriginTag(null); // clear pending tag
             }catch (Exception ex) {
                 Timber.d(ex);
             }
         });
 
-        AlertDialog alert = new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme)
+        AlertDialog alert = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
                 .setCancelable(true)
@@ -855,6 +871,6 @@ public class TagsEditorFragment extends Fragment {
     } */
 
     private Context getApplicationContext() {
-        return getActivity().getApplicationContext();
+        return requireActivity().getApplicationContext();
     }
 }

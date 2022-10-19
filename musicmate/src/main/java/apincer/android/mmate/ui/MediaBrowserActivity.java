@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.transition.Slide;
@@ -24,6 +25,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
@@ -335,6 +337,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             getWindow().setReturnTransition(transition);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -569,6 +572,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         } */
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     private void setUpPermissions() {
         if(!PermissionUtils.hasPermissions(getApplicationContext(), PermissionUtils.PERMISSIONS_ALL)) {
             // do not have read/write storage permission
@@ -710,10 +714,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-        }else if(item.getItemId() == R.id.menu_audiophile) {
+       /* }else if(item.getItemId() == R.id.menu_audiophile) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIOPHILE, null);
-            return true;
+            return true; */
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HIFI_QUALITY);
@@ -1343,7 +1347,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         int count = cnt.getAndIncrement();
                         progressBar.setProgress(count/selections.size()*100);
                     } */
-
                     FFmpegKit.executeAsync(cmd, session -> {
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
                             repos.saveJAudioTagger(targetPath, tag);
@@ -1353,26 +1356,17 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             Timber.d(msg);
                         }
                         runOnUiThread(() -> {
-                            //if(selections.size()==1) {
-                            //    progressBar.setProgress(100);
-                            //}else {
-                           // cnt[0]=cnt[0]+1;
-                            //    int count = cnt.incrementAndGet();
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct+rate));
-                           // progressBar.invalidate();
-                           // }
                         });
                     });
                 }else {
                     int pct = progressBar.getProgress();
                     progressBar.setProgress((int) (pct+rate));
-                   // progressBar.invalidate();
                 }
             }
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
-            //alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());
         alert.show();

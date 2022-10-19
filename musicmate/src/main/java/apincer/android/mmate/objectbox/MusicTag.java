@@ -81,7 +81,17 @@ public class MusicTag implements Cloneable , Parcelable {
     protected String simpleName;
     protected String source = "";
     protected boolean cueSheet;
-    protected boolean audiophile;
+    //protected boolean audiophile;
+    protected  String sourceQuality;
+
+    public String getSourceQuality() {
+        return sourceQuality;
+    }
+
+    public void setSourceQuality(String sourceQuality) {
+        this.sourceQuality = sourceQuality;
+    }
+
     protected int rating; //0-10
 
     // audio information
@@ -145,6 +155,7 @@ public class MusicTag implements Cloneable , Parcelable {
     protected long audioBitRate; //128, 256, 320 kbps
     protected long audioDuration;
 
+    /*
     public boolean isAudiophile() {
         return audiophile;
     }
@@ -152,6 +163,8 @@ public class MusicTag implements Cloneable , Parcelable {
     public void setAudiophile(boolean audiophile) {
         this.audiophile = audiophile;
     }
+
+     */
 
     // tags information
     protected String title= "";
@@ -229,7 +242,7 @@ public class MusicTag implements Cloneable , Parcelable {
         simpleName = in.readString();
         source = in.readString();
         cueSheet = in.readByte() != 0;
-        audiophile = in.readByte() != 0;
+        sourceQuality = in.readString();
         loudnessIntegrated=in.readString();
         loudnessRange=in.readString();
         loudnessTruePeek=in.readString();
@@ -647,7 +660,7 @@ public class MusicTag implements Cloneable , Parcelable {
         tag.source =source;
 
         tag.managed = managed;
-        tag.audiophile =audiophile;
+        tag.sourceQuality =sourceQuality;
         tag.rating = rating;
 
         tag.mqaDeepScan = mqaDeepScan;
@@ -694,7 +707,7 @@ public class MusicTag implements Cloneable , Parcelable {
         this.source =tag.source;
 
         this.managed = tag.managed;
-        this.audiophile = tag.audiophile;
+        this.sourceQuality = tag.sourceQuality;
         this.rating = tag.rating;
 
         this.storageId = tag.storageId;
@@ -752,7 +765,7 @@ public class MusicTag implements Cloneable , Parcelable {
         parcel.writeString(simpleName);
         parcel.writeString(source);
         parcel.writeByte((byte) (cueSheet ? 1 : 0));
-        parcel.writeByte((byte) (audiophile ? 1 : 0));
+        parcel.writeString(sourceQuality);
         parcel.writeString(loudnessIntegrated);
         parcel.writeString(loudnessRange);
         parcel.writeString(loudnessTruePeek);

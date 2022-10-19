@@ -40,20 +40,20 @@ public class MusicTagRepository {
     }
 
     public void saveTag(MusicTag tag) {
-        ObjectBox.get().runInTx(() -> {
-            if(tag.getId()!=0) {
-                tagBox.remove(tag);
-            }
-            tagBox.put(tag);
-        });
+       // ObjectBox.get().runInTx(() -> {
+            //if(tag.getId()!=0) {
+            //    tagBox.remove(tag);
+            //}
+            tagBox.put(tag); // add or update
+       // });
     }
 
     public void removeTag(MusicTag tag) {
-        ObjectBox.get().runInTx(() -> {
+       // ObjectBox.get().runInTx(() -> {
             if (tag.getId() != 0) {
                 tagBox.remove(tag);
             }
-        });
+      //  });
     }
 
     public static void cleanMusicMate() {
@@ -191,25 +191,27 @@ public class MusicTagRepository {
         return false;
     }
 
-    public boolean checkJAudioTaggerOutdated(String path, long lastModified) {
+    public MusicTag getJAudioTaggerOutdated(String path, long lastModified) {
+        // return null if not outdate, else return object
         List<MusicTag> tags = findByPath(path);
         if(tags == null || tags.isEmpty()) {
             // found new file
-            return true;
+            return new MusicTag();
         }else if (tags.size() == 1) {
             if(tags.get(0).getLastModified() < lastModified) {
                 // tag in library already up-to-dated
-                removeTag(tags.get(0));
-                return true;
+                //removeTag(tags.get(0));
+                return tags.get(0);
+            }else {
+                return null; //
             }
-            return false;
         }else {
-            // found >1, could be duplicated, clean up
+            // found >1, could be duplicated, clean all up
             for (MusicTag tag: tags) {
                 removeTag(tag);
             }
+            return new MusicTag();
         }
-        return true;
     }
 
     public MusicTag getAudioTagById(MusicTag md) {
@@ -283,10 +285,10 @@ public class MusicTagRepository {
            // Query<AudioTag> query = tagBox.query(AudioTag_.genre.equal(criteria.getKeyword())).order(AudioTag_.title).order(AudioTag_.artist).build();
             list = query.find();
             query.close();
-        }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
-            Query<MusicTag> query = tagBox.query(MusicTag_.audiophile.equal(true)).order(MusicTag_.title).order(MusicTag_.artist).build();
-            list = query.find();
-            query.close();
+       // }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
+       //     Query<MusicTag> query = tagBox.query(MusicTag_.audiophile.equal(true)).order(MusicTag_.title).order(MusicTag_.artist).build();
+       //     list = query.find();
+       //     query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.MY_SONGS && Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())){
             Query<MusicTag> query = tagBox.query().order(MusicTag_.title).order(MusicTag_.artist).build();
             List<MusicTag> audioTags = query.find();
