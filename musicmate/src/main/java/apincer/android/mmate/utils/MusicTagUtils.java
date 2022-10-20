@@ -859,7 +859,7 @@ public class MusicTagUtils {
         }else if(isPCMLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
-            return Constants.TITLE_HIFI_QUALITY;
+            return Constants.TITLE_HI_QUALITY;
         }
         //Hi-Res Audio
         //Lossless Audio
@@ -1359,9 +1359,10 @@ public class MusicTagUtils {
         return myBitmap;
     }
 
+    /*
     public static boolean isOnPrimaryStorage(Context context, MusicTag tag) {
         return StorageId.PRIMARY.equals(DocumentFileCompat.getStorageId(context, tag.getPath()));
-    }
+    }*/
 
     public static String getEncodingType(MusicTag tag) {
         if(tag.isDSD()) {
@@ -1375,7 +1376,7 @@ public class MusicTagUtils {
         }else if(isPCMLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
-            return Constants.TITLE_HIFI_QUALITY;
+            return Constants.TITLE_HI_QUALITY;
         }
     }
 

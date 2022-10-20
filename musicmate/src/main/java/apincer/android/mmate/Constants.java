@@ -14,6 +14,7 @@ import java.util.List;
 public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
+    public static final String QUALITY_NORMAL = "Regular";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
@@ -24,14 +25,10 @@ public final class Constants {
 
     public static final long QUALITY_SAMPLING_RATE_192 = 192000;
     public static final long QUALITY_SAMPLING_RATE_88 = 88200;
-    public static final String SRC_HD_TRACKS = "HDTracks";
-    public static final String SRC_2L = "2L";
-    public static final String SRC_NATIVE_DSD = "NativeDSD";
-    public static final String SRC_ONKYO = "Onkyo";
-    public static int QUALITY_SAMPLING_RATE_48 = 48000;
-    public static int QUALITY_SAMPLING_RATE_44 = 44100;
-    public static int QUALITY_BIT_DEPTH_HD = 24;
-    public static int QUALITY_BIT_DEPTH_DSD = 1;
+    public static final int QUALITY_SAMPLING_RATE_48 = 48000;
+    public static final int QUALITY_SAMPLING_RATE_44 = 44100;
+    public static final int QUALITY_BIT_DEPTH_HD = 24;
+    public static final int QUALITY_BIT_DEPTH_DSD = 1;
     public static String FIELD_SEP = ";";
   // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;
@@ -101,15 +98,15 @@ public final class Constants {
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
     public static final String AUDIO_SQ_PCM = "PCM";
 
+    //public static final String TITLE_RECORDING_QUALITY = "Recording Quality";
     public static final String TITLE_DUPLICATE = "Duplicate Songs";
-    public static final String TITLE_AUDIOPHILE = "Audiophile";
+    //public static final String TITLE_AUDIOPHILE = "Audiophile";
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
-    //public static final String TITLE_MQA_AUDIO = "Master Quality Authenticated";
     public static final String TITLE_HIRES = "Hi-Res Lossless";
     public static final String TITLE_HIFI_LOSSLESS = "Lossless";
-    public static final String TITLE_HIFI_QUALITY = "High Quality";
+    public static final String TITLE_HI_QUALITY = "High Quality";
     public static final String TITLE_MASTER_AUDIO = "Master Recordings";
     public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
@@ -138,8 +135,12 @@ public final class Constants {
     public static final String SRC_TIDAL = "Tidal";
     public static final String SRC_YOUTUBE = "Youtube";
     public static final String SRC_NONE = "-";
+    public static final String SRC_HD_TRACKS = "HDTracks";
+    public static final String SRC_2L = "2L";
+    public static final String SRC_NATIVE_DSD = "NativeDSD";
+    public static final String SRC_ONKYO = "Onkyo";
 
- public static List<String> getSourceList(Context context) {
+    public static List<String> getSourceList(Context context) {
     List list = new ArrayList<>();
      String[] srcs =  context.getResources().getStringArray(R.array.default_source);
      list.addAll(Arrays.asList(srcs));

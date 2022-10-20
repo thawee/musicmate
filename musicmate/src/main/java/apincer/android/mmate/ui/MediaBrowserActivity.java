@@ -299,7 +299,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private void doStartRefresh(SearchCriteria criteria) {
         if(criteria == null) {
             if (epoxyController.getCriteria() != null) {
-                searchCriteria = epoxyController.getCriteria(); //new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+                searchCriteria = epoxyController.getCriteria();
             } else {
                 searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
             }
@@ -522,7 +522,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(Preferences.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
-            UIUtils.buildStoragesUsed(getApplication(),panel);
+            UIUtils.buildStoragesStatus(getApplication(),panel);
             mResideMenu.setLeftHeader(storageView);
         }
         mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
@@ -540,7 +540,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(Preferences.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
-            UIUtils.buildStoragesUsed(getApplication(),panel);
+            UIUtils.buildStoragesStatus(getApplication(),panel);
             mResideMenu.setLeftHeader(storageView);
         }
         return mResideMenu.dispatchTouchEvent(ev);
@@ -729,13 +729,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-       /* }else if(item.getItemId() == R.id.menu_audiophile) {
+        }else if(item.getItemId() == R.id.menu_recordings_quality) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIOPHILE, null);
-            return true; */
+            doStartRefresh(SearchCriteria.TYPE.RECORDINGS_QUALITY, Constants.QUALITY_NORMAL);
+            return true;
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HIFI_QUALITY);
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HI_QUALITY);
             return true;
         } else if(item.getItemId() == MENU_ID_QUALITY) {
             doHideSearch();

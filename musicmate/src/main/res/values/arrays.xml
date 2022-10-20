@@ -62,9 +62,7 @@
     </string-array>
 
     <string-array name="default_album_artist" >
-        <item>Audiophile</item>
         <item>Soundtracks</item>
-        <item>Remastered</item>
         <item>Various Artists</item>
         <item>Worship Songs</item>
         <!-- audio recording company -->
@@ -148,6 +146,7 @@
         <item>Rap</item>
         <item>Luk Thung</item>
         <item>Luk Thung, Mor Lum</item>
+        <item>Phleng Phuea Chiwit</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Lounge</item>

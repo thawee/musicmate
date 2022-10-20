@@ -35,16 +35,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:layout_marginTop="@dimen/dimen_24_dp">
+        android:layout_marginTop="@dimen/dimen_12_dp">
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="@dimen/dimen_1_dp"
+    android:layout_marginBottom="@dimen/dimen_4_dp"
     android:orientation="vertical">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:layout_marginTop="@dimen/dimen_12_dp"
+        android:layout_marginLeft="@dimen/dimen_4_dp"
         android:textSize="18sp"
         android:textColor="@color/white"
         android:textStyle="bold"
@@ -52,18 +55,19 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:layout_marginTop="@dimen/dimen_12_dp"
         android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginLeft="@dimen/dimen_8_dp"
+            android:layout_marginRight="@dimen/dimen_8_dp"
             android:background="@drawable/shape_border_grey">
             <LinearLayout
                 android:id="@+id/storage_bar"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="left"
                 android:layout_marginLeft="@dimen/dimen_4_dp"
@@ -73,7 +77,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginTop="@dimen/dimen_4_dp"
                 android:layout_gravity="bottom"
                 android:orientation="horizontal">
                 <ImageView
@@ -103,6 +107,7 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!--
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -130,13 +135,15 @@
                 app:corner_radius="4dp"
                 app:direction="ltr"
                 app:shadow="4dp"/>
-        </LinearLayout>
+        </LinearLayout> -->
     </LinearLayout>
 
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/chart1"
         android:layout_width="match_parent"
         android:layout_marginTop="@dimen/dimen_16_dp"
+        android:layout_marginLeft="@dimen/dimen_8_dp"
+        android:layout_marginRight="@dimen/dimen_8_dp"
         android:background="@drawable/shape_border_grey"
         android:layout_height="180dp"/>
 
@@ -168,26 +175,29 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
-        android:layout_marginTop="@dimen/dimen_12_dp"
+        android:layout_marginTop="@dimen/dimen_16_dp"
+        android:layout_marginLeft="@dimen/dimen_4_dp"
         android:textSize="18sp"
         android:textColor="@color/white"
         android:textStyle="bold"
         android:text="Digital Music"/>
 
-    <com.github.irshulx.Editor
-        android:layout_width="match_parent"
-        android:id="@+id/editor"
-        android:background="@color/grey200"
-        app:render_type="Renderer"
-        android:layout_marginTop="@dimen/dimen_12_dp"
-        android:paddingTop="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:layout_height="wrap_content"
-        android:paddingBottom="10dp"
-        android:layout_margin="@dimen/dimen_8_dp"
-        android:scrollbars="vertical"
-        />
-</LinearLayout>
+            <com.github.irshulx.Editor
+                android:layout_width="match_parent"
+                android:id="@+id/editor"
+                app:render_type="Renderer"
+                android:paddingTop="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:layout_height="wrap_content"
+                android:paddingBottom="10dp"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:layout_marginLeft="@dimen/dimen_8_dp"
+                android:layout_marginRight="@dimen/dimen_8_dp"
+                android:layout_marginBottom="@dimen/dimen_8_dp"
+                android:scrollbars="vertical"
+                android:background="@drawable/shape_border_message_box"
+                />
+        </LinearLayout>
     </ScrollView>
 </LinearLayout>

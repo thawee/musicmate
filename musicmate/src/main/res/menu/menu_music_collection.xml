@@ -22,72 +22,23 @@
         android:id="@+id/menu_all_music"
         android:title="My Songs"
         app:showAsAction="always" />
-    <item
-        android:icon="@drawable/ic_round_local_play_24"
-        android:id="@+id/menu_groupings"
-        android:title="Groupings"
-        app:showAsAction="always" />
-<!--
-    <item
-        android:icon="@drawable/ic_round_speaker_24"
-        android:id="@+id/menu_audiophile"
-        android:title="Audiophile"
-        app:showAsAction="always" />
--->
-<!--
-    <item
-        android:icon="@drawable/ic_round_copy_all_24"
-        android:id="@+id/menu_similar_songs"
-        android:title="Duplicate Songs"
-        app:showAsAction="always" />
-
-    <item
-        android:icon="@drawable/baseline_cloud_download_white_24"
-        android:id="@+id/menu_new_collection"
-        android:title="Download Songs"
-        app:showAsAction="always" />
--->
-<!--
-    <item
-        android:icon="@drawable/ic_hd_black_24dp"
-        android:id="@+id/menu_hd_collection"
-        android:title="Hi-Res Audio"
-        app:showAsAction="always" />
-    <item
-        android:icon="@drawable/ic_hd_black_24dp"
-        android:id="@+id/menu_llac_collection"
-        android:title="Lossless Audio"
-        app:showAsAction="always" />
-    <item
-        android:icon="@drawable/ic_hd_black_24dp"
-        android:id="@+id/menu_lsac_collection"
-        android:title="Lossy Audio"
-        app:showAsAction="always" />
--->
-<!--
-    <item
-        android:icon="@drawable/format_white"
-        android:id="@+id/menu_llac_collection"
-        android:title="Lossless Format"
-        app:showAsAction="always" />
-    <item
-        android:icon="@drawable/format_white"
-        android:id="@+id/menu_lsac_collection"
-        android:title="Other Format"
-        app:showAsAction="always" />
--->
-<!--
-    <item
-        android:icon="@drawable/music_similar_white"
-        android:id="@+id/menu_similar_title"
-        android:title="Similar Titles"
-        app:showAsAction="always" />
--->
 
     <item
         android:icon="@drawable/ic_round_style_24"
         android:id="@+id/menu_tag_genre"
         android:title="Genre"
+        app:showAsAction="always" />
+
+    <item
+        android:icon="@drawable/ic_round_local_play_24"
+        android:id="@+id/menu_groupings"
+        android:title="Groupings"
+        app:showAsAction="always" />
+
+    <item
+        android:icon="@drawable/ic_round_audio_file_24"
+        android:id="@+id/menu_recordings_quality"
+        android:title="Recordings Quality"
         app:showAsAction="always" />
     <!--
     <item

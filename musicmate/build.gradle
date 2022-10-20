@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 60
-        versionName  "3.4.0"+ versions.buildDate
+        versionCode 61
+        versionName  "3.4.1"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -143,7 +143,7 @@ dependencies {
     implementation deps.ui.stateViews
     implementation deps.ui.androidribbon
     implementation deps.ui.mpandroidchart
-    implementation deps.ui.datatables
+    //implementation deps.ui.datatables
 
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'

@@ -37,7 +37,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     public static volatile boolean loading  = false;
 
     public MusicTagController(View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
-        tagRepos = MusicTagRepository.getInstance(); //new AudioTagRepository();
+        tagRepos = MusicTagRepository.getInstance();
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
         selections = new ArrayList<>();
@@ -113,13 +113,6 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
         }
         loadSource(criteria);
     }
-/*
-    public void loadSource(boolean resetSearch) {
-        if(criteria!=null && resetSearch) {
-            criteria.resetSearch();
-        }
-        loadSource(criteria);
-    } */
 
     public void loadSource(String keyword) {
         if(criteria == null) {
@@ -182,8 +175,16 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                 }else {
                     return Constants.TITLE_ALL_SONGS;
                 }
-            } else if(criteria.getType() == SearchCriteria.TYPE.AUDIOPHILE) {
-                return Constants.TITLE_AUDIOPHILE;
+            } else if(criteria.getType() == SearchCriteria.TYPE.RECORDINGS_QUALITY) {
+                if(Constants.QUALITY_AUDIOPHILE.equals(criteria.getKeyword())) {
+                    return Constants.QUALITY_AUDIOPHILE;
+                }else if(Constants.QUALITY_RECOMMENDED.equals(criteria.getKeyword())) {
+                    return Constants.QUALITY_RECOMMENDED;
+                }else if(!StringUtils.isEmpty(criteria.getKeyword())) {
+                    return StringUtils.trimToEmpty(criteria.getKeyword());
+                }else {
+                    return Constants.QUALITY_NORMAL;
+                }
             } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {
                 if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
                     return Constants.TITLE_DSD_AUDIO;
@@ -353,7 +354,6 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
         List<String> titles = new ArrayList<>();
         if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
             titles.add(Constants.TITLE_ALL_SONGS);
-           // titles.add(Constants.TITLE_AUDIOPHILE);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
        /* }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
@@ -362,9 +362,12 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
             titles.add(Constants.TITLE_DSD_AUDIO);
+        }else if(criteria.getType() == SearchCriteria.TYPE.RECORDINGS_QUALITY) {
+            titles.add(Constants.QUALITY_NORMAL);
+            titles.add(Constants.QUALITY_RECOMMENDED);
+            titles.add(Constants.QUALITY_AUDIOPHILE);
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {// &&
-            //    !(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword()) || Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword()))) {
-            titles.add(Constants.TITLE_HIFI_QUALITY);
+            titles.add(Constants.TITLE_HI_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
             titles.add(Constants.AUDIO_SQ_PCM_MQA);

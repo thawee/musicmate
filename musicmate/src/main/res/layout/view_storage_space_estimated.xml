@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_margin="1dp"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/storage_box"
+        android:layout_gravity="top|left"
+        android:layout_margin="1dp"
+        android:paddingLeft="2dp"
+        android:src="@drawable/ic_memory_white_24dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left"
+                    android:layout_marginLeft="1dp"
+                    android:layout_marginRight="2dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="4dp"
+                    android:layout_alignRight="@+id/storage_box"
+                    android:orientation="vertical">
+                    <TextView
+                        android:id="@+id/actualStorageInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="8dp"
+                        android:gravity="left|top"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="90%"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="10sp" />
+
+                    <ProgressBar
+                        android:id="@+id/progressBarActual"
+                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="@dimen/dimen_2_dp"
+                        android:layout_marginLeft="4dp"
+                        android:layout_marginRight="4dp"/>
+
+                    <TextView
+                        android:id="@+id/estimateStorageInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="8dp"
+                        android:layout_marginTop="@dimen/dimen_4_dp"
+                        android:gravity="left|top"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="90%"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="10sp" />
+                    <ProgressBar
+                        android:id="@+id/progressBarEstimated"
+                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="@dimen/dimen_2_dp"
+                        android:layout_marginLeft="4dp"
+                        android:layout_marginRight="4dp"/>
+                    <!--
+                    <TextView
+                        android:id="@+id/storage_title"
+                        android:layout_width="140dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="left|top"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="90%"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="12sp" />
+-->
+                    <!--
+                    <com.daimajia.numberprogressbar.NumberProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/storage_percentage"
+                        app:progress_unreached_color="@color/grey400"
+                        app:progress_reached_color="#3498DB"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="4dp"
+                        app:progress_unreached_bar_height="1.75dp"
+                        app:progress_reached_bar_height="3.0dp"
+
+                        app:progress_text_size="10sp"
+                        app:progress_text_color="#3498DB"
+                        app:progress_text_offset="1dp"
+                        app:progress_text_visibility="visible"
+
+                        app:progress_max="100"
+                        app:progress_current="80"
+                        />-->
+                    <!--
+                    <com.skydoves.progressview.ProgressView
+                        android:id="@+id/storage_percentage"
+                        android:layout_width="140dp"
+                        android:layout_height="24dp"
+                        app:progressView_colorBackground="@color/grey600"
+                    app:progressView_colorProgress="@color/grey200"
+                    app:progressView_progress="40"
+                    app:progressView_min="10"
+                    app:progressView_max="100"
+                    app:progressView_progressFromPrevious="false"
+                    app:progressView_autoAnimate="false"
+                    app:progressView_radius="4dp"
+                    app:progressView_padding="1dp"
+                    app:progressView_labelColorInner="@color/black"
+                    app:progressView_labelColorOuter="@color/black"
+                    app:progressView_labelSize="10sp"
+                    app:progressView_labelSpace="8dp"
+                    app:progressView_labelText="achieve 65%"
+                    app:progressView_labelTypeface="bold"
+                    />
+                    <com.cliff.comparingperformancebar.PercentageProgressBar
+                        android:id="@+id/percentageProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:ppb_percentage="50"
+                        app:ppb_progressLeftColor="@color/material_color_green_800"
+                        app:ppb_progressRightColor="@color/material_color_yellow_900"
+                        app:ppb_textSize="16sp" />
+                    <com.cliff.comparingperformancebar.ValueProgressBar
+                        android:id="@+id/valuesProgressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/percentageProgressBar"
+                        app:vpb_progressLeftColor="#77B9C1"
+                        app:vpb_progressRightColor="#45718B"
+                        app:vpb_percent="false"
+                        app:vpb_textSize="18sp"
+                        app:vpb_valueLeft="6"
+                        app:vpb_valueRight="10" /> -->
+
+                    <!--
+                    <TextView
+                        android:id="@+id/storage_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:gravity="left|bottom"
+                        android:maxLines="1"
+                        android:paddingTop="0dp"
+                        android:text="PH"
+                        android:textStyle="bold"
+                        android:textColor="@color/grey200"
+                        android:textSize="10sp" /> -->
+                </LinearLayout>
+</LinearLayout>

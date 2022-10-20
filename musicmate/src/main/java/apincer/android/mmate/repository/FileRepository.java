@@ -62,8 +62,7 @@ import timber.log.Timber;
 public class FileRepository {
     private final Context context;
     private final FileSystem fileRepos;
-    private final MusicTagRepository tagRepos;
-    private final String STORAGE_PRIMARY = StorageId.PRIMARY;
+    private final MusicTagRepository tagRepos;private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
 
     public static FileRepository newInstance(Context application) {
@@ -1040,46 +1039,15 @@ public class FileRepository {
         return metadata.getPath();
     }
 
-    private String getStorageIdFor(MusicTag metadata) {
-        // Thai, Laos, World
-        // English, Favorite, Lounge, Classical
-       // if("Audiophile".equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY;
-       // }
-       // if("Jazz".equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY;
-       // }
-       // if("Favorite".equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY;
-       // }
-        //if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
-        //    return STORAGE_SECONDARY;
-       // }
-       /* if(metadata.isDSD() || metadata.isSACDISO()) {
-            return STORAGE_PRIMARY;
-        }
-        if("Thai".equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
-        }
-        if(metadata.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_192) {
-            return STORAGE_PRIMARY;
-        } */
+    public String getStorageIdFor(MusicTag metadata) {
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
-        }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
+       // }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
+        }else if(metadata.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsPerSample() > 16) {
             // Lossless Hi-Res
             return STORAGE_PRIMARY;
         }
-       // if("Classical".equalsIgnoreCase(metadata.getGrouping())) {
-       //     return STORAGE_PRIMARY;
-       // }
-        //if("English".equalsIgnoreCase(metadata.getGrouping())) {
-        //    return STORAGE_SECONDARY;
-        //}
-        //if("World".equalsIgnoreCase(metadata.getGrouping())) {
-        //    return STORAGE_PRIMARY;
-        //}
         return STORAGE_SECONDARY;
     }
 
