@@ -116,19 +116,29 @@ public class MusicTag implements Cloneable, Parcelable {
         this.loudnessRange = loudnessRange;
     }
 
-    public String getLoudnessTruePeek() {
-        return loudnessTruePeek;
+    public String getTruePeek() {
+        return truePeek;
     }
 
-    public void setLoudnessTruePeek(String loudnessTruePeek) {
-        this.loudnessTruePeek = loudnessTruePeek;
+    public void setTruePeek(String loudnessTruePeek) {
+        this.truePeek = loudnessTruePeek;
     }
 
     // loudness
     @Index
     protected String loudnessIntegrated; // average loudness, negative value unit of LUFS
     protected String loudnessRange; // Dynamic Range, LU
-    protected String loudnessTruePeek; // unit of dB
+    protected String truePeek; // unit of dB
+
+    public String getReplayGain() {
+        return replayGain;
+    }
+
+    public void setReplayGain(String replayGain) {
+        this.replayGain = replayGain;
+    }
+
+    protected String replayGain; // replay gain V2, references LI -18.00 LUFS
 
     public String getAudioChannels() {
         return audioChannels;
@@ -144,6 +154,7 @@ public class MusicTag implements Cloneable, Parcelable {
     protected long audioSampleRate; //44100,48000,88200,96000,192000
     protected long audioBitRate; //128, 256, 320 kbps
     protected double audioDuration;
+    //protected String startLocation; // for supporting cuesheet, iso sacd
 
     // tags information
     @Index
@@ -290,7 +301,8 @@ public class MusicTag implements Cloneable, Parcelable {
         sourceQuality = in.readString();
         loudnessIntegrated = in.readString();
         loudnessRange = in.readString();
-        loudnessTruePeek = in.readString();
+        truePeek = in.readString();
+        replayGain = in.readString();
         encoder = in.readString();
         partOfCompilation = in.readByte() != 0;
         bpm = in.readInt();
@@ -564,7 +576,8 @@ public class MusicTag implements Cloneable, Parcelable {
 
         tag.loudnessIntegrated = loudnessIntegrated;
         tag.loudnessRange = loudnessRange;
-        tag.loudnessTruePeek = loudnessTruePeek;
+        tag.truePeek = truePeek;
+        tag.replayGain = replayGain;
 
         tag.title = title;
         tag.album = album;
@@ -644,7 +657,8 @@ public class MusicTag implements Cloneable, Parcelable {
 
         this.loudnessRange = tag.loudnessRange;
         this.loudnessIntegrated = tag.loudnessIntegrated;
-        this.loudnessTruePeek = tag.loudnessTruePeek;
+        this.truePeek = tag.truePeek;
+        this.replayGain = tag.replayGain;
     }
 
     @Override
@@ -692,7 +706,8 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(sourceQuality);
         parcel.writeString(loudnessIntegrated);
         parcel.writeString(loudnessRange);
-        parcel.writeString(loudnessTruePeek);
+        parcel.writeString(truePeek);
+        parcel.writeString(replayGain);
         parcel.writeString(encoder);
         parcel.writeByte((byte) (partOfCompilation ? 1 : 0));
         parcel.writeInt(bpm);

@@ -12,6 +12,7 @@ import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.SupportedFileFormat;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
@@ -19,16 +20,28 @@ import org.jaudiotagger.audio.mp4.Mp4AudioHeader;
 import org.jaudiotagger.audio.wav.WavOptions;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.TagField;
 import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.flac.FlacTag;
+import org.jaudiotagger.tag.id3.AbstractID3Tag;
+import org.jaudiotagger.tag.id3.AbstractID3v2Frame;
+import org.jaudiotagger.tag.id3.ID3v1Tag;
+import org.jaudiotagger.tag.id3.ID3v22Tag;
+import org.jaudiotagger.tag.id3.ID3v23Frame;
+import org.jaudiotagger.tag.id3.ID3v23Tag;
+import org.jaudiotagger.tag.id3.ID3v24Frame;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
+import org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.mp4.Mp4Tag;
+import org.jaudiotagger.tag.mp4.field.Mp4TagReverseDnsField;
 import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisAlbumArtistSaveOptions;
+import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 import org.jaudiotagger.tag.wav.WavInfoTag;
 import org.jaudiotagger.tag.wav.WavTag;
 import org.jetbrains.annotations.NotNull;
@@ -350,8 +363,8 @@ public class FileRepository {
             AudioFile audioFile = buildAudioFile(musicTag.getPath(), "rw");
             assert audioFile != null;
             Tag tag = audioFile.getTagOrCreateDefault();
-            setCommonTagFields(tag, musicTag);
-            setExtendedTagFields(tag, musicTag);
+            setTagFieldsCommon(tag, musicTag);
+            setTagFieldsExtended(tag, musicTag);
             audioFile.commit();
         }catch (Exception ex) {
             Timber.e(ex);
@@ -439,7 +452,7 @@ public class FileRepository {
         }
     } */
 
-    void setCommonTagFields(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
+    void setTagFieldsCommon(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
         tag.setEncoding(StandardCharsets.UTF_8);
         setTagField(FieldKey.TITLE, musicTag.getTitle(), tag);
         setTagField(FieldKey.ALBUM, musicTag.getAlbum(), tag);
@@ -457,7 +470,7 @@ public class FileRepository {
         setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isPartOfCompilation()), tag);
     }
 
-    void setExtendedTagFields(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
+    void setTagFieldsExtended(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
         setTagField(FieldKey.MEDIA, musicTag.getSource(),tag);
         setTagField(FieldKey.QUALITY, musicTag.getSourceQuality(),tag);
     }
@@ -514,6 +527,127 @@ public class FileRepository {
 
     void setTagField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
         tag.setField(fieldKey, value);
+    }
+
+    /**
+     * This will write a custom ID3 tag (TXXX). This works only with MP3 files
+     * (Flac with ID3-Tag not tested).
+     *
+     * @param description The description of the custom tag i.e. "catalognr"
+     * There can only be one custom TXXX tag with that description in one MP3
+     * file
+     * @param text The actual text to be written into the new tag field
+     * @return True if the tag has been properly written, false otherwise
+     */
+    public static boolean setTagFieldCustom(AudioFile audioFile, String description, String text) throws IOException {
+        // Get the tag from the audio file
+        // If there is no ID3Tag create an ID3v2.3 tag
+        Tag tag = audioFile.getTagOrCreateAndSetDefault();
+        if (tag instanceof AbstractID3Tag) {
+            FrameBodyTXXX txxxBody = new FrameBodyTXXX();
+            txxxBody.setDescription(description);
+            txxxBody.setText(text);
+            // If there is only a ID3v1 tag, copy data into new ID3v2.3 tag
+            if (!(tag instanceof ID3v23Tag || tag instanceof ID3v24Tag)) {
+                Tag newTagV23 = null;
+                if (tag instanceof ID3v1Tag) {
+                    newTagV23 = new ID3v23Tag((ID3v1Tag) tag); // Copy old tag data
+                }
+                if (tag instanceof ID3v22Tag) {
+                    newTagV23 = new ID3v23Tag((ID3v22Tag) tag); // Copy old tag data
+                }
+                audioFile.setTag(newTagV23);
+                tag = newTagV23;
+            }
+
+            AbstractID3v2Frame frame = null;
+            if (tag instanceof ID3v23Tag) {
+                if (((ID3v23Tag) audioFile.getTag()).getInvalidFrames() > 0) {
+                    throw new IOException("read some invalid frames!");
+                }
+                frame = new ID3v23Frame("TXXX");
+            } else if (tag instanceof ID3v24Tag) {
+                if (((ID3v24Tag) audioFile.getTag()).getInvalidFrames() > 0) {
+                    throw new IOException("read some invalid frames!");
+                }
+                frame = new ID3v24Frame("TXXX");
+            }
+
+            frame.setBody(txxxBody);
+
+            try {
+                tag.setField(frame);
+            } catch (FieldDataInvalidException e) {
+                //Logger.getLogger(TrackAnalyzer.class.getName()).log(Level.SEVERE, null, e);
+                return false;
+            }
+        } else if (tag instanceof FlacTag) {
+            try {
+                ((FlacTag) tag).setField(description, text);
+            } catch (KeyNotFoundException ex) {
+                //Logger.getLogger(TrackAnalyzer.class.getName()).log(Level.SEVERE, null, ex);
+                return false;
+            } catch (FieldDataInvalidException ex) {
+                return false;
+            }
+        } else if (tag instanceof Mp4Tag) {
+            //TagField field = new Mp4TagTextField("----:com.apple.iTunes:"+description, text);
+            TagField field;
+            field = new Mp4TagReverseDnsField(Mp4TagReverseDnsField.IDENTIFIER
+                    + ":" + "com.apple.iTunes" + ":" + description,
+                    "com.apple.iTunes", description, text);
+            //TagField field = new Mp4TagTextField(description, text);
+            try {
+                tag.setField(field);
+            } catch (FieldDataInvalidException ex) {
+                //Logger.getLogger(TrackAnalyzer.class.getName()).log(Level.SEVERE, null, ex);
+                return false;
+            }
+        } else if (tag instanceof VorbisCommentTag) {
+            try {
+                ((VorbisCommentTag) tag).setField(description, text);
+            } catch (KeyNotFoundException ex) {
+                return false;
+            } catch (FieldDataInvalidException ex) {
+                return false;
+            }
+        } else {
+            // tag not implemented
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * This will read a custom ID3 tag (TXXX). This works only with MP3 files
+     * (Flac with ID3-Tag not tested).
+     *
+     * @param description The description of the custom tag i.e. "catalognr"
+     * There can only be one custom TXXX tag with that description in one MP3
+     * file
+     * @return text The actual text to be written into the new tag field
+     */
+    public static String getTagFieldCustom(Tag tag, String description)  {
+        // Get the tag from the audio file
+        if (tag instanceof AbstractID3Tag) {
+
+        } else if (tag instanceof FlacTag) {
+            try {
+                return ((FlacTag) tag).getFirst(description);
+            } catch (KeyNotFoundException ex) {
+                return null;
+            }
+        } else if (tag instanceof Mp4Tag) {
+
+        } else if (tag instanceof VorbisCommentTag) {
+
+        } else {
+            // tag not implemented
+            return null;
+        }
+
+        return null;
     }
 
     public void scanMusicFiles(File file) {
@@ -787,7 +921,12 @@ public class FileRepository {
                 metadata.setEncoder(getId3TagValue(tag, FieldKey.ENCODER));
                 metadata.setPartOfCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
 
-              //  if ("wav".equalsIgnoreCase(metadata.getFileExtension()) || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
+                // read replay gain fields
+                metadata.setReplayGain(getTagFieldCustom(tag, "REPLAYGAIN_TRACK_GAIN"));
+                metadata.setLoudnessRange(getTagFieldCustom(tag, "REPLAYGAIN_TRACK_RANGE"));
+                metadata.setLoudnessIntegrated(getTagFieldCustom(tag, "REPLAYGAIN_REFERENCE_LOUDNESS"));
+
+                //  if ("wav".equalsIgnoreCase(metadata.getFileExtension()) || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
                 if(MusicTagUtils.isWavFile(metadata)) {
                     // wave, not support disk no, grouping, media, quality - write to comment
                     parseWaveCommentTag(metadata, getId3TagValue(tag, FieldKey.COMMENT));
@@ -894,7 +1033,7 @@ public class FileRepository {
         if(loudness!= null) {
             tag.setLoudnessIntegrated(loudness.getIntegratedLoudness());
             tag.setLoudnessRange(loudness.getLoudnessRange());
-            tag.setLoudnessTruePeek(loudness.getTruePeak());
+            tag.setTruePeek(loudness.getTruePeak());
             return true;
         }
         return false;
@@ -1151,7 +1290,7 @@ public class FileRepository {
             filename.append(File.separator);
 
             // albumArtist or artist
-            String artist = StringUtils.trimTitle(metadata.getArtist());
+            String artist = StringUtils.trimTitle(MusicTagUtils.getFirstArtist(metadata.getArtist()));
             String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
 
             String pathArtist = getAlbumArtistOrArtist(artist, albumArtist);
@@ -1478,10 +1617,34 @@ public class FileRepository {
 
         tag = MusicTagRepository.getAudioTagById(tag); // re-read tag from db
         if(detectLoudness(tag)) {
+            tag.setReplayGain(FFMPegUtils.getReplayGain(tag));
             detectMQA(tag);
             MusicTagRepository.saveTag(tag);
+            setTagFieldsReplayGain(tag);
             return true;
         }
         return false;
+    }
+
+    private void setTagFieldsReplayGain(MusicTag tag) {
+        // write track replay gain to file
+        // flac, aiff, mp4, mp3, wav?
+        /*
+        "REPLAYGAIN_TRACK_GAIN", -- gain
+    "REPLAYGAIN_TRACK_PEAK", -- true peak
+    "REPLAYGAIN_TRACK_RANGE", -- loudness range
+    "REPLAYGAIN_REFERENCE_LOUDNESS" -- loudness integrated
+         */
+        try {
+            AudioFile audioFile = buildAudioFile(tag.getPath(), "rw");
+            assert audioFile != null;
+            setTagFieldCustom(audioFile, "REPLAYGAIN_TRACK_GAIN",tag.getReplayGain());
+            setTagFieldCustom(audioFile, "REPLAYGAIN_TRACK_RANGE",tag.getLoudnessRange());
+            setTagFieldCustom(audioFile, "REPLAYGAIN_REFERENCE_LOUDNESS",tag.getLoudnessIntegrated());
+
+            audioFile.commit();
+        } catch (CannotWriteException|IOException e) {
+           Timber.e(e);
+        }
     }
 }

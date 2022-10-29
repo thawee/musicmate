@@ -1202,26 +1202,30 @@ public class MusicTagUtils {
         return defaultAlbum;
     }
 
-    /*
-    private static String getFirstArtist(String artist) {
+    public static String getFirstArtist(String artist) {
         if(artist.indexOf(";")>0) {
             return artist.substring(0,artist.indexOf(";"));
-        }else if(artist.indexOf(",")>0) {
-            return artist.substring(0,artist.indexOf(","));
+       // }else if(artist.indexOf(",")>0) {
+       //     return artist.substring(0,artist.indexOf(","));
+        }else if(artist.indexOf("-")>0) {
+            return artist.substring(0,artist.indexOf("-"));
+        }else if(artist.indexOf("&")>0) {
+            return artist.substring(0,artist.indexOf("&"));
         }
         return artist;
-    }*/
+    }
 
     public static Bitmap createLoudnessIcon(Context context,  MusicTag tag) {
-        int width = 340; // for xx
+        int width = 356; //340; // for 56x16,  89x24
         int height = 96; // 16
         int greyColor = context.getColor(R.color.grey200);
-        int darkGreyColor = context.getColor(R.color.grey900);
+       // int darkGreyColor = context.getColor(R.color.grey900);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.material_color_blue_grey_100);
         String lra = StringUtils.trim(tag.getLoudnessRange(),"--");
         String il= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
-        String tp= StringUtils.trim(tag.getLoudnessTruePeek(),"--");
+        //String tp= StringUtils.trim(tag.getTruePeek(),"--");
+        String rg = StringUtils.trim(tag.getReplayGain(),"--");
         if("--".equalsIgnoreCase(il) || "-70.0".equalsIgnoreCase(il)) {
             qualityColor = context.getColor(R.color.warningColor);
         }
@@ -1259,12 +1263,12 @@ public class MusicTagUtils {
 
         padding = 4;
         rectangle = new RectF(
-                padding, // Left
+                padding-2, // Left
                 padding, // Top
-                myCanvas.getWidth()-padding, // Right
+                myCanvas.getWidth()-padding-2, // Right
                 (myCanvas.getHeight()-padding) // Bottom
         );
-        // int borderWidth = 2;
+
         paint =  new Paint();
         paint.setAntiAlias(true);
         paint.setDither(true);
@@ -1273,8 +1277,7 @@ public class MusicTagUtils {
         myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
 
         // draw grey box
-       // int jointCornerRadius = 14;
-        padding = 12;
+        padding = 8;
         int topPadding = 16;
         rectangle = new RectF(
                 padding,  // Left
@@ -1350,15 +1353,18 @@ public class MusicTagUtils {
                 mLetterPaint);
 
         // draw true peak text, black color
+        letterTextSize = 48; //28;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
         mLetterPaint.setTypeface(font);
         mLetterPaint.setTextSize(letterTextSize);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         textMathRect = new Rect();
-        mLetterPaint.getTextBounds(tp, 0, 1, textMathRect);
+        //mLetterPaint.getTextBounds(tp, 0, 1, textMathRect);
+        mLetterPaint.getTextBounds(rg, 0, 1, textMathRect);
         mPositionY = bounds.exactCenterY();
-        myCanvas.drawText(tp,
+        //myCanvas.drawText(tp,
+        myCanvas.drawText(rg,
                 (float) (bounds.exactCenterX()+(bounds.exactCenterX()*0.66)), //left
                 bounds.top + mPositionY + 16, // top
                 mLetterPaint);
@@ -1390,7 +1396,7 @@ public class MusicTagUtils {
         int qualityColor = context.getColor(R.color.grey200);
         String lra = StringUtils.trim(tag.getLoudnessRange(),"--");
         String il= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
-        String tp= StringUtils.trim(tag.getLoudnessTruePeek(),"--");
+        String tp= StringUtils.trim(tag.getTruePeek(),"--");
         if(!"--".equalsIgnoreCase(il)) {
             try {
                 double intg =NumberFormat.getInstance().parse(il).doubleValue();

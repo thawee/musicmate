@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "2:7857686333522563698",
-      "lastPropertyId": "43:8170175465420169311",
+      "lastPropertyId": "44:2817552686864427364",
       "name": "MusicTag",
       "properties": [
         {
@@ -240,13 +240,20 @@
           "id": "43:8170175465420169311",
           "name": "fileSizeRatio",
           "type": 5
+        },
+        {
+          "id": "44:2817552686864427364",
+          "name": "uniqueKey",
+          "indexId": "12:7215861826944590974",
+          "type": 9,
+          "flags": 34848
         }
       ],
       "relations": []
     }
   ],
   "lastEntityId": "2:7857686333522563698",
-  "lastIndexId": "11:758609656100211025",
+  "lastIndexId": "12:7215861826944590974",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

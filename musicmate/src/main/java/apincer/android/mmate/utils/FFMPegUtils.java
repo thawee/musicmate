@@ -1,12 +1,17 @@
 package apincer.android.mmate.utils;
 
+import static java.lang.StrictMath.log10;
+import static java.lang.StrictMath.min;
+
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.Log;
 import com.arthenica.ffmpegkit.ReturnCode;
 
 import java.util.List;
+import java.util.Locale;
 
+import apincer.android.mmate.objectbox.MusicTag;
 import timber.log.Timber;
 
 public class FFMPegUtils {
@@ -57,7 +62,7 @@ public class FFMPegUtils {
 
 */
             //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
-            String cmd = " -hide_banner -i \"" + path + "\" -filter_complex ebur128=peak=true -f null -";
+            String cmd = " -hide_banner -nostats -i \"" + path + "\" -filter_complex ebur128=peak=true:framelog=verbose -f null -";
             //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
             // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
             FFmpegSession session = FFmpegKit.execute(cmd);
@@ -88,7 +93,7 @@ public class FFMPegUtils {
             options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
         }
 
-        String cmd = " -hide_banner -i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
+        String cmd = " -hide_banner -nostats -i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
 
         FFmpegKit.executeAsync(cmd, session -> callbak.onFinish(ReturnCode.isSuccess(session.getReturnCode())));
     }
@@ -111,5 +116,46 @@ public class FFMPegUtils {
         }
 
         return buff.toString();
+    }
+
+    public static final double RGV2_REFERENCE = -18.00;
+    public static String getReplayGain(MusicTag tag) {
+        double max_true_peak_level = -1.0; // dBTP; default for -k, as per EBU Tech 3343
+        // boolean will_clip = false;
+        double trackReplayGain = getReplayGain(Double.parseDouble(tag.getLoudnessIntegrated()));
+        double tpeakGain = 1.0; // "gained" track peak
+        // double tnew;
+        double tpeak = Math.pow(10.0, max_true_peak_level / 20.0); // track peak limit
+        // boolean tclip = false;
+
+        // Check if track will clip, and correct if so requested (-k/-K)
+
+        // track peak after gain
+        tpeakGain = Math.pow(10.0, trackReplayGain / 20.0) * Double.parseDouble(tag.getTruePeek());
+        //  tnew = tpeakGain;
+
+        // printf("\ntrack: %.2f LU, peak %.6f; album: %.2f LU, peak %.6f\ntrack: %.6f, %.6f; album: %.6f, %.6f; Clip: %s\n",
+        // 	scan -> track_gain, scan -> track_peak, scan -> album_gain, scan -> album_peak,
+        // 	tgain, tpeak, again, apeak, will_clip ? "Yes" : "No");
+
+        if (tpeakGain > tpeak) {
+            // set new track peak = minimum of peak after gain and peak limit
+            double tnew = min(tpeakGain, tpeak);
+            trackReplayGain = trackReplayGain - (log10(tpeakGain/tnew) * 20.0);
+            //  tclip = true;
+        }
+        return String.format(Locale.getDefault(),"%.2f", trackReplayGain);
+        // tag.setReplayGain(Double.toString(trackReplayGain));
+
+        //  will_clip = false;
+
+        // printf("\nAfter clipping prevention:\ntrack: %.2f LU, peak %.6f; album: %.2f LU, peak %.6f\ntrack: %.6f, %.6f; album: %.6f, %.6f; Clip: %s\n",
+        // 	scan -> track_gain, scan -> track_peak, scan -> album_gain, scan -> album_peak,
+        // 	tgain, tpeak, again, apeak, will_clip ? "Yes" : "No");
+        //  }
+    }
+
+    private static double getReplayGain(double loudnessIntegrated) {
+        return RGV2_REFERENCE - loudnessIntegrated;
     }
 }
