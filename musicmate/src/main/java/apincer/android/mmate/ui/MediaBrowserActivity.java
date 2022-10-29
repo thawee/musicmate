@@ -45,8 +45,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.epoxy.EpoxyViewHolder;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
-import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.ReturnCode;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -97,6 +95,7 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
+import apincer.android.mmate.utils.FFMPegUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -250,9 +249,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                                 int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
                                 int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
                                 runOnUiThread(() -> {
-                                    nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
-                                    nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor,80)));
-                                    nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor,80)));
+                                    try {
+                                        nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
+                                        nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
+                                        nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
+                                    }catch (Exception ex){}
                                 });
                             });
                             }catch (Exception ex) {
@@ -674,7 +675,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
     }
 
-    @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
@@ -1015,12 +1016,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     MusicTag tag = broadcastData.getTagInfo();
                     onPlaying(tag);
-                    MusicMateExecutors.loudness(() -> {
+                   /* MusicMateExecutors.main(() -> {
                         if(FileRepository.newInstance(getApplicationContext()).deepScanMediaItem(tag)) {
                             epoxyController.notifyModelChanged(tag);
                         }
-                    });
-                   // ScanLoudnessWorker.startScan(getApplicationContext(), tag);
+                    }); */
+                    ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                 }
             }
         }
@@ -1206,7 +1207,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(selections.size()==1) {
             filename.setText(selections.get(0).getSimpleName());
         }else {
-            filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to desired encoding.");
+            filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to selected encoding.");
         }
 
         final String[] encoding = {null};
@@ -1263,26 +1264,37 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 return;
             }
 
-            String options = "";
+           /// String options = "";
             String targetExt = encoding[0].toLowerCase();
-            if(encoding[0].contains("MP3")) {
-                options = " -ar 44100 -ab 320k ";
-            }
+           // if(encoding[0].contains("MP3")) {
+           //     options = " -ar 44100 -ab 320k ";
+          //  }
             progressBar.setProgress(0);
 
             for(MusicTag tag: selections) {
                 if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
-                    if(tag.isDSD()) {
+            //        if(tag.isDSD()) {
                         // convert from dsf to 24 bits, 48 kHz
                         // use lowpass filter to eliminate distortion in the upper frequencies.
-                        options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
-                    }
+              //          options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
+              //      }
 
                     String srcPath = tag.getPath();
                     String filePath = FileUtils.removeExtension(tag.getPath());
                     String targetPath = filePath+"."+targetExt; //+".flac";
-                    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
+                //    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
 
+                    FFMPegUtils.covert(srcPath, targetPath, status -> {
+                        if (status) {
+                            repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
+                            repos.scanMusicFiles(new File(targetPath)); // re scan file
+                        }
+                        runOnUiThread(() -> {
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct+rate));
+                        });
+                    });
+                    /*
                     FFmpegKit.executeAsync(cmd, session -> {
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
                             repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
@@ -1295,7 +1307,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct+rate));
                         });
-                    });
+                    }); */
                 }else {
                     int pct = progressBar.getProgress();
                     progressBar.setProgress((int) (pct+rate));

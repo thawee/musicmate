@@ -23,6 +23,7 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
@@ -58,10 +59,15 @@ public class ScanLoudnessWorker extends Worker {
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
                 EventBus.getDefault().postSticky(message);
 
+                // purge previous completed job
+                WorkManager.getInstance(getApplicationContext()).pruneWork();
+
             } catch (Exception e) {
                 Timber.e(e);
             }
         } else {
+       //     MusicMateExecutors.loudness(new ScanRunnable());
+      //  }
           /*  MusicTagRepository repos = MusicTagRepository.getInstance();
             List<MusicTag> tags = repos.getAudioTagWithoutLoudness();
             for (MusicTag tag : tags) {
@@ -76,9 +82,7 @@ public class ScanLoudnessWorker extends Worker {
             launch(
                     scope ->
                     {
-                       // for (int i = 0; i < COROUTINE_COUNT; i++) {
                             cIterating.runBlocking(scope, null);
-                       // }
                     });
         }
 
@@ -101,7 +105,7 @@ public class ScanLoudnessWorker extends Worker {
                 .putString(Constants.KEY_MEDIA_TAG, s)
                 .build();
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
-                   // .setInitialDelay(4, TimeUnit.SECONDS)
+                    .setInitialDelay(600, TimeUnit.MILLISECONDS)
                 .setInputData(inputData)
                     .build();
         WorkManager instance = WorkManager.getInstance(context);
@@ -109,18 +113,33 @@ public class ScanLoudnessWorker extends Worker {
     }
 
     private final class ScanRunnable  implements Runnable {
-        private final MusicTag tag;
-
-        private ScanRunnable(MusicTag tag) {
-            this.tag = tag;
+        private ScanRunnable() {
         }
         @Override
         public void run() {
-            try {
+           /* try {
                 repos.deepScanMediaItem(tag);
             } catch (Exception e) {
                 Timber.e(e);
-            }
+            }*/
+            Coroutine<?, ?> cIterating =
+                    first(supply(this::list)).then(
+                            forEach( consume (this::scan)));
+
+            launch(
+                    scope ->
+                    {
+                        // for (int i = 0; i < COROUTINE_COUNT; i++) {
+                        cIterating.runBlocking(scope, null);
+                        // }
+                    });
+        }
+        private void scan(MusicTag tag) {
+            repos.deepScanMediaItem(tag);
+        }
+
+        private List<MusicTag> list() {
+            return MusicTagRepository.getAudioTagWithoutLoudness();
         }
     }
 }

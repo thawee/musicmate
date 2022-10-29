@@ -58,6 +58,9 @@ public class ImportAudioFileWorker extends Worker {
                    // }
                 });
 
+        // purge previous completed job
+        WorkManager.getInstance(getApplicationContext()).pruneWork();
+
         return Result.success();
     }
 

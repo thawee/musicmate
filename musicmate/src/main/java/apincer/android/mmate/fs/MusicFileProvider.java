@@ -8,11 +8,26 @@ import android.net.Uri;
 import android.net.Uri.Builder;
 import android.os.ParcelFileDescriptor;
 import android.webkit.MimeTypeMap;
+
+import androidx.work.Configuration;
+import androidx.work.WorkManager;
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.concurrent.Executors;
 
 public final class MusicFileProvider extends ContentProvider {
        // private static final String[] a = new String[]{"_display_name", "_size"};
+       @Override
+       public boolean onCreate() {
+           // Initialize WorkManager with the default configuration.
+           WorkManager.initialize(
+                   getContext(),
+                   new Configuration.Builder()
+                           .setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()))
+                           .build());
+           return true;
+       }
 
         public static Uri getUriForFile(String str) {
             return new Builder().scheme("content").authority("apincer.android.mmate.provider").path(str).build();
@@ -76,10 +91,6 @@ public final class MusicFileProvider extends ContentProvider {
 
         public Uri insert(Uri uri, ContentValues contentValues) {
             throw new UnsupportedOperationException("No support inserts");
-        }
-
-        public boolean onCreate() {
-            return true;
         }
 
         public ParcelFileDescriptor openFile(Uri uri, String str) {

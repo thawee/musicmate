@@ -114,6 +114,19 @@
         </activity>
 
         <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove">
+        </provider>
+
+        <!-- disable workmanager initailser for work manager < 2.6
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            android:enabled="false" />
+            -->
+
+        <provider
             android:name="apincer.android.mmate.fs.MusicFileProvider"
             android:authorities="apincer.android.mmate.provider"
             android:exported="false"

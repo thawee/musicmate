@@ -56,7 +56,7 @@ import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
-import apincer.android.mmate.utils.MediaTagParser;
+import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -791,7 +791,7 @@ public class TagsEditorFragment extends Fragment {
             track.setText("");
             try {
                 List<String> list = mTagListLayout.getTags();// that will return TagModel List
-                MediaTagParser parser = new MediaTagParser();
+                MusicPathTagParser parser = new MusicPathTagParser();
                 MusicTag item = mediaItems.get(0);
                 MusicTag mdata = item.clone();
                 parser.parse(mdata, list);
@@ -816,7 +816,7 @@ public class TagsEditorFragment extends Fragment {
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         btnOK.setOnClickListener(v -> {
             List<String> list = mTagListLayout.getTags();
-            MediaTagParser parser = new MediaTagParser();
+            MusicPathTagParser parser = new MusicPathTagParser();
             for(MusicTag item:mediaItems) {
                 String mediaPath =  item.getPath();
                 File file = new File(mediaPath);

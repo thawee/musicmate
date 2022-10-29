@@ -57,6 +57,10 @@ public class DeleteAudioFileWorker extends Worker {
                         cIterating.runAsync(scope, null);
                    // }
                 });
+
+        // purge previous completed job
+        WorkManager.getInstance(getApplicationContext()).pruneWork();
+
         return Result.success();
     }
 

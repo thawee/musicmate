@@ -4,9 +4,6 @@ import android.content.Context;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
-import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.FFmpegSession;
-import com.arthenica.ffmpegkit.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -58,6 +55,7 @@ import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicMateArtwork;
 import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.utils.FFMPegUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mqaidentifier.NativeLib;
@@ -892,8 +890,16 @@ public class FileRepository {
         if(!StringUtils.isEmpty(lint)) {
             return false; // recheck if al
         }
+        FFMPegUtils.Loudness loudness = FFMPegUtils.getLoudness(tag.getPath());
+        if(loudness!= null) {
+            tag.setLoudnessIntegrated(loudness.getIntegratedLoudness());
+            tag.setLoudnessRange(loudness.getLoudnessRange());
+            tag.setLoudnessTruePeek(loudness.getTruePeak());
+            return true;
+        }
+        return false;
 
-        try {
+//        try {
 /*
    -i "%a" -af ebur128 -f null --i "%a" -af ebur128 -f null -
   Integrated loudness:
@@ -910,12 +916,13 @@ public class FileRepository {
     Peak:        0.5 dBFS[Parsed_ebur128_0 @ 0x7b44c68950]
 
 */
+        /*
             //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
-            String cmd = " -i \""+tag.getPath()+"\" -filter_complex ebur128=peak=true -f null -";
+            String cmd = " -hide_banner -i \""+tag.getPath()+"\" -filter_complex ebur128=peak=true -f null -";
             //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
             // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
             FFmpegSession session = FFmpegKit.execute(cmd);
-            String data = getFFmpegOutputData(session);
+            String data = FFMPegUtils.getFFmpegOutputData(session);
             String keyword = "Integrated loudness:";
 
             int startTag = data.lastIndexOf(keyword);
@@ -931,9 +938,10 @@ public class FileRepository {
         }catch (Exception ex) {
             Timber.e(ex);
         }
-        return false;
+        return false; */
     }
 
+    /*
     private String getFFmpegOutputData(FFmpegSession session) {
         List<Log> logs = session.getLogs();
         StringBuilder buff = new StringBuilder();
@@ -952,7 +960,7 @@ public class FileRepository {
         }
 
         return buff.toString();
-    }
+    }*/
 
     /*
     private int getId3TagIntValue(Tag tag, FieldKey key) {

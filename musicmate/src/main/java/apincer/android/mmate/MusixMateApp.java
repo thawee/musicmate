@@ -8,6 +8,7 @@ import android.graphics.Color;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.work.Configuration;
 import androidx.work.Constraints;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -221,11 +223,12 @@ public class MusixMateApp extends Application  {
         }).start(); */
 
         // scan music on startup
+        // Workmanager intitialize on MusicFileProvider
+        // clear existing scanning worker
+        WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanAudioFileWorker");
+        WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanLoudnessWorker");
+        WorkManager.getInstance(getApplicationContext()).pruneWork();
 
-
-        WorkManager instance = WorkManager.getInstance(getApplicationContext());
-       // instance.cancelAllWork();
-        instance.pruneWork();
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
                 .build();
@@ -234,12 +237,12 @@ public class MusixMateApp extends Application  {
                 .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
                 .setConstraints(constraints)
                 .build();
-        instance.enqueue(workRequest);
+        WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
 
         workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
                 .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build();
-        instance.enqueue(workRequest);
+        WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
     }
 }

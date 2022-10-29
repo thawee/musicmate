@@ -6,7 +6,7 @@ import java.util.List;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.utils.FileUtils;
 
-public class MediaTagParser {
+public class MusicPathTagParser {
     public void parse(MusicTag tag, List<String> patterns) {
        if(patterns.size()<=0) {
             return;
