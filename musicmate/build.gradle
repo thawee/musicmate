@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 62
-        versionName  "3.4.2"+ versions.buildDate
+        versionCode 63
+        versionName  "3.4.3"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -154,7 +154,7 @@ dependencies {
     implementation deps.ui.aboutlibraries
     //implementation deps.ui.toasty
     implementation deps.ui.shapeofview
-    implementation deps.ui.photoview;
+    implementation deps.ui.photoview
     implementation deps.ui.alerter
     implementation deps.ui.htmleditor
 
@@ -222,6 +222,7 @@ aboutLibraries {
     exclusionPatterns = [
             ~"org.jetbrains.*",
             ~"androidx.*",
+            ~"javax.validation:validation-api",
             ~"com.google.guava.*",
             ~"com.google.errorprone.*",
             ~"com.google.j2objc.*",
@@ -231,6 +232,7 @@ aboutLibraries {
             ~"com.google.code.findbugs:jsr305",
             ~"com.fasterxml.jackson.*",
             ~"org.slf4j:slf4j-api",
+            ~"org.jsoup:jsoup",
             ~"commons-io:commons-io",
             ~"commons-logging:commons-logging",
             ~"commons-codec:commons-codec",

@@ -200,7 +200,7 @@ public class TagsActivity extends AppCompatActivity {
         }
     } */
 
-    @Subscribe(threadMode = ThreadMode.ASYNC,sticky = true)
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
         // call from EventBus
         try {

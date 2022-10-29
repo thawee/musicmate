@@ -16,9 +16,6 @@ import android.text.TextPaint;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.res.ResourcesCompat;
 
-import com.anggrayudi.storage.file.DocumentFileCompat;
-import com.anggrayudi.storage.file.StorageId;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -297,7 +294,7 @@ public class MusicTagUtils {
                 Rect textMathRect = new Rect();
                 mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
                 float mLetterTop = textMathRect.height() / 3f;
-                float mPositionY = (float) (bounds.exactCenterY()); //-(bounds.exactCenterY()/16));
+                float mPositionY = bounds.exactCenterY(); //-(bounds.exactCenterY()/16));
                 myCanvas.drawText(label,
                         //(float) (bounds.exactCenterX() + (bounds.exactCenterX() / 4))+2, // left
                         (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
@@ -321,7 +318,7 @@ public class MusicTagUtils {
                 mPositionY = (float) (bounds.bottom) - textMathRect.height();
                 myCanvas.drawText(labelBPS,
                         // (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
-                        (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 4)) + 2, // left
+                        bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 2, // left
                         mPositionY,  // top
                         mLetterPaint);
             }else {
@@ -342,7 +339,7 @@ public class MusicTagUtils {
                 float mPositionY = (float) (bounds.bottom) - textMathRect.height();
                 myCanvas.drawText(label,
                         // (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
-                        (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 4)) + 36, // left
+                        bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 36, // left
                         mPositionY,  // top
                         mLetterPaint);
             }
@@ -382,7 +379,7 @@ public class MusicTagUtils {
             float mLetterTop = textMathRect.height() / 3f;
             float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/18);
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)), // left
+                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
                     mLetterTop + mPositionY+4,  //top
                     mLetterPaint);
         }else {
@@ -402,7 +399,7 @@ public class MusicTagUtils {
             float mLetterTop = textMathRect.height() / 3f;
             float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)), // left
+                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
                     mLetterTop + mPositionY, //top
                     mLetterPaint);
 
@@ -572,9 +569,9 @@ public class MusicTagUtils {
             Rect textMathRect = new Rect();
             mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
             float mLetterTop = textMathRect.height() / 3f;
-            float mPositionY = (float) (bounds.exactCenterY()); //-(bounds.exactCenterY()/16));
+            float mPositionY = bounds.exactCenterY(); //-(bounds.exactCenterY()/16));
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 4))+2, // left
+                    bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 2, // left
                     mLetterTop + mPositionY, //bounds.exactCenterY(), //top
                     mLetterPaint);
 
@@ -628,7 +625,7 @@ public class MusicTagUtils {
             float mLetterTop = textMathRect.height() / 3f;
             float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/18);
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)), // left
+                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
                     mLetterTop + mPositionY+4,  //top
                     mLetterPaint);
         }else {
@@ -646,7 +643,7 @@ public class MusicTagUtils {
             float mLetterTop = textMathRect.height() / 3f;
             float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
             myCanvas.drawText(label,
-                    (float) (bounds.exactCenterX()+(bounds.exactCenterX()/2)), // left
+                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
                     mLetterTop + mPositionY, //top
                     mLetterPaint);
 
@@ -846,7 +843,7 @@ public class MusicTagUtils {
        // mLetterTop = (textMathRect.height() / 6f);
         mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
         myCanvas.drawText(label1,
-                (float) (bounds.exactCenterX())+20, //left
+                bounds.exactCenterX() +20, //left
                 mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
                 mLetterPaint);
 
@@ -921,7 +918,7 @@ public class MusicTagUtils {
         if(Preferences.isShowTrackNumber(context)) {
             String track = StringUtils.trimToEmpty(tag.getTrack());
             if(track.startsWith("0")) {
-                track = track.substring(1,track.length());
+                track = track.substring(1);
             }
             if(track.indexOf("/")>0) {
                 track = track.substring(0,track.indexOf("/"));
@@ -975,7 +972,7 @@ public class MusicTagUtils {
         if(StringUtils.isDigitOnly(channels)) {
             return StringUtils.toLong(channels);
         }else {
-            Timber.i("Channels is string: "+channels);
+            Timber.i("Channels is string: %s", channels);
         }
         return 2; // default channels
     }
@@ -1194,12 +1191,6 @@ public class MusicTagUtils {
         }
     }
 
-    /*
-    public static boolean isHiResOrDSD(MusicTag tag) {
-       // return is24Bits(tag) || isDSD(tag);
-        return isPCMHiRes(tag) || isDSD(tag);
-    }*/
-
     public static String getDefaultAlbum(MusicTag tag) {
         // if album empty, add single
         String defaultAlbum;
@@ -1219,114 +1210,6 @@ public class MusicTagUtils {
             return artist.substring(0,artist.indexOf(","));
         }
         return artist;
-    }*/
-
-    /*
-    public static Bitmap getBitsPerSampleIcon(Context context,  AudioTag tag) {
-        int width = 132; //128;
-        int height = 96;
-       // int borderColor = context.getColor(R.color.grey400);
-      //  int textColor = context.getColor(R.color.black);
-        int whiteColor = context.getColor(R.color.white);
-        int blackColor = context.getColor(R.color.black);
-     //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
-        String bps = "";
-        String samplingRate= "";
-        if(tag.isDSD()) {
-            int rateModulation = (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
-             bps = "DSD";
-             samplingRate = "x"+rateModulation;
-        }else {
-            // bps = StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample());
-            bps = tag.getAudioBitsPerSample()+" B";
-            //samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
-            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(), true);
-        }
-        // samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
-      //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
-      //  return icon;
-        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas myCanvas = new Canvas(myBitmap);
-        int padding = 2;
-        int cornerRadius = 4;
-        Rect bounds = new Rect(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - padding // Bottom
-        );
-
-        // Initialize a new Round Rect object
-        // draw black box
-        RectF rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - padding // Bottom
-        );
-
-        Paint bgPaint =  new Paint();
-        bgPaint.setAntiAlias(true);
-        bgPaint.setColor(blackColor);
-        bgPaint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
-
-        // draw top white box
-        padding = 8;
-        rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                (myCanvas.getHeight()/2) - 2 // Bottom
-        );
-       // int borderWidth = 2;
-        Paint paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setColor(whiteColor);
-        paint.setStyle(Paint.Style.FILL);
-        //.setStyle(Paint.Style.STROKE);
-        //paint.setStrokeWidth(borderWidth);
-        // Finally, draw the rectangle on the canvas
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
-
-        int letterTextSize = 30; //28;
-       // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
-
-        // draw bit per , black color
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize+2);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(bps, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() / 10f;
-        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
-        myCanvas.drawText(bps,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
-                mLetterPaint);
-
-        // draw sampling rate, white color
-        font =  ResourcesCompat.getFont(context, R.font.adca);
-        //font =  ResourcesCompat.getFont(context, R.font.fff_forward);
-        letterTextSize = 30;
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(whiteColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
-        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
-        mPositionY= (float) (bounds.exactCenterY()+(bounds.exactCenterY()/2.5));
-        myCanvas.drawText(samplingRate,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
-                mLetterPaint);
-
-        return myBitmap;
     }*/
 
     public static Bitmap createLoudnessIcon(Context context,  MusicTag tag) {
@@ -1462,7 +1345,7 @@ public class MusicTagUtils {
         float mLetterTop = (textMathRect.height()); // / 2.5f);
         float mPositionY= (float) (bounds.exactCenterY() *0.3);
         myCanvas.drawText(il,
-                (float) (bounds.left+ (bounds.exactCenterX()/3))+2, //left
+                bounds.left + (bounds.exactCenterX() / 3) + 2, //left
                 (float) (bounds.bottom-textMathRect.height())-20, // top
                 mLetterPaint);
 
@@ -1474,10 +1357,10 @@ public class MusicTagUtils {
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(tp, 0, 1, textMathRect);
-        mPositionY = (float) (bounds.exactCenterY());
+        mPositionY = bounds.exactCenterY();
         myCanvas.drawText(tp,
                 (float) (bounds.exactCenterX()+(bounds.exactCenterX()*0.66)), //left
-                (float) (bounds.top+mPositionY)+16, // top
+                bounds.top + mPositionY + 16, // top
                 mLetterPaint);
 
         // draw LRA (DR) text, black color
@@ -1491,8 +1374,8 @@ public class MusicTagUtils {
         mLetterPaint.getTextBounds(lra, 0, 1, textMathRect);
         mLetterTop = textMathRect.height();
         myCanvas.drawText(lra,
-                (float) (bounds.exactCenterX())+2, //left
-                (float) (bounds.top +mLetterTop)+19, // top
+                bounds.exactCenterX() +2, //left
+                bounds.top + mLetterTop + 19, // top
                 mLetterPaint);
 
         return myBitmap;
@@ -1632,7 +1515,7 @@ public class MusicTagUtils {
         float mLetterTop = (textMathRect.height()); // / 2.5f);
         float mPositionY= (float) (bounds.exactCenterY() *0.3);
         myCanvas.drawText(lra,
-                (float) (bounds.left+ (bounds.exactCenterX()/3)), //left
+                bounds.left+ (bounds.exactCenterX()/3), //left
                 bounds.top+mPositionY +mLetterTop+8, //top
                 mLetterPaint);
 
@@ -1645,10 +1528,10 @@ public class MusicTagUtils {
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(tp, 0, 1, textMathRect);
         // mLetterTop = textMathRect.height(); // /1.5f;
-        mPositionY = (float) (bounds.exactCenterY());
+        mPositionY = bounds.exactCenterY();
         myCanvas.drawText(tp,
                 (float) (bounds.exactCenterX()+(bounds.exactCenterX()*0.66)), //left
-                (float) (bounds.top+mPositionY)+16, // top
+                bounds.top + mPositionY + 16, // top
                 mLetterPaint);
 
         // draw integrated loudness text, black color
@@ -1661,19 +1544,14 @@ public class MusicTagUtils {
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(il, 0, 1, textMathRect);
         mLetterTop = textMathRect.height(); // /1.5f;
-        mPositionY= (float) (bounds.exactCenterY());
+        mPositionY= bounds.exactCenterY();
         myCanvas.drawText(il,
-                (float) (bounds.exactCenterX())-4, //left
-                (float) (bounds.top+mPositionY +mLetterTop)+16, // top
+                bounds.exactCenterX() -4, //left
+                bounds.top + mPositionY + mLetterTop + 16, // top
                 mLetterPaint);
 
         return myBitmap;
     }
-
-    /*
-    public static boolean isOnPrimaryStorage(Context context, MusicTag tag) {
-        return StorageId.PRIMARY.equals(DocumentFileCompat.getStorageId(context, tag.getPath()));
-    }*/
 
     public static String getEncodingType(MusicTag tag) {
         if(tag.isDSD()) {
@@ -1699,163 +1577,10 @@ public class MusicTagUtils {
         return (Constants.MEDIA_EXT_FLAC.equalsIgnoreCase(musicTag.getFileExtension()));
     }
 
-    /*
-    private static Bitmap getEncodingSamplingRateIcon2(Context context, AudioTag tag) {
-        int width = 128;
-        int height = 96;
-        // int borderColor = context.getColor(R.color.grey400);
-        //  int textColor = context.getColor(R.color.black);
-        int whiteColor = context.getColor(R.color.white);
-        int blackColor = context.getColor(R.color.black);
-        //   int qualityColor = getResolutionColor(context,tag); //getSampleRateColor(context,item);
-        String encoding = "";
-        String samplingRate = "";
-        if(tag.isDSD()) {
-            int rateModulation = (int) (tag.getAudioSampleRate() / Constants.QUALITY_SAMPLING_RATE_44);
-            encoding = "DSD" + rateModulation;
-            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
-            //samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
-        } else if(tag.isMQA()) {
-            // MQA
-            encoding = "MQA";
-            long mqaRate = parseMQASampleRate(tag.getMQASampleRate());
-            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(mqaRate);
-            //if(mqaRate == tag.getAudioSampleRate()) {
-            //    samplingRate = tag.getAudioBitsPerSample()+"/"+StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
-            //}else {
-            //samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(), false) + "/" + StringUtils.getFormatedAudioSampleRate(mqaRate, false);
-            //}
-        }else {
-            encoding = tag.getAudioEncoding();
-           // samplingRate = tag.getAudioBitsPerSample()+"/"+StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
-            samplingRate = StringUtils.getFormatedAudioSampleRateAbvUnit(tag.getAudioSampleRate());
+    public static void initMusicTag(MusicTag tag) {
+        tag.setFileSizeRatio(MusicTagUtils.getFileSizeRatio(tag));
+        if(StringUtils.isEmpty(tag.getUniqueKey())) {
+            tag.setUniqueKey(tag.getPath()+"_"+ StringUtils.trimToEmpty(tag.getTrack())+"_"+StringUtils.trimToEmpty(tag.getTitle()));
         }
-        //String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),true);
-        //  Bitmap icon = AudioTagUtils.createBitmapFromText(context, 72, 36, StringUtils.getFormatedBitsPerSample(tag.getAudioBitsPerSample()), textColor,borderColor, qualityColor);
-        //  return icon;
-        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas myCanvas = new Canvas(myBitmap);
-        int padding = 2;
-        int cornerRadius = 4;
-        Rect bounds = new Rect(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - padding // Bottom
-        );
-
-        // Initialize a new Round Rect object
-        // draw black box
-        RectF rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - padding // Bottom
-        );
-
-        Paint bgPaint =  new Paint();
-        bgPaint.setAntiAlias(true);
-        bgPaint.setColor(blackColor);
-        bgPaint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
-
-        // draw top white box
-        padding = 8;
-        rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                (myCanvas.getHeight()/2) - 2 // Bottom
-        );
-        // int borderWidth = 2;
-        Paint paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setColor(whiteColor);
-        paint.setStyle(Paint.Style.FILL);
-        //.setStyle(Paint.Style.STROKE);
-        //paint.setStrokeWidth(borderWidth);
-        // Finally, draw the rectangle on the canvas
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
-
-        int letterTextSize = 30; //28;
-        // Typeface font =  ResourcesCompat.getFont(context, R.font.led_font);
-        //Typeface font =  ResourcesCompat.getFont(context, R.font.adca_font);
-        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
-
-        // draw bit per , black color
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(encoding, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() / 10f;
-        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
-        myCanvas.drawText(encoding,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
-                mLetterPaint);
-
-        // draw sampling rate, white color
-        //font =  ResourcesCompat.getFont(context, R.font.led_font);
-        font =  ResourcesCompat.getFont(context, R.font.k2d_bold);
-        letterTextSize = 30;
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(whiteColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
-        mLetterTop = mLetterTop +(textMathRect.height() / 2f);
-        mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
-        myCanvas.drawText(samplingRate,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
-                mLetterPaint);
-
-        return myBitmap;
-    }*/
-
-/*
-    public static int getEncodingColor(final Context context, AudioTag tag) {
-        if(item.getTag().isDSD()) {
-            return context.getColor(R.color.encoding_dsd);
-        }else if(item.getTag().isMQA()) {
-            return context.getColor(R.color.encoding_mqa);
-        }else if(item.getTag().isPCM44()) {
-            return context.getColor(R.color.encoding_pcm_44);
-        }else if(item.getTag().isPCM48()) {
-            return context.getColor(R.color.encoding_pcm_48);
-        } else  if(item.getTag().isPCM88()) {
-            return context.getColor(R.color.encoding_pcm_88);
-        } else if(item.getTag().isPCM96()) {
-            return context.getColor(R.color.encoding_pcm_96);
-        } else if(item.getTag().isPCM96PLUS()) {
-            return context.getColor(R.color.encoding_pcm_96_plus);
-        }else {
-            // bad
-            return context.getColor(R.color.encoding_unknown);
-        }
-    } */
-
-    /*
-    public static int getEncodingColorId(MediaItem item) {
-        if(item.getMetadata().isDSD()) {
-            return  R.color.encoding_dsd;
-        }else if(item.getMetadata().isMQA()) {
-            return  R.color.encoding_mqa;
-        }else if(item.getMetadata().isLossless()) {
-            if("FLAC".equalsIgnoreCase(item.getMetadata().getAudioFormat()) ||
-                    "ALAC".equalsIgnoreCase(item.getMetadata().getAudioFormat())) {
-                return R.color.encoding_compress;
-            }else {
-                return R.color.encoding_uncompress;
-            }
-        }else {
-            // MP3/AAC
-            return R.color.encoding_unknown;
-        }
-    } */
+    }
 }

@@ -674,7 +674,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
     }
 
-    @Subscribe(threadMode = ThreadMode.ASYNC,sticky = true)
+    @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
@@ -1015,16 +1015,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     MusicTag tag = broadcastData.getTagInfo();
                     onPlaying(tag);
-                    ScanLoudnessWorker.startScan(getApplicationContext(), tag);
-                   /* MusicMateExecutors.scan(() -> {
-                        try {
-                            repos.deepScanMediaItem(tag);
-                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
-                            EventBus.getDefault().postSticky(message);
-                        } catch (Exception e) {
-                            Timber.e(e);
+                    MusicMateExecutors.loudness(() -> {
+                        if(FileRepository.newInstance(getApplicationContext()).deepScanMediaItem(tag)) {
+                            epoxyController.notifyModelChanged(tag);
                         }
-                    }); */
+                    });
+                   // ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                 }
             }
         }

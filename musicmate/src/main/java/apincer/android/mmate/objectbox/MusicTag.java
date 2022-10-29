@@ -26,34 +26,7 @@ public class MusicTag implements Cloneable, Parcelable {
     //
     @Transient
     private MusicTag originTag;
-    // @Transient private String musicBrainzId;
-    // @Transient private String artistId;
-    // @Transient private String albumId;
-/*
-    public String getMusicBrainzId() {
-        return musicBrainzId;
-    }
 
-    public void setMusicBrainzId(String musicBrainzId) {
-        this.musicBrainzId = musicBrainzId;
-    }
-
-    public String getArtistId() {
-        return artistId;
-    }
-
-    public void setArtistId(String artistId) {
-        this.artistId = artistId;
-    }
-
-    public String getAlbumId() {
-        return albumId;
-    }
-
-    public void setAlbumId(String albumId) {
-        this.albumId = albumId;
-    }
-*/
     // id auto assigned bny objectbox
     @Id
     protected long id;
@@ -74,8 +47,6 @@ public class MusicTag implements Cloneable, Parcelable {
     @Index
     protected String path = "";
     protected long lastModified = 0;
-    // @Transient
-    // protected String obsoletePath;
     protected long fileSize;
 
     public int getFileSizeRatio() {
@@ -345,18 +316,6 @@ public class MusicTag implements Cloneable, Parcelable {
         this.id = id;
     }
 
-    /*
-    public SearchCriteria.RESULT_TYPE getResultType() {
-        return resultType;
-    }
-
-    public void setResultType(SearchCriteria.RESULT_TYPE resultType) {
-        this.resultType = resultType;
-    } */
-
-    //  @Transient
-    //  protected SearchCriteria.RESULT_TYPE resultType = SearchCriteria.RESULT_TYPE.ALL;
-
     public void setManaged(boolean managed) {
         this.managed = managed;
     }
@@ -437,15 +396,6 @@ public class MusicTag implements Cloneable, Parcelable {
         this.audioEncoding = audioEncoding;
     }
 
-    /*
-        public String getObsoletePath() {
-            return obsoletePath;
-        }
-
-        public void setObsoletePath(String obsoletePath) {
-            this.obsoletePath = obsoletePath;
-        }
-    */
     public String getYear() {
         return year;
     }
@@ -569,47 +519,6 @@ public class MusicTag implements Cloneable, Parcelable {
     public boolean isSACDISO() {
         return Constants.MEDIA_ENC_SACD.equalsIgnoreCase(getAudioEncoding());
     }
-/*
-    public boolean isDSD64() {
-        return ( isDSD() && getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_DSD64);
-    }
-
-    public boolean isDSD128() {
-        return ( isDSD() && getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_DSD64);
-    }
-
-    public boolean isPCM384() {
-        return ( isLossless() && getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_352);
-    }
-
-    public boolean isPCM192() {
-        return ( isLossless() && getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_176 && getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_192);
-    }
-
-    public boolean isPCM96PLUS() {
-        return (isLossless() && getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_96);
-    }
-
-    public boolean isPCM96() {
-        return (isLossless() && getAudioSampleRate() == Constants.QUALITY_SAMPLING_RATE_96);
-    }
-
-    public boolean isPCM88() {
-        return (isLossless() && getAudioSampleRate() == Constants.QUALITY_SAMPLING_RATE_88);
-    }
-
-    public boolean isPCM48() {
-        return (isLossless() && getAudioSampleRate() == Constants.QUALITY_SAMPLING_RATE_48);
-    }
-
-    public boolean isPCM44() {
-        return (isLossless() && getAudioSampleRate() == Constants.QUALITY_SAMPLING_RATE_44);
-    }
-
-    public boolean isSDA() {
-        return (isLossless() &&
-         ((getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_44 && getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_SD)));
-    } */
 
     public boolean isMQA() {
         return mqa;
@@ -622,48 +531,6 @@ public class MusicTag implements Cloneable, Parcelable {
     public String getPath() {
         return path;
     }
-
-    /*
-    public String getDSDRate() {
-        //if(audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD) {
-            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44);
-        return String.valueOf (audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44);
-        //}
-        //return "";
-    }
-     */
-
-    /*
-    public String getAudioResolutions() {
-        //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
-       //// String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
-       // text = text+" / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-
-       // return text;
-
-        //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
-       // if(audioBitsPerSample==Constants.QUALITY_BIT_DEPTH_DSD) {
-            String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
-            text = text+StringUtils.SYMBOL_RES_SEP+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-            text = text+StringUtils.SYMBOL_RES_SEP+StringUtils.getFormatedAudioBitRate(audioBitRate);
-            return text;
-            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+"x "+audioBitsPerSample+"bit/"+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-            //return "DSD"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+"x "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            //return "x"+(audioSampleRate/Constants.QUALITY_SAMPLING_RATE_44)+" "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            //return StringUtils.getFormatedAudioSampleRate(audioSampleRate,true)+" "+audioBitsPerSample+" bit";
-            //return audioBitsPerSample+" bit / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-    }
-
-     */
-
-    /*
-    public String getAudioBitCountAndSampleRate() {
-        //PCM 16bit/44.1kHz,PCM 24bit/44.1kHz, PCM 32bit/192kHz, DSD 64, DSD 128, DSD 256, DSD 512
-        String text = StringUtils.getFormatedBitsPerSample(audioBitsPerSample);
-        text = text+" / "+StringUtils.getFormatedAudioSampleRate(audioSampleRate,true);
-
-        return text;
-    } */
 
     public String getAudioDurationAsString() {
         return StringUtils.formatDuration(audioDuration, false);
@@ -839,7 +706,11 @@ public class MusicTag implements Cloneable, Parcelable {
         this.originTag = originTag;
     }
 
-    public void updateUniqueKey() {
-        uniqueKey = path+"_"+ StringUtils.trimToEmpty(track)+"_"+StringUtils.trimToEmpty(title);
+    public String getUniqueKey() {
+        return uniqueKey;
+    }
+
+    public void setUniqueKey(String uniqueKey) {
+        this.uniqueKey = uniqueKey;
     }
 }

@@ -1,0 +1,7 @@
+{
+  "uniqueId": "ode.esoco.coroutines",
+  "name": "Java Coroutines",
+  "artifactVersion": "0.9.1",
+  "description": "Pure Java implementation of coroutines",
+  "website": "https://github.com/esoco/coroutines"
+}

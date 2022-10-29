@@ -1464,14 +1464,16 @@ public class FileRepository {
         setJAudioTagger(tag);
     }
 
-    public void deepScanMediaItem(MusicTag tag) {
-        if(tag.isDSD() || tag.isSACDISO()) return;
+    public boolean deepScanMediaItem(MusicTag tag) {
+        if(tag.isDSD() || tag.isSACDISO()) return false;
         // not support DSD and SACD ISO
 
         tag = MusicTagRepository.getAudioTagById(tag); // re-read tag from db
         if(detectLoudness(tag)) {
             detectMQA(tag);
             MusicTagRepository.saveTag(tag);
+            return true;
         }
+        return false;
     }
 }

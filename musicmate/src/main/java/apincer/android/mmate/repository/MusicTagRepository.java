@@ -19,38 +19,25 @@ import io.objectbox.query.Query;
 import timber.log.Timber;
 
 public class MusicTagRepository {
-   // private static Box<MusicTag> tagBox;
     public static List<String> lossyAudioFormatList;
-    //MusicTagRepository INSTANCE;
 
     MusicTagRepository() {
-        //INSTANCE = (MusicTagRepository)this;
         lossyAudioFormatList = new ArrayList<>();
         lossyAudioFormatList.add("MP3");
         lossyAudioFormatList.add("AAC");
         lossyAudioFormatList.add("WMA");
-       // tagBox = ObjectBox.get().boxFor(MusicTag.class);
     }
 
     private static Box<MusicTag> getMusicTagBox() {
         return ObjectBox.get().boxFor(MusicTag.class);
     }
 
-    /*
-    public static MusicTagRepository getInstance() {
-        if(INSTANCE==null) {
-            INSTANCE = new MusicTagRepository();
-        }
-        return INSTANCE;
-    } */
-
     public static void saveTag(MusicTag tag) {
        // ObjectBox.get().runInTx(() -> {
             //if(tag.getId()!=0) {
             //    tagBox.remove(tag);
             //}
-            tag.setFileSizeRatio(MusicTagUtils.getFileSizeRatio(tag));
-            tag.updateUniqueKey();
+        MusicTagUtils.initMusicTag(tag);
             getMusicTagBox().put(tag); // add or update
       //  });
     }
@@ -183,7 +170,7 @@ public class MusicTagRepository {
 
     public static boolean checkSACDOutdated(String path, long lastModified) {
         List<MusicTag> tags = findByPath(path);
-        if(tags == null || tags.isEmpty()) {
+        if(tags.isEmpty()) {
             // found new file
             return true;
         }
@@ -200,7 +187,7 @@ public class MusicTagRepository {
     public static MusicTag getJAudioTaggerOutdated(String path, long lastModified) {
         // return null if not outdate, else return object
         List<MusicTag> tags = findByPath(path);
-        if(tags == null || tags.isEmpty()) {
+        if(tags.isEmpty()) {
             // found new file
             return new MusicTag();
         }else if (tags.size() == 1) {
