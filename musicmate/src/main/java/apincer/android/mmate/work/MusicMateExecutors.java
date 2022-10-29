@@ -7,11 +7,18 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import timber.log.Timber;
 
 public class MusicMateExecutors {
     private final Executor mMaintainThread;
-    private final Executor mSingleThread;
+    private final Executor mLoudnessThread;
     private final Executor mScanThread;
+    private final Executor mImportThread;
+    private final Executor mMainThread;
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -24,10 +31,12 @@ public class MusicMateExecutors {
 
     private static volatile MusicMateExecutors mInstance;
 
-    private MusicMateExecutors(Executor mScannerThread, Executor mMaintainThread, Executor mainThread) {
-        this.mSingleThread = mScannerThread;
-        this.mMaintainThread = mMaintainThread;
-        this.mScanThread = mainThread;
+    private MusicMateExecutors(Executor loudnessThread, Executor maintainThread, Executor scanThread, Executor importThread) {
+        this.mLoudnessThread = loudnessThread;
+        this.mMaintainThread = maintainThread;
+        this.mScanThread = scanThread;
+        this.mImportThread = importThread;
+        this.mMainThread = new MainThreadExecutor();
     }
 
     public static MusicMateExecutors getInstance() {
@@ -40,33 +49,69 @@ public class MusicMateExecutors {
     }
 
     private MusicMateExecutors() {
-        this(Executors.newSingleThreadExecutor(), Executors.newFixedThreadPool(NUMBER_OF_CORES),
-                Executors.newFixedThreadPool(NUMBER_OF_CORES)); // new MainThreadExecutor());
-        /*mExecutor = new ThreadPoolExecutor(
-                1, // + 5,   // Initial pool size
-                NUMBER_OF_CORES, // + 4, //8,   // Max pool size
-                KEEP_ALIVE_TIME,       // Time idle thread waits before terminating
-                KEEP_ALIVE_TIME_UNIT,  // Sets the Time Unit for KEEP_ALIVE_TIME
-                new LinkedBlockingDeque<>());  // Work Queue */
+        this(new ThreadPoolExecutor(1, 1,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                protected void afterExecute(Runnable r, Throwable t) {
+                    try {
+                        Thread.sleep(1000); // wait 1 second
+                    } catch (InterruptedException e) {
+                        Timber.e(e);
+                    }
+                }}, new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                 protected void afterExecute(Runnable r, Throwable t) {
+                     try {
+                         Thread.sleep(30); // wait 0.1 second
+                     } catch (InterruptedException e) {
+                         Timber.e(e);
+                     }
+                 }}, new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                    protected void afterExecute(Runnable r, Throwable t) {
+                        try {
+                            Thread.sleep(100); // wait 0.1 second
+                        } catch (InterruptedException e) {
+                            Timber.e(e);
+                        }
+                    }}, new ThreadPoolExecutor(1, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                    protected void afterExecute(Runnable r, Throwable t) {
+                        try {
+                            Thread.sleep(200); // wait 0.2 second
+                        } catch (InterruptedException e) {
+                            Timber.e(e);
+                        }
+                    }
+                });
     }
 
-    public Executor single() {
-        return mSingleThread;
+    public Executor loudness() {
+        return mLoudnessThread;
     }
 
     public Executor update() {
         return mMaintainThread;
+    }
+    public Executor main() {
+        return mMainThread;
     }
 
     public Executor scan() {
         return mScanThread;
     }
 
-    public static void single(@NonNull Runnable command) {
-        getInstance().single().execute(command);
+    public Executor move() {
+        return mImportThread;
+    }
+
+    public static void main(@NonNull Runnable command) {
+        getInstance().main().execute(command);
+    }
+
+    public static void loudness(@NonNull Runnable command) {
+        getInstance().loudness().execute(command);
     }
     public static void update(@NonNull Runnable command) {
         getInstance().update().execute(command);
+    }
+    public static void move(@NonNull Runnable command) {
+        getInstance().move().execute(command);
     }
     public static void scan(@NonNull Runnable command) {
         getInstance().scan().execute(command);

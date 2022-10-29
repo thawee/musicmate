@@ -220,22 +220,12 @@
     <color name="quality_hd">#ffb300</color>
     <color name="quality_h24bits">#FEC500</color>
     <color name="quality_sd">#ffecb3</color>
-    <color name="quality_unknown">#bdbdbd</color>
-<!--
-    // following dragonfly red LED color
-    <color name="sample_rate_44">#28c826</color>
-    <color name="sample_rate_48">#1e388e</color>
-    <color name="sample_rate_88">#d88507</color>
-    <color name="sample_rate_96">#f704f6</color>
-    <color name="sample_rate_96_plus">#0ac7f7</color>
-    <color name="sample_rate_dsd">#0ac7f7</color>
-    <color name="sample_rate_unknown">#bdbdbd</color>
--->
+    <color name="quality_unknown">#e0e0e0</color>
+
     <!--
     <color name="resolution_mqa">#FF00FF</color>
     <color name="resolution_hd">#FF0000</color>
     <color name="resolution_sd">#0000FF</color>
-
 
     <color name="sample_rate_unknown">#bdbdbd</color>
     <color name="sample_rate_44">#ffecb3</color>

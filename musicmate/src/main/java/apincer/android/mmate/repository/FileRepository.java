@@ -17,14 +17,22 @@ import org.jaudiotagger.audio.SupportedFileFormat;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.audio.mp3.MP3AudioHeader;
+import org.jaudiotagger.audio.mp4.Mp4AudioHeader;
+import org.jaudiotagger.audio.wav.WavOptions;
+import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.flac.FlacTag;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
 import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.mp4.Mp4Tag;
 import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisAlbumArtistSaveOptions;
+import org.jaudiotagger.tag.wav.WavInfoTag;
 import org.jaudiotagger.tag.wav.WavTag;
 import org.jetbrains.annotations.NotNull;
 import org.justcodecs.dsd.DISOFormat;
@@ -39,7 +47,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
+import java.nio.BufferUnderflowException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -61,8 +70,7 @@ import timber.log.Timber;
  */
 public class FileRepository {
     private final Context context;
-    private final FileSystem fileRepos;
-    private final MusicTagRepository tagRepos;private final String STORAGE_PRIMARY = StorageId.PRIMARY;
+    private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
 
     public static FileRepository newInstance(Context application) {
@@ -77,8 +85,6 @@ public class FileRepository {
         super();
         this.context = context;
         STORAGE_SECONDARY = getSecondaryId(context);
-        this.fileRepos = new FileSystem(context);
-        this.tagRepos = MusicTagRepository.getInstance();
     }
 
     public static String getSecondaryId(Context context) {
@@ -86,7 +92,6 @@ public class FileRepository {
         for(String sid: sids) {
             if(!sid.equals(StorageId.PRIMARY)) {
                 return sid;
-                //break;
             }
         }
         return StorageId.PRIMARY;
@@ -158,14 +163,14 @@ public class FileRepository {
 
     public static AudioFile buildAudioFile(String path, String mode) {
             try {
-                if(isMediaFileExist(path) && isValidJAudioTagger(path)) {
+                if(isMediaFileExist(path)) {
                     setupTagOptionsForReading();
                     if(mode!=null && mode.contains("w")) {
                         setupTagOptionsForWriting();
                     }
                     return AudioFileIO.read(new File(path));
                 }
-            } catch (CannotReadException | IOException | TagException |ReadOnlyFileException |InvalidAudioFrameException e) {
+            } catch (CannotReadException | IOException | TagException |ReadOnlyFileException |InvalidAudioFrameException| BufferUnderflowException e) {
                 Timber.i(e);
             }
         return null;
@@ -194,7 +199,7 @@ public class FileRepository {
 
     public MusicTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
         try {
-            List<MusicTag> list = tagRepos.findMediaByTitle(currentTitle);
+            List<MusicTag> list = MusicTagRepository.findMediaByTitle(currentTitle);
 
             double prvTitleScore = 0.0;
             double prvArtistScore = 0.0;
@@ -219,8 +224,8 @@ public class FileRepository {
             if (matchedMeta != null) {
                 return matchedMeta.clone();
             }
-        }catch (SQLException sqle) {
-            Timber.e(sqle);
+        }catch (Exception e) {
+            Timber.e(e);
         }
         return null;
     }
@@ -265,22 +270,19 @@ public class FileRepository {
         return isFileSaved;
     } */
 
+    /*
     private boolean isValidTagValue(String newTag) {
         return !StringUtils.MULTI_VALUES.equalsIgnoreCase(newTag);
-    }
+    } */
 
     private String getId3TagValue(Tag id3Tag, FieldKey key) {
-        if(id3Tag == null) {
-            return "";
-        }
-        try {
+        if(id3Tag!=null && id3Tag.hasField(key)) {
             return StringUtils.trimToEmpty(id3Tag.getFirst(key));
-        }catch (Exception ex) {
-            Timber.e(ex);
         }
         return "";
     }
 
+    /*
     private void setTagField(AudioFile audioFile, Tag id3Tag,FieldKey key, String text) {
         try {
             if(isValidTagValue(text)) {
@@ -294,8 +296,80 @@ public class FileRepository {
         } catch (Exception e) {
             Timber.e(e);
         }
+    } */
+
+    private void setMusicTag(MusicTag item) throws Exception{
+        if (item == null || item.getPath() == null) {
+            return;
+        }
+
+        if(item.getOriginTag()==null) {
+            return;
+        }
+
+        item.setManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
+        if(isValidJAudioTagger(item.getPath())) {
+          //  File file = new File(item.getPath());
+           // setupTagOptionsForWriting();
+           // AudioFile audioFile = buildAudioFile(file.getAbsolutePath(), "rw");
+
+            // save default tags
+           // assert audioFile != null;
+           // Tag existingTags = audioFile.getTagOrCreateAndSetDefault();
+            setJAudioTagger(item);
+            item.setOriginTag(null); // reset pending tag
+        }else if (isValidSACD(item.getPath())) {
+            // write to somewhere else
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create();
+            String json = gson.toJson(item);
+            File f = new File(item.getPath());
+            String fileName = f.getParentFile().getAbsolutePath()+"/"+item.getTrack()+".json";
+            org.apache.commons.io.FileUtils.write(new File(fileName), json);
+        }
+
+        MusicTagRepository.saveTag(item);
     }
 
+    private void setJAudioTagger(MusicTag musicTag) {
+        if (musicTag==null) {
+            return;
+        }
+        // prepare new tag
+        // reset tag
+        if(MusicTagUtils.isWavFile(musicTag)) {
+            // need to reset tag for wave file
+            try {
+                setWavComment(musicTag);
+                resetWavFile(new File(musicTag.getPath()));
+            }catch (Exception ex) {
+                Timber.e(ex);
+            }
+        }
+        // write new tag
+        try {
+            AudioFile audioFile = buildAudioFile(musicTag.getPath(), "rw");
+            assert audioFile != null;
+            Tag tag = audioFile.getTagOrCreateDefault();
+            setCommonTagFields(tag, musicTag);
+            setExtendedTagFields(tag, musicTag);
+            audioFile.commit();
+        }catch (Exception ex) {
+            Timber.e(ex);
+        }
+    }
+
+    private void setWavComment(MusicTag musicTag) {
+        String comment = "/#"+StringUtils.trimToEmpty(musicTag.getSource());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getDisc());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getGrouping());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getSourceQuality());
+        comment = comment+"#/ "+StringUtils.trimToEmpty(musicTag.getComment());
+        musicTag.setComment(comment);
+    }
+
+    /*
     private void saveMusicTag(MusicTag item) throws Exception{
         if (item == null || item.getPath() == null) {
             return;
@@ -308,13 +382,13 @@ public class FileRepository {
         item.setManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
         if(isValidJAudioTagger(item.getPath())) {
             File file = new File(item.getPath());
-            setupTagOptionsForWriting();
+            // setupTagOptionsForWriting();
             AudioFile audioFile = buildAudioFile(file.getAbsolutePath(), "rw");
 
             // save default tags
             assert audioFile != null;
             Tag existingTags = audioFile.getTagOrCreateAndSetDefault();
-            writeJAudioTagger(audioFile, existingTags, item);
+            writeJAudioTagger2(audioFile, existingTags, item);
             item.setOriginTag(null); // reset pending tag
         }else if (isValidSACD(item.getPath())) {
             // write to somewhere else
@@ -328,12 +402,14 @@ public class FileRepository {
         }
 
         tagRepos.saveTag(item);
-    }
+    } */
 
+    /*
     private void writeJAudioTagger(AudioFile audioFile, Tag tags, MusicTag pendingMetadata) {
         if (tags == null || pendingMetadata==null) {
             return;
         }
+
         setTagField(audioFile,tags,FieldKey.TITLE, pendingMetadata.getTitle());
         setTagField(audioFile,tags,FieldKey.ALBUM, pendingMetadata.getAlbum());
         setTagField(audioFile,tags,FieldKey.ARTIST, pendingMetadata.getArtist());
@@ -343,7 +419,7 @@ public class FileRepository {
         setTagField(audioFile,tags,FieldKey.TRACK, pendingMetadata.getTrack());
         setTagField(audioFile,tags,FieldKey.COMPOSER, pendingMetadata.getComposer());
         setTagField(audioFile,tags,FieldKey.RATING, String.valueOf(pendingMetadata.getRating()));
-        if (tags instanceof WavTag || "dsf".equalsIgnoreCase(pendingMetadata.getFileExtension())) {
+        if ("wav".equalsIgnoreCase(pendingMetadata.getFileExtension()) || "dsf".equalsIgnoreCase(pendingMetadata.getFileExtension())) {
             // wave, not support disk no, grouping, media, quality - write to comment
             String comment = "/#"+StringUtils.trimToEmpty(pendingMetadata.getSource());
             comment = comment+"#:"+StringUtils.trimToEmpty(pendingMetadata.getDisc());
@@ -351,10 +427,10 @@ public class FileRepository {
             comment = comment+"#:"+StringUtils.trimToEmpty(pendingMetadata.getSourceQuality());
             comment = comment+"#/"+StringUtils.trimToEmpty(pendingMetadata.getComment());
             setTagField(audioFile,tags,FieldKey.COMMENT, comment);
-           // setTagField(audioFile,tags,FieldKey.MEDIA, pendingMetadata.getSource());
-           // setTagField(audioFile,tags,FieldKey.DISC_NO, pendingMetadata.getDisc());
-           // setTagField(audioFile,tags,FieldKey.GROUPING, pendingMetadata.getGrouping());
-           // setTagField(audioFile,tags,FieldKey.QUALITY, pendingMetadata.isAudiophile()?Constants.AUDIOPHILE:"");
+            // setTagField(audioFile,tags,FieldKey.MEDIA, pendingMetadata.getSource());
+            // setTagField(audioFile,tags,FieldKey.DISC_NO, pendingMetadata.getDisc());
+            // setTagField(audioFile,tags,FieldKey.GROUPING, pendingMetadata.getGrouping());
+            // setTagField(audioFile,tags,FieldKey.QUALITY, pendingMetadata.isAudiophile()?Constants.AUDIOPHILE:"");
         }else {
             setTagField(audioFile,tags,FieldKey.DISC_NO, pendingMetadata.getDisc());
             setTagField(audioFile,tags,FieldKey.GROUPING, pendingMetadata.getGrouping());
@@ -363,31 +439,112 @@ public class FileRepository {
             //setTagField(audioFile,tags,FieldKey, pendingMetadata.getGrouping());
             setTagField(audioFile,tags,FieldKey.COMMENT, pendingMetadata.getComment());
         }
+    } */
+
+    void setCommonTagFields(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
+        tag.setEncoding(StandardCharsets.UTF_8);
+        setTagField(FieldKey.TITLE, musicTag.getTitle(), tag);
+        setTagField(FieldKey.ALBUM, musicTag.getAlbum(), tag);
+        setTagField(FieldKey.ALBUM_ARTIST, musicTag.getAlbumArtist(), tag);
+        setTagField(FieldKey.ARTIST, musicTag.getArtist(), tag);
+        setTagField(FieldKey.GENRE, musicTag.getGenre(), tag);
+        setTagField(FieldKey.COMMENT, musicTag.getComment(), tag);
+        setTagField(FieldKey.GROUPING, musicTag.getGrouping(), tag);
+        setTagField(FieldKey.TRACK, musicTag.getTrack(), tag);
+        setTagField(FieldKey.DISC_NO, musicTag.getDisc(), tag);
+        setTagField(FieldKey.YEAR, musicTag.getYear(), tag);
+        setTagField(FieldKey.COMPOSER, musicTag.getComposer(), tag);
+        setTagField(FieldKey.RATING, Integer.toString(musicTag.getRating()), tag);
+        setTagField(FieldKey.BPM, Integer.toString(musicTag.getBpm()), tag);
+        setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isPartOfCompilation()), tag);
     }
 
-    public void scanFileAndSaveTag(File file) {
-        String mediaPath = file.getAbsolutePath();
-            if(isValidSACD(mediaPath)) {
-                if (tagRepos.checkSACDOutdated(mediaPath, file.lastModified())) {
+    void setExtendedTagFields(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
+        setTagField(FieldKey.MEDIA, musicTag.getSource(),tag);
+        setTagField(FieldKey.QUALITY, musicTag.getSourceQuality(),tag);
+    }
+
+    void resetMp3File(File mp3File) throws Exception {
+        AudioFile audio = AudioFileIO.read(mp3File);
+        Tag tag = new ID3v24Tag();
+        resetCommonTagFields(tag);
+        audio.setTag(tag);
+        audio.commit();
+    }
+
+    void resetM4aFile(File m4aFile) throws Exception {
+        AudioFile audio = AudioFileIO.read(m4aFile);
+        Tag tag = new Mp4Tag();
+        resetCommonTagFields(tag);
+        audio.setTag(tag);
+        audio.commit();
+    }
+
+    void resetWavFile(File waveFile) throws Exception {
+        AudioFile audio = AudioFileIO.read(waveFile);
+        WavTag wavTag = new WavTag(WavOptions.READ_ID3_ONLY);
+        wavTag.setID3Tag(new ID3v24Tag());
+        wavTag.setInfoTag(new WavInfoTag());
+        resetCommonTagFields(wavTag);
+        audio.setTag(wavTag);
+        audio.commit();
+    }
+
+    void resetFlacFile(File flacFile) throws Exception {
+        AudioFile audio = AudioFileIO.read(flacFile);
+        Tag tag = new FlacTag();
+        resetCommonTagFields(tag);
+        audio.setTag(tag);
+        audio.commit();
+    }
+
+    void resetCommonTagFields(Tag tag) throws FieldDataInvalidException {
+        setTagField(FieldKey.TITLE, "", tag);
+        setTagField(FieldKey.ALBUM, "", tag);
+        setTagField(FieldKey.ALBUM_ARTIST, "", tag);
+        setTagField(FieldKey.ARTIST, "", tag);
+        setTagField(FieldKey.GENRE, "", tag);
+        setTagField(FieldKey.COMMENT, "", tag);
+        setTagField(FieldKey.GROUPING, "", tag);
+        setTagField(FieldKey.TRACK, Integer.toString(0), tag);
+        setTagField(FieldKey.DISC_NO, Integer.toString(0), tag);
+        setTagField(FieldKey.YEAR, Integer.toString(0), tag);
+        setTagField(FieldKey.BPM, Integer.toString(0), tag);
+        setTagField(FieldKey.RATING, Integer.toString(0), tag);
+        setTagField(FieldKey.IS_COMPILATION, Boolean.toString(false), tag);
+    }
+
+    void setTagField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
+        tag.setField(fieldKey, value);
+    }
+
+    public void scanMusicFiles(File file) {
+        try {
+            String mediaPath = file.getAbsolutePath();
+            if (isValidSACD(mediaPath)) {
+                if (MusicTagRepository.checkSACDOutdated(mediaPath, file.lastModified())) {
                     MusicTag[] tags = readSACD(mediaPath);
                     if (tags == null) return;
                     for (MusicTag metadata : tags) {
                         String matePath = buildCollectionPath(metadata);
                         metadata.setManaged(StringUtils.equals(matePath, metadata.getPath()));
-                        tagRepos.saveTag(metadata);
+                        MusicTagRepository.saveTag(metadata);
                     }
                 }
-            }else if (isValidJAudioTagger(mediaPath)) {
-                MusicTag tag = tagRepos.getJAudioTaggerOutdated(mediaPath, file.lastModified());
-                if(tag != null ) {
+            } else if (isValidJAudioTagger(mediaPath)) {
+                MusicTag tag = MusicTagRepository.getJAudioTaggerOutdated(mediaPath, file.lastModified());
+                if (tag != null) {
                     MusicTag metadata = readJAudioTagger(tag, mediaPath);
-                    if(metadata != null) {
+                    if (metadata != null) {
                         String matePath = buildCollectionPath(metadata);
                         metadata.setManaged(StringUtils.equals(matePath, metadata.getPath()));
-                        tagRepos.saveTag(metadata);
+                        MusicTagRepository.saveTag(metadata);
                     }
                 }
             }
+        }catch (Exception ex) {
+            Timber.e(ex);
+        }
     }
 
     /*
@@ -539,7 +696,7 @@ public class FileRepository {
                 } else {
                     mList = new MusicTag[1];
                     MusicTag metadata = new MusicTag();
-                    populateFileHeader(metadata, path);
+                    readFileHeader(metadata, path);
                     metadata.setLossless(true);
                     metadata.setCueSheet(false);
                     metadata.setAlbum(album);
@@ -592,7 +749,7 @@ public class FileRepository {
                 metadata.setComment(tag.getComment());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Timber.e(e);
         }
     }
 
@@ -604,21 +761,21 @@ public class FileRepository {
         if(isValidJAudioTagger(path)) {
             File file = new File(path);
             metadata.setLastModified(file.lastModified());
+            metadata.setFileSize(file.length());
+            readFileHeader(metadata, path);
+
             AudioFile audioFile = buildAudioFile(path, "r");
-
             if (audioFile == null) {
-                return null;
+                // cannot read file, return as is
+                return metadata;
             }
-
-            populateFileHeader(metadata, path);
             readJAudioHeader(audioFile, metadata); //16/24/32 bit and 44.1/48/96/192 kHz
 
-            Tag tag = audioFile.getTag(); //TagOrCreateDefault();
+            Tag tag = audioFile.getTag();
             if (tag != null && !tag.isEmpty()) {
-                metadata.setTitle(getId3TagValue(tag, FieldKey.TITLE));
-                if (StringUtils.isEmpty(metadata.getTitle())) {
-                    //default to file name
-                    metadata.setTitle(FileUtils.removeExtension(audioFile.getFile()));
+                String title = getId3TagValue(tag, FieldKey.TITLE);
+                if(!StringUtils.isEmpty(title)) {
+                    metadata.setTitle(title);
                 }
                 metadata.setAlbum(getId3TagValue(tag, FieldKey.ALBUM));
                 metadata.setArtist(getId3TagValue(tag, FieldKey.ARTIST));
@@ -627,28 +784,47 @@ public class FileRepository {
                 metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
-                metadata.setRating(getId3TagIntValue(tag, FieldKey.RATING));
+                metadata.setRating(toInt(getId3TagValue(tag, FieldKey.RATING)));
+                metadata.setBpm(toInt(getId3TagValue(tag, FieldKey.BPM)));
+                metadata.setEncoder(getId3TagValue(tag, FieldKey.ENCODER));
+                metadata.setPartOfCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
+
+              //  if ("wav".equalsIgnoreCase(metadata.getFileExtension()) || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
+                if(MusicTagUtils.isWavFile(metadata)) {
+                    // wave, not support disk no, grouping, media, quality - write to comment
+                    parseWaveCommentTag(metadata, getId3TagValue(tag, FieldKey.COMMENT));
+                } else {
+                    // WAV file not support these fields
+                    metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
+                    metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
+                    metadata.setSourceQuality(getId3TagValue(tag, FieldKey.QUALITY));
+                    metadata.setSource(getId3TagValue(tag, FieldKey.MEDIA));
+                    metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
+                }
 
                 // check MQA Tag
-                detectMQA(metadata);
-                //}
-            }
+               // detectMQA(metadata);
 
-            if (tag instanceof WavTag || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
-                // wave, not support disk no, grouping, media, quality - write to comment
-                readWaveCommentTag(metadata, getId3TagValue(tag, FieldKey.COMMENT));
-            } else {
-                // WAV file not support these fields
-                metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
-                metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
-                metadata.setSourceQuality(getId3TagValue(tag, FieldKey.QUALITY));
-                metadata.setSource(getId3TagValue(tag, FieldKey.MEDIA));
-                metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
             }
 
             return metadata;
         }
         return null;
+    }
+
+    private boolean toBoolean(String val) {
+        if("1".equals(val)) {
+            return true;
+        }else {
+            return "true".equalsIgnoreCase(val);
+        }
+    }
+
+    private int toInt(String val) {
+        if(StringUtils.isDigitOnly(val)) {
+            return Integer.parseInt(val);
+        }
+        return 0;
     }
 
     /*
@@ -691,7 +867,7 @@ public class FileRepository {
     } */
 
     private void detectMQA(MusicTag tag) {
-        if((!Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getAudioEncoding())) || tag.isMqaDeepScan()) return; //prevent re check
+        if((!MusicTagUtils.isFlacFile(tag)) || tag.isMqaDeepScan()) return; //prevent re check
         try {
             NativeLib lib = new NativeLib();
             String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(tag.getPath()));
@@ -713,8 +889,8 @@ public class FileRepository {
     public boolean detectLoudness(MusicTag tag) {
         if(tag.isDSD()) return false; // not support DSD
         String lint = StringUtils.trimToEmpty(tag.getLoudnessIntegrated());
-        if(!("-70.0".equals(lint) || StringUtils.isEmpty(lint))) {
-            return false; // recheck if default value;
+        if(!StringUtils.isEmpty(lint)) {
+            return false; // recheck if al
         }
 
         try {
@@ -778,6 +954,7 @@ public class FileRepository {
         return buff.toString();
     }
 
+    /*
     private int getId3TagIntValue(Tag tag, FieldKey key) {
         if(tag == null) {
             return 0;
@@ -791,9 +968,9 @@ public class FileRepository {
             Timber.e(ex);
         }
         return 0;
-    }
+    } */
 
-    private void readWaveCommentTag(MusicTag mediaTag, String comment) {
+    private void parseWaveCommentTag(MusicTag mediaTag, String comment) {
         comment = StringUtils.trimToEmpty(comment);
 
         /*
@@ -804,12 +981,12 @@ public class FileRepository {
             comment = comment+"#/"+StringUtils.trimToEmpty(pendingMetadata.getComment());
          */
         int start = comment.indexOf("/#");
-        int end = comment.indexOf("/#");
-        if(start >0 && end >0 && end > start) {
+        int end = comment.indexOf("#/");
+        if(start >= 0 && end > start) {
             // found metadata comment
             String metadata = comment.substring(start+2, end);
-            if(comment.length()>end) {
-                comment = comment.substring(end);
+            if(comment.length()>(end+2)) {
+                comment = comment.substring(end+2);
             }else {
                 comment = "";
             }
@@ -817,13 +994,16 @@ public class FileRepository {
             if(text.length >=1) {
                 // Source
                 mediaTag.setSource(StringUtils.trimToEmpty(text[0]));
-            } else if(text.length >=2) {
+            }
+            if(text.length >=2) {
                 // Disc
                 mediaTag.setDisc(StringUtils.trimToEmpty(text[1]));
-            }else if(text.length >=3) {
+            }
+            if(text.length >=3) {
                 // Grouping
                 mediaTag.setGrouping(StringUtils.trimToEmpty(text[2]));
-            }else if(text.length >=4) {
+            }
+            if(text.length >=4) {
                 // Audiophile
                 mediaTag.setSourceQuality(StringUtils.trimToEmpty(text[3]));
             }
@@ -840,9 +1020,16 @@ public class FileRepository {
             int bitPerSample = header.getBitsPerSample(); //16/24/32
             long bitRate = header.getBitRateAsNumber(); //128/256/320
             metadata.setLossless(header.isLossless());
-            metadata.setFileSize(read.getFile().length());
-            int ch = 2;
+            //metadata.setFileSize(read.getFile().length());
             metadata.setAudioEncoding(detectAudioEncoding(read,header.isLossless()));
+            if (header instanceof MP3AudioHeader) {
+                metadata.setAudioDuration(header.getPreciseTrackLength());
+            } else if (header instanceof Mp4AudioHeader) {
+                metadata.setAudioDuration(header.getPreciseTrackLength());
+            } else {
+                metadata.setAudioDuration(header.getTrackLength());
+            }
+            /*
             if(header.getTrackLength()>0) {
                 int length = header.getTrackLength();
                 metadata.setAudioDuration(length);
@@ -851,11 +1038,14 @@ public class FileRepository {
                 //duration = filesize in bytes / (samplerate * #of channels * (bitspersample / 8 ))
                 long duration = metadata.getFileSize() / (sampleRate+ch) * (bitPerSample);
                 metadata.setAudioDuration(duration);
-            }
+            } */
             metadata.setAudioBitRate(bitRate);
             metadata.setAudioBitsPerSample(bitPerSample);
             metadata.setAudioSampleRate(sampleRate);
             metadata.setAudioChannels(header.getChannels());
+            if (header.getChannels().toLowerCase().contains("stereo")) {
+                metadata.setAudioChannels("2");
+            }
         }catch (Exception ex) {
             Timber.e(ex);
         }
@@ -912,9 +1102,9 @@ public class FileRepository {
             if (metadata.isSACDISO()) {
                 //encSuffix="-MQA";
                 filename.append(Constants.MEDIA_PATH_SACD);
-            }else if (metadata.isMQA()) {
+           // }else if (metadata.isMQA()) {
                 //encSuffix="-MQA";
-                filename.append(Constants.MEDIA_PATH_MQA);
+            //    filename.append(Constants.MEDIA_PATH_MQA);
             }else if (MusicTagUtils.isPCMHiRes(metadata)) {
                 //encSuffix="-HRA";
                 filename.append(Constants.MEDIA_PATH_HRA);
@@ -1043,8 +1233,11 @@ public class FileRepository {
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
+        }else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getSourceQuality())) {
+            // Audiophile
+            return STORAGE_PRIMARY;
        // }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
-        }else if(metadata.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsPerSample() > 16) {
+        }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsPerSample() > 16) {
             // Lossless Hi-Res
             return STORAGE_PRIMARY;
         }
@@ -1090,7 +1283,8 @@ public class FileRepository {
             File file = new File(item.getPath());
 
             AudioFile audioFile = buildAudioFile(file.getAbsolutePath(),"rw");
-            Tag tag = audioFile.getTagOrCreateAndSetDefault();
+            assert audioFile != null;
+            Tag tag = audioFile.getTagOrCreateDefault();
             if (tag != null) {
                 tag.deleteArtworkField();
                 tag.addField(artwork);
@@ -1107,18 +1301,18 @@ public class FileRepository {
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 return true;
             }
-            if (fileRepos.moveFile(tag.getPath(), newPath)) {
+            if (FileSystem.moveFile(getContext(), tag.getPath(), newPath)) {
                 copyRelatedFiles(tag, newPath);
 
                 File file = new File(tag.getPath());
                 cleanMediaDirectory(file.getParentFile());
-                tag.setObsoletePath(tag.getPath());
+               // tag.setObsoletePath(tag.getPath());
                 tag.setPath(newPath);
                 tag.setManaged(true);
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
                 tag.setLastModified(file.lastModified());
-                tagRepos.saveTag(tag);
+                MusicTagRepository.saveTag(tag);
                 return true;
             }
         return false;
@@ -1152,12 +1346,12 @@ public class FileRepository {
                 // directory is empty or no others media files
                 if(toDelete.size()>0) {
                     for (File file: toDelete) {
-                        fileRepos.delete(file);
+                        FileSystem.delete(getContext(), file);
                     }
                 }
                 // trying delete parent folder
                 File parentFolder = mediaDir.getParentFile();
-                fileRepos.delete(mediaDir);
+                FileSystem.delete(getContext(), mediaDir);
                 cleanMediaDirectory(parentFolder);
             }
        // }
@@ -1170,12 +1364,12 @@ public class FileRepository {
         File newFile = new File(newPath);
         File newDir = newFile.getParentFile();
 
-        File [] files = oldDir.listFiles();
+        assert oldDir != null;
+        File [] files = oldDir.listFiles(file -> Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(file).toLowerCase()));
+        assert files != null;
         for(File f : files) {
-            if(Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(f).toLowerCase())) {
-                File newRelated = new File(newDir, f.getName());
-                fileRepos.copyFile(f, newRelated);
-            }
+            File newRelated = new File(newDir, f.getName());
+            FileSystem.copyFile(getContext(), f, newRelated);
         }
     }
 
@@ -1198,7 +1392,7 @@ public class FileRepository {
             BroadcastHelper.playNextSongOnMatched(getContext(), item);
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
-                tagRepos.removeTag(item);
+                MusicTagRepository.removeTag(item);
                 File file = new File(item.getPath());
                 cleanMediaDirectory(file.getParentFile());
             }
@@ -1208,7 +1402,7 @@ public class FileRepository {
 		return status;
     }
 
-    public boolean saveAudioFile(MusicTag item, String artworkPath) {
+    public boolean setMusicTag(MusicTag item, String artworkPath) {
         boolean status;
         try {
             Artwork artwork = null;
@@ -1222,7 +1416,7 @@ public class FileRepository {
                     }
                 }
             }
-            saveMusicTag(item);
+            setMusicTag(item);
             saveMediaArtwork(item, artwork);
             status = true;
         }catch (Exception|OutOfMemoryError ex) {
@@ -1232,48 +1426,52 @@ public class FileRepository {
         return status;
     }
 
-    private void populateFileHeader(MusicTag metadata, String mediaPath) {
+    private void readFileHeader(MusicTag metadata, String mediaPath) {
         metadata.setPath(mediaPath);
         metadata.setTitle(FileUtils.getFileName(mediaPath));
         metadata.setFileExtension(FileUtils.getExtension(mediaPath).toUpperCase());
+        metadata.setAudioEncoding(metadata.getFileExtension());
         metadata.setSimpleName(DocumentFileCompat.getBasePath(getContext(), mediaPath));
         metadata.setStorageId(DocumentFileCompat.getStorageId(getContext(), mediaPath));
     }
 
-    /*
+/*
     public void readAudioTagFromFile(MusicTag tag) {
         // re-load from file
-        if(!isValidJAudioTagger(tag.getPath())) {
+        if(isValidJAudioTagger(tag.getPath())) {
             // ISO SACD is read only, no need to re load
             long id = tag.getId();
-            MusicTag newTag = readJAudioTagger(tag.getPath());
+            MusicTag newTag = readJAudioTagger(tag, tag.getPath());
             tag.cloneFrom(newTag);
             tag.setId(id);
         }
-    }*/
+    } */
 
-    public void saveJAudioTagger(String targetPath, MusicTag tag) {
+    public void setJAudioTagger(String targetPath, MusicTag tag) {
         if (targetPath == null || tag == null) {
             return;
         }
 
-        File file = new File(targetPath);
+       // File file = new File(targetPath);
 
-        setupTagOptionsForWriting();
-        AudioFile audioFile = buildAudioFile(file.getAbsolutePath(),"rw");
+       // setupTagOptionsForWriting();
+       // AudioFile audioFile = buildAudioFile(file.getAbsolutePath(),"rw");
 
         // save default tags
-        Tag existingTags = audioFile.getTagOrCreateAndSetDefault();
-        writeJAudioTagger(audioFile, existingTags, tag);
+        //Tag existingTags = audioFile.getTagOrCreateAndSetDefault();
+        MusicTag newTag = tag.clone();
+        newTag.setPath(targetPath);
+        setJAudioTagger(tag);
     }
 
     public void deepScanMediaItem(MusicTag tag) {
         if(tag.isDSD() || tag.isSACDISO()) return;
         // not support DSD and SACD ISO
 
-        tag = tagRepos.getAudioTagById(tag); // re-read tag from db
+        tag = MusicTagRepository.getAudioTagById(tag); // re-read tag from db
         if(detectLoudness(tag)) {
-            tagRepos.saveTag(tag);
+            detectMQA(tag);
+            MusicTagRepository.saveTag(tag);
         }
     }
 }

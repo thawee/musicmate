@@ -25,9 +25,9 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
-    private final MusicTagRepository tagRepos;
+  //  private final MusicTagRepository tagRepos;
     private SearchCriteria criteria;
-    private long totalDuration = 0;
+    private double totalDuration = 0;
     private long totalSize = 0;
     private final View.OnClickListener clickListener;
     private final View.OnLongClickListener longClickListener;
@@ -37,7 +37,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     public static volatile boolean loading  = false;
 
     public MusicTagController(View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
-        tagRepos = MusicTagRepository.getInstance();
+        //tagRepos = MusicTagRepository.getInstance();
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
         selections = new ArrayList<>();
@@ -138,7 +138,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             this.criteria = criteria;
 
             SearchCriteria finalCriteria = criteria;
-            Observable<List> observable = Observable.fromCallable(() -> tagRepos.findMediaTag(finalCriteria));
+            Observable<List> observable = Observable.fromCallable(() ->  MusicTagRepository.findMediaTag(finalCriteria));
             observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List>() {
                 @Override
                 public void onSubscribe(Disposable d) {
@@ -172,6 +172,8 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                     return Constants.TITLE_INCOMING_SONGS;
                 }else if(Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                     return Constants.TITLE_DUPLICATE;
+                }else if(Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
+                    return Constants.TITLE_BROKEN;
                 }else {
                     return Constants.TITLE_ALL_SONGS;
                 }
@@ -232,7 +234,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
         return Constants.TITLE_ALL_SONGS;
     }
 
-    public long getTotalDuration() {
+    public double getTotalDuration() {
         return totalDuration;
     }
 
@@ -325,7 +327,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             if (position != RecyclerView.NO_POSITION) {
                 MusicTagModel_ md = (MusicTagModel_) getAdapter().getModelAtPosition(position);
                 if (md != null) {
-                    tagRepos.populateAudioTag(md.tag());
+                    MusicTagRepository.populateAudioTag(md.tag());
                 }
                 notifyModelChanged(position);
             }
@@ -356,6 +358,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
+            titles.add(Constants.TITLE_BROKEN);
        /* }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_PCM_MQA.equals(criteria.getKeyword())) {
             titles.add(Constants.TITLE_MQA_AUDIO);*/
@@ -363,19 +366,20 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                 Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
             titles.add(Constants.TITLE_DSD_AUDIO);
         }else if(criteria.getType() == SearchCriteria.TYPE.RECORDINGS_QUALITY) {
-            titles.add(Constants.QUALITY_NORMAL);
-            titles.add(Constants.QUALITY_RECOMMENDED);
             titles.add(Constants.QUALITY_AUDIOPHILE);
-        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {// &&
+            titles.add(Constants.QUALITY_RECOMMENDED);
+            titles.add(Constants.QUALITY_NORMAL);
+            titles.add(Constants.QUALITY_POOR);
+        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {
             titles.add(Constants.TITLE_HI_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
             titles.add(Constants.AUDIO_SQ_PCM_MQA);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-            List<String> tabs = tagRepos.getGroupingList(context);
+            List<String> tabs = MusicTagRepository.getGroupingList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = tagRepos.getGenreList(context);
+            List<String> tabs = MusicTagRepository.getGenreList(context);
             titles.addAll(tabs);
         }else {
             titles.add(getHeaderTitle());

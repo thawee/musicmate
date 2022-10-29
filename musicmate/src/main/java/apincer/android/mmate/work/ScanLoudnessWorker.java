@@ -1,5 +1,11 @@
 package apincer.android.mmate.work;
 
+import static de.esoco.coroutine.Coroutine.first;
+import static de.esoco.coroutine.CoroutineScope.launch;
+import static de.esoco.coroutine.step.CodeExecution.consume;
+import static de.esoco.coroutine.step.CodeExecution.supply;
+import static de.esoco.coroutine.step.Iteration.forEach;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -17,13 +23,13 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
+import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
 public class ScanLoudnessWorker extends Worker {
@@ -41,32 +47,51 @@ public class ScanLoudnessWorker extends Worker {
     @Override
     public Result doWork() {
         Data inputData = getInputData();
-        if(inputData!=null && inputData.getString(Constants.KEY_MEDIA_TAG)!=null) {
-             String s = inputData.getString(Constants.KEY_MEDIA_TAG);
-             Gson gson = new Gson();
-             Type audioTagType = new TypeToken<MusicTag>(){}.getType();
-              MusicTag tag = gson.fromJson(s, audioTagType);
-              //MusicMateExecutors.main(() -> {
-                  try {
-                        repos.deepScanMediaItem(tag);
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
-                        EventBus.getDefault().postSticky(message);
+        MusicTag tag;
+        if (inputData.getString(Constants.KEY_MEDIA_TAG) != null) {
+            String s = inputData.getString(Constants.KEY_MEDIA_TAG);
+            Gson gson = new Gson();
+            Type audioTagType = new TypeToken<MusicTag>() {}.getType();
+            tag = gson.fromJson(s, audioTagType);
+            try {
+                scan(tag);
+                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                EventBus.getDefault().postSticky(message);
 
-                  } catch (Exception e) {
-                      Timber.e(e);
-                  }
-             // });
-        }else {
-            MusicTagRepository repos = MusicTagRepository.getInstance();
+            } catch (Exception e) {
+                Timber.e(e);
+            }
+        } else {
+          /*  MusicTagRepository repos = MusicTagRepository.getInstance();
             List<MusicTag> tags = repos.getAudioTagWithoutLoudness();
             for (MusicTag tag : tags) {
-                MusicMateExecutors.single(new ScanRunnable(tag));
-            }
+                MusicMateExecutors.loudness(new ScanRunnable(tag));
+            } */
+           // int COROUTINE_COUNT = 1;
+
+            Coroutine<?, ?> cIterating =
+                    first(supply(this::list)).then(
+                            forEach( consume (this::scan)));
+
+            launch(
+                    scope ->
+                    {
+                       // for (int i = 0; i < COROUTINE_COUNT; i++) {
+                            cIterating.runBlocking(scope, null);
+                       // }
+                    });
         }
 
         return Result.success();
     }
 
+    private void scan(MusicTag tag) {
+        repos.deepScanMediaItem(tag);
+    }
+
+    private List<MusicTag> list() {
+        return MusicTagRepository.getAudioTagWithoutLoudness();
+    }
 
     public static void startScan(Context context, MusicTag tag) {
         Gson gson = new Gson();
@@ -76,7 +101,7 @@ public class ScanLoudnessWorker extends Worker {
                 .putString(Constants.KEY_MEDIA_TAG, s)
                 .build();
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
-                    .setInitialDelay(4, TimeUnit.SECONDS)
+                   // .setInitialDelay(4, TimeUnit.SECONDS)
                 .setInputData(inputData)
                     .build();
         WorkManager instance = WorkManager.getInstance(context);
@@ -92,7 +117,6 @@ public class ScanLoudnessWorker extends Worker {
         @Override
         public void run() {
             try {
-               // if(ScanLoudnessWorker.this.)
                 repos.deepScanMediaItem(tag);
             } catch (Exception e) {
                 Timber.e(e);

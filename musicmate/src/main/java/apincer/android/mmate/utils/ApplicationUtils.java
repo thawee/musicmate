@@ -29,13 +29,6 @@ public class ApplicationUtils {
     public static void startAspect(Activity activity, MusicTag tag) {
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("com.andrewkhandr.aspect");
         if (intent != null) {
-          /*  ApplicationInfo ai = null;
-            try {
-                ai =  activity.getPackageManager().getApplicationInfo("com.andrewkhandr.aspect",0);  //MusicListeningService.getInstance().getApplicationInfo("com.andrewkhandr.aspect");
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-            if (ai != null) { */
                 intent.setAction(Intent.ACTION_SEND);
                 MimeTypeMap mime = MimeTypeMap.getSingleton();
 
@@ -46,7 +39,7 @@ public class ApplicationUtils {
                 intent.setDataAndType(apkURI, type);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 activity.startActivity(intent);
-            //}
+
         }
     }
 
@@ -129,7 +122,6 @@ public class ApplicationUtils {
     }
 
     public static void startFileExplorer(TagsActivity activity, MusicTag displayTag) {
-
         File filePath = new File(displayTag.getPath());
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("pl.solidexplorer2");
         if (intent != null) {
@@ -143,8 +135,6 @@ public class ApplicationUtils {
                 intent.setDataAndType(apkURI, type);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 activity.startActivity(intent);
-                //return;
-           // }
         } else {
                 intent = new Intent();
                 MimeTypeMap mime = MimeTypeMap.getSingleton();

@@ -25,21 +25,16 @@ import timber.log.Timber;
 
 public class FileSystem {
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-    private final Context mContext;
+   // private final Context mContext;
 
-    public FileSystem(Context context) {
+    FileSystem() {
         super();
-        this.mContext = context;
-    }
-
-    private Context getContext() {
-        return mContext;
     }
 
     /*
      * file manipulations
      */
-    public boolean copyFile(final File source, final File target) {
+    public static boolean copyFile(Context context, final File source, final File target) {
         FileInputStream inStream = null;
         OutputStream outStream = null;
         FileChannel inChannel = null;
@@ -59,8 +54,8 @@ public class FileSystem {
                 Timber.d("Trying copy by documentfile");
            // } else {
                 // Storage Access Framework
-                DocumentFile targetDoc = DocumentFileCompat.fromFile(getContext(), target);
-                outStream = DocumentFileUtils.openOutputStream(targetDoc, getContext());
+                DocumentFile targetDoc = DocumentFileCompat.fromFile(context, target);
+                outStream = DocumentFileUtils.openOutputStream(targetDoc, context);
                 if (outStream != null) {
                     // Both for SAF and for Kitkat, write to output stream.
                     byte[] buffer = new byte[DEFAULT_BUFFER_SIZE]; // MAGIC_NUMBER
@@ -88,19 +83,12 @@ public class FileSystem {
     Fastest copy methods
      */
     public static void copy(File source, File dest) throws IOException {
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = new FileInputStream(source);
-            os = new FileOutputStream(dest);
+        try (InputStream is = new FileInputStream(source); OutputStream os = new FileOutputStream(dest)) {
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int length;
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
             }
-        } finally {
-            is.close();
-            os.close();
         }
     }
 
@@ -170,17 +158,8 @@ public class FileSystem {
         }
         finally {
             // Ensure that the InputStreams are closed even if there's an exception.
-            try {
-                if ( out != null ) {
-                    out.close();
-                }
-
-                // If you want to close the "in" InputStream yourself then remove this
-                // from here but ensure that you close it yourself eventually.
-                in.close();
-            }
-            catch ( IOException e ) {
-            }
+            closeSilently(out);
+            closeSilently(in);
         }
     }
 
@@ -202,7 +181,7 @@ public class FileSystem {
         return copyFile(file, newFile);
     } */
 
-    public boolean moveFile(String path, String newPath) {
+    public static boolean moveFile(Context context, String path, String newPath) {
         boolean success = false;
         File newFile = new File(newPath);
         File file = new File(path);
@@ -211,17 +190,18 @@ public class FileSystem {
 
         // create new directory if not existed
         File newDir  = newFile.getParentFile();
+        assert newDir != null;
         if(!newDir.exists()) {
             // create new directory
-            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(getContext(), newDir.getAbsolutePath());
+            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
             //mkdirs(newDir);
         }
 
-        if(copyFile(file, newFile)) {
-            success = delete(file);
+        if(copyFile(context, file, newFile)) {
+            success = delete(context,file);
         }else {
             // remove new file
-            delete(newFile);
+            delete(context,newFile);
         }
         return success;
     }
@@ -232,7 +212,7 @@ public class FileSystem {
      * @param file the file to be deleted.
      * @return True if successfully deleted.
      */
-    public boolean delete(final File file) {
+    public static boolean delete(Context context, final File file) {
         if (!file.exists()) {
             Timber.i("cannot delete path %s", file.getAbsolutePath());
             return false;
@@ -246,8 +226,8 @@ public class FileSystem {
 
         // Try with Storage Access Framework.
         Timber.i( "start deleting DocumentFile");
-        DocumentFile docFile = DocumentFileCompat.fromFile(getContext(), file);
-        return DocumentFileUtils.forceDelete(docFile,getContext());
+        DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
+        return DocumentFileUtils.forceDelete(docFile,context);
     }
 
 

@@ -169,6 +169,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         // file type
         holder.mFileTypeView.setText(tag.getAudioEncoding());
         holder.mFileTypeView.setBackground(resolutionBackground);
+        holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
@@ -202,6 +203,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         TextView mFileSizeView;
         ImageView mCoverArtView;
         ImageView mFileSourceView;
+        ImageView mFileBrokenView;
        // ImageView mFileTypeView;
         TextView mFileTypeView;
         Context mContext;
@@ -231,6 +233,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             // this.mAudioQualityView = view.findViewById(R.id.item_sq_icon);
             this.mAudioHiResView = view.findViewById(R.id.item_hires_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
+            this.mFileBrokenView = view.findViewById(R.id.item_broken_file_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
            // this.mNotificationView = view.findViewById(R.id.item_notification);

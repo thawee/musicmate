@@ -14,6 +14,7 @@ import java.util.List;
 public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
+    public static final String QUALITY_POOR = "Poor";
     public static final String QUALITY_NORMAL = "Regular";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
@@ -29,6 +30,9 @@ public final class Constants {
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
+    public static final String MEDIA_EXT_WAVE = "wav";
+    public static final String MEDIA_EXT_FLAC = "flac";
+    public static final int MIN_FILE_SIZE_RATIO = 42;
     public static String FIELD_SEP = ";";
   // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;
@@ -99,7 +103,8 @@ public final class Constants {
     public static final String AUDIO_SQ_PCM = "PCM";
 
     //public static final String TITLE_RECORDING_QUALITY = "Recording Quality";
-    public static final String TITLE_DUPLICATE = "Duplicate Songs";
+    public static final String TITLE_DUPLICATE = "Duplicate";
+    public static final String TITLE_BROKEN = "Broken";
     //public static final String TITLE_AUDIOPHILE = "Audiophile";
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";

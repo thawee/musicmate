@@ -200,7 +200,7 @@ public class TagsActivity extends AppCompatActivity {
         }
     } */
 
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    @Subscribe(threadMode = ThreadMode.ASYNC,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
         // call from EventBus
         try {
@@ -208,9 +208,10 @@ public class TagsActivity extends AppCompatActivity {
             editItems.clear();
             editItems.addAll(event.getItems());
             displayTag = buildDisplayTag();
-
-            updateTitlePanel();
-            setUpPageViewer();
+            runOnUiThread(() -> {
+                updateTitlePanel();
+                setUpPageViewer();
+            });
         }catch (Exception e) {
             Timber.e(e);
         }
@@ -550,6 +551,13 @@ public class TagsActivity extends AppCompatActivity {
     protected MusicTag buildDisplayTag() {
         MusicTag displayTag = editItems.get(0);
         if(editItems.size()==1) {
+           // repos.readAudioTagFromFile(displayTag);
+           // audio file size = bit rate * duration of audio in seconds * number of channels
+            //bit rate = bit depth * sample rate
+           // long calSize = MusicTagUtils.calculateFileSize(displayTag);
+           // long size = displayTag.getFileSize();
+          //s  boolean valid = MusicTagUtils.isFileSizeValid(displayTag);
+
             return displayTag.clone();
         }
 

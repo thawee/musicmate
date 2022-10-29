@@ -4,14 +4,6 @@
 #include "mqa_identifier.h"
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_apincer_android_mqaidentifier_NativeLib_stringFromJNI(
-        JNIEnv* env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
-};
-
-extern "C" JNIEXPORT jstring JNICALL
 Java_apincer_android_mqaidentifier_NativeLib_getMQAInfo(
         JNIEnv* env,
         jobject, /* this */

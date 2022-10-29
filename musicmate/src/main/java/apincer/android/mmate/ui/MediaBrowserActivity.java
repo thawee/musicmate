@@ -105,6 +105,7 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.MusicMateExecutors;
+import apincer.android.mmate.work.ScanLoudnessWorker;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -232,6 +233,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .target(new Target() {
                     @Override
                     public void onStart(@Nullable Drawable drawable) {
+                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_broken_image_black_24dp));
                     }
 
                     @Override
@@ -242,14 +244,18 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     public void onSuccess(@NonNull Drawable drawable) {
                         try {
                             nowPlayingCoverArt.setImageDrawable(drawable);
-                            Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
-                            Palette palette = Palette.from(bmp).generate();
-                            int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
-                            int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
-                            nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
-                            nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor,80)));
-                            nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor,80)));
-                        }catch (Exception ex) {
+                            MusicMateExecutors.main(() -> {
+                                Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
+                                Palette palette = Palette.from(bmp).generate();
+                                int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
+                                int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
+                                runOnUiThread(() -> {
+                                    nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
+                                    nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor,80)));
+                                    nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor,80)));
+                                });
+                            });
+                            }catch (Exception ex) {
                             Timber.e(ex);
                         }
                     }
@@ -266,8 +272,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .build();
         imageLoader.enqueue(request);
         nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
-            AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device)));
 
+        MusicMateExecutors.main(() -> {
+            AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device)));
             runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
                     .scaleX(1f).scaleY(1f)
                     .alpha(1f).setDuration(250)
@@ -280,6 +287,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         }
                     })
                     .start());
+        });
     }
 	
 	private void doHideNowPlayingSongFAB() {
@@ -666,7 +674,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         LocalBroadcastManager.getInstance(this).unregisterReceiver(operationReceiver);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    @Subscribe(threadMode = ThreadMode.ASYNC,sticky = true)
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
@@ -744,11 +752,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getInstance().getDefaultGroupingList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getDefaultGroupingList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getInstance().getGenreList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getGenreList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_settings) {
             Intent myIntent = new Intent(MediaBrowserActivity.this, SettingsActivity.class);
@@ -1007,8 +1015,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     MusicTag tag = broadcastData.getTagInfo();
                     onPlaying(tag);
-                    //ScanLoudnessWorker.startScan(getApplicationContext(), tag);
-                    MusicMateExecutors.scan(() -> {
+                    ScanLoudnessWorker.startScan(getApplicationContext(), tag);
+                   /* MusicMateExecutors.scan(() -> {
                         try {
                             repos.deepScanMediaItem(tag);
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
@@ -1016,7 +1024,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                         } catch (Exception e) {
                             Timber.e(e);
                         }
-                    });
+                    }); */
                 }
             }
         }
@@ -1268,6 +1276,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
             for(MusicTag tag: selections) {
                 if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
+                    if(tag.isDSD()) {
+                        // convert from dsf to 24 bits, 48 kHz
+                        // use lowpass filter to eliminate distortion in the upper frequencies.
+                        options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
+                    }
+
                     String srcPath = tag.getPath();
                     String filePath = FileUtils.removeExtension(tag.getPath());
                     String targetPath = filePath+"."+targetExt; //+".flac";
@@ -1275,8 +1289,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
                     FFmpegKit.executeAsync(cmd, session -> {
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
-                            repos.saveJAudioTagger(targetPath, tag);
-                            repos.scanFileAndSaveTag(new File(targetPath));
+                            repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
+                            repos.scanMusicFiles(new File(targetPath)); // re scan file
                         }else {
                             String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
                             Timber.d(msg);

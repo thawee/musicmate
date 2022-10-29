@@ -302,8 +302,6 @@ public class AudioOutputHelper {
 
         int rate = intArrayLastIndex(device.getSampleRates());
         outputDevice.setSamplingRate(rate);
-        //String bitString = StringUtils.getFormatedBitsPerSample(bps);
-        //String samplingString = StringUtils.getFormatedAudioSampleRate(rate, true);
         outputDevice.setDescription(desc);
     }
 
@@ -311,13 +309,11 @@ public class AudioOutputHelper {
         int width = 128;  // 16x21, 24x32
         int height = 96;
 
-        //int greyColor = context.getColor(R.color.grey200);
         int darkGreyColor = context.getColor(R.color.grey900);
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         String codec = dev.getCodec();
         String rate =  dev.getBitPerSampling()+"/"+StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),false);
-        //String rate =  StringUtils.getFormatedAudioSampleRateAbvUnit(dev.getSamplingRate());
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 2;
@@ -367,7 +363,7 @@ public class AudioOutputHelper {
                 myCanvas.getWidth() - padding, // Right
                 (myCanvas.getHeight()/2) - 2 // Bottom
         );
-        // int borderWidth = 2;
+
         Paint paint =  new Paint();
         paint.setAntiAlias(true);
         paint.setColor(whiteColor);
@@ -390,7 +386,7 @@ public class AudioOutputHelper {
         float mLetterTop = textMathRect.height() / 10f;
         float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/4);
         myCanvas.drawText(codec,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                bounds.exactCenterX(), mLetterTop + mPositionY,
                 mLetterPaint);
 
         // draw sampling rate, white
@@ -406,7 +402,7 @@ public class AudioOutputHelper {
         mLetterTop = mLetterTop +(textMathRect.height() / 2f);
         mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
         myCanvas.drawText(rate,
-                bounds.exactCenterX(), mLetterTop + mPositionY, //bounds.exactCenterY(),
+                bounds.exactCenterX(), mLetterTop + mPositionY,
                 mLetterPaint);
 
         return myBitmap;
@@ -431,7 +427,6 @@ public class AudioOutputHelper {
     }
 
     public static void getA2DP(Context context, Device device, Callback callback, String desc) {
-        //BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
@@ -493,10 +488,8 @@ public class AudioOutputHelper {
                 device1.setBitPerSampling(24);
             }
             device1.setSamplingRate(StringUtils.toLong(sampleRate));
-           // device1.setDescription(getDescription(bitsPerSample, sampleRate));
             device1.setDescription(desc);
 
-        //    codec = codecName+"("+bitsPerSample+"-"+sampleRate+")"; //object.toString();
         } catch(Exception ex) {
             Timber.e(ex);
         }

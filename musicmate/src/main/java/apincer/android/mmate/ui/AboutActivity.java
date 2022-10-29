@@ -79,7 +79,7 @@ public class AboutActivity extends AppCompatActivity {
             TextView version = v.findViewById(R.id.app_version);
             version.setText(BuildConfig.VERSION_NAME);
 
-            List<MusicTag> tags = MusicTagRepository.getInstance().getAllMusics();
+            List<MusicTag> tags = MusicTagRepository.getAllMusics();
 
             Map<String, Integer> encList = new HashMap<>();
             Map<String, Long> estimatedSize = new HashMap<>();
@@ -145,7 +145,7 @@ public class AboutActivity extends AppCompatActivity {
 
             chart.setRotationAngle(0);
             // disable rotation of the chart by touch
-            chart.setRotationEnabled(false);
+            chart.setRotationEnabled(true);
             chart.setHighlightPerTapEnabled(false);
 
             Legend l = chart.getLegend();
@@ -182,7 +182,7 @@ public class AboutActivity extends AppCompatActivity {
             mappedColors.put("Lossless", ColorTemplate.rgb("#bc5090"));
             mappedColors.put("High Quality", ColorTemplate.rgb("#ff6361")); */
 
-            mappedColors.put("DSD", ColorTemplate.rgb("#f48558"));
+            mappedColors.put("DSD", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
             mappedColors.put("MQA", ColorTemplate.rgb("#a8aa41"));
             mappedColors.put("Hi-Res Lossless", ColorTemplate.rgb("#488f31"));
             mappedColors.put("Lossless", ColorTemplate.rgb("#dcb85a"));
@@ -204,13 +204,12 @@ public class AboutActivity extends AppCompatActivity {
 
             dataSet.setDrawIcons(false);
             dataSet.setSliceSpace(2f); //space between each slice
-            dataSet.setValueLineColor(Color.GRAY);
-           // dataSet.setIconsOffset(new MPPointF(0, 40));
+            dataSet.setValueLineColor(Color.WHITE);
             dataSet.setSelectionShift(2f);
             //setting position of the value
             dataSet.setYValuePosition(PieDataSet.ValuePosition.INSIDE_SLICE); // display value outside with pointing line
             dataSet.setUsingSliceColorAsValueLineColor(true);
-            dataSet.setAutomaticallyDisableSliceSpacing(false);
+            dataSet.setAutomaticallyDisableSliceSpacing(true);
 
             dataSet.setColors(colors);
 

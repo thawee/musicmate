@@ -1,5 +1,11 @@
 package apincer.android.mmate.work;
 
+import static de.esoco.coroutine.Coroutine.first;
+import static de.esoco.coroutine.CoroutineScope.launch;
+import static de.esoco.coroutine.step.CodeExecution.consume;
+import static de.esoco.coroutine.step.CodeExecution.supply;
+import static de.esoco.coroutine.step.Iteration.forEach;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -8,13 +14,14 @@ import androidx.work.WorkerParameters;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 
-import org.jaudiotagger.audio.generic.Utils;
-
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTagRepository;
+import de.esoco.coroutine.Continuation;
+import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
 public class ScanAudioFileWorker extends Worker {
@@ -29,31 +36,111 @@ public class ScanAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        /*
         List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
+        List<File> files = new ArrayList<>();
         for (String sid : storageIds) {
             File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
-            if(file.exists()) {
-                MusicMateExecutors.scan(new ScanRunnable(file));
+            if (file.exists()) {
+               // MusicMateExecutors.scan(new ScanRunnable(file));
+                files.add(file);
             }
             file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Download"));
-            if(file.exists()) {
-                //ScanRunnable r = new ScanRunnable(file);
-                //mExecutor.execute(r);
-                MusicMateExecutors.scan(new ScanRunnable(file));
+            if (file.exists()) {
+               // MusicMateExecutors.scan(new ScanRunnable(file));
+                files.add(file);
             }
             file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
+            if (file.exists()) {
+               // MusicMateExecutors.scan(new ScanRunnable(file));
+                files.add(file);
+            }
+        } */
+            // for call recordings
+            /*
+            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Call"));
             if(file.exists()) {
-                //ScanRunnable r = new ScanRunnable(file);
-                //mExecutor.execute(r);
                 MusicMateExecutors.scan(new ScanRunnable(file));
             }
-        }
-        MusicTagRepository.cleanMusicMate();
+            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Recordings"));
+            if(file.exists()) {
+                MusicMateExecutors.scan(new ScanRunnable(file));
+            }*/
+       // int COROUTINE_COUNT = 10;
+
+        Coroutine<?, ?> cIterating =
+                first(supply(this::list)).then(
+                        forEach(consume(this::scanDir)));
+
+        launch(
+                scope ->
+                {
+                   // for (int i = 0; i < COROUTINE_COUNT; i++)
+                   // {
+                        cIterating.runAsync(scope, null);
+                   // }
+                });
+
+        // schedule scan
+        /*
+        WorkManager instance = WorkManager.getInstance(getApplicationContext());
+        instance.pruneWork();
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .build();
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
+                .setInitialDelay(10, TimeUnit.MINUTES)
+                .setConstraints(constraints)
+                .build();
+        instance.enqueue(workRequest); */
 
         return Result.success();
     }
 
+    private void scanMQA(MusicTag tag) {
+    }
 
+    private List<File> list() {
+        List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
+        List<File> files = new ArrayList<>();
+        for (String sid : storageIds) {
+            File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
+            if (file.exists()) {
+                // MusicMateExecutors.scan(new ScanRunnable(file));
+                files.add(file);
+            }
+            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Download"));
+            if (file.exists()) {
+                // MusicMateExecutors.scan(new ScanRunnable(file));
+                files.add(file);
+            }
+            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
+            if (file.exists()) {
+                // MusicMateExecutors.scan(new ScanRunnable(file));
+                files.add(file);
+            }
+        }
+        return files;
+    }
+
+    private void scanDir(File file) {
+        try {
+            File[] files = file.listFiles();
+            if(files == null) return;
+            for (File f : files) {
+                if(!f.exists()) continue;
+                if(f.isDirectory()) {
+                    scanDir(f);
+                }else {
+                    repos.scanMusicFiles(f);
+                }
+            }
+        } catch (Exception e) {
+            Timber.e(e);
+        }
+    }
+
+    /*
     private boolean isValidMediaFile(File file) {
         if(!file.exists()) return false;
 
@@ -75,7 +162,7 @@ public class ScanAudioFileWorker extends Worker {
         }else if(ext.equalsIgnoreCase("dff")) {
             return true;
         }else return ext.equalsIgnoreCase("iso");
-    }
+    } */
 
     private final class ScanRunnable  implements Runnable {
         private final File dir;
@@ -86,18 +173,15 @@ public class ScanAudioFileWorker extends Worker {
         @Override
         public void run() {
             try {
-                //Timber.i("scanning"+ dir+":"+ new Date());
                 File[] files = dir.listFiles();
                 if(files == null) return;
 
                 for (File f : files) {
                     if(!f.exists()) continue;
-                    if(isValidMediaFile(f)) {
-                        repos.scanFileAndSaveTag(f);
-                    } else if(f.isDirectory()) {
+                    if(f.isDirectory()) {
+                        repos.scanMusicFiles(f);
+                    } else {
                         MusicMateExecutors.scan(new ScanRunnable(f));
-                       // ScanRunnable r = new ScanRunnable(f);
-                       // mExecutor.execute(r);
                     }
                 }
             } catch (Exception e) {

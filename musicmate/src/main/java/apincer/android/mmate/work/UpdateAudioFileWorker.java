@@ -1,5 +1,11 @@
 package apincer.android.mmate.work;
 
+import static de.esoco.coroutine.Coroutine.first;
+import static de.esoco.coroutine.CoroutineScope.launch;
+import static de.esoco.coroutine.step.CodeExecution.consume;
+import static de.esoco.coroutine.step.CodeExecution.supply;
+import static de.esoco.coroutine.step.Iteration.forEach;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -18,6 +24,7 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
 public class UpdateAudioFileWorker extends Worker {
@@ -35,11 +42,38 @@ public class UpdateAudioFileWorker extends Worker {
     public Result doWork() {
         Data inputData = getInputData();
         String artworkPath = inputData.getString(Constants.KEY_COVER_ART_PATH);
-        List<MusicTag> tags = MusixMateApp.getPendingItems("Update");
+       /* List<MusicTag> tags = MusixMateApp.getPendingItems("Update");
 
+     //   Profiler profiler = new Profiler();
+        //Thread
         for (MusicTag tag:tags) {
             MusicMateExecutors.update(new UpdateRunnable(tag, artworkPath));
-        }
+        }*/
+        /* executor = (ThreadPoolExecutor) MusicMateExecutors.getInstance().update();
+        while (executor.getActiveCount() != 0 || !executor.getQueue().isEmpty()){
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
+        } */
+       // profiler.measure(String.format("%,9d Threads", 8));
+       // profiler.printSummary();
+
+        // not support save coverart yet
+        //int COROUTINE_COUNT = 4;
+
+        Coroutine<?, ?> cIterating =
+                first(supply(this::list)).then(
+                        forEach(consume(this::save)));
+
+        launch(
+                scope ->
+                {
+                    //for (int i = 0; i < COROUTINE_COUNT; i++)
+                   // {
+                        cIterating.runAsync(scope, null);
+                  //  }
+                });
 
         return Result.success();
     }
@@ -56,6 +90,21 @@ public class UpdateAudioFileWorker extends Worker {
         //}
     }
 
+    private List<MusicTag> list() {
+        return MusixMateApp.getPendingItems("Update");
+    }
+
+    private void save(MusicTag tag) {
+        try {
+            boolean status = repos.setMusicTag(tag, null);
+            // String txt = status?getApplicationContext().getString(R.string.alert_write_tag_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_write_tag_fail, tag.getTitle());
+            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+            EventBus.getDefault().postSticky(message);
+        } catch (Exception e) {
+            Timber.e(e);
+        }
+    }
+
     private final class UpdateRunnable  implements Runnable {
         private final MusicTag tag;
         private final String artworkPath;
@@ -67,7 +116,7 @@ public class UpdateAudioFileWorker extends Worker {
         @Override
         public void run() {
             try {
-                boolean status = repos.saveAudioFile(tag, artworkPath);
+                boolean status = repos.setMusicTag(tag, artworkPath);
                // String txt = status?getApplicationContext().getString(R.string.alert_write_tag_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_write_tag_fail, tag.getTitle());
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
                 EventBus.getDefault().postSticky(message);

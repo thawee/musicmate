@@ -352,6 +352,7 @@ public class StringUtils {
     }
 
     public static boolean isDigitOnly(String text) {
+        if(StringUtils.isEmpty(text)) return false;
         for (char c : text.toCharArray()) {
             if (!Character.isDigit(c)) return false;
         }
@@ -402,11 +403,11 @@ public class StringUtils {
         return convertToStartCase(trimToEmpty(str));
     }
 
-    public static String formatDuration(long milliseconds, boolean withUnit) {
+    public static String formatDuration(double milliseconds, boolean withUnit) {
         int unitms = 1; //1000;
-        long s = milliseconds / unitms % 60;
-        long m = milliseconds / unitms / 60 % 60;
-        long h = milliseconds / unitms / 60 / 60;
+        long s = (long) (milliseconds / unitms % 60);
+        long m = (long) (milliseconds / unitms / 60 % 60);
+        long h = (long) (milliseconds / unitms / 60 / 60);
         String format = "%02d:%02d:%02d";
         String formatHrsUnit = "%2d Hrs";
         String formatMinuteUnit = "%2d Min";

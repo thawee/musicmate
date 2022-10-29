@@ -217,6 +217,16 @@
                 android:padding="1dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/icon_cd" />
+            <ImageView
+                android:id="@+id/item_broken_file_icon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_toRightOf="@id/item_src_icon"
+                android:padding="1dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_round_broken_image_24" />
 
             <LinearLayout
                 android:layout_width="wrap_content"

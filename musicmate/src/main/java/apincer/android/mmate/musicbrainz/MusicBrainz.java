@@ -66,14 +66,14 @@ public class MusicBrainz {
             //prevent NPE
             if(recording==null) return songs;
 
-            for(RecordingsItem item  : recording.getRecordings()) {
+           /* for(RecordingsItem item  : recording.getRecordings()) {
                 MusicTag song = new MusicTag();
                         song.setMusicBrainzId(item.getId());
                         song.setTitle(item.getTitle());
                         parseArtist(song, item);
                         parseAlbum(song, item);
                         songs.add(song);
-            }
+            } */
         }catch (Exception ex) {
              Timber.e(ex);
         }
@@ -126,7 +126,7 @@ public class MusicBrainz {
         try {
             Retrofit retrofit = createCoverRetrofit();
             EndpointInterface eIntf = retrofit.create(EndpointInterface.class);
-            Call call = eIntf.getCoverart(album.getAlbumId());
+            Call call = eIntf.getCoverart(album.getAlbum());
             Response response = call.execute();
             Coverart coverart = (Coverart) response.body();
             List<ImagesItem> images = coverart.getImages();
@@ -159,7 +159,7 @@ public class MusicBrainz {
                  Artist artist = artistCreditItem.getArtist();
                  if(artist!=null && !StringUtils.isEmpty(artist.getName())) {
                      song.setArtist(artist.getName());
-                     song.setArtistId(artist.getId());
+                     //song.setArtistId(artist.getId());
                      break;
                  }
             }
@@ -170,7 +170,7 @@ public class MusicBrainz {
         List<ReleasesItem> releaseList = item.getReleases();
         if(releaseList!=null && releaseList.size()>0) {
             ReleasesItem release =  releaseList.get(0);
-            song.setAlbumId(release.getId());
+           // song.setAlbumId(release.getId());
             song.setAlbum(release.getTitle());
             song.setYear(release.getDate());
         }

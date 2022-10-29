@@ -23,7 +23,7 @@ import timber.log.Timber;
 
 public final class MusicbrainzCoverArtProvider extends ContentProvider {
         public static Uri getUriForMediaItem(MusicTag item) {
-            return new Builder().scheme("content").authority("apincer.android.mmate.musicbrainz.coverart.provider").path(item.getAlbumId()).build();
+            return new Builder().scheme("content").authority("apincer.android.mmate.musicbrainz.coverart.provider").path(item.getAlbum()).build();
         }
 
         public int delete(Uri uri, String str, String[] strArr) {

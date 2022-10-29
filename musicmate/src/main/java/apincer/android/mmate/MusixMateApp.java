@@ -151,6 +151,8 @@ public class MusixMateApp extends Application  {
             jAudioTaggerLogger1.setLevel(Level.SEVERE);
             jAudioTaggerLogger2.setLevel(Level.SEVERE);
 
+        // Do it on main process
+       // BlockCanary.install(this, new AppBlockCanaryContext()).start();
 /*
         BlockCanary.install(this, new BlockCanaryContext() {
 
@@ -222,7 +224,7 @@ public class MusixMateApp extends Application  {
 
 
         WorkManager instance = WorkManager.getInstance(getApplicationContext());
-        instance.cancelAllWork();
+       // instance.cancelAllWork();
         instance.pruneWork();
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)

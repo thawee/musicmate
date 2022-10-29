@@ -1,7 +1,7 @@
 {
   "uniqueId": "org.jaudiotagger:jaudiotagger",
-  "name": "Jaudiotagger",
+  "name": "JAudioTagger",
   "artifactVersion": "3.0.2-SNAPSHOT",
-  "description": "Jaudiotagger is the Audio Tagging library used for tagging data in Audio files. It currently fully supports Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac and Wma, there is limited support for Wav and Real formats",
+  "description": "JAudioTagger is the Audio Tagging library used for tagging data in Audio files. It currently fully supports Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac and Wma, there is limited support for Wav and Real formats",
   "website": "http://www.jthink.net/jaudiotagger/"
 }

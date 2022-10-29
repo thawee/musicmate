@@ -251,48 +251,40 @@ public class TagsEditorFragment extends Fragment {
         if(!viewHolder.tagChanged) {
             return;
         }
-        MusicTag tag = tagUpdate.clone();
-        tagUpdate.setOriginTag(tag);
 
-        tagUpdate.setTitle(buildTag(viewHolder.mTitleView, tagUpdate.getTitle()));
-        tagUpdate.setTrack(buildTag(viewHolder.mTrackView, tagUpdate.getTrack()));
-        tagUpdate.setAlbum(buildTag(viewHolder.mAlbumView, tagUpdate.getAlbum()));
-        tagUpdate.setAlbumArtist(buildTag(viewHolder.mAlbumArtistView, tagUpdate.getAlbumArtist()));
-        tagUpdate.setArtist(buildTag(viewHolder.mArtistView, tagUpdate.getArtist()));
-        tagUpdate.setComposer(buildTag(viewHolder.mComposerView, tagUpdate.getComposer()));
-        tagUpdate.setComment(buildTag(viewHolder.mCommentView, tagUpdate.getComment()));
-        tagUpdate.setGrouping(buildTag(viewHolder.mGroupingView, tagUpdate.getGrouping()));
-        tagUpdate.setGenre(buildTag(viewHolder.mGenreView, tagUpdate.getGenre()));
-        tagUpdate.setYear(buildTag(viewHolder.mYearView, tagUpdate.getYear()));
-        tagUpdate.setDisc(buildTag(viewHolder.mDiscView, tagUpdate.getDisc()));
-        tagUpdate.setSource(buildTag(viewHolder.mMediaSourceView, tagUpdate.getSource()));
-        tagUpdate.setSourceQuality(buildTag(viewHolder.mMediaSourceQualityView, tagUpdate.getSourceQuality()));
-       // tagUpdate.setSourceQuality(buildTag(viewHolder.mAudiophileButton, tagUpdate.isAudiophile()));
-        tagUpdate.setRating(buildTag(viewHolder.mRatingBar, tagUpdate.getRating()));
+        if(tagUpdate.getOriginTag()==null) {
+            // save original tag
+            tagUpdate.setOriginTag(tagUpdate.clone());
+        }
+        MusicTag originTag = tagUpdate.getOriginTag();
+
+        tagUpdate.setTitle(buildTag(viewHolder.mTitleView, originTag.getTitle()));
+        tagUpdate.setTrack(buildTag(viewHolder.mTrackView, originTag.getTrack()));
+        tagUpdate.setAlbum(buildTag(viewHolder.mAlbumView, originTag.getAlbum()));
+        tagUpdate.setAlbumArtist(buildTag(viewHolder.mAlbumArtistView, originTag.getAlbumArtist()));
+        tagUpdate.setArtist(buildTag(viewHolder.mArtistView, originTag.getArtist()));
+        tagUpdate.setComposer(buildTag(viewHolder.mComposerView, originTag.getComposer()));
+        tagUpdate.setComment(buildTag(viewHolder.mCommentView, originTag.getComment()));
+        tagUpdate.setGrouping(buildTag(viewHolder.mGroupingView, originTag.getGrouping()));
+        tagUpdate.setGenre(buildTag(viewHolder.mGenreView, originTag.getGenre()));
+        tagUpdate.setYear(buildTag(viewHolder.mYearView, originTag.getYear()));
+        tagUpdate.setDisc(buildTag(viewHolder.mDiscView, originTag.getDisc()));
+        tagUpdate.setSource(buildTag(viewHolder.mMediaSourceView, originTag.getSource()));
+        tagUpdate.setSourceQuality(buildTag(viewHolder.mMediaSourceQualityView, originTag.getSourceQuality()));
+        tagUpdate.setRating(buildTag(viewHolder.mRatingBar));
     }
 
-    private int buildTag(MaterialRatingBar mRatingBar, int rating) {
+    private int buildTag(MaterialRatingBar mRatingBar) {
        return (int) mRatingBar.getRating();
     }
 
     private String buildTag(TextView textView, String oldVal) {
         String text = getText(textView);
-        if(!StringUtils.MULTI_VALUES.equalsIgnoreCase(text) ) {
-            return text;
-        }
-        return oldVal;
-    }
-
-    /*
-    private boolean buildTag(TriStateToggleButton view, boolean oldVal) {
-        if(view.getToggleStatus() == TriStateToggleButton.ToggleStatus.off) {
-            return false;
-        }else if(view.getToggleStatus() == TriStateToggleButton.ToggleStatus.on) {
-            return true;
-        }else {
+        if(StringUtils.MULTI_VALUES.equalsIgnoreCase(text) ) {
             return oldVal;
         }
-    } */
+        return text;
+    }
 
     private String getText(TextView textView) {
         return StringUtils.trimToEmpty(String.valueOf(textView.getText()));
@@ -344,7 +336,6 @@ public class TagsEditorFragment extends Fragment {
             tagChanged = false;
             coverartChanged = false;
             mTextWatcher =new ViewTextWatcher();
-            MusicTagRepository repository = MusicTagRepository.getInstance();
 
             mEditorCardView = view.findViewById(R.id.editorCardView);
             mEditorPanel = view.findViewById(R.id.editorPanel);
@@ -369,6 +360,8 @@ public class TagsEditorFragment extends Fragment {
             mMediaSourceQualityItems.add(new IconSpinnerItem("",null));
             mMediaSourceQualityItems.add(new IconSpinnerItem(Constants.QUALITY_AUDIOPHILE, null));
             mMediaSourceQualityItems.add(new IconSpinnerItem(Constants.QUALITY_RECOMMENDED, null));
+            mMediaSourceQualityItems.add(new IconSpinnerItem(Constants.QUALITY_POOR, null));
+
             qualityAdapter.setItems(mMediaSourceQualityItems);
             mMediaSourceQualityView.setSpinnerAdapter(qualityAdapter);
             mMediaSourceQualityView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {
@@ -403,7 +396,7 @@ public class TagsEditorFragment extends Fragment {
 
             // artist
             mArtistView = setupAutoCompleteTextView(view, R.id.tag_artist);
-            List<String> list = repository.getArtistList();
+            List<String> list = MusicTagRepository.getArtistList();
             ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
@@ -426,7 +419,7 @@ public class TagsEditorFragment extends Fragment {
 
             // album artist
             mAlbumArtistView = setupAutoCompleteTextView(view, R.id.tag_album_artist);
-            list = repository.getDefaultAlbumArtistList(requireContext());
+            list = MusicTagRepository.getDefaultAlbumArtistList(requireContext());
             arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
@@ -454,7 +447,7 @@ public class TagsEditorFragment extends Fragment {
 
             // genre
             mGenreView = setupAutoCompleteTextView(view,R.id.tag_genre);
-            list = repository.getDefaultGenreList(getContext());
+            list = MusicTagRepository.getDefaultGenreList(getContext());
             arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
@@ -474,7 +467,7 @@ public class TagsEditorFragment extends Fragment {
 
             // grouping
             mGroupingView = setupAutoCompleteTextView(view, R.id.tag_group);
-            list = repository.getDefaultGroupingList(requireContext());
+            list = MusicTagRepository.getDefaultGroupingList(requireContext());
             arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.
