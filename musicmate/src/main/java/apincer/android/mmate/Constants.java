@@ -86,17 +86,17 @@ public final class Constants {
 
     public static final String MEDIA_PATH_DSD = "DSD"; // DSD
     public static final String MEDIA_PATH_MQA = "MQA"; //MQA
-    public static final String MEDIA_PATH_HRA = "HRA"; //HRA
+    public static final String MEDIA_PATH_HRA = "Hi-Res"; //HRA
     public static final String MEDIA_PATH_SACD = "SACD";
    // public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
    // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
-    public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless
-    public static final String MEDIA_PATH_FLAC = "FLAC"; //Lossless
-    public static final String MEDIA_PATH_WAVE = "WAVE";
-    public static final String MEDIA_PATH_AIFF = "AIFF";
-    public static final String MEDIA_PATH_ACC="AAC";
-    public static final String MEDIA_PATH_MP3="MP3";
-    public static final String MEDIA_PATH_OTHER ="Others";
+   // public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless
+   // public static final String MEDIA_PATH_FLAC = "FLAC"; //Lossless
+   // public static final String MEDIA_PATH_WAVE = "WAVE";
+   // public static final String MEDIA_PATH_AIFF = "AIFF";
+   // public static final String MEDIA_PATH_ACC="AAC";
+   // public static final String MEDIA_PATH_MP3="MP3";
+   // public static final String MEDIA_PATH_OTHER ="Others";
 
     public static final String AUDIO_SQ_DSD = "DSD"; // DSD
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
@@ -130,24 +130,20 @@ public final class Constants {
    // public static final int INFO_HEIGHT = 32;
 
     // Source
-    public static final String SRC_JOOX = "Joox";
-    public static final String SRC_QOBUZ = "Qobuz";
-    public static final String SRC_CD = "CD";
-    public static final String SRC_SACD = "SACD";
-    public static final String SRC_VINYL = "VINYL";
-    public static final String SRC_APPLE = "Apple";
-    public static final String SRC_SPOTIFY = "Spotify";
-    public static final String SRC_TIDAL = "Tidal";
-    public static final String SRC_YOUTUBE = "Youtube";
-    public static final String SRC_NONE = "-";
-    public static final String SRC_HD_TRACKS = "HDTracks";
-    public static final String SRC_2L = "2L";
-    public static final String SRC_NATIVE_DSD = "NativeDSD";
-    public static final String SRC_ONKYO = "Onkyo";
+    public static final String PUBLISHER_JOOX = "Joox";
+    public static final String PUBLISHER_QOBUZ = "Qobuz";
+    public static final String MEDIA_TYPE_CD = "CD";
+    public static final String MEDIA_TYPE_SACD = "SACD";
+    public static final String MEDIA_TYPE_VINYL = "VINYL";
+    public static final String PUBLISHER_APPLE = "Apple";
+    public static final String PUBLISHER_SPOTIFY = "Spotify";
+    public static final String PUBLISHER_TIDAL = "Tidal";
+    public static final String PUBLISHER_YOUTUBE = "Youtube";
+    public static final String MEDIA_TYPE_NONE = "-";
 
     public static List<String> getSourceList(Context context) {
     List list = new ArrayList<>();
-     String[] srcs =  context.getResources().getStringArray(R.array.default_source);
+     String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);
      list.addAll(Arrays.asList(srcs));
      Collections.sort(list);
 

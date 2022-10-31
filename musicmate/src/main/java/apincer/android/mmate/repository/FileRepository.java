@@ -1,5 +1,11 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.ffmpeg.FFMPegUtils.detectMQA;
+import static apincer.android.mmate.ffmpeg.FFMPegUtils.writeTrackFields;
+import static apincer.android.mmate.ffmpeg.FFMPegUtils.writeTrackGain;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.toDouble;
+
 import android.content.Context;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
@@ -60,18 +66,19 @@ import java.io.InputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
+import apincer.android.mmate.ffmpeg.FFMPegUtils;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicMateArtwork;
 import apincer.android.mmate.objectbox.MusicTag;
-import apincer.android.mmate.utils.FFMPegUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.utils.FileUtils;
 import timber.log.Timber;
 
@@ -83,6 +90,9 @@ public class FileRepository {
     private final Context context;
     private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
+    private static final String REPLAYGAIN_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
+    private static final String REPLAYGAIN_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
+    private static final String REPLAYGAIN_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
 
     public static FileRepository newInstance(Context application) {
         return new FileRepository(application);
@@ -318,7 +328,7 @@ public class FileRepository {
             return;
         }
 
-        item.setManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
+        item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
         if(isValidJAudioTagger(item.getPath())) {
           //  File file = new File(item.getPath());
            // setupTagOptionsForWriting();
@@ -327,7 +337,8 @@ public class FileRepository {
             // save default tags
            // assert audioFile != null;
            // Tag existingTags = audioFile.getTagOrCreateAndSetDefault();
-            setJAudioTagger(item);
+           // setJAudioTagger(item);
+            writeTrackFields(getContext(), item);
             item.setOriginTag(null); // reset pending tag
         }else if (isValidSACD(item.getPath())) {
             // write to somewhere else
@@ -372,10 +383,10 @@ public class FileRepository {
     }
 
     private void setWavComment(MusicTag musicTag) {
-        String comment = "/#"+StringUtils.trimToEmpty(musicTag.getSource());
+        String comment = "/#"+StringUtils.trimToEmpty(musicTag.getMediaType());
         comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getDisc());
         comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getGrouping());
-        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getSourceQuality());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getMediaQuality());
         comment = comment+"#/ "+StringUtils.trimToEmpty(musicTag.getComment());
         musicTag.setComment(comment);
     }
@@ -466,13 +477,13 @@ public class FileRepository {
         setTagField(FieldKey.YEAR, musicTag.getYear(), tag);
         setTagField(FieldKey.COMPOSER, musicTag.getComposer(), tag);
         setTagField(FieldKey.RATING, Integer.toString(musicTag.getRating()), tag);
-        setTagField(FieldKey.BPM, Integer.toString(musicTag.getBpm()), tag);
-        setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isPartOfCompilation()), tag);
+       // setTagField(FieldKey.BPM, Integer.toString(musicTag.getBpm()), tag);
+        setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isCompilation()), tag);
     }
 
     void setTagFieldsExtended(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
-        setTagField(FieldKey.MEDIA, musicTag.getSource(),tag);
-        setTagField(FieldKey.QUALITY, musicTag.getSourceQuality(),tag);
+        setTagField(FieldKey.MEDIA, musicTag.getMediaType(),tag);
+        setTagField(FieldKey.QUALITY, musicTag.getMediaQuality(),tag);
     }
 
     void resetMp3File(File mp3File) throws Exception {
@@ -584,10 +595,8 @@ public class FileRepository {
         } else if (tag instanceof FlacTag) {
             try {
                 ((FlacTag) tag).setField(description, text);
-            } catch (KeyNotFoundException ex) {
+            } catch (KeyNotFoundException | FieldDataInvalidException ex) {
                 //Logger.getLogger(TrackAnalyzer.class.getName()).log(Level.SEVERE, null, ex);
-                return false;
-            } catch (FieldDataInvalidException ex) {
                 return false;
             }
         } else if (tag instanceof Mp4Tag) {
@@ -606,9 +615,7 @@ public class FileRepository {
         } else if (tag instanceof VorbisCommentTag) {
             try {
                 ((VorbisCommentTag) tag).setField(description, text);
-            } catch (KeyNotFoundException ex) {
-                return false;
-            } catch (FieldDataInvalidException ex) {
+            } catch (KeyNotFoundException | FieldDataInvalidException ex) {
                 return false;
             }
         } else {
@@ -650,26 +657,34 @@ public class FileRepository {
         return null;
     }
 
-    public void scanMusicFiles(File file) {
+    public void scanMusicFile(File file) {
         try {
             String mediaPath = file.getAbsolutePath();
+            Timber.d("Sannning::"+mediaPath);
             if (isValidSACD(mediaPath)) {
                 if (MusicTagRepository.checkSACDOutdated(mediaPath, file.lastModified())) {
                     MusicTag[] tags = readSACD(mediaPath);
                     if (tags == null) return;
                     for (MusicTag metadata : tags) {
                         String matePath = buildCollectionPath(metadata);
-                        metadata.setManaged(StringUtils.equals(matePath, metadata.getPath()));
+                        metadata.setMusicManaged(StringUtils.equals(matePath, metadata.getPath()));
                         MusicTagRepository.saveTag(metadata);
                     }
                 }
-            } else if (isValidJAudioTagger(mediaPath)) {
-                MusicTag tag = MusicTagRepository.getJAudioTaggerOutdated(mediaPath, file.lastModified());
+            //} else if (isValidJAudioTagger(mediaPath)) {
+            } else if (FFMPegUtils.isSupportedFileFormat(mediaPath)) {
+                MusicTag tag = MusicTagRepository.getOutdatedMusicTag(mediaPath, file.lastModified());
                 if (tag != null) {
-                    MusicTag metadata = readJAudioTagger(tag, mediaPath);
-                    if (metadata != null) {
+                   // MusicTag metadata = readJAudioTagger(tag, mediaPath);
+                    MusicTag metadata = FFMPegUtils.readMusicTag(mediaPath);
+                    if(metadata==null) {
+                        metadata = tag;
+                    }
+                    if(metadata!=null) {
+                        readFileHeader(file, metadata, mediaPath);
+                        metadata.setId(tag.getId());
                         String matePath = buildCollectionPath(metadata);
-                        metadata.setManaged(StringUtils.equals(matePath, metadata.getPath()));
+                        metadata.setMusicManaged(StringUtils.equals(matePath, metadata.getPath()));
                         MusicTagRepository.saveTag(metadata);
                     }
                 }
@@ -796,16 +811,16 @@ public class FileRepository {
                     for (int t = 0; t < tracks.length; t++) {
                         mList[t] = new MusicTag();
                         mList[t].setPath(path);
-                        mList[t].setFileExtension(fileExtension);
+                        mList[t].setFileFormat(fileExtension);
                         mList[t].setSimpleName(simpleName);
                         mList[t].setStorageId(storageId);
                         mList[t].setLossless(true);
-                        mList[t].setCueSheet(true);
+                        mList[t].setAudioStartTime(tracks[t].startFrame);
                         mList[t].setAudioBitRate(dsf.getSampleCount());
-                        mList[t].setAudioBitsPerSample(1);
+                        mList[t].setAudioBitsDepth(1);
                         mList[t].setAudioSampleRate(dsf.getSampleRate());
                         mList[t].setAudioEncoding(Constants.MEDIA_ENC_SACD);
-                        mList[t].setLastModified(lastModified);
+                        mList[t].setFileLastModified(lastModified);
                         mList[t].setFileSize(length);
                         mList[t].setAlbum(album);
                         mList[t].setGenre(genre);
@@ -828,18 +843,22 @@ public class FileRepository {
                 } else {
                     mList = new MusicTag[1];
                     MusicTag metadata = new MusicTag();
-                    readFileHeader(metadata, path);
+
+                    metadata.setFileFormat(fileExtension);
+                    metadata.setSimpleName(simpleName);
+                    metadata.setStorageId(storageId);
+                    metadata.setFileLastModified(lastModified);
                     metadata.setLossless(true);
-                    metadata.setCueSheet(false);
                     metadata.setAlbum(album);
                     metadata.setTitle(album);
                     metadata.setGenre(genre);
                     metadata.setYear(year);
+                    metadata.setAudioStartTime(0);
                     metadata.setAudioBitRate(dsf.getSampleCount());
-                    metadata.setAudioBitsPerSample(1);
+                    metadata.setAudioBitsDepth(1);
                     metadata.setAudioSampleRate(dsf.getSampleRate());
                     metadata.setAudioEncoding(Constants.MEDIA_ENC_SACD);
-                    metadata.setLastModified(lastModified);
+                    metadata.setFileLastModified(lastModified);
                     metadata.setFileSize(length);
                     metadata.setAudioDuration((dsf.atoc.minutes * 60) + dsf.atoc.seconds);
                     metadata.setTrack(String.format(Locale.US,"%02d", 1));
@@ -867,14 +886,14 @@ public class FileRepository {
                         .setPrettyPrinting()
                         .create();
                 MusicTag tag = gson.fromJson(new FileReader(fileName), MusicTag.class);
-                metadata.setSourceQuality(tag.getSourceQuality());
+                metadata.setMediaQuality(tag.getMediaQuality());
                 metadata.setTitle(tag.getTitle());
                 metadata.setArtist(tag.getArtist());
                 metadata.setAlbum(tag.getAlbum());
                 metadata.setAlbumArtist(tag.getAlbumArtist());
                 metadata.setGenre(tag.getGenre());
                 metadata.setGrouping(tag.getGrouping());
-                metadata.setSource(tag.getSource());
+                metadata.setMediaType(tag.getMediaType());
                 metadata.setRating(tag.getRating());
                 metadata.setComposer(tag.getComposer());
                 metadata.setYear(tag.getYear());
@@ -892,9 +911,9 @@ public class FileRepository {
     private MusicTag readJAudioTagger(MusicTag metadata, String path) {
         if(isValidJAudioTagger(path)) {
             File file = new File(path);
-            metadata.setLastModified(file.lastModified());
+            metadata.setFileLastModified(file.lastModified());
             metadata.setFileSize(file.length());
-            readFileHeader(metadata, path);
+            readFileHeader(file, metadata, path);
 
             AudioFile audioFile = buildAudioFile(path, "r");
             if (audioFile == null) {
@@ -917,14 +936,21 @@ public class FileRepository {
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
                 metadata.setRating(toInt(getId3TagValue(tag, FieldKey.RATING)));
-                metadata.setBpm(toInt(getId3TagValue(tag, FieldKey.BPM)));
-                metadata.setEncoder(getId3TagValue(tag, FieldKey.ENCODER));
-                metadata.setPartOfCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
+                //metadata.setBpm(toInt(getId3TagValue(tag, FieldKey.BPM)));
+              //  metadata.setEncoder(getId3TagValue(tag, FieldKey.ENCODER));
+                metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
 
                 // read replay gain fields
-                metadata.setReplayGain(getTagFieldCustom(tag, "REPLAYGAIN_TRACK_GAIN"));
-                metadata.setLoudnessRange(getTagFieldCustom(tag, "REPLAYGAIN_TRACK_RANGE"));
-                metadata.setLoudnessIntegrated(getTagFieldCustom(tag, "REPLAYGAIN_REFERENCE_LOUDNESS"));
+                Map<String, String> tags = parseCustomTagFields(tag);
+                if(tags.containsKey(REPLAYGAIN_TRACK_GAIN)) {
+                    metadata.setTrackGain(toDouble(getTagFieldCustom(tag, REPLAYGAIN_TRACK_GAIN)));
+                }
+                if(tags.containsKey(REPLAYGAIN_TRACK_RANGE)) {
+                    metadata.setTrackRange(toDouble(getTagFieldCustom(tag, REPLAYGAIN_TRACK_RANGE)));
+                }
+                if(tags.containsKey(REPLAYGAIN_REFERENCE_LOUDNESS)) {
+                    metadata.setTrackLoudness(toDouble(getTagFieldCustom(tag, REPLAYGAIN_REFERENCE_LOUDNESS)));
+                }
 
                 //  if ("wav".equalsIgnoreCase(metadata.getFileExtension()) || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
                 if(MusicTagUtils.isWavFile(metadata)) {
@@ -934,8 +960,8 @@ public class FileRepository {
                     // WAV file not support these fields
                     metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
                     metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
-                    metadata.setSourceQuality(getId3TagValue(tag, FieldKey.QUALITY));
-                    metadata.setSource(getId3TagValue(tag, FieldKey.MEDIA));
+                    metadata.setMediaQuality(getId3TagValue(tag, FieldKey.QUALITY));
+                    metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
                     metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
                 }
 
@@ -1002,7 +1028,7 @@ public class FileRepository {
 
         return true;
     } */
-
+/*
     private void detectMQA(MusicTag tag) {
         if((!MusicTagUtils.isFlacFile(tag)) || tag.isMqaDeepScan()) return; //prevent re check
         try {
@@ -1015,25 +1041,24 @@ public class FileRepository {
                 if (mqaInfo.toLowerCase().contains("studio")) {
                     tag.setMQAStudio(true);
                 }
-                tag.setMQASampleRate(mqaInfo.substring(mqaInfo.indexOf("|")+1));
+                tag.setMqaSampleRate(toLong(mqaInfo.substring(mqaInfo.indexOf("|")+1)));
             }
             tag.setMqaDeepScan(true);
         }catch (Exception ex) {
             Timber.e(ex);
         }
-    }
+    } */
 
     public boolean detectLoudness(MusicTag tag) {
         if(tag.isDSD()) return false; // not support DSD
-        String lint = StringUtils.trimToEmpty(tag.getLoudnessIntegrated());
-        if(!StringUtils.isEmpty(lint)) {
-            return false; // recheck if al
+        if(tag.isTrackScanned()) {
+            return false; // prevent re scan
         }
         FFMPegUtils.Loudness loudness = FFMPegUtils.getLoudness(tag.getPath());
         if(loudness!= null) {
-            tag.setLoudnessIntegrated(loudness.getIntegratedLoudness());
-            tag.setLoudnessRange(loudness.getLoudnessRange());
-            tag.setTruePeek(loudness.getTruePeak());
+            tag.setTrackLoudness(loudness.getIntegratedLoudness());
+            tag.setTrackRange(loudness.getLoudnessRange());
+            tag.setTrackTruePeek(loudness.getTruePeak());
             return true;
         }
         return false;
@@ -1140,7 +1165,7 @@ public class FileRepository {
             String []text = metadata.split("#:");
             if(text.length >=1) {
                 // Source
-                mediaTag.setSource(StringUtils.trimToEmpty(text[0]));
+                mediaTag.setMediaType(StringUtils.trimToEmpty(text[0]));
             }
             if(text.length >=2) {
                 // Disc
@@ -1152,7 +1177,7 @@ public class FileRepository {
             }
             if(text.length >=4) {
                 // Audiophile
-                mediaTag.setSourceQuality(StringUtils.trimToEmpty(text[3]));
+                mediaTag.setMediaQuality(StringUtils.trimToEmpty(text[3]));
             }
         }
 
@@ -1187,7 +1212,7 @@ public class FileRepository {
                 metadata.setAudioDuration(duration);
             } */
             metadata.setAudioBitRate(bitRate);
-            metadata.setAudioBitsPerSample(bitPerSample);
+            metadata.setAudioBitsDepth(bitPerSample);
             metadata.setAudioSampleRate(sampleRate);
             metadata.setAudioChannels(header.getChannels());
             if (header.getChannels().toLowerCase().contains("stereo")) {
@@ -1249,9 +1274,9 @@ public class FileRepository {
             if (metadata.isSACDISO()) {
                 //encSuffix="-MQA";
                 filename.append(Constants.MEDIA_PATH_SACD);
-           // }else if (metadata.isMQA()) {
+            }else if (MusicTagUtils.isMQA(metadata)) {
                 //encSuffix="-MQA";
-            //    filename.append(Constants.MEDIA_PATH_MQA);
+                filename.append(Constants.MEDIA_PATH_MQA);
             }else if (MusicTagUtils.isPCMHiRes(metadata)) {
                 //encSuffix="-HRA";
                 filename.append(Constants.MEDIA_PATH_HRA);
@@ -1259,12 +1284,16 @@ public class FileRepository {
                 filename.append(Constants.MEDIA_PATH_DSD);
                 //filename.append("-");
                 filename.append(MusicTagUtils.getDSDSampleRateModulation(metadata));
+            }else {
+                filename.append(metadata.getFileFormat().toLowerCase(Locale.US));
+            }
             //}else if (metadata.isMQA()) {
             //    filename.append(Constants.MEDIA_PATH_MQA);
 //            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
   //              filename.append(Constants.MEDIA_PATH_HR);
            // }else if (AudioTagUtils.isPCMLossless(metadata)) {
            //     filename.append(Constants.MEDIA_PATH_HR);
+                /*
             }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
                 filename.append(Constants.MEDIA_PATH_ALAC);
                // filename.append(encSuffix);
@@ -1286,7 +1315,7 @@ public class FileRepository {
             }else {
                 filename.append(Constants.MEDIA_PATH_OTHER);
               //  filename.append(encSuffix);
-            }
+            } */
             filename.append(File.separator);
 
             // albumArtist or artist
@@ -1312,6 +1341,7 @@ public class FileRepository {
 
             // file name
             String title = StringUtils.trimTitle(metadata.getTitle());
+            /*
             if(!metadata.isCueSheet()) {
                 // track
                 boolean hasTrackOrArtist = false;
@@ -1352,14 +1382,14 @@ public class FileRepository {
                 }
 
                 // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] - [title| file name]
-            }else {
+            }else { */
                 // title
                 if (!StringUtils.isEmpty(album)) {
                     filename.append(StringUtils.formatTitle(album));
                 } else {
                     filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
                 }
-            }
+         //   }
 
             String newPath =  filename.toString();
             for(int i=0;i<ReservedChars.length();i++) {
@@ -1380,11 +1410,11 @@ public class FileRepository {
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
-        }else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getSourceQuality())) {
+        }else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getMediaQuality())) {
             // Audiophile
             return STORAGE_PRIMARY;
        // }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
-        }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsPerSample() > 16) {
+        }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsDepth() > 16) {
             // Lossless Hi-Res
             return STORAGE_PRIMARY;
         }
@@ -1455,10 +1485,10 @@ public class FileRepository {
                 cleanMediaDirectory(file.getParentFile());
                // tag.setObsoletePath(tag.getPath());
                 tag.setPath(newPath);
-                tag.setManaged(true);
+                tag.setMusicManaged(true);
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
-                tag.setLastModified(file.lastModified());
+                tag.setFileLastModified(file.lastModified());
                 MusicTagRepository.saveTag(tag);
                 return true;
             }
@@ -1573,13 +1603,24 @@ public class FileRepository {
         return status;
     }
 
-    private void readFileHeader(MusicTag metadata, String mediaPath) {
+    public void readFileHeader(File file, MusicTag metadata, String mediaPath) {
         metadata.setPath(mediaPath);
-        metadata.setTitle(FileUtils.getFileName(mediaPath));
-        metadata.setFileExtension(FileUtils.getExtension(mediaPath).toUpperCase());
-        metadata.setAudioEncoding(metadata.getFileExtension());
-        metadata.setSimpleName(DocumentFileCompat.getBasePath(getContext(), mediaPath));
-        metadata.setStorageId(DocumentFileCompat.getStorageId(getContext(), mediaPath));
+        metadata.setFileLastModified(file.lastModified());
+        if(isEmpty(metadata.getTitle())) {
+            metadata.setTitle(FileUtils.getFileName(mediaPath));
+        }
+        if(isEmpty(metadata.getFileFormat())) {
+            metadata.setFileFormat(FileUtils.getExtension(mediaPath).toUpperCase());
+        }
+        if(isEmpty(metadata.getAudioEncoding())) {
+            metadata.setAudioEncoding(metadata.getFileFormat());
+        }
+        if(isEmpty(metadata.getSimpleName())) {
+            metadata.setSimpleName(DocumentFileCompat.getBasePath(getContext(), mediaPath));
+        }
+        if(isEmpty(metadata.getStorageId())) {
+            metadata.setStorageId(DocumentFileCompat.getStorageId(getContext(), mediaPath));
+        }
     }
 
 /*
@@ -1617,17 +1658,81 @@ public class FileRepository {
 
         tag = MusicTagRepository.getAudioTagById(tag); // re-read tag from db
         if(detectLoudness(tag)) {
-            tag.setReplayGain(FFMPegUtils.getReplayGain(tag));
+            tag.setTrackGain(FFMPegUtils.getReplayGain(tag));
             detectMQA(tag);
             MusicTagRepository.saveTag(tag);
-            setTagFieldsReplayGain(tag);
+            writeTrackGain(getContext(), tag);
+            //setTagFieldsReplayGain(tag);
             return true;
         }
         return false;
     }
 
+    private Map<String, String> parseCustomTagFields(Tag tag) {
+        Map<String, String> tags = null;
+        try {
+            if (tag instanceof VorbisCommentTag) {
+                tags = parseVorbisTags((VorbisCommentTag) tag);
+            } else if (tag instanceof FlacTag) {
+                tags = parseVorbisTags(((FlacTag) tag).getVorbisCommentTag());
+            } else {
+                tags = parseId3Tags(tag);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return tags;
+    }
+
+    private static Map<String, String> parseId3Tags(Tag tag) throws Exception {
+        String id = null;
+
+        if (tag.hasField("TXXX")) {
+            id = "TXXX";
+        } else if (tag.hasField("RGAD")) {    // may support legacy metadata formats: RGAD, RVA2
+            id = "RGAD";
+        } else if (tag.hasField("RVA2")) {
+            id = "RVA2";
+        }
+
+        Map<String, String> tags = new HashMap<>();
+
+        for (TagField field : tag.getFields(id)) {
+            String[] data = field.toString().split(";");
+
+            data[0] = data[0].substring(13, data[0].length() - 1).toUpperCase();
+
+            if (data[0].equals("TRACK")) {data[0] = REPLAYGAIN_TRACK_GAIN;}
+           // else if (data[0].equals("ALBUM")) {data[0] = REPLAYGAIN_ALBUM_GAIN;}
+
+            tags.put(data[0], StringUtils.trimToEmpty(data[1]));
+        }
+
+        return tags;
+    }
+
+    private static Map<String, String> parseVorbisTags(VorbisCommentTag tag) {
+        Map<String, String> tags = new HashMap<>();
+
+        if (tag.hasField(REPLAYGAIN_TRACK_GAIN)) {
+            tags.put(REPLAYGAIN_TRACK_GAIN, StringUtils.trimToEmpty(tag.getFirst(REPLAYGAIN_TRACK_GAIN)));
+        }
+        if (tag.hasField(REPLAYGAIN_TRACK_RANGE)) {
+            tags.put(REPLAYGAIN_TRACK_RANGE, StringUtils.trimToEmpty(tag.getFirst(REPLAYGAIN_TRACK_RANGE)));
+        }
+        if (tag.hasField(REPLAYGAIN_REFERENCE_LOUDNESS)) {
+            tags.put(REPLAYGAIN_REFERENCE_LOUDNESS, StringUtils.trimToEmpty(tag.getFirst(REPLAYGAIN_REFERENCE_LOUDNESS)));
+        }
+
+        return tags;
+    }
+
     private void setTagFieldsReplayGain(MusicTag tag) {
         // write track replay gain to file
+        // Replay Gain V2.0 standard (That means: -18 LUFS reference, "dB" units, and uppercase 'REPLAYGAIN_*' tags.)
+        // 1. should remove old tag lower case and upper cse
+        // 2. write new tag with upper case
+
         // flac, aiff, mp4, mp3, wav?
         /*
         "REPLAYGAIN_TRACK_GAIN", -- gain
@@ -1635,12 +1740,13 @@ public class FileRepository {
     "REPLAYGAIN_TRACK_RANGE", -- loudness range
     "REPLAYGAIN_REFERENCE_LOUDNESS" -- loudness integrated
          */
+
         try {
             AudioFile audioFile = buildAudioFile(tag.getPath(), "rw");
             assert audioFile != null;
-            setTagFieldCustom(audioFile, "REPLAYGAIN_TRACK_GAIN",tag.getReplayGain());
-            setTagFieldCustom(audioFile, "REPLAYGAIN_TRACK_RANGE",tag.getLoudnessRange());
-            setTagFieldCustom(audioFile, "REPLAYGAIN_REFERENCE_LOUDNESS",tag.getLoudnessIntegrated());
+            setTagFieldCustom(audioFile, "REPLAYGAIN_TRACK_GAIN",Double.toString(tag.getTrackGain()));
+            setTagFieldCustom(audioFile, "REPLAYGAIN_TRACK_RANGE",Double.toString(tag.getTrackRange()));
+            setTagFieldCustom(audioFile, "REPLAYGAIN_REFERENCE_LOUDNESS",Double.toString(tag.getTrackLoudness()));
 
             audioFile.commit();
         } catch (CannotWriteException|IOException e) {

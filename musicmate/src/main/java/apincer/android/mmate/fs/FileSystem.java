@@ -14,7 +14,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -230,37 +229,6 @@ public class FileSystem {
         return DocumentFileUtils.forceDelete(docFile,context);
     }
 
-
-    /**
-     * Check if a file is writable. Detects write issues on external SD card.
-     *
-     * @param file The file
-     * @return true if the file is writable.
-     */
-    @Deprecated
-    public static boolean isWritable(final File file) {
-        if (file == null) {
-            return false;
-        }
-
-        boolean isExisting = file.exists();
-
-        try {
-            FileOutputStream output = new FileOutputStream(file, true);
-            closeSilently(output);
-        } catch (FileNotFoundException e) {
-            return false;
-        }
-        boolean result = file.canWrite();
-
-        // Ensure that file is not created during this process.
-        if (!isExisting) {
-            file.delete();
-        }
-
-        return result;
-    }
-
     @Deprecated
     public static void saveImage(Bitmap resource, File coverartFile) {
         try {
@@ -287,18 +255,6 @@ public class FileSystem {
             Timber.w(t);
         }
     }
-
-    @Deprecated
-    public static String removePathExtension(File file) {
-        if(file==null) {
-            return "";
-        }
-
-        String fileName = file.getAbsolutePath();
-        int dotIndex = fileName.lastIndexOf('.');
-        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
-    }
-
 
     public static File getDownloadPath(Context context, String path) {
         File download = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);

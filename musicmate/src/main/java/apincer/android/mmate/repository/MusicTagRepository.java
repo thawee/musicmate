@@ -37,8 +37,11 @@ public class MusicTagRepository {
             //if(tag.getId()!=0) {
             //    tagBox.remove(tag);
             //}
-        MusicTagUtils.initMusicTag(tag);
-            getMusicTagBox().put(tag); // add or update
+       // MusicTagUtils.initMusicTag(tag);
+        if(StringUtils.isEmpty(tag.getUniqueKey())) {
+            tag.setUniqueKey(tag.getPath()+"_"+ tag.getAudioStartTime());
+        }
+        getMusicTagBox().put(tag); // add or update
       //  });
     }
 
@@ -174,7 +177,7 @@ public class MusicTagRepository {
             // found new file
             return true;
         }
-        if(tags.get(0).getLastModified() < lastModified) {
+        if(tags.get(0).getFileLastModified() < lastModified) {
             // found updated, remove old tags, and re scan
             for (MusicTag tag: tags) {
                 removeTag(tag);
@@ -184,14 +187,14 @@ public class MusicTagRepository {
         return false;
     }
 
-    public static MusicTag getJAudioTaggerOutdated(String path, long lastModified) {
+    public static MusicTag getOutdatedMusicTag(String path, long lastModified) {
         // return null if not outdate, else return object
         List<MusicTag> tags = findByPath(path);
         if(tags.isEmpty()) {
             // found new file
             return new MusicTag();
         }else if (tags.size() == 1) {
-            if(tags.get(0).getLastModified() < lastModified) {
+            if(tags.get(0).getFileLastModified() < lastModified) {
                 // tag in library already up-to-dated
                 //removeTag(tags.get(0));
                 return tags.get(0);
@@ -237,7 +240,7 @@ public class MusicTagRepository {
                 list = query.find();
                 query.close();
             }else if(Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-                Query<MusicTag> query = getMusicTagBox().query().filter(tag -> !tag.isManaged()).order(MusicTag_.title).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query().filter(tag -> !tag.isMusicManaged()).order(MusicTag_.title).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
             }else if(Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
@@ -279,29 +282,31 @@ public class MusicTagRepository {
         }else if(criteria.getType() == SearchCriteria.TYPE.RECORDINGS_QUALITY) {
                 Query<MusicTag> query;
                 if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.QUALITY_NORMAL.equals(criteria.getKeyword())) {
-                    query = getMusicTagBox().query(MusicTag_.sourceQuality.isNull().or(MusicTag_.sourceQuality.equal(""))).build();
+                    query = getMusicTagBox().query(MusicTag_.mediaQuality.isNull().or(MusicTag_.mediaQuality.equal(""))).build();
                 } else {
-                    query = getMusicTagBox().query(MusicTag_.sourceQuality.equal(StringUtils.trimToEmpty(criteria.getKeyword()))).build();
+                    query = getMusicTagBox().query(MusicTag_.mediaQuality.equal(StringUtils.trimToEmpty(criteria.getKeyword()))).build();
                 }
                 list = query.find();
                 query.close();
 
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)){
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsPerSample.equal(1)).order(MusicTag_.title).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsDepth.equal(1)).order(MusicTag_.title).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)){
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqa.equal(true)).order(MusicTag_.title).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqaInd.equal("MQA").or(MusicTag_.mqaInd.equal("MQA Studio"))).order(MusicTag_.title).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HI_QUALITY.equals(criteria.keyword)){
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.lossless.notEqual(true).and(MusicTag_.audioBitsPerSample.notEqual(1))).order(MusicTag_.title).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.lossless.notEqual(true).and(MusicTag_.audioBitsDepth.notEqual(1))).order(MusicTag_.title).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
                 Query<MusicTag> query = getMusicTagBox().query(MusicTag_.lossless.equal(true)
-                                .and(MusicTag_.mqa.equal(false))
-                                .and(MusicTag_.audioBitsPerSample.notEqual(1)))
+                               // .and(MusicTag_.mqaInd.mqa(false))
+                                .and(MusicTag_.mqaInd.notEqual("MQA"))
+                                .and(MusicTag_.mqaInd.notEqual("MQA Studio"))
+                                .and(MusicTag_.audioBitsDepth.notEqual(1)))
                         .filter(tag -> {
                             // drop from results
                             return !MusicTagUtils.isPCMHiRes(tag); // include to results
@@ -310,7 +315,8 @@ public class MusicTagRepository {
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)){
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqa.equal(false)).filter(tag -> {
+               // Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqa.equal(false)).filter(tag -> {
+            Query<MusicTag> query = getMusicTagBox().query().filter(tag -> {
                     // drop from results
                     return MusicTagUtils.isPCMHiRes(tag); // && !tag.isMQA(); // include to results
                 }).order(MusicTag_.title).order(MusicTag_.artist).build();
@@ -384,9 +390,56 @@ public class MusicTagRepository {
     }
 
     public static List<MusicTag> getAudioTagWithoutLoudness() {
-        Query<MusicTag> query = getMusicTagBox().query(MusicTag_.loudnessIntegrated.isNull().or(MusicTag_.loudnessIntegrated.equal(""))).build();
+        //Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsDepth.notEqual(1).and(MusicTag_.trackScanned.equals(true))).build();
+        Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsDepth.notEqual(1)).build();
         List<MusicTag> list = query.find();
         query.close();
+        return list;
+    }
+
+    public static List<String> getDefaultPublisherList(Context context) {
+        List<String> list = new ArrayList<>();
+        String[] names = getMusicTagBox().query().build().property(MusicTag_.publisher).distinct().findStrings();
+        if(names!=null) {
+            for (String group:names) {
+                if(StringUtils.isEmpty(group)) {
+                    list.add(StringUtils.EMPTY);
+                }else {
+                    list.add(group);
+                }
+            }
+        }
+        String[] genres =  context.getResources().getStringArray(R.array.default_publisher);
+        for(String genre: genres) {
+            if(!list.contains(genre)) {
+                list.add(genre);
+            }
+        }
+
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<String> getDefaultLanguageList(Context context) {
+        List<String> list = new ArrayList<>();
+        String[] names = getMusicTagBox().query().build().property(MusicTag_.language).distinct().findStrings();
+        if(names!=null) {
+            for (String group:names) {
+                if(StringUtils.isEmpty(group)) {
+                    list.add(StringUtils.EMPTY);
+                }else {
+                    list.add(group);
+                }
+            }
+        }
+        String[] genres =  context.getResources().getStringArray(R.array.default_language);
+        for(String genre: genres) {
+            if(!list.contains(genre)) {
+                list.add(genre);
+            }
+        }
+
+        Collections.sort(list);
         return list;
     }
 }

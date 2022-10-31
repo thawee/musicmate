@@ -73,6 +73,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
+        android:gravity="center"
         android:layout_marginTop="@dimen/spacing_medium"
         >
 <!--
@@ -89,6 +90,7 @@
             android:layout_marginLeft="@dimen/dimen_8_dp"
             />
             -->
+        <!--
         <com.skydoves.powerspinner.PowerSpinnerView
             android:id="@+id/media_source_quality"
             android:layout_width="128dp"
@@ -111,19 +113,21 @@
             app:spinner_popup_animation="dropdown"
             app:spinner_popup_background="@color/black_transparent_80"
             app:spinner_popup_elevation="14dp" />
+            -->
 
         <me.zhanghai.android.materialratingbar.MaterialRatingBar
             android:id="@+id/media_rating"
-            android:layout_width="128dp"
-            android:layout_height="32dp"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dimen_24_dp"
             android:padding="@dimen/dimen_4_dp"
             android:numStars="5"
             android:max="5"
             android:stepSize="1"
             android:background="@drawable/shape_rounded_edittext"
-            android:layout_marginLeft="@dimen/dimen_8_dp"
+            android:layout_marginLeft="@dimen/dimen_24_dp"
+            android:layout_marginRight="@dimen/dimen_24_dp"
             style="@style/Widget.MaterialRatingBar.RatingBar" />
-        <com.skydoves.powerspinner.PowerSpinnerView
+        <!--<com.skydoves.powerspinner.PowerSpinnerView
             android:id="@+id/media_source"
             android:layout_width="match_parent"
             android:layout_height="@dimen/dimen_32_dp"
@@ -146,6 +150,7 @@
             app:spinner_popup_animation="dropdown"
             app:spinner_popup_background="@color/black_transparent_80"
             app:spinner_popup_elevation="14dp" />
+            -->
         <!--
         <com.chivorn.smartmaterialspinner.SmartMaterialSpinner
             android:id="@+id/media_source"
@@ -189,10 +194,203 @@
                 android:layout_marginLeft="@dimen/spacing_small"
                 android:layout_marginRight="@dimen/spacing_small"
                 android:textColor="@color/grey600"
+                android:text="Publisher"
+                android:background="@color/transparent"/>
+
+            <AutoCompleteTextView
+                android:id="@+id/tag_publisher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dip"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@+id/artist"
+                android:completionThreshold="1"
+                android:maxLines="1"
+                android:inputType="text"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:drawablePadding="@dimen/dimen_4_dp"
+                android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
+                android:background="@drawable/shape_rounded_edittext" />
+
+            <!--
+            <com.skydoves.powerspinner.PowerSpinnerView
+                android:id="@+id/tag_genre"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:background="@drawable/shape_rounded_edittext"
+                android:gravity="left|center_vertical"
+                android:hint="@string/editor_hint_genre"
+                android:padding="4dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:textSize="14sp"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                app:spinner_arrow_gravity="end"
+                app:spinner_arrow_padding="8dp"
+                app:spinner_divider_color="@color/grey600_transparent"
+                app:spinner_divider_show="true"
+                app:spinner_divider_size="0.4dp"
+                app:spinner_popup_animation="dropdown"
+                app:spinner_popup_background="@color/black_transparent_80"
+                app:spinner_popup_elevation="14dp" /> -->
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:textColor="@color/grey600"
+                android:gravity="center"
+                android:text="Media Type"
+                android:background="@color/transparent"/>
+        <com.skydoves.powerspinner.PowerSpinnerView
+            android:id="@+id/media_source"
+            android:layout_width="@dimen/dimen_128_dp"
+            android:layout_height="@dimen/dimen_32_dp"
+            android:background="@drawable/shape_rounded_edittext"
+            android:gravity="left|center_vertical"
+            android:hint="Source"
+            android:padding="4dp"
+            android:textColor="@color/white"
+            android:textColorHint="@color/white"
+            android:textSize="14sp"
+            android:layout_marginLeft="@dimen/dimen_8_dp"
+            android:layout_marginRight="@dimen/dimen_8_dp"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
+            app:spinner_arrow_gravity="end"
+            app:spinner_arrow_padding="8dp"
+            app:spinner_divider_color="@color/grey600_transparent"
+            app:spinner_divider_show="true"
+            app:spinner_divider_size="1.2dp"
+            app:spinner_popup_animation="dropdown"
+            app:spinner_popup_background="@color/black_transparent_80"
+            app:spinner_popup_elevation="14dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:textColor="@color/grey600"
+                android:text="Media Quality"
+                android:background="@color/transparent"/>
+            <com.skydoves.powerspinner.PowerSpinnerView
+                android:id="@+id/media_source_quality"
+                android:layout_width="120dp"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:background="@drawable/shape_rounded_edittext"
+                android:gravity="left|center_vertical"
+                android:hint="Quality"
+                android:padding="4dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:textSize="14sp"
+                android:layout_marginLeft="@dimen/dimen_8_dp"
+                android:drawablePadding="@dimen/dimen_4_dp"
+                android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
+                app:spinner_arrow_gravity="end"
+                app:spinner_arrow_padding="8dp"
+                app:spinner_divider_color="@color/grey600_transparent"
+                app:spinner_divider_show="true"
+                app:spinner_divider_size="1.4dp"
+                app:spinner_popup_animation="dropdown"
+                app:spinner_popup_background="@color/black_transparent_80"
+                app:spinner_popup_elevation="14dp" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:textColor="@color/grey600"
                 android:text="@string/editor_label_group"
                 android:background="@color/transparent"/>
             <AutoCompleteTextView
                 android:id="@+id/tag_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dip"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:imeOptions="actionNext"
+                android:nextFocusDown="@+id/genre"
+                android:maxLines="1"
+                android:inputType="text"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
+                android:background="@drawable/shape_rounded_edittext" />
+            <!--
+            <com.skydoves.powerspinner.PowerSpinnerView
+                android:id="@+id/tag_group"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dimen_32_dp"
+                android:background="@drawable/shape_rounded_edittext"
+                android:gravity="left|center_vertical"
+                android:hint="@string/editor_hint_group"
+                android:padding="4dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:textSize="14sp"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                app:spinner_arrow_gravity="end"
+                app:spinner_arrow_padding="8dp"
+                app:spinner_divider_color="@color/grey600_transparent"
+                app:spinner_divider_show="true"
+                app:spinner_divider_size="0.4dp"
+                app:spinner_popup_animation="dropdown"
+                app:spinner_popup_background="@color/black_transparent_80"
+                app:spinner_popup_elevation="14dp" /> -->
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:textColor="@color/grey600"
+                android:gravity="center"
+                android:text="@string/editor_label_language"
+                android:background="@color/transparent"/>
+            <AutoCompleteTextView
+                android:id="@+id/tag_language"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="5dip"
@@ -287,6 +485,7 @@
                 app:spinner_popup_elevation="14dp" /> -->
         </LinearLayout>
     </LinearLayout>
+    <!--
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -294,8 +493,14 @@
         android:layout_marginBottom="@dimen/dimen_8_dp"
         android:textColor="?android:attr/textColorPrimary"
         android:text="@string/editor_song_info"
+        android:background="@color/transparent"/> -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:textColor="@color/grey600"
+        android:text="Title"
         android:background="@color/transparent"/>
-
     <EditText
         android:id="@+id/tag_title"
         android:layout_width="match_parent"
@@ -306,7 +511,8 @@
         android:imeOptions="actionNext"
         android:nextFocusDown="@+id/tag_artist"
         android:maxLines="2"
-        android:inputType="text"
+        android:singleLine="false"
+        android:inputType="textMultiLine"
         android:textSize="14sp"
         android:textColor="@color/white"
         android:background="@drawable/shape_rounded_edittext" />
@@ -431,6 +637,8 @@
         android:layout_marginTop="@dimen/dimen_8_dp"
         android:textColor="?android:attr/textColorPrimary"
         android:text="@string/editor_album_info"
+        android:textSize="16dp"
+        android:textStyle="bold"
         android:background="@color/transparent"/>
     <!--
     <com.google.android.material.textview.MaterialTextView

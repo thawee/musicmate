@@ -64,10 +64,21 @@
     <string-array name="default_album_artist" >
         <item>Various Artists</item>
         <item>Worship Songs</item>
+    </string-array>
+    <string-array name="default_publisher" >
         <!-- audio recording company -->
+        <item>Joox</item>
+        <item>Qobuz</item>
+        <item>Apple</item>
+        <item>Spotify</item>
+        <item>Tidal</item>
+        <item>Youtube</item>
+        <item>2L</item>
+        <item>HDTracks</item>
+        <item>NativeDSD</item>
+        <item>Onkyo</item>
         <item>GMM Grammy</item>
         <item>Audioquest</item>
-        <item>HD Tracks</item>
         <item>Reference Recordings</item>
         <item>Chesky Records</item>
         <item>Linn Records</item>
@@ -100,21 +111,13 @@
         <item>54sp</item>
     </array>
 
-    <string-array name="default_source">
-        <item>Joox</item>
-        <item>Qobuz</item>
+    <string-array name="default_mediaType">
+        <item>Digital</item>
         <item>CD</item>
         <item>SACD</item>
-        <item>Downloads</item>
+        <item>CD</item>
+        <item>MC</item>
         <item>VINYL</item>
-        <item>Apple</item>
-        <item>Spotify</item>
-        <item>Tidal</item>
-        <item>Youtube</item>
-        <item>2L</item>
-        <item>HDTracks</item>
-        <item>NativeDSD</item>
-        <item>Onkyo</item>
     </string-array>
 
     <string-array name="default_genres">
@@ -152,10 +155,18 @@
     <string-array name="default_groupings">
         <item>Lounge</item>
         <item>Thai</item>
-        <item>English</item>
+
         <item>World</item>
         <!--
+        <item>English</item>
         <item>Laos</item>
         -->
+    </string-array>
+    <string-array name="default_language">
+        <item>Chinese</item>
+        <item>Japanese</item>
+        <item>English</item>
+        <item>Thai</item>
+        <item>Laos</item>
     </string-array>
 </resources>

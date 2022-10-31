@@ -113,5 +113,6 @@
     <string name="file_explorer_label">File Explorer</string>
     <string name="app_statistics">Statistics</string>
     <string name="encoding_format">Encoding Format:</string>
+    <string name="editor_label_language">Language</string>
 
 </resources>

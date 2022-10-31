@@ -1,5 +1,8 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -21,7 +24,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.text.NumberFormat;
+import java.util.Locale;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
@@ -164,7 +167,7 @@ public class MusicTagUtils {
     private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
         int width = 340; // 24x85, 16x56, 18x63
         int height = 96;
-        int whiteColor = context.getColor(R.color.white);
+       // int whiteColor = context.getColor(R.color.white);
         int greyColor = context.getColor(R.color.grey200);
         int blackColor = context.getColor(R.color.black);
         int bgBlackColor = context.getColor(R.color.grey900);
@@ -177,11 +180,13 @@ public class MusicTagUtils {
         String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
 
         if(tag.isDSD()) {
+            // dsd use bitrate
             label = "DSD";
-        }else if(tag.isMQA()) {
-            label = "MQA";
-            samplingRate = StringUtils.getFormatedAudioSampleRate(parseMQASampleRate(tag.getMQASampleRate()),false);
-            if(tag.isMQAStudio()) {
+            samplingRate = StringUtils.getFormatedAudioBitRateNoUnit(tag.getAudioBitRate());
+        }else if(isMQA(tag)) {
+            label = "MQA"; //tag.getMqaInd();
+            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getMqaSampleRate(),false);
+            if(isMQAStudio(tag)) {
                 barColor = context.getColor(R.color.mqa_studio);
             }else {
                 barColor = context.getColor(R.color.mqa_master);
@@ -189,12 +194,12 @@ public class MusicTagUtils {
         } else {
             // PCM, draw bit
             label = "Bit"; //"PCM";
-            labelBPS = String.valueOf(tag.getAudioBitsPerSample());
+            labelBPS = String.valueOf(tag.getAudioBitsDepth());
             isPCM = true;
             isLossless = tag.isLossless();
             if(!tag.isLossless()) {
                 // compress rate
-                label = tag.getAudioEncoding();
+                label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
                 samplingRate = StringUtils.getFormatedAudioBitRateNoUnit(tag.getAudioBitRate());
             }
         }
@@ -441,6 +446,13 @@ public class MusicTagUtils {
         return myBitmap;
     }
 
+    private static boolean isMQAStudio(MusicTag tag) {
+        return trimToEmpty(tag.getMqaInd()).contains("MQA Studio");
+    }
+
+    public static boolean isMQA(MusicTag tag) {
+        return trimToEmpty(tag.getMqaInd()).contains("MQA");
+    }
 
     private static Bitmap createEncodingSamplingRateIcon2(Context context, MusicTag tag) {
         int width = 340; // 24x85, 16x56, 18x63
@@ -458,10 +470,10 @@ public class MusicTagUtils {
 
         if(tag.isDSD()) {
             label = "DSD";
-        }else if(tag.isMQA()) {
+        }else if(isMQA(tag)) {
             label = "MQA";
-            samplingRate = StringUtils.getFormatedAudioSampleRate(parseMQASampleRate(tag.getMQASampleRate()),false);
-            if(tag.isMQAStudio()) {
+            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getMqaSampleRate(),false);
+            if(isMQAStudio(tag)) {
                 barColor = context.getColor(R.color.mqa_studio);
             }else {
                 barColor = context.getColor(R.color.mqa_master);
@@ -469,7 +481,7 @@ public class MusicTagUtils {
         } else {
             //
             label = "PCM";
-            labelBPS = String.valueOf(tag.getAudioBitsPerSample());
+            labelBPS = String.valueOf(tag.getAudioBitsDepth());
             isPCM = true;
             if(!tag.isLossless()) {
                 // compress rate
@@ -719,7 +731,7 @@ public class MusicTagUtils {
         int recordsColor = context.getColor(R.color.audiophile_label2);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.audiophile_label1);
-        String label1 = StringUtils.trimToEmpty(qualityText); //;"Audiophile";
+        String label1 = trimToEmpty(qualityText); //;"Audiophile";
         String label2 = "R e c o r d s";
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -891,32 +903,32 @@ public class MusicTagUtils {
     }
 
     public static boolean is24Bits(MusicTag tag) {
-        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD));
+        return ( tag.isLossless() && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
 
     public static boolean isDSD(MusicTag tag) {
-        return tag.getAudioBitsPerSample()==Constants.QUALITY_BIT_DEPTH_DSD;
+        return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
     public static boolean isPCMHiRes(MusicTag tag) {
         // > 24/88
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ( tag.isLossless() && (tag.getAudioBitsPerSample() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
+        return ( tag.isLossless() && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
     }
 
     public static boolean isPCMLossless(MusicTag tag) {
         // 16/48
         // 24/48
         return ( tag.isLossless() &&
-                ((tag.getAudioBitsPerSample() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48))); // ||
+                ((tag.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48))); // ||
                 // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
     }
 
     public static String getFormattedTitle(Context context, MusicTag tag) {
-        String title =  StringUtils.trimToEmpty(tag.getTitle());
+        String title =  trimToEmpty(tag.getTitle());
         if(Preferences.isShowTrackNumber(context)) {
-            String track = StringUtils.trimToEmpty(tag.getTrack());
+            String track = trimToEmpty(tag.getTrack());
             if(track.startsWith("0")) {
                 track = track.substring(1);
             }
@@ -959,13 +971,13 @@ public class MusicTagUtils {
     public static double calculateFileSize(MusicTag tag) {
         // audio file size = bit rate * duration of audio in seconds * number of channels
         //bit rate = bit depth * sample rate
-        double calSize = tag.getAudioBitsPerSample()*tag.getAudioSampleRate();
+        double calSize = tag.getAudioBitsDepth()*tag.getAudioSampleRate();
         calSize = calSize * tag.getAudioDuration()*getChannels(tag);
         return calSize/8;
     }
 
     private static long getChannels(MusicTag tag) {
-        String channels = StringUtils.trimToEmpty(tag.getAudioChannels());
+        String channels = trimToEmpty(tag.getAudioChannels());
         if("Stereo".equalsIgnoreCase(channels)) {
             channels = "2";
         }
@@ -1011,17 +1023,19 @@ public class MusicTagUtils {
         String path = "/Icons/";
 
         if(tag.isDSD()) {
-            path = path+"DSD_" + tag.getAudioSampleRate();
-        }else if(tag.isMQA()) {
-            path = path+"MQA";
-            if (tag.isMQAStudio()) {
+            // dsd use bitrate
+            path = path+"DSD_" + tag.getAudioBitRate();
+        }else if(isMQA(tag)) {
+            path = path+tag.getMqaInd();
+           /* path = path+"MQA";
+            if (isMQAStudio(tag)) {
                 path = path + "Studio";
-            }
+            } */
             path = path + "_" + tag.getAudioSampleRate();
         }else if(tag.isLossless()){
-            path = path + "PCM"+tag.getAudioBitsPerSample()+"_" + tag.getAudioSampleRate();
+            path = path + "PCM"+tag.getAudioBitsDepth()+"_" + tag.getAudioSampleRate();
         }else {
-            path = path + tag.getAudioEncoding()+"_" + tag.getAudioBitRate();
+            path = path + tag.getFileFormat()+"_" + tag.getAudioBitRate();
         }
 
         File pathFile = new File(dir, path+".png");
@@ -1047,7 +1061,7 @@ public class MusicTagUtils {
     public static File getSourceQualityIcon(Context context, MusicTag tag) {
         //AudiophileRecords.png
         File dir = context.getExternalCacheDir();
-        String quality = StringUtils.trimToEmpty(tag.getSourceQuality());
+        String quality = trimToEmpty(tag.getMediaQuality());
         String path = "/Icons/Quality"+quality+"Records.png";
 
         File pathFile = new File(dir, path);
@@ -1084,47 +1098,53 @@ public class MusicTagUtils {
 
     public static int getSourceRescId(String letter) {
         //String letter = item.getSource();
-        if (StringUtils.isEmpty(letter)) {
-            letter = Constants.SRC_NONE;
-        }
-        if (letter.equalsIgnoreCase(Constants.SRC_JOOX)) {
+        if (letter.equalsIgnoreCase(Constants.PUBLISHER_JOOX)) {
             return R.drawable.icon_joox;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_QOBUZ)) {
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_QOBUZ)) {
             return R.drawable.icon_qobuz;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_CD)) { // || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
+        } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_CD)) { // || letter.equalsIgnoreCase(Constants.SRC_CD_LOSSLESS)) {
             return R.drawable.icon_cd;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_SACD)) {
+        } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_SACD)) {
             return R.drawable.icon_sacd;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_VINYL)) {
+        } else if (letter.equalsIgnoreCase(Constants.MEDIA_TYPE_VINYL)) {
             return R.drawable.icon_vinyl;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_SPOTIFY)) {
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_SPOTIFY)) {
             return R.drawable.icon_spotify;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_TIDAL)) {
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_TIDAL)) {
             return R.drawable.icon_tidal;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_APPLE)) {
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_APPLE)) {
             return R.drawable.icon_itune;
-        } else if (letter.equalsIgnoreCase(Constants.SRC_YOUTUBE)) {
+        } else if (letter.equalsIgnoreCase(Constants.PUBLISHER_YOUTUBE)) {
             return R.drawable.icon_youtube;
         }
 
         return -1;
     }
-    public static Bitmap getSourceIcon(Context context, String source) {
+    public static Bitmap getSourceIcon(Context context, MusicTag tag) {
         int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
-        String letter = source; //item.getSource();
+        //String letter = source; //item.getSource();
+        String letter = "";
+        if(isEmpty(tag.getPublisher())) {
+            letter = tag.getMediaType();
+        }else {
+            letter = tag.getPublisher();
+        }
         if(StringUtils.isEmpty(letter)) {
-            letter = Constants.SRC_NONE;
+            return null;
         }
         int size =24;
         int rescId = getSourceRescId(letter);
-        if(Constants.SRC_NONE.equals(letter)) {
-           return null;
-        }else if(rescId ==-1) {
+
+        if(rescId ==-1) {
             int width = 48;
             int height = 48;
             int whiteColor = Color.WHITE;
-            if(letter.equalsIgnoreCase(Constants.SRC_HD_TRACKS)) {
+            letter = StringUtils.abvByUpperCase(letter);
+            if(StringUtils.isEmpty(letter)) {
+                return null;
+            }
+            /*if(letter.equalsIgnoreCase(Constants.SRC_HD_TRACKS)) {
                 letter = "HD";
             }else if(letter.equalsIgnoreCase(Constants.SRC_2L)) {
                 letter = "2L";
@@ -1134,7 +1154,7 @@ public class MusicTagUtils {
                 letter = "e";
             }else {
                 letter = StringUtils.getChars(letter, 1);
-            }
+            } */
             return createButtonFromText (context, width, height, letter, whiteColor, borderColor,qualityColor);
         }else {
             return createBitmapFromDrawable(context, size, size,rescId,qualityColor, qualityColor);
@@ -1158,9 +1178,9 @@ public class MusicTagUtils {
         public static String getTrackQuality(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
-        }else if(tag.isMQAStudio()) {
+        }else if(isMQAStudio(tag)) {
             return Constants.TITLE_MASTER_STUDIO_AUDIO;
-        }else if(tag.isMQA()) {
+        }else if(isMQA(tag)) {
             return Constants.TITLE_MASTER_AUDIO;
         }else if(isPCMHiRes(tag)) {
             return Constants.TITLE_HIRES;
@@ -1178,9 +1198,9 @@ public class MusicTagUtils {
     public static String getTrackQualityDetails(MusicTag tag) {
         if(tag.isDSD()) {
             return "Enjoy rich music which the detail and wide range of the music, its warm tone is very enjoyable.";
-        }else if(tag.isMQAStudio()) {
+        }else if(isMQAStudio(tag)) {
             return "Enjoy the original recordings, directly from mastering engineers, producers or artists to their listeners.";
-        }else if(tag.isMQA()) {
+        }else if(isMQA(tag)) {
             return "Enjoy the original recordings, directly from the master recordings, in the highest quality.";
         }else if(isPCMHiRes(tag)) {
             return "Enjoy rich music which reproduces fine details of musical instruments.";
@@ -1197,7 +1217,7 @@ public class MusicTagUtils {
         if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
             defaultAlbum = "Single"; //getFirstArtist(tag.getArtist())+" - Single";
         }else {
-            defaultAlbum = StringUtils.trimToEmpty(tag.getAlbum());
+            defaultAlbum = trimToEmpty(tag.getAlbum());
         }
         return defaultAlbum;
     }
@@ -1222,10 +1242,11 @@ public class MusicTagUtils {
        // int darkGreyColor = context.getColor(R.color.grey900);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.material_color_blue_grey_100);
-        String lra = StringUtils.trim(tag.getLoudnessRange(),"--");
-        String il= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
+        String lra = String.format(Locale.getDefault(),"%.1f", tag.getTrackRange()); //StringUtils.trim(tag.getTrackRange(),"--");
+        String il= String.format(Locale.getDefault(),"%.1f", tag.getTrackLoudness()); //StringUtils.trim(tag.getTrackLoudness(),"--");
         //String tp= StringUtils.trim(tag.getTruePeek(),"--");
-        String rg = StringUtils.trim(tag.getReplayGain(),"--");
+       // String rg = StringUtils.trim(tag.getTrackGain(),"--");
+        String rg =   String.format(Locale.getDefault(),"%.2f", tag.getTrackGain());
         if("--".equalsIgnoreCase(il) || "-70.0".equalsIgnoreCase(il)) {
             qualityColor = context.getColor(R.color.warningColor);
         }
@@ -1346,10 +1367,12 @@ public class MusicTagUtils {
         Rect textMathRect = new Rect();
         mLetterPaint.getTextBounds(il, 0, 1, textMathRect);
         float mLetterTop = (textMathRect.height()); // / 2.5f);
-        float mPositionY= (float) (bounds.exactCenterY() *0.3);
+       // float mPositionY= (float) (bounds.exactCenterY() *0.3);
+        float mPositionY = bounds.exactCenterY();
         myCanvas.drawText(il,
                 bounds.left + (bounds.exactCenterX() / 3) + 2, //left
-                (float) (bounds.bottom-textMathRect.height())-20, // top
+               // (float) (bounds.bottom-textMathRect.height())-20, // top
+                bounds.top + mPositionY + 16, // top
                 mLetterPaint);
 
         // draw true peak text, black color
@@ -1386,7 +1409,7 @@ public class MusicTagUtils {
 
         return myBitmap;
     }
-
+/*
     public static Bitmap createLoudnessIcon1(Context context,  MusicTag tag) {
         int width = 340; // for xx
         int height = 96; // 16
@@ -1394,9 +1417,9 @@ public class MusicTagUtils {
         int darkGreyColor = context.getColor(R.color.grey900);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.grey200);
-        String lra = StringUtils.trim(tag.getLoudnessRange(),"--");
-        String il= StringUtils.trim(tag.getLoudnessIntegrated(),"--");
-        String tp= StringUtils.trim(tag.getTruePeek(),"--");
+        String lra = StringUtils.trim(tag.getTrackRange(),"--");
+        String il= StringUtils.trim(tag.getTrackLoudness(),"--");
+        String tp= StringUtils.trim(tag.getTrackTruePeek(),"--");
         if(!"--".equalsIgnoreCase(il)) {
             try {
                 double intg =NumberFormat.getInstance().parse(il).doubleValue();
@@ -1557,12 +1580,12 @@ public class MusicTagUtils {
                 mLetterPaint);
 
         return myBitmap;
-    }
+    } */
 
     public static String getEncodingType(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.AUDIO_SQ_DSD;
-        }else if(tag.isMQA()) {
+        }else if(isMQA(tag)) {
                   return Constants.AUDIO_SQ_PCM_MQA;
         }else if(isPCMHiRes(tag)) {
             return Constants.TITLE_HIRES;
@@ -1576,17 +1599,22 @@ public class MusicTagUtils {
     }
 
     public static boolean isWavFile(MusicTag musicTag) {
-        return (Constants.MEDIA_EXT_WAVE.equalsIgnoreCase(musicTag.getFileExtension()));
+        return (Constants.MEDIA_EXT_WAVE.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
     public static boolean isFlacFile(MusicTag musicTag) {
-        return (Constants.MEDIA_EXT_FLAC.equalsIgnoreCase(musicTag.getFileExtension()));
+        return (Constants.MEDIA_EXT_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
-    public static void initMusicTag(MusicTag tag) {
-        tag.setFileSizeRatio(MusicTagUtils.getFileSizeRatio(tag));
-        if(StringUtils.isEmpty(tag.getUniqueKey())) {
-            tag.setUniqueKey(tag.getPath()+"_"+ StringUtils.trimToEmpty(tag.getTrack())+"_"+StringUtils.trimToEmpty(tag.getTitle()));
+    public static Bitmap getMediaTypeIcon(Context context, String src) {
+        //int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
+        int qualityColor = Color.TRANSPARENT;
+
+        int size =24;
+        int rescId = getSourceRescId(src);
+        if(rescId!=-1) {
+            return createBitmapFromDrawable(context, size, size, rescId, qualityColor, qualityColor);
         }
+        return null;
     }
 }

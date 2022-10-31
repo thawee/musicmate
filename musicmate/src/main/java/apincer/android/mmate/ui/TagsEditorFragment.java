@@ -269,8 +269,8 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setGenre(buildTag(viewHolder.mGenreView, originTag.getGenre()));
         tagUpdate.setYear(buildTag(viewHolder.mYearView, originTag.getYear()));
         tagUpdate.setDisc(buildTag(viewHolder.mDiscView, originTag.getDisc()));
-        tagUpdate.setSource(buildTag(viewHolder.mMediaSourceView, originTag.getSource()));
-        tagUpdate.setSourceQuality(buildTag(viewHolder.mMediaSourceQualityView, originTag.getSourceQuality()));
+        tagUpdate.setMediaType(buildTag(viewHolder.mMediaSourceView, originTag.getMediaType()));
+        tagUpdate.setMediaQuality(buildTag(viewHolder.mMediaSourceQualityView, originTag.getMediaQuality()));
         tagUpdate.setRating(buildTag(viewHolder.mRatingBar));
     }
 
@@ -312,6 +312,8 @@ public class TagsEditorFragment extends Fragment {
         private final EditText mYearView;
         private final EditText mComposerView;
         private final AutoCompleteTextView mGroupingView;
+        private final AutoCompleteTextView mPublisherView;
+        private final AutoCompleteTextView mLanguageView;
         private final EditText mCommentView;
         private final EditText mTrackView;
         private final EditText mDiscView;
@@ -377,7 +379,7 @@ public class TagsEditorFragment extends Fragment {
             List<String> srcs = Constants.getSourceList(requireContext());
             mMediaSourceItems.add(new IconSpinnerItem("",null));
             for(String src : srcs) {
-                Bitmap ico = MusicTagUtils.getSourceIcon(getContext(),src);
+                Bitmap ico = MusicTagUtils.getMediaTypeIcon(getContext(),src);
                 mMediaSourceItems.add(new IconSpinnerItem(src,BitmapHelper.bitmapToDrawable(requireContext(), ico)));
             }
 
@@ -403,7 +405,6 @@ public class TagsEditorFragment extends Fragment {
             mArtistView.setThreshold(2);
             mArtistView.setAdapter(arrayAdapter);
             mArtistView.setOnTouchListener((v, event) -> {
-
                 if(event.getAction() == MotionEvent.ACTION_UP) {
                     if(event.getRawX() >= (mArtistView.getRight() - mArtistView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
                         // your action here
@@ -484,6 +485,44 @@ public class TagsEditorFragment extends Fragment {
                 return false;
             });
 
+            // publisher
+            mPublisherView = setupAutoCompleteTextView(view, R.id.tag_publisher);
+            list = MusicTagRepository.getDefaultPublisherList(requireContext());
+            arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
+            //Used to specify minimum number of
+            //characters the user has to type in order to display the drop down hint.
+            mPublisherView.setThreshold(1);
+            mPublisherView.setAdapter(arrayAdapter);
+            mPublisherView.setOnTouchListener((v, event) -> {
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getRawX() >= (mPublisherView.getRight() - mPublisherView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        mPublisherView.showDropDown();
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            //Languge
+            mLanguageView = setupAutoCompleteTextView(view, R.id.tag_language);
+            list = MusicTagRepository.getDefaultLanguageList(requireContext());
+            arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
+            //Used to specify minimum number of
+            //characters the user has to type in order to display the drop down hint.
+            mLanguageView.setThreshold(1);
+            mLanguageView.setAdapter(arrayAdapter);
+            mLanguageView.setOnTouchListener((v, event) -> {
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getRawX() >= (mLanguageView.getRight() - mLanguageView.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        mLanguageView.showDropDown();
+                        return true;
+                    }
+                }
+                return false;
+            });
+
 
             //composer
             mComposerView = setupTextEdit(view, R.id.tag_composer);
@@ -529,7 +568,7 @@ public class TagsEditorFragment extends Fragment {
             int sIndex =0;
             for(int indx=0; indx < mMediaSourceQualityItems.size();indx++) {
                 IconSpinnerItem item = mMediaSourceQualityItems.get(indx);
-                if(item.getText().equals(mediaTag.getSourceQuality())) {
+                if(item.getText().equals(mediaTag.getMediaQuality())) {
                     sIndex = indx;
                     break;
                 }
@@ -576,7 +615,7 @@ public class TagsEditorFragment extends Fragment {
             int selectedIndex =0;
             for(int indx=0; indx < mMediaSourceItems.size();indx++) {
                 IconSpinnerItem item = mMediaSourceItems.get(indx);
-                if(item.getText().equals(mediaTag.getSource())) {
+                if(item.getText().equals(mediaTag.getMediaType())) {
                     selectedIndex = indx;
                     break;
                 }

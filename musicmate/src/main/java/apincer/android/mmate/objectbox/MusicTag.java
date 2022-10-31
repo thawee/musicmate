@@ -16,6 +16,7 @@ import io.objectbox.annotation.Id;
 import io.objectbox.annotation.Index;
 import io.objectbox.annotation.Transient;
 import io.objectbox.annotation.Unique;
+
 @Entity
 public class MusicTag implements Cloneable, Parcelable {
     @Override
@@ -46,115 +47,38 @@ public class MusicTag implements Cloneable, Parcelable {
     // file information
     @Index
     protected String path = "";
-    protected long lastModified = 0;
-    protected long fileSize;
-
-    public int getFileSizeRatio() {
-        return fileSizeRatio;
-    }
-
-    public void setFileSizeRatio(int fileSizeRatio) {
-        this.fileSizeRatio = fileSizeRatio;
-    }
-
     protected int fileSizeRatio;
-    protected String fileExtension;
+    protected String fileFormat;
+    protected long fileLastModified = 0;
+    protected long fileSize;
+    protected String data;
 
     // Mate info
-    protected boolean managed;
+    protected boolean musicManaged;
     protected String storageId;
-    protected String storageName;
     protected String simpleName;
-    protected String source = "";
-    protected boolean cueSheet;
+    protected String mediaType = "";
+    // protected boolean cueSheet;
     @Index
-    protected String sourceQuality;
-
-    public String getSourceQuality() {
-        return sourceQuality;
-    }
-
-    public void setSourceQuality(String sourceQuality) {
-        this.sourceQuality = sourceQuality;
-    }
-
+    protected String mediaQuality;
     protected int rating; //0-10
-
     // audio information
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
     @Index
     protected boolean lossless;
-    protected boolean mqaDeepScan;
-
-    public boolean isMqaDeepScan() {
-        return mqaDeepScan;
-    }
-
-    public void setMqaDeepScan(boolean mqaDeepScan) {
-        this.mqaDeepScan = mqaDeepScan;
-    }
-
     @Index
-    protected boolean mqa;
-    protected boolean mqaStudio;
-    protected String mqaSampleRate;
+    protected String mqaInd;
+    protected long mqaSampleRate;
+    protected boolean mqaScanned = false;
     protected String audioChannels; // 2, 4
 
-    public String getLoudnessIntegrated() {
-        return loudnessIntegrated;
-    }
-
-    public void setLoudnessIntegrated(String loudnessIntegrated) {
-        this.loudnessIntegrated = loudnessIntegrated;
-    }
-
-    public String getLoudnessRange() {
-        return loudnessRange;
-    }
-
-    public void setLoudnessRange(String loudnessRange) {
-        this.loudnessRange = loudnessRange;
-    }
-
-    public String getTruePeek() {
-        return truePeek;
-    }
-
-    public void setTruePeek(String loudnessTruePeek) {
-        this.truePeek = loudnessTruePeek;
-    }
-
-    // loudness
     @Index
-    protected String loudnessIntegrated; // average loudness, negative value unit of LUFS
-    protected String loudnessRange; // Dynamic Range, LU
-    protected String truePeek; // unit of dB
-
-    public String getReplayGain() {
-        return replayGain;
-    }
-
-    public void setReplayGain(String replayGain) {
-        this.replayGain = replayGain;
-    }
-
-    protected String replayGain; // replay gain V2, references LI -18.00 LUFS
-
-    public String getAudioChannels() {
-        return audioChannels;
-    }
-
-    public void setAudioChannels(String audioChannels) {
-        this.audioChannels = audioChannels;
-    }
-
-    @Index
-    protected int audioBitsPerSample; // 16/24/32 bits
+    protected int audioBitsDepth; // 16/24/32 bits
     @Index
     protected long audioSampleRate; //44100,48000,88200,96000,192000
     protected long audioBitRate; //128, 256, 320 kbps
     protected double audioDuration;
-    //protected String startLocation; // for supporting cuesheet, iso sacd
+    protected double audioStartTime; // for supporting cuesheet, iso sacd
 
     // tags information
     @Index
@@ -172,67 +96,58 @@ public class MusicTag implements Cloneable, Parcelable {
     protected String grouping = "";
     protected String composer = "";
     protected String albumArtist = "";
-    protected int bpm;
-    protected boolean partOfCompilation;
+    protected boolean compilation;
+    protected String publisher = "";
+    protected String embedCoverArt = "";
+    protected String language = "";
 
-    public String getStorageName() {
-        return storageName;
+    // loudness and gain
+    protected boolean trackScanned;
+    protected double trackLoudness; // average loudness, negative value unit of LUFS
+    protected double trackRange; // Dynamic Range, LU
+    protected double trackTruePeek; // unit of dB
+    protected double trackGain; // replay gain V2, references LI -18.00 LUFS
+
+    public int getFileSizeRatio() {
+        return fileSizeRatio;
     }
 
-    public void setStorageName(String storageName) {
-        this.storageName = storageName;
+    public void setFileSizeRatio(int fileSizeRatio) {
+        this.fileSizeRatio = fileSizeRatio;
     }
 
-    public boolean isMqa() {
-        return mqa;
+    public String getMqaInd() {
+        return mqaInd;
     }
 
-    public void setMqa(boolean mqa) {
-        this.mqa = mqa;
+    public void setMqaInd(String mqaInd) {
+        this.mqaInd = mqaInd;
     }
 
-    public boolean isMqaStudio() {
-        return mqaStudio;
+
+    public String getAudioChannels() {
+        return audioChannels;
     }
 
-    public void setMqaStudio(boolean mqaStudio) {
-        this.mqaStudio = mqaStudio;
+    public void setAudioChannels(String audioChannels) {
+        this.audioChannels = audioChannels;
     }
 
-    public String getMqaSampleRate() {
+    public long getMqaSampleRate() {
         return mqaSampleRate;
     }
 
-    public void setMqaSampleRate(String mqaSampleRate) {
+    public void setMqaSampleRate(long mqaSampleRate) {
         this.mqaSampleRate = mqaSampleRate;
     }
 
-    public int getBpm() {
-        return bpm;
+    public String getData() {
+        return data;
     }
 
-    public void setBpm(int bpm) {
-        this.bpm = bpm;
+    public void setData(String data) {
+        this.data = data;
     }
-
-    public boolean isPartOfCompilation() {
-        return partOfCompilation;
-    }
-
-    public void setPartOfCompilation(boolean partOfCompilation) {
-        this.partOfCompilation = partOfCompilation;
-    }
-
-    public String getEncoder() {
-        return encoder;
-    }
-
-    public void setEncoder(String encoder) {
-        this.encoder = encoder;
-    }
-
-    protected String encoder = "";
-
 
     public MusicTag() {
     }
@@ -245,39 +160,21 @@ public class MusicTag implements Cloneable, Parcelable {
         this.rating = rating;
     }
 
-    public boolean isMQAStudio() {
-        return mqaStudio;
-    }
-
-    public void setMQAStudio(boolean mqaStudio) {
-        this.mqaStudio = mqaStudio;
-    }
-
-    public String getMQASampleRate() {
-        return mqaSampleRate;
-    }
-
-    public void setMQASampleRate(String mqaSampleRate) {
-        this.mqaSampleRate = mqaSampleRate;
-    }
-
     protected MusicTag(Parcel in) {
         originTag = in.readParcelable(MusicTag.class.getClassLoader());
         id = in.readLong();
         uniqueKey = in.readString();
         path = in.readString();
-        lastModified = in.readLong();
-        //obsoletePath = in.readString();
+        fileLastModified = in.readLong();
         fileSize = in.readLong();
         fileSizeRatio = in.readInt();
-        fileExtension = in.readString();
+        fileFormat = in.readString();
         audioEncoding = in.readString();
         lossless = in.readByte() != 0;
-        mqaDeepScan = in.readByte() != 0;
-        mqa = in.readByte() != 0;
-        mqaStudio = in.readByte() != 0;
-        mqaSampleRate = in.readString();
-        audioBitsPerSample = in.readInt();
+        mqaScanned = in.readByte() != 0;
+        mqaInd = in.readString();
+        mqaSampleRate = in.readLong();
+        audioBitsDepth = in.readInt();
         audioSampleRate = in.readLong();
         audioBitRate = in.readLong();
         audioDuration = in.readDouble();
@@ -293,19 +190,20 @@ public class MusicTag implements Cloneable, Parcelable {
         composer = in.readString();
         albumArtist = in.readString();
         rating = in.readInt();
-        managed = in.readByte() != 0;
+        musicManaged = in.readByte() != 0;
         storageId = in.readString();
         simpleName = in.readString();
-        source = in.readString();
-        cueSheet = in.readByte() != 0;
-        sourceQuality = in.readString();
-        loudnessIntegrated = in.readString();
-        loudnessRange = in.readString();
-        truePeek = in.readString();
-        replayGain = in.readString();
-        encoder = in.readString();
-        partOfCompilation = in.readByte() != 0;
-        bpm = in.readInt();
+        mediaType = in.readString();
+        mediaQuality = in.readString();
+        trackLoudness = in.readDouble();
+        trackRange = in.readDouble();
+        trackTruePeek = in.readDouble();
+        trackGain = in.readDouble();
+        compilation = in.readByte() != 0;
+        publisher = in.readString();
+        language = in.readString();
+        embedCoverArt = in.readString();
+        audioStartTime = in.readDouble();
     }
 
     public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
@@ -328,10 +226,6 @@ public class MusicTag implements Cloneable, Parcelable {
         this.id = id;
     }
 
-    public void setManaged(boolean managed) {
-        this.managed = managed;
-    }
-
     public String getSimpleName() {
         return simpleName;
     }
@@ -348,22 +242,6 @@ public class MusicTag implements Cloneable, Parcelable {
         this.storageId = storageId;
     }
 
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public boolean isCueSheet() {
-        return cueSheet;
-    }
-
-    public void setCueSheet(boolean cueSheet) {
-        this.cueSheet = cueSheet;
-    }
-
     public long getFileSize() {
         return fileSize;
     }
@@ -372,16 +250,12 @@ public class MusicTag implements Cloneable, Parcelable {
         this.fileSize = fileSize;
     }
 
-    public void setMQA(boolean mqa) {
-        this.mqa = mqa;
+    public int getAudioBitsDepth() {
+        return audioBitsDepth;
     }
 
-    public int getAudioBitsPerSample() {
-        return audioBitsPerSample;
-    }
-
-    public void setAudioBitsPerSample(int audioBitsPerSample) {
-        this.audioBitsPerSample = audioBitsPerSample;
+    public void setAudioBitsDepth(int audioBitsDepth) {
+        this.audioBitsDepth = audioBitsDepth;
     }
 
     public long getAudioSampleRate() {
@@ -496,20 +370,20 @@ public class MusicTag implements Cloneable, Parcelable {
         this.albumArtist = albumArtist;
     }
 
-    public long getLastModified() {
-        return lastModified;
+    public long getFileLastModified() {
+        return fileLastModified;
     }
 
-    public void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
+    public void setFileLastModified(long lastModified) {
+        this.fileLastModified = lastModified;
     }
 
-    public String getFileExtension() {
-        return fileExtension;
+    public String getFileFormat() {
+        return fileFormat;
     }
 
-    public void setFileExtension(String fileExtension) {
-        this.fileExtension = fileExtension;
+    public void setFileFormat(String fileExtension) {
+        this.fileFormat = fileExtension;
     }
 
     public void setAudioDuration(double audioDuration) {
@@ -525,15 +399,11 @@ public class MusicTag implements Cloneable, Parcelable {
     }
 
     public boolean isDSD() {
-        return audioBitsPerSample == Constants.QUALITY_BIT_DEPTH_DSD;
+        return audioBitsDepth == Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
     public boolean isSACDISO() {
         return Constants.MEDIA_ENC_SACD.equalsIgnoreCase(getAudioEncoding());
-    }
-
-    public boolean isMQA() {
-        return mqa;
     }
 
     public void setLossless(boolean lossless) {
@@ -562,11 +432,11 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.storageId = storageId;
         tag.simpleName = simpleName;
         tag.fileSize = fileSize;
-        tag.fileSizeRatio =fileSizeRatio;
-        tag.fileExtension = fileExtension;
-        tag.lastModified = lastModified;
+        tag.fileSizeRatio = fileSizeRatio;
+        tag.fileFormat = fileFormat;
+        tag.fileLastModified = fileLastModified;
 
-        tag.audioBitsPerSample = audioBitsPerSample;
+        tag.audioBitsDepth = audioBitsDepth;
         tag.audioBitRate = audioBitRate;
         tag.audioDuration = audioDuration;
         tag.audioSampleRate = audioSampleRate;
@@ -574,10 +444,10 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.audioChannels = audioChannels;
         tag.lossless = lossless;
 
-        tag.loudnessIntegrated = loudnessIntegrated;
-        tag.loudnessRange = loudnessRange;
-        tag.truePeek = truePeek;
-        tag.replayGain = replayGain;
+        tag.trackGain = trackGain;
+        tag.trackLoudness = trackLoudness;
+        tag.trackRange = trackRange;
+        tag.trackTruePeek = trackTruePeek;
 
         tag.title = title;
         tag.album = album;
@@ -590,24 +460,21 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.comment = comment;
         tag.grouping = grouping;
         tag.composer = composer;
-        tag.bpm = bpm;
-        tag.partOfCompilation = partOfCompilation;
-        tag.encoder = encoder;
-        tag.source = source;
+        tag.publisher = publisher;
+        tag.compilation = compilation;
+        tag.mediaType = mediaType;
 
-        tag.managed = managed;
-        tag.sourceQuality = sourceQuality;
+        tag.musicManaged = musicManaged;
+        tag.mediaQuality = mediaQuality;
         tag.rating = rating;
 
-        tag.mqaDeepScan = mqaDeepScan;
-        tag.mqa = mqa;
-        tag.mqaStudio = mqaStudio;
+        tag.mqaScanned = mqaScanned;
+        tag.mqaInd = mqaInd;
         tag.mqaSampleRate = mqaSampleRate;
+        tag.language = language;
+        tag.audioStartTime = audioStartTime;
+        tag.embedCoverArt = embedCoverArt;
         return tag;
-    }
-
-    public boolean isManaged() {
-        return managed;
     }
 
     public void cloneFrom(MusicTag tag) {
@@ -615,11 +482,11 @@ public class MusicTag implements Cloneable, Parcelable {
         this.uniqueKey = tag.uniqueKey;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
-        this.fileSizeRatio =tag.fileSizeRatio;
-        this.fileExtension = tag.fileExtension;
-        this.lastModified = tag.lastModified;
+        this.fileSizeRatio = tag.fileSizeRatio;
+        this.fileFormat = tag.fileFormat;
+        this.fileLastModified = tag.fileLastModified;
 
-        this.audioBitsPerSample = tag.audioBitsPerSample;
+        this.audioBitsDepth = tag.audioBitsDepth;
         this.audioBitRate = tag.audioBitRate;
         this.audioDuration = tag.audioDuration;
         this.audioSampleRate = tag.audioSampleRate;
@@ -637,28 +504,29 @@ public class MusicTag implements Cloneable, Parcelable {
         this.comment = tag.comment;
         this.grouping = tag.grouping;
         this.composer = tag.composer;
-        this.source = tag.source;
-        this.bpm = tag.bpm;
-        this.encoder = tag.encoder;
-        this.partOfCompilation = tag.partOfCompilation;
+        this.mediaType = tag.mediaType;
+        this.compilation = tag.compilation;
 
-        this.managed = tag.managed;
-        this.sourceQuality = tag.sourceQuality;
+        this.musicManaged = tag.musicManaged;
+        this.mediaQuality = tag.mediaQuality;
         this.rating = tag.rating;
 
         this.storageId = tag.storageId;
-        this.storageName = tag.storageName;
         this.simpleName = tag.simpleName;
 
-        this.mqa = tag.mqa;
-        this.mqaDeepScan = tag.mqaDeepScan;
-        this.mqaStudio = tag.mqaStudio;
+        this.mqaScanned = mqaScanned;
+        this.mqaInd = tag.mqaInd;
         this.mqaSampleRate = tag.mqaSampleRate;
 
-        this.loudnessRange = tag.loudnessRange;
-        this.loudnessIntegrated = tag.loudnessIntegrated;
-        this.truePeek = tag.truePeek;
-        this.replayGain = tag.replayGain;
+        this.trackLoudness = tag.trackLoudness;
+        this.trackRange = tag.trackRange;
+        this.trackTruePeek = tag.trackTruePeek;
+        this.trackGain = tag.trackGain;
+
+        this.language = tag.language;
+        this.publisher = tag.publisher;
+        this.embedCoverArt = tag.embedCoverArt;
+        this.audioStartTime = tag.audioStartTime;
     }
 
     @Override
@@ -672,17 +540,16 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeLong(id);
         parcel.writeString(uniqueKey);
         parcel.writeString(path);
-        parcel.writeLong(lastModified);
+        parcel.writeLong(fileLastModified);
         parcel.writeLong(fileSize);
         parcel.writeInt(fileSizeRatio);
-        parcel.writeString(fileExtension);
+        parcel.writeString(fileFormat);
         parcel.writeString(audioEncoding);
         parcel.writeByte((byte) (lossless ? 1 : 0));
-        parcel.writeByte((byte) (mqaDeepScan ? 1 : 0));
-        parcel.writeByte((byte) (mqa ? 1 : 0));
-        parcel.writeByte((byte) (mqaStudio ? 1 : 0));
-        parcel.writeString(mqaSampleRate);
-        parcel.writeInt(audioBitsPerSample);
+        parcel.writeByte((byte) (mqaScanned ? 1 : 0));
+        parcel.writeString(mqaInd);
+        parcel.writeLong(mqaSampleRate);
+        parcel.writeInt(audioBitsDepth);
         parcel.writeLong(audioSampleRate);
         parcel.writeLong(audioBitRate);
         parcel.writeDouble(audioDuration);
@@ -698,19 +565,20 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(composer);
         parcel.writeString(albumArtist);
         parcel.writeInt(rating);
-        parcel.writeByte((byte) (managed ? 1 : 0));
+        parcel.writeByte((byte) (musicManaged ? 1 : 0));
         parcel.writeString(storageId);
         parcel.writeString(simpleName);
-        parcel.writeString(source);
-        parcel.writeByte((byte) (cueSheet ? 1 : 0));
-        parcel.writeString(sourceQuality);
-        parcel.writeString(loudnessIntegrated);
-        parcel.writeString(loudnessRange);
-        parcel.writeString(truePeek);
-        parcel.writeString(replayGain);
-        parcel.writeString(encoder);
-        parcel.writeByte((byte) (partOfCompilation ? 1 : 0));
-        parcel.writeInt(bpm);
+        parcel.writeString(mediaType);
+        parcel.writeString(mediaQuality);
+        parcel.writeDouble(trackLoudness);
+        parcel.writeDouble(trackRange);
+        parcel.writeDouble(trackTruePeek);
+        parcel.writeDouble(trackGain);
+        parcel.writeByte((byte) (compilation ? 1 : 0));
+        parcel.writeString(publisher);
+        parcel.writeString(language);
+        parcel.writeString(embedCoverArt);
+        parcel.writeDouble(audioStartTime);
     }
 
     public MusicTag getOriginTag() {
@@ -727,5 +595,117 @@ public class MusicTag implements Cloneable, Parcelable {
 
     public void setUniqueKey(String uniqueKey) {
         this.uniqueKey = uniqueKey;
+    }
+
+    public boolean isMusicManaged() {
+        return musicManaged;
+    }
+
+    public void setMusicManaged(boolean musicManaged) {
+        this.musicManaged = musicManaged;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
+    }
+
+    public String getMediaQuality() {
+        return mediaQuality;
+    }
+
+    public void setMediaQuality(String mediaQuality) {
+        this.mediaQuality = mediaQuality;
+    }
+
+    public double getAudioStartTime() {
+        return audioStartTime;
+    }
+
+    public void setAudioStartTime(double audioStartTime) {
+        this.audioStartTime = audioStartTime;
+    }
+
+    public boolean isCompilation() {
+        return compilation;
+    }
+
+    public void setCompilation(boolean compilation) {
+        this.compilation = compilation;
+    }
+
+    public String getEmbedCoverArt() {
+        return embedCoverArt;
+    }
+
+    public void setEmbedCoverArt(String embedCoverArt) {
+        this.embedCoverArt = embedCoverArt;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public double getTrackLoudness() {
+        return trackLoudness;
+    }
+
+    public void setTrackLoudness(double trackLoudness) {
+        this.trackLoudness = trackLoudness;
+    }
+
+    public double getTrackRange() {
+        return trackRange;
+    }
+
+    public void setTrackRange(double trackRange) {
+        this.trackRange = trackRange;
+    }
+
+    public double getTrackTruePeek() {
+        return trackTruePeek;
+    }
+
+    public void setTrackTruePeek(double trackTruePeek) {
+        this.trackTruePeek = trackTruePeek;
+    }
+
+    public double getTrackGain() {
+        return trackGain;
+    }
+
+    public void setTrackGain(double trackGain) {
+        this.trackGain = trackGain;
+    }
+
+    public boolean isMqaScanned() {
+        return mqaScanned;
+    }
+
+    public void setMqaScanned(boolean mqaScanned) {
+        this.mqaScanned = mqaScanned;
+    }
+
+    public boolean isTrackScanned() {
+        return trackScanned;
+    }
+
+    public void setTrackScanned(boolean trackLoudnessScanned) {
+        this.trackScanned = trackLoudnessScanned;
+    }
+
+    public String getPublisher() {
+        return publisher;
+    }
+
+    public void setPublisher(String publisher) {
+        this.publisher = publisher;
     }
 }

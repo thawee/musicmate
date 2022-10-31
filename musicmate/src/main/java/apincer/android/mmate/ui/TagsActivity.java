@@ -1,6 +1,6 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.SRC_NONE;
+import static apincer.android.mmate.Constants.MEDIA_TYPE_NONE;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
@@ -224,8 +224,9 @@ public class TagsActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
-        adapter.addNewTab(tagsEditorFragment, "Editor");
-        adapter.addNewTab(new TagsMusicBrainzFragment(), "MusicBrainz");
+        adapter.addNewTab(tagsEditorFragment, "METADATA");
+        adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
+        adapter.addNewTab(new TagsTechnicalFragment(), "TECHNICAL");
         viewPager.setAdapter(adapter);
 
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
@@ -279,7 +280,7 @@ public class TagsActivity extends AppCompatActivity {
 
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         //if (displayTag.isAudiophile()) {
-        if (!StringUtils.isEmpty(displayTag.getSourceQuality())) {
+        if (!StringUtils.isEmpty(displayTag.getMediaQuality())) {
             request = new ImageRequest.Builder(getApplicationContext())
                     .data(MusicTagUtils.getSourceQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
@@ -527,12 +528,12 @@ public class TagsActivity extends AppCompatActivity {
         spannableEnc.append(new SpecialTextUnit(displayTag.getAudioEncoding(),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
 
-        if((!StringUtils.isEmpty(displayTag.getSource())) && !SRC_NONE.equals(displayTag.getSource())) {
-            spannableEnc.append(new SpecialTextUnit(displayTag.getSource(),encColor).setTextSize(10))
+        if((!StringUtils.isEmpty(displayTag.getMediaType())) && !MEDIA_TYPE_NONE.equals(displayTag.getMediaType())) {
+            spannableEnc.append(new SpecialTextUnit(displayTag.getMediaType(),encColor).setTextSize(10))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
         }
 
-        spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsPerSample()),encColor).setTextSize(10))
+        spannableEnc.append(new SpecialTextUnit(StringUtils.getFormatedBitsPerSample(displayTag.getAudioBitsDepth()),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.getFormatedAudioSampleRate(displayTag.getAudioSampleRate(),true),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
@@ -597,8 +598,8 @@ public class TagsActivity extends AppCompatActivity {
             if(!StringUtils.equals(displayTag.getGrouping(), item.getGrouping())) {
                 displayTag.setGrouping(StringUtils.MULTI_VALUES);
             }
-            if(!StringUtils.equals(displayTag.getSource(), item.getSource())) {
-                displayTag.setSource("Unknown");
+            if(!StringUtils.equals(displayTag.getMediaType(), item.getMediaType())) {
+                displayTag.setMediaType("Unknown");
             }
         }
         return displayTag;

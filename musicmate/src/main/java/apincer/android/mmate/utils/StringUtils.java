@@ -7,8 +7,8 @@ import java.text.BreakIterator;
 import java.util.List;
 import java.util.Locale;
 
-import apincer.android.storage.StorageVolume;
 import apincer.android.mmate.Constants;
+import apincer.android.storage.StorageVolume;
 
 public class StringUtils {
     // ·  \u00b7
@@ -102,8 +102,17 @@ public class StringUtils {
         text = StringUtils.remove(text, UNKNOWN_CAP);
         text = StringUtils.remove(text, UNTITLED_CAP);
         text = StringUtils.remove(text, UNKNOWN_ARTIST);
+        text = StringUtils.remove(text, MULTI_VALUES);
         if("-/-".equals(text)) return "";
         return StringUtils.trimToEmpty(text);
+    }
+
+    public static String getWord(String text, String sep, int index) {
+        String [] words =  trimToEmpty(text).split(sep);
+        if(words.length>index) {
+            return trimToEmpty(words[index]);
+        }
+        return "";
     }
 
     public static boolean isEmpty(String input) {
@@ -358,6 +367,13 @@ public class StringUtils {
         }
         return true;
     }
+    public static boolean isDigitOrDecimal(String text) {
+        if(StringUtils.isEmpty(text)) return false;
+        for (char c : text.toCharArray()) {
+            if (!(Character.isDigit(c) || c=='.' || c=='-')) return false;
+        }
+        return true;
+    }
 
     public static String formatStorageSize(long bytes) {
         double s = bytes*1.00;
@@ -491,17 +507,41 @@ public class StringUtils {
         return String.format(Locale.getDefault(),"%.2f", s);
     }
 
-    public static long toLong(String sampleRate) {
-        if(sampleRate == null) return 0;
-        return Long.parseLong(sampleRate);
+    public static long toLong(String text) {
+        if(isDigitOrDecimal(text)) {
+            return Long.parseLong(text);
+        }
+        return 0L;
+    }
+
+    public static double toDouble(String text) {
+        if(isDigitOrDecimal(text)) {
+            return Double.parseDouble(text);
+        }
+        return 0L;
+    }
+
+    public static int toInt(String text) {
+        if(isDigitOnly(text)) {
+            return Integer.parseInt(text);
+        }
+        return 0;
+    }
+
+    public static boolean toBoolean(String text) {
+        if("1".equals(trimToEmpty(text))) {
+            return true;
+        }else return "true".equalsIgnoreCase(trimToEmpty(text));
     }
 
     public static String getFormatedAudioBitRateNoUnit(long audioBitRate) {
-        if(audioBitRate>1000000) {
+        if(audioBitRate>1000000) { //DSD
+            // convert to Mbps
             double dBitrate = audioBitRate/1000000.00;
             return String.format(Locale.getDefault(), "%.1f", dBitrate);
-        }else {
-            return String.format(Locale.getDefault(), "%d", audioBitRate);
+        }else { // others, convert to kbps
+            double dBitrate = audioBitRate/1000.00;
+            return String.format(Locale.getDefault(), "%.0f", dBitrate);
         }
     }
 
@@ -571,5 +611,13 @@ public class StringUtils {
             return String.format(Locale.getDefault(), "%s ch", audioChannels);
         }
         return audioChannels;
+    }
+
+    public static String abvByUpperCase(String letter) {
+        final StringBuilder abv = new StringBuilder();
+        letter.chars().filter(c -> Character.isUpperCase(c))
+                .forEach(c -> abv.append((char) c));
+
+        return abv.toString();
     }
 }

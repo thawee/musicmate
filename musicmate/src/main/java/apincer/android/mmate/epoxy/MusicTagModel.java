@@ -21,6 +21,8 @@ import com.airbnb.epoxy.EpoxyModelWithHolder;
 import com.airbnb.epoxy.OnModelClickListener;
 import com.airbnb.epoxy.OnModelLongClickListener;
 
+import java.util.Locale;
+
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
@@ -91,7 +93,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         holder.rootView.setOnClickListener(clickListener);
         holder.rootView.setOnLongClickListener(longClickListener);
 
-        if (!StringUtils.isEmpty(tag.getSourceQuality())) {
+        if (!StringUtils.isEmpty(tag.getMediaQuality())) {
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
                     .data(MusicTagUtils.getSourceQualityIcon(holder.mContext, tag))
                     .crossfade(false)
@@ -115,7 +117,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         }
 
         // download label
-        if (tag.isManaged()) {
+        if (tag.isMusicManaged()) {
             holder.mNewLabelView.setVisibility(View.GONE);
         } else if (MusicTagUtils.isOnDownloadDir(tag)) {
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_red_900);
@@ -148,7 +150,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         imageLoader.enqueue(request);
 
         // Loudness
-        if(!tag.isDSD() && !StringUtils.isEmpty(tag.getLoudnessIntegrated())) {
+        if(!tag.isDSD()) {
            /* request = new ImageRequest.Builder(holder.mContext)
                     .data(AudioTagUtils.getCachedLoudnessIcon(holder.mContext, tag))
                     .crossfade(false)
@@ -166,8 +168,8 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
         Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
 
-        // file type
-        holder.mFileTypeView.setText(tag.getAudioEncoding());
+        // file format
+        holder.mFileTypeView.setText(tag.getFileFormat().toUpperCase(Locale.US));
         holder.mFileTypeView.setBackground(resolutionBackground);
         holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
 
@@ -176,7 +178,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-            Bitmap srcBmp = MusicTagUtils.getSourceIcon(holder.mContext, tag.getSource());
+            Bitmap srcBmp = MusicTagUtils.getSourceIcon(holder.mContext, tag);
             if(srcBmp!=null) {
                 holder.mFileSourceView.setImageBitmap(srcBmp);
                 holder.mFileSourceView.setVisibility(View.VISIBLE);

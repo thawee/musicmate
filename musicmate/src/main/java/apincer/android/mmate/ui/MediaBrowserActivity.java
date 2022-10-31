@@ -85,6 +85,7 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.epoxy.MusicTagController;
+import apincer.android.mmate.ffmpeg.FFMPegUtils;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
@@ -95,7 +96,6 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
-import apincer.android.mmate.utils.FFMPegUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -1287,7 +1287,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     FFMPegUtils.covert(srcPath, targetPath, status -> {
                         if (status) {
                             repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
-                            repos.scanMusicFiles(new File(targetPath)); // re scan file
+                            repos.scanMusicFile(new File(targetPath)); // re scan file
                         }
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
