@@ -49,7 +49,7 @@ public class StringUtils {
     public static final String MULTI_VALUES = "<multiple>";
     public static final String CHARSET_ISO8859_1 = "ISO-8859-1";
     public static final String SYMBOL_RES_SEP = " \u25C8 ";
-    public static final String EMPTY = "<EMPTY>";
+    public static final String EMPTY = ""; // must left as empty for dropdown list
 
     public static String encodeText(String text, String encode) {
         if(StringUtils.isEmpty(encode)) {

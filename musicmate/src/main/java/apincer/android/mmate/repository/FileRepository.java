@@ -1287,48 +1287,23 @@ public class FileRepository {
             }else {
                 filename.append(metadata.getFileFormat().toLowerCase(Locale.US));
             }
-            //}else if (metadata.isMQA()) {
-            //    filename.append(Constants.MEDIA_PATH_MQA);
-//            }else if (AudioTagUtils.isPCMHiRes(metadata)) {
-  //              filename.append(Constants.MEDIA_PATH_HR);
-           // }else if (AudioTagUtils.isPCMLossless(metadata)) {
-           //     filename.append(Constants.MEDIA_PATH_HR);
-                /*
-            }else if (Constants.MEDIA_ENC_ALAC.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_ALAC);
-               // filename.append(encSuffix);
-            }else if (Constants.MEDIA_ENC_FLAC.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_FLAC);
-               // filename.append(encSuffix);
-            }else if (Constants.MEDIA_ENC_WAVE.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_WAVE);
-              //  filename.append(encSuffix);
-            }else if (Constants.MEDIA_ENC_AIFF.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_AIFF);
-               // filename.append(encSuffix);
-            }else if (Constants.MEDIA_ENC_AAC.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_ACC);
-              //  filename.append(encSuffix);
-            }else if (Constants.MEDIA_ENC_MP3.equals(metadata.getAudioEncoding())) {
-                filename.append(Constants.MEDIA_PATH_MP3);
-              //  filename.append(encSuffix);
-            }else {
-                filename.append(Constants.MEDIA_PATH_OTHER);
-              //  filename.append(encSuffix);
-            } */
             filename.append(File.separator);
 
-            // albumArtist or artist
+            // publisher if albumArtist is various artist
+            // albumArtist
+            // then artist
             String artist = StringUtils.trimTitle(MusicTagUtils.getFirstArtist(metadata.getArtist()));
             String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
-
-            String pathArtist = getAlbumArtistOrArtist(artist, albumArtist);
-
-            if(StringUtils.isEmpty(pathArtist)) {
-                pathArtist = StringUtils.UNKNOWN_ARTIST;
-            }
-            if(!StringUtils.isEmpty(pathArtist)) {
-                filename.append(StringUtils.formatTitle(pathArtist)).append(File.separator);
+            if("Various Artists".equals(albumArtist)) {
+                if(isEmpty(metadata.getPublisher())) {
+                    filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
+                }else {
+                    filename.append(StringUtils.abvByUpperCase(metadata.getPublisher())).append(File.separator);
+                }
+            }else if(!isEmpty(albumArtist)) {
+                filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
+            }else if (isEmpty(artist)) {
+                filename.append(StringUtils.formatTitle(artist)).append(File.separator);
             }
 
             // album
@@ -1339,57 +1314,14 @@ public class FileRepository {
                 }
             }
 
-            // file name
-            String title = StringUtils.trimTitle(metadata.getTitle());
-            /*
-            if(!metadata.isCueSheet()) {
-                // track
-                boolean hasTrackOrArtist = false;
-                String track = StringUtils.trimToEmpty(metadata.getTrack());
-                if (!StringUtils.isEmpty(track)) {
-                    int indx = track.indexOf("/");
-                    if (indx > 0) {
-                        filename.append(StringUtils.trimToEmpty(track.substring(0, indx)));
-                    } else {
-                        filename.append(StringUtils.trimToEmpty(track));
-                    }
-                    //  filename.append(" - ");
-                    hasTrackOrArtist = true;
-                }
-
-                // artist, if albumartist and arttist != albumartist
-                if(!hasTrackOrArtist) {
-                    if ((!StringUtils.isEmpty(artist)) && !artist.equalsIgnoreCase(albumArtist)) {
-                        // add artist to file name only have albumArtist
-                        filename.append(StringUtils.formatTitle(artist));
-                        //  filename.append(" - ");
-                        hasTrackOrArtist = true;
-                    }
-                }
-
-                // artist
-                if (hasTrackOrArtist) {
-                    filename.append(" - ");
-                }
-
-                // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] -
 
                 // title
+            String title = StringUtils.trimTitle(metadata.getTitle());
                 if (!StringUtils.isEmpty(title)) {
                     filename.append(StringUtils.formatTitle(title));
                 } else {
                     filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
                 }
-
-                // /Music/[DSD|SACD|MQA|PCM Hi-Res|PCM SD|MPEG]/[artist|album artist]/album/[track|artist] - [title| file name]
-            }else { */
-                // title
-                if (!StringUtils.isEmpty(album)) {
-                    filename.append(StringUtils.formatTitle(album));
-                } else {
-                    filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
-                }
-         //   }
 
             String newPath =  filename.toString();
             for(int i=0;i<ReservedChars.length();i++) {
@@ -1423,8 +1355,8 @@ public class FileRepository {
 
     private String getAlbumArtistOrArtist(String artist, String albumArtist) {
         if(StringUtils.isEmpty(albumArtist)) {
-            if((!StringUtils.isEmpty(artist)) && artist.indexOf(Constants.FIELD_SEP)>0) {
-                albumArtist = artist.substring(0, artist.indexOf(Constants.FIELD_SEP));
+            if(!StringUtils.isEmpty(artist)) {
+                albumArtist = artist;
             } else {
                 albumArtist = artist;
             }
