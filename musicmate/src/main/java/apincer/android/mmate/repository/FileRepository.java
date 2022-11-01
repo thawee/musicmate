@@ -1285,7 +1285,7 @@ public class FileRepository {
                 //filename.append("-");
                 filename.append(MusicTagUtils.getDSDSampleRateModulation(metadata));
             }else {
-                filename.append(metadata.getFileFormat().toLowerCase(Locale.US));
+                filename.append(metadata.getFileFormat().toUpperCase(Locale.US));
             }
             filename.append(File.separator);
 
@@ -1302,7 +1302,7 @@ public class FileRepository {
                 }
             }else if(!isEmpty(albumArtist)) {
                 filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
-            }else if (isEmpty(artist)) {
+            }else if (!isEmpty(artist)) {
                 filename.append(StringUtils.formatTitle(artist)).append(File.separator);
             }
 
@@ -1314,8 +1314,12 @@ public class FileRepository {
                 }
             }
 
+            // track number
+            if(!isEmpty(metadata.getTrack())) {
+                filename.append(StringUtils.getWord(metadata.getTrack(),"/",0)).append(" - ");
+            }
 
-                // title
+            // title
             String title = StringUtils.trimTitle(metadata.getTitle());
                 if (!StringUtils.isEmpty(title)) {
                     filename.append(StringUtils.formatTitle(title));

@@ -313,7 +313,7 @@ public class AudioOutputHelper {
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         String codec = dev.getCodec();
-        String rate =  dev.getBitPerSampling()+"/"+StringUtils.getFormatedAudioSampleRate(dev.getSamplingRate(),false);
+        String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 2;

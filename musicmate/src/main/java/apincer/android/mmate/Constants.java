@@ -20,6 +20,7 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
     public static final String FILTER_TYPE_GROUPING = "Grouping";
+    public static final String FILTER_TYPE_PUBLISHER = "Publisher";
     public static final String FILTER_TYPE_PATH = "Folder";
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
@@ -33,6 +34,7 @@ public final class Constants {
     public static final String MEDIA_EXT_WAVE = "wav";
     public static final String MEDIA_EXT_FLAC = "flac";
     public static final int MIN_FILE_SIZE_RATIO = 42;
+    public static final String UNKWON_PUBLISHER = "Unkown Publisher";
     public static String FIELD_SEP = ";";
   // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;

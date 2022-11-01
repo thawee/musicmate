@@ -38,7 +38,7 @@
     <item
         android:icon="@drawable/ic_round_audio_file_24"
         android:id="@+id/menu_recordings_quality"
-        android:title="Recordings Quality"
+        android:title="Media Quality"
         app:showAsAction="always" />
     <!--
     <item

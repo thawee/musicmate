@@ -85,6 +85,10 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                     if (!StringUtils.equals(tag.getGenre(), criteria.getFilterText())) {
                         continue;
                     }
+                } else if (Constants.FILTER_TYPE_PUBLISHER.equals(criteria.getFilterType())) {
+                    if (!StringUtils.equals(tag.getPublisher(), criteria.getFilterText())) {
+                        continue;
+                    }
                 } else if (Constants.FILTER_TYPE_GROUPING.equals(criteria.getFilterType())) {
                     if (!StringUtils.equals(tag.getGrouping(), criteria.getFilterText())) {
                         continue;

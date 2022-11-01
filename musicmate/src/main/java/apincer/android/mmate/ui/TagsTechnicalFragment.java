@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.utils.StringUtils.format;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -51,16 +53,11 @@ public class TagsTechnicalFragment extends Fragment {
         TableLayout table = view.findViewById(R.id.tags);
 
         MusicTag tag = tagsActivity.getEditItems().get(0);
-        filename.setText(tag.getPath());
+        String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag);
+        filename.setText("MediaPath:\n"+tag.getPath()+"\n\nMuicMatePath:\n"+musicMatePath);
         MusicTag ffmpegTag = FFMPegUtils.readMusicTag(tag.getPath());
         if(ffmpegTag!=null) {
             metada.setText(ffmpegTag.getData());
-        }
-        FFMPegUtils.Loudness loudness = FFMPegUtils.getLoudness(tag.getPath());
-        if(loudness!= null) {
-            tag.setTrackLoudness(loudness.getIntegratedLoudness());
-            tag.setTrackRange(loudness.getLoudnessRange());
-            tag.setTrackTruePeek(loudness.getTruePeak());
         }
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -70,7 +67,7 @@ public class TagsTechnicalFragment extends Fragment {
         LinearLayout cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
-        tv0.setText(" Attribute Name ");
+        tv0.setText(" Attribute ");
         tv0.setTextColor(Color.WHITE);
         cell.addView(tv0);
         tbrow0.addView(cell);
@@ -88,7 +85,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv2 = new TextView(getContext());
-        tv2.setText(" Read From File ");
+        tv2.setText(" From File ");
         tv2.setTextColor(Color.WHITE);
         cell.addView(tv2);
         tbrow0.addView(cell);
@@ -114,7 +111,7 @@ public class TagsTechnicalFragment extends Fragment {
            // llp.setMargins(0, 0, 2, 0);//2px right-margin
 
             //New Cell
-             cell = new LinearLayout(getContext());
+            cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.DKGRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t1v = new TextView(getContext());
@@ -129,7 +126,7 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t2v = new TextView(getContext());
-            t2v.setText(String.valueOf(ReflectUtil.getFieldValue(field,tag)));
+            t2v.setText(format(ReflectUtil.getFieldValue(field,tag),12,"\n"));
             t2v.setTextColor(Color.WHITE);
             t2v.setGravity(Gravity.CENTER);
             cell.addView(t2v);
@@ -139,7 +136,7 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t3v = new TextView(getContext());
-            t3v.setText(String.valueOf(ReflectUtil.getFieldValue(field,ffmpegTag)));
+            t3v.setText(format(ReflectUtil.getFieldValue(field,ffmpegTag),12,"\n"));
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
             cell.addView(t3v);

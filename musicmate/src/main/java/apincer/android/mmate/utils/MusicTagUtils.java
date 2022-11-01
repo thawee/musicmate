@@ -177,15 +177,15 @@ public class MusicTagUtils {
         String labelBPS = "";
         boolean isPCM = false;
         boolean isLossless = false;
-        String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
+        String samplingRate = StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
 
         if(tag.isDSD()) {
             // dsd use bitrate
             label = "DSD";
-            samplingRate = StringUtils.getFormatedAudioBitRateNoUnit(tag.getAudioBitRate());
+            samplingRate = StringUtils.formatAudioSampleRateAbvUnit(tag.getAudioBitRate());
         }else if(isMQA(tag)) {
             label = "MQA"; //tag.getMqaInd();
-            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getMqaSampleRate(),false);
+            samplingRate = StringUtils.formatAudioSampleRate(tag.getMqaSampleRate(),false);
             if(isMQAStudio(tag)) {
                 barColor = context.getColor(R.color.mqa_studio);
             }else {
@@ -200,7 +200,7 @@ public class MusicTagUtils {
             if(!tag.isLossless()) {
                 // compress rate
                 label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
-                samplingRate = StringUtils.getFormatedAudioBitRateNoUnit(tag.getAudioBitRate());
+                samplingRate = StringUtils.formatAudioBitRateNoUnit(tag.getAudioBitRate());
             }
         }
 
@@ -466,13 +466,13 @@ public class MusicTagUtils {
         String label;
         String labelBPS = "";
         boolean isPCM = false;
-        String samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getAudioSampleRate(),false);
+        String samplingRate = StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
 
         if(tag.isDSD()) {
             label = "DSD";
         }else if(isMQA(tag)) {
             label = "MQA";
-            samplingRate = StringUtils.getFormatedAudioSampleRate(tag.getMqaSampleRate(),false);
+            samplingRate = StringUtils.formatAudioSampleRate(tag.getMqaSampleRate(),false);
             if(isMQAStudio(tag)) {
                 barColor = context.getColor(R.color.mqa_studio);
             }else {
@@ -485,7 +485,7 @@ public class MusicTagUtils {
             isPCM = true;
             if(!tag.isLossless()) {
                 // compress rate
-                samplingRate = StringUtils.getFormatedAudioBitRateNoUnit(tag.getAudioBitRate());
+                samplingRate = StringUtils.formatAudioBitRateNoUnit(tag.getAudioBitRate());
             }
         }
 
@@ -1137,7 +1137,7 @@ public class MusicTagUtils {
         int rescId = getSourceRescId(letter);
 
         if(rescId ==-1) {
-            int width = 48;
+            int width = 96; //48;
             int height = 48;
             int whiteColor = Color.WHITE;
             letter = StringUtils.abvByUpperCase(letter);
@@ -1164,15 +1164,8 @@ public class MusicTagUtils {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
-    private static long parseMQASampleRate(String mqaRate) {
-        if(StringUtils.isDigitOnly(mqaRate)) {
-            return Long.parseLong(mqaRate);
-        }
-        return 0;
-    }
-
     public static int getDSDSampleRateModulation(MusicTag tag) {
-        return (int) (tag.getAudioSampleRate()/Constants.QUALITY_SAMPLING_RATE_44);
+        return (int) (tag.getAudioBitRate()/Constants.QUALITY_SAMPLING_RATE_44);
     }
 
         public static String getTrackQuality(MusicTag tag) {
@@ -1215,7 +1208,7 @@ public class MusicTagUtils {
         // if album empty, add single
         String defaultAlbum;
         if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
-            defaultAlbum = "Single"; //getFirstArtist(tag.getArtist())+" - Single";
+            defaultAlbum = getFirstArtist(tag.getArtist())+" - "+Constants.DEFAULT_ALBUM_TEXT; //getFirstArtist(tag.getArtist())+" - Single";
         }else {
             defaultAlbum = trimToEmpty(tag.getAlbum());
         }

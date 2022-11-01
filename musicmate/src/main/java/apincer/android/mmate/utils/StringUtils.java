@@ -449,7 +449,7 @@ public class StringUtils {
         return formatText;
     }
 
-    public static String getFormatedAudioBitRate(long audioBitRate) {
+    public static String formatAudioBitRate(long audioBitRate) {
         if(audioBitRate>1000000) {
             double dBitrate = audioBitRate/1000000.00;
             return String.format(Locale.getDefault(), "%.1fMbps", dBitrate);
@@ -458,11 +458,11 @@ public class StringUtils {
         }
     }
 
-    public static String getFormatedBitsPerSample(int bit) {
+    public static String formatBitsPerSample(int bit) {
             return String.format(Locale.getDefault(), "%dbits", bit);
     }
 
-    public static String getFormatedAudioSampleRate(long rate,boolean includeUnit) {
+    public static String formatAudioSampleRate(long rate,boolean includeUnit) {
         String unit = "kHz";
         String str;
         double factor = 1000.00;
@@ -482,7 +482,7 @@ public class StringUtils {
         return str;
     }
 
-    public static String getFormatedAudioSampleRateAbvUnit(long rate) {
+    public static String formatAudioSampleRateAbvUnit(long rate) {
         String unit = " k";
         String str;
         double factor = 1000.00;
@@ -534,7 +534,7 @@ public class StringUtils {
         }else return "true".equalsIgnoreCase(trimToEmpty(text));
     }
 
-    public static String getFormatedAudioBitRateNoUnit(long audioBitRate) {
+    public static String formatAudioBitRateNoUnit(long audioBitRate) {
         if(audioBitRate>1000000) { //DSD
             // convert to Mbps
             double dBitrate = audioBitRate/1000000.00;
@@ -606,7 +606,7 @@ public class StringUtils {
         return newTrack;
     }
 
-    public static String getFormatedChannels(String audioChannels) {
+    public static String formatChannels(String audioChannels) {
         if(isDigitOnly(audioChannels)) {
             return String.format(Locale.getDefault(), "%s ch", audioChannels);
         }
@@ -619,5 +619,23 @@ public class StringUtils {
                 .forEach(c -> abv.append((char) c));
 
         return abv.toString();
+    }
+
+    public static String format(Object val, int maxLen, String separator) {
+        String text = trimToEmpty(String.valueOf(val));
+        String ret = "";
+        int cnt=0;
+        for(int i=0;i<text.length();i++) {
+            char ch = text.charAt(i);
+            if(ch ==' ') {
+                if(cnt >= maxLen) {
+                    ret = ret+separator;
+                    cnt =0;
+                }
+            }
+            ret = ret+ch;
+            cnt++;
+        }
+        return ret;
     }
 }

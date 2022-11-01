@@ -30,7 +30,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.fs.MusicFileProvider;
 import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mqaidentifier.NativeLib;
@@ -63,6 +65,15 @@ public class FFMPegUtils {
     private static final String KEY_TAG_RATING = "RATING";
     private static final String KEY_TAG_QUALITY = "QUALITY";
     private static final String KEY_TAG_TITLE = "TITLE";
+    // ICRD = Date
+    private static final String KEY_TAG_WAVE_ARTIST = "IART"; //artist
+    private static final String KEY_TAG_WAVE_ALBUM = "IPRD"; // album
+    private static final String KEY_TAG_WAVE_COMMENT = "ICMT"; // comment
+    private static final String KEY_TAG_WAVE_GENRE = "IGNR"; //genre
+    private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
+    private static final String KEY_TAG_WAVE_PUBLISHER = "ICOP"; //copy right
+    private static final String KEY_TAG_WAVE_LANGUAGE = "ILNG"; // language
+    private static final String KEY_TAG_WAVE_TITLE = "INAM"; //title
     private static final String KEY_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
     private static final String KEY_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
     private static final String KEY_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
@@ -164,6 +175,7 @@ public class FFMPegUtils {
     }
 
     public static boolean writeTrackGain(Context context, MusicTag tag) {
+        if(MusicTagUtils.isWavFile(tag)) return false; // wave file not support track gain
         /// check free space on storage
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff
@@ -223,8 +235,11 @@ public class FFMPegUtils {
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
             // move file
+            // FIXME : for test
+            FileSystem.delete(context, new File(srcPath+"_TAGS."+tag.getFileFormat()));
             FileSystem.moveFile(context, targetPath, srcPath+"_TAGS."+tag.getFileFormat());
            // FileSystem.moveFile(context, targetPath, srcPath);
+            FileRepository.newInstance(context).scanMusicFile(new File(srcPath+"_TAGS."+tag.getFileFormat()));
             return true;
         }else {
             // fail, delete tmp file;
@@ -238,7 +253,13 @@ public class FFMPegUtils {
 
     private static String getMetadataTrackKeys(MusicTag origin, MusicTag tag) {
         // -metadata language="eng"
+        if(MusicTagUtils.isWavFile(tag)) {
+            return getMetadataTrackKeysForWave( origin,  tag);
+        }
         String tags = "";
+        if(isFieldChanged(origin.getTitle(), tag.getTitle())) {
+            tags = tags + METADATA_KEY + " " + KEY_TAG_TITLE + "=\"" + tag.getTitle() + "\" ";
+        }
         if(isFieldChanged(origin.getAlbum(), tag.getAlbum())) {
             tags = tags + METADATA_KEY + " " + KEY_TAG_ALBUM + "=\"" + tag.getAlbum() + "\" ";
         }
@@ -285,6 +306,72 @@ public class FFMPegUtils {
             tags = tags + METADATA_KEY + " " + KEY_TAG_TRACK + "=\"" + tag.getTrack() + "\" ";
         }
         return tags;
+    }
+
+    private static String getMetadataTrackKeysForWave(MusicTag origin, MusicTag tag) {
+        // need to include all metadata
+        String tags = "";
+        if(!isEmpty(tag.getTitle())) {
+            tags = tags + METADATA_KEY + " " + KEY_TAG_WAVE_TITLE + "=\"" + tag.getTitle() + "\" ";
+        }
+        if(!isEmpty(tag.getAlbum())) {
+            tags = tags + METADATA_KEY + " " + KEY_TAG_WAVE_ALBUM + "=\"" + tag.getAlbum() + "\" ";
+        }
+        if(!isEmpty(tag.getArtist())) {
+            tags = tags + METADATA_KEY + " " + KEY_TAG_WAVE_ARTIST + "=\"" + tag.getArtist() + "\" ";
+        }
+
+        if(!isEmpty(tag.getGenre())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_GENRE+"=\""+tag.getGenre()+"\" ";
+        }
+        if(!isEmpty(tag.getPublisher())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_PUBLISHER+"=\""+tag.getPublisher()+"\" ";
+        }
+        if(!isEmpty(tag.getLanguage())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_LANGUAGE+"=\""+tag.getLanguage()+"\" ";
+        }
+        if(!isEmpty(tag.getTrack())) {
+            tags = tags + METADATA_KEY + " " + KEY_TAG_WAVE_TRACK + "=\"" + tag.getTrack() + "\" ";
+        }
+        /*
+        if(isFieldChanged(origin.getGrouping(), tag.getGrouping())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_GROUPING+"=\""+tag.getGrouping()+"\" ";
+        }
+        if(isFieldChanged(origin.getAlbumArtist(), tag.getAlbumArtist())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_ALBUM_ARTIST+"=\""+tag.getAlbumArtist()+"\" ";
+        }
+        if(isFieldChanged(origin.getComposer(), tag.getComposer())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_COMPOSER_WAVE+"=\""+tag.getComposer()+"\" ";
+        }
+        if(isFieldChanged(origin.isCompilation(), tag.isCompilation())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_COMPILATION_WAVE+"=\""+(tag.isCompilation()?1:0)+"\" ";
+        }
+        if(isFieldChanged(origin.getDisc(), tag.getDisc())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_DISCNUMBER+"=\""+tag.getDisc()+"\" ";
+        }
+        if(isFieldChanged(origin.getMediaType(), tag.getMediaType())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_MEDIA+"=\""+tag.getMediaType()+"\" ";
+        }
+        if(isFieldChanged(origin.getMediaQuality(), tag.getMediaQuality())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_QUALITY+"=\""+tag.getMediaQuality()+"\" ";
+        }
+        if(isFieldChanged(origin.getRating(), tag.getRating())) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_RATING+"=\""+tag.getRating()+"\" ";
+        } */
+        String comment = getWaveComment(tag);
+        if(!isEmpty(comment)) {
+            tags = tags + METADATA_KEY+" "+KEY_TAG_WAVE_COMMENT+"=\""+tag.getComment()+"\" ";
+        }
+        return tags;
+    }
+
+    private static String getWaveComment(MusicTag musicTag) {
+        String comment = "<MusicMate>"+StringUtils.trimToEmpty(musicTag.getMediaType());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getDisc());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getGrouping());
+        comment = comment+"#:"+StringUtils.trimToEmpty(musicTag.getMediaQuality());
+        comment = comment+"</MusicMate> "+StringUtils.trimToEmpty(musicTag.getComment());
+        return comment;
     }
 
     private static boolean isFieldChanged(boolean compilation, boolean compilation1) {
@@ -402,6 +489,9 @@ public class FFMPegUtils {
 
             //KEY_TAG_COMMENT
             tag.setComment(getTagforKey(tags, KEY_TAG_COMMENT));
+            if(MusicTagUtils.isWavFile(tag)) {
+                parseWaveComment(tag);
+            }
 
             //KEY_TAG_DISCNUMBER
             tag.setDisc(getTagforKey(tags, KEY_TAG_DISCNUMBER));
@@ -455,6 +545,48 @@ public class FFMPegUtils {
                 tag.setMqaScanned(false);
             }
         }
+    }
+
+    private static void parseWaveComment(MusicTag tag) {
+        String comment = StringUtils.trimToEmpty(tag.getComment());
+
+        /*
+         String comment = "/#"+StringUtils.trimToEmpty(pendingMetadata.getSource());
+            comment = comment+"##"+StringUtils.trimToEmpty(pendingMetadata.getDisc());
+            comment = comment+"##"+StringUtils.trimToEmpty(pendingMetadata.getGrouping());
+            comment = comment+"##"+StringUtils.trimToEmpty(pendingMetadata.isAudiophile()?Constants.AUDIOPHILE:"");
+            comment = comment+"#/"+StringUtils.trimToEmpty(pendingMetadata.getComment());
+         */
+        int start = comment.indexOf("<MusicMate>");
+        int end = comment.indexOf("</MusicMate>");
+        if(start >= 0 && end > start) {
+            // found metadata comment
+            String metadata = comment.substring(start+11, end);
+            if(comment.length()>(end+12)) {
+                comment = comment.substring(end+12);
+            }else {
+                comment = "";
+            }
+            String []text = metadata.split("#:");
+            if(text.length >=1) {
+                // Source
+                tag.setMediaType(StringUtils.trimToEmpty(text[0]));
+            }
+            if(text.length >=2) {
+                // Disc
+                tag.setDisc(StringUtils.trimToEmpty(text[1]));
+            }
+            if(text.length >=3) {
+                // Grouping
+                tag.setGrouping(StringUtils.trimToEmpty(text[2]));
+            }
+            if(text.length >=4) {
+                // Audiophile
+                tag.setMediaQuality(StringUtils.trimToEmpty(text[3]));
+            }
+        }
+
+        tag.setComment(StringUtils.trimToEmpty(comment));
     }
 
     private static String getTagforKey(Map<String, String> tags, String key1) {
