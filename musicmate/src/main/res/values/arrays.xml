@@ -73,7 +73,7 @@
         <item>Tidal</item>
         <item>Youtube</item>
         <item>2L</item>
-        <item>HDTracks</item>
+        <item>HD Tracks</item>
         <item>NativeDSD</item>
         <item>Onkyo</item>
         <item>GMM Grammy</item>
@@ -112,9 +112,9 @@
 
     <string-array name="default_mediaType">
         <item>Digital</item>
+        <item>Analog</item>
         <item>CD</item>
         <item>SACD</item>
-        <item>CD</item>
         <item>MC</item>
         <item>VINYL</item>
     </string-array>
@@ -154,10 +154,9 @@
     <string-array name="default_groupings">
         <item>Lounge</item>
         <item>Thai</item>
-
         <item>World</item>
-        <!--
         <item>English</item>
+        <!--
         <item>Laos</item>
         -->
     </string-array>

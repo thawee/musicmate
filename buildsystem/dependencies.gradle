@@ -9,18 +9,18 @@ ext.versions = [
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 30, // support running on android 11 ot higher
-        targetSdk          : 33, // required 33 for photopicker
+        targetSdk          : 33, // required 33 for photopicker, android 13
         compileSdk         : 33, // required 33 for photopicker
-        buildTools         : '33.0.0', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.7.20', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '1.7.21', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.4.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
         aboutlibraries     : '10.5.1', //''10.3.1',
-        //versionsCheck      : '0.42.0',
-]
+        //versionsCheck      : '0.42.
+        ]
 
 ext.gradlePlugins = [
         android: "com.android.tools.build:gradle:$versions.androidGradlePlugin",
@@ -241,9 +241,9 @@ deps.ui = ui
 def epoxy = [:]
 //https://github.com/airbnb/epoxy/releases
 //https://mvnrepository.com/artifact/com.airbnb.android/epoxy
-epoxy.runtime = "com.airbnb.android:epoxy:5.1.0" //4.6.3"
-epoxy.databinding = "com.airbnb.android:epoxy-databinding:5.1.0" //4.6.3"
-epoxy.annotationProcessor = "com.airbnb.android:epoxy-processor:5.1.0" //4.6.3"
+epoxy.runtime = "com.airbnb.android:epoxy:5.1.1" //4.6.3"
+epoxy.databinding = "com.airbnb.android:epoxy-databinding:5.1.1" //4.6.3"
+epoxy.annotationProcessor = "com.airbnb.android:epoxy-processor:5.1.1" //4.6.3"
 deps.epoxy = epoxy
 
 //https://github.com/afollestad/material-dialogs
@@ -277,7 +277,7 @@ deps.junit = "junit:junit:4.13.2"
 deps.mock_web_server = "com.squareup.okhttp3:mockwebserver:$versions.mockwebserver"
 //https://github.com/ReactiveX/RxAndroid
 deps.rxjava3 = "io.reactivex.rxjava3:rxjava:3.1.5" //10/12/2019
-deps.rxjava3_rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.0"
+deps.rxjava3_rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.2"
 deps.rxjava2 = "io.reactivex.rxjava2:rxjava:2.2.21" //10/12/2019
 deps.rxjava2_rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1" //10/12/2019
 deps.hamcrest = "org.hamcrest:hamcrest-all:1.3" //23/06/2019
@@ -288,7 +288,7 @@ deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019
 //deps.blockcanary_no_op = "com.github.markzhai:blockcanary-no-op:1.5.0" //08/08/2019
 deps.butterknife = "com.jakewharton:butterknife:$versions.butterknife"
 //https://github.com/anggrayudi/SimpleStorage
-deps.storage = "com.anggrayudi:storage:1.5.0"
+deps.storage = "com.anggrayudi:storage:1.5.1"
 deps.guava = "com.google.guava:guava:31.0.1-android"
 //https://github.com/tanersener/ffmpeg-kit/tree/main/android
 //deps.ffmpeg = 'com.arthenica:ffmpeg-kit-full:4.5.1-1.LTS' //4.5.1' // lts support android 4.1, nonw-lts support android 7

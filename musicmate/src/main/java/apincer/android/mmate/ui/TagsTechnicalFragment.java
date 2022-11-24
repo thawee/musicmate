@@ -25,6 +25,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.ffmpeg.FFMPegUtils;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
 public class TagsTechnicalFragment extends Fragment {
@@ -98,6 +99,7 @@ public class TagsTechnicalFragment extends Fragment {
                     || field.getName().equals("simpleName")
                     || field.getName().equals("uniqueKey")
                     || field.getName().equals("data")
+                    || field.getName().equals("storageId")
                     || field.getName().equals("CREATOR")
                     || field.getName().equals("originTag")
                     || field.getName().startsWith("shadow"))  {
@@ -111,12 +113,14 @@ public class TagsTechnicalFragment extends Fragment {
            // llp.setMargins(0, 0, 2, 0);//2px right-margin
 
             //New Cell
+            String mateVal = format(ReflectUtil.getFieldValue(field,tag),12,"\n");
+            String ffmpegVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),12,"\n");
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.DKGRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t1v = new TextView(getContext());
             t1v.setText(field.getName());
-            t1v.setTextColor(Color.WHITE);
+            t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
             t1v.setGravity(Gravity.LEFT);
             t1v.setPadding(24,0,0,0);
             cell.addView(t1v);
@@ -126,7 +130,7 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t2v = new TextView(getContext());
-            t2v.setText(format(ReflectUtil.getFieldValue(field,tag),12,"\n"));
+            t2v.setText(mateVal);
             t2v.setTextColor(Color.WHITE);
             t2v.setGravity(Gravity.CENTER);
             cell.addView(t2v);
@@ -136,20 +140,15 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t3v = new TextView(getContext());
-            t3v.setText(format(ReflectUtil.getFieldValue(field,ffmpegTag),12,"\n"));
+            t3v.setText(ffmpegVal);
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
             cell.addView(t3v);
             tr.addView(cell);
 
             table.addView(tr);
-
-           /* text = text + field.getName()+"\t-->: ";
-            text = text +ReflectUtil.getFieldValue(field,tag);
-            text = text +"\t<>\t";
-            text = text +ReflectUtil.getFieldValue(field,ffmpegTag);
-            text = text +"\n"; */
         }
+
       //  tags.setText(text);
 
         /*

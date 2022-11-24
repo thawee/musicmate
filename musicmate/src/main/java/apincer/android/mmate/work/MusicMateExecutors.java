@@ -6,16 +6,19 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import timber.log.Timber;
 
 public class MusicMateExecutors {
     private final Executor mMaintainThread;
     private final Executor mLoudnessThread;
-    private final Executor mScanThread;
+    private final ExecutorService mScanThread;
     private final Executor mImportThread;
     private final Executor mMainThread;
     /**
@@ -30,7 +33,7 @@ public class MusicMateExecutors {
 
     private static volatile MusicMateExecutors mInstance;
 
-    private MusicMateExecutors(Executor loudnessThread, Executor maintainThread, Executor scanThread, Executor importThread) {
+    private MusicMateExecutors(Executor loudnessThread, Executor maintainThread, ExecutorService scanThread, Executor importThread) {
         this.mLoudnessThread = loudnessThread;
         this.mMaintainThread = maintainThread;
         this.mScanThread = scanThread;
@@ -91,7 +94,7 @@ public class MusicMateExecutors {
         return mMainThread;
     }
 
-    public Executor scan() {
+    public ExecutorService scan() {
         return mScanThread;
     }
 
@@ -114,6 +117,18 @@ public class MusicMateExecutors {
     }
     public static void scan(@NonNull Runnable command) {
         getInstance().scan().execute(command);
+    }
+
+    public static void scan(@NonNull Runnable command, long timeoutInSeconds) {
+        Future future = getInstance().scan().submit(command);
+        try {
+            future.get(timeoutInSeconds, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+        } catch (Exception e) {
+            // handle other exceptions
+            Timber.e(e);
+        }
     }
 
     private static class MainThreadExecutor implements Executor {

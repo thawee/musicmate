@@ -41,6 +41,7 @@ import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.apache.commons.io.IOUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,7 +53,9 @@ import java.util.Objects;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
+import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
@@ -60,7 +63,6 @@ import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.work.UpdateAudioFileWorker;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
 import coil.Coil;
@@ -68,15 +70,17 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
+import register.progressfloatingactionbutton.ProgressFloatingActionButton;
 import timber.log.Timber;
 
 public class TagsEditorFragment extends Fragment {
     private TagsActivity mainActivity;
     private List<MusicTag> mediaItems;
     private ViewHolder viewHolder;
-    private FloatingActionButton fabSaveAction;
+    private ProgressFloatingActionButton fabSaveAction;
     private FloatingActionButton fabMainAction;
-    private String coverArtPath;
+    //private String coverArtPath;
+    //private ProgressBar progressBar;
 
     final int DRAWABLE_LEFT = 0;
     final int DRAWABLE_TOP = 1;
@@ -103,7 +107,9 @@ public class TagsEditorFragment extends Fragment {
         viewHolder = new ViewHolder(root);
         setupFab(root);
         setupFabMenus(root);
+       // setupProgressBar(root);
         toggleSaveFabAction();
+
         return root;
     }
 
@@ -186,9 +192,9 @@ public class TagsEditorFragment extends Fragment {
             IOUtils.copy(ins, new FileOutputStream(path));
 
             // preview
-            this.coverArtPath = path.getAbsolutePath();
+            //this.coverArtPath = path.getAbsolutePath();
             viewHolder.coverartChanged = true;
-            doPreviewCoverArt(coverArtPath);
+           // doPreviewCoverArt(coverArtPath);
             toggleSaveFabAction();
         } catch (IOException e) {
             e.printStackTrace();
@@ -196,51 +202,68 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void startProgressBar() {
+        fabSaveAction.showLoadingAnimation(true);
+       // progressBar.setVisibility(View.VISIBLE);
+       // progress.show();
        // if(mMaterialProgressBar!=null) {
        //     mMaterialProgressBar.setVisibility(View.VISIBLE);
        // }
     }
 
     private void stopProgressBar() {
+        fabSaveAction.showLoadingAnimation(false);
+       // progress.hide();
+       // progressBar.setVisibility(View.GONE);
         //if(mMaterialProgressBar!=null) {
         //    mMaterialProgressBar.setVisibility(View.GONE);
         //}
     }
 
-    /*
-    private void setupProgressBar(View view) {
+
+    //private void setupProgressBar(View view) {
+       // progressBar = view.findViewById(R.id.progressBar);
+        //progressBar.setVisibility(View.GONE);
+       //// progress = view.findViewById(R.id.progressBar);
+       // progress.setIndeterminate(true);
+       // progress.setVisibility(View.GONE);
         //mMaterialProgressBar = view.findViewById(R.id.progress_bar);
         //mMaterialProgressBar.setVisibility(View.GONE);
-    } */
+    //}
 
     private void setupFab(View view) {
         fabSaveAction = view.findViewById(R.id.fab_save_media);
         // save tag action
         fabSaveAction.setOnClickListener(view1 -> doSaveMediaItem());
+        //fabSaveAction.showLoadingAnimation(false);
     }
 
     private void doSaveMediaItem() {
         if(!(viewHolder.tagChanged || viewHolder.coverartChanged)) {
             return;
         }
-
         startProgressBar();
+        fabSaveAction.setEnabled(false); // not accept click
         if(viewHolder.tagChanged) {
             for(MusicTag item:mediaItems) {
                 buildPendingTags(item);
             }
         }
 
-
-      /*  String path = null;
-        if(coverArtUri!=null) {
-            coverArtUri.getPath();
-        } */
-        UpdateAudioFileWorker.startWorker(getContext(), mediaItems, coverArtPath);
+       // UpdateAudioFileWorker.startWorker(getContext(), mediaItems, coverArtPath);
       //  MediaItemIntentService.startService(getApplicationContext(), Constants.COMMAND_SAVE,mediaItems, artworkPath);
-
+        FileRepository repos = FileRepository.newInstance(getApplicationContext());
+        for(MusicTag tag: mediaItems) {
+            try {
+                boolean status = repos.setMusicTag(tag, null);
+                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+                EventBus.getDefault().postSticky(message);
+            } catch (Exception e) {
+                Timber.e(e);
+            }
+        }
+        fabSaveAction.setEnabled(false);
         viewHolder.resetState();
-        toggleSaveFabAction();
+        stopProgressBar();
         mainActivity.buildDisplayTag();
         mainActivity.updateTitlePanel();
         UIUtils.hideKeyboard(requireActivity());
@@ -267,6 +290,8 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setComment(buildTag(viewHolder.mCommentView, originTag.getComment()));
         tagUpdate.setGrouping(buildTag(viewHolder.mGroupingView, originTag.getGrouping()));
         tagUpdate.setGenre(buildTag(viewHolder.mGenreView, originTag.getGenre()));
+        tagUpdate.setPublisher(buildTag(viewHolder.mPublisherView, originTag.getPublisher()));
+        tagUpdate.setLanguage(buildTag(viewHolder.mLanguageView, originTag.getLanguage()));
         tagUpdate.setYear(buildTag(viewHolder.mYearView, originTag.getYear()));
         tagUpdate.setDisc(buildTag(viewHolder.mDiscView, originTag.getDisc()));
         tagUpdate.setMediaType(buildTag(viewHolder.mMediaSourceView, originTag.getMediaType()));
@@ -553,18 +578,15 @@ public class TagsEditorFragment extends Fragment {
         void resetState() {
             tagChanged = false;
             coverartChanged = false;
-            toggleSaveFabAction();
             mEditorCardView.clearFocus();
+            toggleSaveFabAction();
         }
 
         public void bindViewHolder(MusicTag mediaTag) {
             // music mate info
             this.displayTag = mediaTag;
-           /* if(mediaTag.isAudiophile()) {
-                mAudiophileButton.setToggleStatus(TriStateToggleButton.ToggleStatus.on);
-            }else {
-                mAudiophileButton.setToggleStatus(TriStateToggleButton.ToggleStatus.mid);
-            }*/
+            if(displayTag ==null) return;
+
             int sIndex =0;
             for(int indx=0; indx < mMediaSourceQualityItems.size();indx++) {
                 IconSpinnerItem item = mMediaSourceQualityItems.get(indx);
@@ -643,6 +665,17 @@ public class TagsEditorFragment extends Fragment {
             mTrackView.setText(StringUtils.trimToEmpty(displayTag.getTrack()));
             // composer
             mComposerView.setText(StringUtils.trimToEmpty(displayTag.getComposer()));
+
+            // publisher
+            mPublisherView.setText(StringUtils.trimToEmpty(displayTag.getPublisher()));
+
+            // language
+            mLanguageView.setText(StringUtils.trimToEmpty(displayTag.getLanguage()));
+
+            //Disc
+            mDiscView.setText(StringUtils.trimToEmpty(displayTag.getDisc()));
+            // Year
+            mYearView.setText(StringUtils.trimToEmpty(displayTag.getYear()));
         }
 
         public  class ViewTextWatcher implements TextWatcher {
@@ -664,7 +697,7 @@ public class TagsEditorFragment extends Fragment {
         if(viewHolder.tagChanged || viewHolder.coverartChanged) {
             ViewCompat.animate(fabSaveAction)
                     .scaleX(1f).scaleY(1f)
-                    .alpha(1f).setDuration(200)
+                    .alpha(1f).setDuration(100)
                     .setStartDelay(300L)
                     .setListener(new ViewPropertyAnimatorListenerAdapter() {
                         @Override
@@ -676,7 +709,7 @@ public class TagsEditorFragment extends Fragment {
         }else {
             ViewCompat.animate(fabSaveAction)
                     .scaleX(0f).scaleY(0f)
-                    .alpha(0f).setDuration(100)
+                    .alpha(0f).setDuration(50)
                     .setListener(new ViewPropertyAnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(@NonNull View view) {

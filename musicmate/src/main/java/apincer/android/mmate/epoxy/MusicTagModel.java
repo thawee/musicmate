@@ -150,7 +150,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         imageLoader.enqueue(request);
 
         // Loudness
-        if(!tag.isDSD()) {
+        if(!tag.isDSD() && tag.getTrackLoudness() != 0.0) {
            /* request = new ImageRequest.Builder(holder.mContext)
                     .data(AudioTagUtils.getCachedLoudnessIcon(holder.mContext, tag))
                     .crossfade(false)

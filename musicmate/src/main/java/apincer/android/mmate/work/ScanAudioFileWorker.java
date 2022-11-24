@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTagRepository;
 import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
@@ -35,7 +36,20 @@ public class ScanAudioFileWorker extends Worker {
     @Override
     public Result doWork() {
        // int COROUTINE_COUNT = 10;
+        MusicTagRepository.cleanMusicMate();
 
+        // ExecutorService with timeout
+        /*List<File> files = list();
+        for(File file: files) {
+            MusicMateExecutors.scan(new Runnable() {
+                @Override
+                public void run() {
+                    scanDir(file);
+                }
+            }, 60);
+        } */
+
+        // co-routines
         Coroutine<?, ?> cIterating =
                 first(supply(this::list)).then(
                         forEach(consume(this::scanDir)));
@@ -43,10 +57,8 @@ public class ScanAudioFileWorker extends Worker {
         launch(
                 scope ->
                 {
-                   // for (int i = 0; i < COROUTINE_COUNT; i++)
-                   // {
                         cIterating.runAsync(scope, null);
-                   // }
+
                 });
 
         return Result.success();
@@ -85,10 +97,20 @@ public class ScanAudioFileWorker extends Worker {
                     scanDir(f);
                 }else {
                     repos.scanMusicFile(f);
+                    //scanFile(f);
                 }
             }
         } catch (Exception e) {
             Timber.e(e);
         }
+    }
+
+    private void scanFile(File file) {
+        MusicMateExecutors.scan(new Runnable() {
+            @Override
+            public void run() {
+                repos.scanMusicFile(file);
+            }
+        }, 60);
     }
 }

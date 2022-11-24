@@ -12,6 +12,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.transition.Slide;
 import android.view.LayoutInflater;
@@ -104,7 +105,6 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.DeleteAudioFileWorker;
 import apincer.android.mmate.work.ImportAudioFileWorker;
 import apincer.android.mmate.work.MusicMateExecutors;
-import apincer.android.mmate.work.ScanLoudnessWorker;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -604,10 +604,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         } */
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
     private void setUpPermissions() {
-        if(!PermissionUtils.hasPermissions(getApplicationContext(), PermissionUtils.PERMISSIONS_ALL)) {
-            // do not have read/write storage permission
+      //  if(!PermissionUtils.hasPermissions(getApplicationContext(), PermissionUtils.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)) {
+        if (!Environment.isExternalStorageManager()) {
+            //todo when permission is granted      // do not have read/write storage permission
             Intent myIntent = new Intent(MediaBrowserActivity.this, PermissionActivity.class);
             // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
             ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
@@ -740,7 +740,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             return true;
         }else if(item.getItemId() == R.id.menu_recordings_quality) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.RECORDINGS_QUALITY, Constants.QUALITY_NORMAL);
+            doStartRefresh(SearchCriteria.TYPE.MEDIA_QUALITY, Constants.QUALITY_NORMAL);
             return true;
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
@@ -754,6 +754,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getDefaultGroupingList(getApplicationContext()).get(0));
+            return true;
+        }else if(item.getItemId() == R.id.menu_publisher) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.PUBLISHER, null);
             return true;
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
@@ -1016,12 +1020,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                     MusicTag tag = broadcastData.getTagInfo();
                     onPlaying(tag);
-                   /* MusicMateExecutors.main(() -> {
+                    MusicMateExecutors.scan(() -> {
                         if(FileRepository.newInstance(getApplicationContext()).deepScanMediaItem(tag)) {
+
                             epoxyController.notifyModelChanged(tag);
                         }
-                    }); */
-                    ScanLoudnessWorker.startScan(getApplicationContext(), tag);
+                    });
+                   // ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                 }
             }
         }

@@ -5,10 +5,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.Size;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -19,14 +17,24 @@ import org.json.JSONObject;
 
 import timber.log.Timber;
 
-@RequiresApi(api = Build.VERSION_CODES.S)
 public class PermissionUtils {
 
     public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,
             Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_CONNECT};
 
+    public static final String ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION =
+            "android.settings.MANAGE_ALL_FILES_ACCESS_PERMISSION";
 
-    public static boolean hasPermissions(@NonNull Context context,
+    public static boolean hasPermissions(@NonNull Context context, @Size(min = 1) @NonNull String... perms) {
+        for (String perm : perms) {
+            if (ContextCompat.checkSelfPermission(context, perm) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean hasPermissionsOld(@NonNull Context context,
                                          @Size(min = 1) @NonNull String... perms) {
         // Always return true for SDK < M, let the system deal with the permissions
        // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {

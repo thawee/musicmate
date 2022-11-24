@@ -31,8 +31,11 @@ public final class Constants {
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
-    public static final String MEDIA_EXT_WAVE = "wav";
-    public static final String MEDIA_EXT_FLAC = "flac";
+    public static final String MEDIA_FILE_FORMAT_WAVE = "wav";
+    public static final String MEDIA_FILE_FORMAT_FLAC = "flac";
+    public static final String MEDIA_FILE_FORMAT_AIF = "aif";
+    public static final String MEDIA_FILE_FORMAT_AIFF = "aiff";
+    public static final String MEDIA_FILE_FORMAT_M4A = "m4a";
     public static final int MIN_FILE_SIZE_RATIO = 42;
     public static final String UNKWON_PUBLISHER = "Unkown Publisher";
     public static String FIELD_SEP = ";";

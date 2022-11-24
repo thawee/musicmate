@@ -9,6 +9,7 @@ import static de.esoco.coroutine.step.Iteration.forEach;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
@@ -23,7 +24,6 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
@@ -55,13 +55,13 @@ public class ScanLoudnessWorker extends Worker {
             Type audioTagType = new TypeToken<MusicTag>() {}.getType();
             tag = gson.fromJson(s, audioTagType);
             try {
-                scan(tag);
-                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
-                EventBus.getDefault().postSticky(message);
+                if(scan(tag)) {
+                    AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                    EventBus.getDefault().postSticky(message);
+                }
 
                 // purge previous completed job
-                WorkManager.getInstance(getApplicationContext()).pruneWork();
-
+                //WorkManager.getInstance(getApplicationContext()).pruneWork();
             } catch (Exception e) {
                 Timber.e(e);
             }
@@ -89,8 +89,8 @@ public class ScanLoudnessWorker extends Worker {
         return Result.success();
     }
 
-    private void scan(MusicTag tag) {
-        repos.deepScanMediaItem(tag);
+    private boolean scan(MusicTag tag) {
+        return repos.deepScanMediaItem(tag);
     }
 
     private List<MusicTag> list() {
@@ -104,10 +104,16 @@ public class ScanLoudnessWorker extends Worker {
         Data inputData = (new Data.Builder())
                 .putString(Constants.KEY_MEDIA_TAG, s)
                 .build();
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiresStorageNotLow(true)
+                .build();
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
-                    .setInitialDelay(600, TimeUnit.MILLISECONDS)
+                //.setInitialDelay(600, TimeUnit.MILLISECONDS)
+                .setConstraints(constraints)
                 .setInputData(inputData)
-                    .build();
+                .build();
+
         WorkManager instance = WorkManager.getInstance(context);
         instance.enqueueUniqueWork(TAG, ExistingWorkPolicy.KEEP, workRequest);
     }

@@ -1,5 +1,7 @@
 package apincer.android.mmate.fs;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
@@ -30,10 +32,25 @@ public class FileSystem {
         super();
     }
 
+    public static boolean copy(Context context, final String source, final String target) {
+        File newFile = new File(target);
+        File file = new File(source);
+
+        if(!file.exists()) return false;
+
+        // create new directory if not existed
+        File newDir  = newFile.getParentFile();
+        if(!newDir.exists()) {
+            // create new directory
+            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
+            //mkdirs(newDir);
+        }
+        return copy(context, file, newFile);
+    }
     /*
      * file manipulations
      */
-    public static boolean copyFile(Context context, final File source, final File target) {
+    public static boolean copy(Context context, final File source, final File target) {
         FileInputStream inStream = null;
         OutputStream outStream = null;
         FileChannel inChannel = null;
@@ -75,6 +92,13 @@ public class FileSystem {
             closeSilently(inChannel);
             closeSilently(outChannel);
         }
+
+        //check file size
+        if(!isValidSize(source.getAbsolutePath(), target.getAbsolutePath(), true)) {
+            delete(context, target.getAbsolutePath());
+            return false;
+        }
+
         return true;
     }
 
@@ -88,6 +112,78 @@ public class FileSystem {
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
             }
+        }
+    }
+
+    public static String getFilename(String path) {
+        if(isEmpty(path)) {
+            return "";
+        }
+        File file = new File(path);
+        return file.getName();
+    }
+
+    public static boolean safeMove(Context context, String srcPath, String targetPath) {
+        String tmpPath = targetPath+"_tmp_safe_move";
+        String bakPath = targetPath+"_tmp_safe_backup";
+        if(copy(context, srcPath, tmpPath)) {
+            // check original and new updated tag file size
+            if (isValidSize(srcPath, tmpPath, false)) {
+                if(rename(context, targetPath, bakPath)) {
+                   // return rename(context, tmpPath, srcPath);
+                    if(rename(context, tmpPath, targetPath)) {
+                        delete(context, bakPath);
+                        delete(context, srcPath); // delete source file if everything ok
+                        return true;
+                    }
+                }
+            }
+            delete(context, tmpPath); // copy is fail
+        }
+        return false;
+    }
+
+    public static boolean rename(Context context, String srcPath, String targetPath) {
+        File newFile = new File(targetPath);
+        File file = new File(srcPath);
+
+        if(!file.exists()) return false;
+
+        // create new directory if not existed
+        File newDir  = newFile.getParentFile();
+        assert newDir != null;
+        if(!newDir.exists()) {
+            // create new directory
+            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
+            //mkdirs(newDir);
+        }
+
+        // First try the normal deletion.
+        if (file.renameTo(newFile)) {
+            Timber.i( "rename path %s", file.getAbsolutePath());
+            return true;
+        }
+
+        return false;
+
+        // Try with Storage Access Framework.
+       // Timber.i( "start deleting DocumentFile");
+       // DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
+       // return DocumentFileUtils.Delete(docFile,context);
+    }
+
+    private static boolean isValidSize(String srcPath, String targetPath, boolean exactMatch) {
+        File newFile = new File(targetPath);
+        File file = new File(srcPath);
+
+        if(!file.exists()) return false;
+        if(!newFile.exists()) return false;
+
+        if(exactMatch) {
+            return file.length() == newFile.length();
+        }else {
+            // 200 kb diff
+            return Math.abs (file.length() - newFile.length()) <= (5*1024); // 5 kbytes
         }
     }
 
@@ -180,7 +276,7 @@ public class FileSystem {
         return copyFile(file, newFile);
     } */
 
-    public static boolean moveFile(Context context, String path, String newPath) {
+    public static boolean move(Context context, final String path, final String newPath) {
         boolean success = false;
         File newFile = new File(newPath);
         File file = new File(path);
@@ -196,13 +292,17 @@ public class FileSystem {
             //mkdirs(newDir);
         }
 
-        if(copyFile(context, file, newFile)) {
+        if(copy(context, file, newFile)) {
             success = delete(context,file);
         }else {
             // remove new file
             delete(context,newFile);
         }
         return success;
+    }
+
+    public static boolean delete(Context context, final String file) {
+        return delete(context, new File(file));
     }
 
     /**

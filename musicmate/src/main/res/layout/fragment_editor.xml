@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <!--
@@ -35,11 +36,10 @@
         android:textSize="16sp"
         android:layout_gravity="bottom|right"
         /> -->
-<LinearLayout 
+    <FrameLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/shadow_below"
-    android:orientation="vertical"
     android:id="@+id/tagContainer">
 
     <androidx.cardview.widget.CardView
@@ -319,21 +319,50 @@
             android:gravity="center_vertical|end"
             android:padding="@dimen/dimen_2_dp"
             app:fabSize="mini"
-            app:srcCompat="@drawable/ic_tag_outline_black_24dp" />
+            app:srcCompat="@drawable/ic_tag_outline_black_24dp"
+            android:contentDescription="TODO" />
+
+        <register.progressfloatingactionbutton.ProgressFloatingActionButton
+            android:id="@+id/fab_save_media"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|right"
+            android:layout_marginRight="@dimen/dimen_70_dp"
+            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:src="@drawable/ic_round_save_24"
+            android:tint="@android:color/white"
+            android:visibility="visible"
+            app:layout_anchor="@id/tagContainer"
+            app:backgroundTint="@color/fab_save_background"
+            app:elevation="5dp"
+            app:fabCustomSize="56dp"
+            app:maxImageSize="32dp"
+            app:pfab_showEditModePreview="true"
+            app:pfab_arcProportion="0.6"
+            app:pfab_startAngel="0"
+            app:pfab_animationDuration="2000"
+            app:pfab_color="@color/white"
+            app:pfab_margin="2dp"
+            app:pfab_width="2dp"
+            app:srcCompat="@drawable/bubble_arrow"
+            app:tint="@android:color/white"
+            android:contentDescription="TODO" />
+        <!--
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_save_media"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_2_dp"
-            android:layout_marginRight="@dimen/dimen_52_dp"
-            android:src="@drawable/ic_round_save_24"
             android:layout_gravity="top|right"
+            android:layout_marginRight="@dimen/dimen_70_dp"
+            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:src="@drawable/ic_round_save_24"
             android:tint="@android:color/white"
             android:visibility="visible"
             app:layout_anchor="@id/tagContainer"
-            app:layout_anchorGravity="top|right"
             app:backgroundTint="@color/fab_save_background"
-            app:fabSize="mini"/>
+            app:fabSize="mini"
+            android:contentDescription="TODO" />
+-->
         <!--
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_save_media"
@@ -418,7 +447,6 @@
             />
             -->
     </androidx.cardview.widget.CardView>
-</LinearLayout>
 
-
+    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

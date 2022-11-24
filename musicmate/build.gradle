@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 63
-        versionName  "3.4.3"+ versions.buildDate
+        versionCode 64
+        versionName  "3.4.4"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -145,6 +145,14 @@ dependencies {
     implementation deps.ui.androidribbon
     implementation deps.ui.mpandroidchart
     //implementation deps.ui.datatables
+    //https://github.com/DmitryMalkovich/circular-with-floating-action-button
+    //implementation 'com.dmitrymalkovich.android:progress-fab:1.6'
+
+    //https://github.com/pejman-74/ProgressFloatingActionButton
+    implementation 'com.github.pejman-74:ProgressFloatingActionButton:1.0'
+
+    //https://github.com/getActivity/XXPermissions
+    //implementation 'com.github.getActivity:XXPermissions:16.2'
 
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'

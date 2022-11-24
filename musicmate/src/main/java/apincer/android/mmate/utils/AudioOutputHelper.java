@@ -295,8 +295,8 @@ public class AudioOutputHelper {
                     break;
                 case AudioFormat.ENCODING_PCM_32BIT:
                     bps = 32;
-           // default:
-           //     bps = 16;
+            default:
+                bps = 16;
         }
         outputDevice.setBitPerSampling(bps);
 
@@ -423,6 +423,7 @@ public class AudioOutputHelper {
         return sb.toString();
     }
     private static int intArrayLastIndex(int[] integerArray){
+        if(integerArray==null || integerArray.length==0) return 0;
         return integerArray[integerArray.length-1];
     }
 

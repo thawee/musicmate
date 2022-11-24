@@ -69,6 +69,14 @@
             android:text="File name"
             />
     </RelativeLayout>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -509,8 +517,9 @@
     <EditText
         android:id="@+id/tag_title"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/dimen_48_dp"
         android:padding="5dip"
+        android:gravity="left|top"
         android:layout_marginLeft="@dimen/spacing_small"
         android:layout_marginRight="@dimen/spacing_small"
         android:imeOptions="actionNext"
@@ -1020,4 +1029,7 @@
         app:met_floatingLabelTextColor="?android:attr/textColorHint"
         android:hint="Comment"/>
         -->
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

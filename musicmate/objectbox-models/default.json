@@ -254,14 +254,16 @@
         {
           "id": "46:7803027932448732612",
           "name": "publisher",
-          "type": 9
+          "indexId": "12:6512099058997254927",
+          "type": 9,
+          "flags": 2048
         }
       ],
       "relations": []
     }
   ],
   "lastEntityId": "1:2852809238420897983",
-  "lastIndexId": "11:1769105146494174836",
+  "lastIndexId": "12:6512099058997254927",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

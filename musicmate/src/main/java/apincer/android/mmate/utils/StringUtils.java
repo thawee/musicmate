@@ -454,11 +454,12 @@ public class StringUtils {
             double dBitrate = audioBitRate/1000000.00;
             return String.format(Locale.getDefault(), "%.1fMbps", dBitrate);
         }else {
-            return String.format(Locale.getDefault(), "%dKbps", audioBitRate);
+            double dBitrate = audioBitRate/1000.00;
+            return String.format(Locale.getDefault(), "%.0fKbps", dBitrate);
         }
     }
 
-    public static String formatBitsPerSample(int bit) {
+    public static String formatAudioBitsDepth(int bit) {
             return String.format(Locale.getDefault(), "%dbits", bit);
     }
 
@@ -608,14 +609,14 @@ public class StringUtils {
 
     public static String formatChannels(String audioChannels) {
         if(isDigitOnly(audioChannels)) {
-            return String.format(Locale.getDefault(), "%s ch", audioChannels);
+            return String.format(Locale.getDefault(), "%s Ch.", audioChannels);
         }
         return audioChannels;
     }
 
-    public static String abvByUpperCase(String letter) {
+    public static String getAbvByUpperCase(String letter) {
         final StringBuilder abv = new StringBuilder();
-        letter.chars().filter(c -> Character.isUpperCase(c))
+        letter.chars().filter(c -> (Character.isUpperCase(c)||Character.isDigit(c)))
                 .forEach(c -> abv.append((char) c));
 
         return abv.toString();
@@ -637,5 +638,13 @@ public class StringUtils {
             cnt++;
         }
         return ret;
+    }
+
+    public static String toUpperCase(String val) {
+        return trimToEmpty(val).toUpperCase(Locale.US);
+    }
+
+    public static String toLowwerCase(String val) {
+        return trimToEmpty(val).toLowerCase(Locale.US);
     }
 }

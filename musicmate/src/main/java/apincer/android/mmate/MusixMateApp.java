@@ -226,11 +226,12 @@ public class MusixMateApp extends Application  {
         // Workmanager intitialize on MusicFileProvider
         // clear existing scanning worker
         WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanAudioFileWorker");
-        WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanLoudnessWorker");
+       // WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanLoudnessWorker");
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
+                .setRequiresStorageNotLow(true)
                 .build();
 
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
@@ -239,10 +240,10 @@ public class MusixMateApp extends Application  {
                 .build();
         WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
 
-        workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
-                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
-                .setConstraints(constraints)
-                .build();
-        WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
+       // workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
+       //         .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
+       //         .setConstraints(constraints)
+       //         .build();
+       // WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
     }
 }

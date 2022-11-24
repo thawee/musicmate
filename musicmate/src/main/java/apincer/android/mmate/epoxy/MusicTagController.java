@@ -1,5 +1,7 @@
 package apincer.android.mmate.epoxy;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+
 import android.content.Context;
 import android.view.View;
 
@@ -23,9 +25,9 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
-  //  private final MusicTagRepository tagRepos;
     private SearchCriteria criteria;
     private double totalDuration = 0;
     private long totalSize = 0;
@@ -37,7 +39,6 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     public static volatile boolean loading  = false;
 
     public MusicTagController(View.OnClickListener clickListener, View.OnLongClickListener longClickListener) {
-        //tagRepos = MusicTagRepository.getInstance();
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
         selections = new ArrayList<>();
@@ -54,7 +55,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     protected void buildModels(List<MusicTag> audioTags) {
         totalDuration =0;
         totalSize = 0;
-        boolean noFilters = StringUtils.isEmpty(criteria.getFilterType()) && StringUtils.isEmpty(criteria.getFilterText());
+        boolean noFilters = isEmpty(criteria.getFilterType()) && isEmpty(criteria.getFilterText());
         if(noFilters) {
             for (MusicTag tag : audioTags) {
                 new MusicTagModel_()
@@ -69,6 +70,10 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             }
         }else {
             for (MusicTag tag : audioTags) {
+                if(!isFilterMatched(criteria, tag)) {
+                    continue;
+                }
+                /*
                 if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
                     if (!StringUtils.equals(tag.getAlbum(), criteria.getFilterText())) {
                         continue;
@@ -97,7 +102,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                     if (!tag.getPath().startsWith(criteria.getFilterText())) {
                         continue;
                     }
-                }
+                } */
                 new MusicTagModel_()
                         .id(tag.getId())
                         .tag(tag)
@@ -109,6 +114,27 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                 totalSize = totalSize + tag.getFileSize();
             }
         }
+    }
+
+    public static boolean isFilterMatched(SearchCriteria criteria, MusicTag tag) {
+        if(criteria==null || isEmpty(criteria.getFilterType())) {
+            return true;
+        } else if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getAlbum(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_ARTIST.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getArtist(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_ALBUM_ARTIST.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getAlbumArtist(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_GENRE.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getGenre(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_PUBLISHER.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getPublisher(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_GROUPING.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getGrouping(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
+            return tag.getPath().startsWith(criteria.getFilterText());
+        }
+        return false;
     }
 
     public void loadSource() {
@@ -181,15 +207,21 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                 }else {
                     return Constants.TITLE_ALL_SONGS;
                 }
-            } else if(criteria.getType() == SearchCriteria.TYPE.RECORDINGS_QUALITY) {
-                if(Constants.QUALITY_AUDIOPHILE.equals(criteria.getKeyword())) {
+            } else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
+                if (Constants.QUALITY_AUDIOPHILE.equals(criteria.getKeyword())) {
                     return Constants.QUALITY_AUDIOPHILE;
-                }else if(Constants.QUALITY_RECOMMENDED.equals(criteria.getKeyword())) {
+                } else if (Constants.QUALITY_RECOMMENDED.equals(criteria.getKeyword())) {
                     return Constants.QUALITY_RECOMMENDED;
-                }else if(!StringUtils.isEmpty(criteria.getKeyword())) {
+                } else if (!isEmpty(criteria.getKeyword())) {
                     return StringUtils.trimToEmpty(criteria.getKeyword());
-                }else {
+                } else {
                     return Constants.QUALITY_NORMAL;
+                }
+            }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
+                if(isEmpty(criteria.getKeyword()) || Constants.UNKWON_PUBLISHER.equals(criteria.getKeyword())) {
+                    return Constants.UNKWON_PUBLISHER;
+                }else {
+                    return criteria.getKeyword();
                 }
             } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {
                 if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
@@ -227,10 +259,10 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                 }else {
                     return "Results";
                 } */
-            }else if(criteria.getType() == SearchCriteria.TYPE.SEARCH_BY_ARTIST) {
-                return criteria.getKeyword();
-            }else if(criteria.getType() == SearchCriteria.TYPE.SEARCH_BY_ALBUM) {
-                return criteria.getKeyword();
+            //}else if(criteria.getType() == SearchCriteria.TYPE.SEARCH_BY_ARTIST) {
+            //    return criteria.getKeyword();
+           // }else if(criteria.getType() == SearchCriteria.TYPE.SEARCH_BY_ALBUM) {
+            //    return criteria.getKeyword();
             } else {
                 return criteria.getKeyword();
             }
@@ -326,21 +358,29 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
 
     public void notifyModelChanged(MusicTag tag) {
        if(tag!= null) {
-           MusicTagModel_ model = buildModel(tag);
-            int position = getAdapter().getModelPosition(model);
-            if (position != RecyclerView.NO_POSITION) {
-                MusicTagModel_ md = (MusicTagModel_) getAdapter().getModelAtPosition(position);
-                if (md != null) {
-                    MusicTagRepository.populateAudioTag(md.tag());
-                }
-                notifyModelChanged(position);
-            }
-        }
+           try {
+               if (isFilterMatched(criteria, tag)) {
+                   MusicTagModel_ model = buildModel(tag);
+                   int position = getAdapter().getModelPosition(model);
+                   if (position != RecyclerView.NO_POSITION) {
+                       MusicTagModel_ md = (MusicTagModel_) getAdapter().getModelAtPosition(position);
+                       if (md != null) {
+                           MusicTagRepository.populateAudioTag(md.tag());
+                       }
+                       notifyModelChanged(position);
+                   }
+               } else {
+                   notifyModelRemoved(tag);
+               }
+           }catch (Exception ex) {
+               Timber.e(ex);
+           }
+       }
     }
 
     public void notifyModelRemoved(MusicTag tag) {
-        if(tag!= null) {
-            List<MusicTag> list = getCurrentData();
+        List<MusicTag> list = getCurrentData();
+        if(tag!= null || list != null) {
             assert list != null;
             list.removeIf(tag::equals);
             setData(list);
@@ -349,7 +389,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
 
     public boolean hasFilter() {
         if(criteria==null) return false;
-        return !StringUtils.isEmpty(criteria.getFilterType());
+        return !isEmpty(criteria.getFilterType());
     }
 
     public int getTotalSongs() {
@@ -369,7 +409,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
             titles.add(Constants.TITLE_DSD_AUDIO);
-        }else if(criteria.getType() == SearchCriteria.TYPE.RECORDINGS_QUALITY) {
+        }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             titles.add(Constants.QUALITY_AUDIOPHILE);
             titles.add(Constants.QUALITY_RECOMMENDED);
             titles.add(Constants.QUALITY_NORMAL);
@@ -384,6 +424,9 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
             List<String> tabs = MusicTagRepository.getGenreList(context);
+            titles.addAll(tabs);
+        }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
+            List<String> tabs = MusicTagRepository.getPublisherList(context);
             titles.addAll(tabs);
         }else {
             titles.add(getHeaderTitle());

@@ -97,6 +97,7 @@ public class MusicTag implements Cloneable, Parcelable {
     protected String composer = "";
     protected String albumArtist = "";
     protected boolean compilation;
+    @Index
     protected String publisher = "";
     protected String embedCoverArt = "";
     protected String language = "";

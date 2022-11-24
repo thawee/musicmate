@@ -196,7 +196,7 @@ M2
 M2
 <style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
 -->
-    <style name="AlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+    <style name="AlertDialogTheme" parent="Theme.MaterialComponents.Dialog"> <!--parent="ThemeOverlay.Material3.MaterialAlertDialog"> -->
         <item name="colorSurface">@color/grey400</item>
         <item name="elevation">0dp</item>
         <item name="materialAlertDialogTitleTextStyle">@style/TitleTextStyle</item>
@@ -266,6 +266,15 @@ M2
         <item name="textAllCaps">false</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ProgressDialogTheme" parent="Theme.MaterialComponents.Dialog">
+        <item name="colorSurface">@color/black_transparent_98</item>
+        <item name="elevation">0dp</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/SignalPathTitleTextStyle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/SignalPathBodyTextStyle</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
 
 </resources>

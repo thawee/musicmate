@@ -329,7 +329,8 @@ public class FileRepository {
         }
 
         item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
-        if(isValidJAudioTagger(item.getPath())) {
+        //if(isValidJAudioTagger(item.getPath())) {
+        if(FFMPegUtils.isSupportedFileFormat(item.getPath())) {
           //  File file = new File(item.getPath());
            // setupTagOptionsForWriting();
            // AudioFile audioFile = buildAudioFile(file.getAbsolutePath(), "rw");
@@ -660,7 +661,7 @@ public class FileRepository {
     public void scanMusicFile(File file) {
         try {
             String mediaPath = file.getAbsolutePath();
-            Timber.d("Sannning::"+mediaPath);
+            Timber.d("Scanning::%s", mediaPath);
             if (isValidSACD(mediaPath)) {
                 if (MusicTagRepository.checkSACDOutdated(mediaPath, file.lastModified())) {
                     MusicTag[] tags = readSACD(mediaPath);
@@ -683,6 +684,7 @@ public class FileRepository {
                     if(metadata!=null) {
                         readFileHeader(file, metadata, mediaPath);
                         metadata.setId(tag.getId());
+                        detectMQA(metadata,50000); // timeout 50 seconds
                         String matePath = buildCollectionPath(metadata);
                         metadata.setMusicManaged(StringUtils.equals(matePath, metadata.getPath()));
                         MusicTagRepository.saveTag(metadata);
@@ -1294,12 +1296,14 @@ public class FileRepository {
             // then artist
             String artist = StringUtils.trimTitle(MusicTagUtils.getFirstArtist(metadata.getArtist()));
             String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
+            boolean addArtist2title = false;
             if("Various Artists".equals(albumArtist)) {
                 if(isEmpty(metadata.getPublisher())) {
                     filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
                 }else {
-                    filename.append(StringUtils.abvByUpperCase(metadata.getPublisher())).append(File.separator);
+                    filename.append(StringUtils.getAbvByUpperCase(metadata.getPublisher())).append(File.separator);
                 }
+                addArtist2title = true;
             }else if(!isEmpty(albumArtist)) {
                 filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
             }else if (!isEmpty(artist)) {
@@ -1317,6 +1321,8 @@ public class FileRepository {
             // track number
             if(!isEmpty(metadata.getTrack())) {
                 filename.append(StringUtils.getWord(metadata.getTrack(),"/",0)).append(" - ");
+            } else if(addArtist2title) {
+                filename.append(artist).append(" - ");
             }
 
             // title
@@ -1414,7 +1420,7 @@ public class FileRepository {
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 return true;
             }
-            if (FileSystem.moveFile(getContext(), tag.getPath(), newPath)) {
+            if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
                 copyRelatedFiles(tag, newPath);
 
                 File file = new File(tag.getPath());
@@ -1482,7 +1488,7 @@ public class FileRepository {
         assert files != null;
         for(File f : files) {
             File newRelated = new File(newDir, f.getName());
-            FileSystem.copyFile(getContext(), f, newRelated);
+            FileSystem.copy(getContext(), f, newRelated);
         }
     }
 

@@ -117,8 +117,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:layout_marginTop="@dimen/dimen_4_dp"
-            android:layout_marginBottom="@dimen/dimen_4_dp"
+            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:layout_marginBottom="@dimen/dimen_2_dp"
             android:orientation="horizontal">
             <!--
             <TextView
@@ -141,7 +141,7 @@
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_4_dp"
                 android:fontFamily="@font/k2d_bold"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
@@ -175,7 +175,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="1dp"
                 android:layout_marginStart="@dimen/dimen_24_dp"
                 android:layout_marginEnd="@dimen/dimen_24_dp">
 
@@ -184,10 +184,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center|bottom"
-                    android:paddingTop="@dimen/dimen_2_dp"
+                    android:paddingTop="@dimen/dimen_1_dp"
                     android:paddingRight="@dimen/dimen_4_dp"
                     android:paddingLeft="@dimen/dimen_4_dp"
-                    android:paddingBottom="@dimen/dimen_6_dp"
+                    android:paddingBottom="@dimen/dimen_4_dp"
                     android:layout_marginBottom="@dimen/dimen_2_dp"
                     android:fontFamily="@font/sfthonburi_regular"
                     android:background="@color/transparent"/>
@@ -267,7 +267,7 @@
                     android:id="@+id/panel_enc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="@dimen/dimen_4_dp"
+                    android:paddingTop="@dimen/dimen_2_dp"
                     android:fontFamily="@font/k2d_bold"
                     android:textSize="8sp"
                     android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
@@ -281,7 +281,7 @@
             android:orientation="horizontal"
             android:layout_gravity="center"
             android:gravity="center_horizontal"
-            android:layout_marginTop="@dimen/dimen_4_dp"
+            android:layout_marginTop="@dimen/dimen_2_dp"
             android:layout_marginBottom="@dimen/dimen_2_dp"
             android:layout_marginStart="@dimen/dimen_24_dp"
             android:layout_marginEnd="@dimen/dimen_24_dp">
@@ -326,7 +326,22 @@
                 android:gravity="center"
                 android:layout_gravity="center"
                 android:singleLine="true" />
+
         </LinearLayout>
+        <TextView
+            android:id="@+id/panel_filename"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_marginLeft="@dimen/dimen_4_dp"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            android:paddingTop="@dimen/dimen_1_dp"
+            android:fontFamily="@font/sfthonburi_regular"
+            android:textSize="8sp"
+            android:text="filename"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:singleLine="true" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -381,10 +396,10 @@
                 android:id="@+id/btnEdit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
                 android:layout_alignParentTop="true"
+                android:layout_centerInParent="true"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:layout_marginTop="@dimen/dimen_6_dp"
                 android:background="@drawable/shape_border_back_selectable"
                 android:gravity="center_horizontal"
                 android:paddingLeft="@dimen/dimen_12_dp"

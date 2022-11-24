@@ -1,10 +1,12 @@
 package apincer.android.mmate.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,7 @@ import com.anggrayudi.storage.file.StorageId;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.PermissionUtils;
+import apincer.android.storage.StorageUtils;
 
 public class PermissionActivity extends AppCompatActivity {
     // android 5 SD card permissions
@@ -50,7 +53,8 @@ public class PermissionActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_STORAGE_PERMISSION) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (!SimpleStorage.hasFullDiskAccess(getApplicationContext(), StorageId.PRIMARY)) {
+                //if (!SimpleStorage.hasFullDiskAccess(getApplicationContext(), StorageId.PRIMARY)) {
+                 if (!Environment.isExternalStorageManager()) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
                     startActivity(intent);
                 }
@@ -60,15 +64,17 @@ public class PermissionActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private void setUpPermissions() {
         // check all permission required/granted and display on screen
         // check all storage and display required/granted on screen
         // allow to grant permission
         // allow to gramt permission on storages
 
-        txtTitle.setText("Permissions for using Music Mate application");
+        txtTitle.setText("Permissions for Music Mate");
         txtConfirm.setText("OK");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            //todo when permission is granted
             txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
                     PermissionUtils.PERMISSIONS_ALL,
                     REQUEST_CODE_STORAGE_PERMISSION));
@@ -76,9 +82,9 @@ public class PermissionActivity extends AppCompatActivity {
 
         // Internet
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
-       // panel.addView(getPermissionView(layoutInflater,null, "Full Storage Access", "(Required)", "Read/Write media, and files on device to manage music collection."));
-        panel.addView(getPermissionView(layoutInflater,null, "Read External Storage", "(Required)", "Read photos, media, and files on device."));
-        panel.addView(getPermissionView(layoutInflater,null, "Write External Storage", "(Required)", "Write media, and files on device to manage music collection."));
+        panel.addView(getPermissionView(layoutInflater,null, "Full Storage Access", "(Required)", "Read/Write media, and files on device to manage music collection."));
+      //  panel.addView(getPermissionView(layoutInflater,null, "Read External Storage", "(Required)", "Read photos, media, and files on device."));
+       // panel.addView(getPermissionView(layoutInflater,null, "Write External Storage", "(Required)", "Write media, and files on device to manage music collection."));
         //  panel.addView(getPermissionView(layoutInflater,null, "Internet", "(Optional)", "Access Internet for coverart and MusicBrainz services"));
     }
 

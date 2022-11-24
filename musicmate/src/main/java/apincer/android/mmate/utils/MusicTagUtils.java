@@ -1,5 +1,6 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -1140,21 +1141,10 @@ public class MusicTagUtils {
             int width = 96; //48;
             int height = 48;
             int whiteColor = Color.WHITE;
-            letter = StringUtils.abvByUpperCase(letter);
+            letter = getAbvByUpperCase(letter);
             if(StringUtils.isEmpty(letter)) {
                 return null;
             }
-            /*if(letter.equalsIgnoreCase(Constants.SRC_HD_TRACKS)) {
-                letter = "HD";
-            }else if(letter.equalsIgnoreCase(Constants.SRC_2L)) {
-                letter = "2L";
-            }else if(letter.equalsIgnoreCase(Constants.SRC_NATIVE_DSD)) {
-                letter = "ND";
-            }else if(letter.equalsIgnoreCase(Constants.SRC_ONKYO)) {
-                letter = "e";
-            }else {
-                letter = StringUtils.getChars(letter, 1);
-            } */
             return createButtonFromText (context, width, height, letter, whiteColor, borderColor,qualityColor);
         }else {
             return createBitmapFromDrawable(context, size, size,rescId,qualityColor, qualityColor);
@@ -1222,8 +1212,8 @@ public class MusicTagUtils {
        //     return artist.substring(0,artist.indexOf(","));
         }else if(artist.indexOf("-")>0) {
             return artist.substring(0,artist.indexOf("-"));
-        }else if(artist.indexOf("&")>0) {
-            return artist.substring(0,artist.indexOf("&"));
+       // }else if(artist.indexOf("&")>0) {
+        //    return artist.substring(0,artist.indexOf("&"));
         }
         return artist;
     }
@@ -1235,14 +1225,10 @@ public class MusicTagUtils {
        // int darkGreyColor = context.getColor(R.color.grey900);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.material_color_blue_grey_100);
-        String lra = String.format(Locale.getDefault(),"%.1f", tag.getTrackRange()); //StringUtils.trim(tag.getTrackRange(),"--");
-        String il= String.format(Locale.getDefault(),"%.1f", tag.getTrackLoudness()); //StringUtils.trim(tag.getTrackLoudness(),"--");
-        //String tp= StringUtils.trim(tag.getTruePeek(),"--");
-       // String rg = StringUtils.trim(tag.getTrackGain(),"--");
-        String rg =   String.format(Locale.getDefault(),"%.2f", tag.getTrackGain());
-        if("--".equalsIgnoreCase(il) || "-70.0".equalsIgnoreCase(il)) {
-            qualityColor = context.getColor(R.color.warningColor);
-        }
+        String lra = String.format(Locale.getDefault(),"%.1f", tag.getTrackRange());
+        String il= String.format(Locale.getDefault(),"%.1f", tag.getTrackLoudness());
+
+        String rg =   String.format(Locale.getDefault(),"%.1f", tag.getTrackGain());
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -1369,7 +1355,7 @@ public class MusicTagUtils {
                 mLetterPaint);
 
         // draw true peak text, black color
-        letterTextSize = 48; //28;
+        letterTextSize = 50; //28;
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(blackColor);
         mLetterPaint.setTypeface(font);
@@ -1592,11 +1578,11 @@ public class MusicTagUtils {
     }
 
     public static boolean isWavFile(MusicTag musicTag) {
-        return (Constants.MEDIA_EXT_WAVE.equalsIgnoreCase(musicTag.getFileFormat()));
+        return (Constants.MEDIA_FILE_FORMAT_WAVE.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
     public static boolean isFlacFile(MusicTag musicTag) {
-        return (Constants.MEDIA_EXT_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
+        return (Constants.MEDIA_FILE_FORMAT_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
     public static Bitmap getMediaTypeIcon(Context context, String src) {
@@ -1609,5 +1595,16 @@ public class MusicTagUtils {
             return createBitmapFromDrawable(context, size, size, rescId, qualityColor, qualityColor);
         }
         return null;
+    }
+
+    public static boolean isMp4File(MusicTag tag) {
+        // m4a, mov, ,p4
+        return (Constants.MEDIA_FILE_FORMAT_M4A.equalsIgnoreCase(tag.getFileFormat()));
+    }
+
+    public static boolean isAIFFile(MusicTag tag) {
+        // aif, aiff
+        return (Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(tag.getFileFormat()) ||
+                Constants.MEDIA_FILE_FORMAT_AIFF.equalsIgnoreCase(tag.getFileFormat()));
     }
 }
