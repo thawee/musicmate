@@ -22,8 +22,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.ffmpeg.FFMPegUtils;
 import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
@@ -56,9 +56,13 @@ public class TagsTechnicalFragment extends Fragment {
         MusicTag tag = tagsActivity.getEditItems().get(0);
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag);
         filename.setText("MediaPath:\n"+tag.getPath()+"\n\nMuicMatePath:\n"+musicMatePath);
-        MusicTag ffmpegTag = FFMPegUtils.readMusicTag(tag.getPath());
+        MusicTag ffmpegTag = FFMPeg.readFFprobe(getActivity().getApplicationContext(), tag.getPath());
         if(ffmpegTag!=null) {
             metada.setText(ffmpegTag.getData());
+        }
+        MusicTag tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
+        if(tt!=null) {
+            metada.setText(metada.getText() +"\n\nFFmpeg:\n"+tt.getData());
         }
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -77,7 +81,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv1 = new TextView(getContext());
-        tv1.setText(" MusicMate Library ");
+        tv1.setText(" MusicMate ");
         tv1.setTextColor(Color.WHITE);
         cell.addView(tv1);
         tbrow0.addView(cell);
@@ -86,9 +90,19 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv2 = new TextView(getContext());
-        tv2.setText(" From File ");
+        tv2.setText(" FFprobe ");
         tv2.setTextColor(Color.WHITE);
         cell.addView(tv2);
+        tbrow0.addView(cell);
+        //table.addView(tbrow0);
+
+        cell = new LinearLayout(getContext());
+        cell.setBackgroundColor(Color.DKGRAY);
+        cell.setLayoutParams(llp);//2px border on the right for the cell
+        TextView tv = new TextView(getContext());
+        tv.setText(" FFmpeg ");
+        tv.setTextColor(Color.WHITE);
+        cell.addView(tv);
         tbrow0.addView(cell);
         table.addView(tbrow0);
 
@@ -96,12 +110,15 @@ public class TagsTechnicalFragment extends Fragment {
        // String text = "\nField Name\t--> Library\t<>\tFFMPeg\n";
         for(Field field: fields) {
             if (field.getName().equals("path")
-                    || field.getName().equals("simpleName")
+                   // || field.getName().equals("simpleName")
+                    || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
                     || field.getName().equals("data")
-                    || field.getName().equals("storageId")
+                    //|| field.getName().equals("storageId")
                     || field.getName().equals("CREATOR")
                     || field.getName().equals("originTag")
+                    || field.getName().equals("trackLoudness")
+                    || field.getName().equals("trackRange")
                     || field.getName().startsWith("shadow"))  {
                 continue;
             };
@@ -113,8 +130,10 @@ public class TagsTechnicalFragment extends Fragment {
            // llp.setMargins(0, 0, 2, 0);//2px right-margin
 
             //New Cell
-            String mateVal = format(ReflectUtil.getFieldValue(field,tag),12,"\n");
-            String ffmpegVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),12,"\n");
+            String mateVal = format(ReflectUtil.getFieldValue(field,tag),20,"\n");
+            String ffprobeVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
+            String ffmpegVal = format(ReflectUtil.getFieldValue(field,tt),20,"\n");
+
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.DKGRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
@@ -140,6 +159,16 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t3v = new TextView(getContext());
+            t3v.setText(ffprobeVal);
+            t3v.setTextColor(Color.WHITE);
+            t3v.setGravity(Gravity.CENTER);
+            cell.addView(t3v);
+            tr.addView(cell);
+
+            cell = new LinearLayout(getContext());
+            cell.setBackgroundColor(Color.GRAY);
+            cell.setLayoutParams(llp);//2px border on the right for the cell
+            t3v = new TextView(getContext());
             t3v.setText(ffmpegVal);
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
@@ -148,29 +177,5 @@ public class TagsTechnicalFragment extends Fragment {
 
             table.addView(tr);
         }
-
-      //  tags.setText(text);
-
-        /*
-        String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format \""+tag.getPath()+"\"";
-        FFprobeSession session = FFprobeKit.execute(cmd);
-
-        //if (!ReturnCode.isSuccess(session.getReturnCode())) {
-        //   metada.setText(session.getOutput());
-        //}else {
-        //    metada.setText(session.getOutput());
-       // }
-        String output1 = session.getOutput();
-
-
-        cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+tag.getPath()+"\"";
-        session = FFprobeKit.execute(cmd);
-
-        metada.setText(output1 +"\n\n==========\n\n"+session.getOutput()); */
-        //if (!ReturnCode.isSuccess(session.getReturnCode())) {
-        //    metada.setText(session.getOutput());
-        //}else {
-        //    metada.setText(session.getOutput());
-        //}
     }
 }

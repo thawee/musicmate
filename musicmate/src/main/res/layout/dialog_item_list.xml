@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:minHeight="32dip"
     android:textAppearance="?android:attr/textAppearanceLarge"
-    android:textColor="@color/white"
+    android:textColor="@color/darkblue"
     android:gravity="center_vertical"
     android:paddingStart="8dip"
     android:paddingEnd="8dip"

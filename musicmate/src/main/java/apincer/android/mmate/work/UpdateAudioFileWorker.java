@@ -99,7 +99,7 @@ public class UpdateAudioFileWorker extends Worker {
 
     private void save(MusicTag tag) {
         try {
-            boolean status = repos.setMusicTag(tag, null);
+            boolean status = repos.setMusicTag(tag);
             // String txt = status?getApplicationContext().getString(R.string.alert_write_tag_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_write_tag_fail, tag.getTitle());
             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
             EventBus.getDefault().postSticky(message);
@@ -119,7 +119,7 @@ public class UpdateAudioFileWorker extends Worker {
         @Override
         public void run() {
             try {
-                boolean status = repos.setMusicTag(tag, artworkPath);
+                boolean status = repos.setMusicTag(tag);
                // String txt = status?getApplicationContext().getString(R.string.alert_write_tag_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_write_tag_fail, tag.getTitle());
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
                 EventBus.getDefault().postSticky(message);

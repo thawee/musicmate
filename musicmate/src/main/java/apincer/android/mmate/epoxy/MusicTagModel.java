@@ -2,6 +2,8 @@ package apincer.android.mmate.epoxy;
 
 import static com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash;
 
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -85,6 +87,9 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(controller.isSelected(tag));
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
+        if("Come on Over".equalsIgnoreCase(tag.getTitle())) {
+            tag.getTrack();
+        }
 
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayingSong();
@@ -166,12 +171,17 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
-        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-
         // file format
-        holder.mFileTypeView.setText(tag.getFileFormat().toUpperCase(Locale.US));
+        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        holder.mFileTypeView.setText(trimToEmpty(tag.getFileFormat()).toUpperCase(Locale.US));
         holder.mFileTypeView.setBackground(resolutionBackground);
+
         holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
+
+        // Dynamic Range
+        resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        holder.mDynamicRange.setText(String.format(Locale.US, "DR%.0f",tag.getTrackDR()));
+        holder.mDynamicRange.setBackground(resolutionBackground);
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
@@ -208,6 +218,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         ImageView mFileBrokenView;
        // ImageView mFileTypeView;
         TextView mFileTypeView;
+        TextView mDynamicRange;
         Context mContext;
         //ImageView mNotificationView;
         ImageView mPlayerView;
@@ -227,6 +238,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
+            this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
            // this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
            // this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
            // this.mBitrateView = view.findViewById(R.id.item_bitrate);

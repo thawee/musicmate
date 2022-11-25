@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
@@ -143,6 +144,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView pathInfo;
     private TextView filename;
     private TextView pathDrive;
+    private TextView drView;
     //private ImageView pathIcon;
     private SearchCriteria criteria;
 
@@ -258,6 +260,7 @@ public class TagsActivity extends AppCompatActivity {
         encResView = findViewById(R.id.icon_loudness);
         ratingView = findViewById(R.id.icon_rating);
         filename = findViewById(R.id.panel_filename);
+        drView = findViewById(R.id.icon_dr);
     }
 
     public void updateTitlePanel() {
@@ -280,6 +283,11 @@ public class TagsActivity extends AppCompatActivity {
                 .target(hiresView)
                 .build();
         imageLoader.enqueue(request);
+
+        // Dynamic Range
+        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
+        drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
+        drView.setBackground(resolutionBackground);
 
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         //if (displayTag.isAudiophile()) {
@@ -449,7 +457,7 @@ public class TagsActivity extends AppCompatActivity {
         SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
         spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor).setTextSize(10));
 
-        spannableEnc.append(new SpecialTextUnit(displayTag.getFileFormat().toUpperCase(Locale.US),encColor).setTextSize(10))
+        spannableEnc.append(new SpecialTextUnit(trimToEmpty(displayTag.getFileFormat()).toUpperCase(Locale.US),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
 
         if((!isEmpty(displayTag.getMediaType())) && !MEDIA_TYPE_NONE.equals(displayTag.getMediaType())) {

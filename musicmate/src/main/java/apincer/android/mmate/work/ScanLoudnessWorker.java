@@ -33,6 +33,7 @@ import apincer.android.mmate.repository.MusicTagRepository;
 import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
+@Deprecated
 public class ScanLoudnessWorker extends Worker {
     private static final String TAG = "ScanLoudnessWorker";
     FileRepository repos;

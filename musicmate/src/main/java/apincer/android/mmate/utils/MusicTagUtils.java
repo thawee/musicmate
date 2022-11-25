@@ -1002,15 +1002,11 @@ public class MusicTagUtils {
 
         File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
-            // create file
             try {
                 dir = pathFile.getParentFile();
                 dir.mkdirs();
-
-                byte []is = FileRepository.getArtworkAsByte(tag);
-                if(is!=null) {
-                    IOUtils.write(is, new FileOutputStream(pathFile));
-                }
+                // extract covert to cache directory
+                FileRepository.extractCoverArt(tag, pathFile);
             } catch (Exception e) {
                 Timber.e(e);
             }
@@ -1154,11 +1150,12 @@ public class MusicTagUtils {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
+    @Deprecated
     public static int getDSDSampleRateModulation(MusicTag tag) {
-        return (int) (tag.getAudioBitRate()/Constants.QUALITY_SAMPLING_RATE_44);
+        return (int) ((tag.getAudioBitRate()/1000.0)/(Constants.QUALITY_SAMPLING_RATE_44/1000.0));
     }
 
-        public static String getTrackQuality(MusicTag tag) {
+    public static String getTrackQuality(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
         }else if(isMQAStudio(tag)) {
@@ -1583,6 +1580,10 @@ public class MusicTagUtils {
 
     public static boolean isFlacFile(MusicTag musicTag) {
         return (Constants.MEDIA_FILE_FORMAT_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
+    }
+
+    public static boolean isDSDFile(String path) {
+        return (path.endsWith("."+Constants.MEDIA_FILE_FORMAT_DSF));
     }
 
     public static Bitmap getMediaTypeIcon(Context context, String src) {

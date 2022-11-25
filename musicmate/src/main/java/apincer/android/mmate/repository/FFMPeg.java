@@ -1,4 +1,4 @@
-package apincer.android.mmate.ffmpeg;
+package apincer.android.mmate.repository;
 
 import static java.lang.StrictMath.log10;
 import static java.lang.StrictMath.min;
@@ -10,13 +10,16 @@ import static apincer.android.mmate.utils.StringUtils.getWord;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
+import static apincer.android.mmate.utils.StringUtils.toDurationSeconds;
 import static apincer.android.mmate.utils.StringUtils.toInt;
 import static apincer.android.mmate.utils.StringUtils.toLong;
+import static apincer.android.mmate.utils.StringUtils.toUpperCase;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 
+import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.FFprobeKit;
@@ -29,22 +32,84 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.objectbox.MusicTag;
-import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.utils.FileUtils;
 import timber.log.Timber;
 
-public class FFMPegUtils {
+public class FFMPeg {
+    public static void extractCoverArt(MusicTag tag, File pathFile) {
+        String options=" -c:v copy ";
+
+        String cmd = " -hide_banner -nostats -i \""+tag.getPath()+"\" "+options+" \""+pathFile.getAbsolutePath()+"\"";
+
+        FFmpegKit.execute(cmd); // do not clear tghe result
+    }
+
+    public enum SupportedFileFormat
+    {
+        // OGG("ogg", "Ogg"),
+        // OGA("oga", "Oga"),
+        MP3("mp3", "Mp3"),
+        FLAC("flac", "Flac"),
+        //MP4("mp4", "Mp4"),
+        M4A("m4a", "Mp4"),
+        // M4P("m4p", "M4p"),
+        // WMA("wma", "Wma"),
+        WAV("wav", "Wav"),
+        //  RA("ra", "Ra"),
+        //  RM("rm", "Rm"),
+        //  M4B("m4b", "Mp4"),
+        AIF("aif", "Aif"),
+        AIFF("aiff", "Aif"),
+        //  AIFC("aifc", "Aif Compressed"),
+        DSF("dsf", "Dsf"),
+        DFF("dff", "Dff");
+
+        /**
+         * File Suffix
+         */
+        private String filesuffix;
+
+        /**
+         * User Friendly Name
+         */
+        private String displayName;
+
+        /** Constructor for internal use by this enum.
+         */
+        SupportedFileFormat(String filesuffix, String displayName)
+        {
+            this.filesuffix = filesuffix;
+            this.displayName = displayName;
+        }
+
+        /**
+         *  Returns the file suffix (lower case without initial .) associated with the format.
+         */
+        public String getFilesuffix()
+        {
+            return filesuffix;
+        }
+
+
+        public String getDisplayName()
+        {
+            return displayName;
+        }
+    }
+
     private static final String KEY_BIT_RATE = "bit_rate";
-    private static final String KEY_FORMAT_NAME = "format_name";
+   // private static final String KEY_FORMAT_NAME = "format_name";
     private static final String KEY_START_TIME = "start_time";
     private static final String KEY_DURATION = "duration";
     private static final String KEY_SIZE = "size";
@@ -103,41 +168,24 @@ public class FFMPegUtils {
     private static final String KEY_TAG_AIF_YEAR = "YEAR";
 
     // QuickTime/MOV/MP4/M4A
+    // https://wiki.multimedia.cx/index.php/FFmpeg_Metadata
     private static final String KEY_TAG_MP4_ARTIST = "author"; //artist
     private static final String KEY_TAG_MP4_ALBUM = "album"; // album
     private static final String KEY_TAG_MP4_ALBUM_ARTIST = "album_artist";
     private static final String KEY_TAG_MP4_GENRE = "genre"; //genre
     private static final String KEY_TAG_MP4_TRACK = "track"; //track
     private static final String KEY_TAG_MP4_TITLE = "title"; //title
-    private static final String KEY_TAG_MP4_YEAR = "date"; //date
+    private static final String KEY_TAG_MP4_YEAR = "year"; //date
     private static final String KEY_TAG_MP4_COMPOSER = "composer";
-    private static final String KEY_TAG_MP4_MEDIA = "media_type";
+    //private static final String KEY_TAG_MP4_MEDIA = "media_type";
     private static final String KEY_TAG_MP4_GROUPING = "grouping";
-    private static final String KEY_TAG_MP4_DISC = "disc";
+    //private static final String KEY_TAG_MP4_DISC = "disc";
     private static final String KEY_TAG_MP4_COMMENT = "comment";  // comment
     private static final String KEY_TAG_MP4_PUBLISHER = "copyright"; //copy right
-    private static final String KEY_TAG_MP4_LANGUAGE = "language"; // language
-    private static final String KEY_TAG_MP4_RATING = "rating";
-    private static final String KEY_TAG_MP4_QUALITY = "Song-DB_Preference";
-    private static final String KEY_TAG_MP4_COMPILATION = "compilation";
-
-    private static final String KEY_TAG_MP4_RAW_ARTIST = "©ART"; //artist
-    private static final String KEY_TAG_MP4_RAW_ALBUM = "©alb"; // album
-    private static final String KEY_TAG_MP4_RAW_ALBUM_ARTIST = "aART";
-    private static final String KEY_TAG_MP4_RAW_GENRE = "©gen"; //genre
-    private static final String KEY_TAG_MP4_RAW_TRACK = "trkn"; //track
-    private static final String KEY_TAG_MP4_RAW_TITLE = "©nam"; //title
-    private static final String KEY_TAG_MP4_RAW_YEAR = "©day"; //date
-    private static final String KEY_TAG_MP4_RAW_COMPOSER = "©wrt";
-    private static final String KEY_TAG_MP4_RAW_MEDIA = "stik";
-    private static final String KEY_TAG_MP4_RAW_GROUPING = "©grp";
-    private static final String KEY_TAG_MP4_RAW_DISC = "disk";
-    private static final String KEY_TAG_MP4_RAW_COMMENT = "©cmt";  // comment
-    private static final String KEY_TAG_MP4_RAW_PUBLISHER = "cprt"; //copy right
    // private static final String KEY_TAG_MP4_LANGUAGE = "language"; // language
-    private static final String KEY_TAG_MP4_RAW_RATING = "rtng";
-    //private static final String KEY_TAG_MP4_QUALITY = "Song-DB_Preference";
-    private static final String KEY_TAG_MP4_RAW_COMPILATION = "cpil";
+   // private static final String KEY_TAG_MP4_RATING = "rating";
+   // private static final String KEY_TAG_MP4_QUALITY = "Song-DB_Preference";
+   // private static final String KEY_TAG_MP4_COMPILATION = "compilation";
 
     private static final String KEY_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
     private static final String KEY_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
@@ -173,6 +221,7 @@ public class FFMPegUtils {
         void onFinish(boolean status);
     }
 
+    @Deprecated
     public static Loudness getLoudness(String path) {
         try {
 /*
@@ -212,7 +261,256 @@ public class FFMPegUtils {
         return null;
     }
 
-    public static MusicTag readMusicTag(String path) {
+    public static MusicTag readMusicTag(Context context, String path) {
+        //return readFFprobe(path);
+        MusicTag tag = readFFmpeg(context, path);
+        detectMQA(tag,50000); // timeout 50 seconds
+        return tag;
+    }
+
+    public static MusicTag readFFmpeg(Context context, String path) {
+        // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
+       // String filter = " -filter:a drmeter,replaygain ";
+       // if(MusicTagUtils.isDSDFile(path)) {
+       //     filter = " -filter:a drmeter ";
+       // }
+        String filter = " -filter:a drmeter ";
+
+        String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
+
+        FFmpegSession session = FFmpegKit.execute(cmd);
+        if (ReturnCode.isSuccess(session.getReturnCode())) {
+            String data = getFFmpegOutputData(session);
+            MusicTag tag = new MusicTag();
+            tag.setData("Running Time:"+session.getDuration()+"\n"+data);
+            tag.setPath(path);
+            readFileInfo(context,tag);
+            parseStreamInfo(tag);
+            parseDurationInfo(tag);
+            parseTagsInfo(tag);
+           // parseReplayGain(tag);
+            parseDynamicRange(tag);
+            detectFileFormat(tag);
+            tag.setLossless(isLossless(tag));
+            tag.setFileSizeRatio(getFileSizeRatio(tag));
+            return tag;
+        }else {
+            // try to get from file name
+            MusicTag tag = new MusicTag();
+            String data = getFFmpegOutputData(session);
+            tag.setReadError(true);
+            tag.setData("Running Time (error):"+session.getDuration()+"\n"+data);
+            tag.setPath(path);
+            readFileInfo(context,tag);
+            parseStreamInfo(tag);
+            parseDurationInfo(tag);
+            parseTagsInfo(tag);
+           // parseReplayGain(tag);
+            parseDynamicRange(tag);
+            detectFileFormat(tag);
+            tag.setLossless(isLossless(tag));
+            tag.setFileSizeRatio(getFileSizeRatio(tag));
+            session.cancel();
+            return tag;
+        }
+    }
+
+    private static void detectFileFormat(MusicTag tag) {
+        String encoding = trimToEmpty(tag.getAudioEncoding());
+        String ext = FileUtils.getExtension(tag.getPath()).toLowerCase(Locale.US);
+        if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_AAC)) {
+            tag.setFileFormat(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
+        }else if(Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(ext) ||
+                Constants.MEDIA_FILE_FORMAT_AIFF.equalsIgnoreCase(ext)){
+            tag.setFileFormat(Constants.MEDIA_ENC_AIFF.toLowerCase(Locale.US));
+        }else if(Constants.MEDIA_FILE_FORMAT_WAVE.equalsIgnoreCase(ext)){
+            tag.setFileFormat(Constants.MEDIA_ENC_WAVE.toLowerCase(Locale.US));
+        }else if(Constants.MEDIA_FILE_FORMAT_MP3.equalsIgnoreCase(ext)){
+            tag.setFileFormat(Constants.MEDIA_ENC_MP3.toLowerCase(Locale.US));
+        }else {
+            tag.setFileFormat(ext);
+        }
+    }
+
+    private static void parseDurationInfo(MusicTag tag) {
+        try {
+            //Duration: 00:04:13.33, start: 0.000000, bitrate: 2358 kb/s
+            Pattern pattern = Pattern.compile("\\s*Duration:\\s*([\\s\\S]*?),\\s*start:\\s*([\\s\\S]*?),\\s+bitrate:\\s*([\\s\\S]*?)\\s*kb/s");
+            Matcher matcher = pattern.matcher(tag.getData());
+            if (matcher.find()) {
+                tag.setAudioDuration(toDurationSeconds(matcher.group(1)));
+                tag.setAudioStartTime(toDouble(matcher.group(2)));
+                tag.setAudioBitRate(toLong(matcher.group(3)) * 1000);
+            }else {
+                pattern = Pattern.compile("\\s*Duration:\\s*([\\s\\S]*?),\\s+bitrate:\\s*([\\s\\S]*?)\\s*kb/s");
+                matcher = pattern.matcher(tag.getData());
+                if (matcher.find()) {
+                    tag.setAudioDuration(toDurationSeconds(matcher.group(1)));
+                    tag.setAudioStartTime(0.0);
+                    tag.setAudioBitRate(toLong(matcher.group(2)) * 1000);
+                }
+            }
+        }catch (Exception ex) {
+            Timber.e(ex);
+        }
+    }
+
+    private static void parseTagsInfo(MusicTag tag) {
+        // Input #0,
+        // Output #0,
+        // Stream #0:0: Audio:
+       // Pattern pattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Video):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
+       String data = tag.getData();
+       String []lines = data.split("\n");
+        Map<String, String> tags = new HashMap<>();
+       for(String line: lines) {
+           int ind = line.indexOf(":");
+           if(ind >0) {
+              // String[] field = line.split(":");
+               String key = trimToEmpty(line.substring(0, ind)); //getField(field, 0);
+               String val = trimToEmpty(line.substring(ind+1)); //getField(field, 1);
+               if (!tags.containsKey(toUpperCase(key))) {
+                   tags.put(toUpperCase(key), trimToEmpty(val)); // all upper case
+                   tags.put(trimToEmpty(key), trimToEmpty(val)); // as is from file
+               }
+           }
+       }
+       // populate tags
+        // KEY_TAG_ALBUM
+        tag.setAlbum(getValueForKey(tags, KEY_TAG_ALBUM));
+
+        //KEY_TAG_ALBUM_ARTIST
+        tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_ALBUM_ARTIST));
+
+        // KEY_TAG_ARTIST
+        tag.setArtist(getValueForKey(tags, KEY_TAG_ARTIST));
+
+        //KEY_TAG_COMPOSER
+        tag.setComposer(getValueForKey(tags, KEY_TAG_COMPOSER));
+
+        //KEY_TAG_COMPILATION
+        tag.setCompilation(toBoolean(getValueForKey(tags, KEY_TAG_COMPILATION)));
+
+        // YEAR
+        tag.setYear(getValueForKey(tags, KEY_TAG_YEAR));
+
+        //KEY_TAG_COMMENT
+        tag.setComment(getValueForKey(tags, KEY_TAG_COMMENT));
+
+        //KEY_TAG_DISCNUMBER
+        tag.setDisc(getValueForKey(tags, KEY_TAG_DISC));
+
+        //KEY_TAG_GENRE
+        tag.setGenre(getValueForKey(tags, KEY_TAG_GENRE));
+
+        //KEY_TAG_GROUPING
+        tag.setGrouping(getValueForKey(tags, KEY_TAG_GROUPING));
+
+        //KEY_TAG_TRACK
+        tag.setTrack(getValueForKey(tags, KEY_TAG_TRACK));
+
+        //KEY_TAG_MEDIA
+        tag.setMediaType(getValueForKey(tags, KEY_TAG_MEDIA));
+
+        //KEY_TAG_RATING
+        tag.setRating(toInt(getValueForKey(tags, KEY_TAG_RATING)));
+
+        //KEY_TAG_QUALITY
+        tag.setMediaQuality(getValueForKey(tags, KEY_TAG_QUALITY));
+
+        //KEY_TAG_TITLE
+        tag.setTitle(getValueForKey(tags, KEY_TAG_TITLE));
+        if(isEmpty(tag.getTitle())) {
+            tag.setTitle(FileUtils.getFileName(tag.getPath()));
+        }
+
+        // KEY_TRACK_GAIN
+        tag.setTrackGain(toDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
+
+        // KEY_TRACK_RANGE
+        tag.setTrackRange(toDouble(getValueForKey(tags, KEY_TRACK_RANGE)));
+
+        //KEY_REFERENCE_LOUDNESS
+        tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_REFERENCE_LOUDNESS)));
+
+        //KEY_REFERENCE_TRUEPEAK
+        tag.setTrackTruePeek(toDouble(getValueForKey(tags, KEY_TRACK_PEAK)));
+
+        // publisher
+        tag.setPublisher(getValueForKey(tags, KEY_TAG_PUBLISHER));
+
+        // language
+        tag.setLanguage(getValueForKey(tags, KEY_TAG_LANGUAGE));
+
+        // MQA from tag and encoder
+        String encoder = getValueForKey(tags, KEY_TAG_ENCODER);
+        String mqaEncoder = getValueForKey(tags, KEY_TAG_MQA_ENCODER);
+        if(!MusicTagUtils.isFlacFile(tag)) {
+            tag.setMqaInd("None");
+        }else if(encoder.contains(KEY_MQA) || !isEmpty(mqaEncoder)) {
+            tag.setMqaInd("MQA");
+            tag.setMqaSampleRate(toLong(getValueForKey(tags, KEY_TAG_MQA_ORIGINAL_SAMPLERATE)));
+            tag.setMqaScanned(false);
+        }
+
+        // read Quick time Specific tags
+        if(MusicTagUtils.isMp4File(tag)) {
+            tag.setTitle(getValueForKey(tags, KEY_TAG_MP4_TITLE));
+            tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_MP4_ALBUM_ARTIST));
+            tag.setComposer(getValueForKey(tags, KEY_TAG_MP4_COMPOSER));
+            // tag.setCompilation(toBoolean(getTagforKey(tags, KEY_TAG_MP4_COMPILATION)));
+            // tag.setMediaType(getTagforKey(tags, KEY_TAG_MP4_MEDIA));
+            // tag.setMediaQuality(getTagforKey(tags, KEY_TAG_MP4_QUALITY));
+            tag.setPublisher(getValueForKey(tags, KEY_TAG_MP4_PUBLISHER));
+            tag.setYear(getValueForKey(tags, KEY_TAG_MP4_YEAR));
+        }
+
+        // read Wave specific tags
+        if(MusicTagUtils.isWavFile(tag)) {
+            tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
+            tag.setPublisher(getValueForKey(tags, KEY_TAG_WAVE_PUBLISHER));
+            tag.setYear(getValueForKey(tags, KEY_TAG_WAVE_YEAR));
+            parseWaveComment(tag);
+        }
+    }
+
+    private static void parseReplayGain(MusicTag tag) {
+        try {
+            //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_gain = -0.37 dB
+            //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_peak = 0.931971
+            Pattern pattern = Pattern.compile("\\s*track_gain =\\s*(\\S*)");
+            Matcher matcher = pattern.matcher(tag.getData());
+            if (matcher.find()) {
+                String info = matcher.group(1);
+                tag.setTrackGain(toDouble(info));
+            }
+
+            pattern = Pattern.compile("\\s*track_peak =\\s*(\\S*)");
+            matcher = pattern.matcher(tag.getData());
+            if (matcher.find()) {
+                String info = matcher.group(1);
+                tag.setTrackTruePeek(toDouble(info));
+            }
+        }catch (Exception ex) {
+            Timber.e(ex);
+        }
+    }
+
+    private static void parseDynamicRange(MusicTag tag) {
+        try {
+            // Overall DR: 14.0357
+            Pattern pattern = Pattern.compile("\\s*Overall DR:\\s*(\\S*)");
+            Matcher matcher = pattern.matcher(tag.getData());
+            if (matcher.find()) {
+                String info = matcher.group(1);
+                tag.setTrackDR(toDouble(info));
+            }
+        }catch (Exception ex) {
+            Timber.e(ex);
+        }
+    }
+
+    public static MusicTag readFFprobe(Context context, String path) {
        // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
         String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format \""+path+"\"";
 
@@ -220,9 +518,9 @@ public class FFMPegUtils {
         if (ReturnCode.isSuccess(session.getReturnCode())) {
             String data = session.getOutput();
             MusicTag tag = new MusicTag();
-            tag.setData(data);
+            tag.setData("Running Time:"+session.getDuration()+"\n"+data);
             tag.setPath(path);
-            readFileInfo(tag);
+            readFileInfo(context, tag);
             parseStreamInfo(tag);
             parseFormatInfo(tag);
             tag.setLossless(isLossless(tag));
@@ -231,6 +529,7 @@ public class FFMPegUtils {
         }else {
             // try to get from file name
             MusicTag tag = new MusicTag();
+            tag.setReadError(true);
             tag.setData(session.getOutput());
             tag.setPath(path);
             session.cancel();
@@ -381,16 +680,16 @@ public class FFMPegUtils {
                 getMetadataTrackKey(KEY_TAG_MP4_ARTIST, tag.getArtist()) +
                 getMetadataTrackKey(KEY_TAG_MP4_ALBUM_ARTIST, tag.getAlbumArtist()) +
                 getMetadataTrackKey(KEY_TAG_MP4_COMPOSER, tag.getComposer()) +
-                getMetadataTrackKey(KEY_TAG_MP4_COMPILATION, (tag.isCompilation())) +
+              //  getMetadataTrackKey(KEY_TAG_MP4_COMPILATION, (tag.isCompilation())) +
                 getMetadataTrackKey(KEY_TAG_MP4_COMMENT, tag.getComment()) +
-                getMetadataTrackKey(KEY_TAG_MP4_DISC, tag.getDisc()) +
+              //  getMetadataTrackKey(KEY_TAG_MP4_DISC, tag.getDisc()) +
                 getMetadataTrackKey(KEY_TAG_MP4_GENRE, tag.getGenre()) +
                 getMetadataTrackKey(KEY_TAG_MP4_GROUPING, tag.getGrouping()) +
                 getMetadataTrackKey(KEY_TAG_MP4_PUBLISHER, tag.getPublisher()) +
-                getMetadataTrackKey(KEY_TAG_MP4_LANGUAGE, tag.getLanguage()) + ///
-                getMetadataTrackKey(KEY_TAG_MP4_MEDIA, tag.getMediaType()) +
-                getMetadataTrackKey(KEY_TAG_MP4_QUALITY, tag.getMediaQuality()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RATING, tag.getRating()) +
+             //   getMetadataTrackKey(KEY_TAG_MP4_LANGUAGE, tag.getLanguage()) + ///
+             //   getMetadataTrackKey(KEY_TAG_MP4_MEDIA, tag.getMediaType()) +
+             //   getMetadataTrackKey(KEY_TAG_MP4_QUALITY, tag.getMediaQuality()) +
+             //   getMetadataTrackKey(KEY_TAG_MP4_RATING, tag.getRating()) +
                 getMetadataTrackKey(KEY_TAG_MP4_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_MP4_YEAR, tag.getYear());
         return tags;
@@ -416,27 +715,6 @@ public class FFMPegUtils {
                 getMetadataTrackKey(KEY_TAG_AIF_RATING, tag.getRating()) +
                 getMetadataTrackKey(KEY_TAG_AIF_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_AIF_YEAR, tag.getYear());
-        return tags;
-    }
-
-    private static String getMetadataTrackKeysForMp4RAW(MusicTag tag) {
-        String tags = getMetadataTrackKey(KEY_TAG_MP4_RAW_TITLE, tag.getTitle()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_ALBUM, tag.getAlbum()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_ARTIST, tag.getArtist()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_ALBUM_ARTIST, tag.getAlbumArtist()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_COMPOSER, tag.getComposer()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_COMPILATION, (tag.isCompilation())) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_COMMENT, tag.getComment()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_DISC, tag.getDisc()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_GENRE, tag.getGenre()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_GROUPING, tag.getGrouping()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_PUBLISHER, tag.getPublisher()) +
-                //getMetadataTrackKey(KEY_TAG_MP4_RAW_LANGUAGE, tag.getLanguage()) + ///
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_MEDIA, tag.getMediaType()) +
-                getMetadataTrackKey(KEY_TAG_MP4_QUALITY, tag.getMediaQuality()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_RATING, tag.getRating()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_TRACK, tag.getTrack()) +
-                getMetadataTrackKey(KEY_TAG_MP4_RAW_YEAR, tag.getYear());
         return tags;
     }
 
@@ -564,16 +842,19 @@ public class FFMPegUtils {
         }
     }
 
-    private static void readFileInfo(MusicTag tag) {
+    private static void readFileInfo(Context context, MusicTag tag) {
         File file = new File(tag.getPath());
         tag.setFileLastModified(file.lastModified());
+        tag.setFileSize(file.length());
+        tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
+        tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
     }
 
     private static boolean isLossless(MusicTag tag) {
-        if("flac".equalsIgnoreCase(tag.getFileFormat())) return true;
-        if("alac".equalsIgnoreCase(tag.getFileFormat())) return true;
-        if("aiff".equalsIgnoreCase(tag.getFileFormat())) return true;
-        return "wav".equalsIgnoreCase(tag.getFileFormat());
+        if(Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getFileFormat())) return true;
+        if(Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getFileFormat())) return true;
+        if(Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getFileFormat())) return true;
+        return Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(tag.getFileFormat());
     }
 
     private static void parseFormatInfo(MusicTag tag) {
@@ -588,22 +869,21 @@ public class FFMPegUtils {
             for (String line: lines) {
                 if(!isEmpty(line) && line.contains("=")) {
                     String []vals = line.split("=");
-                    tags.put(StringUtils.toUpperCase(vals[0]), getField(vals, 1)); // all upper case
+                    tags.put(toUpperCase(vals[0]), getField(vals, 1)); // all upper case
                     //tags.put(StringUtils.toLowwerCase(vals[0]), trimToEmpty(vals[1])); // all lower case
                     tags.put(vals[0], getField(vals, 1)); // as is from file
                 }
             }
 
             // media info
-            tag.setFileSize(toLong(tags.get(KEY_SIZE))); // size
-            tag.setFileFormat(tags.get(KEY_FORMAT_NAME)); // format_name
+            /*tag.setFileFormat(tags.get(KEY_FORMAT_NAME)); // format_name
             if(tag.getFileFormat().contains(",")) {
                 // found mov,mp4,m4a,...
                 // use information from encoding
                 if(!isEmpty(tag.getAudioEncoding())) {
                     tag.setFileFormat(getWord(tag.getAudioEncoding()," ",0));
                 }
-            }
+            } */
             tag.setAudioStartTime(toDouble(tags.get(KEY_START_TIME))); // start_time
             tag.setAudioDuration(toDouble(tags.get(KEY_DURATION))); // duration
             tag.setAudioBitRate(toLong(tags.get(KEY_BIT_RATE))); // bit_rate
@@ -687,9 +967,9 @@ public class FFMPegUtils {
                 tag.setTitle(getTagforKey(tags, KEY_TAG_MP4_TITLE));
                 tag.setAlbumArtist(getTagforKey(tags, KEY_TAG_MP4_ALBUM_ARTIST));
                 tag.setComposer(getTagforKey(tags, KEY_TAG_MP4_COMPOSER));
-                tag.setCompilation(toBoolean(getTagforKey(tags, KEY_TAG_MP4_COMPILATION)));
-                tag.setMediaType(getTagforKey(tags, KEY_TAG_MP4_MEDIA));
-                tag.setMediaQuality(getTagforKey(tags, KEY_TAG_MP4_QUALITY));
+               // tag.setCompilation(toBoolean(getTagforKey(tags, KEY_TAG_MP4_COMPILATION)));
+               // tag.setMediaType(getTagforKey(tags, KEY_TAG_MP4_MEDIA));
+               // tag.setMediaQuality(getTagforKey(tags, KEY_TAG_MP4_QUALITY));
                 tag.setPublisher(getTagforKey(tags, KEY_TAG_MP4_PUBLISHER));
                 tag.setYear(getTagforKey(tags, KEY_TAG_MP4_YEAR));
             }
@@ -749,23 +1029,17 @@ public class FFMPegUtils {
         return "";
     }
 
+    private static String getValueForKey(Map<String, String> tags, String key) {
+        if(tags.containsKey(toUpperCase(key))) {
+            return trimToEmpty(tags.get(toUpperCase(key)));
+        }
+        return "";
+    }
+
     private static void parseStreamInfo(MusicTag tag) {
         // Stream #0:0: Audio:
         // Stream #0:0[0x1](eng): Audio:
         // Stream #0:1[0x0]: Video:
-        //String KEYWORD_AUDIO = "Stream #0:0: Audio:";
-        /*
-        String KEYWORD_AUDIO = "Stream #0:0: Audio:";
-        String KEYWORD_EMBED_COVER_ART = "Stream #0:1: Video:";
-        int audioStart = tag.getData().indexOf(KEYWORD_AUDIO);
-        if(audioStart > 0) {
-            String info = tag.getData().substring(audioStart+KEYWORD_AUDIO.length(), tag.getData().indexOf("\n", audioStart));
-            String [] tags = info.split(",");
-            tag.setAudioEncoding(parseString(tags, 0));
-            tag.setAudioSampleRate(parseSampleRate(tags, 1));
-            tag.setAudioChannels(parseChannels(tags, 2));
-            tag.setAudioBitsDepth(parseBitDepth(tags, 3));
-        } */
         Pattern audioPattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Audio):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
         Pattern videoPattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Video):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
         Matcher matcher = audioPattern.matcher(tag.getData());
@@ -788,17 +1062,6 @@ public class FFMPegUtils {
         }else {
             tag.setEmbedCoverArt("");
         }
-
-
-    /*
-        int coverArtStart = tag.getData().indexOf(KEYWORD_EMBED_COVER_ART);
-        if(coverArtStart > 0) {
-            String info = tag.getData().substring(coverArtStart+KEYWORD_EMBED_COVER_ART.length(), tag.getData().indexOf("\n", coverArtStart));
-            String [] tags = info.split(",");
-            tag.setEmbedCoverArt(parseString(tags, 0));
-        }else {
-            tag.setEmbedCoverArt("");
-        } */
     }
 
     private static int parseBitDepth(String[] tags, int i) {
@@ -865,6 +1128,27 @@ public class FFMPegUtils {
     }
 
     private static String getFFmpegOutputData(FFmpegSession session) {
+        List<Log> logs = session.getLogs();
+        StringBuilder buff = new StringBuilder();
+        String keyword = "Output #0,";
+        String keyword2 = "[Parsed_";
+        boolean foundTag = false;
+        for (Log log : logs) {
+            String msg = log.getMessage(); //trimToEmpty(log.getMessage());
+            if (msg.startsWith(keyword)) {
+                foundTag = true;
+            }
+            if (foundTag && msg.startsWith(keyword2)) {
+                foundTag = false;
+            }
+            if (foundTag) continue;
+            buff.append(msg); //.append("\n");
+        }
+
+        return buff.toString();
+    }
+
+    private static String getFFmpegOutputData2(FFmpegSession session) {
         List<Log> logs = session.getLogs();
         StringBuilder buff = new StringBuilder();
         String keyword = "Integrated loudness:";

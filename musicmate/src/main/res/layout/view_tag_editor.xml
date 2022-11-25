@@ -181,8 +181,8 @@
             android:gravity="left|center_vertical"
             android:hint="Record Quality"
             android:padding="4dp"
-            android:textColor="@color/white"
-            android:textColorHint="@color/white"
+            android:textColor="@color/darkblue"
+            android:textColorHint="@color/darkblue"
             android:textSize="14sp"
             android:layout_marginLeft="@dimen/dimen_8_dp"
             android:layout_marginRight="@dimen/dimen_8_dp"
@@ -253,8 +253,8 @@
                 android:gravity="left|center_vertical"
                 android:hint="Source"
                 android:padding="4dp"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
+                android:textColor="@color/darkblue"
+                android:textColorHint="@color/darkblue"
                 android:textSize="14sp"
                 android:layout_marginLeft="@dimen/dimen_8_dp"
                 android:layout_marginRight="@dimen/dimen_8_dp"
@@ -298,7 +298,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
                 android:background="@drawable/shape_rounded_edittext" />
@@ -360,7 +360,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
                 android:background="@drawable/shape_rounded_edittext" />
             <!--
@@ -414,7 +414,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
                 android:background="@drawable/shape_rounded_edittext" />
             <!--
@@ -469,7 +469,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
                 android:background="@drawable/shape_rounded_edittext" />
@@ -528,7 +528,7 @@
         android:singleLine="false"
         android:inputType="textMultiLine"
         android:textSize="14sp"
-        android:textColor="@color/white"
+        android:textColor="@color/darkblue"
         android:background="@drawable/shape_rounded_edittext" />
 <!--
     <com.rengwuxian.materialedittext.MaterialEditText
@@ -574,7 +574,7 @@
         android:maxLines="1"
         android:inputType="text"
         android:textSize="14sp"
-        android:textColor="@color/white"
+        android:textColor="@color/darkblue"
         android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
         android:background="@drawable/shape_rounded_edittext"/>
 <!--
@@ -619,7 +619,7 @@
         android:maxLines="1"
         android:inputType="text"
         android:textSize="14sp"
-        android:textColor="@color/white"
+        android:textColor="@color/darkblue"
         android:background="@drawable/shape_rounded_edittext" />
     <!--
     <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
@@ -685,7 +685,7 @@
         android:maxLines="1"
         android:inputType="text"
         android:textSize="14sp"
-        android:textColor="@color/white"
+        android:textColor="@color/darkblue"
         android:background="@drawable/shape_rounded_edittext" />
     <!--
     <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
@@ -728,7 +728,7 @@
         android:maxLines="1"
         android:inputType="text"
         android:textSize="14sp"
-        android:textColor="@color/white"
+        android:textColor="@color/darkblue"
         android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
         android:background="@drawable/shape_rounded_edittext" />
     <!--
@@ -806,7 +806,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:background="@drawable/shape_rounded_edittext" />
         </LinearLayout>
 
@@ -836,7 +836,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:background="@drawable/shape_rounded_edittext" />
 
         </LinearLayout>
@@ -866,7 +866,7 @@
                 android:maxLines="1"
                 android:inputType="text"
                 android:textSize="14sp"
-                android:textColor="@color/white"
+                android:textColor="@color/darkblue"
                 android:background="@drawable/shape_rounded_edittext" />
 
         </LinearLayout>
@@ -1007,7 +1007,7 @@
         android:minLines="2"
         android:inputType="text"
         android:textSize="14sp"
-        android:textColor="@color/white"
+        android:textColor="@color/darkblue"
         android:background="@drawable/shape_rounded_edittext" />
 <!--
     <com.rengwuxian.materialedittext.MaterialEditText

@@ -110,7 +110,7 @@
     <string name="convert_label">Convert</string>
     <string name="editor_label_collection">Collection</string>
     <string name="preferences_sub_collection">Collections</string>
-    <string name="file_explorer_label">File Explorer</string>
+    <string name="file_explorer_label">Directory</string>
     <string name="app_statistics">Statistics</string>
     <string name="encoding_format">Encoding Format:</string>
     <string name="editor_label_language">Language</string>

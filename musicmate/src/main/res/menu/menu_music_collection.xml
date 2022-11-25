@@ -28,13 +28,13 @@
         android:id="@+id/menu_groupings"
         android:title="Groupings"
         app:showAsAction="always" />
-
+<!--
     <item
         android:icon="@drawable/ic_round_copyright_24"
         android:id="@+id/menu_publisher"
         android:title="Publisher"
         app:showAsAction="always" />
-
+-->
     <item
         android:icon="@drawable/ic_round_audio_file_24"
         android:id="@+id/menu_recordings_quality"

@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:2852809238420897983",
-      "lastPropertyId": "46:7803027932448732612",
+      "lastPropertyId": "48:307583132630642224",
       "name": "MusicTag",
       "properties": [
         {
@@ -222,21 +222,6 @@
           "type": 9
         },
         {
-          "id": "40:5872183707785396191",
-          "name": "language",
-          "type": 9
-        },
-        {
-          "id": "41:1160458930206078176",
-          "name": "trackLoudness",
-          "type": 8
-        },
-        {
-          "id": "42:3426410287872576626",
-          "name": "trackRange",
-          "type": 8
-        },
-        {
           "id": "43:8579930403910384231",
           "name": "trackTruePeek",
           "type": 8
@@ -247,16 +232,21 @@
           "type": 8
         },
         {
-          "id": "45:1438288542131386707",
-          "name": "trackScanned",
-          "type": 1
-        },
-        {
           "id": "46:7803027932448732612",
           "name": "publisher",
           "indexId": "12:6512099058997254927",
           "type": 9,
           "flags": 2048
+        },
+        {
+          "id": "47:2926434280788682097",
+          "name": "trackDR",
+          "type": 8
+        },
+        {
+          "id": "48:307583132630642224",
+          "name": "readError",
+          "type": 1
         }
       ],
       "relations": []
@@ -271,7 +261,11 @@
   "retiredEntityUids": [],
   "retiredIndexUids": [],
   "retiredPropertyUids": [
-    2252173349010688014
+    2252173349010688014,
+    5872183707785396191,
+    1160458930206078176,
+    3426410287872576626,
+    1438288542131386707
   ],
   "retiredRelationUids": [],
   "version": 1

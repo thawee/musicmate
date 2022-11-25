@@ -51,28 +51,24 @@ public class MusicMateExecutors {
     }
 
     private MusicMateExecutors() {
-        this(new ThreadPoolExecutor(1, 1,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+        this(new ThreadPoolExecutor(1, 4,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
                 protected void afterExecute(Runnable r, Throwable t) {
                     try {
                         Thread.sleep(1000); // wait 1 second
                     } catch (InterruptedException e) {
                         Timber.e(e);
                     }
-                }}, new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                }},
+                new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
                  protected void afterExecute(Runnable r, Throwable t) {
                      try {
                          Thread.sleep(30); // wait 0.1 second
                      } catch (InterruptedException e) {
                          Timber.e(e);
                      }
-                 }}, new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
-                    protected void afterExecute(Runnable r, Throwable t) {
-                        try {
-                            Thread.sleep(100); // wait 0.1 second
-                        } catch (InterruptedException e) {
-                            Timber.e(e);
-                        }
-                    }}, new ThreadPoolExecutor(1, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                 }},
+                new ThreadPoolExecutor(2, NUMBER_OF_CORES,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {},
+                new ThreadPoolExecutor(1, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
                     protected void afterExecute(Runnable r, Throwable t) {
                         try {
                             Thread.sleep(200); // wait 0.2 second

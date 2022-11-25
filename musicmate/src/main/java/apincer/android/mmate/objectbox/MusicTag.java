@@ -39,7 +39,7 @@ public class MusicTag implements Cloneable, Parcelable {
     public boolean equals(@Nullable Object obj) {
         if (obj == null) return false;
         if (obj instanceof MusicTag) {
-            return id == ((MusicTag) obj).id;
+            return uniqueKey.equals(((MusicTag) obj).uniqueKey);
         }
         return false;
     }
@@ -58,7 +58,8 @@ public class MusicTag implements Cloneable, Parcelable {
     protected String storageId;
     protected String simpleName;
     protected String mediaType = "";
-    // protected boolean cueSheet;
+    protected boolean readError;
+
     @Index
     protected String mediaQuality;
     protected int rating; //0-10
@@ -100,14 +101,18 @@ public class MusicTag implements Cloneable, Parcelable {
     @Index
     protected String publisher = "";
     protected String embedCoverArt = "";
+    @Transient
     protected String language = "";
 
     // loudness and gain
-    protected boolean trackScanned;
+    //protected boolean trackScanned;
+    @Transient
     protected double trackLoudness; // average loudness, negative value unit of LUFS
+    @Transient
     protected double trackRange; // Dynamic Range, LU
     protected double trackTruePeek; // unit of dB
     protected double trackGain; // replay gain V2, references LI -18.00 LUFS
+    protected double trackDR; // Dynamic Range
 
     public int getFileSizeRatio() {
         return fileSizeRatio;
@@ -196,15 +201,17 @@ public class MusicTag implements Cloneable, Parcelable {
         simpleName = in.readString();
         mediaType = in.readString();
         mediaQuality = in.readString();
-        trackLoudness = in.readDouble();
-        trackRange = in.readDouble();
+        //trackLoudness = in.readDouble();
+        //trackRange = in.readDouble();
         trackTruePeek = in.readDouble();
         trackGain = in.readDouble();
         compilation = in.readByte() != 0;
         publisher = in.readString();
-        language = in.readString();
+        //language = in.readString();
         embedCoverArt = in.readString();
         audioStartTime = in.readDouble();
+        readError = in.readByte() != 0;
+        trackDR = in.readDouble();
     }
 
     public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
@@ -436,6 +443,7 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.fileSizeRatio = fileSizeRatio;
         tag.fileFormat = fileFormat;
         tag.fileLastModified = fileLastModified;
+        tag.readError = readError;
 
         tag.audioBitsDepth = audioBitsDepth;
         tag.audioBitRate = audioBitRate;
@@ -446,9 +454,10 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.lossless = lossless;
 
         tag.trackGain = trackGain;
-        tag.trackLoudness = trackLoudness;
-        tag.trackRange = trackRange;
+        //tag.trackLoudness = trackLoudness;
+        //tag.trackRange = trackRange;
         tag.trackTruePeek = trackTruePeek;
+        tag.trackDR = trackDR;
 
         tag.title = title;
         tag.album = album;
@@ -472,7 +481,7 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.mqaScanned = mqaScanned;
         tag.mqaInd = mqaInd;
         tag.mqaSampleRate = mqaSampleRate;
-        tag.language = language;
+       // tag.language = language;
         tag.audioStartTime = audioStartTime;
         tag.embedCoverArt = embedCoverArt;
         return tag;
@@ -486,6 +495,7 @@ public class MusicTag implements Cloneable, Parcelable {
         this.fileSizeRatio = tag.fileSizeRatio;
         this.fileFormat = tag.fileFormat;
         this.fileLastModified = tag.fileLastModified;
+        this.readError = tag.readError;
 
         this.audioBitsDepth = tag.audioBitsDepth;
         this.audioBitRate = tag.audioBitRate;
@@ -515,16 +525,17 @@ public class MusicTag implements Cloneable, Parcelable {
         this.storageId = tag.storageId;
         this.simpleName = tag.simpleName;
 
-        this.mqaScanned = mqaScanned;
+        this.mqaScanned = tag.mqaScanned;
         this.mqaInd = tag.mqaInd;
         this.mqaSampleRate = tag.mqaSampleRate;
 
-        this.trackLoudness = tag.trackLoudness;
-        this.trackRange = tag.trackRange;
+        //this.trackLoudness = tag.trackLoudness;
+        //this.trackRange = tag.trackRange;
         this.trackTruePeek = tag.trackTruePeek;
         this.trackGain = tag.trackGain;
+        this.trackDR = tag.trackDR;
 
-        this.language = tag.language;
+       // this.language = tag.language;
         this.publisher = tag.publisher;
         this.embedCoverArt = tag.embedCoverArt;
         this.audioStartTime = tag.audioStartTime;
@@ -571,15 +582,17 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(simpleName);
         parcel.writeString(mediaType);
         parcel.writeString(mediaQuality);
-        parcel.writeDouble(trackLoudness);
-        parcel.writeDouble(trackRange);
+       // parcel.writeDouble(trackLoudness);
+       // parcel.writeDouble(trackRange);
         parcel.writeDouble(trackTruePeek);
         parcel.writeDouble(trackGain);
         parcel.writeByte((byte) (compilation ? 1 : 0));
         parcel.writeString(publisher);
-        parcel.writeString(language);
+       // parcel.writeString(language);
         parcel.writeString(embedCoverArt);
         parcel.writeDouble(audioStartTime);
+        parcel.writeByte((byte) (readError ? 1 : 0));
+        parcel.writeDouble(trackDR);
     }
 
     public MusicTag getOriginTag() {
@@ -694,19 +707,27 @@ public class MusicTag implements Cloneable, Parcelable {
         this.mqaScanned = mqaScanned;
     }
 
-    public boolean isTrackScanned() {
-        return trackScanned;
-    }
-
-    public void setTrackScanned(boolean trackLoudnessScanned) {
-        this.trackScanned = trackLoudnessScanned;
-    }
-
     public String getPublisher() {
         return publisher;
     }
 
     public void setPublisher(String publisher) {
         this.publisher = publisher;
+    }
+
+    public double getTrackDR() {
+        return trackDR;
+    }
+
+    public void setTrackDR(double trackDR) {
+        this.trackDR = trackDR;
+    }
+
+    public boolean isReadError() {
+        return readError;
+    }
+
+    public void setReadError(boolean readError) {
+        this.readError = readError;
     }
 }

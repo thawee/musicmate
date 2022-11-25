@@ -86,8 +86,8 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.epoxy.MusicTagController;
-import apincer.android.mmate.ffmpeg.FFMPegUtils;
 import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -98,7 +98,6 @@ import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
@@ -130,6 +129,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private static final int MENU_ID_QUALITY_PCM = 55550000;
     private static final int MAX_PROGRESS_BLOCK = 10;
     private static final int MAX_PROGRESS = 100;
+
+
 
     ActivityResultLauncher<Intent> editorLauncher;
 
@@ -170,8 +171,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private ActionMode actionMode;
 
     //selected song to scroll
-    private MusicTag lastPlaying;
+   // private MusicTag lastPlaying;
     private boolean onSetup = true;
+    private int positionToScroll = -1;
 
     private SearchCriteria searchCriteria;
     private boolean backFromEditor;
@@ -617,9 +619,16 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private boolean scrollToListening() {
-        return scrollToSong(MusixMateApp.getPlayingSong());
+    private void scrollToListening() {
+       // return scrollToSong(MusixMateApp.getPlayingSong());
+        MusicMateExecutors.main(() -> {
+            MusicTag tag = MusixMateApp.getPlayingSong();
+            positionToScroll = epoxyController.getAudioTagPosition(tag);
+            //epoxyController.notifyModelChanged(positionToScroll);
+            epoxyController.loadSource();
+        });
     }
+    /*
     private boolean scrollToSong(MusicTag tag) {
         if (tag == null) return false;
 
@@ -634,7 +643,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             Timber.e(ex);
         }
         return false;
-    }
+    } */
 
     private int scrollToPosition(int position, boolean offset) {
         if(position != RecyclerView.NO_POSITION) {
@@ -644,6 +653,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     positionWithOffset = 0;
                 }
                 mRecyclerView.scrollToPosition(positionWithOffset);
+                LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+                Objects.requireNonNull(layoutManager).scrollToPositionWithOffset(position, RECYCLEVIEW_ITEM_OFFSET);
+            }else {
+                mRecyclerView.scrollToPosition(position);
             }
         }
         return position;
@@ -755,10 +768,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getDefaultGroupingList(getApplicationContext()).get(0));
             return true;
-        }else if(item.getItemId() == R.id.menu_publisher) {
+       /* }else if(item.getItemId() == R.id.menu_publisher) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.PUBLISHER, null);
-            return true;
+            return true; */
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getGenreList(getApplicationContext()).get(0));
@@ -928,7 +941,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         epoxyController.addModelBuildListener(result -> {
             doStopRefresh();
             updateHeaderPanel();
-            scrollToSong(MusixMateApp.getPlayingSong());
+            //scrollToSong(MusixMateApp.getPlayingSong());
+            if(positionToScroll != -1) {
+                scrollToPosition(positionToScroll, true);
+                //mRecyclerView.scrollToPosition(positionToScroll);
+                positionToScroll = -1;
+            }
+
             if(epoxyController.getAdapter().getItemCount()==0) {
                mStateView.displayState("search");
             }else {
@@ -943,6 +962,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mRecyclerView.setHasFixedSize(true); //Size of RV will not change
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
+        mRecyclerView.setItemAnimator(null);
+        mRecyclerView.setPreserveFocusAfterLayout(false);
 
         new FastScrollerBuilder(mRecyclerView)
                 .useMd2Style()
@@ -1018,15 +1039,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
             if(broadcastData!=null) {
                 if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
-                    MusicTag tag = broadcastData.getTagInfo();
-                    onPlaying(tag);
-                    MusicMateExecutors.scan(() -> {
-                        if(FileRepository.newInstance(getApplicationContext()).deepScanMediaItem(tag)) {
-
-                            epoxyController.notifyModelChanged(tag);
-                        }
+                    MusicMateExecutors.main(() -> {
+                        MusicTag tag = broadcastData.getTagInfo();
+                        onPlaying(tag);
                     });
-                   // ScanLoudnessWorker.startScan(getApplicationContext(), tag);
                 }
             }
         }
@@ -1080,14 +1096,12 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void onPlaying(MusicTag song) {
-        if(lastPlaying!=null) {
-            epoxyController.notifyModelChanged(lastPlaying);
-        }
-
         if(song!=null) {
-            doShowNowPlayingSongFAB(song);
+            runOnUiThread(() -> doShowNowPlayingSongFAB(song));
+            //doShowNowPlayingSongFAB(song);
             //scrollToSong(song);
-            if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
+            //if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
+            if(Preferences.isOpenNowPlaying(getBaseContext())) {
                     if(timer!=null) {
                             timer.cancel();
                     }
@@ -1098,9 +1112,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             runOnUiThread(() -> doShowEditActivity(song));
                         }
                     }, 1500); // 1.5 seconds
+            }else {
+                epoxyController.loadSource();
             }
         }
-        lastPlaying = song;
     }
 
     private class ActionModeCallback implements ActionMode.Callback {
@@ -1289,9 +1304,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     String targetPath = filePath+"."+targetExt; //+".flac";
                 //    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
 
-                    FFMPegUtils.covert(srcPath, targetPath, status -> {
+                    FFMPeg.covert(srcPath, targetPath, status -> {
                         if (status) {
-                            repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
+                            //repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
                             repos.scanMusicFile(new File(targetPath)); // re scan file
                         }
                         runOnUiThread(() -> {

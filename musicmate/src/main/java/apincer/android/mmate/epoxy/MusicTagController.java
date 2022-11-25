@@ -447,4 +447,11 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             setData(getCurrentData()); // re-build data models, re-filter
         }
     }
+
+    @Override
+    protected void onExceptionSwallowed(RuntimeException exception) {
+        // Best practice is to throw in debug so you are aware of any issues that Epoxy notices.
+        // Otherwise Epoxy does its best to swallow these exceptions and continue gracefully
+        throw exception;
+    }
 }

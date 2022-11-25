@@ -247,7 +247,7 @@ public class MusicTagRepository {
                 list = query.find();
                 query.close();
             } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO)).order(MusicTag_.fileSize).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO).or(MusicTag_.readError.equal(true))).order(MusicTag_.fileSize).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
             } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
@@ -431,9 +431,10 @@ public class MusicTagRepository {
         return list;
     }
 
+    @Deprecated
     public static List<String> getDefaultLanguageList(Context context) {
         List<String> list = new ArrayList<>();
-        String[] names = getMusicTagBox().query().build().property(MusicTag_.language).distinct().findStrings();
+       /* String[] names = getMusicTagBox().query().build().property(MusicTag_.language).distinct().findStrings();
         if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
@@ -450,7 +451,7 @@ public class MusicTagRepository {
             }
         }
 
-        Collections.sort(list);
+        Collections.sort(list); */
         return list;
     }
 

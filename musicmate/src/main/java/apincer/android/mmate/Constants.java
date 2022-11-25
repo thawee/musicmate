@@ -36,12 +36,19 @@ public final class Constants {
     public static final String MEDIA_FILE_FORMAT_AIF = "aif";
     public static final String MEDIA_FILE_FORMAT_AIFF = "aiff";
     public static final String MEDIA_FILE_FORMAT_M4A = "m4a";
+    public static final String MEDIA_FILE_FORMAT_DSF="dsf";
+    public static final String MEDIA_FILE_FORMAT_MP3="mp3";
     public static final int MIN_FILE_SIZE_RATIO = 42;
     public static final String UNKWON_PUBLISHER = "Unkown Publisher";
     public static String FIELD_SEP = ";";
   // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;
    public static double MIN_ARTIST = 0.70;
+
+
+    public static final String REPLAYGAIN_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
+    public static final String REPLAYGAIN_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
+    public static final String REPLAYGAIN_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
 
     public static final List<String> IMAGE_COVERS = new ArrayList();
     static {

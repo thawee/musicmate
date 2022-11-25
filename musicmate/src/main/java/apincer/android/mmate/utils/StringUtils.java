@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 
 import java.io.UnsupportedEncodingException;
 import java.text.BreakIterator;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 
@@ -527,6 +528,24 @@ public class StringUtils {
             return Integer.parseInt(text);
         }
         return 0;
+    }
+
+    public static double toDurationSeconds(String durationString) {
+        // 00:04:13.33 - HH:MM:SS.sss
+        // P1DT8H15M10.345000S
+
+        double seconds = 0.0;
+        String[] text = durationString.split(":");
+        if(text.length>=1) {
+            seconds += toDouble(text[0])*60*60;
+        }
+        if(text.length>=2) {
+            seconds += toDouble(text[1])*60;
+        }
+        if(text.length>=3) {
+            seconds += toDouble(text[2]);
+        }
+        return seconds;
     }
 
     public static boolean toBoolean(String text) {

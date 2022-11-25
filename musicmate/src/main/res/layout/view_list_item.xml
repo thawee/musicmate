@@ -74,13 +74,27 @@
                 android:textColor="@color/black"
                 android:textSize="9sp"
                 android:textStyle="bold" />
+            <TextView
+                android:id="@+id/item_dr_icon"
+                android:layout_width="@dimen/dimen_24_dp"
+                android:layout_height="16dp"
+                android:layout_toRightOf="@id/item_type_label"
+                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_gravity="center"
+                android:background="@drawable/shape_background_unknown"
+                android:fontFamily="@font/oswald_bold"
+                android:gravity="center"
+                android:text="DR16"
+                android:textColor="@color/black"
+                android:textSize="9sp"
+                android:textStyle="bold"/>
 
             <ImageView
                 android:id="@+id/item_hires_icon"
                 android:layout_width="@dimen/dimen_52_dp"
                 android:layout_height="16dp"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
-                android:layout_toRightOf="@id/item_type_label"
+                android:layout_toRightOf="@id/item_dr_icon"
                 android:paddingLeft="@dimen/dimen_2_dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_format_mqa_white" />

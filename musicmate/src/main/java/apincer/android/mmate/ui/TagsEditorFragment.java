@@ -254,7 +254,7 @@ public class TagsEditorFragment extends Fragment {
         FileRepository repos = FileRepository.newInstance(getApplicationContext());
         for(MusicTag tag: mediaItems) {
             try {
-                boolean status = repos.setMusicTag(tag, null);
+                boolean status = repos.setMusicTag(tag);
                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
                 EventBus.getDefault().postSticky(message);
             } catch (Exception e) {
