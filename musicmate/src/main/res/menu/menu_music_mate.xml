@@ -68,10 +68,23 @@
 		app:showAsAction="always" />
 
 	<item
+		android:id="@+id/menu_about_crash"
+		android:icon="@drawable/ic_round_report_gmailerrorred_24"
+		android:title="Crash Report"
+		app:showAsAction="always" />
+
+	<item
 		android:id="@+id/menu_about_music_mate"
 		android:icon="@drawable/ic_round_copyright_24"
 		android:title="About"
 		app:showAsAction="always" />
 
 
+<!--
+	<item
+		android:id="@+id/menu_about_log"
+		android:icon="@drawable/ic_round_copyright_24"
+		android:title="Log Messages"
+		app:showAsAction="always" />
+-->
 </menu>

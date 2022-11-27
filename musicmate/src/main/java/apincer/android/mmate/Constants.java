@@ -31,11 +31,13 @@ public final class Constants {
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
-    public static final String MEDIA_FILE_FORMAT_WAVE = "wav";
+    public static final String MEDIA_FILE_FORMAT_WAVE = "wave";
     public static final String MEDIA_FILE_FORMAT_FLAC = "flac";
     public static final String MEDIA_FILE_FORMAT_AIF = "aif";
     public static final String MEDIA_FILE_FORMAT_AIFF = "aiff";
     public static final String MEDIA_FILE_FORMAT_M4A = "m4a";
+    public static final String MEDIA_FILE_FORMAT_AAC = "aac";
+    public static final String MEDIA_FILE_FORMAT_ALAC = "alac";
     public static final String MEDIA_FILE_FORMAT_DSF="dsf";
     public static final String MEDIA_FILE_FORMAT_MP3="mp3";
     public static final int MIN_FILE_SIZE_RATIO = 42;
@@ -50,22 +52,22 @@ public final class Constants {
     public static final String REPLAYGAIN_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
     public static final String REPLAYGAIN_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
 
-    public static final List<String> IMAGE_COVERS = new ArrayList();
+    public static final List<String> IMAGE_COVERS = new ArrayList<>();
     static {
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");
-       // IMAGE_COVERS.add("folder.png"); // not supported by UAPP
+        IMAGE_COVERS.add("folder.png"); // not supported by UAPP
         IMAGE_COVERS.add("artwork.png"); // supported by UAAP
         IMAGE_COVERS.add("front.jpg");
         IMAGE_COVERS.add("cover.jpg");
-       // IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
+        IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
         IMAGE_COVERS.add("artwork.jpg"); // UAAP
-        IMAGE_COVERS.add("front.jpeg");
-        IMAGE_COVERS.add("cover.jpeg");
+     //   IMAGE_COVERS.add("front.jpeg");
+     //   IMAGE_COVERS.add("cover.jpeg");
       //  IMAGE_COVERS.add("folder.jpeg"); // not supported by UAPP
     }
 
-    public static final List<String> RELATED_FILE_TYPES = new ArrayList();
+    public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
     static {
         RELATED_FILE_TYPES.add("png");
         RELATED_FILE_TYPES.add("jpg");

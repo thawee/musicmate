@@ -31,9 +31,10 @@
             android:id="@+id/menu_editor_tool_pick_coverart"
             android:title="Pick CoverArt"
             app:showAsAction="always" />
+    <!--
     <item
-        android:icon="@drawable/ic_outline_info_24"
-        android:id="@+id/menu_editor_tool_info"
-        android:title="Show Tags on file"
-        app:showAsAction="always" />
+        android:icon="@drawable/ic_round_refresh_24_black"
+        android:id="@+id/menu_editor_refresh"
+        android:title="Refresh Tags from file"
+        app:showAsAction="always" /> -->
 </menu>

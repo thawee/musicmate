@@ -20,11 +20,7 @@ import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.StringUtils;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import apincer.android.mmate.work.MusicMateExecutors;
 import timber.log.Timber;
 
 public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
@@ -166,7 +162,16 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
        // synchronized (this) {
           //  loading = true;
             this.criteria = criteria;
+        SearchCriteria finalCriteria = criteria;
+        MusicMateExecutors.main(() -> {
+            clearSelections();
+            List<MusicTag> actionResult = MusicTagRepository.findMediaTag(finalCriteria);
+            setData(actionResult);
+            listener.onModelBuildFinished(null);
+            loading = false;
+        });
 
+        /*
             SearchCriteria finalCriteria = criteria;
             Observable<List> observable = Observable.fromCallable(() ->  MusicTagRepository.findMediaTag(finalCriteria));
             observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List>() {
@@ -191,7 +196,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                     listener.onModelBuildFinished(null);
                     loading = false;
                 }
-            });
+            }); */
        // }
     }
 
@@ -352,8 +357,13 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     }
 
     public int getAudioTagPosition(MusicTag tag) {
+        long startTime = System.currentTimeMillis();
         MusicTagModel_ model = buildModel(tag);
-        return getAdapter().getModelPosition(model);
+        int position = getAdapter().getModelPosition(model);
+        long endTime = System.currentTimeMillis();
+        double MethodeDuration = (endTime - startTime)/1000.0;
+        Timber.i("getAudioTagPosition(): "+MethodeDuration +" seconds");
+        return position;
     }
 
     public void notifyModelChanged(MusicTag tag) {
@@ -380,8 +390,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
 
     public void notifyModelRemoved(MusicTag tag) {
         List<MusicTag> list = getCurrentData();
-        if(tag!= null || list != null) {
-            assert list != null;
+        if(tag!= null && (list != null  && list.size()>0)) {
             list.removeIf(tag::equals);
             setData(list);
         }

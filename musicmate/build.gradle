@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 65
-        versionName  "3.5.0"+ versions.buildDate
+        versionCode 66
+        versionName  "3.5.1"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -123,8 +123,8 @@ dependencies {
     implementation deps.google.material
 
     // RxAndroid & Coroutine
-    implementation deps.rxjava3_rxandroid
-    implementation deps.rxjava3
+    //implementation deps.rxjava3_rxandroid
+    //implementation deps.rxjava3
     //implementation deps.coroutines  // cannot use coz cannot resolve dependency
     //implementation deps.objectrelations
     //implementation deps.esococommon;
@@ -149,7 +149,7 @@ dependencies {
     //implementation 'com.dmitrymalkovich.android:progress-fab:1.6'
 
     //https://github.com/pejman-74/ProgressFloatingActionButton
-    implementation 'com.github.pejman-74:ProgressFloatingActionButton:1.0'
+    //implementation 'com.github.pejman-74:ProgressFloatingActionButton:1.0'
 
     //https://github.com/getActivity/XXPermissions
     //implementation 'com.github.getActivity:XXPermissions:16.2'

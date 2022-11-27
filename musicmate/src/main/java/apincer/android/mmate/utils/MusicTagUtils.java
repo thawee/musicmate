@@ -1600,7 +1600,9 @@ public class MusicTagUtils {
 
     public static boolean isMp4File(MusicTag tag) {
         // m4a, mov, ,p4
-        return (Constants.MEDIA_FILE_FORMAT_M4A.equalsIgnoreCase(tag.getFileFormat()));
+        return (Constants.MEDIA_FILE_FORMAT_M4A.equalsIgnoreCase(tag.getFileFormat()) ||
+                Constants.MEDIA_FILE_FORMAT_AAC.equalsIgnoreCase(tag.getFileFormat()) ||
+                Constants.MEDIA_FILE_FORMAT_ALAC.equalsIgnoreCase(tag.getFileFormat()));
     }
 
     public static boolean isAIFFile(MusicTag tag) {

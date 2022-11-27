@@ -27,6 +27,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.epoxy.MusicBrainzController;
@@ -44,11 +48,11 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
 import coil.transform.RoundedCornersTransformation;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+//import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+//import io.reactivex.rxjava3.core.Observable;
+//import io.reactivex.rxjava3.core.Observer;
+//import io.reactivex.rxjava3.disposables.Disposable;
+//import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
@@ -254,6 +258,38 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
     }
 
     public void doSearch() {
+        CompletableFuture future = CompletableFuture.supplyAsync(new Supplier<List<MusicTag>>() {
+            @Override
+            public List<MusicTag> get() {
+                mStateView.displayLoadingState();
+                keywordTitle = chipTitle.isChecked()?songTitle:null;
+                keywordArtist = chipArtist.isChecked()?songArtist:null;
+                keywordAlbum = chipAlbum.isChecked()?songAlbum:null;
+                return MusicBrainz.findSongInfo(keywordTitle,keywordArtist,keywordAlbum);
+            }
+        }).thenAccept(new Consumer<List<MusicTag>>() {
+            @Override
+            public void accept(List<MusicTag> musicTags) {
+                if(musicTags.isEmpty()) {
+                    // vEmptyView.setVisibility(View.VISIBLE);
+                    mRecyclerView.setVisibility(View.GONE);
+                }else {
+                    // vEmptyView.setVisibility(View.GONE);
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                    controller.setData(musicTags);
+                }
+                mStateView.hideStates();
+            }
+        }).exceptionally(new Function<Throwable, Void>() {
+            @Override
+            public Void apply(Throwable throwable) {
+                mStateView.hideStates();
+                mStateView.displayState(NO_RESULTS);
+                mRecyclerView.setVisibility(View.GONE);
+                return null;
+            }
+        });
+/*
         Observable<List<MusicTag>> observable = Observable.fromCallable(() -> {
            // if(mainActivity.getEditItems().size()>0) {
                 keywordTitle = chipTitle.isChecked()?songTitle:null;
@@ -295,17 +331,8 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
             @Override
             public void onComplete() {
                 mStateView.hideStates();
-               /* if(resultsList.isEmpty()) {
-                    vEmptyView.setVisibility(View.VISIBLE);
-                    mRecyclerView.setVisibility(View.GONE);
-                }else {
-                    vEmptyView.setVisibility(View.GONE);
-                    mRecyclerView.setVisibility(View.VISIBLE);
-                    controller.setData(resultsList);
-                   /// mAdapter.updateDataSet(itemList);
-                } */
             }
-        });
+        }); */
     }
 
   //  @Override

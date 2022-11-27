@@ -322,6 +322,7 @@
             app:srcCompat="@drawable/ic_tag_outline_black_24dp"
             android:contentDescription="TODO" />
 
+        <!--
         <register.progressfloatingactionbutton.ProgressFloatingActionButton
             android:id="@+id/fab_save_media"
             android:layout_width="wrap_content"
@@ -346,8 +347,8 @@
             app:pfab_width="2dp"
             app:srcCompat="@drawable/bubble_arrow"
             app:tint="@android:color/white"
-            android:contentDescription="TODO" />
-        <!--
+            android:contentDescription="TODO" /> -->
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_save_media"
             android:layout_width="wrap_content"
@@ -362,7 +363,7 @@
             app:backgroundTint="@color/fab_save_background"
             app:fabSize="mini"
             android:contentDescription="TODO" />
--->
+
         <!--
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_save_media"

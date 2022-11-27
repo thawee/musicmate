@@ -324,12 +324,16 @@ public class FileRepository {
         }
     } */
 
-    public void scanMusicFile(File file) {
+    public void scanMusicFile(File file, boolean forceRead) {
         try {
             String mediaPath = file.getAbsolutePath();
             Timber.d("Scanning::%s", mediaPath);
+            long lastModified = file.lastModified();
+            if(forceRead) {
+                lastModified = System.currentTimeMillis()+2000;
+            }
             if (isValidSACD(mediaPath)) {
-                if (MusicTagRepository.checkSACDOutdated(mediaPath, file.lastModified())) {
+                if (MusicTagRepository.checkSACDOutdated(mediaPath, lastModified)) {
                     MusicTag[] tags = readSACD(mediaPath);
                     if (tags == null) return;
                     for (MusicTag metadata : tags) {
@@ -340,7 +344,7 @@ public class FileRepository {
                 }
             //} else if (isValidJAudioTagger(mediaPath)) {
             } else if (FFMPeg.isSupportedFileFormat(mediaPath)) {
-                MusicTag tag = MusicTagRepository.getOutdatedMusicTag(mediaPath, file.lastModified());
+                MusicTag tag = MusicTagRepository.getOutdatedMusicTag(mediaPath, lastModified);
                 if (tag != null) {
                    // MusicTag metadata = readJAudioTagger(tag, mediaPath);
                     MusicTag metadata = FFMPeg.readMusicTag(getContext(), mediaPath);

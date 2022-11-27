@@ -53,7 +53,7 @@ public class ScanAudioFileWorker extends Worker {
         for(File file: list) {
             List<Path> paths = search(file.getAbsolutePath());
             for(Path path: paths) {
-                MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile()));
+                MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile(), false));
             }
         }
 

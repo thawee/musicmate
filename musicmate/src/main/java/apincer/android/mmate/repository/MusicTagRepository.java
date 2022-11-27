@@ -247,7 +247,7 @@ public class MusicTagRepository {
                 list = query.find();
                 query.close();
             } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO).or(MusicTag_.readError.equal(true))).order(MusicTag_.fileSize).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO).or(MusicTag_.readError.equal(true))).orderDesc(MusicTag_.fileSizeRatio).order(MusicTag_.fileSize).build();
                 list = query.find();
                 query.close();
             } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {

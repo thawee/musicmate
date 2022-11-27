@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
@@ -70,17 +71,18 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
-import register.progressfloatingactionbutton.ProgressFloatingActionButton;
 import timber.log.Timber;
 
 public class TagsEditorFragment extends Fragment {
     private TagsActivity mainActivity;
     private List<MusicTag> mediaItems;
     private ViewHolder viewHolder;
-    private ProgressFloatingActionButton fabSaveAction;
+    private FloatingActionButton fabSaveAction;
     private FloatingActionButton fabMainAction;
+    private PopupMenu popupMenu;
     //private String coverArtPath;
     //private ProgressBar progressBar;
+    AlertDialog progressDialog;
 
     final int DRAWABLE_LEFT = 0;
     final int DRAWABLE_TOP = 1;
@@ -107,15 +109,40 @@ public class TagsEditorFragment extends Fragment {
         viewHolder = new ViewHolder(root);
         setupFab(root);
         setupFabMenus(root);
-       // setupProgressBar(root);
         toggleSaveFabAction();
 
         return root;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(popupMenu !=null) {
+            popupMenu.dismiss();
+        }
+        if(progressDialog!=null) {
+            progressDialog.dismiss();
+        }
+    }
+
     private void setupFabMenus(View root) {
         fabMainAction = root.findViewById(R.id.fabMain);
         fabMainAction.setOnClickListener(view1 -> doShowPopupMenu());
+        popupMenu = new PopupMenu(requireContext(), fabMainAction);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_editor_tools, popupMenu.getMenu());
+            UIUtils.makePopForceShowIcon(popupMenu);
+        popupMenu.setOnMenuItemClickListener(item -> {
+                if(item.getItemId() == R.id.menu_editor_tool_read_tag) {
+                    doShowReadTagsPreview();
+                }else if(item.getItemId() == R.id.menu_editor_tool_format_tag) {
+                    doFormatTags();
+                }if(item.getItemId() == R.id.menu_editor_tool_pick_coverart) {
+                    doPickCoverart();
+               // }if(item.getItemId() == R.id.menu_editor_refresh) {
+               //     doReloadTagFromFile();
+                }
+                return false;
+            });
     }
 
     private void doShowPopupMenu() {
@@ -129,32 +156,10 @@ public class TagsEditorFragment extends Fragment {
                 doFormatTags();
             }if(item.getItemId() == R.id.menu_editor_tool_pick_coverart) {
                 doPickCoverart();
-            }if(item.getItemId() == R.id.menu_editor_tool_info) {
-                doShowTagsfromFile();
             }
              return false;
         });
         popup.show();
-    }
-
-    private void doShowTagsfromFile() {
-        View cview = getLayoutInflater().inflate(R.layout.view_actionview_show_tags_from_file, null);
-        View okBtn = cview.findViewById(R.id.btn_ok);
-        TextView filenameView = cview.findViewById(R.id.full_filename);
-        filenameView.setText(mediaItems.get(0).getPath());
-
-        // add tag to view
-        AlertDialog alert = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-        okBtn.setOnClickListener(view -> alert.dismiss());
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
-        // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        alert.show();
     }
 
     @Override
@@ -202,33 +207,23 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void startProgressBar() {
-        fabSaveAction.showLoadingAnimation(true);
-       // progressBar.setVisibility(View.VISIBLE);
-       // progress.show();
-       // if(mMaterialProgressBar!=null) {
-       //     mMaterialProgressBar.setVisibility(View.VISIBLE);
-       // }
+        getActivity().runOnUiThread(() -> {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
+            dialogBuilder.setView(R.layout.progress_dialog_layout);
+            dialogBuilder.setCancelable(false);
+            progressDialog = dialogBuilder.create();
+            progressDialog.show();
+        });
     }
 
     private void stopProgressBar() {
-        fabSaveAction.showLoadingAnimation(false);
-       // progress.hide();
-       // progressBar.setVisibility(View.GONE);
-        //if(mMaterialProgressBar!=null) {
-        //    mMaterialProgressBar.setVisibility(View.GONE);
-        //}
+        getActivity().runOnUiThread(() -> {
+            if(progressDialog!=null) {
+                progressDialog.dismiss();
+                progressDialog = null;
+            }
+        });
     }
-
-
-    //private void setupProgressBar(View view) {
-       // progressBar = view.findViewById(R.id.progressBar);
-        //progressBar.setVisibility(View.GONE);
-       //// progress = view.findViewById(R.id.progressBar);
-       // progress.setIndeterminate(true);
-       // progress.setVisibility(View.GONE);
-        //mMaterialProgressBar = view.findViewById(R.id.progress_bar);
-        //mMaterialProgressBar.setVisibility(View.GONE);
-    //}
 
     private void setupFab(View view) {
         fabSaveAction = view.findViewById(R.id.fab_save_media);
@@ -241,32 +236,54 @@ public class TagsEditorFragment extends Fragment {
         if(!(viewHolder.tagChanged || viewHolder.coverartChanged)) {
             return;
         }
-        startProgressBar();
-        fabSaveAction.setEnabled(false); // not accept click
-        if(viewHolder.tagChanged) {
-            for(MusicTag item:mediaItems) {
-                buildPendingTags(item);
-            }
-        }
 
-       // UpdateAudioFileWorker.startWorker(getContext(), mediaItems, coverArtPath);
-      //  MediaItemIntentService.startService(getApplicationContext(), Constants.COMMAND_SAVE,mediaItems, artworkPath);
-        FileRepository repos = FileRepository.newInstance(getApplicationContext());
-        for(MusicTag tag: mediaItems) {
-            try {
-                boolean status = repos.setMusicTag(tag);
-                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().postSticky(message);
-            } catch (Exception e) {
-                Timber.e(e);
-            }
-        }
-        fabSaveAction.setEnabled(false);
-        viewHolder.resetState();
-        stopProgressBar();
-        mainActivity.buildDisplayTag();
-        mainActivity.updateTitlePanel();
-        UIUtils.hideKeyboard(requireActivity());
+        fabSaveAction.setVisibility(View.GONE);
+        //fabSaveAction.setEnabled(false); // not accept click
+
+        startProgressBar();
+        CompletableFuture.runAsync(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        if(viewHolder.tagChanged) {
+                            for(MusicTag item:mediaItems) {
+                                buildPendingTags(item);
+                            }
+                        }
+                        FileRepository repos = FileRepository.newInstance(getApplicationContext());
+                        for(MusicTag tag: mediaItems) {
+                            try {
+                                boolean status = repos.setMusicTag(tag);
+                                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+                                EventBus.getDefault().postSticky(message);
+                            } catch (Exception e) {
+                                Timber.e(e);
+                            }
+                        }
+                    }
+                }
+        ).thenAccept(
+                unused -> {
+                    fabSaveAction.setEnabled(false);
+
+                    stopProgressBar();
+                    // set updated item on main activity
+                    viewHolder.ignoreTagChanged = true;
+                    viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
+                    //viewHolder.ignoreTagChanged = false;
+                    //viewHolder.resetState();
+                    //toggleSaveFabAction();
+                    //mainActivity.buildDisplayTag();
+                    mainActivity.updateTitlePanel();
+                }
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
+
+      //  UIUtils.hideKeyboard(requireActivity());
     }
 
     private void buildPendingTags(MusicTag tagUpdate) {
@@ -356,6 +373,7 @@ public class TagsEditorFragment extends Fragment {
 
         private final ViewTextWatcher mTextWatcher;
         protected volatile boolean tagChanged;
+        protected volatile boolean ignoreTagChanged = false;
         protected volatile boolean coverartChanged;
 
         @SuppressLint("ClickableViewAccessibility")
@@ -371,8 +389,7 @@ public class TagsEditorFragment extends Fragment {
             // music mate info
             mRatingBar = view.findViewById(R.id.media_rating);
             mRatingBar.setOnRatingChangeListener((ratingBar, rating) -> {
-                tagChanged = true;
-                toggleSaveFabAction();
+                setTagChanged();
             });
 
             /*
@@ -392,10 +409,7 @@ public class TagsEditorFragment extends Fragment {
             qualityAdapter.setItems(mMediaSourceQualityItems);
             mMediaSourceQualityView.setSpinnerAdapter(qualityAdapter);
             mMediaSourceQualityView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {
-                //if(StringUtils.trimToEmpty(displayTag.getSourceQuality()).equalsIgnoreCase(mMediaSourceQualityItems.get(mMediaSourceQualityView.getSelectedIndex()).getText())) {
-                    tagChanged = true;
-                    toggleSaveFabAction();
-               // }
+                setTagChanged();
             });
 
             mMediaSourceView = view.findViewById(R.id.media_source);
@@ -411,8 +425,7 @@ public class TagsEditorFragment extends Fragment {
             adapter.setItems(mMediaSourceItems);
             mMediaSourceView.setSpinnerAdapter(adapter);
             mMediaSourceView.setOnSpinnerItemSelectedListener((i, o, i1, t1) -> {
-                tagChanged = true;
-                toggleSaveFabAction();
+                setTagChanged();
             });
 
             mPathNameView = view.findViewById(R.id.editor_pathname);
@@ -556,6 +569,14 @@ public class TagsEditorFragment extends Fragment {
             mCommentView = setupTextEdit(view, R.id.tag_comment);
         }
 
+        private void setTagChanged() {
+            if(ignoreTagChanged) return;
+            if(!tagChanged) {
+                tagChanged = true;
+                toggleSaveFabAction();
+            }
+        }
+
         private EditText setupTextEdit(View view, int viewId) {
             EditText  textInput = view.findViewById(viewId);
             textInput.addTextChangedListener(mTextWatcher);
@@ -676,14 +697,16 @@ public class TagsEditorFragment extends Fragment {
             mDiscView.setText(StringUtils.trimToEmpty(displayTag.getDisc()));
             // Year
             mYearView.setText(StringUtils.trimToEmpty(displayTag.getYear()));
+
+            //reset silent flag
+            ignoreTagChanged = false;
         }
 
         public  class ViewTextWatcher implements TextWatcher {
             public ViewTextWatcher() {
             }
             public void afterTextChanged(Editable editable) {
-                tagChanged = true;
-                toggleSaveFabAction();
+                setTagChanged();
             }
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -703,6 +726,7 @@ public class TagsEditorFragment extends Fragment {
                         @Override
                         public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
+                            view.setEnabled(true);
                         }
                     })
                     .start();
@@ -721,36 +745,47 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doFormatTags() {
-       // hideFabMenus();
         startProgressBar();
-        for(MusicTag tag:mediaItems) {
-            MusicTag mItem = tag.clone();
-            tag.setOriginTag(mItem);
-            tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
-            if(!StringUtils.isEmpty(tag.getArtist()) && tag.getArtist().contains(",")) {
-                // split reformat to ;
-                tag.setArtist(tag.getArtist().replaceAll(",",";"));
-            }
-            tag.setArtist(StringUtils.formatTitle(tag.getArtist()));
-            tag.setAlbum(StringUtils.formatTitle(tag.getAlbum()));
-            tag.setAlbumArtist(StringUtils.formatTitle(tag.getAlbumArtist()));
-            tag.setGenre(StringUtils.formatTitle(tag.getGenre()));
-            if(!StringUtils.isEmpty(tag.getTrack())) {
-                tag.setTrack(StringUtils.formatTrack(tag.getTrack()));
-            }
-            // clean albumArtist if same value as artist
-            if(tag.getAlbumArtist().equals(tag.getArtist())) {
-                tag.setAlbumArtist("");
-            }
-            // if album empty, add single
-            if(StringUtils.isEmpty(tag.getAlbum())) {
-                tag.setAlbum(MusicTagUtils.getDefaultAlbum(tag));
-            }
-        }
-        // set updated item on main activity
-        viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
-        stopProgressBar();
-        toggleSaveFabAction();
+        CompletableFuture.runAsync(
+                () -> {
+                    for(MusicTag tag:mediaItems) {
+                        MusicTag mItem = tag.clone();
+                        tag.setOriginTag(mItem);
+                        tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
+                        if(!StringUtils.isEmpty(tag.getArtist()) && tag.getArtist().contains(",")) {
+                            // split reformat to ;
+                            tag.setArtist(tag.getArtist().replaceAll(",",";"));
+                        }
+                        tag.setArtist(StringUtils.formatTitle(tag.getArtist()));
+                        tag.setAlbum(StringUtils.formatTitle(tag.getAlbum()));
+                        tag.setAlbumArtist(StringUtils.formatTitle(tag.getAlbumArtist()));
+                        tag.setGenre(StringUtils.formatTitle(tag.getGenre()));
+                        if(!StringUtils.isEmpty(tag.getTrack())) {
+                            tag.setTrack(StringUtils.formatTrack(tag.getTrack()));
+                        }
+                        // clean albumArtist if same value as artist
+                        if(tag.getAlbumArtist().equals(tag.getArtist())) {
+                            tag.setAlbumArtist("");
+                        }
+                        // if album empty, add single
+                        if(StringUtils.isEmpty(tag.getAlbum())) {
+                            tag.setAlbum(MusicTagUtils.getDefaultAlbum(tag));
+                        }
+                    }
+                }
+        ).thenAccept(
+                unused -> {
+                    stopProgressBar();
+                    // set updated item on main activity
+                    viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
+                    toggleSaveFabAction();
+                }
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
     }
 /*
     private void doChangeCharset(String charset) {

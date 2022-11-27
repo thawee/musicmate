@@ -1,6 +1,7 @@
 package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.utils.StringUtils.format;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -16,10 +18,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
@@ -31,6 +36,7 @@ import de.esoco.lib.reflect.ReflectUtil;
 public class TagsTechnicalFragment extends Fragment {
     protected Context context;
     protected TagsActivity tagsActivity;
+    AlertDialog progressDialog;
 
     @Override
     public void onAttach(Context context) {
@@ -52,14 +58,25 @@ public class TagsTechnicalFragment extends Fragment {
         TextView filename = view.findViewById(R.id.filename);
         TextView metada = view.findViewById(R.id.ffmpeg_info);
         TableLayout table = view.findViewById(R.id.tags);
+        Button reloadBtn = view.findViewById(R.id.reload_tag_from_file);
+        Button extractEmbedCoverBtn = view.findViewById(R.id.extract_coverart);
+        Button removeEmbedCoverBtn = view.findViewById(R.id.remove_coverart);
+
+        reloadBtn.setOnClickListener(view1 -> doReloadTagFromFile());
+        extractEmbedCoverBtn.setOnClickListener(view1 -> doExtractEmbedCoverart());
+        removeEmbedCoverBtn.setOnClickListener(view1 -> doRemoveEmbedCoverart());
 
         MusicTag tag = tagsActivity.getEditItems().get(0);
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag);
         filename.setText("MediaPath:\n"+tag.getPath()+"\n\nMuicMatePath:\n"+musicMatePath);
-        MusicTag ffmpegTag = FFMPeg.readFFprobe(getActivity().getApplicationContext(), tag.getPath());
+       /* MusicTag ffmpegTag = FFMPeg.readFFprobe(getActivity().getApplicationContext(), tag.getPath());
         if(ffmpegTag!=null) {
             metada.setText(ffmpegTag.getData());
+        } */
+        if(tag.getData()!=null) {
+            metada.setText("MusicTag:\n"+tag.getData()+"\n\n");
         }
+
         MusicTag tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
         if(tt!=null) {
             metada.setText(metada.getText() +"\n\nFFmpeg:\n"+tt.getData());
@@ -86,6 +103,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.addView(tv1);
         tbrow0.addView(cell);
 
+        /*
         cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
@@ -94,7 +112,7 @@ public class TagsTechnicalFragment extends Fragment {
         tv2.setTextColor(Color.WHITE);
         cell.addView(tv2);
         tbrow0.addView(cell);
-        //table.addView(tbrow0);
+        //table.addView(tbrow0); */
 
         cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
@@ -131,7 +149,7 @@ public class TagsTechnicalFragment extends Fragment {
 
             //New Cell
             String mateVal = format(ReflectUtil.getFieldValue(field,tag),20,"\n");
-            String ffprobeVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
+           // String ffprobeVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
             String ffmpegVal = format(ReflectUtil.getFieldValue(field,tt),20,"\n");
 
             cell = new LinearLayout(getContext());
@@ -155,6 +173,7 @@ public class TagsTechnicalFragment extends Fragment {
             cell.addView(t2v);
             tr.addView(cell);
 
+            /*
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
@@ -163,12 +182,12 @@ public class TagsTechnicalFragment extends Fragment {
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
             cell.addView(t3v);
-            tr.addView(cell);
+            tr.addView(cell); */
 
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
-            t3v = new TextView(getContext());
+            TextView t3v = new TextView(getContext());
             t3v.setText(ffmpegVal);
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
@@ -177,5 +196,94 @@ public class TagsTechnicalFragment extends Fragment {
 
             table.addView(tr);
         }
+    }
+
+    private void doRemoveEmbedCoverart() {
+        startProgressBar();
+        CompletableFuture.runAsync(
+                () -> {
+                    FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        String path = FFMPeg.removeCoverArt(getActivity().getApplicationContext(), tag);
+                        repos.scanMusicFile(new File(path), true);
+                    }
+                }
+        ).thenAccept(
+                unused -> {
+                    stopProgressBar();
+                }
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
+    }
+
+    private void doExtractEmbedCoverart() {
+        startProgressBar();
+        CompletableFuture.runAsync(
+                () -> {
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        String coverArtPath = tag.getEmbedCoverArt();
+                        if(!isEmpty(coverArtPath)) {
+                            String path = tag.getPath();
+                            coverArtPath = path.substring(0, path.lastIndexOf("."))+"."+coverArtPath;
+                            FFMPeg.extractCoverArt(tag, new File(coverArtPath));
+                        }
+                    }
+                }
+        ).thenAccept(
+                unused -> {
+                    stopProgressBar();
+                }
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
+    }
+
+
+    private void doReloadTagFromFile() {
+        startProgressBar();
+        CompletableFuture.runAsync(
+                () -> {
+                    FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        repos.scanMusicFile(new File(tag.getPath()), true);
+                    }
+                }
+        ).thenAccept(
+                unused -> {
+                    stopProgressBar();
+                }
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
+    }
+
+    private void startProgressBar() {
+        getActivity().runOnUiThread(() -> {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
+            dialogBuilder.setView(R.layout.progress_dialog_layout);
+            dialogBuilder.setCancelable(false);
+            progressDialog = dialogBuilder.create();
+            progressDialog.show();
+        });
+    }
+
+
+    private void stopProgressBar() {
+        getActivity().runOnUiThread(() -> {
+            if(progressDialog!=null) {
+                progressDialog.dismiss();
+                progressDialog = null;
+            }
+        });
     }
 }

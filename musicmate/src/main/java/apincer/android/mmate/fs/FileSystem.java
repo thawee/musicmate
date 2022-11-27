@@ -127,18 +127,38 @@ public class FileSystem {
         String tmpPath = targetPath+"_tmp_safe_move";
         String bakPath = targetPath+"_tmp_safe_backup";
         if(copy(context, srcPath, tmpPath)) {
-            // check original and new updated tag file size
-            if (isValidSize(srcPath, tmpPath, false)) {
-                if(rename(context, targetPath, bakPath)) {
+            // check original and tmp file is valid file size
+            if (isValidSize(srcPath, tmpPath, true)) {
+                // copy file is ok, no lost file content
+                if(rename(context, targetPath, bakPath)) { // backup file
                    // return rename(context, tmpPath, srcPath);
                     if(rename(context, tmpPath, targetPath)) {
                         delete(context, bakPath);
                         delete(context, srcPath); // delete source file if everything ok
                         return true;
+                    }else {
+                        rename(context, bakPath, targetPath);
                     }
                 }
+            }else {
+                delete(context, tmpPath); // copy is fail, no valid file size
             }
-            delete(context, tmpPath); // copy is fail
+        }
+        return false;
+    }
+
+    public static boolean safeMove(Context context, String srcPath, String targetPath, boolean sameDirectory) {
+        if(!sameDirectory) return safeMove(context, srcPath, targetPath);
+
+        String bakPath = targetPath+"_tmp_safe_backup";
+        if(rename(context, targetPath, bakPath)) {
+            if(rename(context, srcPath, targetPath)) {
+                delete(context, bakPath);
+                delete(context, srcPath);
+                return true;
+            }else {
+                rename(context, bakPath, targetPath); // copy is fail
+            }
         }
         return false;
     }

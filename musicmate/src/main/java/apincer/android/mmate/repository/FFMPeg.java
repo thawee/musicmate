@@ -26,6 +26,7 @@ import com.arthenica.ffmpegkit.FFprobeKit;
 import com.arthenica.ffmpegkit.FFprobeSession;
 import com.arthenica.ffmpegkit.Log;
 import com.arthenica.ffmpegkit.ReturnCode;
+import com.arthenica.ffmpegkit.Session;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -48,11 +49,34 @@ import timber.log.Timber;
 
 public class FFMPeg {
     public static void extractCoverArt(MusicTag tag, File pathFile) {
-        String options=" -c:v copy ";
+        if(!isEmpty(tag.getEmbedCoverArt())) {
+            String options = " -c:v copy ";
 
-        String cmd = " -hide_banner -nostats -i \""+tag.getPath()+"\" "+options+" \""+pathFile.getAbsolutePath()+"\"";
+            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile.getAbsolutePath() + "\"";
 
-        FFmpegKit.execute(cmd); // do not clear tghe result
+            FFmpegKit.execute(cmd); // do not clear the result
+        }
+    }
+
+    public static String removeCoverArt(Context context, MusicTag tag) {
+        if(!isEmpty(tag.getEmbedCoverArt())) {
+            String pathFile = tag.getPath();
+            String ext = FileUtils.getExtension(pathFile);
+            pathFile = pathFile.replace("."+ext, "no_embed."+ext);
+            String options = " -vn -codec:a copy ";
+           // String options =" -map 0:V -y -codec copy ";
+
+            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
+            Session session = FFmpegKit.execute(cmd); // do not clear the result
+            if (ReturnCode.isSuccess(session.getReturnCode())) {
+                FileSystem.safeMove(context, pathFile, tag.getPath(), true);
+                //return pathFile;
+                return tag.getPath();
+            }else {
+                FileSystem.delete(context, pathFile);
+            }
+        }
+        return null;
     }
 
     public enum SupportedFileFormat
@@ -137,16 +161,23 @@ public class FFMPeg {
     private static final String KEY_TAG_YEAR = "YEAR";
 
     // WAVE file
+    //https://www.digitizationguidelines.gov/audio-visual/documents/listinfo.html
     private static final String KEY_TAG_WAVE_ARTIST = "IART"; //artist
     private static final String KEY_TAG_WAVE_ALBUM = "IPRD"; // album
+    private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG"; // engineers
     private static final String KEY_TAG_WAVE_GENRE = "IGNR"; //genre
     private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
     private static final String KEY_TAG_WAVE_TITLE = "INAM"; //title
     private static final String KEY_TAG_WAVE_YEAR = "date"; //""ICRD"; //date
     private static final String KEY_TAG_WAVE_MEDIA = "IMED";
     private static final String KEY_TAG_WAVE_COMMENT = "ICMT"; // comment
-    private static final String KEY_TAG_WAVE_PUBLISHER = "copyright"; //""ICOP"; //copy right
-    private static final String KEY_TAG_WAVE_LANGUAGE = "ILNG"; // language
+   // private static final String KEY_TAG_WAVE_PUBLISHER = "copyright"; //""ICOP"; //copy right
+   // private static final String KEY_TAG_WAVE_LANGUAGE = "ILNG"; // language
+    private static final String KEY_TAG_WAVE_PUBLISHER = "ISRC"; // name of person or organization
+    private static final String KEY_TAG_WAVE_DISC = "ISRF"; // original form of material
+    private static final String KEY_TAG_WAVE_GROUP = "IKEY"; // list of keyword, saperated by semicolon
+    private static final String KEY_TAG_WAVE_COMPOSER = "ICMS"; // person who commision the subject
+    private static final String KEY_TAG_WAVE_QUALITY = "ISBJ"; // Describes the contents of the file
 
     // AIF/AIFF
     private static final String KEY_TAG_AIF_ARTIST = "ARTIST";
@@ -320,7 +351,9 @@ public class FFMPeg {
         String ext = FileUtils.getExtension(tag.getPath()).toLowerCase(Locale.US);
         if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_AAC)) {
             tag.setFileFormat(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
-        }else if(Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(ext) ||
+        }else if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_ALAC)) {
+                tag.setFileFormat(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
+        } else if(Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(ext) ||
                 Constants.MEDIA_FILE_FORMAT_AIFF.equalsIgnoreCase(ext)){
             tag.setFileFormat(Constants.MEDIA_ENC_AIFF.toLowerCase(Locale.US));
         }else if(Constants.MEDIA_FILE_FORMAT_WAVE.equalsIgnoreCase(ext)){
@@ -467,10 +500,15 @@ public class FFMPeg {
 
         // read Wave specific tags
         if(MusicTagUtils.isWavFile(tag)) {
+            tag.setComposer(getValueForKey(tags, KEY_TAG_WAVE_COMPOSER));
+            tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_WAVE_ALBUM_ARTIST));
+            tag.setGrouping(getValueForKey(tags, KEY_TAG_WAVE_GROUP));
             tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
             tag.setPublisher(getValueForKey(tags, KEY_TAG_WAVE_PUBLISHER));
             tag.setYear(getValueForKey(tags, KEY_TAG_WAVE_YEAR));
-            parseWaveComment(tag);
+            tag.setMediaQuality(getValueForKey(tags, KEY_TAG_WAVE_QUALITY));
+            tag.setDisc(getValueForKey(tags, KEY_TAG_WAVE_DISC));
+            //parseWaveComment(tag);
         }
     }
 
@@ -562,7 +600,7 @@ public class FFMPeg {
             // success
             // moveSafe file
             if(FileSystem.safeMove(context, targetPath, srcPath)) {
-                FileRepository.newInstance(context).scanMusicFile(new File(srcPath));
+                FileRepository.newInstance(context).scanMusicFile(new File(srcPath), true);
                 return true;
             }else {
                 FileSystem.delete(context, targetPath); // delete source file to clear space
@@ -584,7 +622,8 @@ public class FFMPeg {
         String srcPath = tag.getPath();
         File dir = context.getExternalCacheDir();
         //File dir = FileSystem.getDownloadPath(context, "tmp");
-        String targetPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+tag.getFileFormat();
+        String ext = FileUtils.getExtension(srcPath);
+        String targetPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, targetPath);
         if(!dir.getParentFile().exists()) {
             dir.getParentFile().mkdirs();
@@ -596,13 +635,14 @@ public class FFMPeg {
         String cmd = " -hide_banner -nostats -i \"" + srcPath + "\" -map 0 -y -codec copy "+metadataKeys+ "\""+targetPath+"\"";
         //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
         // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
+        Timber.i("write tags: "+cmd);
         FFmpegSession session = FFmpegKit.execute(cmd);
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
             // move file
             if(isFlacFile(tag) || isWavFile(tag) || isAIFFile(tag)) {
                 if(FileSystem.safeMove(context, targetPath, srcPath)) {
-                    FileRepository.newInstance(context).scanMusicFile(new File(srcPath));
+                    FileRepository.newInstance(context).scanMusicFile(new File(srcPath),true);
                     return true;
                 }else {
                     FileSystem.delete(context, targetPath); // delete source file to clear space
@@ -611,7 +651,7 @@ public class FFMPeg {
             }else {
                 // FIXME : for test
                 FileSystem.move(context, targetPath, srcPath + "_TAGS." + tag.getFileFormat());
-                FileRepository.newInstance(context).scanMusicFile(new File(srcPath + "_TAGS." + tag.getFileFormat()));
+                FileRepository.newInstance(context).scanMusicFile(new File(srcPath + "_TAGS." + tag.getFileFormat()),false);
                 return true;
             }
         }else {
@@ -720,17 +760,22 @@ public class FFMPeg {
 
     private static String getMetadataTrackKeysForWave(MusicTag tag) {
         // need to include all metadata
-        String comment = getWaveComment(tag);
+        //String comment = getWaveComment(tag);
         String tags = getMetadataTrackKey(KEY_TAG_WAVE_TITLE,tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_WAVE_ALBUM,tag.getAlbum())+
+                getMetadataTrackKey(KEY_TAG_WAVE_ALBUM_ARTIST,tag.getAlbumArtist())+
                 getMetadataTrackKey(KEY_TAG_WAVE_ARTIST,tag.getArtist())+
                 getMetadataTrackKey(KEY_TAG_WAVE_GENRE,tag.getGenre())+
-                getMetadataTrackKey(KEY_TAG_WAVE_LANGUAGE,tag.getLanguage())+
+               // getMetadataTrackKey(KEY_TAG_WAVE_LANGUAGE,tag.getLanguage())+
                 getMetadataTrackKey(KEY_TAG_WAVE_TRACK,tag.getTrack())+
                 getMetadataTrackKey(KEY_TAG_WAVE_YEAR,tag.getYear())+
+                getMetadataTrackKey(KEY_TAG_WAVE_COMPOSER,tag.getComposer())+
+                getMetadataTrackKey(KEY_TAG_WAVE_GROUP,tag.getGrouping())+
                 getMetadataTrackKey(KEY_TAG_WAVE_MEDIA,tag.getMediaType())+
+                getMetadataTrackKey(KEY_TAG_WAVE_DISC,tag.getDisc())+
                 getMetadataTrackKey(KEY_TAG_WAVE_PUBLISHER,tag.getPublisher())+
-                getMetadataTrackKey(KEY_TAG_WAVE_COMMENT,comment);
+                getMetadataTrackKey(KEY_TAG_WAVE_QUALITY,tag.getMediaQuality()) +
+                getMetadataTrackKey(KEY_TAG_WAVE_COMMENT,tag.getComment());
         return tags;
     }
 
@@ -1066,17 +1111,17 @@ public class FFMPeg {
 
     private static int parseBitDepth(String[] tags, int i) {
         if(tags.length>i) {
-            if(tags[0].contains("dsd")) {
+            if (tags[0].contains("dsd")) {
                 return 1; // dsd
-            }else if(tags[i].contains("s16")) {
-                return 16;
-            }else if(tags[i].contains("s24")) {
-                    return 24;
-            }else if(tags[i].contains("s32")) {
-                if(tags[i].contains("24")) {
+            } else if (tags[i].contains("s24")) {
+                return 24;
+            } else if (tags[i].contains("s32")) {
+                if (tags[i].contains("24")) {
                     return 24;
                 }
                 return 32;
+            } else if (tags[i].contains("s16")) {
+                return 16;
             }
         }
         return 0;

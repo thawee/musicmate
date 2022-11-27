@@ -54,6 +54,17 @@
         <!--this is makes changes to the entire snackbar-->
         <item name="snackbarStyle">@style/AppSnackbar</item>
 
+        <!-- ActionMode -->
+        <item name="actionModeStyle">@style/ActionModeTheme</item>
+        <!--
+        <item name="windowActionModeOverlay">true</item>
+        -->
+        <item name="actionModeCloseDrawable">@drawable/ic_close_white_18dp</item>
+        <item name="actionMenuTextColor">@color/white</item>
+    </style>
+
+    <style name="ActionModeTheme" parent="@android:style/Theme.Holo.Light">
+        <item name="android:background">@drawable/context_menu</item>
     </style>
 
     <style name="AboutAppTheme" parent="Theme.Material3.DayNight">

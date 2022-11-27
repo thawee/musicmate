@@ -46,6 +46,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.epoxy.EpoxyViewHolder;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
+import com.balsikandar.crashreporter.ui.CrashReporterActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -704,17 +705,19 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                       ///  epoxyController.loadSource();
               //      }
               //  }, 300);
-            if(event.getItem()!=null) {
-                if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
-                    epoxyController.notifyModelRemoved(event.getItem());
-                }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
-                    epoxyController.notifyModelMoved(event.getItem());
+            MusicMateExecutors.main(() -> {
+                if(event.getItem()!=null) {
+                    if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
+                        epoxyController.notifyModelRemoved(event.getItem());
+                    }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
+                        epoxyController.notifyModelMoved(event.getItem());
+                    }else {
+                        epoxyController.notifyModelChanged(event.getItem());
+                    }
                 }else {
-                    epoxyController.notifyModelChanged(event.getItem());
+                    epoxyController.loadSource();
                 }
-            }else {
-                epoxyController.loadSource();
-            }
+            });
         }catch (Exception e) {
             Timber.e(e);
         }
@@ -810,6 +813,14 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             return true;
        /* } else if(item.getItemId() == R.id.menu_storage) {
             doDeepScan();
+            return true;*/
+        }else if(item.getItemId() == R.id.menu_about_crash) {
+            Intent myIntent = new Intent(MediaBrowserActivity.this, CrashReporterActivity.class);
+            startActivity(myIntent);
+            return true;
+        /*}else if(item.getItemId() == R.id.menu_about_log) {
+            Intent myIntent = new Intent(MediaBrowserActivity.this, LogMessageActivity.class);
+            startActivity(myIntent);
             return true;*/
         }
         return super.onOptionsItemSelected(item);
@@ -962,7 +973,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mRecyclerView.setHasFixedSize(true); //Size of RV will not change
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
-        mRecyclerView.setItemAnimator(null);
+        //mRecyclerView.setItemAnimator(null);
         mRecyclerView.setPreserveFocusAfterLayout(false);
 
         new FastScrollerBuilder(mRecyclerView)
@@ -1121,7 +1132,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private class ActionModeCallback implements ActionMode.Callback {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            mode.getMenuInflater().inflate(R.menu.menu_context, menu);
+            mode.getMenuInflater().inflate(R.menu.menu_main_actionmode, menu);
             return true;
         }
 
@@ -1307,7 +1318,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     FFMPeg.covert(srcPath, targetPath, status -> {
                         if (status) {
                             //repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
-                            repos.scanMusicFile(new File(targetPath)); // re scan file
+                            repos.scanMusicFile(new File(targetPath),false); // re scan file
                         }
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
