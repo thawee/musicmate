@@ -10,7 +10,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -19,6 +18,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import java.io.File;
@@ -39,7 +39,7 @@ public class TagsTechnicalFragment extends Fragment {
     AlertDialog progressDialog;
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         this.context = context;
         this.tagsActivity = (TagsActivity) getActivity();
@@ -47,39 +47,40 @@ public class TagsTechnicalFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_ffmpeg, container, false);
-        return v;
+        return inflater.inflate(R.layout.fragment_ffmpeg, container, false);
     }
 
+    public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
+        return item -> {
+            if(item.getItemId() == R.id.menu_editor_tech_reload) {
+                doReloadTagFromFile();
+            }else if(item.getItemId() == R.id.menu_editor_tech_extract_coverart) {
+                doExtractEmbedCoverart();
+            }if(item.getItemId() == R.id.menu_editor_tech_remove_coverart) {
+                doRemoveEmbedCoverart();
+            }
+            return false;
+        };
+    }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         TextView filename = view.findViewById(R.id.filename);
         TextView metada = view.findViewById(R.id.ffmpeg_info);
         TableLayout table = view.findViewById(R.id.tags);
-        Button reloadBtn = view.findViewById(R.id.reload_tag_from_file);
-        Button extractEmbedCoverBtn = view.findViewById(R.id.extract_coverart);
-        Button removeEmbedCoverBtn = view.findViewById(R.id.remove_coverart);
-
-        reloadBtn.setOnClickListener(view1 -> doReloadTagFromFile());
-        extractEmbedCoverBtn.setOnClickListener(view1 -> doExtractEmbedCoverart());
-        removeEmbedCoverBtn.setOnClickListener(view1 -> doRemoveEmbedCoverart());
 
         MusicTag tag = tagsActivity.getEditItems().get(0);
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag);
-        filename.setText("MediaPath:\n"+tag.getPath()+"\n\nMuicMatePath:\n"+musicMatePath);
-       /* MusicTag ffmpegTag = FFMPeg.readFFprobe(getActivity().getApplicationContext(), tag.getPath());
-        if(ffmpegTag!=null) {
-            metada.setText(ffmpegTag.getData());
-        } */
+        filename.setText(String.format("MediaPath:\n%s\n\nMuicMatePath:\n%s", tag.getPath(), musicMatePath));
+
         if(tag.getData()!=null) {
-            metada.setText("MusicTag:\n"+tag.getData()+"\n\n");
+            metada.setText(String.format("MusicTag:\n%s\n\n", tag.getData()));
         }
 
         MusicTag tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
         if(tt!=null) {
-            metada.setText(metada.getText() +"\n\nFFmpeg:\n"+tt.getData());
+            metada.setText(String.format("%s\n\nFFmpeg:\n%s", metada.getText(), tt.getData()));
         }
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -102,17 +103,6 @@ public class TagsTechnicalFragment extends Fragment {
         tv1.setTextColor(Color.WHITE);
         cell.addView(tv1);
         tbrow0.addView(cell);
-
-        /*
-        cell = new LinearLayout(getContext());
-        cell.setBackgroundColor(Color.DKGRAY);
-        cell.setLayoutParams(llp);//2px border on the right for the cell
-        TextView tv2 = new TextView(getContext());
-        tv2.setText(" FFprobe ");
-        tv2.setTextColor(Color.WHITE);
-        cell.addView(tv2);
-        tbrow0.addView(cell);
-        //table.addView(tbrow0); */
 
         cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
@@ -139,7 +129,7 @@ public class TagsTechnicalFragment extends Fragment {
                     || field.getName().equals("trackRange")
                     || field.getName().startsWith("shadow"))  {
                 continue;
-            };
+            }
             TableRow tr = new TableRow(getContext());
             tr.setBackgroundColor(Color.BLACK);
             tr.setPadding(0, 0, 0, 2); //Border between rows
@@ -173,17 +163,6 @@ public class TagsTechnicalFragment extends Fragment {
             cell.addView(t2v);
             tr.addView(cell);
 
-            /*
-            cell = new LinearLayout(getContext());
-            cell.setBackgroundColor(Color.GRAY);
-            cell.setLayoutParams(llp);//2px border on the right for the cell
-            TextView t3v = new TextView(getContext());
-            t3v.setText(ffprobeVal);
-            t3v.setTextColor(Color.WHITE);
-            t3v.setGravity(Gravity.CENTER);
-            cell.addView(t3v);
-            tr.addView(cell); */
-
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
@@ -209,9 +188,7 @@ public class TagsTechnicalFragment extends Fragment {
                     }
                 }
         ).thenAccept(
-                unused -> {
-                    stopProgressBar();
-                }
+                unused -> stopProgressBar()
         ).exceptionally(
                 throwable -> {
                     stopProgressBar();
@@ -234,9 +211,7 @@ public class TagsTechnicalFragment extends Fragment {
                     }
                 }
         ).thenAccept(
-                unused -> {
-                    stopProgressBar();
-                }
+                unused -> stopProgressBar()
         ).exceptionally(
                 throwable -> {
                     stopProgressBar();
@@ -256,9 +231,7 @@ public class TagsTechnicalFragment extends Fragment {
                     }
                 }
         ).thenAccept(
-                unused -> {
-                    stopProgressBar();
-                }
+                unused -> stopProgressBar()
         ).exceptionally(
                 throwable -> {
                     stopProgressBar();

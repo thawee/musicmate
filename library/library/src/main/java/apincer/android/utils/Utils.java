@@ -10,11 +10,14 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.RemoteException;
 import android.provider.DocumentsContract;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
+
+import androidx.annotation.DimenRes;
+import androidx.core.text.TextUtilsCompat;
+import androidx.core.view.ViewCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,10 +25,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipFile;
-
-import androidx.annotation.DimenRes;
-import androidx.core.text.TextUtilsCompat;
-import androidx.core.view.ViewCompat;
 
 
 public class Utils {
@@ -58,14 +57,6 @@ public class Utils {
 
     public static final String[] TEXT_MIMES = new String[] {
             "text/*", };
-
-    public static boolean hasNougat() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
-    }
-
-    public static boolean hasLollipopMR1() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1;
-    }
 
     public static boolean isTelevision(Context context) {
         UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
@@ -134,26 +125,6 @@ public class Utils {
             } catch (Exception ignored) {
             }
         }
-    }
-
-    public static boolean hasJellyBeanMR1() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1;
-    }
-
-    public static boolean hasMarshmallow() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
-    }
-
-    public static boolean hasJellyBean() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
-    }
-
-    public static boolean hasLollipop() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
-    }
-
-    public static boolean hasKitKat() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     }
 
     public static boolean isDir(String mimeType) {

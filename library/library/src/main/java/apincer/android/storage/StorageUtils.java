@@ -4,7 +4,6 @@ package apincer.android.storage;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
@@ -15,8 +14,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import apincer.android.utils.Utils;
 
 public class StorageUtils {
 
@@ -143,13 +140,10 @@ public class StorageUtils {
             Field mPath = object.getClass().getDeclaredField("mPath");
             mPath.setAccessible(true);
             Object pathObj = mPath.get(object);
-            if(Utils.hasJellyBeanMR1()){
-                file = (File)pathObj;
-            }
-            else{
+
                 path = (String)pathObj;
                 file = new File(path);
-            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -157,22 +151,8 @@ public class StorageUtils {
     }
 
     private String getDescription(Object object) {
-        String description;
-        if(Utils.hasMarshmallow()){
-            description = getDescription(object, false);
-        }
-        else if(Utils.hasJellyBean()){
-            try {
-                description = getDescription(object, true);
-            }
-            catch (Resources.NotFoundException e){
-                description = getDescription(object, false);
-            }
-        }
-        else{
-            description = getDescription(object, false);
-        }
-        return description;
+
+        return getDescription(object, false);
     }
 
     private String getDescription(Object object, boolean hasId) {

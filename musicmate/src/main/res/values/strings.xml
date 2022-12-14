@@ -29,9 +29,13 @@
     <string name="editor_label_genre">Genre</string>
     <string name="editor_label_group">Grouping</string>
     <string name="editor_label_album">Album</string>
-    <string name="editor_label_album_artist">Album Artist</string>
-    <string name="editor_label_track">Track</string>
+    <string name="editor_label_album_artist">Album artist</string>
+    <string name="editor_label_disc">Disc number</string>
+    <string name="editor_label_track">Song number</string>
     <string name="editor_label_year">Year</string>
+    <string name="editor_label_media_type">Media type</string>
+    <string name="editor_label_media_quality">Media quality</string>
+    <string name="editor_label_publisher">Publisher</string>
 
     <string name="editor_hint_track">Track No.</string>
     <string name="editor_hint_disc">Disc No.</string>
@@ -114,5 +118,20 @@
     <string name="app_statistics">Statistics</string>
     <string name="encoding_format">Encoding Format:</string>
     <string name="editor_label_language">Language</string>
+    <string name="editor_info">Music information</string>
+    <string name="enter_title">Enter title</string>
+    <string name="file_path">File Path</string>
+    <string name="editor_musicmate_info">Music Mate information</string>
+
+    <!-- new editor -->
+    <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="Rounded" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 
 </resources>

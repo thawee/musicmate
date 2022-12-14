@@ -1,11 +1,5 @@
 package apincer.android.mmate.work;
 
-import static de.esoco.coroutine.Coroutine.first;
-import static de.esoco.coroutine.CoroutineScope.launch;
-import static de.esoco.coroutine.step.CodeExecution.consume;
-import static de.esoco.coroutine.step.CodeExecution.supply;
-import static de.esoco.coroutine.step.Iteration.forEach;
-
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -23,7 +17,6 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
 public class ImportAudioFileWorker extends Worker {
@@ -39,12 +32,9 @@ public class ImportAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-       /* List<MusicTag> tags = MusixMateApp.getPendingItems("Import");
-        for (MusicTag tag:tags) {
-            MusicMateExecutors.move(new ImportRunnable(tag));
-        }*/
-     //   int COROUTINE_COUNT = 4;
-
+        List<MusicTag> list = list();
+        list.parallelStream().forEach(this::importFile);
+        /*
         Coroutine<?, ?> cIterating =
                 first(supply(this::list)).then(
                         forEach(consume(this::move)));
@@ -57,7 +47,7 @@ public class ImportAudioFileWorker extends Worker {
                         cIterating.runAsync(scope, null);
                    // }
                 });
-
+*/
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -74,7 +64,7 @@ public class ImportAudioFileWorker extends Worker {
         return MusixMateApp.getPendingItems("Import");
     }
 
-    private void move(MusicTag tag) {
+    private void importFile(MusicTag tag) {
         try {
             boolean status = repos.importAudioFile(tag);
 
@@ -84,7 +74,7 @@ public class ImportAudioFileWorker extends Worker {
             Timber.e(e);
         }
     }
-
+/*
     private final class ImportRunnable  implements Runnable {
         private final MusicTag tag;
 
@@ -102,5 +92,5 @@ public class ImportAudioFileWorker extends Worker {
                 Timber.e(e);
             }
         }
-    }
+    } */
 }

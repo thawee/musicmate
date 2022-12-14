@@ -61,13 +61,13 @@ public class ResideMenu extends FrameLayout {
     private List<View> ignoredViews;
     private List<ResideMenuItem> leftMenuItems;
     private List<ResideMenuItem> rightMenuItems;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
+    private final DisplayMetrics displayMetrics = new DisplayMetrics();
     private OnMenuListener menuListener;
     private float lastRawX;
     private boolean isInIgnoredView = false;
     private int scaleDirection = DIRECTION_LEFT;
     private int pressedState = PRESSED_DOWN;
-    private List<Integer> disabledSwipeDirection = new ArrayList<Integer>();
+    private final List<Integer> disabledSwipeDirection = new ArrayList<>();
     // Valid scale factor is between 0.0f and 1.0f.
     private float mScaleValue = 0.5f;
 
@@ -116,19 +116,19 @@ public class ResideMenu extends FrameLayout {
         } else {
             scrollViewRightMenu = inflater.inflate(
                     R.layout.residemenu_custom_right_scrollview, this, false);
-            layoutRightMenu = (LinearLayout) scrollViewRightMenu.findViewById(R.id.layout_right_menu);
+            layoutRightMenu = scrollViewRightMenu.findViewById(R.id.layout_right_menu);
         }
 
-        imageViewShadow = (ImageView) findViewById(R.id.iv_shadow);
-        imageViewBackground = (ImageView) findViewById(R.id.iv_background);
+        imageViewShadow = findViewById(R.id.iv_shadow);
+        imageViewBackground = findViewById(R.id.iv_background);
 
-        RelativeLayout menuHolder = (RelativeLayout) findViewById(R.id.sv_menu_holder);
+        RelativeLayout menuHolder = findViewById(R.id.sv_menu_holder);
         menuHolder.addView(scrollViewLeftMenu);
         menuHolder.addView(scrollViewRightMenu);
 
-        rightHeaderHolder = (RelativeLayout) scrollViewRightMenu.findViewById(R.id.sv_right_header_holder);
+        rightHeaderHolder = scrollViewRightMenu.findViewById(R.id.sv_right_header_holder);
         rightHeaderHolder.setVisibility(GONE);
-        leftHeaderHolder = (RelativeLayout) scrollViewLeftMenu.findViewById(R.id.sv_left_header_holder);
+        leftHeaderHolder = scrollViewLeftMenu.findViewById(R.id.sv_left_header_holder);
         leftHeaderHolder.setVisibility(GONE);
     }
 
@@ -182,7 +182,6 @@ public class ResideMenu extends FrameLayout {
     /**
      * Set up the activity;
      *
-     * @param activity
      */
     public void attachToActivity(Activity activity) {
         initValue(activity);

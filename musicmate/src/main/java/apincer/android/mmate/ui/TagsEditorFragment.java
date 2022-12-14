@@ -270,7 +270,7 @@ public class TagsEditorFragment extends Fragment {
                     // set updated item on main activity
                     viewHolder.ignoreTagChanged = true;
                     viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
-                    //viewHolder.ignoreTagChanged = false;
+                    viewHolder.ignoreTagChanged = false;
                     //viewHolder.resetState();
                     //toggleSaveFabAction();
                     //mainActivity.buildDisplayTag();
@@ -772,13 +772,14 @@ public class TagsEditorFragment extends Fragment {
                             tag.setAlbum(MusicTagUtils.getDefaultAlbum(tag));
                         }
                     }
+                    viewHolder.tagChanged=true;
+                    toggleSaveFabAction();
                 }
         ).thenAccept(
                 unused -> {
                     stopProgressBar();
                     // set updated item on main activity
                     viewHolder.bindViewHolder(mainActivity.buildDisplayTag());
-                    toggleSaveFabAction();
                 }
         ).exceptionally(
                 throwable -> {

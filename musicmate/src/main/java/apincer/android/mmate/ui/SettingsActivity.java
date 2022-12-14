@@ -8,13 +8,20 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.PreferenceFragmentCompat;
 
+import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragement);
         getSupportActionBar().setTitle(R.string.app_settings);

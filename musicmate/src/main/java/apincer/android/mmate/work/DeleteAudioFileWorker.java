@@ -1,11 +1,5 @@
 package apincer.android.mmate.work;
 
-import static de.esoco.coroutine.Coroutine.first;
-import static de.esoco.coroutine.CoroutineScope.launch;
-import static de.esoco.coroutine.step.CodeExecution.consume;
-import static de.esoco.coroutine.step.CodeExecution.supply;
-import static de.esoco.coroutine.step.Iteration.forEach;
-
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -23,7 +17,6 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import de.esoco.coroutine.Coroutine;
 import timber.log.Timber;
 
 public class DeleteAudioFileWorker extends Worker {
@@ -39,12 +32,10 @@ public class DeleteAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-       /*List<MusicTag> tags = MusixMateApp.getPendingItems("Delete");
-        for (MusicTag tag:tags) {
-            MusicMateExecutors.update(new DeleteRunnable(tag));
-        } */
-       // int COROUTINE_COUNT = 10;
+       List<MusicTag> list = list();
+       list.parallelStream().forEach(this::delete);
 
+       /*
         Coroutine<?, ?> cIterating =
                 first(supply(this::list)).then(
                         forEach(consume(this::delete)));
@@ -57,7 +48,7 @@ public class DeleteAudioFileWorker extends Worker {
                         cIterating.runAsync(scope, null);
                    // }
                 });
-
+        */
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -67,7 +58,6 @@ public class DeleteAudioFileWorker extends Worker {
     public static void startWorker(Context context, List<MusicTag> files) {
         MusixMateApp.putPendingItems("Delete", files);
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class).build();
-                  //  .setInputData(inputData).build();
             WorkManager.getInstance(context).enqueue(workRequest);
     }
 
@@ -78,16 +68,14 @@ public class DeleteAudioFileWorker extends Worker {
     private void delete(MusicTag tag) {
         try {
             boolean status = repos.deleteMediaItem(tag);
-            //String txt = status?getApplicationContext().getString(R.string.alert_delete_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_delete_fail, tag.getTitle());
 
             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-            //AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, null);
             EventBus.getDefault().postSticky(message);
         } catch (Exception e) {
             Timber.e(e);
         }
     }
-
+/*
     private final class DeleteRunnable  implements Runnable {
         private final MusicTag tag;
 
@@ -107,5 +95,5 @@ public class DeleteAudioFileWorker extends Worker {
                 Timber.e(e);
             }
         }
-    }
+    } */
 }

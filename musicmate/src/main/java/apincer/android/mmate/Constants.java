@@ -31,7 +31,7 @@ public final class Constants {
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
-    public static final String MEDIA_FILE_FORMAT_WAVE = "wave";
+    public static final String MEDIA_FILE_FORMAT_WAVE = "wav";
     public static final String MEDIA_FILE_FORMAT_FLAC = "flac";
     public static final String MEDIA_FILE_FORMAT_AIF = "aif";
     public static final String MEDIA_FILE_FORMAT_AIFF = "aiff";
@@ -41,7 +41,9 @@ public final class Constants {
     public static final String MEDIA_FILE_FORMAT_DSF="dsf";
     public static final String MEDIA_FILE_FORMAT_MP3="mp3";
     public static final int MIN_FILE_SIZE_RATIO = 42;
-    public static final String UNKWON_PUBLISHER = "Unkown Publisher";
+    public static final String UNKWON_PUBLISHER = "Unknown Publisher";
+    public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
+    public static final String GROUPING_LOUNGE = "Lounge";
     public static String FIELD_SEP = ";";
   // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;

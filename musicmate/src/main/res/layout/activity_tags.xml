@@ -173,7 +173,9 @@
                         android:layout_gravity="center_horizontal"
                         android:background="@color/transparent"
                         android:layout_marginLeft="@dimen/dimen_12_dp"
-                        style="@style/Widget.MaterialRatingBar.RatingBar" />
+                        style="@style/Widget.MaterialRatingBar.RatingBar"
+                        android:contentDescription="rating"
+                        tools:ignore="HardcodedText" />
                 </LinearLayout>
                 <!--
                 <LinearLayout
@@ -281,15 +283,15 @@
                         android:layout_gravity="right|center_vertical"
                         android:layout_marginRight="@dimen/dimen_2_dp"
                         android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
                         android:background="@drawable/shape_background_unknown"
                         android:fontFamily="@font/oswald_bold"
+                        android:gravity="center"
+                        android:paddingTop="@dimen/dimen_2_dp"
+                        android:paddingBottom="@dimen/dimen_2_dp"
+                        android:text="DR14"
                         android:textColor="@color/black"
                         android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:text="DR14"/>
+                        android:textStyle="bold" />
 
                 </LinearLayout>
                 <!--
@@ -355,6 +357,7 @@
             android:background="@color/bgColor"
             app:tabIndicatorColor="@android:color/white"
             app:tabSelectedTextColor="@color/white"
+            app:tabTextColor="@color/grey400"
             app:layout_collapseMode="pin"
             app:tabGravity="fill"
             app:tabMode="fixed"/>

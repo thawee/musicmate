@@ -33,6 +33,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
@@ -372,6 +373,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
+        }
         super.onCreate(savedInstanceState);
         repos = FileRepository.newInstance(getApplicationContext());
         initActivityTransitions();
@@ -495,7 +501,9 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
 
         mSearchView.setOnCloseListener(() -> {
             SearchCriteria criteria = epoxyController.getCriteria();
-            criteria.resetSearch();
+            if( criteria!=null) {
+                criteria.resetSearch();
+            }
             doStartRefresh(null);
            // mSearchView.setIconified(true);
             return false;

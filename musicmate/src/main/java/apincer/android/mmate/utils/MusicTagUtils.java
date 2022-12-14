@@ -995,7 +995,9 @@ public class MusicTagUtils {
         //md5 digest
         File dir = context.getExternalCacheDir();
         File songDir = new File(tag.getPath());
-        songDir = songDir.getParentFile();
+        if(tag.isMusicManaged()) {
+            songDir = songDir.getParentFile();
+        }
         String path = DigestUtils.md5Hex(songDir.getAbsolutePath())+".png";
 
         path = "/CoverArts/"+path;
@@ -1575,11 +1577,11 @@ public class MusicTagUtils {
     }
 
     public static boolean isWavFile(MusicTag musicTag) {
-        return (Constants.MEDIA_FILE_FORMAT_WAVE.equalsIgnoreCase(musicTag.getFileFormat()));
+        return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
     public static boolean isFlacFile(MusicTag musicTag) {
-        return (Constants.MEDIA_FILE_FORMAT_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
+        return (Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
     public static boolean isDSDFile(String path) {
@@ -1609,5 +1611,168 @@ public class MusicTagUtils {
         // aif, aiff
         return (Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(tag.getFileFormat()) ||
                 Constants.MEDIA_FILE_FORMAT_AIFF.equalsIgnoreCase(tag.getFileFormat()));
+    }
+
+    public static Object getSourceQualityIconMini(Context context, MusicTag tag) {
+        File dir = context.getExternalCacheDir();
+        String quality = trimToEmpty(tag.getMediaQuality());
+        String path = "/Icons/Quality"+quality+"RecordsMini.png";
+
+        File pathFile = new File(dir, path);
+        //if(!pathFile.exists()) {
+        if(true) {
+            // create file
+            try {
+                dir = pathFile.getParentFile();
+                dir.mkdirs();
+
+                Bitmap bitmap = createSourceQualityIconMini(context, quality);
+                byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
+                if(is!=null) {
+                    IOUtils.write(is, new FileOutputStream(pathFile));
+                }
+            } catch (Exception e) {
+                Timber.e(e);
+            }
+        }
+        return pathFile;
+    }
+
+    private static Bitmap createSourceQualityIconMini(Context context, String quality) {
+        int width =  132;//280; // 16x46, 24x70
+        int height = 96;
+        int bgColor = context.getColor(R.color.material_color_blue_grey_900);
+        int recordsColor = context.getColor(R.color.audiophile_label2);
+        int blackColor = context.getColor(R.color.black);
+        int qualityColor = context.getColor(R.color.audiophile_label1);
+        String label1 =  StringUtils.getAbvByUpperCase(quality); //;"Audiophile";
+        String label2 = "R e c o r d s";
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding;
+        int cornerRadius = 12;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        //draw back color
+        padding = 0;
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw audiophile background
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(bgColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw grey shade colors
+        int []colors = new int[7];
+
+        colors[6] = context.getColor(R.color.material_color_blue_grey_300);
+        colors[5] = context.getColor(R.color.material_color_blue_grey_400);
+        colors[4] = context.getColor(R.color.material_color_blue_grey_500);
+        colors[3] = context.getColor(R.color.material_color_blue_grey_600);
+        colors[2] = context.getColor(R.color.material_color_blue_grey_700);
+        colors[1] = context.getColor(R.color.material_color_blue_grey_800);
+        colors[0] = context.getColor(R.color.material_color_blue_grey_900);
+
+        int barWidth = 6;
+        int rndNo =0;
+        padding=8;
+        int bottomPos = height-padding-4;
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            Path path = new Path();
+            path.moveTo(12+(rndNo*barWidth), padding);
+            path.lineTo(12+(rndNo*barWidth), bottomPos-(rndNo*barWidth));
+            path.lineTo( width-padding, bottomPos-(rndNo*barWidth));
+
+            float radius = 36.0f;
+
+            CornerPathEffect cornerPathEffect =
+                    new CornerPathEffect(radius);
+
+            paint.setPathEffect(cornerPathEffect);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
+        // draw label "Records", grey color
+        Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+        int letterTextSize = 21; //28;
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(recordsColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setDither(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label2, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() ;
+        float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+        myCanvas.drawText(label2,
+                (float) (bounds.width()-(textMathRect.width()*5.0)), // left
+                mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
+                mLetterPaint);
+
+        // draw label "Audiophile", quality color
+        font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+        if(Constants.QUALITY_AUDIOPHILE.equals(quality)) {
+            // Audiophile
+            letterTextSize = 40; //82;
+        }else {
+            letterTextSize = 30; //82;
+            qualityColor = recordsColor;
+        }
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(qualityColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setDither(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label1, 0, 1, textMathRect);
+        // mLetterTop = (textMathRect.height() / 6f);
+        mPositionY= bounds.exactCenterY()-8;//+(bounds.exactCenterY()/4);
+        myCanvas.drawText(label1,
+                bounds.exactCenterX() +20, //left
+                mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
+                mLetterPaint);
+
+        return myBitmap;
     }
 }

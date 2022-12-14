@@ -14,6 +14,14 @@ public class Preferences {
         return prefs.getBoolean(Constants.PREF_SHOW_STORAGE_SPACE,true);
     }
 
+    public static boolean isOnNightModeOnly(Context context) {
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_NIGHT_MODE_ONLY,true);
+    }
+
+
+
     public static boolean isOpenNowPlaying(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);

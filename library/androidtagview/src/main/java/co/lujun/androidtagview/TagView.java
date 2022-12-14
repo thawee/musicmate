@@ -16,28 +16,25 @@
 
 package co.lujun.androidtagview;
 
+import static co.lujun.androidtagview.Utils.dp2px;
+
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapShader;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.graphics.Region;
 import android.graphics.Shader;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.text.TextUtils;
 import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.customview.widget.ViewDragHelper;
-
-import static co.lujun.androidtagview.Utils.dp2px;
 
 /**
  * Author: lujun(http://blog.lujun.co)
@@ -95,7 +92,7 @@ public class TagView extends View {
     private int mSlopThreshold = 4;
 
     /** How long trigger long click callback(default 500ms)*/
-    private int mLongPressTime = 500;
+    private final int mLongPressTime = 500;
 
     /** Text direction(support:TEXT_DIRECTION_RTL & TEXT_DIRECTION_LTR, default TEXT_DIRECTION_LTR)*/
     private int mTextDirection = View.TEXT_DIRECTION_LTR;
@@ -149,7 +146,7 @@ public class TagView extends View {
 
     private boolean unSupportedClipPath = false;
 
-    private Runnable mLongClickHandle = new Runnable() {
+    private final Runnable mLongClickHandle = new Runnable() {
         @Override
         public void run() {
             if (!isMoved && !isUp){
@@ -398,15 +395,10 @@ public class TagView extends View {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void drawRipple(Canvas canvas){
-        if (isViewClickable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
-                canvas != null && !unSupportedClipPath){
+        if (isViewClickable && canvas != null && !unSupportedClipPath){
 
             // Disable hardware acceleration for 'Canvas.clipPath()' when running on API from 11 to 17
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2){
-                setLayerType(LAYER_TYPE_SOFTWARE, null);
-            }
             try {
                 canvas.save();
                 mPath.reset();
@@ -415,11 +407,7 @@ public class TagView extends View {
                 mPath.addRoundRect(mRectF, mBorderRadius, mBorderRadius, Path.Direction.CCW);
 
 //                bug: https://github.com/whilu/AndroidTagView/issues/88
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    canvas.clipPath(mPath);
-                } else {
-                    canvas.clipPath(mPath, Region.Op.REPLACE);
-                }
+                canvas.clipPath(mPath);
 
                 canvas.drawCircle(mTouchX, mTouchY, mRippleRadius, mRipplePaint);
                 canvas.restore();
@@ -429,22 +417,18 @@ public class TagView extends View {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void splashRipple(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && mTouchX > 0 && mTouchY > 0){
+        if (mTouchX > 0 && mTouchY > 0){
             mRipplePaint.setColor(mRippleColor);
             mRipplePaint.setAlpha(mRippleAlpha);
             final float maxDis = Math.max(Math.max(Math.max(mTouchX, mTouchY),
                     Math.abs(getMeasuredWidth() - mTouchX)), Math.abs(getMeasuredHeight() - mTouchY));
 
             mRippleValueAnimator = ValueAnimator.ofFloat(0.0f, maxDis).setDuration(mRippleDuration);
-            mRippleValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    float animValue = (float) animation.getAnimatedValue();
-                    mRippleRadius = animValue >= maxDis ? 0 : animValue;
-                    postInvalidate();
-                }
+            mRippleValueAnimator.addUpdateListener(animation -> {
+                float animValue = (float) animation.getAnimatedValue();
+                mRippleRadius = animValue >= maxDis ? 0 : animValue;
+                postInvalidate();
             });
             mRippleValueAnimator.start();
         }

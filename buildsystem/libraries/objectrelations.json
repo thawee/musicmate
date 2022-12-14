@@ -1,7 +1,0 @@
-{
-  "uniqueId": "org.obrel.objectrelations",
-  "name": "The ObjectRelations project",
-  "artifactVersion": "1.5.0",
-  "description": "Generic modeling of object relations in OOP",
-  "website": "https://github.com/esoco/objectrelations"
-}

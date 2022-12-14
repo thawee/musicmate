@@ -23,8 +23,10 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -97,6 +99,7 @@ public class TagsActivity extends AppCompatActivity {
     private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     private volatile boolean isEditing;
     FileRepository repos;
+    private Fragment activeFragment;
 
     @Override
     public void onBackPressed() {
@@ -154,6 +157,11 @@ public class TagsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tags);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -175,33 +183,6 @@ public class TagsActivity extends AppCompatActivity {
         setUpTitlePanel();
     }
 
-    /*
-    private void doStartFFMpeg( ) {
-        mStateView.displayLoadingState();
-        final int total =  getEditItems().size();
-        final int[] count = {0};
-
-        for(AudioTag tag: getEditItems()) {
-            if(Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(tag.getAudioEncoding()))  {
-                String wavePath = tag.getPath();
-                String filePath = FileUtils.removeExtension(tag.getPath());
-                String flacPath = filePath+".flac";
-                String cmd = "-i \""+wavePath+"\" \""+flacPath+"\"";
-                FFmpegKit.executeAsync(cmd, session -> {
-                    repos.scanFileAndSaveTag(new File(flacPath));
-                    runOnUiThread(() -> {
-                        String message = "Convert '"+tag.getTitle()+"' completed in " + session.getDuration() +" ms.";
-                        ToastHelper.showActionMessage(TagsActivity.this, mStateView, Constants.STATUS_SUCCESS, message);
-                        if(total == count[0]) {
-                            mStateView.hideStates();
-                        }
-                    });
-                    count[0]++;
-                });
-            }
-        }
-    } */
-
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
         // call from EventBus
@@ -222,18 +203,33 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void setUpPageViewer() {
-
         final AppBarLayout appBarLayout = findViewById(R.id.appbar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
-        adapter.addNewTab(tagsEditorFragment, "METADATA");
-        adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
-        adapter.addNewTab(new TagsTechnicalFragment(), "TECHNICAL");
-        viewPager.setAdapter(adapter);
 
-        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
+       // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
+        adapter.addNewTab(new MusicInforFragment(), "Music information");
+        adapter.addNewTab(new TagsTechnicalFragment(), "Technical information");
+       // adapter.addNewTab(tagsEditorFragment, "METADATA");
+        viewPager.setAdapter(adapter);
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                activeFragment = adapter.fragments.get(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+            }
+        });
+
+        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            tab.setText(adapter.getPageTitle(position));
+        });
         tabLayoutMediator.attach();
 
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
@@ -635,7 +631,26 @@ public class TagsActivity extends AppCompatActivity {
             }
         }
     }
-/*
+
+    public void setupEditorManu(Toolbar.OnMenuItemClickListener listener) {
+        if(!"Music".equalsIgnoreCase(String.valueOf(toolbar.getTitle()))) {
+            toolbar.getMenu().clear();
+            toolbar.setTitle("Music");
+            toolbar.inflateMenu(R.menu.menu_tag_editor);
+            toolbar.setOnMenuItemClickListener(listener);
+        }
+    }
+
+    public void setupTechnicalManu(Toolbar.OnMenuItemClickListener listener) {
+        if(!"Technical".equalsIgnoreCase(String.valueOf(toolbar.getTitle()))) {
+            toolbar.getMenu().clear();
+            toolbar.setTitle("Technical");
+            toolbar.inflateMenu(R.menu.menu_tag_technical);
+            toolbar.setOnMenuItemClickListener(listener);
+        }
+    }
+
+    /*
     public void doPreviewCoverArt(File coverArtFile) {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
@@ -662,36 +677,71 @@ public class TagsActivity extends AppCompatActivity {
 
         @Override
         public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-
             double vScrollOffset = Math.abs(verticalOffset);
             double scale = (1 - (1.0 / appBarLayout.getTotalScrollRange() * (vScrollOffset) * 0.2));
             coverArtView.setScaleX((float) scale);
             coverArtView.setScaleY((float) scale);
             fadeToolbarTitle((1.0 / appBarLayout.getTotalScrollRange() * (vScrollOffset)));
 
-            if (Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset) >= 0.8) {
+            if (verticalOffset == 0) {
+                // fully EXPANDED, on preview screen
+                toolbar.getMenu().clear();
+            } else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange()) {
+                // fully COLLAPSED, on editing screen
+                setupToolBarMenu();
+            }else if (Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset) >= 0.8) {
                 //edit mode
                 isEditing = true;
+                // should display menus
+               /* if(activeFragment!= null) {
+                    if (activeFragment instanceof MusicInforFragment) {
+                        setupEditorManu(((MusicInforFragment) activeFragment).getOnMenuItemClickListener());
+                    } else if (activeFragment instanceof TagsTechnicalFragment) {
+                        setupTechnicalManu(((TagsTechnicalFragment) activeFragment).getOnMenuItemClickListener());
+                    } else {
+                        toolbar.getMenu().clear();
+                    }
+                } */
 //                tabLayout.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                 ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
-                        "backgroundColor" /*view attribute name*/, new ArgbEvaluator(),
-                        toolbar_from_color
-                        /*from color*/, toolbar_to_color/*to color*/);
+                        "backgroundColor", /*view attribute name*/
+                        new ArgbEvaluator(),
+                        toolbar_from_color, /*from color*/
+                        toolbar_to_color /*to color*/);
                 colorFade.setDuration(2000);
                 colorFade.start();
             } else {
-                // view mode
+                // preview mode
+               // toolbar.getMenu().clear(); // clear all menus
                 //buildDisplayTag(false);
                 //updateTitlePanel();
 //                tabLayout.setBackgroundColor(getResources().getColor(R.color.bgColor));
                 ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
-                        "backgroundColor" /*view attribute name*/, new ArgbEvaluator(),
-                        ContextCompat.getColor(getApplicationContext(),R.color.bgColor)
-                        /*from color*/, ContextCompat.getColor(getApplicationContext(),R.color.bgColor)/*to color*/);
+                        "backgroundColor", /*view attribute name*/
+                        new ArgbEvaluator(),
+                        ContextCompat.getColor(getApplicationContext(),R.color.bgColor), /*from color*/
+                        ContextCompat.getColor(getApplicationContext(),R.color.bgColor) /*to color*/);
                 colorFade.setDuration(2000);
                 colorFade.start();
             }
         }
+    }
+
+    private void setupToolBarMenu() {
+        if(activeFragment!= null) {
+            if (activeFragment instanceof MusicInforFragment) {
+                setupEditorManu(((MusicInforFragment) activeFragment).getOnMenuItemClickListener());
+            } else if (activeFragment instanceof TagsTechnicalFragment) {
+                setupTechnicalManu(((TagsTechnicalFragment) activeFragment).getOnMenuItemClickListener());
+            } else {
+                clearToolBarMenu();
+            }
+        }
+    }
+
+    private void clearToolBarMenu() {
+        toolbar.setTitle("");
+        toolbar.getMenu().clear();
     }
 
     private void fadeToolbarTitle(double scale) {

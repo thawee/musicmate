@@ -680,7 +680,7 @@ public class FFMPeg {
     }
 
     private static String getMetadataTrackKey(String key, String val) {
-        return METADATA_KEY + " " + key + "=\"" + trimToEmpty(val) + "\" ";
+        return METADATA_KEY + " " + key + "=\"" + trimToEmpty(val).replace("\"","\\\"") + "\" ";
     }
     private static String getMetadataTrackKey(String key, boolean val) {
         return METADATA_KEY + " " + key + "=\"" + (val?1:0) + "\" ";
@@ -1167,9 +1167,14 @@ public class FFMPeg {
             options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
         }
 
-        String cmd = " -hide_banner -nostats -i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
+        String cmd = " -hide_banner -nostats -i "+escapeFileName(srcPath)+" "+options+" \""+targetPath+"\"";
 
         FFmpegKit.executeAsync(cmd, session -> callbak.onFinish(ReturnCode.isSuccess(session.getReturnCode())));
+    }
+
+    private static String escapeFileName(String srcPath) {
+        srcPath = srcPath.replace("'", "\\'");
+        return "'"+srcPath+"'";
     }
 
     private static String getFFmpegOutputData(FFmpegSession session) {

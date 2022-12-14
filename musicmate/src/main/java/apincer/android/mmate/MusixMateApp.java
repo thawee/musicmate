@@ -101,7 +101,6 @@ public class MusixMateApp extends Application  {
         super.onCreate();
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
-
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
         if (BuildConfig.DEBUG) {

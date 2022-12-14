@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 66
-        versionName  "3.5.1"+ versions.buildDate
+        versionCode 67
+        versionName  "3.5.2"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -135,6 +135,7 @@ dependencies {
 
     // UI Libs
     implementation deps.ui.powerspinner
+    implementation deps.ui.powermenu
     implementation deps.ui.progressview
     implementation deps.ui.simplifyspan
     implementation deps.ui.materialratingbar
@@ -211,10 +212,10 @@ dependencies {
     debugImplementation project(':library:crashreporter')
     implementation project(':library:MaterialEditText')
     implementation project(':library:mqaidentifier')
-    implementation project(':library:coroutines')
+   // implementation project(':library:coroutines')
     implementation project(':library:objectrelations')
-    implementation project(':library:esoco-common')
-    implementation project(':library:esoco-monads')
+   // implementation project(':library:esoco-common')
+   // implementation project(':library:esoco-monads')
 }
 
 aboutLibraries {

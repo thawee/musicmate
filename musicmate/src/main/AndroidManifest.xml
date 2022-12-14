@@ -22,12 +22,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-<!--
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE"/>
-    -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.VIBRATE"/>
@@ -39,8 +33,12 @@
 
     <uses-feature android:name="android.software.leanback"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
 
     <queries>
+        <package android:name="com.sonyericson.music" />
         <package android:name="com.neutroncode.mp" />
         <package android:name="com.extreamsd.usbaudioplayerpro" />
         <package android:name="com.foobar2000.foobar2000" />
@@ -58,7 +56,7 @@
         android:largeHeap="true"
         android:requestLegacyExternalStorage="true"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme.Material3">
 
         <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
         <service
@@ -76,8 +74,8 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:banner="@string/app_name"
-            android:label="@string/app_name"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -92,27 +90,28 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:launchMode = "singleInstance"
-            android:label="@string/app_name">
+            tools:ignore="LockedOrientationActivity">
         </activity>
 
         <activity
             android:name="apincer.android.mmate.ui.PermissionActivity"
             android:screenOrientation="portrait"
-            android:label="@string/app_permission">
+            android:label="@string/app_permission"
+            tools:ignore="LockedOrientationActivity">
         </activity>
 
         <activity
             android:name="apincer.android.mmate.ui.SettingsActivity"
             android:theme="@style/AboutAppTheme"
             android:screenOrientation="portrait"
-            android:label="@string/app_name">
+            tools:ignore="LockedOrientationActivity">
         </activity>
 
         <activity
             android:name="apincer.android.mmate.ui.AboutActivity"
             android:theme="@style/AboutAppTheme"
             android:screenOrientation="portrait"
-            android:label="@string/app_name">
+            tools:ignore="LockedOrientationActivity">
         </activity>
 
         <provider
@@ -120,13 +119,6 @@
             android:authorities="${applicationId}.androidx-startup"
             tools:node="remove">
         </provider>
-
-        <!-- disable workmanager initailser for work manager < 2.6
-        <provider
-            android:name="androidx.work.impl.WorkManagerInitializer"
-            android:authorities="${applicationId}.workmanager-init"
-            android:enabled="false" />
-            -->
 
         <provider
             android:name="apincer.android.mmate.fs.MusicFileProvider"

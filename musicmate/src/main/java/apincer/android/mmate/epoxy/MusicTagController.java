@@ -357,12 +357,13 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
     }
 
     public int getAudioTagPosition(MusicTag tag) {
-        long startTime = System.currentTimeMillis();
+        if(tag==null) return RecyclerView.NO_POSITION;
+       // long startTime = System.currentTimeMillis();
         MusicTagModel_ model = buildModel(tag);
         int position = getAdapter().getModelPosition(model);
-        long endTime = System.currentTimeMillis();
-        double MethodeDuration = (endTime - startTime)/1000.0;
-        Timber.i("getAudioTagPosition(): "+MethodeDuration +" seconds");
+       // long endTime = System.currentTimeMillis();
+       // double MethodeDuration = (endTime - startTime)/1000.0;
+       // Timber.i("getAudioTagPosition(): "+MethodeDuration +" seconds");
         return position;
     }
 

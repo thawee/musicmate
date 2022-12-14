@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
 import com.github.irshulx.Editor;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.BuildConfig;
+import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
@@ -40,7 +42,13 @@ import apincer.android.mmate.utils.UIUtils;
 public class AboutActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
+        }
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_fragement);
         getSupportActionBar().setTitle(R.string.app_name);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

@@ -15,11 +15,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 
 import com.anggrayudi.storage.SimpleStorage;
 import com.anggrayudi.storage.file.StorageId;
 
+import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.storage.StorageUtils;
@@ -35,6 +37,11 @@ public class PermissionActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_permissions);
         panel = findViewById(R.id.perms_panel);

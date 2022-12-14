@@ -93,6 +93,7 @@
 					   android:layout_marginTop="@dimen/dimen_1_dp"
 					   app:tabGravity="center"
 					   app:tabSelectedTextColor="@color/colorPrimary_light"
+					   app:tabTextColor="@color/grey600"
 					   app:tabBackground="@color/transparent"
 					   app:tabIndicatorColor="@color/colorPrimary_light"
 					   app:tabMode="scrollable"
@@ -103,7 +104,8 @@
 					   app:layout_constraintStart_toStartOf="parent"
 					   app:layout_constraintTop_toTopOf="parent"
 					   app:tabIndicatorAnimationMode="elastic"
-					   />
+					   android:contentDescription="labels header"
+					   tools:ignore="HardcodedText" />
 				   <TextView
 					   android:id="@+id/header_subtitle"
 					   android:layout_width="match_parent"
