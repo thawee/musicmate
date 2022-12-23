@@ -16,6 +16,8 @@ Screenshots
 
 Support
 -------
+/Users/thawee.p/Library/Android/sdk/platform-tools/adb shell dumpsys activity broadcasts
+
 1. lis all broadcasts
 $dumpsys activity broadcasts history
 

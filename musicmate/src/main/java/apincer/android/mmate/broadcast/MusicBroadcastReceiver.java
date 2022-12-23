@@ -32,6 +32,7 @@ import timber.log.Timber;
  *      - Hiby Music
  */
 public class MusicBroadcastReceiver extends BroadcastReceiver {
+    public static String PACKAGE_SONY_MUSIC = "com.sonyericson.music";
     public static String PACKAGE_NEUTRON = "com.neutroncode.mp";
     public static String PACKAGE_UAPP = "com.extreamsd.usbaudioplayerpro";
     public static String PACKAGE_FOOBAR2000="com.foobar2000.foobar2000";
@@ -67,21 +68,22 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Bundle extras = intent.getExtras();
+
         //KEEP for DEBUG
-           /* Bundle extras = intent.getExtras();
             String string = "";
             if(extras != null) {
                 for (String key : extras.keySet()) {
                     string += " " + key + " => " + extras.get(key) + ";";
                 }
-            } */
+            }
 
             boolean paused = intent.getBooleanExtra("paused", false);
             if(!paused) {
                 try {
-                    Bundle extras = intent.getExtras();
                     String playerPackage = extractPlayer(context, intent);
-                    extractTitle(intent);
+
+                    extractTitle(playerPackage, extras);
                    // displayNotification();
                   //  MusicListeningService.getInstance().setPlayerInfo(playerInfo);
                   //  MusicListeningService.getInstance().setPlayingSong(title,artist,album);
@@ -177,33 +179,46 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 		iF.addAction("com.maxmpz.audioplayer.metachanged");
 
         // Sony
-        iF.addAction("com.sonyericson.music.metachanged");
+        //SEMC Music Player
+        iF.addAction("com.sonyericsson.music.playbackcontrol.ACTION_TRACK_STARTED");
+        iF.addAction("com.sonyericsson.music.playbackcontrol.ACTION_PLAYBACK_PLAY");
+       // iF.addAction("com.sonyericsson.music.playbackcontrol.ACTION_PAUSED");
+       // iF.addAction("com.sonyericsson.music.TRACK_COMPLETED");
+        iF.addAction("com.sonyericsson.music.metachanged");
+       // iF.addAction("com.sonyericsson.music.playbackcomplete");
+        iF.addAction("com.sonyericsson.music.playstatechanged");
+        iF.addAction("com.sonyericsson.music.RECENTLY_PLAYED");
+
+        // spotify
+        iF.addAction("com.spotify.music.metadatachanged");
+        iF.addAction("com.spotify.music.playbackstatechanged");
+        iF.addAction("com.spotify.music.queuechanged");
 
         //VIVO Music
-         iF.addAction("com.android.bbkmusic.metachanged");
+        // iF.addAction("com.android.bbkmusic.metachanged");
 
          //MIUI
-        iF.addAction("com.miui.player.metachanged");
+       // iF.addAction("com.miui.player.metachanged");
 
         //HTC
        // iF.addAction("com.htc.music.metachanged");
        // iF.addAction("com.htc.music.playstatechanged");
 
         // GoneMAD
-        iF.addAction("gonbemad.dashclock.music.metachanged");
-        iF.addAction("gonbemad.dashclock.music.playstatechanged");
+       // iF.addAction("gonbemad.dashclock.music.metachanged");
+       // iF.addAction("gonbemad.dashclock.music.playstatechanged");
 
         //JR
-        iF.addAction("com.jrstudio.music.metachanged");
-        iF.addAction("com.jrstudio.music.playstatechanged");
+       // iF.addAction("com.jrstudio.music.metachanged");
+       // iF.addAction("com.jrstudio.music.playstatechanged");
 
         // SAMSUNG
-        iF.addAction("com.samsung.sec.android.MusicPlayer.metachanged");
-        iF.addAction("com.samsung.music.metachanged");
-        iF.addAction("com.samsung.sec.metachanged");
-        iF.addAction("com.samsung.sec.android.metachanged");
-        iF.addAction("com.samsung.MusicPlayer.metachanged");
-        iF.addAction("com.sec.android.music.state.META_CHANGED");
+       // iF.addAction("com.samsung.sec.android.MusicPlayer.metachanged");
+       // iF.addAction("com.samsung.music.metachanged");
+       // iF.addAction("com.samsung.sec.metachanged");
+       // iF.addAction("com.samsung.sec.android.metachanged");
+       // iF.addAction("com.samsung.MusicPlayer.metachanged");
+       // iF.addAction("com.sec.android.music.state.META_CHANGED");
 
         // FIIO
         iF.addAction("com.fiio.musicalone.player.brocast");
@@ -211,7 +226,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         // hiby
         iF.addAction("com.hiby.music");
 
-        // get forword from notification reader
+        // get forward from notification reader
         iF.addAction("apincer.android.mmate");
 
         //Audio
@@ -226,17 +241,28 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         iF.addAction("com.android.music.queuechanged");
         iF.addAction("com.android.music.updateprogress");
 
+        iF.addCategory("");
+
         context.registerReceiver(this, iF);
     }
 
-    protected void extractTitle(Intent intent) {
+    protected void extractTitle(String playerPackage, Bundle bundle) {
        // String action = intent.getAction();
-       artist = intent.getStringExtra("artist");
-       album = intent.getStringExtra("album");
-       title = intent.getStringExtra("track");
+        artist = "";
+        album = "";
+        title = "";
+
+        artist = bundle.getString("artist");
+       album = bundle.getString("album");
+       title = bundle.getString("track");
        //if(PACKAGE_POWERAMP.equals(playerPackage)) {
        //    title = StringUtils.trimToEmpty(title.replace( " - "+artist+" - "+ album, ""));
        //}
+        if(PACKAGE_SONY_MUSIC.equalsIgnoreCase(playerPackage)) {
+            artist = bundle.getString("ARTIST_NAME");
+            album = bundle.getString("ALBUM_NAME");
+            title = bundle.getString("TRACK_NAME");
+        }
     }
 /*
     protected final void displayNotification() {
