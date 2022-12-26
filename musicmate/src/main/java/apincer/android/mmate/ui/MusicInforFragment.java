@@ -167,7 +167,7 @@ public class MusicInforFragment extends Fragment {
                                 .setAutoDismiss(true)
                                 .setOnMenuItemClickListener((position, item) -> {
                                     bypassChange = true;
-                                    textInput.setText(item.getTitle());
+                                    textInput.setText(item.title);
                                     powerMenu = null;
                                     bypassChange = false;
                                 })

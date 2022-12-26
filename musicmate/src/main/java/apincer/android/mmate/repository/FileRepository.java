@@ -516,7 +516,10 @@ public class FileRepository {
         }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
             // lounge
             return STORAGE_PRIMARY;
-        }
+        }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
+        // lounge
+        return STORAGE_PRIMARY;
+    }
         return STORAGE_SECONDARY;
     }
 

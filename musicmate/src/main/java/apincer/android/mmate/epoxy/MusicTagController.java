@@ -223,8 +223,8 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                     return Constants.QUALITY_NORMAL;
                 }
             }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-                if(isEmpty(criteria.getKeyword()) || Constants.UNKWON_PUBLISHER.equals(criteria.getKeyword())) {
-                    return Constants.UNKWON_PUBLISHER;
+                if(isEmpty(criteria.getKeyword()) || Constants.UNKNOWN_PUBLISHER.equals(criteria.getKeyword())) {
+                    return Constants.UNKNOWN_PUBLISHER;
                 }else {
                     return criteria.getKeyword();
                 }

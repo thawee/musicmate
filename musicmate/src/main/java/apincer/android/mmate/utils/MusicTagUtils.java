@@ -1209,8 +1209,8 @@ public class MusicTagUtils {
             return artist.substring(0,artist.indexOf(";"));
        // }else if(artist.indexOf(",")>0) {
        //     return artist.substring(0,artist.indexOf(","));
-        }else if(artist.indexOf("-")>0) {
-            return artist.substring(0,artist.indexOf("-"));
+       // }else if(artist.indexOf("-")>0) {  // some artist name contain -
+       //     return artist.substring(0,artist.indexOf("-"));
        // }else if(artist.indexOf("&")>0) {
         //    return artist.substring(0,artist.indexOf("&"));
         }

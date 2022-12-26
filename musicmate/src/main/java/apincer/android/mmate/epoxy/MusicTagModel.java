@@ -25,6 +25,7 @@ import com.airbnb.epoxy.OnModelLongClickListener;
 
 import java.util.Locale;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
@@ -99,15 +100,24 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         holder.rootView.setOnLongClickListener(longClickListener);
 
         if (!StringUtils.isEmpty(tag.getMediaQuality())) {
-            ImageRequest request = new ImageRequest.Builder(holder.mContext)
+           /* ImageRequest request = new ImageRequest.Builder(holder.mContext)
                     .data(MusicTagUtils.getSourceQualityIconMini(holder.mContext, tag))
                     .crossfade(false)
                     .target(holder.mAudiophileLabelView)
                     .build();
             imageLoader.enqueue(request);
-            holder.mAudiophileLabelView.setVisibility(View.VISIBLE);
+            holder.mAudiophileLabelView.setVisibility(View.VISIBLE); */
+           // holder.mAudiophileLabelView.setVisibility(View.GONE);
+            if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+                holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label1));
+            }else {
+                holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
+            }
+            holder.mMediaQualityView.setText(StringUtils.getAbvByUpperCase(tag.getMediaQuality()));
+            holder.mMediaQualityView.setVisibility(View.VISIBLE);
         } else {
-            holder.mAudiophileLabelView.setVisibility(View.GONE);
+           // holder.mAudiophileLabelView.setVisibility(View.GONE);
+            holder.mMediaQualityView.setVisibility(View.GONE);
         }
 
         if (isListening) {
@@ -208,26 +218,19 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         View mTitleLayout;
         TextView mTitle;
         TextView mSubtitle;
-       // TextView mBitPerSamplingView;
-       // TextView mSamplingRateView;
-       // ImageView mBitrateView;
         TextView mDurationView;
         TextView mFileSizeView;
         ImageView mCoverArtView;
         ImageView mFileSourceView;
         ImageView mFileBrokenView;
-       // ImageView mFileTypeView;
         TextView mFileTypeView;
         TextView mDynamicRange;
         Context mContext;
-        //ImageView mNotificationView;
         ImageView mPlayerView;
-        // ImageView mAudioQualityView;
+         TextView mMediaQualityView;
         ImageView mAudioHiResView;
         ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
-        ImageView mAudiophileLabelView;
-        //ImageView mAudiophileLabelView;
 
         @Override
         protected void bindView(View view) {
@@ -239,6 +242,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
+            this.mMediaQualityView = view.findViewById(R.id.item_media_quality_label);
            // this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
            // this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
            // this.mBitrateView = view.findViewById(R.id.item_bitrate);
@@ -253,7 +257,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
            // this.mNotificationView = view.findViewById(R.id.item_notification);
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
-            this.mAudiophileLabelView = view.findViewById(R.id.item_audiophile_label);
+           // this.mAudiophileLabelView = view.findViewById(R.id.item_audiophile_label);
             this.mAudioLoudnessView = view.findViewById(R.id.item_loudness_icon);
         }
     }

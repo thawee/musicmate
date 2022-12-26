@@ -75,7 +75,6 @@ import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
 
 public class TagsActivity extends AppCompatActivity {
-    private static final String UNKNOWN_GENRE = "Unknown Genre";
     private static final ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
@@ -336,6 +335,7 @@ public class TagsActivity extends AppCompatActivity {
                 finish();
             });
         }
+        /*
         if(!isEmpty(displayTag.getGenre())) {
             genreView.setText(displayTag.getGenre());
             genreView.setPaintFlags(genreView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -351,10 +351,33 @@ public class TagsActivity extends AppCompatActivity {
                 finish();
             });
         }else {
-            genreView.setText(UNKNOWN_GENRE);
-        }
+            genreView.setText(Constants.UNKNOWN_GENRE);
+        } */
+        String mediaTypeAndPublisher = "";
+        mediaTypeAndPublisher = isEmpty(displayTag.getMediaType())?Constants.UNKNOWN_MEDIA_TYPE:displayTag.getMediaType();
+        mediaTypeAndPublisher += " "+StringUtils.SYMBOL_SEP+" ";
+        mediaTypeAndPublisher += isEmpty(displayTag.getPublisher())?Constants.UNKNOWN_PUBLISHER:displayTag.getPublisher();
+        genreView.setText(mediaTypeAndPublisher);
 
-        filename.setText("("+FileSystem.getFilename(displayTag.getPath())+")");
+       // if(!isEmpty(displayTag.getPublisher())) {
+       //     genreView.setText(displayTag.getGenre());
+            /*genreView.setPaintFlags(genreView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+              genreView.setOnClickListener(view -> {
+                // filter by genre
+                Intent resultIntent = new Intent();
+                if (criteria != null) {
+                    criteria.setFilterType(Constants.FILTER_TYPE_PUBLISHER);
+                    criteria.setFilterText(displayTag.getPublisher());
+                    ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                }
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            }); */
+        //}else {
+        //    genreView.setText(Constants.UNKNOWN_PUBLISHER);
+       // }
+
+        filename.setText("["+FileSystem.getFilename(displayTag.getPath())+"]");
         String matePath = repos.buildCollectionPath(displayTag);
         String sid = displayTag.getStorageId();
        // String mateInd = "";
@@ -416,18 +439,18 @@ public class TagsActivity extends AppCompatActivity {
                 new SpecialTextUnit(isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold())
                 .appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                            if(!isEmpty(displayTag.getPublisher())) {
+                            if(!isEmpty(displayTag.getGenre())) {
                                 Intent resultIntent = new Intent();
                                 if (criteria != null) {
-                                    criteria.setFilterType(Constants.FILTER_TYPE_PUBLISHER);
-                                    criteria.setFilterText(trimToEmpty(displayTag.getPublisher()));
+                                    criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
+                                    criteria.setFilterText(trimToEmpty(displayTag.getGenre()));
                                     ApplicationUtils.setSearchCriteria(resultIntent, criteria);
                                 }
                                 setResult(RESULT_OK, resultIntent);
                                 finish();
                             }
                         }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                        new SpecialTextUnit(isEmpty(displayTag.getPublisher())?Constants.UNKWON_PUBLISHER:displayTag.getPublisher()).setTextSize(14).useTextBold().showUnderline());
+                        new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN_GENRE:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
         if(!isEmpty(displayTag.getAlbumArtist())) {
             tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold())
@@ -456,10 +479,10 @@ public class TagsActivity extends AppCompatActivity {
         spannableEnc.append(new SpecialTextUnit(trimToEmpty(displayTag.getFileFormat()).toUpperCase(Locale.US),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
 
-        if((!isEmpty(displayTag.getMediaType())) && !MEDIA_TYPE_NONE.equals(displayTag.getMediaType())) {
+       /* if((!isEmpty(displayTag.getMediaType())) && !MEDIA_TYPE_NONE.equals(displayTag.getMediaType())) {
             spannableEnc.append(new SpecialTextUnit(displayTag.getMediaType(),encColor).setTextSize(10))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
-        }
+        } */
 
         try {
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(10))

@@ -284,7 +284,7 @@ public class MusicTagRepository {
             }
         }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
             Query<MusicTag> query;
-            if(isEmpty(criteria.getKeyword()) || Constants.UNKWON_PUBLISHER.equals(criteria.getKeyword())) {
+            if(isEmpty(criteria.getKeyword()) || Constants.UNKNOWN_PUBLISHER.equals(criteria.getKeyword())) {
                 query = getMusicTagBox().query(MusicTag_.publisher.isNull().or(MusicTag_.publisher.equal(""))).build();
             } else {
                 query = getMusicTagBox().query(MusicTag_.publisher.equal(StringUtils.trimToEmpty(criteria.getKeyword()))).build();

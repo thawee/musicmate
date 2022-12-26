@@ -153,18 +153,9 @@
     </string-array>
     <string-array name="default_groupings">
         <item>Lounge</item>
+        <item>Live</item>
         <item>Thai</item>
         <item>World</item>
         <item>English</item>
-        <!--
-        <item>Laos</item>
-        -->
-    </string-array>
-    <string-array name="default_language">
-        <item>Chinese</item>
-        <item>Japanese</item>
-        <item>English</item>
-        <item>Thai</item>
-        <item>Laos</item>
     </string-array>
 </resources>

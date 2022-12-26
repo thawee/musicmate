@@ -41,14 +41,15 @@ public final class Constants {
     public static final String MEDIA_FILE_FORMAT_DSF="dsf";
     public static final String MEDIA_FILE_FORMAT_MP3="mp3";
     public static final int MIN_FILE_SIZE_RATIO = 42;
-    public static final String UNKWON_PUBLISHER = "Unknown Publisher";
+    public static final String UNKNOWN_PUBLISHER = "Unknown Publisher";
+    public static final String UNKNOWN_GENRE = "Unknown Genre";
+    public static final String UNKNOWN_MEDIA_TYPE = "Unknown Media Type";
     public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
     public static final String GROUPING_LOUNGE = "Lounge";
+    public static final String GROUPING_LIVE = "Live";
     public static String FIELD_SEP = ";";
-  // public static double MIN_TITLE_ONLY = 0.90;
    public static double MIN_TITLE = 0.80;
    public static double MIN_ARTIST = 0.70;
-
 
     public static final String REPLAYGAIN_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
     public static final String REPLAYGAIN_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
@@ -60,7 +61,7 @@ public final class Constants {
         IMAGE_COVERS.add("cover.png");
         IMAGE_COVERS.add("folder.png"); // not supported by UAPP
         IMAGE_COVERS.add("artwork.png"); // supported by UAAP
-        IMAGE_COVERS.add("front.jpg");
+        IMAGE_COVERS.add("front.jpg"); // support by neplayer
         IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
         IMAGE_COVERS.add("artwork.jpg"); // UAAP
