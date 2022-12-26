@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.MEDIA_TYPE_NONE;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -556,7 +555,7 @@ public class TagsActivity extends AppCompatActivity {
                 displayTag.setGrouping(StringUtils.MULTI_VALUES);
             }
             if(!StringUtils.equals(displayTag.getMediaType(), item.getMediaType())) {
-                displayTag.setMediaType("Unknown");
+                displayTag.setMediaType(StringUtils.MULTI_VALUES);
             }
         }
         return displayTag;

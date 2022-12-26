@@ -100,14 +100,6 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         holder.rootView.setOnLongClickListener(longClickListener);
 
         if (!StringUtils.isEmpty(tag.getMediaQuality())) {
-           /* ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                    .data(MusicTagUtils.getSourceQualityIconMini(holder.mContext, tag))
-                    .crossfade(false)
-                    .target(holder.mAudiophileLabelView)
-                    .build();
-            imageLoader.enqueue(request);
-            holder.mAudiophileLabelView.setVisibility(View.VISIBLE); */
-           // holder.mAudiophileLabelView.setVisibility(View.GONE);
             if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
                 holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label1));
             }else {
@@ -116,7 +108,6 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             holder.mMediaQualityView.setText(StringUtils.getAbvByUpperCase(tag.getMediaQuality()));
             holder.mMediaQualityView.setVisibility(View.VISIBLE);
         } else {
-           // holder.mAudiophileLabelView.setVisibility(View.GONE);
             holder.mMediaQualityView.setVisibility(View.GONE);
         }
 
@@ -166,12 +157,6 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
         // Loudness
         if(!tag.isDSD() && tag.getTrackLoudness() != 0.0) {
-           /* request = new ImageRequest.Builder(holder.mContext)
-                    .data(AudioTagUtils.getCachedLoudnessIcon(holder.mContext, tag))
-                    .crossfade(false)
-                    .target(holder.mAudioLoudnessView)
-                    .build();
-            imageLoader.enqueue(request);*/
             holder.mAudioLoudnessView.setImageBitmap(MusicTagUtils.createLoudnessIcon(holder.mContext, tag));
             holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
         }else {
@@ -243,21 +228,15 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
             this.mMediaQualityView = view.findViewById(R.id.item_media_quality_label);
-           // this.mBitPerSamplingView = view.findViewById(R.id.item_bit_per_sampling);
-           // this.mSamplingRateView = view.findViewById(R.id.item_sampling_rate);
-           // this.mBitrateView = view.findViewById(R.id.item_bitrate);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
-            // this.mAudioQualityView = view.findViewById(R.id.item_sq_icon);
             this.mAudioHiResView = view.findViewById(R.id.item_hires_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
             this.mFileBrokenView = view.findViewById(R.id.item_broken_file_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
-           // this.mNotificationView = view.findViewById(R.id.item_notification);
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
-           // this.mAudiophileLabelView = view.findViewById(R.id.item_audiophile_label);
             this.mAudioLoudnessView = view.findViewById(R.id.item_loudness_icon);
         }
     }

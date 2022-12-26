@@ -147,14 +147,9 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         initPlayer();
         playerInfo.playerPackage = packageName;
         playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
-        ApplicationInfo ai = null;
         try {
-            ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        if (ai != null) {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
+            if (ai != null) {
                 playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
                 if (playerInfo.playerIconDrawable != null) {
                     playerInfo.playerIconBitmap = BitmapHelper.drawableToBitmap(playerInfo.playerIconDrawable);
@@ -165,6 +160,9 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                     playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
                 }
             }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void register(Context context) {

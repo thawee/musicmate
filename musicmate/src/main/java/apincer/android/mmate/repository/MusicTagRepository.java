@@ -431,30 +431,6 @@ public class MusicTagRepository {
         return list;
     }
 
-    @Deprecated
-    public static List<String> getDefaultLanguageList(Context context) {
-        List<String> list = new ArrayList<>();
-       /* String[] names = getMusicTagBox().query().build().property(MusicTag_.language).distinct().findStrings();
-        if(names!=null) {
-            for (String group:names) {
-                if(StringUtils.isEmpty(group)) {
-                    list.add(StringUtils.EMPTY);
-                }else {
-                    list.add(group);
-                }
-            }
-        }
-        String[] genres =  context.getResources().getStringArray(R.array.default_language);
-        for(String genre: genres) {
-            if(!list.contains(genre)) {
-                list.add(genre);
-            }
-        }
-
-        Collections.sort(list); */
-        return list;
-    }
-
     public static List<String> getPublisherList(Context context) {
         List<String> list = new ArrayList<>();
         String[] names = getMusicTagBox().query().build().property(MusicTag_.publisher).distinct().findStrings();

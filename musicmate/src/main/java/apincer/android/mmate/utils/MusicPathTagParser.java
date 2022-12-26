@@ -1,5 +1,7 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+
 import java.io.File;
 import java.util.List;
 
@@ -46,19 +48,19 @@ public class MusicPathTagParser {
            int textLen = text.length();
             if("title".equalsIgnoreCase(tagType)) {
                     int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                    tag.setTitle(text.substring(0, nextTagIndex));
+                    tag.setTitle(trimToEmpty(text.substring(0, nextTagIndex)));
                     text = text.substring(nextTagIndex, textLen);
                 }else if("artist".equalsIgnoreCase(tagType)) {
                     int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                    tag.setArtist(text.substring(0, nextTagIndex));
+                    tag.setArtist(trimToEmpty(text.substring(0, nextTagIndex)));
                     text = text.substring(nextTagIndex, textLen);
                 } else if("album".equalsIgnoreCase(tagType)) {
                     int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                    tag.setAlbum(text.substring(0, nextTagIndex));
+                    tag.setAlbum(trimToEmpty(text.substring(0, nextTagIndex)));
                     text = text.substring(nextTagIndex, textLen);
                 }else if("track".equalsIgnoreCase(tagType)) {
                     int nextTagIndex = getIndexForNextTag(text, nextTagText);
-                    tag.setTrack(text.substring(0, nextTagIndex));
+                    tag.setTrack(trimToEmpty(text.substring(0, nextTagIndex)));
                     text = text.substring(nextTagIndex, textLen);
                 }else if ("sp".equals(tagType)){
                     // eat space(s)
@@ -164,11 +166,11 @@ public class MusicPathTagParser {
         }else {
             int titleIndx = text.indexOf(titleSep);
             if (titleIndx >= 0) {
-                tag.setArtist(StringUtils.trimToEmpty(text.substring(0, titleIndx)));
-                text = StringUtils.trimToEmpty(text.substring(titleIndx+titleSep.length()));
+                tag.setArtist(trimToEmpty(text.substring(0, titleIndx)));
+                text = trimToEmpty(text.substring(titleIndx+titleSep.length()));
             }
         }
-        return StringUtils.trimToEmpty(text);
+        return trimToEmpty(text);
     }
 
     private String parseTrackNumber(MusicTag tag, String text) {String trackNo = "";
@@ -191,7 +193,7 @@ public class MusicPathTagParser {
             text = text.substring(i);
         }
         tag.setTrack(trackNo);
-        return StringUtils.trimToEmpty(text);
+        return trimToEmpty(text);
     }
 
     private String removeFeaturing(String artist) {
@@ -211,16 +213,16 @@ public class MusicPathTagParser {
     private String parseTitle(String text) {
         int titleIndx = text.indexOf(titleSep);
             if(titleIndx>=0) {
-                text = StringUtils.trimToEmpty(text.substring(titleIndx+titleSep.length()));
+                text = trimToEmpty(text.substring(titleIndx+titleSep.length()));
             }
             while(text.contains("_")) {
-                String timestamp = StringUtils.trimToEmpty(text.substring(text.indexOf("_")+1));
+                String timestamp = trimToEmpty(text.substring(text.indexOf("_")+1));
                 if (StringUtils.isDigitOnly(timestamp) && timestamp.length() >4) {
                     text = text.substring(0, text.indexOf("_"));
                 }else {
                     text = text.substring(0, text.indexOf("_"))+" "+text.substring(text.indexOf("_")+1);
                 }
             }
-            return StringUtils.trimToEmpty(text);
+            return trimToEmpty(text);
     }
 }

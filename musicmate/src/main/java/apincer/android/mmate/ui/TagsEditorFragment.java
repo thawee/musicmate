@@ -544,7 +544,7 @@ public class TagsEditorFragment extends Fragment {
 
             //Languge
             mLanguageView = setupAutoCompleteTextView(view, R.id.tag_language);
-            list = MusicTagRepository.getDefaultLanguageList(requireContext());
+           // list = MusicTagRepository.getDefaultLanguageList(requireContext());
             arrayAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_item_list, list);
             //Used to specify minimum number of
             //characters the user has to type in order to display the drop down hint.

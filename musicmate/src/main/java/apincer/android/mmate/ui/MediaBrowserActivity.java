@@ -18,7 +18,6 @@ import android.transition.Slide;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
@@ -552,6 +551,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         mResideMenu.openMenu(ResideMenu.DIRECTION_RIGHT);
     }
 
+    /*
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         super.dispatchTouchEvent(ev);
@@ -564,7 +564,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             mResideMenu.setLeftHeader(storageView);
         }
         return mResideMenu.dispatchTouchEvent(ev);
-    }
+    } */
 
     private void setUpResideMenus() {
         // attach to current activity;
