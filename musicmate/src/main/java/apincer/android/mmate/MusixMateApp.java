@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.BroadcastHelper;
@@ -33,8 +31,8 @@ import sakout.mehdi.StateViews.StateViewsBuilder;
 import timber.log.Timber;
 
 public class MusixMateApp extends Application  {
-    private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
-    private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
+   // private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
+  //  private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
         try {
@@ -146,8 +144,8 @@ public class MusixMateApp extends Application  {
          */
 
         // TURN OFF log for JAudioTagger
-            jAudioTaggerLogger1.setLevel(Level.SEVERE);
-            jAudioTaggerLogger2.setLevel(Level.SEVERE);
+            //jAudioTaggerLogger1.setLevel(Level.SEVERE);
+           // jAudioTaggerLogger2.setLevel(Level.SEVERE);
 
         // Do it on main process
        // BlockCanary.install(this, new AppBlockCanaryContext()).start();

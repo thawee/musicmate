@@ -138,7 +138,7 @@ dependencies {
     implementation deps.ui.powermenu
     implementation deps.ui.progressview
     implementation deps.ui.simplifyspan
-    implementation deps.ui.materialratingbar
+    //implementation deps.ui.materialratingbar
     implementation deps.ui.aspectRatioImageview
     implementation deps.ui.fastscroll
     implementation deps.ui.elasticviews
@@ -205,7 +205,7 @@ dependencies {
 
     // Local Library
     //https://bitbucket.org/ijabz/jaudiotagger/src/master/
-    implementation project(':library:jaudiotagger')
+    //implementation project(':library:jaudiotagger')
     implementation project(':library:justdsd')
     implementation project(':library:library')
     implementation project(':library:androidtagview')

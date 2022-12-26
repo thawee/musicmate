@@ -69,7 +69,6 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
-import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import sakout.mehdi.StateViews.StateView;
 import timber.log.Timber;
 
@@ -87,14 +86,14 @@ public class TagsActivity extends AppCompatActivity {
     private ImageView audiophileView;
     private ImageView hiresView;
     private ImageView encResView;
-    private MaterialRatingBar ratingView;
+   // private MaterialRatingBar ratingView;
     private View coverArtLayout;
     private View panelLabels;
     private CollapsingToolbarLayout toolBarLayout;
     private int toolbar_from_color;
     private int toolbar_to_color;
     private StateView mStateView;
-    private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
+   // private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     private volatile boolean isEditing;
     FileRepository repos;
     private Fragment activeFragment;
@@ -252,7 +251,7 @@ public class TagsActivity extends AppCompatActivity {
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
         encResView = findViewById(R.id.icon_loudness);
-        ratingView = findViewById(R.id.icon_rating);
+       // ratingView = findViewById(R.id.icon_rating);
         filename = findViewById(R.id.panel_filename);
         drView = findViewById(R.id.icon_dr);
     }
@@ -303,8 +302,8 @@ public class TagsActivity extends AppCompatActivity {
             encResView.setImageBitmap(MusicTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
             encResView.setVisibility(View.VISIBLE);
         }
-        ratingView.setRating(displayTag.getRating());
-        ratingView.setFocusable(false);
+       // ratingView.setRating(displayTag.getRating());
+       // ratingView.setFocusable(false);
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist

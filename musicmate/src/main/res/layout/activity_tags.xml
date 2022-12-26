@@ -161,7 +161,7 @@
                     android:layout_marginBottom="@dimen/dimen_24_dp"
                     android:padding="@dimen/dimen_2_dp"
                     android:background="@drawable/shadow">
-
+<!--
                     <me.zhanghai.android.materialratingbar.MaterialRatingBar
                         android:id="@+id/icon_rating"
                         android:layout_width="wrap_content"
@@ -175,7 +175,7 @@
                         android:layout_marginLeft="@dimen/dimen_12_dp"
                         style="@style/Widget.MaterialRatingBar.RatingBar"
                         android:contentDescription="rating"
-                        tools:ignore="HardcodedText" />
+                        tools:ignore="HardcodedText" /> -->
                 </LinearLayout>
                 <!--
                 <LinearLayout

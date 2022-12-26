@@ -122,7 +122,7 @@
             app:spinner_popup_background="@color/black_transparent_80"
             app:spinner_popup_elevation="14dp" />
             -->
-
+<!--
         <me.zhanghai.android.materialratingbar.MaterialRatingBar
             android:id="@+id/media_rating"
             android:layout_width="200dp"
@@ -135,6 +135,7 @@
             android:layout_marginLeft="@dimen/dimen_24_dp"
             android:layout_marginRight="@dimen/dimen_24_dp"
             style="@style/Widget.MaterialRatingBar.RatingBar" />
+            -->
        <!--
         <LinearLayout
             android:layout_width="0dp"
