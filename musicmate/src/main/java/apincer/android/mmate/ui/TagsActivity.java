@@ -224,9 +224,7 @@ public class TagsActivity extends AppCompatActivity {
             }
         });
 
-        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            tab.setText(adapter.getPageTitle(position));
-        });
+        TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
         tabLayoutMediator.attach();
 
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
@@ -302,8 +300,6 @@ public class TagsActivity extends AppCompatActivity {
             encResView.setImageBitmap(MusicTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
             encResView.setVisibility(View.VISIBLE);
         }
-       // ratingView.setRating(displayTag.getRating());
-       // ratingView.setFocusable(false);
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -333,47 +329,11 @@ public class TagsActivity extends AppCompatActivity {
                 finish();
             });
         }
-        /*
-        if(!isEmpty(displayTag.getGenre())) {
-            genreView.setText(displayTag.getGenre());
-            genreView.setPaintFlags(genreView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            genreView.setOnClickListener(view -> {
-                // filter by genre
-                Intent resultIntent = new Intent();
-                if (criteria != null) {
-                    criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
-                    criteria.setFilterText(displayTag.getGenre());
-                    ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-                }
-                setResult(RESULT_OK, resultIntent);
-                finish();
-            });
-        }else {
-            genreView.setText(Constants.UNKNOWN_GENRE);
-        } */
-        String mediaTypeAndPublisher = "";
+        String mediaTypeAndPublisher;
         mediaTypeAndPublisher = isEmpty(displayTag.getMediaType())?Constants.UNKNOWN_MEDIA_TYPE:displayTag.getMediaType();
         mediaTypeAndPublisher += " "+StringUtils.SYMBOL_SEP+" ";
         mediaTypeAndPublisher += isEmpty(displayTag.getPublisher())?Constants.UNKNOWN_PUBLISHER:displayTag.getPublisher();
         genreView.setText(mediaTypeAndPublisher);
-
-       // if(!isEmpty(displayTag.getPublisher())) {
-       //     genreView.setText(displayTag.getGenre());
-            /*genreView.setPaintFlags(genreView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-              genreView.setOnClickListener(view -> {
-                // filter by genre
-                Intent resultIntent = new Intent();
-                if (criteria != null) {
-                    criteria.setFilterType(Constants.FILTER_TYPE_PUBLISHER);
-                    criteria.setFilterText(displayTag.getPublisher());
-                    ApplicationUtils.setSearchCriteria(resultIntent,criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-                }
-                setResult(RESULT_OK, resultIntent);
-                finish();
-            }); */
-        //}else {
-        //    genreView.setText(Constants.UNKNOWN_PUBLISHER);
-       // }
 
         filename.setText("["+FileSystem.getFilename(displayTag.getPath())+"]");
         String matePath = repos.buildCollectionPath(displayTag);
@@ -477,11 +437,6 @@ public class TagsActivity extends AppCompatActivity {
         spannableEnc.append(new SpecialTextUnit(trimToEmpty(displayTag.getFileFormat()).toUpperCase(Locale.US),encColor).setTextSize(10))
                 .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
 
-       /* if((!isEmpty(displayTag.getMediaType())) && !MEDIA_TYPE_NONE.equals(displayTag.getMediaType())) {
-            spannableEnc.append(new SpecialTextUnit(displayTag.getMediaType(),encColor).setTextSize(10))
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(10));
-        } */
-
         try {
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(10))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(10))
@@ -555,6 +510,9 @@ public class TagsActivity extends AppCompatActivity {
             }
             if(!StringUtils.equals(displayTag.getMediaType(), item.getMediaType())) {
                 displayTag.setMediaType(StringUtils.MULTI_VALUES);
+            }
+            if(!StringUtils.equals(displayTag.getPublisher(), item.getPublisher())) {
+                displayTag.setPublisher(StringUtils.MULTI_VALUES);
             }
         }
         return displayTag;
@@ -671,29 +629,6 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    public void doPreviewCoverArt(File coverArtFile) {
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(coverArtFile)
-                .placeholder(R.drawable.progress)
-                .error(R.drawable.ic_broken_image_black_24dp)
-                .target(coverArtView)
-                .build();
-        imageLoader.enqueue(request);
-    }
-
-    public void doPreviewCoverArt(Uri coverArtUri) {
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(coverArtUri)
-                .placeholder(R.drawable.progress)
-                .error(R.drawable.ic_broken_image_black_24dp)
-                .target(coverArtView)
-                .build();
-        imageLoader.enqueue(request);
-    } */
-
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
 
         @Override
@@ -707,6 +642,8 @@ public class TagsActivity extends AppCompatActivity {
             if (verticalOffset == 0) {
                 // fully EXPANDED, on preview screen
                 toolbar.getMenu().clear();
+                buildDisplayTag();
+                updateTitlePanel();
             } else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange()) {
                 // fully COLLAPSED, on editing screen
                 setupToolBarMenu();
@@ -714,17 +651,7 @@ public class TagsActivity extends AppCompatActivity {
                 //edit mode
                 isEditing = true;
                 // should display menus
-               /* if(activeFragment!= null) {
-                    if (activeFragment instanceof MusicInforFragment) {
-                        setupEditorManu(((MusicInforFragment) activeFragment).getOnMenuItemClickListener());
-                    } else if (activeFragment instanceof TagsTechnicalFragment) {
-                        setupTechnicalManu(((TagsTechnicalFragment) activeFragment).getOnMenuItemClickListener());
-                    } else {
-                        toolbar.getMenu().clear();
-                    }
-                } */
-//                tabLayout.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
+               ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
                         "backgroundColor", /*view attribute name*/
                         new ArgbEvaluator(),
                         toolbar_from_color, /*from color*/
@@ -733,17 +660,15 @@ public class TagsActivity extends AppCompatActivity {
                 colorFade.start();
             } else {
                 // preview mode
-               // toolbar.getMenu().clear(); // clear all menus
-                //buildDisplayTag(false);
-                //updateTitlePanel();
-//                tabLayout.setBackgroundColor(getResources().getColor(R.color.bgColor));
-                ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
+               ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
                         "backgroundColor", /*view attribute name*/
                         new ArgbEvaluator(),
                         ContextCompat.getColor(getApplicationContext(),R.color.bgColor), /*from color*/
                         ContextCompat.getColor(getApplicationContext(),R.color.bgColor) /*to color*/);
                 colorFade.setDuration(2000);
                 colorFade.start();
+                buildDisplayTag();
+                updateTitlePanel();
             }
         }
     }
@@ -786,18 +711,6 @@ public class TagsActivity extends AppCompatActivity {
                     if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
                         MusicTag tag = broadcastData.getTagInfo();
                         onPlaying(tag);
-                    /*    if((!isEditing) && Preferences.isFollowNowPlaying(getApplicationContext())) {
-                            AudioTag tag = broadcastData.getTagInfo();
-                            try {
-                                editItems.clear();
-                                editItems.add(tag);
-                                displayTag = buildDisplayTag(true);
-                                updateTitlePanel();
-                                setUpPageViewer();
-                            } catch (Exception e) {
-                                Timber.e(e);
-                            }
-                        } */
                     }else {
                         ToastHelper.showBroadcastData(TagsActivity.this, mStateView, broadcastData);
                     }

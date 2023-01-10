@@ -63,6 +63,7 @@
 
     <string-array name="default_album_artist" >
         <item>Various Artists</item>
+        <item>Soundtrack</item>
     </string-array>
     <string-array name="default_publisher" >
         <!-- audio recording company -->

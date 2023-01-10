@@ -995,7 +995,7 @@ public class MusicTagUtils {
         //md5 digest
         File dir = context.getExternalCacheDir();
         File songDir = new File(tag.getPath());
-        if(tag.isMusicManaged()) {
+        if(tag.isMusicManaged() && !isEmpty(tag.getAlbum())) {
             songDir = songDir.getParentFile();
         }
         String path = DigestUtils.md5Hex(songDir.getAbsolutePath())+".png";

@@ -116,17 +116,17 @@ public class MusicInforFragment extends Fragment {
         rdRegular = v.findViewById(R.id.mediaQualityRegular);
 
         // popup list
-        setupListValuePopup(txtArtist, MusicTagRepository.getArtistList(), 1);
-        setupListValuePopup(txtAlbumArtist, MusicTagRepository.getDefaultAlbumArtistList(getContext()),0);
-        setupListValuePopup(txtGenre, MusicTagRepository.getDefaultGenreList(getContext()),1);
-        setupListValuePopup(txtGrouping, MusicTagRepository.getDefaultGroupingList(getContext()),0);
-        setupListValuePopup(txtPublisher, MusicTagRepository.getDefaultPublisherList(getContext()),1);
-        setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1);
+        setupListValuePopup(txtArtist, MusicTagRepository.getArtistList(), 3, false);
+        setupListValuePopup(txtAlbumArtist, MusicTagRepository.getDefaultAlbumArtistList(getContext()),1, false);
+        setupListValuePopup(txtGenre, MusicTagRepository.getDefaultGenreList(getContext()),3, true);
+        setupListValuePopup(txtGrouping, MusicTagRepository.getDefaultGroupingList(getContext()),1, true);
+        setupListValuePopup(txtPublisher, MusicTagRepository.getDefaultPublisherList(getContext()),3, false);
+        setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1, true);
 
         return v;
     }
 
-    private void setupListValuePopup(TextInputEditText textInput, @NonNull List<String> defaultList, int minChar) {
+    private void setupListValuePopup(TextInputEditText textInput, @NonNull List<String> defaultList, int minChar, boolean autoSelect) {
         textInput.addTextChangedListener(new TextWatcher() {
 
             @Override
@@ -149,7 +149,7 @@ public class MusicInforFragment extends Fragment {
                             .limit(10)
                             .forEach(s -> items.add(new PowerMenuItem(s)));
                    // if(items.size()>0 && !(items.size()==1 && txt.equalsIgnoreCase(String.valueOf(items.get(0).getTitle())))) {
-                    if(items.size()>0) {
+                    if((!autoSelect) || items.size()>=1) {
                         powerMenu = new PowerMenu.Builder(context)
                                 .setWidth(textInput.getWidth()+24)
                                 .setLifecycleOwner(getViewLifecycleOwner())
@@ -173,9 +173,13 @@ public class MusicInforFragment extends Fragment {
                                 })
                                 .build();
                         powerMenu.setShowBackground(false); // do not showing background.
-                        powerMenu.setFocusable(true); // makes focusing only on the menu popup.
+                        //powerMenu.setFocusable(true); // makes focusing only on the menu popup.
                         int height = powerMenu.getContentViewHeight();
                         powerMenu.showAsDropDown(textInput,0, (-1)*height*(items.size()+1)); // view is an anchor
+                    }else if(autoSelect && items.size()==1) {
+                        bypassChange = true;
+                        textInput.setText(items.get(0).title);
+                        bypassChange = false;
                     }
                 }
             }
