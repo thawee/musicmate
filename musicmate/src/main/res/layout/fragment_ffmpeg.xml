@@ -53,24 +53,7 @@
     android:layout_margin="@dimen/dimen_1_dp"
     android:layout_marginBottom="@dimen/dimen_4_dp"
     android:orientation="vertical">
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left"
-        android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
-        android:textSize="16sp"
-        android:text="RAW data:"
-        android:textColor="?android:attr/textColorPrimary"/>
-    <TextView
-        android:id="@+id/ffmpeg_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left"
-        android:layout_marginTop="@dimen/dimen_12_dp"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
-        android:textSize="14sp"
-        android:textColor="?android:attr/textColorPrimary"/>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -103,6 +86,26 @@
         android:isScrollContainer="true"/>
     </HorizontalScrollView>
     </ScrollView>
-        </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_marginTop="@dimen/dimen_12_dp"
+        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:textSize="16sp"
+        android:text="RAW data:"
+        android:textColor="?android:attr/textColorPrimary"/>
+    <TextView
+        android:id="@+id/ffmpeg_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_marginTop="@dimen/dimen_12_dp"
+        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:textSize="14sp"
+        android:textColor="?android:attr/textColorPrimary"/>
+
+</LinearLayout>
     </ScrollView>
 </LinearLayout>

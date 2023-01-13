@@ -5,6 +5,7 @@ import static java.lang.StrictMath.min;
 import static apincer.android.mmate.utils.MusicTagUtils.getFileSizeRatio;
 import static apincer.android.mmate.utils.MusicTagUtils.isAIFFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isFlacFile;
+import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
 import static apincer.android.mmate.utils.MusicTagUtils.isWavFile;
 import static apincer.android.mmate.utils.StringUtils.getWord;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
@@ -487,7 +488,7 @@ public class FFMPeg {
         }
 
         // read Quick time Specific tags
-        if(MusicTagUtils.isMp4File(tag)) {
+        if(isMp4File(tag)) {
             tag.setTitle(getValueForKey(tags, KEY_TAG_MP4_TITLE));
             tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_MP4_ALBUM_ARTIST));
             tag.setComposer(getValueForKey(tags, KEY_TAG_MP4_COMPOSER));
@@ -640,7 +641,7 @@ public class FFMPeg {
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
             // move file
-            if(isFlacFile(tag) || isWavFile(tag) || isAIFFile(tag)) {
+            if(isFlacFile(tag) || isWavFile(tag) || isAIFFile(tag) || isMp4File(tag)) {
                 if(FileSystem.safeMove(context, targetPath, srcPath)) {
                     FileRepository.newInstance(context).scanMusicFile(new File(srcPath),true);
                     return true;
@@ -667,15 +668,16 @@ public class FFMPeg {
 
     private static String getMetadataTrackKeys(MusicTag origin, MusicTag tag) {
         // -metadata language="eng"
-        if (MusicTagUtils.isWavFile(tag)) {
+        if (isWavFile(tag)) {
             return getMetadataTrackKeysForWave(tag);
-        } else if (MusicTagUtils.isFlacFile(tag)) {
+        } else if (isFlacFile(tag)) {
             return getMetadataTrackKeysForFlac(tag);
-        }else if (MusicTagUtils.isAIFFile(tag)) {
+        }else if (isAIFFile(tag)) {
             return getMetadataTrackKeysForAIF(tag);
-        }else if (MusicTagUtils.isMp4File(tag)) {
+        }else if (isMp4File(tag)) {
             return getMetadataTrackKeysForMp4(tag);
         }
+        // need mp3
         return null;
     }
 
@@ -1008,7 +1010,7 @@ public class FFMPeg {
             }
 
             // read Quick time Specific tags
-            if(MusicTagUtils.isMp4File(tag)) {
+            if(isMp4File(tag)) {
                 tag.setTitle(getTagforKey(tags, KEY_TAG_MP4_TITLE));
                 tag.setAlbumArtist(getTagforKey(tags, KEY_TAG_MP4_ALBUM_ARTIST));
                 tag.setComposer(getTagforKey(tags, KEY_TAG_MP4_COMPOSER));

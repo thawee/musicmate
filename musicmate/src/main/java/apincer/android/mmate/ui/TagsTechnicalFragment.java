@@ -74,13 +74,14 @@ public class TagsTechnicalFragment extends Fragment {
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag);
         filename.setText(String.format("MediaPath:\n%s\n\nMuicMatePath:\n%s", tag.getPath(), musicMatePath));
 
-        if(tag.getData()!=null) {
-            metada.setText(String.format("MusicTag:\n%s\n\n", tag.getData()));
-        }
+        //if(tag.getData()!=null) {
+        //    metada.setText(String.format("MusicTag:\n%s\n\n", tag.getData()));
+        //}
 
         MusicTag tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
         if(tt!=null) {
-            metada.setText(String.format("%s\n\nFFmpeg:\n%s", metada.getText(), tt.getData()));
+           // metada.setText(String.format("%s\n\nFFmpeg:\n%s", metada.getText(), tt.getData()));
+            metada.setText(String.format("FFmpeg:\n%s", tt.getData()));
         }
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -99,7 +100,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv1 = new TextView(getContext());
-        tv1.setText(" MusicMate ");
+        tv1.setText(" Tags from MusicMate ");
         tv1.setTextColor(Color.WHITE);
         cell.addView(tv1);
         tbrow0.addView(cell);
@@ -108,7 +109,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv = new TextView(getContext());
-        tv.setText(" FFmpeg ");
+        tv.setText(" Tags from media file");
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);

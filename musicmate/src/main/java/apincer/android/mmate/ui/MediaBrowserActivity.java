@@ -180,6 +180,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private boolean backFromEditor;
 
     private void doDeleteMediaItems(List<MusicTag> itemsList) {
+        if(itemsList.isEmpty()) return;
         String text = "Delete ";
         if(itemsList.size()>1) {
             text = text + itemsList.size() + " songs?";
@@ -199,6 +200,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doMoveMediaItems(List<MusicTag> itemsList) {
+        if(itemsList.isEmpty()) return;
         String text = "Import ";
         if(itemsList.size()>1) {
             text = text + itemsList.size() + " songs to Music Directory?";
@@ -1235,6 +1237,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void doEncodingAudioFiles(ArrayList<MusicTag> selections) {
+        if(selections.isEmpty()) return;
         // convert WAVE to AIFF, FLAC, ALAC
         // convert AIFF to WAVE, FLAC, ALAC
         // convert FLAC to ALAC
