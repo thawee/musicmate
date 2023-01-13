@@ -506,9 +506,9 @@ public class FileRepository {
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
-        }else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getMediaQuality())) {
+        //}else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getMediaQuality())) {
             // Audiophile
-            return STORAGE_PRIMARY;
+        //    return STORAGE_PRIMARY;
        // }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
         //}else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsDepth() > 16) {
             // Lossless Hi-Res
