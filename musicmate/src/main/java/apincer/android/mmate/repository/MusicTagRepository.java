@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.objectbox.MusicTag_;
@@ -36,24 +37,20 @@ public class MusicTagRepository {
     }
 
     public static void saveTag(MusicTag tag) {
-       // ObjectBox.get().runInTx(() -> {
-            //if(tag.getId()!=0) {
-            //    tagBox.remove(tag);
-            //}
-       // MusicTagUtils.initMusicTag(tag);
         if(StringUtils.isEmpty(tag.getUniqueKey())) {
             tag.setUniqueKey(tag.getPath()+"_"+ tag.getAudioStartTime());
         }
-        getMusicTagBox().put(tag); // add or update
-      //  });
+        if(tag.getId()>0) {
+            MusixMateApp.getDatabase().musicTagDao().update(tag);
+        }else {
+            MusixMateApp.getDatabase().musicTagDao().insert(tag);
+        }
+        MusicTagObjectBox.save(tag);
     }
 
     public static void removeTag(MusicTag tag) {
-        //ObjectBox.get().runInTx(() -> {
-            if (tag.getId() != 0) {
-                getMusicTagBox().remove(tag);
-            }
-       // });
+        MusicTagObjectBox.delete(tag);
+        MusixMateApp.getDatabase().musicTagDao().delete(tag);
     }
 
     public static void cleanMusicMate() {
@@ -247,7 +244,7 @@ public class MusicTagRepository {
                 list = query.find();
                 query.close();
             } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO).or(MusicTag_.readError.equal(true))).orderDesc(MusicTag_.fileSizeRatio).order(MusicTag_.fileSize).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO).or(MusicTag_.mmReadError.equal(true))).orderDesc(MusicTag_.fileSizeRatio).order(MusicTag_.fileSize).build();
                 list = query.find();
                 query.close();
             } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
@@ -309,11 +306,15 @@ public class MusicTagRepository {
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HI_QUALITY.equals(criteria.keyword)){
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.lossless.notEqual(true).and(MusicTag_.audioBitsDepth.notEqual(1))).order(MusicTag_.title).order(MusicTag_.artist).build();
+                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_MPEG.toLowerCase()).or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_AAC.toLowerCase())).and(MusicTag_.audioBitsDepth.notEqual(1))).order(MusicTag_.title).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
-                Query<MusicTag> query = getMusicTagBox().query(MusicTag_.lossless.equal(true)
+                Query<MusicTag> query = getMusicTagBox().query(
+                        MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_FLAC.toLowerCase())
+                                .or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_ALAC.toLowerCase()))
+                                .or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_WAVE.toLowerCase()))
+                                .or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_AIFF.toLowerCase()))
                                // .and(MusicTag_.mqaInd.mqa(false))
                                 .and(MusicTag_.mqaInd.notEqual("MQA"))
                                 .and(MusicTag_.mqaInd.notEqual("MQA Studio"))
@@ -327,10 +328,9 @@ public class MusicTagRepository {
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)){
                // Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqa.equal(false)).filter(tag -> {
-            Query<MusicTag> query = getMusicTagBox().query().filter(tag -> {
-                    // drop from results
-                    return MusicTagUtils.isPCMHiRes(tag); // && !tag.isMQA(); // include to results
-                }).order(MusicTag_.title).order(MusicTag_.artist).build();
+            // drop from results
+            // && !tag.isMQA(); // include to results
+            Query<MusicTag> query = getMusicTagBox().query().filter(MusicTagUtils::isPCMHiRes).order(MusicTag_.title).order(MusicTag_.artist).build();
                 list = query.find();
                 query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.GROUPING){

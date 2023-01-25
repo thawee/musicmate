@@ -156,12 +156,14 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         imageLoader.enqueue(request);
 
         // Loudness
-        if(!tag.isDSD() && tag.getTrackLoudness() != 0.0) {
-            holder.mAudioLoudnessView.setImageBitmap(MusicTagUtils.createLoudnessIcon(holder.mContext, tag));
-            holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
-        }else {
-            holder.mAudioLoudnessView.setVisibility(View.GONE);
-        }
+       // if(!tag.isDSD()) {
+           // holder.mAudioLoudnessView.setImageBitmap(MusicTagUtils.createLoudnessIcon(holder.mContext, tag));
+           // holder.mAudioLoudnessView.setVisibility(View.VISIBLE);
+       //     holder.mTrackReplayGainView.setVisibility(View.VISIBLE);
+       // }else {
+           // holder.mAudioLoudnessView.setVisibility(View.GONE);
+       //     holder.mTrackReplayGainView.setVisibility(View.GONE);
+       // }
 
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
@@ -177,6 +179,10 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
         holder.mDynamicRange.setText(String.format(Locale.US, "DR%.0f",tag.getTrackDR()));
         holder.mDynamicRange.setBackground(resolutionBackground);
+
+        resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        holder.mTrackReplayGainView.setText(String.format(Locale.US, "RG %.2f",tag.getTrackRG()));
+        holder.mTrackReplayGainView.setBackground(resolutionBackground);
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
@@ -212,10 +218,11 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         TextView mDynamicRange;
         Context mContext;
         ImageView mPlayerView;
-         TextView mMediaQualityView;
+        TextView mMediaQualityView;
         ImageView mAudioHiResView;
-        ImageView mAudioLoudnessView;
+        //ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
+        TextView mTrackReplayGainView;
 
         @Override
         protected void bindView(View view) {
@@ -237,7 +244,8 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
-            this.mAudioLoudnessView = view.findViewById(R.id.item_loudness_icon);
+            //this.mAudioLoudnessView = view.findViewById(R.id.item_loudness_icon);
+            this.mTrackReplayGainView = view.findViewById(R.id.item_track_rg_icon);
         }
     }
 }

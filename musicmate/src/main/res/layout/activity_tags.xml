@@ -250,7 +250,7 @@
                         android:paddingTop="@dimen/dimen_2_dp"
                         android:paddingBottom="@dimen/dimen_2_dp"
                         android:src="@drawable/ic_audiophile"/>
-
+<!--
                     <ImageView
                         android:id="@+id/icon_loudness"
                         android:layout_width="@dimen/dimen_86_dp"
@@ -263,6 +263,7 @@
                         android:gravity="right|center_vertical"
                         android:layout_alignParentRight="true"
                         android:src="@drawable/ic_format_hires" />
+                        -->
 
                     <ImageView
                         android:id="@+id/icon_hires"
@@ -289,6 +290,23 @@
                         android:paddingTop="@dimen/dimen_2_dp"
                         android:paddingBottom="@dimen/dimen_2_dp"
                         android:text="DR14"
+                        android:textColor="@color/black"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/icon_track_rg"
+                        android:layout_width="@dimen/dimen_52_dp"
+                        android:layout_height="@dimen/dimen_24_dp"
+                        android:layout_gravity="right|center_vertical"
+                        android:layout_marginRight="@dimen/dimen_2_dp"
+                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:background="@drawable/shape_background_unknown"
+                        android:fontFamily="@font/oswald_bold"
+                        android:gravity="center"
+                        android:paddingTop="@dimen/dimen_2_dp"
+                        android:paddingBottom="@dimen/dimen_2_dp"
+                        android:text="RG 0.00"
                         android:textColor="@color/black"
                         android:textSize="12sp"
                         android:textStyle="bold" />

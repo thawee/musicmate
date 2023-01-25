@@ -30,6 +30,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
@@ -58,9 +59,58 @@ public class TagsTechnicalFragment extends Fragment {
                 doExtractEmbedCoverart();
             }if(item.getItemId() == R.id.menu_editor_tech_remove_coverart) {
                 doRemoveEmbedCoverart();
+            }if(item.getItemId() == R.id.menu_editor_tech_replaygain) {
+                doUpdateReplayGain();
             }
             return false;
         };
+    }
+
+    private void doUpdateReplayGain() {
+        // calculate RG
+        // update RG on files
+        startProgressBar();
+        CompletableFuture.runAsync(
+                () -> {
+                   for(MusicTag tag:tagsActivity.getEditItems()) {
+                        //calculate track RG
+                        FFMPeg.readReplayGain(getActivity(), tag);
+                    }
+                    // calculate album RG
+                    if(tagsActivity.getEditItems().size()>=1) {
+                        double rg = tagsActivity.getEditItems().get(0).getTrackRG();
+                        double tp = tagsActivity.getEditItems().get(0).getTrackTruePeak();
+                        for(MusicTag tag:tagsActivity.getEditItems()) {
+                            if(tag.getTrackTruePeak() > tp) {
+                                tp = tag.getTrackTruePeak();
+                            }
+                            if(rg < tag.getTrackRG()) {
+                                rg = tag.getTrackRG();
+                            }
+                        }
+                        for(MusicTag tag:tagsActivity.getEditItems()) {
+                            //calculate track RG
+                            tag.setAlbumRG(rg);
+                            tag.setAlbumTruePeak(tp);
+                        }
+                    }
+
+                    // save RG to media file
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        //write RG to file
+                        FFMPeg.writeReplayGain(getActivity(), tag);
+                        // update MusicMate Library
+                        MusicTagRepository.saveTag(tag);
+                    }
+                }
+        ).thenAccept(
+                unused -> stopProgressBar()
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
     }
 
     @Override
@@ -126,8 +176,6 @@ public class TagsTechnicalFragment extends Fragment {
                     //|| field.getName().equals("storageId")
                     || field.getName().equals("CREATOR")
                     || field.getName().equals("originTag")
-                    || field.getName().equals("trackLoudness")
-                    || field.getName().equals("trackRange")
                     || field.getName().startsWith("shadow"))  {
                 continue;
             }

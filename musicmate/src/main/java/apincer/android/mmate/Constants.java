@@ -31,15 +31,16 @@ public final class Constants {
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
-    public static final String MEDIA_FILE_FORMAT_WAVE = "wav";
-    public static final String MEDIA_FILE_FORMAT_FLAC = "flac";
-    public static final String MEDIA_FILE_FORMAT_AIF = "aif";
-    public static final String MEDIA_FILE_FORMAT_AIFF = "aiff";
-    public static final String MEDIA_FILE_FORMAT_M4A = "m4a";
-    public static final String MEDIA_FILE_FORMAT_AAC = "aac";
-    public static final String MEDIA_FILE_FORMAT_ALAC = "alac";
-    public static final String MEDIA_FILE_FORMAT_DSF="dsf";
-    public static final String MEDIA_FILE_FORMAT_MP3="mp3";
+    public static final String FILE_EXT_WAVE = "wav";
+   // public static final String MEDIA_FILE_FORMAT_FLAC = "flac";
+    public static final String FILE_EXT_AIF = "aif";
+    public static final String FILE_EXT_AIFF = "aiff";
+    //public static final String MEDIA_FILE_FORMAT_M4A = "m4a";
+   // public static final String MEDIA_FILE_FORMAT_AAC = "aac";
+   // public static final String MEDIA_FILE_FORMAT_MPEG = "mpeg";
+   // public static final String MEDIA_FILE_FORMAT_ALAC = "alac";
+    public static final String FILE_EXT_DSF="dsf";
+    public static final String FILE_EXT_MP3="mp3";
     public static final int MIN_FILE_SIZE_RATIO = 42;
     public static final String UNKNOWN_PUBLISHER = "Unknown Publisher";
     public static final String UNKNOWN_GENRE = "Unknown Genre";
@@ -51,9 +52,9 @@ public final class Constants {
    public static double MIN_TITLE = 0.80;
    public static double MIN_ARTIST = 0.70;
 
-    public static final String REPLAYGAIN_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
-    public static final String REPLAYGAIN_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
-    public static final String REPLAYGAIN_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
+   // public static final String REPLAYGAIN_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
+   // public static final String REPLAYGAIN_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
+   // public static final String REPLAYGAIN_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     static {
@@ -89,10 +90,10 @@ public final class Constants {
     public static String KEY_SEARCH_KEYWORD="search_criteria_keyword";
     public static String KEY_FILTER_TYPE="search_filter_type";
     public static String KEY_FILTER_KEYWORD="search_filter_keyword";
-    public static final String KEY_MEDIA_TAG = "mediaTAG";
+   // public static final String KEY_MEDIA_TAG = "mediaTAG";
     public static final String KEY_COVER_ART_PATH = "coverArtPath";
     public static final String MEDIA_ENC_AAC="AAC";
-    public static final String MEDIA_ENC_MP3="MPEG";
+    public static final String MEDIA_ENC_MPEG="MPEG";
     public static final String MEDIA_ENC_FLAC="FLAC";
     public static final String MEDIA_ENC_ALAC="ALAC";
     public static final String MEDIA_ENC_WAVE = "WAVE";
@@ -159,7 +160,7 @@ public final class Constants {
     public static final String MEDIA_TYPE_NONE = "-";
 
     public static List<String> getSourceList(Context context) {
-    List list = new ArrayList<>();
+    List<String> list = new ArrayList<>();
      String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);
      list.addAll(Arrays.asList(srcs));
      Collections.sort(list);

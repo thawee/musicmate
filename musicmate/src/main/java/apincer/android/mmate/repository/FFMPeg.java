@@ -1,10 +1,8 @@
 package apincer.android.mmate.repository;
 
-import static java.lang.StrictMath.log10;
-import static java.lang.StrictMath.min;
 import static apincer.android.mmate.utils.MusicTagUtils.getFileSizeRatio;
 import static apincer.android.mmate.utils.MusicTagUtils.isAIFFile;
-import static apincer.android.mmate.utils.MusicTagUtils.isFlacFile;
+import static apincer.android.mmate.utils.MusicTagUtils.isFLACFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
 import static apincer.android.mmate.utils.MusicTagUtils.isWavFile;
 import static apincer.android.mmate.utils.StringUtils.getWord;
@@ -151,7 +149,7 @@ public class FFMPeg {
     private static final String KEY_TAG_GROUPING = "GROUPING";
     private static final String KEY_TAG_TRACK = "track";
     private static final String KEY_TAG_PUBLISHER = "PUBLISHER";
-    private static final String KEY_TAG_LANGUAGE = "LANGUAGE";
+    //private static final String KEY_TAG_LANGUAGE = "LANGUAGE";
     private static final String KEY_TAG_ENCODER = "ENCODER";
     private static final String KEY_TAG_MQA_ORIGINAL_SAMPLERATE = "ORIGINALSAMPLERATE";
     private static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
@@ -192,7 +190,7 @@ public class FFMPeg {
     private static final String KEY_TAG_AIF_GROUPING = "GROUPING";
     private static final String KEY_TAG_AIF_TRACK = "track";
     private static final String KEY_TAG_AIF_PUBLISHER = "PUBLISHER";
-    private static final String KEY_TAG_AIF_LANGUAGE = "LANGUAGE";
+    //private static final String KEY_TAG_AIF_LANGUAGE = "LANGUAGE";
     private static final String KEY_TAG_AIF_MEDIA = "MEDIA";
     private static final String KEY_TAG_AIF_RATING = "RATING";
     private static final String KEY_TAG_AIF_QUALITY = "QUALITY";
@@ -220,9 +218,9 @@ public class FFMPeg {
    // private static final String KEY_TAG_MP4_COMPILATION = "compilation";
 
     private static final String KEY_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
-    private static final String KEY_TRACK_RANGE = "REPLAYGAIN_TRACK_RANGE";
-    private static final String KEY_REFERENCE_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
     private static final String KEY_TRACK_PEAK = "REPLAYGAIN_TRACK_PEAK"; // added by thawee
+    private static final String KEY_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
+    private static final String KEY_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
     private static final String METADATA_KEY = "-metadata";
 
     public static class Loudness {
@@ -300,12 +298,59 @@ public class FFMPeg {
         return tag;
     }
 
-    public static MusicTag readFFmpeg(Context context, String path) {
+    public static void readLoudness(Context context, MusicTag tag) {
+        String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" -filter_complex ebur128=peak=true:framelog=verbose -f null -";
+        //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
+        // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
+        FFmpegSession session = FFmpegKit.execute(cmd);
+        String data = getFFmpegOutputData(session);
+        parseLoudness(tag, data);
+        session.cancel();
+    }
+
+    private static void parseLoudness(MusicTag tag, String data) {
+        String keyword = "Integrated loudness:";
+        int startTag = data.lastIndexOf(keyword);
+        if (startTag > 0) {
+            String loudness = data.substring(data.indexOf("I:") + 3, data.indexOf("LUFS"));
+            String range = data.substring(data.indexOf("LRA:") + 5, data.indexOf("LU\n"));
+            String truePeak = data.substring(data.indexOf("Peak:") + 6, data.indexOf("dBFS"));
+            tag.setTrackLoudness(toDouble(loudness));
+            tag.setTrackRange(toDouble(range));
+            tag.setTrackTruePeak(toDouble(truePeak));
+        }
+    }
+
+    public static void readReplayGain(Context context, MusicTag tag) {
         // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
        // String filter = " -filter:a drmeter,replaygain ";
        // if(MusicTagUtils.isDSDFile(path)) {
        //     filter = " -filter:a drmeter ";
        // }
+        String path = tag.getPath();
+        String filter = " -filter:a replaygain ";
+
+        String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
+
+        FFmpegSession session = FFmpegKit.execute(cmd);
+       // if (ReturnCode.isSuccess(session.getReturnCode())) {
+            String data = getFFmpegOutputData(session);
+            parseReplayGain(tag, data);
+            session.cancel();
+       // }else {
+            // try to get from file name
+        //    String data = getFFmpegOutputData(session);
+        //    parseReplayGain(tag, data);
+        //    session.cancel();
+       // }
+    }
+
+    public static MusicTag readFFmpeg(Context context, String path) {
+        // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
+        // String filter = " -filter:a drmeter,replaygain ";
+        // if(MusicTagUtils.isDSDFile(path)) {
+        //     filter = " -filter:a drmeter ";
+        // }
         String filter = " -filter:a drmeter ";
 
         String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
@@ -320,10 +365,10 @@ public class FFMPeg {
             parseStreamInfo(tag);
             parseDurationInfo(tag);
             parseTagsInfo(tag);
-           // parseReplayGain(tag);
+            // parseReplayGain(tag);
             parseDynamicRange(tag);
             detectFileFormat(tag);
-            tag.setLossless(isLossless(tag));
+           // tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
             return tag;
         }else {
@@ -337,10 +382,10 @@ public class FFMPeg {
             parseStreamInfo(tag);
             parseDurationInfo(tag);
             parseTagsInfo(tag);
-           // parseReplayGain(tag);
+            // parseReplayGain(tag);
             parseDynamicRange(tag);
             detectFileFormat(tag);
-            tag.setLossless(isLossless(tag));
+           // tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
             session.cancel();
             return tag;
@@ -354,13 +399,12 @@ public class FFMPeg {
             tag.setFileFormat(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
         }else if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_ALAC)) {
                 tag.setFileFormat(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
-        } else if(Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(ext) ||
-                Constants.MEDIA_FILE_FORMAT_AIFF.equalsIgnoreCase(ext)){
+        } else if(Constants.FILE_EXT_AIF.equalsIgnoreCase(ext)||Constants.FILE_EXT_AIFF.equalsIgnoreCase(ext)){
             tag.setFileFormat(Constants.MEDIA_ENC_AIFF.toLowerCase(Locale.US));
-        }else if(Constants.MEDIA_FILE_FORMAT_WAVE.equalsIgnoreCase(ext)){
+        }else if(Constants.FILE_EXT_WAVE.equalsIgnoreCase(ext)){
             tag.setFileFormat(Constants.MEDIA_ENC_WAVE.toLowerCase(Locale.US));
-        }else if(Constants.MEDIA_FILE_FORMAT_MP3.equalsIgnoreCase(ext)){
-            tag.setFileFormat(Constants.MEDIA_ENC_MP3.toLowerCase(Locale.US));
+        }else if(Constants.FILE_EXT_MP3.equalsIgnoreCase(ext)){
+            tag.setFileFormat(Constants.MEDIA_ENC_MPEG.toLowerCase(Locale.US));
         }else {
             tag.setFileFormat(ext);
         }
@@ -459,27 +503,24 @@ public class FFMPeg {
         }
 
         // KEY_TRACK_GAIN
-        tag.setTrackGain(toDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
+        tag.setTrackRG(toDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
 
-        // KEY_TRACK_RANGE
-        tag.setTrackRange(toDouble(getValueForKey(tags, KEY_TRACK_RANGE)));
+        //KEY_TRACK_PEAK
+        tag.setTrackTruePeak(toDouble(getValueForKey(tags, KEY_TRACK_PEAK)));
 
-        //KEY_REFERENCE_LOUDNESS
-        tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_REFERENCE_LOUDNESS)));
+        // KEY_ALBUM_GAIN
+        tag.setAlbumRG(toDouble(getValueForKey(tags, KEY_ALBUM_GAIN)));
 
-        //KEY_REFERENCE_TRUEPEAK
-        tag.setTrackTruePeek(toDouble(getValueForKey(tags, KEY_TRACK_PEAK)));
+        //KEY_ALBUM_PEAK
+        tag.setAlbumTruePeak(toDouble(getValueForKey(tags, KEY_ALBUM_PEAK)));
 
         // publisher
         tag.setPublisher(getValueForKey(tags, KEY_TAG_PUBLISHER));
 
-        // language
-        tag.setLanguage(getValueForKey(tags, KEY_TAG_LANGUAGE));
-
         // MQA from tag and encoder
         String encoder = getValueForKey(tags, KEY_TAG_ENCODER);
         String mqaEncoder = getValueForKey(tags, KEY_TAG_MQA_ENCODER);
-        if(!MusicTagUtils.isFlacFile(tag)) {
+        if(!MusicTagUtils.isFLACFile(tag)) {
             tag.setMqaInd("None");
         }else if(encoder.contains(KEY_MQA) || !isEmpty(mqaEncoder)) {
             tag.setMqaInd("MQA");
@@ -513,22 +554,25 @@ public class FFMPeg {
         }
     }
 
-    private static void parseReplayGain(MusicTag tag) {
+    private static void parseReplayGain(MusicTag tag, String data) {
         try {
             //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_gain = -0.37 dB
             //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_peak = 0.931971
+            if(data.contains("[Parsed_replaygain")) {
+                data = data.substring(data.indexOf("[Parsed_replaygain"));
+            }
             Pattern pattern = Pattern.compile("\\s*track_gain =\\s*(\\S*)");
-            Matcher matcher = pattern.matcher(tag.getData());
+            Matcher matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
-                tag.setTrackGain(toDouble(info));
+                tag.setTrackRG(toDouble(info));
             }
 
             pattern = Pattern.compile("\\s*track_peak =\\s*(\\S*)");
-            matcher = pattern.matcher(tag.getData());
+            matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
-                tag.setTrackTruePeek(toDouble(info));
+                tag.setTrackTruePeak(toDouble(info));
             }
         }catch (Exception ex) {
             Timber.e(ex);
@@ -562,7 +606,7 @@ public class FFMPeg {
             readFileInfo(context, tag);
             parseStreamInfo(tag);
             parseFormatInfo(tag);
-            tag.setLossless(isLossless(tag));
+            //tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
             return tag;
         }else {
@@ -577,7 +621,7 @@ public class FFMPeg {
         }
     }
 
-    public static boolean writeTrackGain(Context context, MusicTag tag) {
+    public static boolean writeReplayGain(Context context, MusicTag tag) {
         if(MusicTagUtils.isWavFile(tag)) return false; // wave file not support track gain
         /// check free space on storage
         // ffmpeg write to new tmp file
@@ -641,7 +685,7 @@ public class FFMPeg {
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
             // move file
-            if(isFlacFile(tag) || isWavFile(tag) || isAIFFile(tag) || isMp4File(tag)) {
+            if(isFLACFile(tag) || isWavFile(tag) || isAIFFile(tag) || isMp4File(tag)) {
                 if(FileSystem.safeMove(context, targetPath, srcPath)) {
                     FileRepository.newInstance(context).scanMusicFile(new File(srcPath),true);
                     return true;
@@ -670,7 +714,7 @@ public class FFMPeg {
         // -metadata language="eng"
         if (isWavFile(tag)) {
             return getMetadataTrackKeysForWave(tag);
-        } else if (isFlacFile(tag)) {
+        } else if (isFLACFile(tag)) {
             return getMetadataTrackKeysForFlac(tag);
         }else if (isAIFFile(tag)) {
             return getMetadataTrackKeysForAIF(tag);
@@ -707,7 +751,6 @@ public class FFMPeg {
                 getMetadataTrackKey(KEY_TAG_GENRE, tag.getGenre()) +
                 getMetadataTrackKey(KEY_TAG_GROUPING, tag.getGrouping()) +
                 getMetadataTrackKey(KEY_TAG_PUBLISHER, tag.getPublisher()) +
-                getMetadataTrackKey(KEY_TAG_LANGUAGE, tag.getLanguage()) + ///
                 getMetadataTrackKey(KEY_TAG_MEDIA, tag.getMediaType()) +
                 getMetadataTrackKey(KEY_TAG_QUALITY, tag.getMediaQuality()) +
                 getMetadataTrackKey(KEY_TAG_RATING, tag.getRating()) +
@@ -751,7 +794,6 @@ public class FFMPeg {
                 getMetadataTrackKey(KEY_TAG_AIF_GENRE, tag.getGenre()) +
                 getMetadataTrackKey(KEY_TAG_AIF_GROUPING, tag.getGrouping()) +
                 getMetadataTrackKey(KEY_TAG_AIF_PUBLISHER, tag.getPublisher()) +
-                getMetadataTrackKey(KEY_TAG_AIF_LANGUAGE, tag.getLanguage()) + ///
                 getMetadataTrackKey(KEY_TAG_AIF_MEDIA, tag.getMediaType()) +
                 getMetadataTrackKey(KEY_TAG_AIF_QUALITY, tag.getMediaQuality()) +
                 getMetadataTrackKey(KEY_TAG_AIF_RATING, tag.getRating()) +
@@ -813,6 +855,18 @@ public class FFMPeg {
         // wave - not support - use bwf
         //https://bytesandbones.wordpress.com/2017/03/16/audio-nomalization-with-ffmpeg-using-loudnorm-ebur128-filter/
 // https://whoislewys.com/2018/10/18/audio_norm_guides_are_evil_and_immoral/
+        // The four tags are REPLAYGAIN_TRACK_GAIN, REPLAYGAIN_TRACK_PEAK,
+        // REPLAYGAIN_ALBUM_GAIN and REPLAYGAIN_ALBUM_PEAK.
+
+        /*
+    "REPLAYGAIN_TRACK_GAIN",
+    "REPLAYGAIN_TRACK_PEAK",
+    "REPLAYGAIN_TRACK_RANGE",
+    "REPLAYGAIN_ALBUM_GAIN",
+    "REPLAYGAIN_ALBUM_PEAK",
+    "REPLAYGAIN_ALBUM_RANGE",
+    "REPLAYGAIN_REFERENCE_LOUDNESS"
+         */
 
         String tags = "";
 
@@ -820,10 +874,25 @@ public class FFMPeg {
             tags = " -write_id3v2 1 ";
         }
 
-         tags = tags +getMetadataTrackKey(KEY_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackGain())) +
-                getMetadataTrackKey(KEY_TRACK_RANGE, tag.getTrackRange()) +
-                getMetadataTrackKey(KEY_REFERENCE_LOUDNESS, tag.getTrackLoudness()) +
-                getMetadataTrackKey(KEY_TRACK_PEAK, tag.getTrackTruePeek());
+        if(tag.getTrackRG() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TRACK_GAIN, "") +
+                    getMetadataTrackKey(KEY_TRACK_PEAK, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
+                    getMetadataTrackKey(KEY_TRACK_PEAK, String.format("%,.6f", tag.getTrackTruePeak()));
+        }
+        if(tag.getAlbumRG() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_ALBUM_GAIN, "") +
+                    getMetadataTrackKey(KEY_ALBUM_PEAK, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_ALBUM_GAIN, String.format("%,.2f dB", tag.getAlbumRG())) +
+                    getMetadataTrackKey(KEY_ALBUM_PEAK, String.format("%,.6f", tag.getAlbumTruePeak()));
+        }
+
         /*
         tags = tags + METADATA_KEY+" "+KEY_TRACK_GAIN+"=\""+in()+"\" ";
         tags = tags + METADATA_KEY+" "+KEY_TRACK_RANGE+"=\""+tag.getTrackRange()+"\" ";
@@ -856,7 +925,7 @@ public class FFMPeg {
     }
 
     public static void detectMQA(MusicTag tag) {
-        if(!MusicTagUtils.isFlacFile(tag)) return; // scan only flac
+        if(!MusicTagUtils.isFLACFile(tag)) return; // scan only flac
         if(tag.isMqaScanned()) return; //prevent re scan
         try {
             NativeLib lib = new NativeLib();
@@ -981,27 +1050,24 @@ public class FFMPeg {
             tag.setTitle(getTagforKey(tags, KEY_TAG_TITLE));
 
             // KEY_TRACK_GAIN
-            tag.setTrackGain(toDouble(getTagforKey(tags, KEY_TRACK_GAIN)));
+            tag.setTrackRG(toDouble(getTagforKey(tags, KEY_TRACK_GAIN)));
 
-            // KEY_TRACK_RANGE
-            tag.setTrackRange(toDouble(getTagforKey(tags, KEY_TRACK_RANGE)));
+            //KEY_TRACK_PEAK
+            tag.setTrackTruePeak(toDouble(getTagforKey(tags, KEY_TRACK_PEAK)));
 
-            //KEY_REFERENCE_LOUDNESS
-            tag.setTrackLoudness(toDouble(getTagforKey(tags, KEY_REFERENCE_LOUDNESS)));
+            // KEY_ALBUM_GAIN
+            tag.setAlbumRG(toDouble(getTagforKey(tags, KEY_ALBUM_GAIN)));
 
-            //KEY_REFERENCE_TRUEPEAK
-            tag.setTrackTruePeek(toDouble(getTagforKey(tags, KEY_TRACK_PEAK)));
+            //KEY_ALBUM_PEAK
+            tag.setAlbumTruePeak(toDouble(getTagforKey(tags, KEY_ALBUM_PEAK)));
 
             // publisher
             tag.setPublisher(getTagforKey(tags, KEY_TAG_PUBLISHER));
 
-            // language
-            tag.setLanguage(getTagforKey(tags, KEY_TAG_LANGUAGE));
-
             // MQA from tag and encoder
             String encoder = getTagforKey(tags, KEY_TAG_ENCODER);
             String mqaEncoder = getTagforKey(tags, KEY_TAG_MQA_ENCODER);
-            if(!MusicTagUtils.isFlacFile(tag)) {
+            if(!MusicTagUtils.isFLACFile(tag)) {
                 tag.setMqaInd("None");
             }else if(encoder.contains(KEY_MQA) || !isEmpty(mqaEncoder)) {
                 tag.setMqaInd("MQA");
@@ -1093,7 +1159,7 @@ public class FFMPeg {
         if (matcher.find()) {
             String info = matcher.group(1);
 
-            String [] tags = info.split(",");
+            String [] tags = info.split(",", -1);
             tag.setAudioEncoding(getField(tags, 0));
             tag.setAudioSampleRate(parseSampleRate(tags, 1));
             tag.setAudioChannels(parseChannels(tags, 2));
@@ -1220,6 +1286,8 @@ public class FFMPeg {
         return buff.toString();
     }
 
+    /*
+    https://github.com/Moonbase59/loudgain/blob/master/src/loudgain.c
     public static final double RGV2_REFERENCE = -18.00;
     public static double getReplayGain(MusicTag tag) {
         double max_true_peak_level = -1.0; // dBTP; default for -k, as per EBU Tech 3343
@@ -1260,5 +1328,5 @@ public class FFMPeg {
 
     private static double getReplayGain(double loudnessIntegrated) {
         return RGV2_REFERENCE - loudnessIntegrated;
-    }
+    } */
 }

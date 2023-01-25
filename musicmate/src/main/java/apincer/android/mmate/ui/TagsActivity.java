@@ -85,7 +85,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView encInfo;
     private ImageView audiophileView;
     private ImageView hiresView;
-    private ImageView encResView;
+   // private ImageView encResView;
    // private MaterialRatingBar ratingView;
     private View coverArtLayout;
     private View panelLabels;
@@ -145,6 +145,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView filename;
     private TextView pathDrive;
     private TextView drView;
+    private TextView trackRGView;
     //private ImageView pathIcon;
     private SearchCriteria criteria;
 
@@ -248,10 +249,11 @@ public class TagsActivity extends AppCompatActivity {
         pathDrive = findViewById(R.id.panel_path_drive);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
-        encResView = findViewById(R.id.icon_loudness);
+       // encResView = findViewById(R.id.icon_loudness);
        // ratingView = findViewById(R.id.icon_rating);
         filename = findViewById(R.id.panel_filename);
         drView = findViewById(R.id.icon_dr);
+        trackRGView = findViewById(R.id.icon_track_rg);
     }
 
     public void updateTitlePanel() {
@@ -280,6 +282,11 @@ public class TagsActivity extends AppCompatActivity {
         drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
         drView.setBackground(resolutionBackground);
 
+        // Track Replay Gain
+        resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
+        trackRGView.setText(String.format(Locale.US, "RG %.2f",displayTag.getTrackRG()));
+        trackRGView.setBackground(resolutionBackground);
+
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         //if (displayTag.isAudiophile()) {
         if (!isEmpty(displayTag.getMediaQuality())) {
@@ -294,12 +301,12 @@ public class TagsActivity extends AppCompatActivity {
             audiophileView.setVisibility(View.GONE);
         }
 
-        if(displayTag.isDSD() || displayTag.getTrackLoudness()==0.0) {
+       /* if(displayTag.isDSD() || displayTag.getTrackLoudness()==0.0) {
             encResView.setVisibility(View.GONE);
         }else {
             encResView.setImageBitmap(MusicTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
             encResView.setVisibility(View.VISIBLE);
-        }
+        } */
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist

@@ -31,4 +31,9 @@
         android:id="@+id/menu_editor_tech_remove_coverart"
         android:title="Remove Coverart"
         app:showAsAction="always" />
+    <item
+        android:icon="@drawable/round_volume_up_24"
+        android:id="@+id/menu_editor_tech_replaygain"
+        android:title="Replaygain"
+        app:showAsAction="always" />
 </menu>

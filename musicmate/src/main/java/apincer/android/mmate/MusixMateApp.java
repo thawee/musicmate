@@ -26,13 +26,14 @@ import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.objectbox.ObjectBox;
+import apincer.android.mmate.repository.MusicMateDatabase;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 import timber.log.Timber;
 
-public class MusixMateApp extends Application  {
-   // private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
-  //  private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
+public class MusixMateApp extends Application {
+    // private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
+    //  private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
         try {
@@ -43,7 +44,7 @@ public class MusixMateApp extends Application  {
                     .setMessage("");
             Intent intent = data.getIntent();
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             Timber.e(ex);
         }
     });
@@ -51,6 +52,7 @@ public class MusixMateApp extends Application  {
     private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
+    private static MusicMateDatabase database;
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
@@ -88,6 +90,10 @@ public class MusixMateApp extends Application  {
         BroadcastHelper.playNextSong(applicationContext);
     }
 
+    public static MusicMateDatabase getDatabase() {
+            return database;
+    }
+
     @Override
     public void onTerminate() {
         super.onTerminate();
@@ -100,6 +106,7 @@ public class MusixMateApp extends Application  {
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+        database = MusicMateDatabase.getDatabase(this);
 
         if (BuildConfig.DEBUG) {
             //initialise reporter with external path

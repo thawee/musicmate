@@ -177,7 +177,7 @@ public class MusicTagUtils {
         String label;
         String labelBPS = "";
         boolean isPCM = false;
-        boolean isLossless = false;
+        boolean isLossless = isLossless(tag);
         String samplingRate = StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
 
         if(tag.isDSD()) {
@@ -197,8 +197,8 @@ public class MusicTagUtils {
             label = "Bit"; //"PCM";
             labelBPS = String.valueOf(tag.getAudioBitsDepth());
             isPCM = true;
-            isLossless = tag.isLossless();
-            if(!tag.isLossless()) {
+           // isLossless = tag.isLossless();
+            if(!isLossless) {
                 // compress rate
                 label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
                 samplingRate = StringUtils.formatAudioBitRateNoUnit(tag.getAudioBitRate());
@@ -484,7 +484,7 @@ public class MusicTagUtils {
             label = "PCM";
             labelBPS = String.valueOf(tag.getAudioBitsDepth());
             isPCM = true;
-            if(!tag.isLossless()) {
+            if(!isLossless(tag)) {
                 // compress rate
                 samplingRate = StringUtils.formatAudioBitRateNoUnit(tag.getAudioBitRate());
             }
@@ -896,7 +896,7 @@ public class MusicTagUtils {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
         }else if(is24Bits(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
-        }else if(isPCMLossless(tag)){
+        }else if(isLossless(tag)){
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
         }else {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_unknown);
@@ -904,7 +904,7 @@ public class MusicTagUtils {
     }
 
     public static boolean is24Bits(MusicTag tag) {
-        return ( tag.isLossless() && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
+        return ( isLossless(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
 
     public static boolean isDSD(MusicTag tag) {
@@ -915,13 +915,13 @@ public class MusicTagUtils {
         // > 24/88
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ( tag.isLossless() && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
+        return ( isLossless(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= Constants.QUALITY_SAMPLING_RATE_88));
     }
 
     public static boolean isPCMLossless(MusicTag tag) {
         // 16/48
         // 24/48
-        return ( tag.isLossless() &&
+        return ( isLossless(tag) &&
                 ((tag.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48))); // ||
                 // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
     }
@@ -1016,6 +1016,10 @@ public class MusicTagUtils {
         return pathFile;
     }
 
+    public static boolean isLossless(MusicTag tag) {
+        return isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag);
+    }
+
     public static File getEncResolutionIcon( Context context, MusicTag tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
@@ -1031,7 +1035,7 @@ public class MusicTagUtils {
                 path = path + "Studio";
             } */
             path = path + "_" + tag.getAudioSampleRate();
-        }else if(tag.isLossless()){
+        }else if(isLossless(tag)){
             path = path + "PCM"+tag.getAudioBitsDepth()+"_" + tag.getAudioSampleRate();
         }else {
             path = path + tag.getFileFormat()+"_" + tag.getAudioBitRate();
@@ -1217,6 +1221,7 @@ public class MusicTagUtils {
         return artist;
     }
 
+    /*
     public static Bitmap createLoudnessIcon(Context context,  MusicTag tag) {
         int width = 356; //340; // for 56x16,  89x24
         int height = 96; // 16
@@ -1227,7 +1232,7 @@ public class MusicTagUtils {
         String lra = String.format(Locale.getDefault(),"%.1f", tag.getTrackRange());
         String il= String.format(Locale.getDefault(),"%.1f", tag.getTrackLoudness());
 
-        String rg =   String.format(Locale.getDefault(),"%.1f", tag.getTrackGain());
+        String rg =   String.format(Locale.getDefault(),"%.1f", tag.getTrackRG());
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -1386,7 +1391,7 @@ public class MusicTagUtils {
                 mLetterPaint);
 
         return myBitmap;
-    }
+    } */
 /*
     public static Bitmap createLoudnessIcon1(Context context,  MusicTag tag) {
         int width = 340; // for xx
@@ -1580,12 +1585,12 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
-    public static boolean isFlacFile(MusicTag musicTag) {
+    public static boolean isFLACFile(MusicTag musicTag) {
         return (Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(musicTag.getFileFormat()));
     }
 
     public static boolean isDSDFile(String path) {
-        return (path.endsWith("."+Constants.MEDIA_FILE_FORMAT_DSF));
+        return (path.endsWith("."+Constants.FILE_EXT_DSF));
     }
 
     public static Bitmap getMediaTypeIcon(Context context, String src) {
@@ -1602,15 +1607,18 @@ public class MusicTagUtils {
 
     public static boolean isMp4File(MusicTag tag) {
         // m4a, mov, ,p4
-        return (Constants.MEDIA_FILE_FORMAT_M4A.equalsIgnoreCase(tag.getFileFormat()) ||
-                Constants.MEDIA_FILE_FORMAT_AAC.equalsIgnoreCase(tag.getFileFormat()) ||
-                Constants.MEDIA_FILE_FORMAT_ALAC.equalsIgnoreCase(tag.getFileFormat()));
+        return (Constants.MEDIA_ENC_AAC.equalsIgnoreCase(tag.getFileFormat()) ||
+                Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getFileFormat()));
+    }
+
+    public static boolean isALACFile(MusicTag tag) {
+        // m4a, mov, ,p4
+        return (Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getFileFormat()));
     }
 
     public static boolean isAIFFile(MusicTag tag) {
         // aif, aiff
-        return (Constants.MEDIA_FILE_FORMAT_AIF.equalsIgnoreCase(tag.getFileFormat()) ||
-                Constants.MEDIA_FILE_FORMAT_AIFF.equalsIgnoreCase(tag.getFileFormat()));
+        return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getFileFormat()));
     }
 
     public static Object getSourceQualityIconMini(Context context, MusicTag tag) {

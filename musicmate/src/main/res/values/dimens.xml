@@ -73,4 +73,6 @@
     <dimen name="dimen_20_dp">20dp</dimen>
     <dimen name="dimen_60_dp">60dp</dimen>
     <dimen name="dimen_28_dp">28dp</dimen>
+    <dimen name="dimen_36_dp">36dp</dimen>
+    <dimen name="dimen_38_dp">38dp</dimen>
 </resources>

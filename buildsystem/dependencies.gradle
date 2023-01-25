@@ -35,14 +35,14 @@ def deps = [:]
 
 def google = [:]
 // https://github.com/material-components/material-components-android/releases
-google.material = "com.google.android.material:material:1.8.0-rc01" //1.7.0-rc01" //1.6.1" // 1.6.0-beta01" //1.5.0"
+google.material = "com.google.android.material:material:1.8.0" //1.7.0-rc01" //1.6.1" // 1.6.0-beta01" //1.5.0"
 google.gson = "com.google.code.gson:gson:2.10.1" //2.8.9"
 google.android_maps_utils = "com.google.maps.android:android-maps-utils:2.3.0" //0.5" //23/06/2019
 deps.google = google
 
 def apache = [:]
-apache.httpclient = "org.apache.httpcomponents:httpclient:4.5.13"
-apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.13"
+apache.httpclient = "org.apache.httpcomponents:httpclient:4.5.14"
+apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 deps.apache = apache
 
 def androidx = [:]
@@ -85,14 +85,14 @@ androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.5.1"
 
 
 // Room
-androidx.room = "androidx.room:room-runtime:2.4.3" //23/06/2019
-androidx.room_compiler = "androidx.room:room-compiler:2.4.3" // use kapt for Kotlin //23/06/2019
+androidx.room = "androidx.room:room-runtime:2.5.0" //23/06/2019
+androidx.room_compiler = "androidx.room:room-compiler:2.5.0" // use kapt for Kotlin //23/06/2019
 // optional - RxJava support for Room
-androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.4.3" //23/06/2019
+androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.5.0" //23/06/2019
 // optional - Guava support for Room, including Optional and ListenableFuture
-androidx.room_guava = "androidx.room:room-guava:2.4.4" //23/06/2019
+androidx.room_guava = "androidx.room:room-guava:2.5.0" //23/06/2019
 // Test helpers
-androidx.room_testing = "androidx.room:room-testing:2.4.3" //23/06/2019
+androidx.room_testing = "androidx.room:room-testing:2.5.0" //23/06/2019
 
 // Paging
 //https://developer.android.com/jetpack/androidx/releases/paging
@@ -213,7 +213,8 @@ ui.aspectRatioFramelayout  = 'me.buck.customview:aspect-ratio-framelayout:1.0.0'
 ui.materialratingbar = 'me.zhanghai.android.materialratingbar:library:1.4.0'
 //https://github.com/santalu/aspect-ratio-imageview
 ui.aspectRatioImageview = 'com.github.santalu:aspect-ratio-imageview:1.0.9'
-ui.fastscroll =  'me.zhanghai.android.fastscroll:library:1.1.8'
+//https://github.com/zhanghai/AndroidFastScroll
+ui.fastscroll =  'me.zhanghai.android.fastscroll:library:1.2.0'
 //https://github.com/mukeshsolanki/liquidrefreshlayout
 ui.liquidrefreshlayout = 'com.github.mukeshsolanki:liquidrefreshlayout:1.0.3'
 //https://github.com/medyo/StateViews

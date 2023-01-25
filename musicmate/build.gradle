@@ -119,6 +119,12 @@ dependencies {
     implementation deps.androidx.documentFile
     implementation deps.androidx.work
 
+    // room
+    implementation deps.androidx.room
+    //annotationProcessor deps.androidx.room_compiler
+    // To use Kotlin annotation processing tool (kapt)
+    kapt deps.androidx.room_compiler
+
     // google
     implementation deps.google.material
 

@@ -47,6 +47,7 @@ public class FileRepository {
         return new FileRepository(application);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         try {
             File dir = pathFile.getParentFile();
@@ -162,32 +163,6 @@ public class FileRepository {
         return (titleScore*60)+(artistScore*20)+(albumScore*20);
     }
 
-    /*
-    public boolean saveArtworkToFile(MusicTag item, String filePath) {
-        boolean isFileSaved = false;
-        try {
-            byte[] artwork = getArtworkAsByte(item);
-            if(artwork!=null) {
-                File f = new File(filePath);
-                if (f.exists()) {
-                    f.delete();
-                }
-                f.createNewFile();
-                FileOutputStream fos = new FileOutputStream(f);
-                fos.write(artwork);
-                fos.flush();
-                fos.close();
-                isFileSaved = true;
-            }
-            // File Saved
-        } catch (FileNotFoundException e) {
-            Timber.e(e);
-        } catch (IOException e) {
-            Timber.e(e);
-        }
-        return isFileSaved;
-    } */
-
     public boolean setMusicTag(MusicTag item) throws Exception{
         if (item == null || item.getPath() == null) {
             return false;
@@ -301,7 +276,7 @@ public class FileRepository {
                         mList[t].setFileFormat(fileExtension);
                         mList[t].setSimpleName(simpleName);
                         mList[t].setStorageId(storageId);
-                        mList[t].setLossless(true);
+                       // mList[t].setLossless(true);
                         mList[t].setAudioStartTime(tracks[t].startFrame);
                         mList[t].setAudioBitRate(dsf.getSampleCount());
                         mList[t].setAudioBitsDepth(1);
@@ -335,7 +310,7 @@ public class FileRepository {
                     metadata.setSimpleName(simpleName);
                     metadata.setStorageId(storageId);
                     metadata.setFileLastModified(lastModified);
-                    metadata.setLossless(true);
+                    //metadata.setLossless(true);
                     metadata.setAlbum(album);
                     metadata.setTitle(album);
                     metadata.setGenre(genre);
@@ -394,20 +369,6 @@ public class FileRepository {
     private boolean isValidSACD(String path) {
         return path.toLowerCase().endsWith(".iso");
     }
-
-    /*
-    @Deprecated
-    public boolean detectLoudness(MusicTag tag) {
-        if(tag.isDSD()) return false; // not support DSD
-        FFMPeg.Loudness loudness = FFMPeg.getLoudness(tag.getPath());
-        if(loudness!= null) {
-            tag.setTrackLoudness(loudness.getIntegratedLoudness());
-            tag.setTrackRange(loudness.getLoudnessRange());
-            tag.setTrackTruePeek(loudness.getTruePeak());
-            return true;
-        }
-        return false;
-    } */
 
     public String buildCollectionPath(@NotNull MusicTag metadata) {
         // hierarchy directory
@@ -525,11 +486,7 @@ public class FileRepository {
 
     private String getAlbumArtistOrArtist(String artist, String albumArtist) {
         if(StringUtils.isEmpty(albumArtist)) {
-            if(!StringUtils.isEmpty(artist)) {
-                albumArtist = artist;
-            } else {
-                albumArtist = artist;
-            }
+            albumArtist = artist;
         }
 
         return StringUtils.trimToEmpty(albumArtist);
@@ -667,22 +624,4 @@ public class FileRepository {
         }
 		return status;
     }
-/*
-    @Deprecated
-    public boolean deepScanMediaItem(MusicTag tag) {
-        if(tag.isDSD() || tag.isSACDISO()) return false;
-        // not support DSD and SACD ISO
-
-        tag = MusicTagRepository.getAudioTagById(tag); // re-read tag from db
-        if(detectLoudness(tag)) {
-            tag.setTrackGain(FFMPeg.getReplayGain(tag));
-            //detectMQA(tag);
-            MusicTagRepository.saveTag(tag);
-            writeTrackGain(getContext(), tag);
-            //setTagFieldsReplayGain(tag);
-            return true;
-        }
-        return false;
-    } */
-
 }
