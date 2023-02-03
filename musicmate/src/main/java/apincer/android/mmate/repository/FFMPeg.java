@@ -5,6 +5,7 @@ import static apincer.android.mmate.utils.MusicTagUtils.isAIFFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isFLACFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
 import static apincer.android.mmate.utils.MusicTagUtils.isWavFile;
+import static apincer.android.mmate.utils.StringUtils.gainToDouble;
 import static apincer.android.mmate.utils.StringUtils.getWord;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
@@ -49,9 +50,11 @@ import timber.log.Timber;
 public class FFMPeg {
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         if(!isEmpty(tag.getEmbedCoverArt())) {
+            String targetPath = pathFile.getAbsolutePath();
+            targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
 
-            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile.getAbsolutePath() + "\"";
+            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + targetPath + "\"";
 
             FFmpegKit.execute(cmd); // do not clear the result
         }
@@ -221,6 +224,8 @@ public class FFMPeg {
     private static final String KEY_TRACK_PEAK = "REPLAYGAIN_TRACK_PEAK"; // added by thawee
     private static final String KEY_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
     private static final String KEY_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
+    private static final String KEY_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
+
     private static final String METADATA_KEY = "-metadata";
 
     public static class Loudness {
@@ -251,9 +256,10 @@ public class FFMPeg {
         void onFinish(boolean status);
     }
 
+    /*
     @Deprecated
     public static Loudness getLoudness(String path) {
-        try {
+        try { */
 /*
    -i "%a" -af ebur128 -f null --i "%a" -af ebur128 -f null -
   Integrated loudness:
@@ -270,7 +276,7 @@ public class FFMPeg {
     Peak:        0.5 dBFS[Parsed_ebur128_0 @ 0x7b44c68950]
 
 */
-            //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
+ /*           //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
             String cmd = " -hide_banner -nostats -i \"" + path + "\" -filter_complex ebur128=peak=true:framelog=verbose -f null -";
             //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
             // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
@@ -289,7 +295,7 @@ public class FFMPeg {
             Timber.e(ex);
         }
         return null;
-    }
+    } */
 
     public static MusicTag readMusicTag(Context context, String path) {
         //return readFFprobe(path);
@@ -299,24 +305,34 @@ public class FFMPeg {
     }
 
     public static void readLoudness(Context context, MusicTag tag) {
-        String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" -filter_complex ebur128=peak=true:framelog=verbose -f null -";
+        String targetPath = tag.getPath();
+        targetPath = escapePathForFFMPEG(targetPath);
+        String cmd = " -hide_banner -nostats -i \"" + targetPath + "\" -filter_complex ebur128=peak=true:framelog=verbose -f null -";
         //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
         // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
         FFmpegSession session = FFmpegKit.execute(cmd);
         String data = getFFmpegOutputData(session);
         parseLoudness(tag, data);
         session.cancel();
+
+        if(tag.getTrackLoudness()==-70.0) {
+            // trye reading again, first time may get error
+            session = FFmpegKit.execute(cmd);
+            data = getFFmpegOutputData(session);
+            parseLoudness(tag, data);
+            session.cancel();
+        }
     }
 
     private static void parseLoudness(MusicTag tag, String data) {
         String keyword = "Integrated loudness:";
         int startTag = data.lastIndexOf(keyword);
         if (startTag > 0) {
-            String loudness = data.substring(data.indexOf("I:") + 3, data.indexOf("LUFS"));
-            String range = data.substring(data.indexOf("LRA:") + 5, data.indexOf("LU\n"));
-            String truePeak = data.substring(data.indexOf("Peak:") + 6, data.indexOf("dBFS"));
+            String loudness = data.substring(data.indexOf("I:",startTag) + 3, data.indexOf("LUFS",startTag));
+            //String range = data.substring(data.indexOf("LRA:",startTag) + 5, data.indexOf("LU\n",startTag));
+            String truePeak = data.substring(data.indexOf("Peak:",startTag) + 6, data.indexOf("dBFS",startTag));
             tag.setTrackLoudness(toDouble(loudness));
-            tag.setTrackRange(toDouble(range));
+            //tag.setTrackRange(toDouble(range));
             tag.setTrackTruePeak(toDouble(truePeak));
         }
     }
@@ -327,10 +343,11 @@ public class FFMPeg {
        // if(MusicTagUtils.isDSDFile(path)) {
        //     filter = " -filter:a drmeter ";
        // }
-        String path = tag.getPath();
+        String targetPath = tag.getPath();
+        targetPath = escapePathForFFMPEG(targetPath);
         String filter = " -filter:a replaygain ";
 
-        String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
+        String cmd ="-hide_banner -nostats -i \""+targetPath+"\""+filter+" -f null -";
 
         FFmpegSession session = FFmpegKit.execute(cmd);
        // if (ReturnCode.isSuccess(session.getReturnCode())) {
@@ -552,6 +569,13 @@ public class FFMPeg {
             tag.setDisc(getValueForKey(tags, KEY_TAG_WAVE_DISC));
             //parseWaveComment(tag);
         }
+
+        // replay gain
+        tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_TRACK_LOUDNESS)));
+        tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
+        tag.setTrackTruePeak(toDouble(getValueForKey(tags, KEY_TRACK_PEAK)));
+        tag.setAlbumRG(gainToDouble(getValueForKey(tags, KEY_ALBUM_GAIN)));
+        tag.setAlbumTruePeak(toDouble(getValueForKey(tags, KEY_ALBUM_PEAK)));
     }
 
     private static void parseReplayGain(MusicTag tag, String data) {
@@ -635,6 +659,7 @@ public class FFMPeg {
             dir.getParentFile().mkdirs();
         }
         targetPath = dir.getAbsolutePath();
+        targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackGainKeys(tag);
 
         String cmd = " -hide_banner -nostats -i \"" + srcPath + "\" -map 0 -y -codec copy "+metadataKeys+ "\""+targetPath+"\"";
@@ -674,6 +699,7 @@ public class FFMPeg {
             dir.getParentFile().mkdirs();
         }
         targetPath = dir.getAbsolutePath();
+        targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackKeys(tag.getOriginTag(), tag);
         if(isEmpty(metadataKeys)) return false; // co change to write to change
 
@@ -873,6 +899,9 @@ public class FFMPeg {
         if(isAIFFile(tag)) {
             tags = " -write_id3v2 1 ";
         }
+
+        tags = tags +
+                getMetadataTrackKey(KEY_TRACK_LOUDNESS, tag.getTrackLoudness());
 
         if(tag.getTrackRG() == 0.0) {
             tags = tags +
@@ -1224,7 +1253,7 @@ public class FFMPeg {
         return "";
     }
 
-    public static void covert(String srcPath, String targetPath, CallBack callbak) {
+    public static void convert(String srcPath, String targetPath, CallBack callbak) {
         String options="";
         if (targetPath.endsWith(".mp3")) {
             // convert to 320k bitrate
@@ -1234,6 +1263,7 @@ public class FFMPeg {
             // use lowpass filter to eliminate distortion in the upper frequencies.
             options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
         }
+        targetPath = escapePathForFFMPEG(targetPath);
 
         String cmd = " -hide_banner -nostats -i "+escapeFileName(srcPath)+" "+options+" \""+targetPath+"\"";
 
@@ -1284,6 +1314,12 @@ public class FFMPeg {
         }
 
         return buff.toString();
+    }
+
+    public static String escapePathForFFMPEG(String path) {
+        path = StringUtils.trimToEmpty(path);
+       // path = path.replace("'", "''");
+        return path;
     }
 
     /*

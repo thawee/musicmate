@@ -153,6 +153,7 @@
         <item>Phuea Chiwit</item>
     </string-array>
     <string-array name="default_groupings">
+        <item>Acoustic</item>
         <item>Lounge</item>
         <item>Live</item>
         <item>Thai</item>

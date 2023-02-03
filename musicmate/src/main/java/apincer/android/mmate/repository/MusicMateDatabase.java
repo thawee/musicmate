@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.objectbox.MusicTagDao;
 
-@Database(entities = MusicTag.class,exportSchema = false, version = 2)
+@Database(entities = MusicTag.class,exportSchema = false, version = 3)
 public abstract class MusicMateDatabase extends RoomDatabase {
     private static volatile MusicMateDatabase INSTANCE;
 

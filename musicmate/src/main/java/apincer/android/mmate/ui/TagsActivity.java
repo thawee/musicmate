@@ -284,7 +284,7 @@ public class TagsActivity extends AppCompatActivity {
 
         // Track Replay Gain
         resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
-        trackRGView.setText(String.format(Locale.US, "RG %.2f",displayTag.getTrackRG()));
+        trackRGView.setText(String.format(Locale.US, "G %.2f",displayTag.getTrackRG()));
         trackRGView.setBackground(resolutionBackground);
 
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);

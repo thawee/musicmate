@@ -21,6 +21,7 @@ public class MusicMateExecutors {
     private final ExecutorService mScanThread;
     private final Executor mImportThread;
     private final Executor mMainThread;
+    private final Executor mDbThread;
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -38,6 +39,7 @@ public class MusicMateExecutors {
         this.mMaintainThread = maintainThread;
         this.mScanThread = scanThread;
         this.mImportThread = importThread;
+        this.mDbThread = new ThreadPoolExecutor(2, 2,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {};
         this.mMainThread = new MainThreadExecutor();
     }
 
@@ -81,6 +83,14 @@ public class MusicMateExecutors {
 
     public Executor loudness() {
         return mLoudnessThread;
+    }
+
+    public Executor db() {
+        return mDbThread;
+    }
+
+    public static void db(@NonNull Runnable command) {
+        getInstance().db().execute(command);
     }
 
     public Executor update() {

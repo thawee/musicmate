@@ -121,12 +121,12 @@ public class MusicTag implements Cloneable, Parcelable {
     //protected boolean trackScanned;
     protected double gainTrackTruePeak; // unit of dB
     protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
-    protected double trackDR; // Dynamic Range
+    protected double gainTrackDR; // Dynamic Range
     protected double gainAlbumTruePeak; // unit of dB
     protected double gainAlbumRG; // replay gain V2, references LI -18.00 LUFS
 
    // protected double ebur128TruePeak; // ebur128
-    protected double gainTrackRange; // ebur128
+   // protected double gainTrackRange; // ebur128
     protected double gainTrackLoudness; // ebur128
 
     public int getFileSizeRatio() {
@@ -227,7 +227,7 @@ public class MusicTag implements Cloneable, Parcelable {
         embedCoverArt = in.readString();
         audioStartTime = in.readDouble();
         mmReadError = in.readByte() != 0;
-        trackDR = in.readDouble();
+        gainTrackDR = in.readDouble();
     }
 
     public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
@@ -475,7 +475,7 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.gainTrackRG = gainTrackRG;
         tag.gainTrackTruePeak = gainTrackTruePeak;
         tag.gainTrackLoudness = gainTrackLoudness;
-        tag.trackDR = trackDR;
+        tag.gainTrackDR = gainTrackDR;
         tag.gainAlbumRG = gainAlbumRG;
         tag.gainAlbumTruePeak=gainAlbumTruePeak;
 
@@ -552,7 +552,7 @@ public class MusicTag implements Cloneable, Parcelable {
         this.gainTrackTruePeak = tag.gainTrackTruePeak;
         this.gainTrackRG = tag.gainTrackRG;
         this.gainTrackLoudness = tag.gainTrackLoudness;
-        this.trackDR = tag.trackDR;
+        this.gainTrackDR = tag.gainTrackDR;
         this.gainAlbumRG = tag.gainAlbumRG;
         this.gainAlbumTruePeak = tag.gainAlbumTruePeak;
 
@@ -613,7 +613,7 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(embedCoverArt);
         parcel.writeDouble(audioStartTime);
         parcel.writeByte((byte) (mmReadError ? 1 : 0));
-        parcel.writeDouble(trackDR);
+        parcel.writeDouble(gainTrackDR);
     }
 
     public MusicTag getOriginTag() {
@@ -713,11 +713,11 @@ public class MusicTag implements Cloneable, Parcelable {
     }
 
     public double getTrackDR() {
-        return trackDR;
+        return gainTrackDR;
     }
 
     public void setTrackDR(double trackDR) {
-        this.trackDR = trackDR;
+        this.gainTrackDR = trackDR;
     }
 
     public double getAlbumTruePeak() {
@@ -735,13 +735,14 @@ public class MusicTag implements Cloneable, Parcelable {
     public void setAlbumRG(double albumRG) {
         this.gainAlbumRG = albumRG;
     }
+    /*
     public double getTrackRange() {
         return gainTrackRange;
     }
 
     public void setTrackRange(double ebur128Range) {
         this.gainTrackRange = ebur128Range;
-    }
+    } */
 
     public double getTrackLoudness() {
         return gainTrackLoudness;

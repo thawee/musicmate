@@ -517,6 +517,16 @@ public class StringUtils {
     }
 
     public static double toDouble(String text) {
+        text = trimToEmpty(text);
+        if(isDigitOrDecimal(text)) {
+            return Double.parseDouble(text);
+        }
+        return 0L;
+    }
+
+    public static double gainToDouble(String text) {
+        text = text.replace("dB", "");
+        text = trimToEmpty(text);
         if(isDigitOrDecimal(text)) {
             return Double.parseDouble(text);
         }

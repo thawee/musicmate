@@ -91,7 +91,7 @@ public class MusixMateApp extends Application {
     }
 
     public static MusicMateDatabase getDatabase() {
-            return database;
+       return database;
     }
 
     @Override

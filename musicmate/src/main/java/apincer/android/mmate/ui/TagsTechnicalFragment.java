@@ -31,6 +31,7 @@ import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.utils.ReplayGain;
 import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
@@ -74,9 +75,12 @@ public class TagsTechnicalFragment extends Fragment {
                 () -> {
                    for(MusicTag tag:tagsActivity.getEditItems()) {
                         //calculate track RG
-                        FFMPeg.readReplayGain(getActivity(), tag);
+                       // FFMPeg.readReplayGain(getActivity(), tag);
+                        FFMPeg.readLoudness(getContext(), tag);
                     }
                     // calculate album RG
+                    ReplayGain.calculate(tagsActivity.getEditItems());
+                    /*
                     if(tagsActivity.getEditItems().size()>=1) {
                         double rg = tagsActivity.getEditItems().get(0).getTrackRG();
                         double tp = tagsActivity.getEditItems().get(0).getTrackTruePeak();
@@ -93,7 +97,7 @@ public class TagsTechnicalFragment extends Fragment {
                             tag.setAlbumRG(rg);
                             tag.setAlbumTruePeak(tp);
                         }
-                    }
+                    }*/
 
                     // save RG to media file
                     for(MusicTag tag:tagsActivity.getEditItems()) {

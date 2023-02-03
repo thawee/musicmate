@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -49,14 +51,12 @@ import com.anggrayudi.storage.file.StorageId;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
 import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.skydoves.powerspinner.IconSpinnerAdapter;
-import com.skydoves.powerspinner.IconSpinnerItem;
-import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -855,7 +855,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         TextView outputlabel = view.findViewById(R.id.panel_output_label);
         String quality;
         String qualityDetails = "";
-        if(tag != null && !StringUtils.isEmpty(tag.getPath())) {
+        if(tag != null && !isEmpty(tag.getPath())) {
             ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
             ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                     .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), tag))
@@ -881,7 +881,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             outputText.setText(device.getName());
             outputlabel.setText(device.getDescription());
         });
-        if(StringUtils.isEmpty(qualityDetails)) {
+        if(isEmpty(qualityDetails)) {
             qualityDetails = "Track details is not available.";
         }
 
@@ -1037,7 +1037,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         SimplifySpanBuild spannable = new SimplifySpanBuild("");
         if(count >0) {
             SearchCriteria criteria = epoxyController.getCriteria();
-            if (!StringUtils.isEmpty(criteria.getFilterType())) {
+            if (!isEmpty(criteria.getFilterType())) {
                 String filterType = criteria.getFilterType();
                 spannable.appendMultiClickable(new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> epoxyController.clearFilter()).setNormalTextColor(getColor(R.color.grey200)), new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10));
             }
@@ -1252,14 +1252,40 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to selected encoding.");
         }
 
-        final String[] encoding = {null};
+       // final String[] encoding = {null};
         View btnOK = cview.findViewById(R.id.btn_ok);
         View btnCancel = cview.findViewById(R.id.btn_cancel);
-        PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+
+        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+        MaterialRadioButton btnAiff = cview.findViewById(R.id.mediaEncodingAIFF);
+        MaterialRadioButton btnFlac = cview.findViewById(R.id.mediaEncodingFLAC);
+        MaterialRadioButton btnMPeg = cview.findViewById(R.id.mediaEncodingMPEG);
+        if(MusicTagUtils.isWavFile(selections.get(0))) {
+            btnAiff.setEnabled(true);
+            btnFlac.setEnabled(true);
+            btnMPeg.setEnabled(true);
+
+            btnFlac.setChecked(true);
+            //encoding[0]="FLAC";
+        }else if(MusicTagUtils.isAIFFile(selections.get(0))) {
+            btnAiff.setEnabled(false);
+            btnFlac.setEnabled(true);
+            btnMPeg.setEnabled(true);
+
+            btnFlac.setChecked(true);
+           // encoding[0] = "FLAC";
+        } else if(MusicTagUtils.isFLACFile(selections.get(0))) {
+                btnAiff.setEnabled(true);
+                btnFlac.setEnabled(false);
+                btnMPeg.setEnabled(true);
+
+                btnAiff.setChecked(true);
+              //  encoding[0]="AIFF";
+        }
 
         btnOK.setEnabled(false);
-        IconSpinnerAdapter adapter = new IconSpinnerAdapter(mEncodingView);
+        /*IconSpinnerAdapter adapter = new IconSpinnerAdapter(mEncodingView);
         ArrayList<IconSpinnerItem> encodingItems = new ArrayList<>();
         encodingItems.add(new IconSpinnerItem("AIFF", null));
        // encodingItems.add(new IconSpinnerItem("ALAC", null));
@@ -1277,7 +1303,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         });
         mEncodingView.setSpinnerAdapter(adapter);
         mEncodingView.setText("FLAC");
-        encoding[0]="FLAC";
+         */
+
         btnOK.setEnabled(true);
 
         int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
@@ -1302,19 +1329,31 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
-            if(encoding[0] == null) {
-                return;
-            }
+           //// if(encoding[0] == null) {
+           //     return;
+           // }
 
            /// String options = "";
-            String targetExt = encoding[0].toLowerCase();
+            String targetExt = "";// encoding[0].toLowerCase();
            // if(encoding[0].contains("MP3")) {
            //     options = " -ar 44100 -ab 320k ";
           //  }
+            if(btnAiff.isChecked()) {
+                targetExt = "AIFF";
+            }else if(btnFlac.isChecked()) {
+                targetExt = "FLAC";
+            }else if (btnMPeg.isChecked()){
+                targetExt = "MP3";
+            }
+
+            if(isEmpty(targetExt)) {
+                return;
+            }
+
             progressBar.setProgress(0);
 
             for(MusicTag tag: selections) {
-                if(!StringUtils.trimToEmpty(encoding[0]).equalsIgnoreCase(tag.getAudioEncoding()))  {
+                if(!StringUtils.trimToEmpty(targetExt).equalsIgnoreCase(tag.getAudioEncoding()))  {
             //        if(tag.isDSD()) {
                         // convert from dsf to 24 bits, 48 kHz
                         // use lowpass filter to eliminate distortion in the upper frequencies.
@@ -1326,7 +1365,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     String targetPath = filePath+"."+targetExt; //+".flac";
                 //    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
 
-                    FFMPeg.covert(srcPath, targetPath, status -> {
+                    FFMPeg.convert(srcPath, targetPath, status -> {
                         if (status) {
                             //repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
                             repos.scanMusicFile(new File(targetPath),false); // re scan file

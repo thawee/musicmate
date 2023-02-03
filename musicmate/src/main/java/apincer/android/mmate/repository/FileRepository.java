@@ -478,9 +478,12 @@ public class FileRepository {
             // lounge
             return STORAGE_PRIMARY;
         }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
-        // lounge
-        return STORAGE_PRIMARY;
-    }
+            // lounge
+            return STORAGE_PRIMARY;
+        }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
+                // Acoustic
+                return STORAGE_PRIMARY;
+            }
         return STORAGE_SECONDARY;
     }
 

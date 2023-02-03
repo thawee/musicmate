@@ -91,7 +91,7 @@
                 android:textStyle="bold"/>
             <TextView
                 android:id="@+id/item_track_rg_icon"
-                android:layout_width="@dimen/dimen_38_dp"
+                android:layout_width="@dimen/dimen_32_dp"
                 android:layout_height="16dp"
                 android:layout_toRightOf="@id/item_dr_icon"
                 android:layout_marginLeft="@dimen/dimen_2_dp"

@@ -55,6 +55,50 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_weight="1">
+            <RadioGroup
+                android:id="@+id/mediaEncoding"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                android:orientation="horizontal"
+                tools:ignore="UselessParent">
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/mediaEncodingAIFF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:shapeAppearance="@style/Rounded"
+                    android:background="@drawable/shape_edittext_border"
+                    android:layout_margin="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:textColor="@color/white"
+                    android:text="AIFF"/>
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/mediaEncodingFLAC"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/dimen_4_dp"
+                    app:shapeAppearance="@style/Rounded"
+                    android:background="@drawable/shape_edittext_border"
+                    android:layout_margin="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:textColor="@color/white"
+                    android:text="FLAC"/>
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/mediaEncodingMPEG"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:shapeAppearance="@style/Rounded"
+                    android:layout_margin="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:background="@drawable/shape_edittext_border"
+                    android:textColor="@color/white"
+                    android:text="MPEG"/>
+            </RadioGroup>
+            <!--
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,6 +131,7 @@
                 app:spinner_popup_animation="dropdown"
                 app:spinner_popup_background="@color/black_transparent_80"
                 app:spinner_popup_elevation="14dp" />
+                -->
         </LinearLayout>
 
         <RelativeLayout
@@ -100,7 +145,7 @@
                 android:id="@+id/progressBar"
                 style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/dimen_4_dp"
+                android:layout_height="@dimen/dimen_8_dp"
                 android:layout_marginLeft="24dp"
                 android:layout_marginTop="@dimen/dimen_16_dp"
                 android:layout_marginRight="24dp" />

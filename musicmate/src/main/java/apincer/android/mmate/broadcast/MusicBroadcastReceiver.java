@@ -160,8 +160,8 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                     playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
                 }
             }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Timber.w(e);
         }
     }
 

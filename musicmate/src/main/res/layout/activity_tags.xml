@@ -296,7 +296,7 @@
 
                     <TextView
                         android:id="@+id/icon_track_rg"
-                        android:layout_width="@dimen/dimen_52_dp"
+                        android:layout_width="@dimen/dimen_46_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_gravity="right|center_vertical"
                         android:layout_marginRight="@dimen/dimen_2_dp"
@@ -306,7 +306,7 @@
                         android:gravity="center"
                         android:paddingTop="@dimen/dimen_2_dp"
                         android:paddingBottom="@dimen/dimen_2_dp"
-                        android:text="RG 0.00"
+                        android:text="G 0.00"
                         android:textColor="@color/black"
                         android:textSize="12sp"
                         android:textStyle="bold" />

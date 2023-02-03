@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.BuildConfig;
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
@@ -37,6 +38,7 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 
 public class AboutActivity extends AppCompatActivity {
@@ -90,6 +92,7 @@ public class AboutActivity extends AppCompatActivity {
             List<MusicTag> tags = MusicTagRepository.getAllMusics();
 
             Map<String, Integer> encList = new HashMap<>();
+            Map<String, Integer> grpList = new HashMap<>();
             Map<String, Long> estimatedSize = new HashMap<>();
             Map<String, Long> actualSize = new HashMap<>();
             FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
@@ -116,6 +119,16 @@ public class AboutActivity extends AppCompatActivity {
                 }else {
                     encList.put(enc, 1);
                 }
+
+                // grouping
+                String grp = tag.getGrouping();
+                if(StringUtils.isEmpty(grp)) grp = Constants.UNKNOWN_GROUP;
+                if(grpList.containsKey(grp)) {
+                    Integer cnt = grpList.get(grp);
+                    grpList.put(grp, cnt + 1);
+                }else {
+                    grpList.put(grp, 1);
+                }
             }
 
             // storage
@@ -123,7 +136,8 @@ public class AboutActivity extends AppCompatActivity {
             UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
 
             // file type piechart
-            setupEncodingChart(v, encList);
+            //setupEncodingChart(v, encList, "Music File Format");
+            setupEncodingChart(v, grpList, "");
 
             // setup digital music details
             String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
@@ -132,11 +146,14 @@ public class AboutActivity extends AppCompatActivity {
             return v;
         }
 
-        private void setupEncodingChart(View v, Map<String, Integer> encList) {
+        private void setupEncodingChart(View v, Map<String, Integer> encList, String title) {
             PieChart chart = v.findViewById(R.id.chart1);
-            chart.setUsePercentValues(false);
+            //chart.setUsePercentValues(false);
+            chart.setUsePercentValues(true);
             chart.getDescription().setEnabled(false);
-            chart.setExtraOffsets(5, 10, 5, 10);
+            chart.setExtraOffsets(0, 4, 0, 0);
+            //chart.setExtraOffsets(5, 10, 5, 10);
+            //chart.setExtraOffsets(20f, 130f, 20f, 20f);
 
             chart.setDragDecelerationFrictionCoef(0.95f);
 
@@ -144,7 +161,8 @@ public class AboutActivity extends AppCompatActivity {
             chart.setDrawHoleEnabled(true);
             chart.setHoleColor(Color.TRANSPARENT);
 
-            chart.setHoleRadius(42f);
+            //chart.setHoleRadius(42f);
+            chart.setHoleRadius(32f);
             chart.setTransparentCircleRadius(56f);
 
             chart.setDrawCenterText(false);
@@ -157,25 +175,26 @@ public class AboutActivity extends AppCompatActivity {
             chart.setHighlightPerTapEnabled(false);
 
             Legend l = chart.getLegend();
-            l.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
-            l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
-            l.setOrientation(Legend.LegendOrientation.VERTICAL);
-            l.setDrawInside(false);
-            l.setXEntrySpace(5f);
-            l.setYEntrySpace(0f);
-            l.setYOffset(2f);
-            l.setStackSpace(12);
+            //l.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
+            //l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
+           // l.setOrientation(Legend.LegendOrientation.VERTICAL);
+           // l.setDrawInside(false);
+           // l.setXEntrySpace(5f);
+           // l.setYEntrySpace(0f);
+           // l.setYOffset(2f);
+           // l.setStackSpace(12);
             l.setTextColor(Color.WHITE);
+            l.setWordWrapEnabled(true);
 
             // entry label styling
             chart.setEntryLabelColor(Color.WHITE);
             chart.setDrawEntryLabels(false);
             //  chart.setEntryLabelTypeface(tfRegular);
             chart.setEntryLabelTextSize(10f);
-            setData(chart, encList);
+            setData(chart, encList, title);
         }
 
-        private void setData(PieChart chart, Map<String, Integer> encList) {
+        private void setData(PieChart chart, Map<String, Integer> encList, String title) {
             ArrayList<PieEntry> entries = new ArrayList<>();
 
             // NOTE: The order of the entries when being added to the entries array determines their position around the center of
@@ -191,10 +210,16 @@ public class AboutActivity extends AppCompatActivity {
             mappedColors.put("High Quality", ColorTemplate.rgb("#ff6361")); */
 
             mappedColors.put("DSD", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
+            mappedColors.put("Lounge", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
             mappedColors.put("MQA", ColorTemplate.rgb("#a8aa41"));
-            mappedColors.put("Hi-Res Lossless", ColorTemplate.rgb("#488f31"));
+            mappedColors.put("Live", ColorTemplate.rgb("#a8aa41"));
+            mappedColors.put("Hi-Res", ColorTemplate.rgb("#488f31"));
+            mappedColors.put("English", ColorTemplate.rgb("#488f31"));
             mappedColors.put("Lossless", ColorTemplate.rgb("#dcb85a"));
+            mappedColors.put(Constants.UNKNOWN_GROUP, ColorTemplate.rgb("#dcb85a"));
             mappedColors.put("High Quality", ColorTemplate.rgb("#de425b"));
+            mappedColors.put("Thai", ColorTemplate.rgb("#de425b"));
+            mappedColors.put("World", ColorTemplate.rgb("#f48558"));
             for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));
                 if(mappedColors.containsKey(enc)) {
@@ -204,7 +229,7 @@ public class AboutActivity extends AppCompatActivity {
                 }
             }
 
-            PieDataSet dataSet = new PieDataSet(entries, "Music Encodings");
+            PieDataSet dataSet = new PieDataSet(entries, title);
             //setting size of the value
             dataSet.setValueLinePart1OffsetPercentage(0.0f);
             dataSet.setValueLinePart1Length(1f);

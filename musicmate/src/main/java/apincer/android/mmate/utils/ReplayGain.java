@@ -9,7 +9,7 @@ public class ReplayGain {
     public static double max_true_peak_level = -1.0; // dBTP; default as per EBU Tech 3343
     public static void calculate(List<MusicTag> tags) {
         //https://github.com/Moonbase59/loudgain/blob/master/src/loudgain.c
-        double albumGain = RG2_REFERENCE - getAlbumLoudness(tags); //scan -> album_gain
+        double albumGain = loudnessToReplayGain(getAlbumLoudness(tags)); //scan -> album_gain
         double albumPeak = getAlbumTruePeak(tags);
 
         for(MusicTag tag: tags) {
@@ -38,6 +38,7 @@ public class ReplayGain {
                 final double ttemp = tgain/tnew;
                 trackGain = trackGain - (Math.log10(ttemp) * 20.0);
             }
+            tag.setTrackRG(trackGain);
 
             if (again > apeak) {
                 anew = Math.min(again, apeak);
@@ -45,10 +46,18 @@ public class ReplayGain {
                 albumGain = albumGain - (Math.log10(atemp) * 20.0);
             }
         }
+        for(MusicTag tag: tags) {
+            tag.setAlbumRG(albumGain);
+            tag.setAlbumTruePeak(albumPeak);
+        }
     }
 
     private static double loudnessToReplayGain(double loudness) {
-        return RG2_REFERENCE - loudness;
+        if(loudness==-70.0) {
+          return 0.0d;
+        }else {
+            return RG2_REFERENCE - loudness;
+        }
     }
 
     private static double getAlbumTruePeak(List<MusicTag> tags) {
@@ -61,8 +70,10 @@ public class ReplayGain {
 
     private static double getAlbumLoudness(List<MusicTag> tags) {
         double loudness = 0.0d;
-
-        return loudness;
+        for(MusicTag tag: tags) {
+            loudness += tag.getTrackLoudness();
+        }
+        return loudness/tags.size();
     }
 
     private static double getAlbumRange(List<MusicTag> tags) {
