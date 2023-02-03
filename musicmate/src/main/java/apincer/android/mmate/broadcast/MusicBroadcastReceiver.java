@@ -156,7 +156,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                 } else {
                     playerInfo.playerIconBitmap = null;
                 }
-                if (playerName == null) {
+                if (playerName == null || playerName.equals(packageName)) {
                     playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
                 }
             }

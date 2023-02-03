@@ -12,6 +12,8 @@ import apincer.android.mmate.utils.StringUtils;
 public class MusicMateNotificationListener extends NotificationListenerService {
      public static final String HIBY_MUSIC = "com.hiby.music";
     public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
+
+    public static final String SHANLING_EDDICTPLAYER = "com.shanling.eddictplayer";
     private String prvPack;
     private String prvTitle;
     private String prvArtist;
@@ -21,9 +23,6 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     }
 
     Context context;
-  //  protected MusicPlayerInfo playerInfo;
-  //  public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
-
     @Override
 
     public void onCreate() {
@@ -42,25 +41,15 @@ public class MusicMateNotificationListener extends NotificationListenerService {
             String title = extras.getString("android.title");
             String artist = extras.getCharSequence("android.text").toString();
             sendBroadcast(pack, title, artist);
-           // if (MusicListeningService.getInstance() != null) {
-          //      setPlayer(getApplicationContext(),pack, null);
-          //  broadcastHelper.setPlayerInfo(playerInfo);
-         //   broadcastHelper.setPlayingSong( context, title,artist,null);
-            //    MusicListeningService.getInstance().setPlayerInfo(playerInfo);
-            //    MusicListeningService.getInstance().setPlayingSong(title, artist, null);
-           // }
         } else if (NE_PLAYER_LITE.equals(pack)) {
             String title = extras.getString("android.title");
             String artist = extras.getCharSequence("android.text").toString();
             sendBroadcast(pack, title, artist);
-           // if (MusicListeningService.getInstance() != null) {
-            //    setPlayer(getApplicationContext(),pack, null);
-            //    MusicListeningService.getInstance().setPlayerInfo(playerInfo);
-            //    MusicListeningService.getInstance().setPlayingSong(title, artist, null);
-           // broadcastHelper.setPlayerInfo(playerInfo);
-           // broadcastHelper.setPlayingSong( context, title,artist,null);
-           // }
-        }
+        } else if (SHANLING_EDDICTPLAYER.equals(pack)) {
+                String title = extras.getString("android.title");
+                String artist = extras.getCharSequence("android.text").toString();
+                sendBroadcast(pack, title, artist);
+            }
     }
 
     public void sendBroadcast(String pack, String title, String artist) {
@@ -82,38 +71,4 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     public void onNotificationRemoved(StatusBarNotification sbn) {
 
     }
-
-    /*
-    private void initPlayer() {
-        if(playerInfo==null) {
-            playerInfo = new MusicPlayerInfo();
-        }
-        playerInfo.playerName = DEAFULT_PLAYER_NAME;
-        playerInfo.playerPackage = "unknown";
-        playerInfo.playerIconBitmap = null;
-        playerInfo.playerIconDrawable = null;
-    }
-
-    protected void setPlayer(Context context, String packageName, String playerName) {
-        initPlayer();
-        playerInfo.playerPackage = packageName;
-        playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
-        ApplicationInfo ai = null;
-        try {
-            ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        if(ai!=null) {
-            playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
-            if (playerInfo.playerIconDrawable != null) {
-                playerInfo.playerIconBitmap = BitmapHelper.drawableToBitmap(playerInfo.playerIconDrawable);
-            }else {
-                playerInfo.playerIconBitmap = null;
-            }
-            if(playerName==null) {
-                playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
-            }
-        }
-    } */
 }
