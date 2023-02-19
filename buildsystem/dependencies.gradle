@@ -5,15 +5,15 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '7.4.0', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '7.4.1', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 30, // support running on android 11 ot higher
         targetSdk          : 33, // required 33 for photopicker, android 13
         compileSdk         : 33, // required 33 for photopicker
-        buildTools         : '33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '34.0.0-rc1', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.8.0', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '1.8.10', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.5.1', //''3.2.1' , //'3.1.3',
@@ -51,7 +51,7 @@ androidx.activity = "androidx.activity:activity:1.6.1" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.5.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
-androidx.appCompat = "androidx.appcompat:appcompat:1.6.0"
+androidx.appCompat = "androidx.appcompat:appcompat:1.6.1"
 //https://developer.android.com/jetpack/androidx/releases/cardview
 androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout
@@ -104,7 +104,7 @@ androidx.paging_rxjava2 = "androidx.paging:paging-rxjava2:3.1.0" //23/06/2019
 
 // Worker
 //https://developer.android.com/jetpack/androidx/releases/work
-androidx.work = "androidx.work:work-runtime:2.7.1"
+androidx.work = "androidx.work:work-runtime:2.8.0"
 
 deps.androidx = androidx
 
@@ -239,6 +239,8 @@ ui.mpandroidchart = 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 //https://github.com/salehyarahmadi/DataTable
 ui.datatables = 'com.github.salehyarahmadi:DataTable:v1.0.1'
 ui.htmleditor = 'com.github.irshulx:laser-native-editor:3.0.4'
+//https://github.com/lisawray/groupie
+ui.groupie = 'com.github.lisawray.groupie:groupie:2.10.1'
 deps.ui = ui
 
 def epoxy = [:]
@@ -284,7 +286,8 @@ deps.rxjava3_rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.2"
 deps.rxjava2 = "io.reactivex.rxjava2:rxjava:2.2.21" //10/12/2019
 deps.rxjava2_rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1" //10/12/2019
 deps.hamcrest = "org.hamcrest:hamcrest-all:1.3" //23/06/2019
-//deps.ormlite = "com.j256.ormlite:ormlite-android:5.1" //23/06/2019
+//https://github.com/j256/ormlite-android
+deps.ormlite = "com.j256.ormlite:ormlite-android:6.1" //23/06/2019
 //deps.crashreporter = "com.balsikandar.android:crashreporter:1.1.0" // 2/11/2019
 //deps.leakcanary = "com.squareup.leakcanary:leakcanary-android:2.0-alpha-2" //23/07/2019
 deps.blockcanary = "com.github.markzhai:blockcanary-android:1.5.0" //08/08/2019

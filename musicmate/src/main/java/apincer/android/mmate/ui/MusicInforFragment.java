@@ -280,7 +280,7 @@ public class MusicInforFragment extends Fragment {
         uscLabel.setOnClickListener(v -> mTagListLayout.addTag("_"));
         dotLabel.setOnClickListener(v -> mTagListLayout.addTag("."));
         spaceLabel.setOnClickListener(v -> mTagListLayout.addTag("sp"));
-        freeTextLabel.setOnClickListener(v -> mTagListLayout.addTag("*"));
+        freeTextLabel.setOnClickListener(v -> mTagListLayout.addTag("?"));
 
         View btnPreview = cview.findViewById(R.id.btn_preview_bar);
         View btnOK = cview.findViewById(R.id.btn_ok);

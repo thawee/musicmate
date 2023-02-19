@@ -131,6 +131,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private static final int MAX_PROGRESS_BLOCK = 10;
     private static final int MAX_PROGRESS = 100;
 
+    private MusicTag nowPlaying = null;
 
 
     ActivityResultLauncher<Intent> editorLauncher;
@@ -227,6 +228,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         if(nowPlayingView == null) {
             setUpNowPlayingView();
         }
+        nowPlaying = song;
 
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
@@ -297,6 +299,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 	
 	private void doHideNowPlayingSongFAB() {
+        nowPlaying = null;
         runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
                 .scaleX(0f).scaleY(0f)
                 .alpha(0f).setDuration(100)
@@ -631,30 +634,20 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void scrollToListening() {
+        if(nowPlaying ==null) return;
        // return scrollToSong(MusixMateApp.getPlayingSong());
-        MusicMateExecutors.main(() -> {
-            MusicTag tag = MusixMateApp.getPlayingSong();
-            positionToScroll = epoxyController.getAudioTagPosition(tag);
-            //epoxyController.notifyModelChanged(positionToScroll);
-            epoxyController.loadSource();
-        });
-    }
-    /*
-    private boolean scrollToSong(MusicTag tag) {
-        if (tag == null) return false;
+        positionToScroll = epoxyController.getAudioTagPosition(nowPlaying);
+      /*  if(positionToScroll != RecyclerView.NO_POSITION) {
+            MusicMateExecutors.main(() -> {
+                // MusicTag tag = MusixMateApp.getPlayingSong();
 
-        try {
-            int position = epoxyController.getAudioTagPosition(tag);
-            position = scrollToPosition(position, true);
-            if (position == RecyclerView.NO_POSITION) return false;
-            LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-            Objects.requireNonNull(layoutManager).scrollToPositionWithOffset(position, RECYCLEVIEW_ITEM_OFFSET);
-            return true;
-        }catch (Exception ex) {
-            Timber.e(ex);
-        }
-        return false;
-    } */
+                //epoxyController.notifyModelChanged(positionToScroll);
+                epoxyController.loadSource();
+
+            });
+        } */
+        scrollToPosition(positionToScroll,false);
+    }
 
     private int scrollToPosition(int position, boolean offset) {
         if(position != RecyclerView.NO_POSITION) {
@@ -963,11 +956,11 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doStopRefresh();
             updateHeaderPanel();
             //scrollToSong(MusixMateApp.getPlayingSong());
-            if(positionToScroll != -1) {
+          /*  if(positionToScroll != -1) {
                 scrollToPosition(positionToScroll, true);
                 //mRecyclerView.scrollToPosition(positionToScroll);
                 positionToScroll = -1;
-            }
+            } */
 
             if(epoxyController.getAdapter().getItemCount()==0) {
                mStateView.displayState("search");

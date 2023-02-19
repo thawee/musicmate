@@ -5,31 +5,22 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.room.Ignore;
-import androidx.room.Index;
-import androidx.room.PrimaryKey;
+
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.Objects;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.utils.StringUtils;
-import io.objectbox.annotation.ConflictStrategy;
-import io.objectbox.annotation.Entity;
-import io.objectbox.annotation.Id;
-import io.objectbox.annotation.Transient;
-import io.objectbox.annotation.Unique;
+///import io.objectbox.annotation.ConflictStrategy;
+//import io.objectbox.annotation.Entity;
+//import io.objectbox.annotation.Id;
+//import io.objectbox.annotation.Transient;
+//import io.objectbox.annotation.Unique;
 
-@Entity
-@androidx.room.Entity(tableName = "tag",
-    indices = {
-        @Index(value = {"uniqueKey"},unique = true),
-        @Index(value = {"path"}, unique = false),
-            @Index(value = {"fileFormat"}, unique = false),
-            @Index(value = {"mediaQuality"}, unique = false),
-            @Index(value = {"mqaInd"}, unique = false),
-            @Index(value = {"title"}, unique = false)
-    }
-)
+//@Entity
+@DatabaseTable(tableName = "musictag")
 public class MusicTag implements Cloneable, Parcelable {
     @Override
     public int hashCode() {
@@ -37,16 +28,16 @@ public class MusicTag implements Cloneable, Parcelable {
     }
 
     //
-    @Transient
-    @Ignore
+    //@Transient
     private MusicTag originTag;
 
     // id auto assigned bny objectbox
-    @Id
-    @PrimaryKey(autoGenerate = true)
+    //@Id
+    @DatabaseField(generatedId = true)
     protected long id;
 
-    @Unique(onConflict = ConflictStrategy.REPLACE)
+    //@Unique(onConflict = ConflictStrategy.REPLACE)
+    @DatabaseField(uniqueIndex = true)
     protected String uniqueKey;
 
     @Override
@@ -60,74 +51,117 @@ public class MusicTag implements Cloneable, Parcelable {
 
     // file information
     //@Index
+    @DatabaseField
     protected String path = "";
+    @DatabaseField
     protected int fileSizeRatio;
    // @Index
-    protected String fileFormat;
+   @DatabaseField
+   protected String fileFormat;
+    @DatabaseField
     protected long fileLastModified = 0;
+    @DatabaseField
     protected long fileSize;
+    @DatabaseField
     protected String data;
 
     // Mate info
+    @DatabaseField
     protected boolean mmManaged;
+    @DatabaseField
     protected String storageId;
+    @DatabaseField
     protected String simpleName;
+    @DatabaseField
     protected String mediaType = "";
+    @DatabaseField
     protected boolean mmReadError;
 
    // @Index
-    protected String mediaQuality;
+   @DatabaseField(index = true)
+   protected String mediaQuality;
+    @DatabaseField
     protected int rating; //0-10
     // audio information
+    @DatabaseField
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
    // @Index
    // protected boolean audioLossless;
    // @Index
-    protected String mqaInd;
+   @DatabaseField(index = true)
+   protected String mqaInd;
+    @DatabaseField
     protected long mqaSampleRate;
+    @DatabaseField
     protected boolean mqaScanned = false;
+    @DatabaseField
     protected String audioChannels; // 2, 4
 
     //@Index
+    @DatabaseField(index = true)
     protected int audioBitsDepth; // 16/24/32 bits
    // @Index
-    protected long audioSampleRate; //44100,48000,88200,96000,192000
+   @DatabaseField
+   protected long audioSampleRate; //44100,48000,88200,96000,192000
+    @DatabaseField
     protected long audioBitRate; //128, 256, 320 kbps
+    @DatabaseField
     protected double audioDuration;
+    @DatabaseField
     protected double audioStartTime; // for supporting cuesheet, iso sacd
 
     // tags information
     //@Index
+    @DatabaseField(index = true)
     protected String title = "";
     //@Index
+    @DatabaseField(index = true)
     protected String artist = "";
+    @DatabaseField
     protected String album = "";
+    @DatabaseField
     private String year = "";
    // @Index
-    protected String genre = "";
+   @DatabaseField(index = true)
+   protected String genre = "";
+    @DatabaseField
     protected String track = "";
+    @DatabaseField
     protected String disc = "";
+    @DatabaseField
     protected String comment = "";
    // @Index
-    protected String grouping = "";
+   @DatabaseField(index = true)
+   protected String grouping = "";
+    @DatabaseField
     protected String composer = "";
+    @DatabaseField
     protected String albumArtist = "";
+    @DatabaseField
     protected boolean compilation;
   //  @Index
-    protected String publisher = "";
+  @DatabaseField(index = true)
+  protected String publisher = "";
+    @DatabaseField
     protected String embedCoverArt = "";
 
     // loudness and gain
     //protected boolean trackScanned;
+    @DatabaseField
     protected double gainTrackTruePeak; // unit of dB
+    @DatabaseField
     protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
+    @DatabaseField
     protected double gainTrackDR; // Dynamic Range
+    @DatabaseField
     protected double gainAlbumTruePeak; // unit of dB
+    @DatabaseField
     protected double gainAlbumRG; // replay gain V2, references LI -18.00 LUFS
 
    // protected double ebur128TruePeak; // ebur128
    // protected double gainTrackRange; // ebur128
-    protected double gainTrackLoudness; // ebur128
+   @DatabaseField
+   protected double gainTrackLoudness; // ebur128
 
     public int getFileSizeRatio() {
         return fileSizeRatio;

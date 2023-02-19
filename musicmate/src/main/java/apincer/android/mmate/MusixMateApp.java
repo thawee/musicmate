@@ -14,6 +14,7 @@ import androidx.work.WorkManager;
 
 import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,8 +26,7 @@ import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.objectbox.MusicTag;
-import apincer.android.mmate.objectbox.ObjectBox;
-import apincer.android.mmate.repository.MusicMateDatabase;
+import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 import timber.log.Timber;
@@ -34,6 +34,11 @@ import timber.log.Timber;
 public class MusixMateApp extends Application {
     // private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
     //  private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
+    private static MusixMateApp INSTANCE;
+
+    public static MusixMateApp getInstance() {
+        return INSTANCE;
+    }
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
         try {
@@ -52,7 +57,8 @@ public class MusixMateApp extends Application {
     private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
-    private static MusicMateDatabase database;
+   // private static MusicMateDatabase database;
+    private MusicMateOrmLite ormLite = null;
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
@@ -90,9 +96,9 @@ public class MusixMateApp extends Application {
         BroadcastHelper.playNextSong(applicationContext);
     }
 
-    public static MusicMateDatabase getDatabase() {
-       return database;
-    }
+   // public static MusicMateDatabase getDatabase() {
+  //     return database;
+  //  }
 
     @Override
     public void onTerminate() {
@@ -103,10 +109,11 @@ public class MusixMateApp extends Application {
 
     @Override public void onCreate() {
         super.onCreate();
+        INSTANCE = this;
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-        database = MusicMateDatabase.getDatabase(this);
+        //database = MusicMateDatabase.getDatabase(this);
 
         if (BuildConfig.DEBUG) {
             //initialise reporter with external path
@@ -116,7 +123,7 @@ public class MusixMateApp extends Application {
         broadcastHelper.onCreate(this);
 
         //initialize ObjectBox is when your app starts
-        ObjectBox.init(this);
+        //ObjectBox.init(this);
 
         StateViewsBuilder
                 .init(this)
@@ -246,5 +253,15 @@ public class MusixMateApp extends Application {
        //         .setConstraints(constraints)
        //         .build();
        // WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
+    }
+
+    /*
+Provides the SQLite Helper Object among the application
+ */
+    public MusicMateOrmLite getOrmLite() {
+        if (ormLite == null) {
+            ormLite = OpenHelperManager.getHelper(this, MusicMateOrmLite.class);
+        }
+        return ormLite;
     }
 }

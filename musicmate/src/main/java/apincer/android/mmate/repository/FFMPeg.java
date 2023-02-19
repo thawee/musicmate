@@ -96,6 +96,8 @@ public class FFMPeg {
         //  RM("rm", "Rm"),
         //  M4B("m4b", "Mp4"),
         AIF("aif", "Aif"),
+
+        APE("ape", "Ape"),
         AIFF("aiff", "Aif"),
         //  AIFC("aifc", "Aif Compressed"),
         DSF("dsf", "Dsf"),

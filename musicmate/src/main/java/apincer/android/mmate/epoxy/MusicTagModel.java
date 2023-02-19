@@ -181,7 +181,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         holder.mDynamicRange.setBackground(resolutionBackground);
 
         resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        holder.mTrackReplayGainView.setText(String.format(Locale.US, "G %.2f",tag.getTrackRG()));
+        holder.mTrackReplayGainView.setText(String.format(Locale.US, "G%.2f",tag.getTrackRG()));
         holder.mTrackReplayGainView.setBackground(resolutionBackground);
 
         // duration
