@@ -220,6 +220,7 @@ dependencies {
     //https://bitbucket.org/ijabz/jaudiotagger/src/master/
     //implementation project(':library:jaudiotagger')
     implementation project(':library:justdsd')
+    implementation project(':library:JustFLAC')
     implementation project(':library:library')
     implementation project(':library:androidtagview')
     debugImplementation project(':library:crashreporter')

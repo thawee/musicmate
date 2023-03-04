@@ -52,6 +52,7 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.hiby.SyncHibyPlayer;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -232,10 +233,40 @@ public class TagsActivity extends AppCompatActivity {
 
         findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
         findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItem());
+        findViewById(R.id.btnSyncHiby).setOnClickListener(v -> doSyncHibyPlayer());
         findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItem());
         findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
         findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
         findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
+    }
+
+    private void doSyncHibyPlayer() {
+        String text = "Sync ";
+        if(editItems.size()>1) {
+            text = text + editItems.size() + " songs?";
+        }else {
+            text = text + "'"+editItems.get(0).getTitle()+"'?";
+        }
+
+        MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
+                .setIcon(R.drawable.round_send_24)
+                .setTitle("Sync Songs")
+                .setMessage(text)
+                .setPositiveButton("Sync to Hiby", (dialogInterface, i) -> {
+                    MusicMateExecutors.move(new Runnable() {
+                        @Override
+                        public void run() {
+                            for(MusicTag tag: editItems) {
+                                SyncHibyPlayer.sync(getApplicationContext(), tag);
+                            }
+                        }
+                    });
+                    finish(); // back to prev activity
+                })
+                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        AlertDialog alertDialog = builder.create();
+        alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+        alertDialog.show();
     }
 
     private void setUpTitlePanel() {
@@ -343,7 +374,7 @@ public class TagsActivity extends AppCompatActivity {
         genreView.setText(mediaTypeAndPublisher);
 
         filename.setText("["+FileSystem.getFilename(displayTag.getPath())+"]");
-        String matePath = repos.buildCollectionPath(displayTag);
+        String matePath = repos.buildCollectionPath(displayTag, true);
         String sid = displayTag.getStorageId();
        // String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {

@@ -26,7 +26,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.android.musicmate.db";
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     /**
      * The data access object used to interact with the Sqlite database to do C.R.U.D operations.
@@ -85,6 +85,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         return tagDao;
     }
 
+    /*
     public List<MusicTag> getAllMusicTag() {
         Dao<MusicTag, ?> dao = null;
         try {
@@ -94,7 +95,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
-    }
+    } */
 
     public List<MusicTag> findMySongs()  {
         Dao<MusicTag, ?> dao = null;
@@ -327,7 +328,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
     public List<MusicTag> findDuplicateSong() {
         try {
             List<MusicTag> list = new ArrayList<>();
-            List<MusicTag> audioTags = getAllMusicTag();
+            List<MusicTag> audioTags = findMySongs(); // getAllMusicTag();
             String title = "";
             String artist = "";
             MusicTag prvTag = null;

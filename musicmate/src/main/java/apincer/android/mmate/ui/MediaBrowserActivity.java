@@ -977,7 +977,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
         //mRecyclerView.setItemAnimator(null);
-        mRecyclerView.setPreserveFocusAfterLayout(false);
+        mRecyclerView.setPreserveFocusAfterLayout(true);
 
         new FastScrollerBuilder(mRecyclerView)
                 .useMd2Style()
@@ -1358,7 +1358,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                     String targetPath = filePath+"."+targetExt; //+".flac";
                 //    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
 
-                    FFMPeg.convert(srcPath, targetPath, status -> {
+                    FFMPeg.convert(getApplicationContext(),srcPath, targetPath, status -> {
                         if (status) {
                             //repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
                             repos.scanMusicFile(new File(targetPath),false); // re scan file

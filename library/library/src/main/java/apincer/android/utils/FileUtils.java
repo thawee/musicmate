@@ -243,4 +243,20 @@ public class FileUtils {
         int dotIndex = fileName.lastIndexOf('.');
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
+
+    public static String getFullFileName(String mediaPath) {
+        if(mediaPath==null) {
+            return "";
+        }
+        File file = new File(mediaPath);
+        return file.getName();
+    }
+
+    public static String getFolderName(String mediaPath) {
+        if(mediaPath==null) {
+            return "";
+        }
+        File file = new File(mediaPath);
+        return file.getParentFile().getPath();
+    }
 }

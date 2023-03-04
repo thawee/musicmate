@@ -464,6 +464,26 @@
                 android:layout_marginTop="@dimen/dimen_12_dp"
                 >
                 <com.skydoves.elasticviews.ElasticLayout
+                    android:id="@+id/btnSyncHiby"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_border_back_selectable"
+                    android:layout_marginBottom="@dimen/dimen_12_dp"
+                    android:layout_marginRight="@dimen/dimen_12_dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/dimen_4_dp"
+                        android:paddingBottom="@dimen/dimen_4_dp"
+                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        android:text="@string/sync_to_hiby_label"/>
+                </com.skydoves.elasticviews.ElasticLayout>
+                <com.skydoves.elasticviews.ElasticLayout
                     android:id="@+id/btnWebSearch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

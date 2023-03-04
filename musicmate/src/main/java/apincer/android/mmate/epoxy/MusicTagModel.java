@@ -2,6 +2,7 @@ package apincer.android.mmate.epoxy;
 
 import static com.airbnb.epoxy.EpoxyAttribute.Option.DoNotHash;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
@@ -177,11 +178,19 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
         // Dynamic Range
         resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        holder.mDynamicRange.setText(String.format(Locale.US, "DR%.0f",tag.getTrackDR()));
+        if(tag.getTrackDR()==0.00) {
+            holder.mDynamicRange.setText(" - ");
+        }else {
+            holder.mDynamicRange.setText(String.format(Locale.US, "DR%.0f", tag.getTrackDR()));
+        }
         holder.mDynamicRange.setBackground(resolutionBackground);
 
         resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        holder.mTrackReplayGainView.setText(String.format(Locale.US, "G%.2f",tag.getTrackRG()));
+        if(tag.getTrackRG() ==0.00) {
+            holder.mTrackReplayGainView.setText(" - ");
+        }else {
+            holder.mTrackReplayGainView.setText(String.format(Locale.US, "G%.2f", tag.getTrackRG()));
+        }
         holder.mTrackReplayGainView.setBackground(resolutionBackground);
 
         // duration

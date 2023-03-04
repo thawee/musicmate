@@ -172,7 +172,7 @@ public class FileRepository {
             return false;
         }
 
-        item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item)));
+        item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
         //if(isValidJAudioTagger(item.getPath())) {
         if(FFMPeg.isSupportedFileFormat(item.getPath())) {
           //  File file = new File(item.getPath());
@@ -223,6 +223,18 @@ public class FileRepository {
                     }
                 }
             //} else if (isValidJAudioTagger(mediaPath)) {
+           /* } else if (JustFLAC.isSupportedFileFormat(mediaPath)) {
+                // flac
+                MusicTag tag = MusicTagRepository.getOutdatedMusicTag(mediaPath, lastModified);
+                if (tag != null) {
+                    MusicTag metadata = JustFLAC.readMusicTag(getContext(), mediaPath);
+                    if(metadata!=null) {
+                        metadata.setId(tag.getId());
+                        String matePath = buildCollectionPath(metadata);
+                        metadata.setMusicManaged(StringUtils.equals(matePath, metadata.getPath()));
+                        MusicTagRepository.saveTag(metadata);
+                    }
+                } */
             } else if (FFMPeg.isSupportedFileFormat(mediaPath)) {
                 MusicTag tag = MusicTagRepository.getOutdatedMusicTag(mediaPath, lastModified);
                 if (tag != null) {
@@ -243,6 +255,10 @@ public class FileRepository {
         }catch (Exception ex) {
             Timber.e(ex);
         }
+    }
+
+    private String buildCollectionPath(MusicTag metadata) {
+        return buildCollectionPath(metadata, true);
     }
 
     private MusicTag[] readSACD(String path) {
@@ -370,7 +386,7 @@ public class FileRepository {
         return path.toLowerCase().endsWith(".iso");
     }
 
-    public String buildCollectionPath(@NotNull MusicTag metadata) {
+    public String buildCollectionPath(@NotNull MusicTag metadata, boolean includeStorageDir) {
         // hierarchy directory
         // 1. Collection (Jazz Collection, Isan Collection, Thai Collection, World Collection, Classic Collection, etc)
         // 2. hires, lossless, mqa, etc
@@ -454,7 +470,11 @@ public class FileRepository {
             }
 
             newPath = newPath+"."+ext;
-            return DocumentFileCompat.buildAbsolutePath(getContext(), storageId, newPath);
+            if(includeStorageDir) {
+                return DocumentFileCompat.buildAbsolutePath(getContext(), storageId, newPath);
+            }else {
+                return newPath;
+            }
 
             //  return newPath;
         } catch (Exception e) {

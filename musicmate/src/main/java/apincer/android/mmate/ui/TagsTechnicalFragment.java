@@ -30,6 +30,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.JustFLAC;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.ReplayGain;
 import apincer.android.mmate.utils.StringUtils;
@@ -75,11 +76,11 @@ public class TagsTechnicalFragment extends Fragment {
                 () -> {
                    for(MusicTag tag:tagsActivity.getEditItems()) {
                         //calculate track RG
-                       // FFMPeg.readReplayGain(getActivity(), tag);
-                        FFMPeg.readLoudness(getContext(), tag);
+                        FFMPeg.readReplayGain(getActivity(), tag);
+                       // FFMPeg.readLoudness(getContext(), tag);
                     }
                     // calculate album RG
-                    ReplayGain.calculate(tagsActivity.getEditItems());
+                    //ReplayGain.calculate(tagsActivity.getEditItems());
                     /*
                     if(tagsActivity.getEditItems().size()>=1) {
                         double rg = tagsActivity.getEditItems().get(0).getTrackRG();
@@ -125,14 +126,19 @@ public class TagsTechnicalFragment extends Fragment {
         TableLayout table = view.findViewById(R.id.tags);
 
         MusicTag tag = tagsActivity.getEditItems().get(0);
-        String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag);
-        filename.setText(String.format("MediaPath:\n%s\n\nMuicMatePath:\n%s", tag.getPath(), musicMatePath));
+        String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag, true);
+        filename.setText(String.format("MediaPath:\n%s\n\nMusicMatePath:\n%s", tag.getPath(), musicMatePath));
 
         //if(tag.getData()!=null) {
         //    metada.setText(String.format("MusicTag:\n%s\n\n", tag.getData()));
         //}
-
-        MusicTag tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
+        MusicTag tt = null;
+        if(JustFLAC.isSupportedFileFormat(tag.getPath())) {
+            tt = JustFLAC.readMusicTag(getActivity().getApplicationContext(), tag.getPath());
+        }else {
+            tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
+        }
+        //MusicTag tt = FFMPeg.readFFprobe(getActivity().getApplicationContext(), tag.getPath());
         if(tt!=null) {
            // metada.setText(String.format("%s\n\nFFmpeg:\n%s", metada.getText(), tt.getData()));
             metada.setText(String.format("FFmpeg:\n%s", tt.getData()));
@@ -163,7 +169,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv = new TextView(getContext());
-        tv.setText(" Tags from media file");
+        tv.setText(" Tags from file");
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);
@@ -173,7 +179,9 @@ public class TagsTechnicalFragment extends Fragment {
        // String text = "\nField Name\t--> Library\t<>\tFFMPeg\n";
         for(Field field: fields) {
             if (field.getName().equals("path")
-                   // || field.getName().equals("simpleName")
+                    || field.getName().equals("simpleName")
+                    || field.getName().equals("mmManaged")
+                    || field.getName().equals("fileSizeRatio")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
                     || field.getName().equals("data")

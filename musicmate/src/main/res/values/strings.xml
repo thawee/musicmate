@@ -109,12 +109,12 @@
     <string name="import_songs_label">Import</string>
     <string name="edit_tags_label">Edit Tags</string>
     <string name="delete_song_label">Delete</string>
-    <string name="aspect_label">Analyzer</string>
-    <string name="websearch_label">Web Search</string>
+    <string name="aspect_label">Aspect</string>
+    <string name="websearch_label">WWW</string>
     <string name="convert_label">Convert</string>
     <string name="editor_label_collection">Collection</string>
     <string name="preferences_sub_collection">Collections</string>
-    <string name="file_explorer_label">Directory</string>
+    <string name="file_explorer_label">Folder</string>
     <string name="app_statistics">Statistics</string>
     <string name="encoding_format">Encoding Format:</string>
     <string name="editor_label_language">Language</string>
@@ -122,6 +122,7 @@
     <string name="enter_title">Enter title</string>
     <string name="file_path">File Path</string>
     <string name="editor_musicmate_info">Music Mate information</string>
+    <string name="sync_to_hiby_label">Sync</string>
 
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">

@@ -18,6 +18,7 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.provider.MediaStore;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.arthenica.ffmpegkit.FFmpegKit;
@@ -302,6 +303,7 @@ public class FFMPeg {
     public static MusicTag readMusicTag(Context context, String path) {
         //return readFFprobe(path);
         MusicTag tag = readFFmpeg(context, path);
+       // MusicTag tag = readFFprobe(context, path);
         detectMQA(tag,50000); // timeout 50 seconds
         return tag;
     }
@@ -341,13 +343,13 @@ public class FFMPeg {
 
     public static void readReplayGain(Context context, MusicTag tag) {
         // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
-       // String filter = " -filter:a drmeter,replaygain ";
+        String filter = " -filter:a drmeter,replaygain ";
        // if(MusicTagUtils.isDSDFile(path)) {
        //     filter = " -filter:a drmeter ";
        // }
         String targetPath = tag.getPath();
         targetPath = escapePathForFFMPEG(targetPath);
-        String filter = " -filter:a replaygain ";
+       // String filter = " -filter:a replaygain ";
 
         String cmd ="-hide_banner -nostats -i \""+targetPath+"\""+filter+" -f null -";
 
@@ -355,6 +357,7 @@ public class FFMPeg {
        // if (ReturnCode.isSuccess(session.getReturnCode())) {
             String data = getFFmpegOutputData(session);
             parseReplayGain(tag, data);
+            parseDynamicRange(tag);
             session.cancel();
        // }else {
             // try to get from file name
@@ -370,9 +373,10 @@ public class FFMPeg {
         // if(MusicTagUtils.isDSDFile(path)) {
         //     filter = " -filter:a drmeter ";
         // }
-        String filter = " -filter:a drmeter ";
+       // String filter = " -filter:a drmeter ";
 
-        String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
+       // String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
+        String cmd ="-hide_banner -nostats -i \""+path+"\" -f null -";
 
         FFmpegSession session = FFmpegKit.execute(cmd);
         if (ReturnCode.isSuccess(session.getReturnCode())) {
@@ -385,7 +389,7 @@ public class FFMPeg {
             parseDurationInfo(tag);
             parseTagsInfo(tag);
             // parseReplayGain(tag);
-            parseDynamicRange(tag);
+          //  parseDynamicRange(tag);
             detectFileFormat(tag);
            // tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
@@ -402,7 +406,7 @@ public class FFMPeg {
             parseDurationInfo(tag);
             parseTagsInfo(tag);
             // parseReplayGain(tag);
-            parseDynamicRange(tag);
+           // parseDynamicRange(tag);
             detectFileFormat(tag);
            // tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
@@ -632,7 +636,16 @@ public class FFMPeg {
             readFileInfo(context, tag);
             parseStreamInfo(tag);
             parseFormatInfo(tag);
+            detectFileFormat(tag);
             //tag.setLossless(isLossless(tag));
+            tag.setFileSizeRatio(getFileSizeRatio(tag));
+
+            parseDurationInfo(tag);
+            parseTagsInfo(tag);
+            // parseReplayGain(tag);
+            parseDynamicRange(tag);
+            detectFileFormat(tag);
+            // tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
             return tag;
         }else {
@@ -641,6 +654,7 @@ public class FFMPeg {
             tag.setReadError(true);
             tag.setData(session.getOutput());
             tag.setPath(path);
+            detectFileFormat(tag);
             session.cancel();
             Timber.d(session.getOutput());
             return tag;
@@ -661,7 +675,7 @@ public class FFMPeg {
             dir.getParentFile().mkdirs();
         }
         targetPath = dir.getAbsolutePath();
-        targetPath = escapePathForFFMPEG(targetPath);
+        //targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackGainKeys(tag);
 
         String cmd = " -hide_banner -nostats -i \"" + srcPath + "\" -map 0 -y -codec copy "+metadataKeys+ "\""+targetPath+"\"";
@@ -902,8 +916,14 @@ public class FFMPeg {
             tags = " -write_id3v2 1 ";
         }
 
-        tags = tags +
-                getMetadataTrackKey(KEY_TRACK_LOUDNESS, tag.getTrackLoudness());
+        //tags = tags +
+        if(tag.getTrackLoudness() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TRACK_LOUDNESS, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TRACK_LOUDNESS, tag.getTrackLoudness());
+        }
 
         if(tag.getTrackRG() == 0.0) {
             tags = tags +
@@ -1255,7 +1275,7 @@ public class FFMPeg {
         return "";
     }
 
-    public static void convert(String srcPath, String targetPath, CallBack callbak) {
+    public static void convert(Context context, String srcPath, String targetPath, CallBack callbak) {
         String options="";
         if (targetPath.endsWith(".mp3")) {
             // convert to 320k bitrate
@@ -1265,11 +1285,29 @@ public class FFMPeg {
             // use lowpass filter to eliminate distortion in the upper frequencies.
             options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
         }
-        targetPath = escapePathForFFMPEG(targetPath);
 
-        String cmd = " -hide_banner -nostats -i "+escapeFileName(srcPath)+" "+options+" \""+targetPath+"\"";
+        String ext = FileUtils.getExtension(srcPath);
+        File dir = context.getExternalCacheDir();
+        String tmpPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
+        dir = new File(dir, tmpPath);
+        if(!dir.getParentFile().exists()) {
+            dir.getParentFile().mkdirs();
+        }
+        tmpPath = dir.getAbsolutePath();
 
-        FFmpegKit.executeAsync(cmd, session -> callbak.onFinish(ReturnCode.isSuccess(session.getReturnCode())));
+        String tmpTarget = tmpPath+"_NEWFMT";
+
+       // targetPath = escapePathForFFMPEG(targetPath);
+
+       // String cmd = " -hide_banner -nostats -i "+escapeFileName(srcPath)+" "+options+" \""+targetPath+"\"";
+        String cmd = " -hide_banner -nostats -i "+tmpPath+" "+options+" \""+tmpTarget+"\"";
+
+       // FFmpegKit.executeAsync(cmd, session -> callbak.onFinish(ReturnCode.isSuccess(session.getReturnCode())));
+        FFmpegSession session = FFmpegKit.execute(cmd);
+        if (ReturnCode.isSuccess(session.getReturnCode())) {
+            FileSystem.move(context, tmpTarget, targetPath);
+        }
+        FileSystem.delete(context, tmpPath);
     }
 
     private static String escapeFileName(String srcPath) {

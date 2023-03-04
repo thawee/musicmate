@@ -62,8 +62,8 @@ public class MusicTag implements Cloneable, Parcelable {
     protected long fileLastModified = 0;
     @DatabaseField
     protected long fileSize;
-    @DatabaseField
-    protected String data;
+    //@DatabaseField
+    protected transient String data;
 
     // Mate info
     @DatabaseField
@@ -108,7 +108,7 @@ public class MusicTag implements Cloneable, Parcelable {
     @DatabaseField
     protected double audioDuration;
     @DatabaseField
-    protected double audioStartTime; // for supporting cuesheet, iso sacd
+    protected double audioStartTime; // for supporting cue sheet, iso sacd
 
     // tags information
     //@Index
