@@ -175,7 +175,9 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
         // Dynamic Range
         resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        if(tag.getTrackDR()==0.00) {
+        holder.mDynamicRange.setBackground(resolutionBackground);
+        holder.mDynamicRange.setText(MusicTagUtils.getTrackDRandGainString(tag));
+       /* if(tag.getTrackDR()==0.00) {
             holder.mDynamicRange.setText(" - ");
         }else {
             holder.mDynamicRange.setText(String.format(Locale.US, "DR%.0f", tag.getTrackDR()));
@@ -188,7 +190,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         }else {
             holder.mTrackReplayGainView.setText(String.format(Locale.US, "R%.2f", tag.getTrackRG()));
         }
-        holder.mTrackReplayGainView.setBackground(resolutionBackground);
+        holder.mTrackReplayGainView.setBackground(resolutionBackground); */
 
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
@@ -228,7 +230,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         ImageView mAudioHiResView;
         //ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
-        TextView mTrackReplayGainView;
+       // TextView mTrackReplayGainView;
 
         @Override
         protected void bindView(View view) {
@@ -251,7 +253,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
             //this.mAudioLoudnessView = view.findViewById(R.id.item_loudness_icon);
-            this.mTrackReplayGainView = view.findViewById(R.id.item_track_rg_icon);
+          //  this.mTrackReplayGainView = view.findViewById(R.id.item_track_rg_icon);
         }
     }
 }

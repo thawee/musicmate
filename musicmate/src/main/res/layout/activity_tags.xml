@@ -279,7 +279,7 @@
 
                     <TextView
                         android:id="@+id/icon_dr"
-                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_width="@dimen/dimen_64_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_gravity="right|center_vertical"
                         android:layout_marginRight="@dimen/dimen_2_dp"
@@ -294,6 +294,7 @@
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
+                    <!--
                     <TextView
                         android:id="@+id/icon_track_rg"
                         android:layout_width="@dimen/dimen_46_dp"
@@ -309,7 +310,7 @@
                         android:text="G 0.00"
                         android:textColor="@color/black"
                         android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold" /> -->
 
                 </LinearLayout>
                 <!--

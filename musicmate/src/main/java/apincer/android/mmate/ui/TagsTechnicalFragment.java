@@ -32,6 +32,7 @@ import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.JustFLACReader;
 import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagReader;
 import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
@@ -131,16 +132,18 @@ public class TagsTechnicalFragment extends Fragment {
         //if(tag.getData()!=null) {
         //    metada.setText(String.format("MusicTag:\n%s\n\n", tag.getData()));
         //}
-        MusicTag tt = null;
-        if(JustFLACReader.isSupportedFileFormat(tag.getPath())) {
+        MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getActivity().getApplicationContext(), tag.getPath()).get(0);
+       /* if(JustFLACReader.isSupportedFileFormat(tag.getPath())) {
             tt = (new JustFLACReader()).readMusicTag(getActivity().getApplicationContext(), tag.getPath()).get(0);
         }else {
             tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
-        }
+        } */
         //MusicTag tt = FFMPeg.readFFprobe(getActivity().getApplicationContext(), tag.getPath());
-        if(tt!=null) {
-           // metada.setText(String.format("%s\n\nFFmpeg:\n%s", metada.getText(), tt.getData()));
-            metada.setText(String.format("FFmpeg:\n%s", tt.getData()));
+
+
+        MusicTag ffmpegTag = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
+        if(ffmpegTag!=null) {
+            metada.setText(String.format("FFmpeg:\n%s", ffmpegTag.getData()));
         }
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -159,7 +162,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv1 = new TextView(getContext());
-        tv1.setText(" Tags from MusicMate ");
+        tv1.setText("MusicMate");
         tv1.setTextColor(Color.WHITE);
         cell.addView(tv1);
         tbrow0.addView(cell);
@@ -168,7 +171,16 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv = new TextView(getContext());
-        tv.setText(" Tags from file");
+        tv.setText("File (STD)");
+        tv.setTextColor(Color.WHITE);
+        cell.addView(tv);
+        tbrow0.addView(cell);
+
+        cell = new LinearLayout(getContext());
+        cell.setBackgroundColor(Color.DKGRAY);
+        cell.setLayoutParams(llp);//2px border on the right for the cell
+        tv = new TextView(getContext());
+        tv.setText("File (FFMpeg)");
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);
@@ -199,8 +211,8 @@ public class TagsTechnicalFragment extends Fragment {
 
             //New Cell
             String mateVal = format(ReflectUtil.getFieldValue(field,tag),20,"\n");
-           // String ffprobeVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
-            String ffmpegVal = format(ReflectUtil.getFieldValue(field,tt),20,"\n");
+            String stdVal = format(ReflectUtil.getFieldValue(field,tt),20,"\n");
+            String ffmpegVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
 
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.DKGRAY);
@@ -227,6 +239,16 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t3v = new TextView(getContext());
+            t3v.setText(stdVal);
+            t3v.setTextColor(Color.WHITE);
+            t3v.setGravity(Gravity.CENTER);
+            cell.addView(t3v);
+            tr.addView(cell);
+
+            cell = new LinearLayout(getContext());
+            cell.setBackgroundColor(Color.GRAY);
+            cell.setLayoutParams(llp);//2px border on the right for the cell
+            t3v = new TextView(getContext());
             t3v.setText(ffmpegVal);
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);

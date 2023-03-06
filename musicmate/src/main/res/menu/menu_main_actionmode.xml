@@ -27,12 +27,17 @@
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_encoding_file"
-		android:title="File Re-Encoding"
+		android:title="Re-Encoding file"
+		app:showAsAction="collapseActionView"/>
+	<item
+		android:icon="@drawable/ic_round_audio_file_24"
+		android:id="@+id/action_calculate_replay_gain"
+		android:title="Calculate ReplayGain"
 		app:showAsAction="collapseActionView"/>
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_export_playlist"
-		android:title="Export as Playlist"
+		android:title="Export to playlist"
 		app:showAsAction="collapseActionView"/>
 
 </menu>

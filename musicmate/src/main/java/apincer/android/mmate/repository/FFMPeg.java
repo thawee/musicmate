@@ -528,6 +528,8 @@ public class FFMPeg extends TagReader {
             tag.setTitle(FileUtils.getFileName(tag.getPath()));
         }
 
+        tag.setTrackDR(toDouble(getValueForKey(tags, KEY_TRACK_DYNAMIC_RANGE)));
+
         // KEY_TRACK_GAIN
         tag.setTrackRG(toDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
 

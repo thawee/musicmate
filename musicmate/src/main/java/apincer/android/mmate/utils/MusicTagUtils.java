@@ -1100,6 +1100,26 @@ public class MusicTagUtils {
         }
     }
 
+    public static String getTrackDRandGainString(MusicTag tag) {
+        String text = "";
+        if(tag.getTrackDR()==0.00) {
+            text = " - ";
+        }else {
+            text = String.format(Locale.US, "DR%.0f", tag.getTrackDR());
+        }
+        text = text + "/";
+
+        if(tag.getTrackRG() ==0.00) {
+            text = text + " - ";
+        }else if (tag.getTrackRG() > 0.00){
+            text = text + String.format(Locale.US, "+%.2f", tag.getTrackRG());
+        }else {
+            text = text + String.format(Locale.US, "%.2f", tag.getTrackRG());
+        }
+
+        return text;
+    }
+
     public static int getSourceRescId(String letter) {
         //String letter = item.getSource();
         if (letter.equalsIgnoreCase(Constants.PUBLISHER_JOOX)) {

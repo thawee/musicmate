@@ -189,9 +189,7 @@ public class UIUtils  {
             TextView searchBtn = (TextView) searchField.get(searchView);
             searchBtn.setTextColor(color);
             searchBtn.setHintTextColor(hintColor);
-        } catch (NoSuchFieldException e) {
-            Log.e(TAG, "setSearchViewTextColor",e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             Log.e(TAG, "setSearchViewTextColor",e);
         }
     }

@@ -147,7 +147,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView filename;
     private TextView pathDrive;
     private TextView drView;
-    private TextView trackRGView;
+    //private TextView trackRGView;
     //private ImageView pathIcon;
     private SearchCriteria criteria;
 
@@ -285,7 +285,7 @@ public class TagsActivity extends AppCompatActivity {
        // ratingView = findViewById(R.id.icon_rating);
         filename = findViewById(R.id.panel_filename);
         drView = findViewById(R.id.icon_dr);
-        trackRGView = findViewById(R.id.icon_track_rg);
+        //trackRGView = findViewById(R.id.icon_track_rg);
     }
 
     public void updateTitlePanel() {
@@ -311,13 +311,14 @@ public class TagsActivity extends AppCompatActivity {
 
         // Dynamic Range
         Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
-        drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
+        //drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
+        drView.setText(MusicTagUtils.getTrackDRandGainString(displayTag));
         drView.setBackground(resolutionBackground);
 
         // Track Replay Gain
-        resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
-        trackRGView.setText(String.format(Locale.US, "G%.2f",displayTag.getTrackRG()));
-        trackRGView.setBackground(resolutionBackground);
+        //resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
+        //trackRGView.setText(String.format(Locale.US, "G%.2f",displayTag.getTrackRG()));
+        //trackRGView.setBackground(resolutionBackground);
 
         //audiophileView.setVisibility(displayTag.isAudiophile()?View.VISIBLE:View.GONE);
         //if (displayTag.isAudiophile()) {

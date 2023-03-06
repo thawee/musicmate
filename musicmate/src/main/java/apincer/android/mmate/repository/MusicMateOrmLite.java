@@ -102,7 +102,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             dao = getDao(MusicTag.class);
 
-            return dao.queryBuilder().groupBy("title").groupBy("artist").query();
+            return dao.queryBuilder().orderBy("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
@@ -170,7 +170,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             dao = getDao(MusicTag.class);
             QueryBuilder builder = dao.queryBuilder();
             builder.where().eq("mmManaged",false);
-            return builder.groupBy("title").groupBy("artist").query();
+            return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }

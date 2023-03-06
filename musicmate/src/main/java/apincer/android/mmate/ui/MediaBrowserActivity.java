@@ -78,6 +78,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -125,8 +126,8 @@ import sakout.mehdi.StateViews.StateView;
  */
 public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
     private static final String TAG = MediaBrowserActivity.class.getName();
-    private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=20; //start scrolling from 5 items
-    private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
+    private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=14; //start scrolling from 4 items
+    private static final int RECYCLEVIEW_ITEM_OFFSET= 64*4; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
     private static final int MENU_ID_QUALITY_PCM = 55550000;
     private static final int MAX_PROGRESS_BLOCK = 10;
@@ -758,10 +759,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-        }else if(item.getItemId() == R.id.menu_recordings_quality) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.MEDIA_QUALITY, Constants.QUALITY_NORMAL);
-            return true;
+       // }else if(item.getItemId() == R.id.menu_recordings_quality) {
+       //     doHideSearch();
+       //     doStartRefresh(SearchCriteria.TYPE.MEDIA_QUALITY, Constants.QUALITY_NORMAL);
+      //      return true;
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HI_QUALITY);
@@ -1165,9 +1166,13 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 doEncodingAudioFiles(epoxyController.getCurrentSelections());
                 mode.finish();
                 return true;
+            }else if (id == R.id.action_calculate_replay_gain) {
+                doCalculateReplayGain(epoxyController.getCurrentSelections());
+                mode.finish();
+                return true;
             }else if (id == R.id.action_export_playlist) {
                 doExportAsPlaylist(epoxyController.getCurrentSelections());
-                mode.finish();
+                //mode.finish();
                 return true;
             }else if (id == R.id.action_select_all) {
                 epoxyController.toggleSelections();
@@ -1188,6 +1193,34 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             actionMode = null;
             mHeaderPanel.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void doCalculateReplayGain(ArrayList<MusicTag> currentSelections) {
+            // calculate RG
+            // update RG on files
+            CompletableFuture.runAsync(
+                    () -> {
+                        for(MusicTag tag:currentSelections) {
+                            //calculate track RG
+                            FFMPeg.readReplayGain(this, tag);
+                        }
+
+                        // save RG to media file
+                        for(MusicTag tag:currentSelections) {
+                            //write RG to file
+                            FFMPeg.writeReplayGain(this, tag);
+                            // update MusicMate Library
+                            MusicTagRepository.saveTag(tag);
+                        }
+                    }
+            ).thenAccept(
+                    unused -> epoxyController.loadSource()
+            ).exceptionally(
+                    throwable -> {
+                       // stopProgressBar();
+                        return null;
+                    }
+            );
     }
 
     private void doExportAsPlaylist(List<MusicTag> currentSelections) {

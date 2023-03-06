@@ -178,18 +178,12 @@ public class FileSystem {
             //mkdirs(newDir);
         }
 
-        // First try the normal deletion.
         if (file.renameTo(newFile)) {
-            Log.i(TAG, "rename path "+file.getAbsolutePath());
+            //Log.i(TAG, "rename path "+file.getAbsolutePath());
             return true;
         }
 
         return false;
-
-        // Try with Storage Access Framework.
-       // Timber.i( "start deleting DocumentFile");
-       // DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
-       // return DocumentFileUtils.Delete(docFile,context);
     }
 
     private static boolean isValidSize(String srcPath, String targetPath, boolean exactMatch) {
@@ -339,7 +333,7 @@ public class FileSystem {
 
         // First try the normal deletion.
         if (file.delete()) {
-            Log.i(TAG,"delete path "+ file.getAbsolutePath());
+           // Log.i(TAG,"delete path "+ file.getAbsolutePath());
             return true;
         }
 
