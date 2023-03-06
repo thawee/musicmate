@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,9 +56,9 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
-import timber.log.Timber;
 
 public class MusicInforFragment extends Fragment {
+    private static final String TAG = MusicInforFragment.class.getName();
     protected Context context;
     protected TagsActivity tagsActivity;
     AlertDialog progressDialog;
@@ -302,7 +303,7 @@ public class MusicInforFragment extends Fragment {
                 track.setText(StringUtils.trimToEmpty(mdata.getTrack()));
                 //item.setOriginTag(null); // clear pending tag
             }catch (Exception ex) {
-                Timber.d(ex);
+                Log.e(TAG, "doShowReadTagsPreview",ex);
             }
         });
 
@@ -354,7 +355,7 @@ public class MusicInforFragment extends Fragment {
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
                             EventBus.getDefault().postSticky(message);
                         } catch (Exception e) {
-                            Timber.e(e);
+                            Log.e(TAG, "doSaveMediaItem",e);
                         }
                     }
                 }
@@ -503,7 +504,7 @@ public class MusicInforFragment extends Fragment {
                 progressDialog = dialogBuilder.create();
                 progressDialog.show();
             }catch (Exception ex) {
-                Timber.e(ex);
+                Log.e(TAG, "startProgressBar",ex);
             }
         });
     }

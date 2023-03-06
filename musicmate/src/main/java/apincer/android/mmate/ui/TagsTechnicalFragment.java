@@ -30,9 +30,8 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.JustFLAC;
+import apincer.android.mmate.repository.JustFLACReader;
 import apincer.android.mmate.repository.MusicTagRepository;
-import apincer.android.mmate.utils.ReplayGain;
 import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
@@ -133,8 +132,8 @@ public class TagsTechnicalFragment extends Fragment {
         //    metada.setText(String.format("MusicTag:\n%s\n\n", tag.getData()));
         //}
         MusicTag tt = null;
-        if(JustFLAC.isSupportedFileFormat(tag.getPath())) {
-            tt = JustFLAC.readMusicTag(getActivity().getApplicationContext(), tag.getPath());
+        if(JustFLACReader.isSupportedFileFormat(tag.getPath())) {
+            tt = (new JustFLACReader()).readMusicTag(getActivity().getApplicationContext(), tag.getPath()).get(0);
         }else {
             tt = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
         }

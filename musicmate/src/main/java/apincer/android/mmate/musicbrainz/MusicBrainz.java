@@ -1,5 +1,7 @@
 package apincer.android.mmate.musicbrainz;
 
+import android.util.Log;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,13 +22,13 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import timber.log.Timber;
 
 /**
  * Created by Administrator on 12/20/17.
  */
 
 public class MusicBrainz {
+    private static final String TAG = MusicBrainz.class.getName();
     private static final String MB_URL = "http://musicbrainz.org/";
     private static final String COVER_URL = "http://coverartarchive.org/";
 
@@ -75,7 +77,7 @@ public class MusicBrainz {
                         songs.add(song);
             } */
         }catch (Exception ex) {
-             Timber.e(ex);
+             Log.e(TAG,"findSongInfo",ex);
         }
         return songs;
     }
@@ -117,7 +119,7 @@ public class MusicBrainz {
             return recordings.size()>0?recordings.get(0):null;
            // return  (Recording) response.body();*/
         }catch (Exception ex) {
-            Timber.d(ex);
+            Log.e(TAG,"fetchRecordings",ex);
         }
         return null;
     }
@@ -145,9 +147,7 @@ public class MusicBrainz {
                 }
             }
         }catch (Exception ex) {
-            Timber.e(ex);
-            //LogHelper.logToFile("GetCoverArt", "No coverart for "+album.name);
-            //ex.printStackTrace();
+            Log.e(TAG,"getCoverart",ex);
         }
         return null;
     }

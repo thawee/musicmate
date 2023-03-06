@@ -5,6 +5,7 @@ import static apincer.android.mmate.utils.StringUtils.formatTitle;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
@@ -12,18 +13,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import org.jetbrains.annotations.NotNull;
-import org.justcodecs.dsd.DISOFormat;
-import org.justcodecs.dsd.Scarletbook;
-import org.justcodecs.dsd.Utils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
@@ -32,13 +28,13 @@ import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
-import timber.log.Timber;
 
 /**
  * Wrapper class for accessing media information via media store and jaudiotagger
  * Created by e1022387 on 5/10/2017.
  */
 public class FileRepository {
+    private static final String TAG = JustFLACReader.class.getName();
     private final Context context;
     private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
@@ -61,7 +57,7 @@ public class FileRepository {
                 FFMPeg.extractCoverArt(tag, pathFile);
             }
         } catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG, "extractCoverArt",e);
         }
     }
 
@@ -154,7 +150,7 @@ public class FileRepository {
                 return matchedMeta.clone();
             }
         }catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG, "findMediaItem",e);
         }
         return null;
     }
@@ -187,7 +183,7 @@ public class FileRepository {
             item.setOriginTag(null); // reset pending tag
             MusicTagRepository.saveTag(item);
             return true;
-        }else if (isValidSACD(item.getPath())) {
+        }else if (JustDSDReader.isSupportedFileFormat(item.getPath())) {
             // write to somewhere else
             Gson gson = new GsonBuilder()
                     .setPrettyPrinting()
@@ -207,12 +203,24 @@ public class FileRepository {
     public void scanMusicFile(File file, boolean forceRead) {
         try {
             String mediaPath = file.getAbsolutePath();
-            Timber.d("Scanning::%s", mediaPath);
             long lastModified = file.lastModified();
             if(forceRead) {
                 lastModified = System.currentTimeMillis()+2000;
             }
-            if (isValidSACD(mediaPath)) {
+            TagReader reader = TagReader.getReader(mediaPath);
+            // if timestamp is outdated
+            if(MusicTagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
+                Log.d(TAG, "Reading -> "+mediaPath);
+                List<MusicTag> tags = reader.readMusicTag(getContext(), mediaPath);
+                if (tags != null ) {
+                    for (MusicTag tag : tags) {
+                        String matePath = buildCollectionPath(tag);
+                        tag.setMusicManaged(StringUtils.equals(matePath, tag.getPath()));
+                        MusicTagRepository.saveTag(tag);
+                    }
+                }
+            }
+           /* if (isValidSACD(mediaPath)) {
                 if (MusicTagRepository.checkSACDOutdated(mediaPath, lastModified)) {
                     MusicTag[] tags = readSACD(mediaPath);
                     if (tags == null) return;
@@ -221,7 +229,7 @@ public class FileRepository {
                         metadata.setMusicManaged(StringUtils.equals(matePath, metadata.getPath()));
                         MusicTagRepository.saveTag(metadata);
                     }
-                }
+                } */
             //} else if (isValidJAudioTagger(mediaPath)) {
            /* } else if (JustFLAC.isSupportedFileFormat(mediaPath)) {
                 // flac
@@ -235,7 +243,7 @@ public class FileRepository {
                         MusicTagRepository.saveTag(metadata);
                     }
                 } */
-            } else if (FFMPeg.isSupportedFileFormat(mediaPath)) {
+          /*  } else if (FFMPeg.isSupportedFileFormat(mediaPath)) {
                 MusicTag tag = MusicTagRepository.getOutdatedMusicTag(mediaPath, lastModified);
                 if (tag != null) {
                    // MusicTag metadata = readJAudioTagger(tag, mediaPath);
@@ -251,9 +259,9 @@ public class FileRepository {
                         MusicTagRepository.saveTag(metadata);
                     }
                 }
-            }
+            } */
         }catch (Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG, "scanMusicFile",ex);
         }
     }
 
@@ -261,8 +269,9 @@ public class FileRepository {
         return buildCollectionPath(metadata, true);
     }
 
+    /*
     private MusicTag[] readSACD(String path) {
-        if (isValidSACD(path)) {
+        if (JustDSDReader.isSupportedFileFormat(path)) {
             try {
                 String fileExtension = FileUtils.getExtension(path).toUpperCase();
                 String simpleName = DocumentFileCompat.getBasePath(getContext(), path);
@@ -352,9 +361,9 @@ public class FileRepository {
             }
         }
         return null;
-    }
+    } */
 
-    private void readJSON(MusicTag metadata) {
+   /* private void readJSON(MusicTag metadata) {
         try {
             File f = new File(metadata.getPath());
             String fileName = f.getParentFile().getAbsolutePath()+"/"+metadata.getTrack()+".json";
@@ -380,11 +389,7 @@ public class FileRepository {
         } catch (Exception e) {
             Timber.e(e);
         }
-    }
-
-    private boolean isValidSACD(String path) {
-        return path.toLowerCase().endsWith(".iso");
-    }
+    } */
 
     public String buildCollectionPath(@NotNull MusicTag metadata, boolean includeStorageDir) {
         // hierarchy directory
@@ -478,7 +483,7 @@ public class FileRepository {
 
             //  return newPath;
         } catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG, "buildCollectionPath",e);
         }
         return metadata.getPath();
     }
@@ -621,7 +626,7 @@ public class FileRepository {
             BroadcastHelper.playNextSongOnMatched(getContext(), item);
             status = importAudioTag(item);
         }catch(Exception|OutOfMemoryError ex) {
-            Timber.e(ex);
+            Log.e(TAG, "importAudioFile",ex);
             status = false;
         }
 

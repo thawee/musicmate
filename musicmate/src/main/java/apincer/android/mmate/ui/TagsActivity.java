@@ -15,6 +15,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -71,9 +72,9 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import sakout.mehdi.StateViews.StateView;
-import timber.log.Timber;
 
 public class TagsActivity extends AppCompatActivity {
+    private static final String TAG = TagsActivity.class.getName();
     private static final ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
@@ -197,7 +198,7 @@ public class TagsActivity extends AppCompatActivity {
                 });
             }
         }catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG, "onMessageEvent", e);
         }
     }
 
@@ -491,7 +492,7 @@ public class TagsActivity extends AppCompatActivity {
                     .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor).setTextSize(10));
             encInfo.setText(spannableEnc.build());
         }catch (Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG, "updateTitlePanel", ex);
         }
     }
 
@@ -585,7 +586,7 @@ public class TagsActivity extends AppCompatActivity {
                                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, getEditItems().get(0));
                                 EventBus.getDefault().postSticky(message);
                             } catch (Exception e) {
-                                Timber.e(e);
+                                Log.e(TAG, "doDeleteMediaItem", e);
                             }
                         });
                     }else {
@@ -644,7 +645,7 @@ public class TagsActivity extends AppCompatActivity {
                 updateTitlePanel();
                 setUpPageViewer();
             } catch (Exception e) {
-                Timber.e(e);
+                Log.e(TAG, "onPlaying", e );
             }
         }
     }

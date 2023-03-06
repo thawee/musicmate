@@ -21,6 +21,7 @@ import android.media.AudioManager;
 import android.media.MediaRouter;
 import android.os.Build;
 import android.text.TextPaint;
+import android.util.Log;
 
 import androidx.core.content.res.ResourcesCompat;
 
@@ -28,9 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import apincer.android.mmate.R;
-import timber.log.Timber;
 
 public class AudioOutputHelper {
+    private static final String TAG = AudioOutputHelper.class.getName();
     public static class Device {
         public String getName() {
             return name;
@@ -492,7 +493,7 @@ public class AudioOutputHelper {
             device1.setDescription(desc);
 
         } catch(Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG,"getA2DPCodec",ex);
         }
     }
 

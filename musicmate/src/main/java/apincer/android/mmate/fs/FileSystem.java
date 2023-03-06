@@ -5,6 +5,7 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
 
@@ -22,9 +23,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 
-import timber.log.Timber;
-
 public class FileSystem {
+    private static final String TAG = FileSystem.class.getName();
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
    // private final Context mContext;
 
@@ -67,7 +67,7 @@ public class FileSystem {
                 outChannel = ((FileOutputStream) outStream).getChannel();
                 inChannel.transferTo(0, inChannel.size(), outChannel);
             }catch(Exception ex) {
-                Timber.d("Trying copy by documentfile");
+                Log.d(TAG, "Trying copy by document file");
            // } else {
                 // Storage Access Framework
                 DocumentFile targetDoc = DocumentFileCompat.fromFile(context, target);
@@ -84,7 +84,7 @@ public class FileSystem {
                 }
             }
         } catch (Exception e) {
-            Timber.e(e,"Error when copying file from " + source.getAbsolutePath() + " to " + target.getAbsolutePath());
+            Log.e(TAG,"Error when copying file from " + source.getAbsolutePath() + " to " + target.getAbsolutePath());
             return false;
         } finally {
             closeSilently(inStream);
@@ -180,7 +180,7 @@ public class FileSystem {
 
         // First try the normal deletion.
         if (file.renameTo(newFile)) {
-            Timber.i( "rename path %s", file.getAbsolutePath());
+            Log.i(TAG, "rename path "+file.getAbsolutePath());
             return true;
         }
 
@@ -269,7 +269,7 @@ public class FileSystem {
             }
         }
         catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG,"copy",e);
         }
         finally {
             // Ensure that the InputStreams are closed even if there's an exception.
@@ -333,18 +333,18 @@ public class FileSystem {
      */
     public static boolean delete(Context context, final File file) {
         if (!file.exists()) {
-            Timber.i("cannot delete path %s", file.getAbsolutePath());
+            Log.i(TAG,"cannot delete path "+file.getAbsolutePath());
             return false;
         }
 
         // First try the normal deletion.
         if (file.delete()) {
-            Timber.i( "delete path %s", file.getAbsolutePath());
+            Log.i(TAG,"delete path "+ file.getAbsolutePath());
             return true;
         }
 
         // Try with Storage Access Framework.
-        Timber.i( "start deleting DocumentFile");
+        Log.i(TAG, "start deleting DocumentFile");
         DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
         return DocumentFileUtils.forceDelete(docFile,context);
     }
@@ -372,7 +372,7 @@ public class FileSystem {
         try {
             c.close();
         } catch (IOException t) {
-            Timber.w(t);
+            Log.w(TAG,"closeSilently");
         }
     }
 

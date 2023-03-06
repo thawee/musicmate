@@ -89,9 +89,6 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(controller.isSelected(tag));
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
-       // if("Come on Over".equalsIgnoreCase(tag.getTitle())) {
-       //     tag.getTrack();
-       // }
 
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayingSong();
@@ -189,7 +186,7 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
         if(tag.getTrackRG() ==0.00) {
             holder.mTrackReplayGainView.setText(" - ");
         }else {
-            holder.mTrackReplayGainView.setText(String.format(Locale.US, "G%.2f", tag.getTrackRG()));
+            holder.mTrackReplayGainView.setText(String.format(Locale.US, "R%.2f", tag.getTrackRG()));
         }
         holder.mTrackReplayGainView.setBackground(resolutionBackground);
 

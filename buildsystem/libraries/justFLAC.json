@@ -1,0 +1,8 @@
+{
+  "uniqueId": "JustFLAC",
+  "name": "JustFLAC",
+  "artifactVersion": "18 Aug 2018",
+  "developers":[{"name":"drogatkin"}],
+  "description": "It's just a fork of the popular jFLAC decoder",
+  "website": "https://github.com/drogatkin/JustFLAC"
+}

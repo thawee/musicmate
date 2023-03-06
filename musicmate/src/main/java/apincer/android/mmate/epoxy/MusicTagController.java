@@ -3,6 +3,7 @@ package apincer.android.mmate.epoxy;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -21,9 +22,9 @@ import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.work.MusicMateExecutors;
-import timber.log.Timber;
 
 public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
+    private static final String TAG = MusicTagController.class.getName();
     private SearchCriteria criteria;
     private double totalDuration = 0;
     private long totalSize = 0;
@@ -385,7 +386,7 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
                    notifyModelRemoved(tag);
                }
            }catch (Exception ex) {
-               Timber.e(ex);
+               Log.e(TAG, "notifyModelChanged",ex);
            }
        }
     }

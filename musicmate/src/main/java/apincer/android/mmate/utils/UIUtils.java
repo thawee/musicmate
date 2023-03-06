@@ -32,6 +32,7 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -77,13 +78,13 @@ import java.util.Map;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
-import timber.log.Timber;
 
 /**
  * Created by e1022387 on 6/4/2017.
  */
 
 public class UIUtils  {
+    private static final String TAG = UIUtils.class.getName();
     public static final int INVALID_COLOR = -1;
     public static int colorAccent = INVALID_COLOR;
 
@@ -141,7 +142,7 @@ public class UIUtils  {
             MenuPopupHelper mPopup = (MenuPopupHelper) mFieldPopup.get(popupMenu);
             mPopup.setForceShowIcon(true);
         } catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG, "makePopForceShowIcon",e);
         }
     }
 
@@ -176,7 +177,7 @@ public class UIUtils  {
             DrawableCompat.setTint(wrapDrawable, color);
             DrawableCompat.setTintMode(wrapDrawable, PorterDuff.Mode.SRC_IN);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            Timber.e(e);
+            Log.e(TAG, "getTintedDrawable",e);
         }
     }
 
@@ -189,9 +190,9 @@ public class UIUtils  {
             searchBtn.setTextColor(color);
             searchBtn.setHintTextColor(hintColor);
         } catch (NoSuchFieldException e) {
-            Timber.e(e);
+            Log.e(TAG, "setSearchViewTextColor",e);
         } catch (IllegalAccessException e) {
-            Timber.e(e);
+            Log.e(TAG, "setSearchViewTextColor",e);
         }
     }
 
@@ -754,7 +755,7 @@ public class UIUtils  {
             Method hasNavigationBar = windowManagerService.getClass().getMethod("hasNavigationBar");
             return (boolean)hasNavigationBar.invoke(windowManagerService);
         } catch (ClassNotFoundException | ClassCastException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            Timber.w(e);
+            Log.e(TAG, "hasNavigationBar",e);
             return null;
         }
     }

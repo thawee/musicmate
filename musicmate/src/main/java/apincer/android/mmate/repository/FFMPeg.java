@@ -18,20 +18,20 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.provider.MediaStore;
+import android.util.Log;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.FFprobeKit;
 import com.arthenica.ffmpegkit.FFprobeSession;
-import com.arthenica.ffmpegkit.Log;
 import com.arthenica.ffmpegkit.ReturnCode;
 import com.arthenica.ffmpegkit.Session;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -46,9 +46,9 @@ import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.utils.FileUtils;
-import timber.log.Timber;
 
-public class FFMPeg {
+public class FFMPeg extends TagReader {
+    private static final String TAG = FFMPeg.class.getName();
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         if(!isEmpty(tag.getEmbedCoverArt())) {
             String targetPath = pathFile.getAbsolutePath();
@@ -229,6 +229,8 @@ public class FFMPeg {
     private static final String KEY_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
     private static final String KEY_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
 
+    private static final String KEY_TRACK_DYNAMIC_RANGE = "TRACK_DYNAMIC_RANGE";
+
     private static final String METADATA_KEY = "-metadata";
 
     public static class Loudness {
@@ -300,12 +302,13 @@ public class FFMPeg {
         return null;
     } */
 
-    public static MusicTag readMusicTag(Context context, String path) {
+    public List<MusicTag> readMusicTag(Context context, String path) {
         //return readFFprobe(path);
+        Log.d(TAG, "FFMpeg -> "+path);
         MusicTag tag = readFFmpeg(context, path);
        // MusicTag tag = readFFprobe(context, path);
         detectMQA(tag,50000); // timeout 50 seconds
-        return tag;
+        return Arrays.asList(tag);
     }
 
     public static void readLoudness(Context context, MusicTag tag) {
@@ -357,7 +360,7 @@ public class FFMPeg {
        // if (ReturnCode.isSuccess(session.getReturnCode())) {
             String data = getFFmpegOutputData(session);
             parseReplayGain(tag, data);
-            parseDynamicRange(tag);
+            parseDynamicRange(tag, data);
             session.cancel();
        // }else {
             // try to get from file name
@@ -452,7 +455,7 @@ public class FFMPeg {
                 }
             }
         }catch (Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG, "parseDurationInfo", ex);
         }
     }
 
@@ -595,6 +598,7 @@ public class FFMPeg {
             Matcher matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
+                info = info.replace("+", "");
                 tag.setTrackRG(toDouble(info));
             }
 
@@ -605,21 +609,21 @@ public class FFMPeg {
                 tag.setTrackTruePeak(toDouble(info));
             }
         }catch (Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG, "parseReplayGain", ex);
         }
     }
 
-    private static void parseDynamicRange(MusicTag tag) {
+    private static void parseDynamicRange(MusicTag tag, String data) {
         try {
             // Overall DR: 14.0357
             Pattern pattern = Pattern.compile("\\s*Overall DR:\\s*(\\S*)");
-            Matcher matcher = pattern.matcher(tag.getData());
+            Matcher matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
                 tag.setTrackDR(toDouble(info));
             }
         }catch (Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG, "parseDynamicRange", ex);
         }
     }
 
@@ -643,7 +647,7 @@ public class FFMPeg {
             parseDurationInfo(tag);
             parseTagsInfo(tag);
             // parseReplayGain(tag);
-            parseDynamicRange(tag);
+            parseDynamicRange(tag, data);
             detectFileFormat(tag);
             // tag.setLossless(isLossless(tag));
             tag.setFileSizeRatio(getFileSizeRatio(tag));
@@ -656,7 +660,7 @@ public class FFMPeg {
             tag.setPath(path);
             detectFileFormat(tag);
             session.cancel();
-            Timber.d(session.getOutput());
+            Log.d(TAG, session.getOutput());
             return tag;
         }
     }
@@ -693,7 +697,7 @@ public class FFMPeg {
                 return false;
             }
         }else {
-            Timber.i(session.getOutput());
+            Log.i(TAG, session.getOutput());
             // fail, delete tmp file;
             FileSystem.delete(context, new File(targetPath));
             return false;
@@ -722,7 +726,8 @@ public class FFMPeg {
         String cmd = " -hide_banner -nostats -i \"" + srcPath + "\" -map 0 -y -codec copy "+metadataKeys+ "\""+targetPath+"\"";
         //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
         // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
-        Timber.i("write tags: "+cmd);
+
+        Log.d(TAG, "write tags: "+cmd);
         FFmpegSession session = FFmpegKit.execute(cmd);
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
@@ -742,7 +747,7 @@ public class FFMPeg {
                 return true;
             }
         }else {
-            Timber.i(session.getOutput());
+            Log.d(TAG, session.getOutput());
             // fail, delete tmp file;
             File tmp = new File(targetPath);
             if(tmp.exists()) {
@@ -908,6 +913,8 @@ public class FFMPeg {
     "REPLAYGAIN_ALBUM_PEAK",
     "REPLAYGAIN_ALBUM_RANGE",
     "REPLAYGAIN_REFERENCE_LOUDNESS"
+
+    TRACK_DYNAMIC_RANGE
          */
 
         String tags = "";
@@ -916,7 +923,14 @@ public class FFMPeg {
             tags = " -write_id3v2 1 ";
         }
 
-        //tags = tags +
+        if(tag.getTrackDR() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TRACK_DYNAMIC_RANGE, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TRACK_DYNAMIC_RANGE, tag.getTrackDR());
+        }
+
         if(tag.getTrackLoudness() == 0.0) {
             tags = tags +
                     getMetadataTrackKey(KEY_TRACK_LOUDNESS, "");
@@ -995,7 +1009,7 @@ public class FFMPeg {
         }catch (Exception ex) {
             tag.setMqaInd("None");
             tag.setMqaScanned(true);
-            Timber.e(ex);
+            Log.e(TAG, "detectMQA", ex);
         }
     }
 
@@ -1316,12 +1330,12 @@ public class FFMPeg {
     }
 
     private static String getFFmpegOutputData(FFmpegSession session) {
-        List<Log> logs = session.getLogs();
+        List<com.arthenica.ffmpegkit.Log> logs = session.getLogs();
         StringBuilder buff = new StringBuilder();
         String keyword = "Output #0,";
         String keyword2 = "[Parsed_";
         boolean foundTag = false;
-        for (Log log : logs) {
+        for (com.arthenica.ffmpegkit.Log log : logs) {
             String msg = log.getMessage(); //trimToEmpty(log.getMessage());
             if (msg.startsWith(keyword)) {
                 foundTag = true;
@@ -1337,12 +1351,12 @@ public class FFMPeg {
     }
 
     private static String getFFmpegOutputData2(FFmpegSession session) {
-        List<Log> logs = session.getLogs();
+        List<com.arthenica.ffmpegkit.Log> logs = session.getLogs();
         StringBuilder buff = new StringBuilder();
         String keyword = "Integrated loudness:";
         String keyword2 = "-70.0 LUFS";
         boolean foundTag = false;
-        for (Log log : logs) {
+        for (com.arthenica.ffmpegkit.Log log : logs) {
             String msg = trimToEmpty(log.getMessage());
             if (!foundTag) { // finding start keyword
                 if (msg.contains(keyword) && !msg.contains(keyword2)) {

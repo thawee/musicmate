@@ -11,11 +11,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.util.Log;
 
 import java.util.List;
 
 import apincer.android.mmate.utils.BitmapHelper;
-import timber.log.Timber;
 
 /**
  * Supporting android standard broadcast
@@ -32,6 +32,7 @@ import timber.log.Timber;
  *      - Hiby Music
  */
 public class MusicBroadcastReceiver extends BroadcastReceiver {
+    private static final String TAG = MusicBroadcastReceiver.class.getName();
     public static String PACKAGE_SONY_MUSIC = "com.sonyericson.music";
     public static String PACKAGE_NEUTRON = "com.neutroncode.mp";
     public static String PACKAGE_UAPP = "com.extreamsd.usbaudioplayerpro";
@@ -93,7 +94,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                         broadcastHelper.setPlayingSong(context, title, artist, album);
                 //    }
                 }catch (Exception ex) {
-                    Timber.e(ex);
+                    Log.e(TAG, "onReceive",ex);
                 }
             }
     }
@@ -138,7 +139,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                 return list.get(list.size()-1).activityInfo.packageName;
             }
         }catch (Exception ex) {
-            Timber.e(ex);
+            Log.e(TAG, "getDefaultPlayerPackage",ex);
         }
         return null;
     }
@@ -161,7 +162,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                 }
             }
         } catch (Exception e) {
-            Timber.w(e);
+            Log.e(TAG, "setPlayer",e);
         }
     }
 

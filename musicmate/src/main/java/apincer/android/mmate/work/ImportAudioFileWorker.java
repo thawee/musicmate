@@ -1,6 +1,7 @@
 package apincer.android.mmate.work;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.OneTimeWorkRequest;
@@ -17,9 +18,9 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import timber.log.Timber;
 
 public class ImportAudioFileWorker extends Worker {
+    private static final String TAG = ImportAudioFileWorker.class.getName();
     FileRepository repos;
 
     private ImportAudioFileWorker(
@@ -71,7 +72,7 @@ public class ImportAudioFileWorker extends Worker {
             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
             EventBus.getDefault().postSticky(message);
         } catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG,"importFile",e);
         }
     }
 /*

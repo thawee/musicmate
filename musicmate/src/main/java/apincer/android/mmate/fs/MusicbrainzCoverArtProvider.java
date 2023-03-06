@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.net.Uri.Builder;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,9 +20,9 @@ import fm.last.musicbrainz.coverart.CoverArt;
 import fm.last.musicbrainz.coverart.CoverArtArchiveClient;
 import fm.last.musicbrainz.coverart.CoverArtImage;
 import fm.last.musicbrainz.coverart.impl.DefaultCoverArtArchiveClient;
-import timber.log.Timber;
 
 public final class MusicbrainzCoverArtProvider extends ContentProvider {
+    private static final String TAG = MusicbrainzCoverArtProvider.class.getName();
         public static Uri getUriForMediaItem(MusicTag item) {
             return new Builder().scheme("content").authority("apincer.android.mmate.musicbrainz.coverart.provider").path(item.getAlbum()).build();
         }
@@ -68,7 +69,7 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
                     }
                 }
             } catch (Exception e) {
-                Timber.e(e);
+                Log.e(TAG,"openFile",e);
             }
             return null;
         }

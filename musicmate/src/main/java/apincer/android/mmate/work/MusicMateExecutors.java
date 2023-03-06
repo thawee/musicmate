@@ -2,6 +2,7 @@ package apincer.android.mmate.work;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -13,9 +14,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import timber.log.Timber;
-
 public class MusicMateExecutors {
+    private static final String TAG = MusicMateExecutors.class.getName();
     private final Executor mMaintainThread;
     private final Executor mLoudnessThread;
     private final ExecutorService mScanThread;
@@ -58,7 +58,7 @@ public class MusicMateExecutors {
                     try {
                         Thread.sleep(1000); // wait 1 second
                     } catch (InterruptedException e) {
-                        Timber.e(e);
+                        Log.e(TAG, "MusicMateExecutors",e);
                     }
                 }},
                 new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
@@ -66,7 +66,7 @@ public class MusicMateExecutors {
                      try {
                          Thread.sleep(30); // wait 0.1 second
                      } catch (InterruptedException e) {
-                         Timber.e(e);
+                         Log.e(TAG, "MusicMateExecutors",e);
                      }
                  }},
                 new ThreadPoolExecutor(2, NUMBER_OF_CORES,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {},
@@ -75,7 +75,7 @@ public class MusicMateExecutors {
                         try {
                             Thread.sleep(200); // wait 0.2 second
                         } catch (InterruptedException e) {
-                            Timber.e(e);
+                            Log.e(TAG, "MusicMateExecutors",e);
                         }
                     }
                 });
@@ -133,7 +133,7 @@ public class MusicMateExecutors {
             future.cancel(true);
         } catch (Exception e) {
             // handle other exceptions
-            Timber.e(e);
+            Log.e(TAG, "scan",e);
         }
     }
 

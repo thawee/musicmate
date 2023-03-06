@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -118,12 +119,12 @@ import coil.request.ImageRequest;
 import coil.target.Target;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
-import timber.log.Timber;
 
 /**
  * Created by Administrator on 11/23/17.
  */
 public class MediaBrowserActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
+    private static final String TAG = MediaBrowserActivity.class.getName();
     private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=20; //start scrolling from 5 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 64*7; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
@@ -263,8 +264,8 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                                     }catch (Exception ex){}
                                 });
                             });
-                            }catch (Exception ex) {
-                            Timber.e(ex);
+                        }catch (Exception ex) {
+                            Log.e(TAG, "doShowNowPlayingSongFAB", ex);
                         }
                     }
                 })
@@ -722,7 +723,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 }
             });
         }catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG,"onMessageEvent",e);
         }
     }
 

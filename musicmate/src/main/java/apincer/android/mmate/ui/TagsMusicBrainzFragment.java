@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
 import apincer.android.mmate.musicbrainz.MusicBrainz;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.ui.view.LinearDividerItemDecoration;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -55,9 +57,9 @@ import coil.transform.RoundedCornersTransformation;
 //import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
-import timber.log.Timber;
 
 public class TagsMusicBrainzFragment extends Fragment implements View.OnClickListener {
+    private static final String TAG = TagsMusicBrainzFragment.class.getName();
     private static final String NO_RESULTS = "NO_RESULTS";
     private TagsActivity mainActivity;
     private RecyclerView mRecyclerView;
@@ -531,7 +533,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                                             Bitmap bitmap = UIUtils.drawableToBitmap(drawable);
                                             writePNG(new File(artworkPath), bitmap);
                                         } catch (Exception e) {
-                                            Timber.e(e);
+                                            Log.e(TAG, "", e);
                                         }
                                     }
                                 })

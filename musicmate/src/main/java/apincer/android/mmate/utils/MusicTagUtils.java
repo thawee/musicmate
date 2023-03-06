@@ -16,6 +16,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.TextPaint;
+import android.util.Log;
 
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.res.ResourcesCompat;
@@ -32,10 +33,9 @@ import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import timber.log.Timber;
 
 public class MusicTagUtils {
-
+    private static final String TAG = MusicTagUtils.class.getName();
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, int drawableId, int borderColor, int backgroundColor) {
         Bitmap icon = BitmapHelper.getBitmapFromVectorDrawable(context, drawableId);
         return createBitmapFromDrawable(context,width,height,icon, borderColor, backgroundColor);
@@ -960,6 +960,7 @@ public class MusicTagUtils {
     }
 
     public static boolean isFileCouldBroken(MusicTag tag) {
+        if(tag.getFileSize()==0) return true;
         return tag.getFileSizeRatio() < Constants.MIN_FILE_SIZE_RATIO; // 42 % of calculated size
     }
 
@@ -985,7 +986,7 @@ public class MusicTagUtils {
         if(StringUtils.isDigitOnly(channels)) {
             return StringUtils.toLong(channels);
         }else {
-            Timber.i("Channels is string: %s", channels);
+            Log.i(TAG, "Channels is string: "+channels);
         }
         return 2; // default channels
     }
@@ -1010,7 +1011,7 @@ public class MusicTagUtils {
                 // extract covert to cache directory
                 FileRepository.extractCoverArt(tag, pathFile);
             } catch (Exception e) {
-                Timber.e(e);
+                Log.e(TAG,"getCoverArt",e);
             }
         }
         return pathFile;
@@ -1055,7 +1056,7 @@ public class MusicTagUtils {
                     IOUtils.write(is, new FileOutputStream(pathFile));
                 }
             } catch (Exception e) {
-                Timber.e(e);
+                Log.e(TAG,"getEncResolutionIcon",e);
             }
         }
         return pathFile;
@@ -1081,7 +1082,7 @@ public class MusicTagUtils {
                     IOUtils.write(is, new FileOutputStream(pathFile));
                 }
             } catch (Exception e) {
-                Timber.e(e);
+                Log.e(TAG,"getSourceQualityIcon",e);
             }
         }
         return pathFile;
@@ -1640,7 +1641,7 @@ public class MusicTagUtils {
                     IOUtils.write(is, new FileOutputStream(pathFile));
                 }
             } catch (Exception e) {
-                Timber.e(e);
+                Log.e(TAG,"getSourceQualityIconMini",e);
             }
         }
         return pathFile;

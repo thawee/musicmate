@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
@@ -21,9 +22,9 @@ import apincer.android.mmate.Preferences;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.StringUtils;
-import timber.log.Timber;
 
 public class BroadcastHelper {
+    private static final String TAG = BroadcastHelper.class.getName();
     /**
      * Poweramp package name
      */
@@ -77,7 +78,7 @@ public class BroadcastHelper {
                         context.unregisterReceiver((BroadcastReceiver)receiver);
                     }
                 } catch (Exception ex) {
-                    Timber.e( ex);
+                    Log.e(TAG,"unregisterReceivers",ex);
                 }
             }
             receivers.clear();
@@ -103,7 +104,7 @@ public class BroadcastHelper {
                     playingSong = null;
                 }
             } catch (Exception ex) {
-                Timber.e( ex);
+                Log.e(TAG,"setPlayingSong", ex);
             }
         }else {
             playingSong = null;
@@ -139,7 +140,7 @@ public class BroadcastHelper {
                 //		vibrator.vibrate(pattern, -1);
                 //  }
             } catch (Exception ex) {
-                Timber.e(ex);
+                Log.e(TAG,"playNextSong",ex);
             }
         }
 

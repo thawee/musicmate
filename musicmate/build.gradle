@@ -184,7 +184,7 @@ dependencies {
    // implementation deps.dexter
     implementation deps.eventbus
     implementation deps.storage
-    implementation deps.timber
+   // implementation deps.timber
     implementation deps.guava
     implementation deps.ffmpeg
     implementation deps.coverartarchive

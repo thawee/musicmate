@@ -3,6 +3,7 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,9 +15,9 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
-import timber.log.Timber;
 
 public class MusicTagRepository {
+    private static final String TAG = MusicTagRepository.class.getName();
     public static List<String> lossyAudioFormatList;
 
     MusicTagRepository() {
@@ -58,7 +59,7 @@ public class MusicTagRepository {
                 }
             }
         } catch (Exception e) {
-            Timber.e(e);
+            Log.e(TAG,"cleanMusicMate",e);
         }
     }
 
@@ -504,5 +505,18 @@ public class MusicTagRepository {
 
         Collections.sort(list);
         return list;
+    }
+
+    public static boolean cleanOutdatedMusicTag(String mediaPath, long lastModified) {
+        // clean all existing outdated tag in database
+        List<MusicTag> tags = findByPath(mediaPath);
+        if(tags ==null || tags.size()==0) return true;
+        if(tags.get(0).getFileLastModified() < lastModified) {
+            for (MusicTag tag : tags) {
+                removeTag(tag);
+            }
+            return true;
+        }
+        return false;
     }
 }

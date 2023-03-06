@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
@@ -15,9 +16,8 @@ import androidx.preference.PreferenceManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import timber.log.Timber;
-
 public class PermissionUtils {
+    private static final String TAG = PermissionUtils.class.getName();
 
     public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,
             Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_CONNECT};
@@ -87,7 +87,7 @@ public class PermissionUtils {
             }
             return true;
         } else {
-            Timber.e( "no write permission: %s", rootPath);
+            Log.i(TAG, "no write permission: "+rootPath);
         }
         return false;
     }

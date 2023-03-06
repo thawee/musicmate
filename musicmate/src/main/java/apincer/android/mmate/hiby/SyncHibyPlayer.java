@@ -27,7 +27,7 @@ public class SyncHibyPlayer {
     public static void list(String hibyEndpoint, String path) {
         Retrofit ret = createHibyRetrofit(hibyEndpoint);
         API api = ret.create(API.class);
-        Map map = new HashMap();
+        Map<String, String> map = new HashMap();
         map.put("path", "/mnt/sd_0/"+path+"/");
         Call call =  api.list(map);
         Response response;
