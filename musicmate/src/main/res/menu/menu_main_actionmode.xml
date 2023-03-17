@@ -27,17 +27,22 @@
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_encoding_file"
-		android:title="Re-Encoding file"
+		android:title="Encoding file"
 		app:showAsAction="collapseActionView"/>
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_calculate_replay_gain"
 		android:title="Calculate ReplayGain"
 		app:showAsAction="collapseActionView"/>
+
+	<item
+		android:icon="@drawable/round_upload_file_24"
+		android:id="@+id/action_send_to_hibyos"
+		android:title="Send to Hiby DAP"
+		app:showAsAction="collapseActionView"/>
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_export_playlist"
-		android:title="Export to playlist"
+		android:title="Create Playlist"
 		app:showAsAction="collapseActionView"/>
-
 </menu>

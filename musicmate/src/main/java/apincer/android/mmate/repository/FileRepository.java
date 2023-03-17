@@ -81,7 +81,7 @@ public class FileRepository {
         return StorageId.PRIMARY;
     }
 
-    private static File getFolderCoverArt(MusicTag mediaItem) {
+    public static File getFolderCoverArt(MusicTag mediaItem) {
         // try loading from folder
         // front.png, front.jpg
         // cover.png, cover.jpg

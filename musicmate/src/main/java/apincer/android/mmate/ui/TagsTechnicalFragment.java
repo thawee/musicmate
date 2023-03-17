@@ -192,7 +192,7 @@ public class TagsTechnicalFragment extends Fragment {
             if (field.getName().equals("path")
                     || field.getName().equals("simpleName")
                     || field.getName().equals("mmManaged")
-                    || field.getName().equals("fileSizeRatio")
+                    //|| field.getName().equals("fileSizeRatio")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
                     || field.getName().equals("data")

@@ -1,0 +1,3 @@
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/2y3r8443/arm64-v8a/CMakeFiles/mqaidentifier.dir
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/2y3r8443/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/2y3r8443/arm64-v8a/CMakeFiles/rebuild_cache.dir

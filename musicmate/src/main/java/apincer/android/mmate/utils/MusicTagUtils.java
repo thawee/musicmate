@@ -201,7 +201,7 @@ public class MusicTagUtils {
             if(!isLossless) {
                 // compress rate
                 label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
-                samplingRate = StringUtils.formatAudioBitRateNoUnit(tag.getAudioBitRate());
+                samplingRate = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
             }
         }
 
@@ -961,6 +961,7 @@ public class MusicTagUtils {
 
     public static boolean isFileCouldBroken(MusicTag tag) {
         if(tag.getFileSize()==0) return true;
+        if(!isLossless(tag)) return false;
         return tag.getFileSizeRatio() < Constants.MIN_FILE_SIZE_RATIO; // 42 % of calculated size
     }
 

@@ -235,7 +235,9 @@ public class JustFLACReader extends TagReader{
                 tag.setMediaType(getFirstString(comment, "MEDIA"));
                 tag.setComment(getFirstString(comment, "DESCRIPTION"));
             }else if (metadata instanceof Picture) {
-                tag.setEmbedCoverArt(parseMimeString(((Picture)metadata).getMimeString()));
+                Picture pict = ((Picture)metadata);
+                tag.setEmbedCoverArt(parseMimeString(pict.getMimeString()));
+              //  pict.
             }
         }
 

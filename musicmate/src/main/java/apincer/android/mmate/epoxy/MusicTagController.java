@@ -165,13 +165,17 @@ public class MusicTagController extends TypedEpoxyController<List<MusicTag>> {
             this.criteria = criteria;
         SearchCriteria finalCriteria = criteria;
         MusicMateExecutors.db(() -> {
-            clearSelections();
-            List<MusicTag> actionResult = MusicTagRepository.findMediaTag(finalCriteria);
-            MusicMateExecutors.main(() -> {
-                setData(actionResult);
-                listener.onModelBuildFinished(null);
-                loading = false;
-            });
+            try {
+                clearSelections();
+                List<MusicTag> actionResult = MusicTagRepository.findMediaTag(finalCriteria);
+                MusicMateExecutors.main(() -> {
+                    setData(actionResult);
+                    listener.onModelBuildFinished(null);
+                    loading = false;
+                });
+            }catch (Exception ex) {
+                Log.e(TAG, "loadSource", ex);
+            }
         });
 
         /*

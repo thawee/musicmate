@@ -20,7 +20,7 @@
         android:paddingTop="@dimen/spacing_xsmall"
         android:paddingBottom="@dimen/spacing_xsmall"
         /> -->
-
+<!--
     <com.santalu.aspectratioimageview.AspectRatioImageView
         android:id="@+id/coverart"
         android:layout_gravity="center"
@@ -30,6 +30,15 @@
         android:layout_marginTop="@dimen/dimen_8_dp"
         android:layout_marginBottom="@dimen/dimen_8_dp"
         app:ari_ratio="0.8"
+        /> -->
+    <ImageView
+        android:id="@+id/coverart"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="fitXY"
+        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:layout_marginBottom="@dimen/dimen_8_dp"
         />
 
     <androidx.cardview.widget.CardView

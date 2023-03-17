@@ -1291,7 +1291,7 @@ public class FFMPeg extends TagReader {
         return "";
     }
 
-    public static void convert(Context context, String srcPath, String targetPath, CallBack callbak) {
+    public static boolean convert(Context context, String srcPath, String targetPath, CallBack callbak) {
         String options="";
         if (targetPath.endsWith(".mp3")) {
             // convert to 320k bitrate
@@ -1302,7 +1302,10 @@ public class FFMPeg extends TagReader {
             options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
         }
 
+        Log.i(TAG, "Converting: "+ srcPath);
+
         String ext = FileUtils.getExtension(srcPath);
+        String targetExt = FileUtils.getExtension(targetPath);
         File dir = context.getExternalCacheDir();
         String tmpPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, tmpPath);
@@ -1310,20 +1313,28 @@ public class FFMPeg extends TagReader {
             dir.getParentFile().mkdirs();
         }
         tmpPath = dir.getAbsolutePath();
+        FileSystem.copy(context, srcPath, tmpPath);
 
-        String tmpTarget = tmpPath+"_NEWFMT";
+        String tmpTarget = tmpPath.replace("."+ext, "_NEWFMT."+targetExt);
 
        // targetPath = escapePathForFFMPEG(targetPath);
 
        // String cmd = " -hide_banner -nostats -i "+escapeFileName(srcPath)+" "+options+" \""+targetPath+"\"";
         String cmd = " -hide_banner -nostats -i "+tmpPath+" "+options+" \""+tmpTarget+"\"";
+        Log.i(TAG, "Converting with cmd: "+ cmd);
 
        // FFmpegKit.executeAsync(cmd, session -> callbak.onFinish(ReturnCode.isSuccess(session.getReturnCode())));
-        FFmpegSession session = FFmpegKit.execute(cmd);
-        if (ReturnCode.isSuccess(session.getReturnCode())) {
-            FileSystem.move(context, tmpTarget, targetPath);
-        }
-        FileSystem.delete(context, tmpPath);
+       try {
+           FFmpegSession session = FFmpegKit.execute(cmd);
+
+           if (ReturnCode.isSuccess(session.getReturnCode())) {
+               FileSystem.move(context, tmpTarget, targetPath);
+               return true;
+           }
+       }finally {
+           FileSystem.delete(context, tmpPath);
+       }
+       return false;
     }
 
     private static String escapeFileName(String srcPath) {

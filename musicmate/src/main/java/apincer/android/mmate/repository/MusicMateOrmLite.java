@@ -316,7 +316,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         Dao<MusicTag, ?> dao = null;
         try {
             dao = getDao(MusicTag.class);
-            keyword = "%"+keyword.replace("'","''")+"%";
+            keyword = "'%"+keyword.replace("'","''")+"%'";
             QueryBuilder builder = dao.queryBuilder();
             builder.where().raw("title like "+keyword+" or artist like "+keyword);
             return builder.query();

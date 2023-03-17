@@ -459,6 +459,16 @@ public class StringUtils {
             return String.format(Locale.getDefault(), "%.0fKbps", dBitrate);
         }
     }
+    public static String formatAudioBitRateShortUnit(long audioBitRate) {
+        if(audioBitRate>1000000) {
+            double dBitrate = audioBitRate/1000000.00;
+            return String.format(Locale.getDefault(), "%.1fM", dBitrate);
+        }else {
+            double dBitrate = audioBitRate/1000.00;
+            return String.format(Locale.getDefault(), "%.0fK", dBitrate);
+        }
+    }
+
 
     public static String formatAudioBitsDepth(int bit) {
             return String.format(Locale.getDefault(), "%dbits", bit);

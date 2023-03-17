@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 68
-        versionName  "3.5.3"+ versions.buildDate
+        versionCode 69
+        versionName  "3.6.0"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -146,13 +146,13 @@ dependencies {
 
 
     // UI Libs
-    implementation deps.ui.groupie
+    //implementation deps.ui.groupie
     implementation deps.ui.powerspinner
     implementation deps.ui.powermenu
     implementation deps.ui.progressview
     implementation deps.ui.simplifyspan
     //implementation deps.ui.materialratingbar
-    implementation deps.ui.aspectRatioImageview
+    //implementation deps.ui.aspectRatioImageview //use for musicbrainz screen
     implementation deps.ui.fastscroll
     implementation deps.ui.elasticviews
     implementation deps.ui.stateViews

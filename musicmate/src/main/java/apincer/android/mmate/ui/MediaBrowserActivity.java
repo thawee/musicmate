@@ -12,19 +12,26 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -73,12 +80,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -89,6 +99,8 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.epoxy.MusicTagController;
+import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.hiby.SyncHibyPlayer;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
@@ -182,7 +194,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
     private SearchCriteria searchCriteria;
     private boolean backFromEditor;
 
-    private void doDeleteMediaItems(List<MusicTag> itemsList) {
+    private void doDeleteMediaItemsOld(List<MusicTag> itemsList) {
         if(itemsList.isEmpty()) return;
         String text = "Delete ";
         if(itemsList.size()>1) {
@@ -202,7 +214,123 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 .show();
     }
 
-    private void doMoveMediaItems(List<MusicTag> itemsList) {
+    private void doDeleteMediaItems(List<MusicTag> selections) {
+     if(selections.isEmpty()) return;
+
+    View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
+
+    Map<MusicTag, String> statusList = new HashMap<>();
+    ListView itemsView = cview.findViewById(R.id.itemListView);
+    TextView titleText = cview.findViewById(R.id.title);
+        titleText.setText("Delete Files");
+        itemsView.setAdapter(new BaseAdapter() {
+        @Override
+        public int getCount() {
+            return selections.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+            MusicTag tag = selections.get(i);
+            TextView seq = (TextView)           view.findViewById(R.id.seq);
+            TextView name = (TextView)           view.findViewById(R.id.name);
+            TextView status = (TextView)           view.findViewById(R.id.status);
+            seq.setText(String.valueOf(i+1));
+            if(statusList.containsKey(tag)) {
+                status.setText(statusList.get(tag));
+            }else {
+                status.setText("-");
+            }
+            name.setText(FileSystem.getFilename(tag.getPath()));
+            return view;
+        }
+    });
+
+    // final String[] encoding = {null};
+    View btnOK = cview.findViewById(R.id.btn_ok);
+    View btnCancel = cview.findViewById(R.id.btn_cancel);
+
+    //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+    ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setEnabled(false);
+
+        btnOK.setEnabled(true);
+
+    int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
+    int sizeInBlock = MAX_PROGRESS/block;
+    List<Long> valueList = new ArrayList<>();
+        for(int i=0; i< block;i++) {
+        valueList.add((long) sizeInBlock);
+    }
+    final float rate = 100/selections.size(); // pcnt per 1 song
+    int barColor = getColor(R.color.material_color_green_400);
+        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        progressBar.setMax(MAX_PROGRESS);
+
+    AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+            .setTitle("")
+            .setView(cview)
+            .setCancelable(true)
+            .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+    // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        btnOK.setOnClickListener(v -> {
+        progressBar.setProgress((int) (rate/10));
+        for(MusicTag tag: selections) {
+            MusicMateExecutors.move(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        boolean status = repos.deleteMediaItem(tag);
+                        if(status) {
+                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+                            EventBus.getDefault().postSticky(message);
+                            statusList.put(tag, "Deleted");
+                        }else {
+                            statusList.put(tag, "Fail");
+                        }
+                        runOnUiThread(() -> {
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct + rate));
+                            progressBar.invalidate();
+                            itemsView.invalidateViews();
+                        });
+                    } catch (Exception e) {
+                        Log.e(TAG,"deleteFile",e);
+                        statusList.put(tag, "Fail");
+                        runOnUiThread(() -> {
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct + rate));
+                            progressBar.invalidate();
+                            itemsView.invalidateViews();
+                        });
+                    }
+                }
+            });
+        }
+        btnOK.setEnabled(false);
+        btnOK.setVisibility(View.GONE);
+    });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
+}
+
+    private void doMoveMediaItemsOld(List<MusicTag> itemsList) {
         if(itemsList.isEmpty()) return;
         String text = "Import ";
         if(itemsList.size()>1) {
@@ -220,6 +348,122 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss()).create();
         dlg.show();
+    }
+
+    private void doMoveMediaItems(List<MusicTag> selections) {
+        if(selections.isEmpty()) return;
+
+        View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
+
+        Map<MusicTag, String> statusList = new HashMap<>();
+        ListView itemsView = cview.findViewById(R.id.itemListView);
+        TextView titleText = cview.findViewById(R.id.title);
+        titleText.setText("Manage Files");
+        itemsView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return selections.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+                return null;
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @Override
+            public View getView(int i, View view, ViewGroup viewGroup) {
+                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+                MusicTag tag = selections.get(i);
+                TextView seq = (TextView)           view.findViewById(R.id.seq);
+                TextView name = (TextView)           view.findViewById(R.id.name);
+                TextView status = (TextView)           view.findViewById(R.id.status);
+                seq.setText(String.valueOf(i+1));
+                if(statusList.containsKey(tag)) {
+                    status.setText(statusList.get(tag));
+                }else {
+                    status.setText("-");
+                }
+                name.setText(FileSystem.getFilename(tag.getPath()));
+                return view;
+            }
+        });
+
+        // final String[] encoding = {null};
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+
+        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setEnabled(false);
+
+        btnOK.setEnabled(true);
+
+        int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
+        int sizeInBlock = MAX_PROGRESS/block;
+        List<Long> valueList = new ArrayList<>();
+        for(int i=0; i< block;i++) {
+            valueList.add((long) sizeInBlock);
+        }
+        final float rate = 100/selections.size(); // pcnt per 1 song
+        int barColor = getColor(R.color.material_color_green_400);
+        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        progressBar.setMax(MAX_PROGRESS);
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        btnOK.setOnClickListener(v -> {
+            progressBar.setProgress((int) (rate/10));
+            for(MusicTag tag: selections) {
+                MusicMateExecutors.move(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            boolean status = repos.importAudioFile(tag);
+                            if(status) {
+                                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, tag);
+                                EventBus.getDefault().postSticky(message);
+                                statusList.put(tag, "Moved");
+                            }else {
+                                statusList.put(tag, "Fail");
+                            }
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                progressBar.invalidate();
+                                itemsView.invalidateViews();
+                            });
+                        } catch (Exception e) {
+                            Log.e(TAG,"importFile",e);
+                            runOnUiThread(() -> {
+                                statusList.put(tag, "Fail");
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                progressBar.invalidate();
+                                itemsView.invalidateViews();
+                            });
+                        }
+                    }
+                });
+            }
+            btnOK.setEnabled(false);
+            btnOK.setVisibility(View.GONE);
+        });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
     }
 	
 	private void doShowNowPlayingSongFAB(final MusicTag song) {
@@ -1166,6 +1410,10 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 doEncodingAudioFiles(epoxyController.getCurrentSelections());
                 mode.finish();
                 return true;
+            }else if (id == R.id.action_send_to_hibyos) {
+                doSendFilesToHibyDAP(epoxyController.getCurrentSelections());
+               // mode.finish();
+                return true;
             }else if (id == R.id.action_calculate_replay_gain) {
                 doCalculateReplayGain(epoxyController.getCurrentSelections());
                 mode.finish();
@@ -1195,7 +1443,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void doCalculateReplayGain(ArrayList<MusicTag> currentSelections) {
+    private void doCalculateReplayGainOld(ArrayList<MusicTag> currentSelections) {
             // calculate RG
             // update RG on files
             CompletableFuture.runAsync(
@@ -1223,6 +1471,123 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
             );
     }
 
+    private void doCalculateReplayGain(ArrayList<MusicTag> selections) {
+        if(selections.isEmpty()) return;
+
+        View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
+
+        Map<MusicTag, String> statusList = new HashMap<>();
+        ListView itemsView = cview.findViewById(R.id.itemListView);
+        TextView titleText = cview.findViewById(R.id.title);
+        titleText.setText("Calculate ReplyGain");
+        itemsView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return selections.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+                return null;
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @Override
+            public View getView(int i, View view, ViewGroup viewGroup) {
+                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+                MusicTag tag = selections.get(i);
+                TextView seq = (TextView)           view.findViewById(R.id.seq);
+                TextView name = (TextView)           view.findViewById(R.id.name);
+                TextView status = (TextView)           view.findViewById(R.id.status);
+                seq.setText(String.valueOf(i+1));
+                if(statusList.containsKey(tag)) {
+                    status.setText(statusList.get(tag));
+                }else {
+                    status.setText("-");
+                }
+                name.setText(FileSystem.getFilename(tag.getPath()));
+                return view;
+            }
+        });
+
+        // final String[] encoding = {null};
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+
+        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setEnabled(false);
+
+        btnOK.setEnabled(true);
+
+        int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
+        int sizeInBlock = MAX_PROGRESS/block;
+        List<Long> valueList = new ArrayList<>();
+        for(int i=0; i< block;i++) {
+            valueList.add((long) sizeInBlock);
+        }
+        final float rate = 100/selections.size(); // pcnt per 1 song
+        int barColor = getColor(R.color.material_color_green_400);
+        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        progressBar.setMax(MAX_PROGRESS);
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        btnOK.setOnClickListener(v -> {
+            progressBar.setProgress((int) (rate/10));
+            for(MusicTag tag: selections) {
+                MusicMateExecutors.move(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            //calculate track RG
+                            FFMPeg.readReplayGain(MediaBrowserActivity.this, tag);
+                            //write RG to file
+                            FFMPeg.writeReplayGain(MediaBrowserActivity.this, tag);
+                            // update MusicMate Library
+                            MusicTagRepository.saveTag(tag);
+
+                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                            EventBus.getDefault().postSticky(message);
+                            statusList.put(tag, "Success");
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                progressBar.invalidate();
+                                itemsView.invalidateViews();
+                            });
+                        } catch (Exception e) {
+                            Log.e(TAG,"calculateRG",e);
+                            statusList.put(tag, "Fail");
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                progressBar.invalidate();
+                                itemsView.invalidateViews();
+                            });
+                        }
+                    }
+                });
+            }
+            btnOK.setEnabled(false);
+            btnOK.setVisibility(View.GONE);
+        });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
+    }
     private void doExportAsPlaylist(List<MusicTag> currentSelections) {
         /*
         #EXTM3U
@@ -1270,14 +1635,55 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         // convert FLAC to ALAC
         // convert ALAC to FLAC
 
-        View cview = getLayoutInflater().inflate(R.layout.view_actionview_encoding_audio_files, null);
+        View cview = getLayoutInflater().inflate(R.layout.view_action_encoding_files, null);
 
-        TextView filename = cview.findViewById(R.id.full_filename);
+        List<MusicTag> doneList = new ArrayList<>();
+        List<MusicTag> failList = new ArrayList<>();
+        List<MusicTag> skipList = new ArrayList<>();
+        ListView itemsView = cview.findViewById(R.id.itemListView);
+        itemsView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return selections.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+                return null;
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @Override
+            public View getView(int i, View view, ViewGroup viewGroup) {
+                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+                MusicTag tag = selections.get(i);
+                TextView seq = (TextView)           view.findViewById(R.id.seq);
+                TextView name = (TextView)           view.findViewById(R.id.name);
+                TextView status = (TextView)           view.findViewById(R.id.status);
+                seq.setText(String.valueOf(i+1));
+                if(doneList.contains(tag)) {
+                    status.setText("Done");
+                }else if(failList.contains(tag)) {
+                    status.setText("Fail");
+                }else if(skipList.contains(tag)) {
+                    status.setText("Skip");
+                }else {
+                    status.setText("-");
+                }
+                name.setText(FileSystem.getFilename(tag.getPath()));
+                return view;
+            }
+        });
+       /* TextView filename = cview.findViewById(R.id.full_filename);
         if(selections.size()==1) {
             filename.setText(selections.get(0).getSimpleName());
         }else {
             filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to selected encoding.");
-        }
+        } */
 
        // final String[] encoding = {null};
         View btnOK = cview.findViewById(R.id.btn_ok);
@@ -1312,25 +1718,6 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         }
 
         btnOK.setEnabled(false);
-        /*IconSpinnerAdapter adapter = new IconSpinnerAdapter(mEncodingView);
-        ArrayList<IconSpinnerItem> encodingItems = new ArrayList<>();
-        encodingItems.add(new IconSpinnerItem("AIFF", null));
-       // encodingItems.add(new IconSpinnerItem("ALAC", null));
-        encodingItems.add(new IconSpinnerItem("FLAC", null));
-        encodingItems.add(new IconSpinnerItem("MP3 (320 kbps)", null));
-        adapter.setItems(encodingItems);
-        adapter.setOnSpinnerItemSelectedListener((i, iconSpinnerItem, i1, t1) -> {
-            encoding[0] = String.valueOf(t1.getText());
-            if(StringUtils.isEmpty(encoding[0])) {
-                btnOK.setEnabled(false);
-            }else {
-                btnOK.setEnabled(true);
-                progressBar.setProgress(0);
-            }
-        });
-        mEncodingView.setSpinnerAdapter(adapter);
-        mEncodingView.setText("FLAC");
-         */
 
         btnOK.setEnabled(true);
 
@@ -1356,15 +1743,7 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
-           //// if(encoding[0] == null) {
-           //     return;
-           // }
-
-           /// String options = "";
-            String targetExt = "";// encoding[0].toLowerCase();
-           // if(encoding[0].contains("MP3")) {
-           //     options = " -ar 44100 -ab 320k ";
-          //  }
+            String targetExt = "";
             if(btnAiff.isChecked()) {
                 targetExt = "AIFF";
             }else if(btnFlac.isChecked()) {
@@ -1377,50 +1756,193 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                 return;
             }
 
-            progressBar.setProgress(0);
+            progressBar.setProgress((int) (rate/10));
 
-            for(MusicTag tag: selections) {
-                if(!StringUtils.trimToEmpty(targetExt).equalsIgnoreCase(tag.getAudioEncoding()))  {
-            //        if(tag.isDSD()) {
-                        // convert from dsf to 24 bits, 48 kHz
-                        // use lowpass filter to eliminate distortion in the upper frequencies.
-              //          options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
-              //      }
+            String finalTargetExt = targetExt;
+            MusicMateExecutors.move(new Runnable() {
+                @Override
+                public void run() {
+                    for(MusicTag tag: selections) {
+                        if(!StringUtils.trimToEmpty(finalTargetExt).equalsIgnoreCase(tag.getAudioEncoding()))  {
 
-                    String srcPath = tag.getPath();
-                    String filePath = FileUtils.removeExtension(tag.getPath());
-                    String targetPath = filePath+"."+targetExt; //+".flac";
-                //    String cmd = "-i \""+srcPath+"\" "+options+" \""+targetPath+"\"";
+                            String srcPath = tag.getPath();
+                            String filePath = FileUtils.removeExtension(tag.getPath());
+                            String targetPath = filePath+"."+ finalTargetExt;
 
-                    FFMPeg.convert(getApplicationContext(),srcPath, targetPath, status -> {
-                        if (status) {
-                            //repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
-                            repos.scanMusicFile(new File(targetPath),false); // re scan file
-                        }
-                        runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct+rate));
-                        });
-                    });
-                    /*
-                    FFmpegKit.executeAsync(cmd, session -> {
-                        if (ReturnCode.isSuccess(session.getReturnCode())) {
-                            repos.setJAudioTagger(targetPath, tag); // copy metatag tyo new file
-                            repos.scanMusicFiles(new File(targetPath)); // re scan file
+                            if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, null)) {
+                                doneList.add(tag);
+                            //    status -> {
+                            //        if (status) {
+                                        repos.scanMusicFile(new File(targetPath),false); // re scan file
+                            //        }
+                                    runOnUiThread(() -> {
+                                        int pct = progressBar.getProgress();
+                                        progressBar.setProgress((int) (pct+rate));
+                                        progressBar.invalidate();
+                                        itemsView.invalidateViews();
+                                    });
+                            }else {
+                                failList.add(tag);
+                                runOnUiThread(() -> {
+                                    int pct = progressBar.getProgress();
+                                    progressBar.setProgress((int) (pct+rate));
+                                    progressBar.invalidate();
+                                    itemsView.invalidateViews();
+                                });
+                            }
+                            //});
                         }else {
-                            String msg = String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace());
-                            Timber.d(msg);
+                            skipList.add(tag);
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                progressBar.invalidate();
+                                itemsView.invalidateViews();
+                            });
                         }
-                        runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct+rate));
-                        });
-                    }); */
-                }else {
-                    int pct = progressBar.getProgress();
-                    progressBar.setProgress((int) (pct+rate));
+                    }
+
                 }
+            });
+            btnOK.setEnabled(false);
+            btnOK.setVisibility(View.GONE);
+        });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
+    }
+
+    private void doSendFilesToHibyDAP(ArrayList<MusicTag> selections) {
+        if(selections.isEmpty()) return;
+
+        Context context = getApplicationContext();
+        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        int ipAddress = wm.getConnectionInfo().getIpAddress();
+        String ip = String.format("%d.%d.%d.%d", (ipAddress & 0xff),(ipAddress >> 8 & 0xff),(ipAddress >> 16 & 0xff),(ipAddress >> 24 & 0xff));
+        ip = ip.substring(0, ip.lastIndexOf("."))+".xxx";
+        //String url = "http://10.100.1.242:4399/";
+        AtomicReference<String> url = new AtomicReference<>("http://" + ip + ":4399/");
+        View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
+        List<MusicTag> doneList = new ArrayList<>();
+        List<MusicTag> failList = new ArrayList<>();
+        ListView itemsView = cview.findViewById(R.id.itemListView);
+        EditText targetURL = cview.findViewById(R.id.targetURL);
+        EditText targetIP = cview.findViewById(R.id.targetIP);
+        String finalIp = ip;
+        targetIP.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
             }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String newIp = finalIp.substring(0, finalIp.lastIndexOf("."));
+                newIp = newIp+"."+targetIP.getText();
+                url.set("http://" + newIp + ":4399/");
+                targetURL.setText(url.get());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        targetURL.setText(url.get());
+        itemsView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return selections.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+               return null;
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @Override
+            public View getView(int i, View view, ViewGroup viewGroup) {
+                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+                MusicTag tag = selections.get(i);
+                TextView seq = (TextView)           view.findViewById(R.id.seq);
+                TextView name = (TextView)           view.findViewById(R.id.name);
+                TextView status = (TextView)           view.findViewById(R.id.status);
+                seq.setText(String.valueOf(i+1));
+                if(doneList.contains(tag)) {
+                    status.setText("Done");
+                }else if(failList.contains(tag)) {
+                    status.setText("Fail");
+                }else {
+                    status.setText("-");
+                }
+                name.setText(FileSystem.getFilename(tag.getPath()));
+                return view;
+            }
+        });
+
+        // final String[] encoding = {null};
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+
+        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setEnabled(true);
+
+        int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
+        int sizeInBlock = MAX_PROGRESS/block;
+        List<Long> valueList = new ArrayList<>();
+        for(int i=0; i< block;i++) {
+            valueList.add((long) sizeInBlock);
+        }
+        final float rate = 100/selections.size(); // pcnt per 1 song
+        int barColor = getColor(R.color.material_color_green_400);
+        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        progressBar.setMax(MAX_PROGRESS);
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        btnOK.setOnClickListener(v -> {
+            progressBar.setProgress((int) (rate/10));
+            String finalUrl = String.valueOf(targetURL.getText());
+            for(MusicTag tag: selections) {
+                MusicMateExecutors.move(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            SyncHibyPlayer.sync(getApplicationContext(), finalUrl, tag);
+                            doneList.add(tag);
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                itemsView.invalidateViews();
+                                progressBar.invalidate();
+                            });
+                        }catch (Exception ex) {
+                            failList.add(tag);
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                itemsView.invalidateViews();
+                                progressBar.invalidate();
+                            });
+                        }
+                    }
+                });
+                }
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });

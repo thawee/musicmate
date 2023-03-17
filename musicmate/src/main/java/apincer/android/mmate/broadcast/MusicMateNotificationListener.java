@@ -39,15 +39,15 @@ public class MusicMateNotificationListener extends NotificationListenerService {
         Bundle extras = sbn.getNotification().extras;
         if (HIBY_MUSIC.equals(pack)) {
             String title = extras.getString("android.title");
-            String artist = extras.getCharSequence("android.text").toString();
+            String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
         } else if (NE_PLAYER_LITE.equals(pack)) {
             String title = extras.getString("android.title");
-            String artist = extras.getCharSequence("android.text").toString();
+            String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
         } else if (SHANLING_EDDICTPLAYER.equals(pack)) {
                 String title = extras.getString("android.title");
-                String artist = extras.getCharSequence("android.text").toString();
+                String artist = String.valueOf (extras.getCharSequence("android.text"));
                 sendBroadcast(pack, title, artist);
             }
     }

@@ -1,6 +1,7 @@
 package apincer.android.mmate.hiby;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +11,8 @@ import java.util.Map;
 
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -58,16 +60,16 @@ public class SyncHibyPlayer {
             System.out.println(response.body());
 
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Log.e("SyncHibyDAP", e.getMessage());
+          //  e.printStackTrace();
         }
 
     }
 
-    private static void upload(String hibyEndpoint,String dir, String filename, File file) {
+    private static void upload(String hibyEndpoint,String dir, String filename, File file) throws IOException {
         Retrofit ret = createHibyRetrofit(hibyEndpoint);
         API api = ret.create(API.class);
-        try {
+     //   try {
             //Map map = new HashMap();
             //map.put("path", "/mnt/sd_0/"+dir+"/");  //?path=/mnt/sd_0/{dir}/
             String path = "/mnt/sd_0/"+dir+"/";
@@ -83,10 +85,9 @@ public class SyncHibyPlayer {
             response = call.execute();
             System.out.println(response.body());
 
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+      //  } catch (IOException e) {
+     //       e.printStackTrace();
+     //   }
     }
 
     private static Retrofit createHibyRetrofit(String hibyEndpoint) {
@@ -96,14 +97,20 @@ public class SyncHibyPlayer {
                 .build();
     }
 
-    public static void sync(Context context, MusicTag tag) {
+    public static void sync(Context context, String url, MusicTag tag) throws IOException{
        // String url = "http://10.100.1.96:4399/";  // via Mac
-        String url = "http://10.100.1.242:4399/";
+       // String url = "http://10.100.1.242:4399/";
         String targetPath = FileRepository.newInstance(context).buildCollectionPath(tag, false);
         String targetDir = FileUtils.getFolderName(targetPath);
         String targetFilename = FileUtils.getFullFileName(targetPath);
         createDirs(url, targetDir);
         upload(url, targetDir, targetFilename, new File(tag.getPath()));
+       // send image file if existed
+       File cover = FileRepository.getFolderCoverArt(tag);
+       if(cover != null) {
+            String ext = FileUtils.getExtension(cover);
+            upload(url, targetDir, "cover."+ext, cover);
+       }
     }
 
     private static void createDirs(String url, String targetDir) {

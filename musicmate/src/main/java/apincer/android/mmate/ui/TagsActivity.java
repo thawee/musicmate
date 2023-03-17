@@ -41,6 +41,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -249,6 +250,7 @@ public class TagsActivity extends AppCompatActivity {
             text = text + "'"+editItems.get(0).getTitle()+"'?";
         }
 
+        String url = "http://10.100.1.242:4399/";
         MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
                 .setIcon(R.drawable.round_send_24)
                 .setTitle("Sync Songs")
@@ -258,7 +260,11 @@ public class TagsActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             for(MusicTag tag: editItems) {
-                                SyncHibyPlayer.sync(getApplicationContext(), tag);
+                                try {
+                                    SyncHibyPlayer.sync(getApplicationContext(), url, tag);
+                                } catch (IOException e) {
+                                   e.printStackTrace();
+                                }
                             }
                         }
                     });

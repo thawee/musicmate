@@ -314,6 +314,9 @@ public class AudioOutputHelper {
         int whiteColor = context.getColor(R.color.white);
         int blackColor = context.getColor(R.color.black);
         String codec = dev.getCodec();
+        if(codec !=null && codec.length()>6) {
+            codec = codec.substring(0,6);
+        }
         String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -372,7 +375,7 @@ public class AudioOutputHelper {
         // Finally, draw the rectangle on the canvas
         myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, paint);
 
-        int letterTextSize = 30; //28;
+        int letterTextSize = 28;
         Typeface font =  ResourcesCompat.getFont(context, R.font.adca);
 
         // draw bit per , black color
@@ -391,6 +394,7 @@ public class AudioOutputHelper {
                 mLetterPaint);
 
         // draw sampling rate, white
+        letterTextSize = 34;
         font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(whiteColor);
@@ -403,7 +407,7 @@ public class AudioOutputHelper {
         mLetterTop = mLetterTop +(textMathRect.height() / 2f);
         mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/3);
         myCanvas.drawText(rate,
-                bounds.exactCenterX(), mLetterTop + mPositionY,
+                bounds.exactCenterX(), mLetterTop + mPositionY+6,
                 mLetterPaint);
 
         return myBitmap;
