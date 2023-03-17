@@ -63,15 +63,15 @@ public abstract class MusicTagModel extends EpoxyModelWithHolder<MusicTagModel.H
 
     @Override
     public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
+       // if (o == this) {
+       //     return true;
+       // }
         if (!(o instanceof MusicTagModel_)) {
             return false;
         }
-        if (!super.equals(o)) {
-            return false;
-        }
+       // if (!super.equals(o)) {
+       //     return false;
+       // }
         MusicTagModel_ that = (MusicTagModel_) o;
         if (((tag == null) != (that.tag == null))) {
             return false;

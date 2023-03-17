@@ -41,7 +41,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -54,7 +53,6 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.hiby.SyncHibyPlayer;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -235,13 +233,14 @@ public class TagsActivity extends AppCompatActivity {
 
         findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
         findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItem());
-        findViewById(R.id.btnSyncHiby).setOnClickListener(v -> doSyncHibyPlayer());
+       // findViewById(R.id.btnSyncHiby).setOnClickListener(v -> doSyncHibyPlayer());
         findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItem());
         findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
         findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
         findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
     }
 
+    /*
     private void doSyncHibyPlayer() {
         String text = "Sync ";
         if(editItems.size()>1) {
@@ -274,7 +273,7 @@ public class TagsActivity extends AppCompatActivity {
         AlertDialog alertDialog = builder.create();
         alertDialog.getWindow().setGravity(Gravity.BOTTOM);
         alertDialog.show();
-    }
+    } */
 
     private void setUpTitlePanel() {
         titleView = findViewById(R.id.panel_title);

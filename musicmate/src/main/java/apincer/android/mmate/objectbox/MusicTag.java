@@ -44,7 +44,8 @@ public class MusicTag implements Cloneable, Parcelable {
     public boolean equals(@Nullable Object obj) {
         if (obj == null) return false;
         if (obj instanceof MusicTag) {
-            return uniqueKey.equals(((MusicTag) obj).uniqueKey);
+            return id == ((MusicTag) obj).getId();
+           // return uniqueKey.equals(((MusicTag) obj).uniqueKey);
         }
         return false;
     }

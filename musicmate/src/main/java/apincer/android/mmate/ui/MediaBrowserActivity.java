@@ -448,13 +448,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             });
                         } catch (Exception e) {
                             Log.e(TAG,"importFile",e);
-                            runOnUiThread(() -> {
-                                statusList.put(tag, "Fail");
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                progressBar.invalidate();
-                                itemsView.invalidateViews();
-                            });
+                            try {
+                                runOnUiThread(() -> {
+                                    statusList.put(tag, "Fail");
+                                    int pct = progressBar.getProgress();
+                                    progressBar.setProgress((int) (pct + rate));
+                                    progressBar.invalidate();
+                                    itemsView.invalidateViews();
+                                });
+                            }catch (Exception ex) {}
                         }
                     }
                 });
@@ -1571,13 +1573,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                             });
                         } catch (Exception e) {
                             Log.e(TAG,"calculateRG",e);
-                            statusList.put(tag, "Fail");
-                            runOnUiThread(() -> {
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                progressBar.invalidate();
-                                itemsView.invalidateViews();
-                            });
+                            try {
+                                statusList.put(tag, "Fail");
+                                runOnUiThread(() -> {
+                                    int pct = progressBar.getProgress();
+                                    progressBar.setProgress((int) (pct + rate));
+                                    progressBar.invalidate();
+                                    itemsView.invalidateViews();
+                                });
+                            }catch (Exception ex) {}
                         }
                     }
                 });
@@ -1932,13 +1936,15 @@ public class MediaBrowserActivity extends AppCompatActivity implements View.OnCl
                                 progressBar.invalidate();
                             });
                         }catch (Exception ex) {
-                            failList.add(tag);
-                            runOnUiThread(() -> {
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                itemsView.invalidateViews();
-                                progressBar.invalidate();
-                            });
+                            try {
+                                failList.add(tag);
+                                runOnUiThread(() -> {
+                                    int pct = progressBar.getProgress();
+                                    progressBar.setProgress((int) (pct + rate));
+                                    itemsView.invalidateViews();
+                                    progressBar.invalidate();
+                                });
+                            }catch (Exception e) {}
                         }
                     }
                 });

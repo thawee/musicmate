@@ -463,6 +463,7 @@
                 android:orientation="horizontal"
                 android:layout_marginTop="@dimen/dimen_12_dp"
                 >
+                <!--
                 <com.skydoves.elasticviews.ElasticLayout
                     android:id="@+id/btnSyncHiby"
                     android:layout_width="wrap_content"
@@ -483,6 +484,7 @@
                         android:textStyle="bold"
                         android:text="@string/sync_to_hiby_label"/>
                 </com.skydoves.elasticviews.ElasticLayout>
+                -->
                 <com.skydoves.elasticviews.ElasticLayout
                     android:id="@+id/btnWebSearch"
                     android:layout_width="wrap_content"
