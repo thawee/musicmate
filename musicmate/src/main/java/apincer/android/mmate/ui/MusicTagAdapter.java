@@ -50,13 +50,48 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public void loadDataSets() {
         localDataSet.clear();
+        totalSize =0;
+        totalDuration =0;
         List<MusicTag> list = MusicTagRepository.findMediaTag(criteria);
-        for(MusicTag tag: list) {
-            localDataSet.add(tag);
-            totalSize += tag.getFileSize();
-            totalDuration += tag.getAudioDuration();
+        boolean noFilters = isEmpty(criteria.getFilterType()) && isEmpty(criteria.getFilterText());
+        if(noFilters) {
+            for (MusicTag tag : list) {
+                localDataSet.add(tag);
+                totalSize += tag.getFileSize();
+                totalDuration += tag.getAudioDuration();
+            }
+        }else {
+            for (MusicTag tag : list) {
+                if(!isMatchFilter(criteria, tag)) {
+                    continue;
+                }
+                localDataSet.add(tag);
+                totalSize += tag.getFileSize();
+                totalDuration += tag.getAudioDuration();
+            }
         }
         notifyDataSetChanged();
+    }
+
+    private boolean isMatchFilter(SearchCriteria criteria, MusicTag tag) {
+        if(criteria==null || isEmpty(criteria.getFilterType())) {
+            return true;
+        } else if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getAlbum(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_ARTIST.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getArtist(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_ALBUM_ARTIST.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getAlbumArtist(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_GENRE.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getGenre(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_PUBLISHER.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getPublisher(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_GROUPING.equals(criteria.getFilterType())) {
+            return StringUtils.equals(tag.getGrouping(), criteria.getFilterText());
+        } else if (Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
+            return tag.getPath().startsWith(criteria.getFilterText());
+        }
+        return false;
     }
 
     public void loadDataSets(SearchCriteria finalCriteria) {
@@ -106,6 +141,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public void resetFilter() {
+        criteria.setFilterText(null);
+        criteria.setFilterType(null);
     }
 
     public List<String> getHeaderTitles(Context context) {
@@ -129,10 +166,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_HIRES);
             titles.add(Constants.AUDIO_SQ_PCM_MQA);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-            List<String> tabs = MusicTagRepository.getGroupingList(context);
+            List<String> tabs = MusicTagRepository.getActualGroupingList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = MusicTagRepository.getGenreList(context);
+            List<String> tabs = MusicTagRepository.getActualGenreList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
             List<String> tabs = MusicTagRepository.getPublisherList(context);
@@ -195,6 +232,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        // }
         if(position == RecyclerView.NO_POSITION) return null;
         return localDataSet.get(position);
+    }
+
+    public void setType(SearchCriteria.TYPE type) {
+        criteria.setType(type);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

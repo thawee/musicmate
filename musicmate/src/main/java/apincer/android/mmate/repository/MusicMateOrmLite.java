@@ -4,6 +4,7 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
@@ -69,7 +70,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
 
             return dao.queryBuilder().orderBy("title", true).orderByNullsFirst("artist", true).query();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
     }
@@ -82,7 +83,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             String keyword = "%"+title.replace("'","''")+"%";
             builder.where().like("title",keyword).or().like("path", keyword);
             return builder.query();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
     }
@@ -309,57 +310,75 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (Exception e) {
+            Log.e("MusicMateORMLite","findDuplicateSong: "+e.getMessage());
             return Collections.EMPTY_LIST;
         }
     }
 
     public List<String> getGeners() {
         try {
+            List<String> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder builder = dao.queryBuilder();
             builder.selectRaw("distinct genre");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            String[] result = results.getFirstResult();
-            return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                list.add(vals[0]);
+            }
+            return list;
         } catch (SQLException e) {
+            Log.e("MusicMateORMLite","getGeners: "+e.getMessage());
             return Collections.EMPTY_LIST;
         }
     }
 
     public List<String> getGrouping() {
         try {
+            List<String> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder builder = dao.queryBuilder();
             builder.selectRaw("distinct grouping");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            String[] result = results.getFirstResult();
-            return Arrays.asList(result);
+            //return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                list.add(vals[0]);
+            }
+            return list;
         } catch (SQLException e) {
+            Log.e("MusicMateORMLite","getGrouping: "+e.getMessage());
             return Collections.EMPTY_LIST;
         }
     }
     public List<String> getPublishers() {
         try {
+            List<String> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder builder = dao.queryBuilder();
             builder.selectRaw("distinct publisher");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            String[] result = results.getFirstResult();
-            return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                list.add(vals[0]);
+            }
+            return list;
         } catch (SQLException e) {
+            Log.e("MusicMateORMLite","getPublishers: "+e.getMessage());
             return Collections.EMPTY_LIST;
         }
     }
 
     public List<String> getArtits() {
         try {
+            List<String> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder builder = dao.queryBuilder();
             builder.selectRaw("distinct artist");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            String[] result = results.getFirstResult();
-            return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                list.add(vals[0]);
+            }
+            return list;
         } catch (SQLException e) {
+            Log.e("MusicMateORMLite","getArtits: "+e.getMessage());
             return Collections.EMPTY_LIST;
         }
     }

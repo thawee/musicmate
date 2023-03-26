@@ -22,7 +22,7 @@
     android:layout_height="match_parent"
     android:id="@+id/main_content"
     android:layout_above="@+id/bottom_app_bar"
-    tools:context=".ui.MediaBrowserActivity">
+    tools:context=".ui.MainActivity">
 
     <!-- changed from match parent to 0 dp -->
 	<!--
@@ -93,7 +93,7 @@
 					   android:layout_height="@dimen/dimen_32_dp"
 					   android:layout_marginTop="@dimen/dimen_1_dp"
 					   app:tabGravity="center"
-					   app:tabSelectedTextColor="@color/colorPrimary_light"
+					   app:tabSelectedTextColor="@color/white"
 					   app:tabTextColor="@color/grey600"
 					   app:tabBackground="@color/transparent"
 					   app:tabIndicatorColor="@color/colorPrimary_light"

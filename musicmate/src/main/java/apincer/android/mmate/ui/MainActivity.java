@@ -24,7 +24,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -195,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean onSetup = true;
     private int positionToScroll = -1;
 
-    private SearchCriteria searchCriteria;
+    //private SearchCriteria searchCriteria;
     private boolean backFromEditor;
 
     private void doDeleteMediaItems(List<MusicTag> selections) {
@@ -227,9 +226,9 @@ public class MainActivity extends AppCompatActivity {
         public View getView(int i, View view, ViewGroup viewGroup) {
             view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
             MusicTag tag = selections.get(i);
-            TextView seq = (TextView)           view.findViewById(R.id.seq);
-            TextView name = (TextView)           view.findViewById(R.id.name);
-            TextView status = (TextView)           view.findViewById(R.id.status);
+            TextView seq = view.findViewById(R.id.seq);
+            TextView name = view.findViewById(R.id.name);
+            TextView status = view.findViewById(R.id.status);
             seq.setText(String.valueOf(i+1));
             if(statusList.containsKey(tag)) {
                 status.setText(statusList.get(tag));
@@ -311,27 +310,6 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
 }
 
-/*
-    private void doMoveMediaItemsOld(List<MusicTag> itemsList) {
-        if(itemsList.isEmpty()) return;
-        String text = "Import ";
-        if(itemsList.size()>1) {
-            text = text + itemsList.size() + " songs to Music Directory?";
-        }else {
-            text = text + "'"+itemsList.get(0).getTitle()+"' song to Music Directory?";
-        }
-
-        AlertDialog dlg =new MaterialAlertDialogBuilder(MediaBrowserActivity.this, R.style.AlertDialogTheme)
-                .setTitle("Import Songs")
-                .setMessage(text)
-                .setPositiveButton("Import", (dialogInterface, i) -> {
-                    dialogInterface.dismiss();
-                    ImportAudioFileWorker.startWorker(getApplicationContext(), itemsList);
-                })
-                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss()).create();
-        dlg.show();
-    } */
-
     private void doMoveMediaItems(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
@@ -361,9 +339,9 @@ public class MainActivity extends AppCompatActivity {
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 MusicTag tag = selections.get(i);
-                TextView seq = (TextView)           view.findViewById(R.id.seq);
-                TextView name = (TextView)           view.findViewById(R.id.name);
-                TextView status = (TextView)           view.findViewById(R.id.status);
+                TextView seq = view.findViewById(R.id.seq);
+                TextView name = view.findViewById(R.id.name);
+                TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 if(statusList.containsKey(tag)) {
                     status.setText(statusList.get(tag));
@@ -542,21 +520,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doStartRefresh(SearchCriteria criteria) {
-        if(criteria == null) {
+       // if(criteria == null) {
          /*   if (epoxyController.getCriteria() != null) {
                 searchCriteria = epoxyController.getCriteria();
             } else { */
-                searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+           //     searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
            // }
-        }else {
-            searchCriteria = criteria;
+       // }else {
+        //    searchCriteria = criteria;
+       // }
+        if(criteria!= null) {
+            doStartRefresh(criteria.getType(), criteria.getKeyword());
         }
         refreshLayout.autoRefresh();
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
-        searchCriteria = new SearchCriteria(type);
-        searchCriteria.setKeyword(keyword);
+       // searchCriteria = new SearchCriteria(type);
+       // searchCriteria.setKeyword(keyword);
+        adapter.setType(type);
+        adapter.setKeyword(keyword);
         refreshLayout.autoRefresh();
     }
 
@@ -631,10 +614,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpEditorLauncher() {
         editorLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-
+            // support filter by artist, albnum, path
            // adapter.notifyDataSetChanged();
 
-            SearchCriteria criteria = null;
+            SearchCriteria criteria;
             if (result.getData() != null) {
                 // if retrun criteria, use it otherwise provide null
                 criteria = ApplicationUtils.getSearchCriteria(result.getData());
@@ -646,12 +629,9 @@ public class MainActivity extends AppCompatActivity {
 
             SearchCriteria finalCriteria = criteria;
             backFromEditor = true;
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    adapter.loadDataSets(finalCriteria);
-                   // adapter.notifyDataSetChanged();
-                }
+            runOnUiThread(() -> {
+                adapter.loadDataSets(finalCriteria);
+               // adapter.notifyDataSetChanged();
             });
           //  new Timer().schedule(new TimerTask() {
          //       @Override
@@ -671,12 +651,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if(!onSetup) {
-                   // epoxyController.loadSource(Objects.requireNonNull(tab.getText()).toString());
-                   /// SearchCriteria criteria = adapter.getCriteria();
-                   // criteria.setFilterType("");
-                   // criteria.setFilterText("");
+                    adapter.resetFilter();
+                    //SearchCriteria criteria = adapter.getCriteria();
+                    //criteria.setFilterType("");
+                    //criteria.setFilterText("");
                    // criteria.setKeyword(tab.getText().toString());
-                    //adapter.resetFilter();
                     adapter.setKeyword(tab.getText().toString());
                     //doStartRefresh();
                     refreshLayout.autoRefresh();
@@ -802,21 +781,6 @@ public class MainActivity extends AppCompatActivity {
         mResideMenu.openMenu(ResideMenu.DIRECTION_RIGHT);
     }
 
-    /*
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        super.dispatchTouchEvent(ev);
-
-        if(mResideMenu==null) return true;
-        if(Preferences.isShowStorageSpace(getApplicationContext())) {
-            @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
-            LinearLayout panel = storageView.findViewById(R.id.storage_bar);
-            UIUtils.buildStoragesStatus(getApplication(),panel);
-            mResideMenu.setLeftHeader(storageView);
-        }
-        return mResideMenu.dispatchTouchEvent(ev);
-    } */
-
     private void setUpResideMenus() {
         // attach to current activity;
         mResideMenu = new ResideMenu(this);
@@ -881,18 +845,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scrollToListening() {
         if(nowPlaying ==null) return;
-       // return scrollToSong(MusixMateApp.getPlayingSong());
-      //  positionToScroll = epoxyController.getAudioTagPosition(nowPlaying);
         positionToScroll = adapter.getMusicTagPosition(nowPlaying);
-      /*  if(positionToScroll != RecyclerView.NO_POSITION) {
-            MusicMateExecutors.main(() -> {
-                // MusicTag tag = MusixMateApp.getPlayingSong();
-
-                //epoxyController.notifyModelChanged(positionToScroll);
-                epoxyController.loadSource();
-
-            });
-        } */
         scrollToPosition(positionToScroll,false);
     }
 
@@ -948,7 +901,8 @@ public class MainActivity extends AppCompatActivity {
                     int position = adapter.getMusicTagPosition(event.getItem());
                     if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
                         adapter.notifyItemRemoved(position);
-                    }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
+                        //}else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
+                    }else {
                         MusicTag tag = adapter.getContent(position);
                         if(tag != null) {
                             MusicTagRepository.load(tag);
@@ -1008,7 +962,7 @@ public class MainActivity extends AppCompatActivity {
 
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getDefaultGroupingList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getActualGroupingList(getApplicationContext()).get(0));
             return true;
        /* }else if(item.getItemId() == R.id.menu_publisher) {
             doHideSearch();
@@ -1016,7 +970,7 @@ public class MainActivity extends AppCompatActivity {
             return true; */
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getGenreList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getActualGenreList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_settings) {
             Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
@@ -1210,44 +1164,13 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.getAdapter().hasStableIds();
+        mRecyclerView.setPreserveFocusAfterLayout(true); // preserve original location
 
-        MusicTagAdapter.OnListItemClick onListItemClick = new MusicTagAdapter.OnListItemClick() {
-            @Override
-            public void onClick(View view, int position) {
-                doShowEditActivity(Collections.singletonList(adapter.getContent(position)));
-            }
-        };
+        MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> doShowEditActivity(Collections.singletonList(adapter.getContent(position)));
         adapter.setClickListener(onListItemClick);
 
         //mRecyclerView.setItemAnimator(null);
         //mRecyclerView.setPreserveFocusAfterLayout(true);
-
-       /* mRecyclerView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(view);
-                doShowEditActivity(Collections.singletonList(adapter.getContent(h.getLayoutPosition())));
-            }
-        }); */
-      /*  mRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-                                                 @Override
-                                                 public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                                                     View child = rv.findChildViewUnder(e.getX(), e.getY());
-                                                     RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(child);
-                                                     doShowEditActivity(Collections.singletonList(adapter.getContent(h.getLayoutPosition())));
-                                                     return false;
-                                                 }
-
-                                                @Override
-                                                public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-
-                                                }
-
-                                                @Override
-                                                public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
-                                                }
-        }); */
 
         mTracker = new SelectionTracker.Builder<>(
                 "selection-id",
@@ -1263,17 +1186,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSelectionChanged() {
                 int count = mTracker.getSelection().size();
+                selections.clear();
                 if(count > 0) {
-                    selections.clear();
+                    // selections.clear();
                     mTracker.getSelection().forEach(item -> selections.add(adapter.getContent(item.intValue())));//selections += item);
                     if (actionMode == null) {
                         actionMode = startSupportActionMode(actionModeCallback);
                     }
                     actionMode.setTitle(StringUtils.formatSongSize(count));
                     actionMode.invalidate();
-                }else if(actionMode != null){
-                    selections.clear();
-                    actionMode.finish();
+              }else if(actionMode != null){
+                    actionMode.setTitle(StringUtils.formatSongSize(count));
+                    actionMode.invalidate();
                 }
             }
         };
@@ -1387,27 +1311,6 @@ public class MainActivity extends AppCompatActivity {
 */
    //     return false;
    // }
-/*
-    private void enableActionMode(MusicTag tag) {
-        if (actionMode == null) {
-            actionMode = startSupportActionMode(actionModeCallback);
-        }
-        toggleSelection(tag);
-    }
-
-    private void toggleSelection(MusicTag tag) {
-       // adapter.toggleSelection(tag);
-        int count = mTracker.getSelection().size();
-
-        if (count == 0) {
-            actionMode.finish();
-        } else {
-            actionMode.setTitle(StringUtils.formatSongSize(count));
-            actionMode.invalidate();
-        }
-        int position = adapter.getMusicTagPosition(tag);
-        adapter.notifyItemChanged(position);
-    } */
 
     public void onPlaying(MusicTag song) {
         if(song!=null) {
@@ -1449,35 +1352,42 @@ public class MainActivity extends AppCompatActivity {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int id = item.getItemId();
             if (id == R.id.action_delete) {
-               doDeleteMediaItems(selections);
+               doDeleteMediaItems(getSelections());
                 mode.finish();
                 return true;
             }else if (id == R.id.action_transfer_file) {
-                doMoveMediaItems(selections);
+                doMoveMediaItems(getSelections());
                 mode.finish();
                 return true;
             }else if (id == R.id.action_edit_metadata) {
-                doShowEditActivity(selections);
+                doShowEditActivity(getSelections());
                 mode.finish();
                 return true;
             }else if (id == R.id.action_encoding_file) {
-                doEncodingAudioFiles(selections);
+                doEncodingAudioFiles(getSelections());
                 mode.finish();
                 return true;
             }else if (id == R.id.action_send_to_hibyos) {
-                doSendFilesToHibyDAP(selections);
-               // mode.finish();
+                doSendFilesToHibyDAP(getSelections());
+                mode.finish();
                 return true;
             }else if (id == R.id.action_calculate_replay_gain) {
-                doCalculateReplayGain(selections);
+                doCalculateReplayGain(getSelections());
                 mode.finish();
                 return true;
             }else if (id == R.id.action_export_playlist) {
-                doExportAsPlaylist(selections);
-                //mode.finish();
+                doExportAsPlaylist(getSelections());
+                mode.finish();
                 return true;
             }else if (id == R.id.action_select_all) {
-
+                if(mTracker.getSelection().size() == adapter.getItemCount()) {
+                    // selected all, reset selection
+                    mTracker.clearSelection();
+                }else {
+                    for (int i = 0; i < adapter.getItemCount(); i++) {
+                        mTracker.select((long) i);
+                    }
+                }
             }
             return false;
         }
@@ -1488,36 +1398,13 @@ public class MainActivity extends AppCompatActivity {
             actionMode = null;
             mHeaderPanel.setVisibility(View.VISIBLE);
         }
+
+        private List<MusicTag> getSelections() {
+            List<MusicTag> list = new ArrayList<>();
+            list.addAll(selections);
+            return list;
+        }
     }
-
-    /*
-    private void doCalculateReplayGainOld(ArrayList<MusicTag> currentSelections) {
-            // calculate RG
-            // update RG on files
-            CompletableFuture.runAsync(
-                    () -> {
-                        for(MusicTag tag:currentSelections) {
-                            //calculate track RG
-                            FFMPeg.readReplayGain(this, tag);
-                        }
-
-                        // save RG to media file
-                        for(MusicTag tag:currentSelections) {
-                            //write RG to file
-                            FFMPeg.writeReplayGain(this, tag);
-                            // update MusicMate Library
-                            MusicTagRepository.saveTag(tag);
-                        }
-                    }
-            ).thenAccept(
-                    unused -> epoxyController.loadSource()
-            ).exceptionally(
-                    throwable -> {
-                       // stopProgressBar();
-                        return null;
-                    }
-            );
-    } */
 
     private void doCalculateReplayGain(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
@@ -1527,7 +1414,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Calculate ReplyGain");
+        titleText.setText("Calculate ReplayGain");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1548,9 +1435,9 @@ public class MainActivity extends AppCompatActivity {
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 MusicTag tag = selections.get(i);
-                TextView seq = (TextView)           view.findViewById(R.id.seq);
-                TextView name = (TextView)           view.findViewById(R.id.name);
-                TextView status = (TextView)           view.findViewById(R.id.status);
+                TextView seq = view.findViewById(R.id.seq);
+                TextView name = view.findViewById(R.id.name);
+                TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 if(statusList.containsKey(tag)) {
                     status.setText(statusList.get(tag));
@@ -1658,8 +1545,9 @@ public class MainActivity extends AppCompatActivity {
          */
         Writer out = null;
         try {
+
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.US);
-            String path = "/Playlist/"+searchCriteria.getKeyword()+"_"+currentSelections.size()+"_"+simpleDateFormat.format(new Date())+".m3u";
+            String path = "/Playlist/"+adapter.getCriteria().getKeyword()+"_"+currentSelections.size()+"_"+simpleDateFormat.format(new Date())+".m3u";
             path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
             File filepath = new File(path);
             File folder = filepath.getParentFile();
@@ -1718,9 +1606,9 @@ public class MainActivity extends AppCompatActivity {
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 MusicTag tag = selections.get(i);
-                TextView seq = (TextView)           view.findViewById(R.id.seq);
-                TextView name = (TextView)           view.findViewById(R.id.name);
-                TextView status = (TextView)           view.findViewById(R.id.status);
+                TextView seq = view.findViewById(R.id.seq);
+                TextView name = view.findViewById(R.id.name);
+                TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 if(doneList.contains(tag)) {
                     status.setText("Done");
@@ -1735,12 +1623,6 @@ public class MainActivity extends AppCompatActivity {
                 return view;
             }
         });
-       /* TextView filename = cview.findViewById(R.id.full_filename);
-        if(selections.size()==1) {
-            filename.setText(selections.get(0).getSimpleName());
-        }else {
-            filename.setText("Convert "+ StringUtils.formatSongSize(selections.size())+" to selected encoding.");
-        } */
 
        // final String[] encoding = {null};
         View btnOK = cview.findViewById(R.id.btn_ok);
@@ -1875,8 +1757,7 @@ public class MainActivity extends AppCompatActivity {
         //String url = "http://10.100.1.242:4399/";
         AtomicReference<String> url = new AtomicReference<>("http://" + ip + ":4399/");
         View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
-        List<MusicTag> doneList = new ArrayList<>();
-        List<MusicTag> failList = new ArrayList<>();
+        Map<MusicTag, String> doneList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         EditText targetURL = cview.findViewById(R.id.targetURL);
         EditText targetIP = cview.findViewById(R.id.targetIP);
@@ -1922,14 +1803,12 @@ public class MainActivity extends AppCompatActivity {
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
                 MusicTag tag = selections.get(i);
-                TextView seq = (TextView)           view.findViewById(R.id.seq);
-                TextView name = (TextView)           view.findViewById(R.id.name);
-                TextView status = (TextView)           view.findViewById(R.id.status);
+                TextView seq = view.findViewById(R.id.seq);
+                TextView name = view.findViewById(R.id.name);
+                TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
-                if(doneList.contains(tag)) {
-                    status.setText("Done");
-                }else if(failList.contains(tag)) {
-                    status.setText("Fail");
+                if(doneList.containsKey(tag)) {
+                    status.setText(doneList.get(tag));
                 }else {
                     status.setText("-");
                 }
@@ -1974,8 +1853,12 @@ public class MainActivity extends AppCompatActivity {
             for(MusicTag tag: selections) {
                 MusicMateExecutors.move(() -> {
                     try {
+                        doneList.put(tag, "Sending");
+                        runOnUiThread(() -> {
+                            itemsView.invalidateViews();
+                        });
                         SyncHibyPlayer.sync(getApplicationContext(), finalUrl, tag);
-                        doneList.add(tag);
+                        doneList.put(tag, "Done");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
@@ -1984,7 +1867,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                     }catch (Exception ex) {
                         try {
-                            failList.add(tag);
+                            doneList.put(tag, "Fail");
                             runOnUiThread(() -> {
                                 int pct = progressBar.getProgress();
                                 progressBar.setProgress((int) (pct + rate));
