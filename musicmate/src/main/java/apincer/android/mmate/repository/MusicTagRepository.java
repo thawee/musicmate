@@ -33,29 +33,21 @@ public class MusicTagRepository {
             tag.setUniqueKey(tag.getPath()+"_"+ tag.getAudioStartTime());
         }
 
-       // MusixMateApp.getDatabase().musicTagDao().save(tag);
-       // MusicTagObjectBox.save(tag);
         MusixMateApp.getInstance().getOrmLite().save(tag);
     }
 
     public static void removeTag(MusicTag tag) {
-       // MusicTagObjectBox.delete(tag);
         MusixMateApp.getInstance().getOrmLite().delete(tag);
     }
 
     public static void cleanMusicMate() {
         try {
-            //List<MusicTag> list = getMusicTagBox().getAll();
-           // List<MusicTag> list = MusicTagObjectBox.findMySongs();
             List<MusicTag> list =  MusixMateApp.getInstance().getOrmLite().findMySongs();
             for(int i=0; i<list.size();i++) {
                 MusicTag mdata = list.get(i);
                 String path = mdata.getPath();
                 if(!FileRepository.isMediaFileExist(path) || mdata.getFileSize()==0.00) {
-                    //getMusicTagBox().remove(mdata);
                     removeTag(mdata);
-               // }else {
-               //     MusixMateApp.getInstance().getOrmLite().save(mdata); // copy to ormlite db
                 }
             }
         } catch (Exception e) {
@@ -66,10 +58,7 @@ public class MusicTagRepository {
     public static List<String> getGenreList(Context context) {
         List<String> list = new ArrayList<>();
 
-       // String[] names = getMusicTagBox().query().build().property(MusicTag_.genre).distinct().findStrings();
-       // List<String> names = MusicTagObjectBox.getGeners();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGeners();
-       // if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     list.add(StringUtils.EMPTY);
@@ -77,7 +66,6 @@ public class MusicTagRepository {
                     list.add(group);
                 }
             }
-        //}
 
         Collections.sort(list);
         return list;
@@ -85,8 +73,6 @@ public class MusicTagRepository {
 
     public static List<String> getDefaultGenreList(Context context) {
         List<String> list = new ArrayList<>();
-       // String[] names = getMusicTagBox().query().build().property(MusicTag_.genre).distinct().findStrings();
-       // List<String> names = MusicTagObjectBox.getGeners();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGeners();
        // if(names!=null) {
             for (String group:names) {
@@ -118,10 +104,7 @@ public class MusicTagRepository {
 
     public static List<String> getGroupingList(Context context) {
         List<String> list = new ArrayList<>();
-      //  String[] names = getMusicTagBox().query().build().property(MusicTag_.grouping).distinct().findStrings();
-        //List<String> names = MusicTagObjectBox.getGrouping();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGrouping();
-        // if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     list.add(StringUtils.EMPTY);
@@ -129,8 +112,6 @@ public class MusicTagRepository {
                     list.add(group);
                 }
             }
-            //list.addAll(Arrays.asList(names));
-      //  }
         String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
         for(String grp: groupings) {
             if(!list.contains(grp)) {
@@ -142,12 +123,7 @@ public class MusicTagRepository {
     }
 
     public static List<String> getArtistList() {
-        //String[] names = getMusicTagBox().query().build().property(MusicTag_.artist).distinct().findStrings();
-        //if(names!=null) {
-       // List<String> list = MusicTagObjectBox.getArtits();
         List<String> list = MusixMateApp.getInstance().getOrmLite().getArtits();
-       // List<String> list = new ArrayList<>(names);
-        //}
         Collections.sort(list);
         return list;
     }
@@ -164,284 +140,65 @@ public class MusicTagRepository {
         return list;
     }
 
-    /*public static List<String> getAlbumList() {
-        List<String> list = new ArrayList<>();
-        String[] names = getMusicTagBox().query().build().property(MusicTag_.album).distinct().findStrings();
-        if(names!=null) {
-            list.addAll(Arrays.asList(names));
-        }
-        Collections.sort(list);
-        return list;
-    }*/
-
-    public static boolean checkSACDOutdated(String path, long lastModified) {
-        List<MusicTag> tags = findByPath(path);
-        if(tags.isEmpty()) {
-            // found new file
-            return true;
-        }
-        if(tags.get(0).getFileLastModified() < lastModified) {
-            // found updated, remove old tags, and re scan
-            for (MusicTag tag: tags) {
-                removeTag(tag);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    public static MusicTag getOutdatedMusicTag(String path, long lastModified) {
-        // return null if not outdate, else return object
-        List<MusicTag> tags = findByPath(path);
-        if(tags.isEmpty()) {
-            // found new file
-            return new MusicTag();
-        }else if (tags.size() == 1) {
-            if(tags.get(0).getFileLastModified() < lastModified) {
-                // tag in library already up-to-dated
-                //removeTag(tags.get(0));
-                return tags.get(0);
-            }else {
-                return null; // tag database already up to date
-            }
-        }else {
-            // found >1, could be duplicated, clean all up and re scan
-            //ObjectBox.get().runInTx(() -> {
-                for (MusicTag tag: tags) {
-                    //getMusicTagBox().remove(tag);
-                    removeTag(tag);
-                }
-           // });
-            return new MusicTag();
-        }
-    }
-
-    /*public static MusicTag getAudioTagById(MusicTag md) {
-        return getMusicTagBox().get(md.getId());
-    }*/
-
     public static List<MusicTag> findByPath(String path) {
-
-      // return MusicTagObjectBox.findByPath(path);
-       //return MusixMateApp.getDatabase().musicTagDao().findByPath(path);
        return MusixMateApp.getInstance().getOrmLite().findByPath(path);
     }
 
     public static List<MusicTag> findMediaByTitle(String title) {
-       //return MusicTagObjectBox.findByTitle(title);
-       // return MusicTagObjectBox.findByTitle(title);
         return MusixMateApp.getInstance().getOrmLite().findByTitle(title);
-      // return MusixMateApp.getDatabase().musicTagDao().findByTitle("%"+title+"%");
     }
 
-    //public static synchronized List<MusicTag> findMediaTag(SearchCriteria criteria) {
     public static List<MusicTag> findMediaTag(SearchCriteria criteria) {
         List<MusicTag> list = new ArrayList<>();
         if(criteria.getType()==SearchCriteria.TYPE.MY_SONGS) {
             if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
-                // default for MY_SONGS
-               /* Query<MusicTag> query = getMusicTagBox().query().order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close(); */
-               // list = MusicTagObjectBox.findMySongs(criteria);
-                //list = MusixMateApp.getDatabase().musicTagDao().findMySongs();
                 list = MusixMateApp.getInstance().getOrmLite().findMySongs();
             } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-               /* Query<MusicTag> query = getMusicTagBox().query().filter(tag -> !tag.isMusicManaged()).order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close(); */
-               // list = MusicTagObjectBox.findMyIncommingSongs(criteria);
-               // list = MusixMateApp.getDatabase().musicTagDao().findMyIncommingSongs();
                 list = MusixMateApp.getInstance().getOrmLite().findMyIncommingSongs();
             } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-               /* Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileSizeRatio.less(Constants.MIN_FILE_SIZE_RATIO).or(MusicTag_.mmReadError.equal(true))).orderDesc(MusicTag_.fileSizeRatio).order(MusicTag_.fileSize).build();
-                list = query.find();
-                query.close(); */
-               // list = MusicTagObjectBox.findMyBrokenSongs(criteria);
-               // list = MusixMateApp.getDatabase().musicTagDao().findMyBrokenSongs();
                 list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
             } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
-              /*  Query<MusicTag> query = getMusicTagBox().query().order(MusicTag_.title).order(MusicTag_.artist).build();
-                List<MusicTag> audioTags = query.find();
-                String title = "";
-                String artist = "";
-                MusicTag prvTag = null;
-                for (MusicTag tag : audioTags) {
-                    if (StringUtils.isEmpty(title)) {
-                        title = tag.getTitle();
-                    } else if ((StringUtils.similarity(title, tag.getTitle()) > Constants.MIN_TITLE)) {// ||
-                        // found similar title
-                        // check artist
-                        if ((StringUtils.similarity(artist, tag.getArtist()) > Constants.MIN_ARTIST) ||
-                                StringUtils.contains(artist, tag.getArtist())) {
-                            if (prvTag != null && !list.contains(prvTag)) {
-                                list.add(prvTag);
-                            }
-                            list.add(tag);
-                        } else {
-                            // found different artist
-                            title = tag.getTitle();
-                            artist = tag.getArtist();
-                        }
-                    } else {
-                        // found different title
-                        title = tag.getTitle();
-                        artist = tag.getArtist();
-                    }
-                    prvTag = tag;
-                }
-                query.close(); */
                 list = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
             }
         }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-          /*  Query<MusicTag> query;
-            if(isEmpty(criteria.getKeyword()) || Constants.UNKNOWN_PUBLISHER.equals(criteria.getKeyword())) {
-                query = getMusicTagBox().query(MusicTag_.publisher.isNull().or(MusicTag_.publisher.equal(""))).build();
-            } else {
-                query = getMusicTagBox().query(MusicTag_.publisher.equal(StringUtils.trimToEmpty(criteria.getKeyword()))).build();
-            }
-            list = query.find();
-            query.close(); */
             list = MusixMateApp.getInstance().getOrmLite().findByPublisher(criteria.getKeyword());
         }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
-               /* Query<MusicTag> query;
-                if (isEmpty(criteria.getKeyword()) || Constants.QUALITY_NORMAL.equals(criteria.getKeyword())) {
-                    query = getMusicTagBox().query(MusicTag_.mediaQuality.isNull().or(MusicTag_.mediaQuality.equal(""))).build();
-                } else {
-                    query = getMusicTagBox().query(MusicTag_.mediaQuality.equal(StringUtils.trimToEmpty(criteria.getKeyword()))).build();
-                }
-                list = query.find();
-                query.close(); */
-                //list = MusicTagObjectBox.findByMediaQuality(criteria.getKeyword());
             list = MusixMateApp.getInstance().getOrmLite().findByMediaQuality(criteria.getKeyword());
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)){
-                /*Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsDepth.equal(1)).order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close(); */
-              //  list = MusicTagObjectBox.findDSDSongs();
             list = MusixMateApp.getInstance().getOrmLite().findDSDSongs();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)){
-              /*  Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqaInd.equal("MQA").or(MusicTag_.mqaInd.equal("MQA Studio"))).order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                //query.close(); */
-                //list = MusicTagObjectBox.findMQASongs();
             list = MusixMateApp.getInstance().getOrmLite().findMQASongs();
 
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HI_QUALITY.equals(criteria.keyword)){
-               /* Query<MusicTag> query = getMusicTagBox().query(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_MPEG.toLowerCase()).or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_AAC.toLowerCase())).and(MusicTag_.audioBitsDepth.notEqual(1))).order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close(); */
-            //list = MusicTagObjectBox.findHighQuality();
-           // list = MusixMateApp.getDatabase().musicTagDao().findHighQuality();
             list = MusixMateApp.getInstance().getOrmLite().findHighQuality();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)){
-              /*  Query<MusicTag> query = getMusicTagBox().query(
-                        MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_FLAC.toLowerCase())
-                                .or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_ALAC.toLowerCase()))
-                                .or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_WAVE.toLowerCase()))
-                                .or(MusicTag_.fileFormat.equal(Constants.MEDIA_ENC_AIFF.toLowerCase()))
-                               // .and(MusicTag_.mqaInd.mqa(false))
-                                .and(MusicTag_.mqaInd.notEqual("MQA"))
-                                .and(MusicTag_.mqaInd.notEqual("MQA Studio"))
-                                .and(MusicTag_.audioBitsDepth.notEqual(1)))
-                        .filter(tag -> {
-                            // drop from results
-                            return !MusicTagUtils.isPCMHiRes(tag); // include to results
-                        })
-                        .order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close(); */
                 list = MusixMateApp.getInstance().getOrmLite().findLosslessSong();
         }else if(criteria.getType()== SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)){
-               // Query<MusicTag> query = getMusicTagBox().query(MusicTag_.mqa.equal(false)).filter(tag -> {
-            // drop from results
-            // && !tag.isMQA(); // include to results
-           /* Query<MusicTag> query = getMusicTagBox().query().filter(MusicTagUtils::isPCMHiRes).order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close(); */
-            //list = MusicTagObjectBox.findHiRes();
-           // list = MusixMateApp.getDatabase().musicTagDao().findHiRes();
             list = MusixMateApp.getInstance().getOrmLite().findHiRes();
         }else if(criteria.getType()== SearchCriteria.TYPE.GROUPING){
-            /*    Query<MusicTag> query;
-                if(isEmpty(criteria.getKeyword()) || StringUtils.EMPTY.equalsIgnoreCase(criteria.getKeyword())) {
-                    query = getMusicTagBox().query(MusicTag_.grouping.isNull().or(MusicTag_.grouping.equal(""))).order(MusicTag_.title).order(MusicTag_.artist).build();
-                }else {
-                    query = getMusicTagBox().query(MusicTag_.grouping.equal(criteria.getKeyword())).order(MusicTag_.title).order(MusicTag_.artist).build();
-                }
-                list = query.find();
-                query.close(); */
             String val = criteria.getKeyword();
             if(isEmpty(val) || StringUtils.EMPTY.equalsIgnoreCase(val)) {
                 val = "";
             }
-            // list = MusicTagObjectBox.findByGrouping(val);
-          //  list = MusixMateApp.getDatabase().musicTagDao().findByGrouping(val);
             list = MusixMateApp.getInstance().getOrmLite().findByGrouping(val);
         }else if(criteria.getType()== SearchCriteria.TYPE.GENRE){
-                /*Query<MusicTag> query;
-                if(isEmpty(criteria.getKeyword()) || StringUtils.EMPTY.equalsIgnoreCase(criteria.getKeyword())) {
-                    query = getMusicTagBox().query(MusicTag_.genre.isNull().or(MusicTag_.genre.equal(""))).order(MusicTag_.title).order(MusicTag_.artist).build();
-                }else {
-                    query = getMusicTagBox().query(MusicTag_.genre.equal(criteria.getKeyword())).order(MusicTag_.title).order(MusicTag_.artist).build();
-                }
-                list = query.find();
-                query.close(); */
 
                 String val = criteria.getKeyword();
                 if(isEmpty(val) || StringUtils.EMPTY.equalsIgnoreCase(val)) {
                     val = "";
                 }
-            // list = MusicTagObjectBox.findByGenre(val);
-              //  list = MusixMateApp.getDatabase().musicTagDao().findByGenre(val);
             list = MusixMateApp.getInstance().getOrmLite().findByGenre(val);
-                // }else if(criteria.getType()== SearchCriteria.TYPE.AUDIOPHILE){
-                //     Query<MusicTag> query = tagBox.query(MusicTag_.audiophile.equal(true)).order(MusicTag_.title).order(MusicTag_.artist).build();
-                //     list = query.find();
-                //     query.close();
         }else if(criteria.getType()== SearchCriteria.TYPE.SEARCH) {
                 // search title only, limit 5 songs
-            /*Query<AudioTag> query = tagBox.query().filter(tag -> {
-                // drop to results
-                return StringUtils.contains(tag.getTitle(), criteria.getKeyword()); // include from results
-            }).order(AudioTag_.artist).order(AudioTag_.title).build();
-            List titles = query.find();
-            if(titles.size() > 0) {
-                AudioTag title = new AudioTag();
-                title.setTitle("Top Results");
-                title.setId(99999999);
-                list.add(title);
-                list.addAll(titles);
-            }
-            query.close(); */
-
-                // search path
-               /* Query<MusicTag> query = getMusicTagBox().query(MusicTag_.title.contains(criteria.getKeyword()) //.filter(tag -> {
-                                // drop to results
-                                //    return StringUtils.contains(tag.getPath(), criteria.getKeyword()); // include from results
-                                //})
-                                .or(MusicTag_.artist.contains(criteria.getKeyword())))
-                        .order(MusicTag_.title).build();
-                list = new ArrayList<>(query.find());
-                query.close(); */
-             //   list = MusicTagObjectBox.findByKeyword(criteria.getKeyword());
             list = MusixMateApp.getInstance().getOrmLite().findByKeyword(criteria.getKeyword());
         } else {
                 // default for MY_SONGS and others
-               /* Query<MusicTag> query = getMusicTagBox().query().order(MusicTag_.title).order(MusicTag_.artist).build();
-                list = query.find();
-                query.close();
-                */
-            // list = MusicTagObjectBox.findMySongs(criteria);
-            //list = MusixMateApp.getDatabase().musicTagDao().findMySongs();
             list = MusixMateApp.getInstance().getOrmLite().findMySongs();
         }
         return list;
     }
 
     public static void populateAudioTag(MusicTag md) {
-        //MusicTag tag = getMusicTagBox().get(md.getId());
-        //MusicTag tag = MusicTagObjectBox.findById(md.getId());
         MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(md.getId());
         if(tag != null) {
             md.cloneFrom(tag);
@@ -449,24 +206,11 @@ public class MusicTagRepository {
     }
 
     public static List<MusicTag> getAllMusics() {
-        //return getMusicTagBox().getAll();
-       // return MusicTagObjectBox.findMySongs();
-        //return MusixMateApp.getDatabase().musicTagDao().findMySongs();
         return MusixMateApp.getInstance().getOrmLite().findMySongs();
     }
 
-    /*public static List<MusicTag> getAudioTagWithoutLoudness() {
-        //Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsDepth.notEqual(1).and(MusicTag_.trackScanned.equals(true))).build();
-        Query<MusicTag> query = getMusicTagBox().query(MusicTag_.audioBitsDepth.notEqual(1)).build();
-        List<MusicTag> list = query.find();
-        query.close();
-        return list;
-    } */
-
     public static List<String> getDefaultPublisherList(Context context) {
         List<String> list = new ArrayList<>();
-        //String[] names = getMusicTagBox().query().build().property(MusicTag_.publisher).distinct().findStrings();
-       // List<String> names = MusicTagObjectBox.getPublishers();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getPublishers();
         //if(names!=null) {
             for (String group:names) {
@@ -490,8 +234,6 @@ public class MusicTagRepository {
 
     public static List<String> getPublisherList(Context context) {
         List<String> list = new ArrayList<>();
-       // String[] names = getMusicTagBox().query().build().property(MusicTag_.publisher).distinct().findStrings();
-      // List<String> names = MusicTagObjectBox.getPublishers();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getPublishers();
         // if(names!=null) {
             for (String group:names) {
@@ -518,5 +260,12 @@ public class MusicTagRepository {
             return true;
         }
         return false;
+    }
+
+    public static void load(MusicTag tag) {
+        MusicTag newTag = MusixMateApp.getInstance().getOrmLite().findById(tag.getId());
+        if(newTag !=null) {
+            tag.cloneFrom(newTag);
+        }
     }
 }

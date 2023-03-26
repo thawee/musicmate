@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 69
-        versionName  "3.6.0"+ versions.buildDate
+        versionCode 71
+        versionName  "3.7.1"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -88,17 +88,17 @@ kapt {
     correctErrorTypes = true
 }
 
-project.android.buildTypes.all { buildType ->
-    buildType.javaCompileOptions.annotationProcessorOptions.arguments =
-            [
-                    validateEpoxyModelUsage     : "true",
-                    requireHashCodeInEpoxyModels: "true",
-                    requireAbstractEpoxyModels  : "true",
-                    implicitlyAddAutoModels     : "true",
-                    logEpoxyTimings     : "false",
-                   // enableParallelEpoxyProcessing     : "true",
-            ]
-}
+//project.android.buildTypes.all { buildType ->
+//    buildType.javaCompileOptions.annotationProcessorOptions.arguments =
+//            [
+//                    validateEpoxyModelUsage     : "true",
+//                    requireHashCodeInEpoxyModels: "true",
+//                    requireAbstractEpoxyModels  : "true",
+//                    implicitlyAddAutoModels     : "true",
+//                    logEpoxyTimings     : "false",
+//                   // enableParallelEpoxyProcessing     : "true",
+//            ]
+//}
 
 repositories {
     maven { url "https://jitpack.io" }
@@ -110,6 +110,7 @@ dependencies {
     // AndroidX
     implementation deps.androidx.activity
     implementation deps.androidx.recyclerView
+    implementation deps.androidx.recyclerView_selection
     implementation deps.androidx.appCompat
     implementation deps.androidx.cardView
     implementation deps.androidx.annotation
@@ -140,10 +141,8 @@ dependencies {
     //implementation deps.esococommon;
 
     // epoxy
-    implementation deps.epoxy.runtime
-    kapt deps.epoxy.annotationProcessor
-
-
+    //implementation deps.epoxy.runtime
+    //kapt deps.epoxy.annotationProcessor
 
     // UI Libs
     //implementation deps.ui.groupie
@@ -245,6 +244,12 @@ aboutLibraries {
     exclusionPatterns = [
             ~"org.jetbrains.*",
             ~"androidx.*",
+            ~"androidx.activity*",
+            ~"androidx.databinding*",
+            ~"androidx.emoji2:emoji2-*",
+            ~"androidx.lifecycle:lifecycle-*",
+            ~"androidx.room*",
+            ~"androidx.sqlite:sqlite*",
             ~"javax.validation:validation-api",
             ~"com.google.guava.*",
             ~"com.google.errorprone.*",

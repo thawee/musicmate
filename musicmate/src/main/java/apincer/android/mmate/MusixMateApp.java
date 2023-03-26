@@ -32,8 +32,6 @@ import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
 public class MusixMateApp extends Application {
-    // private static final Logger jAudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
-    //  private static final Logger jAudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
     private static final String TAG = MusixMateApp.class.getName();
 
     private static MusixMateApp INSTANCE;
@@ -56,11 +54,11 @@ public class MusixMateApp extends Application {
         }
     });
     private static final long SCAN_SCHEDULE_TIME = 5;
-    private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
+   // private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
    // private static MusicMateDatabase database;
-    private MusicMateOrmLite ormLite = null;
+   // private MusicMateOrmLite ormLite = null;
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();

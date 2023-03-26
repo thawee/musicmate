@@ -61,8 +61,8 @@
                     android:layout_height="wrap_content"
                     android:text="Artist"
                     android:maxLines="2"
-                    android:gravity="right"
-                    android:layout_marginRight="@dimen/dimen_4_dp"
+                    android:gravity="end"
+                    android:layout_marginEnd="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
                     android:fontFamily="@font/sfthonburi_regular"
                     android:textColor="@android:color/white"
@@ -103,8 +103,9 @@
                     android:layout_height="wrap_content"
                     android:text="Album"
                     android:maxLines="2"
-                    android:gravity="left"
+                    android:gravity="start"
                     android:paddingLeft="@dimen/dimen_4_dp"
+                    android:paddingRight="@dimen/dimen_4_dp"
                     android:layout_gravity="center_horizontal"
                     android:fontFamily="@font/sfthonburi_regular"
                     android:textColor="@android:color/white"
@@ -140,6 +141,7 @@
                 android:maxLines="1"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_4_dp"
+                android:paddingRight="@dimen/dimen_4_dp"
                 android:fontFamily="@font/k2d_bold"
                 android:textSize="10sp"
                 android:textStyle="bold"
@@ -316,7 +318,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:layout_marginLeft="@dimen/dimen_4_dp"
+                android:layout_marginStart="@dimen/dimen_4_dp"
                 android:drawablePadding="@dimen/dimen_4_dp"
                 android:paddingTop="@dimen/dimen_1_dp"
                 android:fontFamily="@font/sfthonburi_regular"
@@ -333,7 +335,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:layout_marginLeft="@dimen/dimen_4_dp"
+            android:layout_marginStart="@dimen/dimen_4_dp"
             android:drawablePadding="@dimen/dimen_4_dp"
             android:paddingTop="@dimen/dimen_1_dp"
             android:fontFamily="@font/sfthonburi_regular"
@@ -342,7 +344,7 @@
             android:gravity="center"
             android:layout_gravity="center"
             android:singleLine="true" />
-
+<!--
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -352,15 +354,17 @@
             android:layout_marginStart="@dimen/dimen_16_dp"
             android:layout_marginEnd="@dimen/dimen_16_dp"
             android:background="@drawable/shape_btn_background"
-            >
+            > -->
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dimen_16_dp"
-            android:layout_marginEnd="@dimen/dimen_16_dp"
-            android:layout_marginTop="@dimen/dimen_1_dp"
-            android:layout_gravity="center">
+            android:layout_marginStart="@dimen/dimen_12_dp"
+            android:layout_marginEnd="@dimen/dimen_12_dp"
+            android:layout_marginTop="@dimen/dimen_8_dp"
+            android:layout_gravity="center"
+            android:padding="@dimen/dimen_4_dp"
+            android:background="@drawable/shape_btn_background">
 
             <com.skydoves.elasticviews.ElasticLayout
                 android:id="@+id/btnDelete"
@@ -368,6 +372,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/dimen_24_dp"
                 android:background="@drawable/shape_border_back_selectable"
+                android:layout_marginStart="@dimen/dimen_8_dp"
                 android:paddingLeft="@dimen/dimen_12_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
                 android:paddingRight="@dimen/dimen_12_dp"
@@ -376,17 +381,18 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:src="@drawable/ic_round_delete_forever_24" />
+                    android:layout_gravity="start"
+                    android:src="@drawable/ic_round_delete_forever_24"
+                    android:contentDescription="@string/editor_musicmate_info"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginLeft="@dimen/dimen_16_dp"
+                    android:layout_marginStart="@dimen/dimen_12_dp"
                     android:gravity="center_vertical"
-                    android:paddingRight="@dimen/dimen_12_dp"
-                    android:drawablePadding="@dimen/dimen_4_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_2_dp"
                     android:text="@string/delete_song_label"
                     android:textColor="@android:color/white"
                     android:textStyle="bold" />
@@ -411,7 +417,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:src="@drawable/ic_round_edit_24" />
+                    android:src="@drawable/ic_round_edit_24"
+                    android:contentDescription="@string/editor_musicmate_info"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -430,20 +437,23 @@
                 android:id="@+id/btnImport"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_marginTop="@dimen/dimen_24_dp"
                 android:background="@drawable/shape_border_back_selectable"
+                android:layout_marginEnd="@dimen/dimen_8_dp"
                 android:paddingLeft="@dimen/dimen_12_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
                 android:paddingRight="@dimen/dimen_12_dp"
-                android:paddingBottom="@dimen/dimen_4_dp">
+                android:paddingBottom="@dimen/dimen_4_dp"
+                tools:ignore="RelativeOverlap">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginRight="@dimen/dimen_16_dp"
-                    android:paddingLeft="@dimen/dimen_12_dp"
+                    android:layout_marginEnd="@dimen/dimen_16_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_2_dp"
                     android:drawablePadding="@dimen/dimen_4_dp"
                     android:text="@string/import_songs_label"
                     android:textColor="@android:color/white"
@@ -452,8 +462,9 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="right"
-                    android:src="@drawable/ic_round_download_done_24" />
+                    android:layout_gravity="end"
+                    android:src="@drawable/ic_round_download_done_24"
+                    android:contentDescription="@string/editor_musicmate_info"/>
             </com.skydoves.elasticviews.ElasticLayout>
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -491,7 +502,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/shape_border_back_selectable"
                     android:layout_marginBottom="@dimen/dimen_12_dp"
-                    android:layout_marginRight="@dimen/dimen_12_dp">
+                    android:layout_marginEnd="@dimen/dimen_12_dp">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -510,7 +521,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/shape_border_back_selectable"
-                    android:layout_marginRight="@dimen/dimen_12_dp"
+                    android:layout_marginEnd="@dimen/dimen_12_dp"
                     android:layout_marginBottom="@dimen/dimen_4_dp">
 
                     <TextView
@@ -532,7 +543,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/shape_border_back_selectable"
                 android:layout_marginBottom="@dimen/dimen_4_dp"
-                android:layout_marginRight="@dimen/dimen_12_dp">
+                android:layout_marginEnd="@dimen/dimen_12_dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -650,7 +661,8 @@
             <!--
                 </LinearLayout>
 -->
-        </LinearLayout>
+        <!--
+        </LinearLayout> -->
             <!--
                 <LinearLayout
                     android:layout_width="match_parent"

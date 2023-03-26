@@ -61,6 +61,18 @@ public class FFMPeg extends TagReader {
         }
     }
 
+    public static void extractCoverArt(String path, File pathFile) {
+        //if(!isEmpty(tag.getEmbedCoverArt())) {
+            String targetPath = pathFile.getAbsolutePath();
+            targetPath = escapePathForFFMPEG(targetPath);
+            String options = " -c:v copy ";
+
+            String cmd = " -hide_banner -nostats -i \"" + path + "\" " + options + " \"" + targetPath + "\"";
+
+            FFmpegKit.execute(cmd); // do not clear the result
+       // }
+    }
+
     public static String removeCoverArt(Context context, MusicTag tag) {
         if(!isEmpty(tag.getEmbedCoverArt())) {
             String pathFile = tag.getPath();
@@ -734,7 +746,7 @@ public class FFMPeg extends TagReader {
         if(ReturnCode.isSuccess(session.getReturnCode())) {
             // success
             // move file
-            if(isFLACFile(tag) || isWavFile(tag) || isAIFFile(tag) || isMp4File(tag)) {
+           // if(isFLACFile(tag) || isWavFile(tag) || isAIFFile(tag) || isMp4File(tag)) {
                 if(FileSystem.safeMove(context, targetPath, srcPath)) {
                     FileRepository.newInstance(context).scanMusicFile(new File(srcPath),true);
                     return true;
@@ -742,12 +754,12 @@ public class FFMPeg extends TagReader {
                     FileSystem.delete(context, targetPath); // delete source file to clear space
                     return false;
                 }
-            }else {
+          /*  }else {
                 // FIXME : for test
                 FileSystem.move(context, targetPath, srcPath + "_TAGS." + tag.getFileFormat());
                 FileRepository.newInstance(context).scanMusicFile(new File(srcPath + "_TAGS." + tag.getFileFormat()),false);
                 return true;
-            }
+            }*/
         }else {
             Log.d(TAG, session.getOutput());
             // fail, delete tmp file;

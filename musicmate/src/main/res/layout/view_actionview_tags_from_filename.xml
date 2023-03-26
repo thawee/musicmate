@@ -331,6 +331,7 @@
                 android:hint="@string/editor_label_title"
                 android:imeOptions="actionNext"
                 android:singleLine="true"
+                android:enabled="false"
                 />
         </LinearLayout>
         <!--
@@ -386,6 +387,7 @@
                 android:hint="@string/editor_label_artist"
                 android:imeOptions="actionNext"
                 android:singleLine="true"
+                android:enabled="false"
                 />
         </LinearLayout>
         <!--
@@ -438,6 +440,7 @@
                 android:hint="@string/editor_label_album"
                 android:imeOptions="actionNext"
                 android:singleLine="true"
+                android:enabled="false"
                 />
         </LinearLayout>
         <!--
@@ -490,34 +493,16 @@
                 android:textColor="@color/grey300"
                 android:imeOptions="actionNext"
                 android:singleLine="true"
+                android:enabled="false"
                 />
         </LinearLayout>
-        <!--
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
-            android:id="@+id/track"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionNext"
-            android:nextFocusDown="@+id/album_arist"
-            android:maxLines="1"
-            android:inputType="text"
-            android:textSize="12sp"
-            android:layout_marginLeft="@dimen/spacing_large"
-            app:met_floatingLabel="highlight"
-            app:met_hideUnderline="true"
-            app:met_floatingLabelAlwaysShown="true"
-            app:met_baseColor="?android:attr/textColorPrimary"
-            app:met_textColorHint="?android:attr/textColorHint"
-            app:met_textColor="?android:attr/textColorPrimary"
-            app:met_floatingLabelTextColor="?android:attr/textColorHint"
-            app:met_floatingLabelText="@string/editor_label_track"
-            android:hint="@string/editor_hint_track"/>
-            -->
+
     </LinearLayout>
     </androidx.cardview.widget.CardView>
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="@dimen/dimen_32_dp"
+        android:layout_marginTop="@dimen/dimen_8_dp"
         android:layout_marginLeft="@dimen/dimen_32_dp"
         android:layout_marginRight="@dimen/dimen_32_dp"
         android:layout_marginBottom="@dimen/dimen_12_dp">
@@ -533,7 +518,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="24dp"
-                android:text="Cancel"
+                android:text="@string/cancel"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingRight="@dimen/dimen_8_dp"
@@ -557,7 +542,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="24dp"
-                android:text="OK"
+                android:text="@string/ok"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingRight="@dimen/dimen_8_dp"

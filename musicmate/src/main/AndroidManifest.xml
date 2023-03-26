@@ -74,8 +74,23 @@
             </intent-filter>
         </service>
         <!-- Main activity for music browsing on phone -->
+        <!--
         <activity
             android:name="apincer.android.mmate.ui.MediaBrowserActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
+            android:banner="@string/app_name"
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+        -->
+        <activity
+            android:name="apincer.android.mmate.ui.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:banner="@string/app_name"
@@ -91,7 +106,7 @@
         <!-- Music Tag Editor activity -->
         <activity
             android:name="apincer.android.mmate.ui.TagsActivity"
-            android:parentActivityName="apincer.android.mmate.ui.MediaBrowserActivity"
+            android:parentActivityName="apincer.android.mmate.ui.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:launchMode = "singleInstance"
@@ -128,6 +143,11 @@
         <provider
             android:name="apincer.android.mmate.fs.MusicFileProvider"
             android:authorities="apincer.android.mmate.provider"
+            android:exported="false"
+            android:grantUriPermissions="true"/>
+        <provider
+            android:name="apincer.android.mmate.fs.MusicCoverArtProvider"
+            android:authorities="apincer.android.mmate.coverart.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
         <provider

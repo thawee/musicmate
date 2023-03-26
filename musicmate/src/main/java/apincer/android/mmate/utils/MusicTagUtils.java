@@ -25,7 +25,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.Locale;
 
 import apincer.android.mmate.Constants;
@@ -992,6 +992,7 @@ public class MusicTagUtils {
         return 2; // default channels
     }
 
+    @Deprecated
     public static File getCoverArt( Context context, MusicTag tag) {
         //PH|SD_AR|R_album|filename.png
         //md5 digest
@@ -1053,9 +1054,9 @@ public class MusicTagUtils {
 
                 Bitmap bitmap = createEncodingSamplingRateIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                if(is!=null) {
-                    IOUtils.write(is, new FileOutputStream(pathFile));
-                }
+                //if(is!=null) {
+                IOUtils.write(is, Files.newOutputStream(pathFile.toPath())); //new FileOutputStream(pathFile));
+                //}
             } catch (Exception e) {
                 Log.e(TAG,"getEncResolutionIcon",e);
             }
@@ -1079,9 +1080,9 @@ public class MusicTagUtils {
 
                 Bitmap bitmap = createSourceQualityIcon(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                if(is!=null) {
-                    IOUtils.write(is, new FileOutputStream(pathFile));
-                }
+                //if(is!=null) {
+                IOUtils.write(is, Files.newOutputStream(pathFile.toPath())); //new FileOutputStream(pathFile));
+                //}
             } catch (Exception e) {
                 Log.e(TAG,"getSourceQualityIcon",e);
             }
@@ -1649,8 +1650,8 @@ public class MusicTagUtils {
         String path = "/Icons/Quality"+quality+"RecordsMini.png";
 
         File pathFile = new File(dir, path);
-        //if(!pathFile.exists()) {
-        if(true) {
+        if(!pathFile.exists()) {
+       // if(true) {
             // create file
             try {
                 dir = pathFile.getParentFile();
@@ -1658,9 +1659,9 @@ public class MusicTagUtils {
 
                 Bitmap bitmap = createSourceQualityIconMini(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                if(is!=null) {
-                    IOUtils.write(is, new FileOutputStream(pathFile));
-                }
+                //if(is!=null) {
+                IOUtils.write(is, Files.newOutputStream(pathFile.toPath())); //new FileOutputStream(pathFile));
+                //}
             } catch (Exception e) {
                 Log.e(TAG,"getSourceQualityIconMini",e);
             }

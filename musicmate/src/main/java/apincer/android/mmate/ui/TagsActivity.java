@@ -53,6 +53,7 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -86,8 +87,6 @@ public class TagsActivity extends AppCompatActivity {
     private TextView encInfo;
     private ImageView audiophileView;
     private ImageView hiresView;
-   // private ImageView encResView;
-   // private MaterialRatingBar ratingView;
     private View coverArtLayout;
     private View panelLabels;
     private CollapsingToolbarLayout toolBarLayout;
@@ -146,8 +145,6 @@ public class TagsActivity extends AppCompatActivity {
     private TextView filename;
     private TextView pathDrive;
     private TextView drView;
-    //private TextView trackRGView;
-    //private ImageView pathIcon;
     private SearchCriteria criteria;
 
     public List<MusicTag> getEditItems() {
@@ -240,41 +237,6 @@ public class TagsActivity extends AppCompatActivity {
         findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
     }
 
-    /*
-    private void doSyncHibyPlayer() {
-        String text = "Sync ";
-        if(editItems.size()>1) {
-            text = text + editItems.size() + " songs?";
-        }else {
-            text = text + "'"+editItems.get(0).getTitle()+"'?";
-        }
-
-        String url = "http://10.100.1.242:4399/";
-        MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
-                .setIcon(R.drawable.round_send_24)
-                .setTitle("Sync Songs")
-                .setMessage(text)
-                .setPositiveButton("Sync to Hiby", (dialogInterface, i) -> {
-                    MusicMateExecutors.move(new Runnable() {
-                        @Override
-                        public void run() {
-                            for(MusicTag tag: editItems) {
-                                try {
-                                    SyncHibyPlayer.sync(getApplicationContext(), url, tag);
-                                } catch (IOException e) {
-                                   e.printStackTrace();
-                                }
-                            }
-                        }
-                    });
-                    finish(); // back to prev activity
-                })
-                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
-        AlertDialog alertDialog = builder.create();
-        alertDialog.getWindow().setGravity(Gravity.BOTTOM);
-        alertDialog.show();
-    } */
-
     private void setUpTitlePanel() {
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
@@ -286,11 +248,8 @@ public class TagsActivity extends AppCompatActivity {
         pathDrive = findViewById(R.id.panel_path_drive);
         audiophileView = findViewById(R.id.icon_audiophile);
         hiresView = findViewById(R.id.icon_hires);
-       // encResView = findViewById(R.id.icon_loudness);
-       // ratingView = findViewById(R.id.icon_rating);
         filename = findViewById(R.id.panel_filename);
         drView = findViewById(R.id.icon_dr);
-        //trackRGView = findViewById(R.id.icon_track_rg);
     }
 
     public void updateTitlePanel() {
@@ -339,12 +298,11 @@ public class TagsActivity extends AppCompatActivity {
             audiophileView.setVisibility(View.GONE);
         }
 
-       /* if(displayTag.isDSD() || displayTag.getTrackLoudness()==0.0) {
-            encResView.setVisibility(View.GONE);
+        if(displayTag.isDSD()) {
+            drView.setVisibility(View.GONE);
         }else {
-            encResView.setImageBitmap(MusicTagUtils.createLoudnessIcon(getApplicationContext(), displayTag));
-            encResView.setVisibility(View.VISIBLE);
-        } */
+            drView.setVisibility(View.VISIBLE);
+        }
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -414,7 +372,8 @@ public class TagsActivity extends AppCompatActivity {
         });
 
         request = new ImageRequest.Builder(getApplicationContext())
-                .data(MusicTagUtils.getCoverArt(getApplicationContext(), displayTag))
+                //.data(MusicTagUtils.getCoverArt(getApplicationContext(), displayTag))
+                .data(MusicCoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)

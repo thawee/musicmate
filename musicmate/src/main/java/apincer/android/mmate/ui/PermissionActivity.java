@@ -18,13 +18,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 
-import com.anggrayudi.storage.SimpleStorage;
-import com.anggrayudi.storage.file.StorageId;
-
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.PermissionUtils;
-import apincer.android.storage.StorageUtils;
 
 public class PermissionActivity extends AppCompatActivity {
     // android 5 SD card permissions

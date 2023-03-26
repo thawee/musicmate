@@ -7,7 +7,7 @@
     android:paddingBottom="4dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground">
+    android:background="@drawable/selector_item">
 
     <LinearLayout
         android:id="@+id/item_title_layout"

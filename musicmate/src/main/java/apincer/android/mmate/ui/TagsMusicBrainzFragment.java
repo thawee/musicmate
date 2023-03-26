@@ -21,7 +21,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.airbnb.epoxy.EpoxyViewHolder;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -34,12 +33,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.epoxy.MusicBrainzController;
+import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
 import apincer.android.mmate.musicbrainz.MusicBrainz;
 import apincer.android.mmate.objectbox.MusicTag;
-import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.ui.view.LinearDividerItemDecoration;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -50,11 +47,6 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
 import coil.transform.RoundedCornersTransformation;
-//import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-//import io.reactivex.rxjava3.core.Observable;
-//import io.reactivex.rxjava3.core.Observer;
-//import io.reactivex.rxjava3.disposables.Disposable;
-//import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -65,7 +57,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
     private RecyclerView mRecyclerView;
     //private View vEmptyView;
     //private RotateLoading mProgressView;
-    private MusicBrainzController controller;
+//    private MusicBrainzController controller;
     private StateView mStateView;
 
     private String keywordTitle = null;
@@ -121,9 +113,9 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
 
         mRecyclerView.addItemDecoration(itemDecoration);
 
-        controller = new MusicBrainzController(this);
+       // controller = new MusicBrainzController(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mRecyclerView.setAdapter(controller.getAdapter());
+       // mRecyclerView.setAdapter(controller.getAdapter());
         new FastScrollerBuilder(mRecyclerView)
                 .useMd2Style()
                 .setPadding(0,0,8,0)
@@ -278,7 +270,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                 }else {
                     // vEmptyView.setVisibility(View.GONE);
                     mRecyclerView.setVisibility(View.VISIBLE);
-                    controller.setData(musicTags);
+                  //  controller.setData(musicTags);
                 }
                 mStateView.hideStates();
             }
@@ -459,6 +451,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
     @Override
     public void onClick(View view) {
         RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(view);
+        /*
         if(h instanceof EpoxyViewHolder) {
             EpoxyViewHolder holder = (EpoxyViewHolder)h;
             MusicTag tag = controller.getAudioTag(holder); // ((MusicBrainzModel_)holder.getModel()).tag();
@@ -544,7 +537,7 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
 
                         dialogInterface.dismiss();
                     })
-                    .create();
+                    .create(); */
 
             /*
             btnOK.setOnClickListener((View.OnClickListener) v -> {
@@ -587,12 +580,12 @@ public class TagsMusicBrainzFragment extends Fragment implements View.OnClickLis
                 alert.dismiss();
             }); */
            // btnCancel.setOnClickListener(v -> alert.dismiss());
-
+/*
             alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
             alert.setCanceledOnTouchOutside(true);
             // make popup round corners
            // alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             alert.show();
-        }
+        } */
     }
 }

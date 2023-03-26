@@ -44,50 +44,6 @@ public class JustFLACReader extends TagReader{
     public List<MusicTag> readMusicTag(Context context, String mediaPath) {
         Log.d(TAG, "JustFLAC -> "+mediaPath);
         try {
-          /*  RandomFileInputStream is = new RandomFileInputStream(mediaPath);
-            FLACDecoder decoder = new FLACDecoder(is);
-
-           // StreamInfo si = decoder.readStreamInfo();
-           // decoder.readStreamSync();
-
-            Metadata[] metas = decoder.readMetadata();
-            StreamInfo si = decoder.getStreamInfo();
-            MusicTag tag = new MusicTag();
-            tag.setAudioSampleRate(si.getSampleRate());
-            tag.setAudioChannels(String.valueOf(si.getChannels()));
-            tag.setAudioBitsDepth(si.getBitsPerSample());
-
-           // long duration = (si.getTotalSamples() * 1000L * 1000L) / si.getSampleRate();
-            double duration = (si.getTotalSamples()*1.00) / si.getSampleRate();
-            tag.setAudioDuration(duration);
-            tag.setAudioBitRate((long) ((si.getTotalSamples()*si.getBitsPerSample())/duration));
-            for(Metadata meta: metas) {
-                if(meta instanceof VorbisComment) {
-                    VorbisComment comment = (VorbisComment) meta;
-                    tag.setYear(getFirstString(comment, "YEAR"));
-                    tag.setTitle(getFirstString(comment, "TITLE"));
-                    tag.setDisc(getFirstString(comment, "DISCNUMBER"));
-                    tag.setTrack(getFirstString(comment, "TRACKNUMBER"));
-                    tag.setArtist(getFirstString(comment, "ARTIST"));
-                    tag.setMediaQuality(getFirstString(comment, "QUALITY"));
-                    tag.setAlbum(getFirstString(comment, "ALBUM"));
-                    tag.setAlbumArtist(getFirstString(comment, "ALBUMARTIST"));
-                    tag.setGenre(getFirstString(comment, "GENRE"));
-                    tag.setGrouping(getFirstString(comment, "GROUPING"));
-                    tag.setPublisher(getFirstString(comment, "PUBLISHER"));
-                    tag.setRating(getFirstInt(comment, "RATING"));
-                    tag.setTrackDR(getFirstDouble(comment, "TRACK_DYNAMIC_RANGE"));
-                    tag.setTrackTruePeak(getFirstDouble(comment, "REPLAYGAIN_TRACK_PEAK"));
-                    tag.setTrackRG(getFirstDouble(comment, "REPLAYGAIN_TRACK_GAIN", " dB"));
-                    tag.setMediaType(getFirstString(comment, "MEDIA"));
-                    tag.setComment(getFirstString(comment, "DESCRIPTION"));
-                }else if (meta instanceof Picture) {
-                   // tag.setEmbedCoverArt("embed");
-                    tag.setEmbedCoverArt(parseMimeString(((Picture)meta).getMimeString()));
-                }
-            }
-            decoder.close();
-            is.close(); */
             MusicTag tag = new MusicTag();
             FileInputStream is = new FileInputStream(mediaPath);
             FLACDecoder decoder = new FLACDecoder(is);
@@ -101,7 +57,7 @@ public class JustFLACReader extends TagReader{
             detectMQA(tag,5000); // timeout 5 seconds
             return Arrays.asList(tag);
         } catch (Exception e) {
-            Log.e(TAG, "ReadMusicTag",e);
+            Log.e(TAG, "ReadMusicTag: "+e.getMessage());
         }
         return null;
     }
@@ -145,11 +101,6 @@ public class JustFLACReader extends TagReader{
     }
 
     private static String getFirstString(VorbisComment comment, String name) {
-       /* String []vals = comment.getCommentByName(key);
-        if(vals!=null && vals.length >0) {
-            return vals[0];
-        }
-        return  ""; */
         try {
             final String[] comments = comment.getCommentByName( name );
             return ( comments.length > 0 )

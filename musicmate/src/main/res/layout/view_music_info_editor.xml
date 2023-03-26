@@ -49,7 +49,7 @@
                 android:id="@+id/preview_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left"
+                android:layout_gravity="start"
                 android:text="Song Title"
                 android:textColor="@color/black"
                 tools:ignore="HardcodedText" />
@@ -59,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/preview_title"
-                android:layout_gravity="left"
+                android:layout_gravity="start"
                 android:text="Song Artist"
                 android:textColor="@color/grey900"
                 tools:ignore="HardcodedText" />
@@ -69,7 +69,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/preview_artist"
-                android:layout_gravity="left"
+                android:layout_gravity="start"
                 android:text="Song Album"
                 tools:ignore="HardcodedText"
                 android:textColor="@color/grey900" />

@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingTop="@dimen/dimen_12_dp"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/dimen_12_dp"
     android:paddingRight="@dimen/dimen_12_dp"
     android:layout_margin="@dimen/dimen_8_dp"
-        android:paddingStart="@dimen/dimen_12_dp">
+    android:paddingStart="@dimen/dimen_12_dp">
 
         <LinearLayout
             android:layout_width="match_parent"

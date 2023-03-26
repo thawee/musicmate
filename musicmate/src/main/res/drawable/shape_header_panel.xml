@@ -6,7 +6,7 @@
     <corners
         android:bottomLeftRadius="32dp"
         android:bottomRightRadius="32dp"/> -->
-        <solid android:color="@color/black" />
+        <solid android:color="@color/colorPrimary_light" />
     <!--
     <solid android:color="@color/colorPrimary_light" />
     <stroke
