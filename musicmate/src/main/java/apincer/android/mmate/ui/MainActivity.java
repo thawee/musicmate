@@ -543,9 +543,10 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.autoRefresh();
     }
 
+    /*
     private void doStopRefresh() {
         refreshLayout.finishRefresh();
-    }
+    } */
 
     @Override
     public void onBackPressed() {
@@ -562,10 +563,11 @@ public class MainActivity extends AppCompatActivity {
             mSearchView.setIconified(true);
         }
 
-       /* if(epoxyController.hasFilter()) {
-            epoxyController.clearFilter();
+        if(adapter!=null && adapter.hasFilter()) {
+            adapter.resetFilter();
+            refreshLayout.autoRefresh();
             return;
-        } */
+        }
 
         if (!mExitSnackbar.isShown()) {
             mExitSnackbar.show();
@@ -588,6 +590,8 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // create -> restore state --> resume --> running --> pause --> save state --> destroy
+        // if savedInstanceState == null, fresh start
         if(Preferences.isOnNightModeOnly(getApplicationContext())) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }else {
@@ -602,11 +606,11 @@ public class MainActivity extends AppCompatActivity {
         setUpHeaderPanel();
         setUpNowPlayingView();
         setUpBottomAppBar();
-        setUpRecycleView(savedInstanceState);
+        setUpRecycleView();
         setUpSwipeToRefresh();
         setUpResideMenus();
 
-        initMediaItemList(getIntent());
+        loadDataSets(savedInstanceState);
         mExitSnackbar = Snackbar.make(this.mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
@@ -615,8 +619,13 @@ public class MainActivity extends AppCompatActivity {
     private void setUpEditorLauncher() {
         editorLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             // support filter by artist, albnum, path
+            if (result.getData() != null) {
+                // if retrun criteria, use it otherwise provide null
+                SearchCriteria criteria = ApplicationUtils.getSearchCriteria(result.getData());
+                adapter.loadDataSets(criteria);
+            }
            // adapter.notifyDataSetChanged();
-
+/*
             SearchCriteria criteria;
             if (result.getData() != null) {
                 // if retrun criteria, use it otherwise provide null
@@ -632,7 +641,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 adapter.loadDataSets(finalCriteria);
                // adapter.notifyDataSetChanged();
-            });
+            }); */
           //  new Timer().schedule(new TimerTask() {
          //       @Override
           //      public void run() {
@@ -674,12 +683,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void initMediaItemList(Intent startIntent) {
-        //ScanAudioFileWorker.startScan(getApplicationContext());
-        SearchCriteria criteria = null;
-
-        if (startIntent.getExtras() != null) {
-            criteria =  ApplicationUtils.getSearchCriteria(startIntent);
+    private void loadDataSets(Bundle startIntent) {
+        SearchCriteria criteria;
+        if(startIntent != null) {
+            criteria = startIntent.getParcelable("main_screen_type");
+        }else {
+            criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
         }
         doStartRefresh(criteria);
     }
@@ -831,14 +840,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpPermissions() {
-      //  if(!PermissionUtils.hasPermissions(getApplicationContext(), PermissionUtils.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)) {
         if (!Environment.isExternalStorageManager()) {
             //todo when permission is granted      // do not have read/write storage permission
             Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
             // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
             ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
-                    result -> initMediaItemList(getIntent()));
+                    result -> loadDataSets(null));
             permissionResultLauncher.launch(myIntent);
         }
     }
@@ -870,10 +878,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if(!backFromEditor) {
-            initMediaItemList(getIntent());
-        }
-        backFromEditor = false;
+        //if(!backFromEditor) {
+        //    initMediaItemList(getIntent());
+       // }
+       // backFromEditor = false;
 
         if(mResideMenu.isOpened()) {
             mResideMenu.closeMenu();
@@ -925,6 +933,17 @@ public class MainActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putParcelable("main_screen_type", adapter.getCriteria());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
@@ -1093,7 +1112,7 @@ public class MainActivity extends AppCompatActivity {
             if(FileRepository.isMediaFileExist(tag)) {
                 tagList.add(tag);
             }else {
-            new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
+                new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
                     .setTitle("Problem")
                     .setMessage(getString(R.string.alert_invalid_media_file, tag.getTitle()))
                     .setPositiveButton("GOT IT", (dialogInterface, i) -> {
@@ -1140,7 +1159,7 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.setOnRefreshListener(refreshlayout -> adapter.loadDataSets());
     }
 
-    private void setUpRecycleView(Bundle savedInstanceState) {
+    private void setUpRecycleView( ) {
         adapter = new MusicTagAdapter(new SearchCriteria(SearchCriteria.TYPE.MY_SONGS));
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
@@ -1188,7 +1207,6 @@ public class MainActivity extends AppCompatActivity {
                 int count = mTracker.getSelection().size();
                 selections.clear();
                 if(count > 0) {
-                    // selections.clear();
                     mTracker.getSelection().forEach(item -> selections.add(adapter.getContent(item.intValue())));//selections += item);
                     if (actionMode == null) {
                         actionMode = startSupportActionMode(actionModeCallback);
@@ -1239,7 +1257,6 @@ public class MainActivity extends AppCompatActivity {
         for(String title: titles) {
             TabLayout.Tab firstTab = headerTab.newTab(); // Create a new Tab names
             firstTab.setText(title); // set the Text for the first Tab
-            //headerTab.addTab(firstTab);
             if(StringUtils.equals(headerTitle, title)) {
                 headerTab.addTab(firstTab, true);
             }else {
@@ -1285,32 +1302,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
-  //  @Override
-  //  public void onClick(View view) {
-      /*  RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(view);
-        if(h instanceof EpoxyViewHolder) {
-            EpoxyViewHolder holder = (EpoxyViewHolder)h;
-            if (epoxyController.getSelectedItemCount() > 0) {
-                enableActionMode(epoxyController.getAudioTag(holder));
-            } else {
-                doShowEditActivity(Collections.singletonList(epoxyController.getAudioTag(holder)));
-            }
-        } */
-  //  }
-
-   // @Override
-   // public boolean onLongClick(View view) {
-     /*   RecyclerView.ViewHolder h = mRecyclerView.getChildViewHolder(view);
-        if(h instanceof EpoxyViewHolder) {
-            EpoxyViewHolder holder = (EpoxyViewHolder) h;
-            MusicTag tag = epoxyController.getAudioTag(holder);// ((AudioTagModel_)holder.getModel()).tag();
-            enableActionMode(tag);
-            return true;
-        }
-*/
-   //     return false;
-   // }
 
     public void onPlaying(MusicTag song) {
         if(song!=null) {
@@ -1453,7 +1444,6 @@ public class MainActivity extends AppCompatActivity {
         View btnOK = cview.findViewById(R.id.btn_ok);
         View btnCancel = cview.findViewById(R.id.btn_cancel);
 
-        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
         btnOK.setEnabled(false);
@@ -1850,34 +1840,35 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             String finalUrl = String.valueOf(targetURL.getText());
-            for(MusicTag tag: selections) {
-                MusicMateExecutors.move(() -> {
-                    try {
-                        doneList.put(tag, "Sending");
-                        runOnUiThread(() -> {
-                            itemsView.invalidateViews();
-                        });
-                        SyncHibyPlayer.sync(getApplicationContext(), finalUrl, tag);
-                        doneList.put(tag, "Done");
-                        runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
-                            itemsView.invalidateViews();
-                            progressBar.invalidate();
-                        });
-                    }catch (Exception ex) {
+            MusicMateExecutors.move(() -> {
+                    for(MusicTag tag: selections) {
                         try {
-                            doneList.put(tag, "Fail");
+                            doneList.put(tag, "Sending");
+                            runOnUiThread(() -> {
+                                itemsView.invalidateViews();
+                            });
+                            SyncHibyPlayer.sync(getApplicationContext(), finalUrl, tag);
+                            doneList.put(tag, "Done");
                             runOnUiThread(() -> {
                                 int pct = progressBar.getProgress();
                                 progressBar.setProgress((int) (pct + rate));
                                 itemsView.invalidateViews();
                                 progressBar.invalidate();
                             });
-                        }catch (Exception e) {}
+                        } catch (Exception ex) {
+                            try {
+                                doneList.put(tag, "Fail");
+                                runOnUiThread(() -> {
+                                    int pct = progressBar.getProgress();
+                                    progressBar.setProgress((int) (pct + rate));
+                                    itemsView.invalidateViews();
+                                    progressBar.invalidate();
+                                });
+                            } catch (Exception e) {
+                            }
+                        }
                     }
                 });
-                }
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });

@@ -53,7 +53,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         totalSize =0;
         totalDuration =0;
         List<MusicTag> list = MusicTagRepository.findMediaTag(criteria);
-        boolean noFilters = isEmpty(criteria.getFilterType()) && isEmpty(criteria.getFilterText());
+        boolean noFilters = hasFilter();
         if(noFilters) {
             for (MusicTag tag : list) {
                 localDataSet.add(tag);
@@ -238,6 +238,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         criteria.setType(type);
     }
 
+    public boolean hasFilter() {
+        return isEmpty(criteria.getFilterType()) && isEmpty(criteria.getFilterText());
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;
@@ -385,9 +389,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
-
-      //  holder.rootView.setOnClickListener(clickListener);
-      //  holder.rootView.setOnLongClickListener(longClickListener);
 
         if (!StringUtils.isEmpty(tag.getMediaQuality())) {
             if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {

@@ -1317,7 +1317,7 @@ public class FFMPeg extends TagReader {
         Log.i(TAG, "Converting: "+ srcPath);
 
         String ext = FileUtils.getExtension(srcPath);
-        String targetExt = FileUtils.getExtension(targetPath);
+        String targetExt = FileUtils.getExtension(targetPath).toLowerCase(Locale.US);
         File dir = context.getExternalCacheDir();
         String tmpPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, tmpPath);
