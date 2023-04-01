@@ -29,12 +29,12 @@
         <SwitchPreferenceCompat
             android:key="preference_open_now_playing"
             android:summary="Always open song details on next playing song."
-            android:title="Open TAGs Now Playing"
+            android:title="Open TAGs Screen for Now Playing"
             android:defaultValue="false"/>
         <SwitchPreferenceCompat
             android:key="preference_follow_now_playing"
             android:summary="Always open song details following playing song."
-            android:title="TAGs Screen following Now Playing"
+            android:title="Refresh TAGs Screen for Now Playing"
             android:defaultValue="false"/>
         <SwitchPreferenceCompat
             android:key="preference_default_next_by_media_buttons"

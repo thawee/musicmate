@@ -3,6 +3,7 @@ package apincer.android.mmate.ui;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
@@ -53,7 +54,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         totalSize =0;
         totalDuration =0;
         List<MusicTag> list = MusicTagRepository.findMediaTag(criteria);
-        boolean noFilters = hasFilter();
+        boolean noFilters = !hasFilter();
         if(noFilters) {
             for (MusicTag tag : list) {
                 localDataSet.add(tag);
@@ -62,7 +63,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             }
         }else {
             for (MusicTag tag : list) {
-                if(!isMatchFilter(criteria, tag)) {
+                if(!isMatchFilter(tag)) {
                     continue;
                 }
                 localDataSet.add(tag);
@@ -73,7 +74,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         notifyDataSetChanged();
     }
 
-    private boolean isMatchFilter(SearchCriteria criteria, MusicTag tag) {
+    public boolean isMatchFilter(MusicTag tag) {
         if(criteria==null || isEmpty(criteria.getFilterType())) {
             return true;
         } else if (Constants.FILTER_TYPE_ALBUM.equals(criteria.getFilterType())) {
@@ -105,10 +106,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public void setSearchString(String text) {
         criteria.searchFor(text);
-    }
-
-    public void resetSearchString() {
-        criteria.resetSearch();
     }
 
     public void setClickListener(OnListItemClick context) {
@@ -239,7 +236,19 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public boolean hasFilter() {
-        return isEmpty(criteria.getFilterType()) && isEmpty(criteria.getFilterText());
+        return !(isEmpty(criteria.getFilterType()) && isEmpty(criteria.getFilterText()));
+    }
+
+    public boolean isSearchMode() {
+        return criteria.getType() == SearchCriteria.TYPE.SEARCH;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void notifyItemChanged(MusicTag song) {
+        int position = getMusicTagPosition(song);
+        if(position != RecyclerView.NO_POSITION) {
+            notifyItemChanged(position);
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

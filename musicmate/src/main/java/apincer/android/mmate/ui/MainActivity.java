@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
     private MusicTagAdapter adapter;
     private SelectionTracker<Long> mTracker;
 
-    List<MusicTag> selections = new ArrayList();
+    List<MusicTag> selections = new ArrayList<>();
 
     private Snackbar mExitSnackbar;
     //private View mSearchBar;
@@ -186,6 +186,8 @@ public class MainActivity extends AppCompatActivity {
     // open tag timer
     private Timer timer;
 
+    private volatile boolean busy;
+
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
 
@@ -193,9 +195,6 @@ public class MainActivity extends AppCompatActivity {
    // private MusicTag lastPlaying;
     private boolean onSetup = true;
     private int positionToScroll = -1;
-
-    //private SearchCriteria searchCriteria;
-    private boolean backFromEditor;
 
     private void doDeleteMediaItems(List<MusicTag> selections) {
      if(selections.isEmpty()) return;
@@ -273,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
+            busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
             MusicMateExecutors.move(() -> {
@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setEnabled(false);
         btnOK.setVisibility(View.GONE);
     });
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
 }
 
@@ -386,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
+            busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
                 MusicMateExecutors.move(() -> {
@@ -421,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
     }
 	
@@ -494,10 +495,11 @@ public class MainActivity extends AppCompatActivity {
                     .alpha(1f).setDuration(250)
                     .setStartDelay(10L)
                     .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                        @SuppressLint("NotifyDataSetChanged")
                         @Override
                         public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
-                            adapter.notifyDataSetChanged(); // .notifyModelChanged(song);
+                            adapter.notifyItemChanged(song); // .notifyModelChanged(song);
                         }
                     })
                     .start());
@@ -531,22 +533,16 @@ public class MainActivity extends AppCompatActivity {
        // }
         if(criteria!= null) {
             doStartRefresh(criteria.getType(), criteria.getKeyword());
+        }else {
+            refreshLayout.autoRefresh();
         }
-        refreshLayout.autoRefresh();
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
-       // searchCriteria = new SearchCriteria(type);
-       // searchCriteria.setKeyword(keyword);
         adapter.setType(type);
         adapter.setKeyword(keyword);
         refreshLayout.autoRefresh();
     }
-
-    /*
-    private void doStopRefresh() {
-        refreshLayout.finishRefresh();
-    } */
 
     @Override
     public void onBackPressed() {
@@ -557,10 +553,21 @@ public class MainActivity extends AppCompatActivity {
 
         if(actionMode !=null) {
             actionMode.finish();
+            return;
         }
 
-        if(mSearchView.isShown()) {
+       /* not work as expected
+       if(mSearchView.isShown()) {
             mSearchView.setIconified(true);
+            adapter.resetSearchString();
+            refreshLayout.autoRefresh();
+            return;
+        } */
+
+        if(adapter!=null && adapter.isSearchMode()) {
+            doHideSearch();
+            refreshLayout.autoRefresh();
+            return;
         }
 
         if(adapter!=null && adapter.hasFilter()) {
@@ -742,7 +749,8 @@ public class MainActivity extends AppCompatActivity {
                 criteria.resetSearch();
             }
             doStartRefresh(null); */
-            adapter.resetSearchString();
+            //adapter.resetSearchString();
+            doHideSearch();
             refreshLayout.autoRefresh();
             return false;
         });
@@ -769,6 +777,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doHideSearch() {
+        mSearchView.setVisibility(View.GONE);
     }
 	
 	private boolean doPlayNextSong() {
@@ -909,14 +918,23 @@ public class MainActivity extends AppCompatActivity {
                     int position = adapter.getMusicTagPosition(event.getItem());
                     if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
                         adapter.notifyItemRemoved(position);
-                        //}else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
+                        // }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
+                    }else if(adapter.isMatchFilter(event.getItem())) {
+                            MusicTag tag = adapter.getContent(position);
+                            if(tag != null) {
+                                MusicTagRepository.load(tag);
+                                adapter.notifyItemChanged(position);
+                            }
                     }else {
+                            adapter.notifyItemRemoved(position);
+                    }
+                   /* }else {
                         MusicTag tag = adapter.getContent(position);
                         if(tag != null) {
                             MusicTagRepository.load(tag);
                             adapter.notifyItemChanged(position);
-                        }
-                    }
+                        } */
+                  //  }
                 }
             });
         }catch (Exception e) {
@@ -1174,6 +1192,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        adapter.setHasStableIds(true);
         mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setItemViewCacheSize(0); //Setting ViewCache to 0 (default=2) will animate items better while scrolling down+up with LinearLayout
        // mRecyclerView.setWillNotCacheDrawing(true);
@@ -1182,14 +1201,10 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setHasFixedSize(true); //Size of RV will not change
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
-        mRecyclerView.getAdapter().hasStableIds();
         mRecyclerView.setPreserveFocusAfterLayout(true); // preserve original location
 
         MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> doShowEditActivity(Collections.singletonList(adapter.getContent(position)));
         adapter.setClickListener(onListItemClick);
-
-        //mRecyclerView.setItemAnimator(null);
-        //mRecyclerView.setPreserveFocusAfterLayout(true);
 
         mTracker = new SelectionTracker.Builder<>(
                 "selection-id",
@@ -1309,7 +1324,7 @@ public class MainActivity extends AppCompatActivity {
             //doShowNowPlayingSongFAB(song);
             //scrollToSong(song);
             //if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
-            if(Preferences.isOpenNowPlaying(getBaseContext())) {
+            if(!busy && Preferences.isOpenNowPlaying(getBaseContext())) {
                     if(timer!=null) {
                             timer.cancel();
                     }
@@ -1472,6 +1487,7 @@ public class MainActivity extends AppCompatActivity {
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
+            busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
                 MusicMateExecutors.move(() -> {
@@ -1513,7 +1529,8 @@ public class MainActivity extends AppCompatActivity {
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false; });
+        busy = true;
         alert.show();
     }
 
@@ -1672,6 +1689,7 @@ public class MainActivity extends AppCompatActivity {
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
+            busy = true;
             String targetExt = "";
             if(btnAiff.isChecked()) {
                 targetExt = "AIFF";
@@ -1732,7 +1750,7 @@ public class MainActivity extends AppCompatActivity {
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
     }
 
@@ -1742,7 +1760,7 @@ public class MainActivity extends AppCompatActivity {
         Context context = getApplicationContext();
         WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         int ipAddress = wm.getConnectionInfo().getIpAddress();
-        String ip = String.format("%d.%d.%d.%d", (ipAddress & 0xff),(ipAddress >> 8 & 0xff),(ipAddress >> 16 & 0xff),(ipAddress >> 24 & 0xff));
+        String ip = String.format(Locale.ENGLISH, "%d.%d.%d.%d", (ipAddress & 0xff),(ipAddress >> 8 & 0xff),(ipAddress >> 16 & 0xff),(ipAddress >> 24 & 0xff));
         ip = ip.substring(0, ip.lastIndexOf("."))+".xxx";
         //String url = "http://10.100.1.242:4399/";
         AtomicReference<String> url = new AtomicReference<>("http://" + ip + ":4399/");
@@ -1838,15 +1856,14 @@ public class MainActivity extends AppCompatActivity {
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         btnOK.setOnClickListener(v -> {
+            busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             String finalUrl = String.valueOf(targetURL.getText());
             MusicMateExecutors.move(() -> {
                     for(MusicTag tag: selections) {
                         try {
                             doneList.put(tag, "Sending");
-                            runOnUiThread(() -> {
-                                itemsView.invalidateViews();
-                            });
+                            runOnUiThread(() -> itemsView.invalidateViews());
                             SyncHibyPlayer.sync(getApplicationContext(), finalUrl, tag);
                             doneList.put(tag, "Done");
                             runOnUiThread(() -> {
@@ -1872,7 +1889,7 @@ public class MainActivity extends AppCompatActivity {
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });
-        btnCancel.setOnClickListener(v -> alert.dismiss());
+        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
     }
 }
