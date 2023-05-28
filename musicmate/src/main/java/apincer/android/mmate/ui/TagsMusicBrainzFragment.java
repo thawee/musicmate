@@ -4,17 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.ImageView;
-import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -22,7 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,20 +26,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.fs.MusicbrainzCoverArtProvider;
 import apincer.android.mmate.musicbrainz.MusicBrainz;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.view.LinearDividerItemDecoration;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.work.UpdateAudioFileWorker;
 import apincer.android.utils.FileUtils;
-import coil.Coil;
-import coil.ImageLoader;
-import coil.request.ImageRequest;
-import coil.target.Target;
-import coil.transform.RoundedCornersTransformation;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 

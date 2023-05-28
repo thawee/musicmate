@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;

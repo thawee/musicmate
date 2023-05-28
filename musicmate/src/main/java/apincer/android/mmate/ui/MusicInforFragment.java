@@ -45,7 +45,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.MusicPathTagParser;

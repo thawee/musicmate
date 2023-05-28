@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;

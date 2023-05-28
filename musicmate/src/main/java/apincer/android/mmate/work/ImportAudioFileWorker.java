@@ -16,7 +16,7 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 
 public class ImportAudioFileWorker extends Worker {

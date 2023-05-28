@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 
 /**
  * Class which contains all the data passed in broadcast intents to notify task progress, errors,

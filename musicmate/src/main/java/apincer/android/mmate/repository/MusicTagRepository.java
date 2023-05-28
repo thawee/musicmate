@@ -13,7 +13,6 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 
 public class MusicTagRepository {

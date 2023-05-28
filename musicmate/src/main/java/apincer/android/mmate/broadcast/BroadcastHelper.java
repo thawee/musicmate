@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Preferences;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.StringUtils;
 

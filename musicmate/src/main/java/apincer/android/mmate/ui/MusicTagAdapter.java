@@ -30,7 +30,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
@@ -43,12 +43,13 @@ import coil.transform.RoundedCornersTransformation;
 
 public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHolder> {
     private SearchCriteria criteria;
-    private List<MusicTag> localDataSet;
+    private final List<MusicTag> localDataSet;
     private SelectionTracker<Long> mTracker;
     private OnListItemClick onListItemClick;
     private long totalSize;
     private double totalDuration;
 
+    @SuppressLint("NotifyDataSetChanged")
     public void loadDataSets() {
         localDataSet.clear();
         totalSize =0;
@@ -224,9 +225,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public MusicTag getContent(int position) {
-       // for(MusicTag tag: localDataSet) {
-       //     if(tag.getId() == position) return tag;
-       // }
         if(position == RecyclerView.NO_POSITION) return null;
         return localDataSet.get(position);
     }
@@ -303,7 +301,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     return getAbsoluteAdapterPosition();
                 }
 
-                @Nullable
                 @Override
                 public Long getSelectionKey() {
                     return id;
@@ -337,7 +334,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     static class KeyProvider extends ItemKeyProvider<Long> {
 
-        KeyProvider(MusicTagAdapter adapter) {
+        KeyProvider( ) {
             super(ItemKeyProvider.SCOPE_MAPPED);
         }
 
@@ -365,9 +362,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     public MusicTagAdapter(SearchCriteria criteria) {
         this.criteria = criteria;
         this.localDataSet = new ArrayList<>();
+        setHasStableIds(true);
     }
 
     // Create new views (invoked by the layout manager)
+    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         // Create a new view, which defines the UI of the list item
@@ -387,12 +386,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.id = (long)position; //tag.getId();
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
-        holder.rootView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onListItemClick.onClick(holder.rootView, holder.getLayoutPosition());
-            }
-        });
+        holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
 
         // Background, when bound the first time
@@ -489,6 +483,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     @Override
     public int getItemCount() {
         return localDataSet.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return getContent(position).getId();
     }
 }
 

@@ -31,7 +31,7 @@ import java.util.Locale;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 
 public class MusicTagUtils {

@@ -3,7 +3,7 @@ package apincer.android.mmate.broadcast;
 import java.util.Collection;
 import java.util.List;
 
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 
 public class AudioTagEditEvent {

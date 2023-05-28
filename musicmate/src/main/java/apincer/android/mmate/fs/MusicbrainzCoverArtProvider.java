@@ -14,7 +14,7 @@ import androidx.annotation.Nullable;
 import java.io.InputStream;
 import java.util.UUID;
 
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 import fm.last.musicbrainz.coverart.CoverArt;
 import fm.last.musicbrainz.coverart.CoverArtArchiveClient;

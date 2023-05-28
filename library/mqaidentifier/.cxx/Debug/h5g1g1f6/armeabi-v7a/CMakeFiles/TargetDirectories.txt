@@ -1,3 +1,0 @@
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/h5g1g1f6/armeabi-v7a/CMakeFiles/rebuild_cache.dir
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/h5g1g1f6/armeabi-v7a/CMakeFiles/edit_cache.dir
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/h5g1g1f6/armeabi-v7a/CMakeFiles/mqaidentifier.dir

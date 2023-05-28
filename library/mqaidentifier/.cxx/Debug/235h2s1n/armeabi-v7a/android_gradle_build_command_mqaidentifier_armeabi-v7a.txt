@@ -1,7 +1,0 @@
-Executable : /Users/thawee.p/Library/Android/sdk/cmake/3.18.1/bin/ninja
-arguments : 
--C
-/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/235h2s1n/armeabi-v7a
-mqaidentifier
-jvmArgs : 
-

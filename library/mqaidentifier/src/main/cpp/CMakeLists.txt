@@ -35,12 +35,12 @@ add_library( # Sets the name of the library.
         # you want CMake to locate.
 #        ${CMAKE_CURRENT_SOURCE_DIR}/../../jni/flac/include )
 
-find_library( # Sets the name of the path variable.
-              log-lib
-
+#find_library( # Sets the name of the path variable.
+              #log-lib log
+              #ffmpeg
               # Specifies the name of the NDK library that
-              # you want CMake to locate.
-              log )
+              # you want CMake to locate.#
+#            )
 
 
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../jni/libflac/src/libFLAC++)
@@ -63,27 +63,32 @@ set_target_properties( # Specifies the target library.
         PROPERTIES IMPORTED_LOCATION
 
         # Provides the path to the library you want to import.
-        ${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/lib/libFLAC++.so)
+        #../../libs/arm64-v8a/libFLAC++.so)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../libs/arm64-v8a/libFLAC++.so)
 set_target_properties( # Specifies the target library.
         FLAC
         # Specifies the parameter you want to define.
         PROPERTIES IMPORTED_LOCATION
 
         # Provides the path to the library you want to import.
-        ${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/lib/libFLAC.so)
+        #../../libs/arm64-v8a/libFLAC.so)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../libs/arm64-v8a/libFLAC.so)
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-                       mqaidentifier
-                       FLAC
-                       FLAC++
-                       #${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/lib/libFLAC++.so
+        # Links the target library to the log library
+        # included in the NDK.
+        #${log-lib}
 
-                       # Links the target library to the log library
-                       # included in the NDK.
-                       ${log-lib} )
+        mqaidentifier
+        FLAC
+        FLAC++
+        #${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/lib/libFLAC++.so
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/include)
+        #ffmpeg
+        )
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include)

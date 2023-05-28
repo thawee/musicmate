@@ -41,7 +41,6 @@ import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.objectbox.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mqaidentifier.NativeLib;

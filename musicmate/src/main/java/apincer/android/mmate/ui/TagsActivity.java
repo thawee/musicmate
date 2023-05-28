@@ -54,7 +54,7 @@ import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.ApplicationUtils;

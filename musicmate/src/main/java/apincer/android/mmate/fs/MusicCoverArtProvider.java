@@ -16,8 +16,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.io.File;
 import java.io.FileInputStream;
 
-import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 

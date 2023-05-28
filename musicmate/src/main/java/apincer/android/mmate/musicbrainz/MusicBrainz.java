@@ -16,7 +16,7 @@ import apincer.android.mmate.musicbrainz.recording.ArtistCreditItem;
 import apincer.android.mmate.musicbrainz.recording.Recording;
 import apincer.android.mmate.musicbrainz.recording.RecordingsItem;
 import apincer.android.mmate.musicbrainz.recording.ReleasesItem;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import retrofit2.Call;
 import retrofit2.Response;

@@ -1,2 +1,0 @@
-ninja: Entering directory `/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/235h2s1n/arm64-v8a'
-ninja: no work to do.

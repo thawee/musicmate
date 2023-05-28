@@ -35,6 +35,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -102,7 +103,7 @@ import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.hiby.SyncHibyPlayer;
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
@@ -154,6 +155,8 @@ public class MainActivity extends AppCompatActivity {
     private BottomAppBar bottomAppBar;
 
     private ResideMenu mResideMenu;
+
+    private OnBackPressedCallback onBackPressedCallback;
 
     //private MusicTagController epoxyController;
     private MusicTagAdapter adapter;
@@ -605,6 +608,17 @@ public class MainActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
         }
         super.onCreate(savedInstanceState);
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // Your business logic to handle the back pressed event
+                Log.d(TAG, "onBackPressedCallback: handleOnBackPressed");
+                onBackPressed();
+            }
+        };
+
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+
         repos = FileRepository.newInstance(getApplicationContext());
         initActivityTransitions();
         setContentView(R.layout.activity_main);
@@ -668,12 +682,7 @@ public class MainActivity extends AppCompatActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 if(!onSetup) {
                     adapter.resetFilter();
-                    //SearchCriteria criteria = adapter.getCriteria();
-                    //criteria.setFilterType("");
-                    //criteria.setFilterText("");
-                   // criteria.setKeyword(tab.getText().toString());
                     adapter.setKeyword(tab.getText().toString());
-                    //doStartRefresh();
                     refreshLayout.autoRefresh();
                 }
             }
@@ -736,20 +745,11 @@ public class MainActivity extends AppCompatActivity {
        });
 
        mSearchView.setOnSearchClickListener(v -> {
-          // SearchCriteria criteria = epoxyController.getCriteria();
-          // criteria.searchFor(String.valueOf(mSearchView.getQuery()));
-           //doStartRefresh(criteria);
            adapter.setSearchString(String.valueOf(mSearchView.getQuery()));
            refreshLayout.autoRefresh();
        });
 
         mSearchView.setOnCloseListener(() -> {
-           /* SearchCriteria criteria = epoxyController.getCriteria();
-            if( criteria!=null) {
-                criteria.resetSearch();
-            }
-            doStartRefresh(null); */
-            //adapter.resetSearchString();
             doHideSearch();
             refreshLayout.autoRefresh();
             return false;
@@ -886,11 +886,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        //if(!backFromEditor) {
-        //    initMediaItemList(getIntent());
-       // }
-       // backFromEditor = false;
 
         if(mResideMenu.isOpened()) {
             mResideMenu.closeMenu();
@@ -1192,7 +1187,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        adapter.setHasStableIds(true);
         mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setItemViewCacheSize(0); //Setting ViewCache to 0 (default=2) will animate items better while scrolling down+up with LinearLayout
        // mRecyclerView.setWillNotCacheDrawing(true);
@@ -1209,7 +1203,7 @@ public class MainActivity extends AppCompatActivity {
         mTracker = new SelectionTracker.Builder<>(
                 "selection-id",
                 mRecyclerView,
-                new MusicTagAdapter.KeyProvider(adapter),
+                new MusicTagAdapter.KeyProvider(),
                 new MusicTagAdapter.DetailsLookup(mRecyclerView),
                 StorageStrategy.createLongStorage())
                 .withSelectionPredicate(SelectionPredicates.createSelectAnything())

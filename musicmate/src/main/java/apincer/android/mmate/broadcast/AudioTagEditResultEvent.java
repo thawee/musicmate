@@ -1,6 +1,6 @@
 package apincer.android.mmate.broadcast;
 
-import apincer.android.mmate.objectbox.MusicTag;
+import apincer.android.mmate.repository.MusicTag;
 
 public class AudioTagEditResultEvent {
 
