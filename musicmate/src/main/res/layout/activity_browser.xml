@@ -87,15 +87,15 @@
 				   android:orientation="vertical"
 				   android:background="@drawable/shape_header_panel">
 				   <com.google.android.material.tabs.TabLayout
-					   app:tabTextAppearance="@style/TabTextAppearance"
 					   android:id="@+id/header_tab"
 					   android:layout_width="match_parent"
 					   android:layout_height="@dimen/dimen_32_dp"
 					   android:layout_marginTop="@dimen/dimen_1_dp"
+					   android:background="@color/material_color_blue_grey_900"
 					   app:tabGravity="center"
 					   app:tabSelectedTextColor="@color/colorPrimary_light"
-					   app:tabTextColor="@color/grey600"
-					   app:tabBackground="@color/transparent"
+					   app:tabTextColor="@color/material_color_blue_grey_600"
+					   app:tabBackground="@color/material_color_blue_grey_900"
 					   app:tabIndicatorColor="@color/colorPrimary_light"
 					   app:tabMode="scrollable"
 					   app:tabPaddingStart="@dimen/dimen_16_dp"

@@ -1,7 +1,6 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.FFMPeg.writeTrackFields;
-import static apincer.android.mmate.utils.StringUtils.formatTitle;
+import static apincer.android.mmate.repository.FFMPeg.writeTagToFile;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -26,7 +25,7 @@ import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 /**
- * Wrapper class for accessing media information via media store and jaudiotagger
+ * Wrapper class for accessing media information via media store
  * Created by e1022387 on 5/10/2017.
  */
 public class FileRepository {
@@ -204,7 +203,7 @@ public class FileRepository {
         item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
 
         if(FFMPeg.isSupportedFileFormat(item.getPath())) {
-            writeTrackFields(getContext(), item);
+            writeTagToFile(getContext(), item);
             item.setOriginTag(null); // reset pending tag
             MusicTagRepository.saveTag(item);
             return true;
@@ -285,8 +284,11 @@ public class FileRepository {
                 filename.append(Constants.MEDIA_PATH_HRA);
             }else if(MusicTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
+            }else if(MusicTagUtils.isLossless(metadata)) {
+                filename.append(Constants.MEDIA_PATH_HIFI);
             }else {
-                filename.append(formatTitle(metadata.getFileFormat()));
+                filename.append(Constants.MEDIA_PATH_HIGH_QUALITY);
+                //filename.append(formatTitle(metadata.getFileFormat()));
             }
             filename.append(File.separator);
 
@@ -355,6 +357,9 @@ public class FileRepository {
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
+        }else if (!MusicTagUtils.isLossless(metadata)) {
+            // compress id keep on
+            return STORAGE_SECONDARY;
         //}else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getMediaQuality())) {
             // Audiophile
         //    return STORAGE_PRIMARY;

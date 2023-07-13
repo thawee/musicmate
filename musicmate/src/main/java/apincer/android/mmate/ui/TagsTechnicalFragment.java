@@ -75,13 +75,13 @@ public class TagsTechnicalFragment extends Fragment {
                 () -> {
                    for(MusicTag tag:tagsActivity.getEditItems()) {
                         //calculate track RG
-                        FFMPeg.readReplayGain(getActivity(), tag);
+                        FFMPeg.detectQuality(tag);
                     }
 
                     // save RG to media file
                     for(MusicTag tag:tagsActivity.getEditItems()) {
                         //write RG to file
-                        FFMPeg.writeReplayGain(getActivity(), tag);
+                        FFMPeg.writeTagQualityToFile(getActivity(), tag);
                         // update MusicMate Library
                         MusicTagRepository.saveTag(tag);
                     }
@@ -109,7 +109,7 @@ public class TagsTechnicalFragment extends Fragment {
 
         MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getActivity().getApplicationContext(), tag.getPath()).get(0);
 
-        MusicTag ffmpegTag = FFMPeg.readFFmpeg(getActivity().getApplicationContext(), tag.getPath());
+        MusicTag ffmpegTag = FFMPeg.readTagFromFile(getActivity().getApplicationContext(), tag.getPath());
         metada.setText(String.format("FFmpeg:\n%s", ffmpegTag.getData()));
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -137,7 +137,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv = new TextView(getContext());
-        tv.setText("File (STD)");
+        tv.setText("Default Reader");
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);
@@ -146,7 +146,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         tv = new TextView(getContext());
-        tv.setText("File (FFMpeg)");
+        tv.setText("FFMpeg Reader");
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);

@@ -1,7 +1,6 @@
 package apincer.android.mmate.utils;
 
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -31,8 +30,8 @@ import java.util.Locale;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTag;
 
 public class MusicTagUtils {
     private static final String TAG = MusicTagUtils.class.getName();
@@ -194,7 +193,7 @@ public class MusicTagUtils {
             }
         } else {
             // PCM, draw bit
-            label = "Bit"; //"PCM";
+            label = "BIT"; //"PCM";
             labelBPS = String.valueOf(tag.getAudioBitsDepth());
             isPCM = true;
            // isLossless = tag.isLossless();
@@ -959,17 +958,19 @@ public class MusicTagUtils {
         return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
     }
 
+    /*
     public static boolean isFileCouldBroken(MusicTag tag) {
         if(tag.getFileSize()==0) return true;
         if(!isLossless(tag)) return false;
         return tag.getFileSizeRatio() < Constants.MIN_FILE_SIZE_RATIO; // 42 % of calculated size
-    }
+    } */
 
+    /*
     public static int getFileSizeRatio(MusicTag tag) {
         double calSize = calculateFileSize(tag);
         if(calSize==0.00) return 0; // file is not valid, cannot read metatag
         return (int) ((tag.getFileSize()/calSize)*100);
-    }
+    } */
 
     public static double calculateFileSize(MusicTag tag) {
         // audio file size = bit rate * duration of audio in seconds * number of channels
@@ -998,8 +999,10 @@ public class MusicTagUtils {
         //md5 digest
         File dir = context.getExternalCacheDir();
         File songDir = new File(tag.getPath());
-        if(tag.isMusicManaged() && !isEmpty(tag.getAlbum())) {
+        if(tag.isMusicManaged()) {
             songDir = songDir.getParentFile();
+       // }else  { //(isEmpty(tag.getAlbum())) {
+      //      songDir = songDir.getParentFile();
         }
         String path = DigestUtils.md5Hex(songDir.getAbsolutePath())+".png";
 
@@ -1111,12 +1114,53 @@ public class MusicTagUtils {
         }
         text = text + "/";
 
-        if(tag.getTrackRG() ==0.00) {
+        double gain = tag.getTrackRG();
+       // double gain = tag.getTrackLoudness();
+
+        if(gain ==0.00) {
             text = text + " - ";
-        }else if (tag.getTrackRG() > 0.00){
-            text = text + String.format(Locale.US, "+%.2f", tag.getTrackRG());
+        }else if (gain > 0.00){
+            text = text + String.format(Locale.US, "+%.2f", gain);
         }else {
-            text = text + String.format(Locale.US, "%.2f", tag.getTrackRG());
+            text = text + String.format(Locale.US, "%.2f", gain);
+        }
+
+        return text;
+    }
+
+    public static String getTrackReplayGainString(MusicTag tag) {
+        String text = "";
+        double gain = tag.getTrackRG();
+        // double gain = tag.getTrackLoudness();
+
+        if(gain ==0.00) {
+            text = text + " - ";
+        }else if (gain > 0.00){
+            text = text + String.format(Locale.US, "+%.2f", gain);
+        }else {
+            text = text + String.format(Locale.US, "%.2f", gain);
+        }
+
+        return text;
+    }
+
+    public static String getTrackDR(MusicTag tag) {
+        String text = "";
+        if(tag.getTrackDR()==0.00) {
+            text = "-";
+        }else {
+            text = String.format(Locale.US, "%.0f", tag.getTrackDR());
+        }
+
+        return text;
+    }
+
+    public static String getMeasuredDR(MusicTag tag) {
+        String text = "";
+        if(tag.getMeasuredDR()==0.00) {
+            text = " - ";
+        }else {
+            text = String.format(Locale.US, "%.2f", tag.getMeasuredDR());
         }
 
         return text;
@@ -1151,11 +1195,11 @@ public class MusicTagUtils {
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
         //String letter = source; //item.getSource();
         String letter = "";
-        if(isEmpty(tag.getPublisher())) {
+        //if(isEmpty(tag.getPublisher())) {
             letter = tag.getMediaType();
-        }else {
-            letter = tag.getPublisher();
-        }
+        //}else {
+        //    letter = tag.getPublisher();
+       // }
         if(StringUtils.isEmpty(letter)) {
             return null;
         }
@@ -1196,7 +1240,7 @@ public class MusicTagUtils {
         }else if(isPCMLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
-            return Constants.TITLE_HI_QUALITY;
+            return Constants.TITLE_HIGH_QUALITY;
         }
         //Hi-Res Audio
         //Lossless Audio
@@ -1600,7 +1644,7 @@ public class MusicTagUtils {
         }else if(isPCMLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
-            return Constants.TITLE_HI_QUALITY;
+            return Constants.TITLE_HIGH_QUALITY;
         }
     }
 
@@ -1632,6 +1676,11 @@ public class MusicTagUtils {
         // m4a, mov, ,p4
         return (Constants.MEDIA_ENC_AAC.equalsIgnoreCase(tag.getFileFormat()) ||
                 Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getFileFormat()));
+    }
+
+    public static boolean isMPegFile(MusicTag tag) {
+        // m4a, mov, ,p4
+        return (Constants.MEDIA_ENC_MPEG.equalsIgnoreCase(tag.getFileFormat()));
     }
 
     public static boolean isALACFile(MusicTag tag) {
@@ -1805,5 +1854,24 @@ public class MusicTagUtils {
                 mLetterPaint);
 
         return myBitmap;
+    }
+
+    public static boolean isUpScaled(MusicTag tag) {
+        if(tag.getMeasuredDR()==0) return false;
+        if(tag.getAudioBitsDepth() ==16) {
+            // less than 90 is upscaled
+            return tag.getMeasuredDR() < 90; // SNR 96.33 db
+        }else  if(tag.getAudioBitsDepth() >=24) {
+            // less than 120 is upscaled
+            return tag.getMeasuredDR() < 120; // SNR 144.49 db
+       // }else  if(tag.getAudioBitsDepth() ==32) {
+            // less than 190 is upscaled
+        //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
+        }
+        return false;
+    }
+
+    public static boolean isUpSampled(MusicTag tag) {
+        return false;
     }
 }

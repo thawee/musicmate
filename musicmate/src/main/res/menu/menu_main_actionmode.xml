@@ -14,9 +14,9 @@
 		app:showAsAction="always"/>
 
     <item
-        android:icon="@drawable/ic_edit_white_24dp"
+        android:icon="@drawable/round_preview_24"
         android:id="@+id/action_edit_metadata"
-        android:title="Edit Tags"
+        android:title="Preview Tags"
         app:showAsAction="always"/>
 
 	<item android:id="@+id/action_select_all"
@@ -26,13 +26,20 @@
 
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
-		android:id="@+id/action_encoding_file"
-		android:title="Encoding file"
+		android:id="@+id/action_calculate_replay_gain"
+		android:title="Check Audio Quality"
 		app:showAsAction="collapseActionView"/>
+
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
-		android:id="@+id/action_calculate_replay_gain"
-		android:title="Calculate ReplayGain"
+		android:id="@+id/action_encoding_file"
+		android:title="Convert Audio Files"
+		app:showAsAction="collapseActionView"/>
+
+	<item
+		android:icon="@drawable/ic_round_audio_file_24"
+		android:id="@+id/action_export_playlist"
+		android:title="Make Playlist"
 		app:showAsAction="collapseActionView"/>
 
 	<item
@@ -40,9 +47,5 @@
 		android:id="@+id/action_send_to_hibyos"
 		android:title="Send to Hiby DAP"
 		app:showAsAction="collapseActionView"/>
-	<item
-		android:icon="@drawable/ic_round_audio_file_24"
-		android:id="@+id/action_export_playlist"
-		android:title="Create Playlist"
-		app:showAsAction="collapseActionView"/>
+
 </menu>

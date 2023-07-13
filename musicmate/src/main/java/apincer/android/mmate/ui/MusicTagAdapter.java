@@ -159,7 +159,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.QUALITY_NORMAL);
             titles.add(Constants.QUALITY_POOR);
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ) {
-            titles.add(Constants.TITLE_HI_QUALITY);
+            titles.add(Constants.TITLE_HIGH_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
             titles.add(Constants.AUDIO_SQ_PCM_MQA);
@@ -249,6 +249,12 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
     }
 
+    public void removeItem(MusicTag song) {
+        localDataSet.remove( song);
+        notifyDataSetChanged();
+        //removeItem(position);;
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;
@@ -260,12 +266,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         TextView mFileSizeView;
         ImageView mCoverArtView;
         ImageView mFileSourceView;
-        ImageView mFileBrokenView;
+       // ImageView mFileBrokenView;
         TextView mFileTypeView;
         TextView mDynamicRange;
         Context mContext;
         ImageView mPlayerView;
         TextView mMediaQualityView;
+        TextView mMediaUpScaledView;
+        TextView mMediaUpSampledView;
         ImageView mAudioHiResView;
         //ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
@@ -283,11 +291,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
             this.mMediaQualityView = view.findViewById(R.id.item_media_quality_label);
+            this.mMediaUpScaledView = view.findViewById(R.id.item_media_upscaled_label);
+            this.mMediaUpSampledView = view.findViewById(R.id.item_media_upsampled_label);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioHiResView = view.findViewById(R.id.item_hires_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
-            this.mFileBrokenView = view.findViewById(R.id.item_broken_file_icon);
+            //this.mFileBrokenView = view.findViewById(R.id.item_broken_file_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
@@ -379,11 +389,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
         MusicTag tag = localDataSet.get(position);
-        holder.id = (long)position; //tag.getId();
+        holder.id = (long)position;
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
@@ -402,7 +411,30 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mMediaQualityView.setText(StringUtils.getAbvByUpperCase(tag.getMediaQuality()));
             holder.mMediaQualityView.setVisibility(View.VISIBLE);
         } else {
-            holder.mMediaQualityView.setVisibility(View.GONE);
+            holder.mMediaQualityView.setText(StringUtils.getAbvByUpperCase(Constants.QUALITY_NORMAL));
+            holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
+            holder.mMediaQualityView.setVisibility(View.VISIBLE);
+            //holder.mMediaQualityView.setVisibility(View.GONE);
+        }
+
+        if (tag.getMeasuredDR()>0.0) {
+            if(MusicTagUtils.isUpScaled(tag)) {
+                holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.errorColor));
+                holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
+            }else {
+                holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.audiophile_label1));
+                holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
+            }
+        }else {
+            holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
+            holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
+            //holder.mMediaUpScaledView.setVisibility(View.GONE);
+        }
+
+        if (MusicTagUtils.isUpSampled(tag)) {
+            holder.mMediaUpSampledView.setVisibility(View.VISIBLE);
+        }else {
+            holder.mMediaUpSampledView.setVisibility(View.GONE);
         }
 
         if (isListening) {
@@ -459,12 +491,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mFileTypeView.setText(trimToEmpty(tag.getFileFormat()).toUpperCase(Locale.US));
         holder.mFileTypeView.setBackground(resolutionBackground);
 
-        holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
+       // holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
 
         // Dynamic Range
         resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
         holder.mDynamicRange.setBackground(resolutionBackground);
-        holder.mDynamicRange.setText(MusicTagUtils.getTrackDRandGainString(tag));
+        holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
+        //holder.mDynamicRange.setText(MusicTagUtils.getTrackDRandGainString(tag));
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
 

@@ -85,8 +85,11 @@ public class TagsActivity extends AppCompatActivity {
     private TextView albumView ;
     private TextView genreView;
     private TextView encInfo;
+    private TextView drView;
+    private TextView drDBView;
+    private TextView rgView;
     private ImageView audiophileView;
-    private ImageView hiresView;
+    private ImageView resolutionView;
     private View coverArtLayout;
     private View panelLabels;
     private CollapsingToolbarLayout toolBarLayout;
@@ -144,7 +147,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView pathInfo;
     private TextView filename;
     private TextView pathDrive;
-    private TextView drView;
+    //private TextView drView;
     private SearchCriteria criteria;
 
     public List<MusicTag> getEditItems() {
@@ -206,7 +209,7 @@ public class TagsActivity extends AppCompatActivity {
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
        // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
-        adapter.addNewTab(new MusicInforFragment(), "Music information");
+        adapter.addNewTab(new TagsEditorFragment(), "Music information");
         adapter.addNewTab(new TagsTechnicalFragment(), "Technical information");
        // adapter.addNewTab(tagsEditorFragment, "METADATA");
         viewPager.setAdapter(adapter);
@@ -247,9 +250,11 @@ public class TagsActivity extends AppCompatActivity {
         pathInfo = findViewById(R.id.panel_path);
         pathDrive = findViewById(R.id.panel_path_drive);
         audiophileView = findViewById(R.id.icon_audiophile);
-        hiresView = findViewById(R.id.icon_hires);
+        resolutionView = findViewById(R.id.icon_resolution);
         filename = findViewById(R.id.panel_filename);
         drView = findViewById(R.id.icon_dr);
+        drDBView = findViewById(R.id.icon_drDB);
+        rgView = findViewById(R.id.icon_replay_gain);
     }
 
     public void updateTitlePanel() {
@@ -269,15 +274,21 @@ public class TagsActivity extends AppCompatActivity {
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), displayTag))
                 .crossfade(false)
-                .target(hiresView)
+                .target(resolutionView)
                 .build();
         imageLoader.enqueue(request);
 
         // Dynamic Range
         Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
         //drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
-        drView.setText(MusicTagUtils.getTrackDRandGainString(displayTag));
+        drView.setText(MusicTagUtils.getTrackDR(displayTag));
         drView.setBackground(resolutionBackground);
+
+        drDBView.setText(MusicTagUtils.getMeasuredDR(displayTag) +" dB");
+        drDBView.setBackground(resolutionBackground);
+
+        rgView.setText(MusicTagUtils.getTrackReplayGainString(displayTag));
+        rgView.setBackground(resolutionBackground);
 
         // Track Replay Gain
         //resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
@@ -300,8 +311,10 @@ public class TagsActivity extends AppCompatActivity {
 
         if(displayTag.isDSD()) {
             drView.setVisibility(View.GONE);
+            rgView.setVisibility(View.GONE);
         }else {
             drView.setVisibility(View.VISIBLE);
+            rgView.setVisibility(View.VISIBLE);
         }
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
@@ -679,8 +692,8 @@ public class TagsActivity extends AppCompatActivity {
 
     private void setupToolBarMenu() {
         if(activeFragment!= null) {
-            if (activeFragment instanceof MusicInforFragment) {
-                setupEditorManu(((MusicInforFragment) activeFragment).getOnMenuItemClickListener());
+            if (activeFragment instanceof TagsEditorFragment) {
+                setupEditorManu(((TagsEditorFragment) activeFragment).getOnMenuItemClickListener());
             } else if (activeFragment instanceof TagsTechnicalFragment) {
                 setupTechnicalManu(((TagsTechnicalFragment) activeFragment).getOnMenuItemClickListener());
             } else {

@@ -58,8 +58,8 @@ import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
 
-public class MusicInforFragment extends Fragment {
-    private static final String TAG = MusicInforFragment.class.getName();
+public class TagsEditorFragment extends Fragment {
+    private static final String TAG = TagsEditorFragment.class.getName();
     protected Context context;
     protected TagsActivity tagsActivity;
     AlertDialog progressDialog;

@@ -197,7 +197,7 @@ public class MusicTagRepository {
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findMQASongs();
 
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HI_QUALITY.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIGH_QUALITY.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findHighQuality();
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findLosslessSong();

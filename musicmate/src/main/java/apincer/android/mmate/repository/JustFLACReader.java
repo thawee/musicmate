@@ -1,7 +1,6 @@
 package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.repository.FFMPeg.detectMQA;
-import static apincer.android.mmate.utils.MusicTagUtils.getFileSizeRatio;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -52,7 +51,7 @@ public class JustFLACReader extends TagReader{
             tag.setAudioEncoding("flac");
             tag.setFileFormat("flac");
             readFileInfo(context,tag);
-            tag.setFileSizeRatio(getFileSizeRatio(tag));
+           // tag.setFileSizeRatio(getFileSizeRatio(tag));
             detectMQA(tag,5000); // timeout 5 seconds
             return Arrays.asList(tag);
         } catch (Exception e) {
@@ -182,6 +181,7 @@ public class JustFLACReader extends TagReader{
                 tag.setTrackDR(getFirstDouble(comment, "TRACK_DYNAMIC_RANGE"));
                 tag.setTrackTruePeak(getFirstDouble(comment, "REPLAYGAIN_TRACK_PEAK"));
                 tag.setTrackRG(getFirstDouble(comment, "REPLAYGAIN_TRACK_GAIN", " dB"));
+                tag.setMeasuredDR(getFirstDouble(comment,  FFMPeg.KEY_MUSICMATE_DR));
                 tag.setMediaType(getFirstString(comment, "MEDIA"));
                 tag.setComment(getFirstString(comment, "DESCRIPTION"));
             }else if (metadata instanceof Picture) {

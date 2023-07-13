@@ -394,11 +394,18 @@ public class MainActivity extends AppCompatActivity {
             for(MusicTag tag: selections) {
                 MusicMateExecutors.move(() -> {
                     try {
+                        statusList.put(tag, "Moving");
+                        runOnUiThread(() -> {
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct + rate));
+                            progressBar.invalidate();
+                            itemsView.invalidateViews();
+                        });
                         boolean status = repos.importAudioFile(tag);
                         if(status) {
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, tag);
                             EventBus.getDefault().postSticky(message);
-                            statusList.put(tag, "Success");
+                            statusList.put(tag, "Done");
                         }else {
                             statusList.put(tag, "Fail");
                         }
@@ -912,16 +919,20 @@ public class MainActivity extends AppCompatActivity {
                 if(event.getItem()!=null) {
                     int position = adapter.getMusicTagPosition(event.getItem());
                     if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
-                        adapter.notifyItemRemoved(position);
+                        adapter.removeItem(event.getItem());
+                       // adapter.notifyItemRemoved(position);
                         // }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
                     }else if(adapter.isMatchFilter(event.getItem())) {
-                            MusicTag tag = adapter.getContent(position);
+                         /*   MusicTag tag = adapter.getContent(position);
                             if(tag != null) {
                                 MusicTagRepository.load(tag);
                                 adapter.notifyItemChanged(position);
-                            }
-                    }else {
-                            adapter.notifyItemRemoved(position);
+                            } */
+                        adapter.loadDataSets();
+                   // }else {
+                        //adapter.removeItem(event.getItem());
+                            //adapter.removeItem(position);
+                           // adapter.notifyItemRemoved(position);
                     }
                    /* }else {
                         MusicTag tag = adapter.getContent(position);
@@ -985,7 +996,7 @@ public class MainActivity extends AppCompatActivity {
       //      return true;
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HI_QUALITY);
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HIGH_QUALITY);
             return true;
         } else if(item.getItemId() == MENU_ID_QUALITY) {
             doHideSearch();
@@ -1414,7 +1425,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Calculate ReplayGain");
+        titleText.setText("Checking Audio Quality");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1484,22 +1495,39 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
+               /* if(MusicTagUtils.isWavFile(tag)) {
+                    statusList.put(tag, "Skip");
+                    int pct = progressBar.getProgress();
+                    progressBar.setProgress((int) (pct + rate));
+                    progressBar.invalidate();
+                    itemsView.invalidateViews();
+                    continue;
+                }*/
+                /*if(!MusicTagUtils.isLossless(tag)) {
+                    statusList.put(tag, "Skip");
+                    int pct = progressBar.getProgress();
+                    progressBar.setProgress((int) (pct + rate));
+                    progressBar.invalidate();
+                    itemsView.invalidateViews();
+                    continue; // no need for compress encoding
+                }*/
+
                 MusicMateExecutors.move(() -> {
                     try {
-                        statusList.put(tag, "Calculating");
+                        statusList.put(tag, "Checking");
                         runOnUiThread(() -> {
                             itemsView.invalidateViews();
                         });
                         //calculate track RG
-                        FFMPeg.readReplayGain(MainActivity.this, tag);
+                        FFMPeg.detectQuality(tag);
                         //write RG to file
-                        FFMPeg.writeReplayGain(MainActivity.this, tag);
+                        FFMPeg.writeTagQualityToFile(MainActivity.this, tag);
                         // update MusicMate Library
                         MusicTagRepository.saveTag(tag);
 
                         AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
                         EventBus.getDefault().postSticky(message);
-                        statusList.put(tag, "Success");
+                        statusList.put(tag, "Done");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
@@ -1631,35 +1659,40 @@ public class MainActivity extends AppCompatActivity {
 
         //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-        MaterialRadioButton btnAiff = cview.findViewById(R.id.mediaEncodingAIFF);
+        MaterialRadioButton btnAlac = cview.findViewById(R.id.mediaEncodingALAC);
         MaterialRadioButton btnFlac = cview.findViewById(R.id.mediaEncodingFLAC);
-        MaterialRadioButton btnMPeg = cview.findViewById(R.id.mediaEncodingMPEG);
-        if(MusicTagUtils.isWavFile(selections.get(0))) {
+       // MaterialRadioButton btnMPeg = cview.findViewById(R.id.mediaEncodingMPEG);
+       /* if(MusicTagUtils.isWavFile(selections.get(0))) {
             btnAiff.setEnabled(true);
             btnFlac.setEnabled(true);
-            btnMPeg.setEnabled(true);
+           // btnMPeg.setEnabled(true);
 
             btnFlac.setChecked(true);
             //encoding[0]="FLAC";
-        }else if(MusicTagUtils.isAIFFile(selections.get(0))) {
-            btnAiff.setEnabled(false);
+        }else*/
+        if(MusicTagUtils.isALACFile(selections.get(0))) {
+            btnAlac.setEnabled(false);
             btnFlac.setEnabled(true);
-            btnMPeg.setEnabled(true);
+           // btnMPeg.setEnabled(true);
 
             btnFlac.setChecked(true);
            // encoding[0] = "FLAC";
         } else if(MusicTagUtils.isFLACFile(selections.get(0))) {
-                btnAiff.setEnabled(true);
+                btnAlac.setEnabled(true);
                 btnFlac.setEnabled(false);
-                btnMPeg.setEnabled(true);
+                btnOK.setEnabled(true);
+             //   btnMPeg.setEnabled(true);
 
-                btnAiff.setChecked(true);
+              //  btnAiff.setChecked(true);
               //  encoding[0]="AIFF";
+        }else {
+           // btnFlac.setChecked(true);
+            btnOK.setEnabled(false);
         }
 
-        btnOK.setEnabled(false);
+       // btnOK.setEnabled(false);
 
-        btnOK.setEnabled(true);
+      //  btnOK.setEnabled(true);
 
         int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         int sizeInBlock = MAX_PROGRESS/block;
@@ -1682,15 +1715,17 @@ public class MainActivity extends AppCompatActivity {
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
+
+
         btnOK.setOnClickListener(v -> {
             busy = true;
+            int cLevel = 2; // for flac 0 less, 8 most compress
             String targetExt = "";
-            if(btnAiff.isChecked()) {
-                targetExt = "AIFF";
-            }else if(btnFlac.isChecked()) {
+            if(btnAlac.isChecked()) {
+                targetExt = "m4a";
+            }else {
+               // compressLevel = 2; // 5 = default, 0 less, 8 most cpmpress
                 targetExt = "FLAC";
-            }else if (btnMPeg.isChecked()){
-                targetExt = "MP3";
             }
 
             if(isEmpty(targetExt)) {
@@ -1699,17 +1734,16 @@ public class MainActivity extends AppCompatActivity {
 
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
 
-            String finalTargetExt = targetExt;
+            String finalTargetExt = targetExt.toLowerCase();
             MusicMateExecutors.move(() -> {
                 for(MusicTag tag: selections) {
-
-                    if(!StringUtils.trimToEmpty(finalTargetExt).equalsIgnoreCase(tag.getAudioEncoding()))  {
-
+                    if(!StringUtils.trimToEmpty(finalTargetExt).equalsIgnoreCase(tag.getFileFormat()))  {
                         String srcPath = tag.getPath();
                         String filePath = FileUtils.removeExtension(tag.getPath());
                         String targetPath = filePath+"."+ finalTargetExt;
+                        int bitdept = tag.getAudioBitsDepth();
 
-                        if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, null)) {
+                        if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, cLevel, bitdept)) {
                             doneList.add(tag);
                             repos.scanMusicFile(new File(targetPath),false); // re scan file
 

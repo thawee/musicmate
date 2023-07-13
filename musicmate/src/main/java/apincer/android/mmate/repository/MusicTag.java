@@ -41,8 +41,8 @@ public class MusicTag implements Cloneable, Parcelable {
     // file information
     @DatabaseField
     protected String path = "";
-    @DatabaseField
-    protected int fileSizeRatio;
+    //@DatabaseField
+    //protected int fileSizeRatio;
    @DatabaseField
    protected String fileFormat;
     @DatabaseField
@@ -130,24 +130,38 @@ public class MusicTag implements Cloneable, Parcelable {
     @DatabaseField
     protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
     @DatabaseField
-    protected double gainTrackDR; // Dynamic Range
-    @DatabaseField
-    protected double gainAlbumTruePeak; // unit of dB
-    @DatabaseField
-    protected double gainAlbumRG; // replay gain V2, references LI -18.00 LUFS
+    protected double gainTrackDR; // Dynamic Range6yjm
+    //@DatabaseField
+    //protected double gainAlbumTruePeak; // unit of dB
+    //@DatabaseField
+    //protected double gainAlbumRG; // replay gain V2, references LI -18.00 LUFS
 
    // protected double ebur128TruePeak; // ebur128
    // protected double gainTrackRange; // ebur128
    @DatabaseField
-   protected double gainTrackLoudness; // ebur128
+   protected double measuredDR;
 
-    public int getFileSizeRatio() {
-        return fileSizeRatio;
-    }
+    @DatabaseField
+    protected int measuredBitDept;
 
+    @DatabaseField
+    protected long measuredSamplingRate;
+
+    @DatabaseField
+    protected boolean upscaled; // increasing the bitdept from original file
+
+    @DatabaseField
+    protected boolean upsampled; // increasing the sampling rate from original file
+   //protected double gainTrackLoudness; // ebur128
+
+    //public int getFileSizeRatio() {
+    //    return fileSizeRatio;
+   // }
+
+    /*
     public void setFileSizeRatio(int fileSizeRatio) {
         this.fileSizeRatio = fileSizeRatio;
-    }
+    }*/
 
     public String getMqaInd() {
         return mqaInd;
@@ -200,7 +214,7 @@ public class MusicTag implements Cloneable, Parcelable {
         path = in.readString();
         fileLastModified = in.readLong();
         fileSize = in.readLong();
-        fileSizeRatio = in.readInt();
+        //fileSizeRatio = in.readInt();
         fileFormat = in.readString();
         audioEncoding = in.readString();
        // audioLossless = in.readByte() != 0;
@@ -230,9 +244,9 @@ public class MusicTag implements Cloneable, Parcelable {
         mediaQuality = in.readString();
         gainTrackTruePeak = in.readDouble();
         gainTrackRG = in.readDouble();
-        gainTrackLoudness = in.readDouble();
-        gainAlbumTruePeak = in.readDouble();
-        gainAlbumRG = in.readDouble();
+       // gainTrackLoudness = in.readDouble();
+       // gainAlbumTruePeak = in.readDouble();
+       // gainAlbumRG = in.readDouble();
         //gainAlbumLoudness = in.readDouble();
         compilation = in.readByte() != 0;
         publisher = in.readString();
@@ -240,6 +254,11 @@ public class MusicTag implements Cloneable, Parcelable {
         audioStartTime = in.readDouble();
         mmReadError = in.readByte() != 0;
         gainTrackDR = in.readDouble();
+        upscaled = in.readByte() != 0;
+        upsampled = in.readByte() != 0;
+        measuredDR = in.readDouble();
+        measuredBitDept = in.readInt();
+        measuredSamplingRate = in.readLong();
     }
 
     public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
@@ -471,7 +490,7 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.storageId = storageId;
         tag.simpleName = simpleName;
         tag.fileSize = fileSize;
-        tag.fileSizeRatio = fileSizeRatio;
+        //tag.fileSizeRatio = fileSizeRatio;
         tag.fileFormat = fileFormat;
         tag.fileLastModified = fileLastModified;
         tag.mmReadError = mmReadError;
@@ -486,10 +505,15 @@ public class MusicTag implements Cloneable, Parcelable {
 
         tag.gainTrackRG = gainTrackRG;
         tag.gainTrackTruePeak = gainTrackTruePeak;
-        tag.gainTrackLoudness = gainTrackLoudness;
+       // tag.gainTrackLoudness = gainTrackLoudness;
         tag.gainTrackDR = gainTrackDR;
-        tag.gainAlbumRG = gainAlbumRG;
-        tag.gainAlbumTruePeak=gainAlbumTruePeak;
+       // tag.gainAlbumRG = gainAlbumRG;
+       // tag.gainAlbumTruePeak=gainAlbumTruePeak;
+        tag.upscaled = upscaled;
+        tag.upsampled = upsampled;
+        tag.measuredDR = measuredDR;
+        tag.measuredSamplingRate = measuredSamplingRate;
+        tag.measuredBitDept = measuredBitDept;
 
         tag.title = title;
         tag.album = album;
@@ -524,7 +548,7 @@ public class MusicTag implements Cloneable, Parcelable {
         this.uniqueKey = tag.uniqueKey;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
-        this.fileSizeRatio = tag.fileSizeRatio;
+        //this.fileSizeRatio = tag.fileSizeRatio;
         this.fileFormat = tag.fileFormat;
         this.fileLastModified = tag.fileLastModified;
         this.mmReadError = tag.mmReadError;
@@ -563,10 +587,15 @@ public class MusicTag implements Cloneable, Parcelable {
 
         this.gainTrackTruePeak = tag.gainTrackTruePeak;
         this.gainTrackRG = tag.gainTrackRG;
-        this.gainTrackLoudness = tag.gainTrackLoudness;
+        //this.gainTrackLoudness = tag.gainTrackLoudness;
         this.gainTrackDR = tag.gainTrackDR;
-        this.gainAlbumRG = tag.gainAlbumRG;
-        this.gainAlbumTruePeak = tag.gainAlbumTruePeak;
+        //this.gainAlbumRG = tag.gainAlbumRG;
+       // this.gainAlbumTruePeak = tag.gainAlbumTruePeak;
+        this.upscaled = tag.upscaled;
+        this.upsampled = tag.upsampled;
+        this.measuredDR = tag.measuredDR;
+        this.measuredSamplingRate=tag.measuredSamplingRate;
+        this.measuredBitDept=tag.measuredBitDept;
 
         this.publisher = tag.publisher;
         this.embedCoverArt = tag.embedCoverArt;
@@ -586,7 +615,7 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(path);
         parcel.writeLong(fileLastModified);
         parcel.writeLong(fileSize);
-        parcel.writeInt(fileSizeRatio);
+        //parcel.writeInt(fileSizeRatio);
         parcel.writeString(fileFormat);
         parcel.writeString(audioEncoding);
         //parcel.writeByte((byte) (audioLossless ? 1 : 0));
@@ -615,10 +644,10 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(mediaType);
         parcel.writeString(mediaQuality);
         parcel.writeDouble(gainTrackTruePeak);
-        parcel.writeDouble(gainTrackLoudness);
+       // parcel.writeDouble(gainTrackLoudness);
         parcel.writeDouble(gainTrackRG);
-        parcel.writeDouble(gainAlbumTruePeak);
-        parcel.writeDouble(gainAlbumRG);
+       // parcel.writeDouble(gainAlbumTruePeak);
+        //parcel.writeDouble(gainAlbumRG);
         parcel.writeByte((byte) (compilation ? 1 : 0));
         parcel.writeString(publisher);
        // parcel.writeString(language);
@@ -626,6 +655,11 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeDouble(audioStartTime);
         parcel.writeByte((byte) (mmReadError ? 1 : 0));
         parcel.writeDouble(gainTrackDR);
+        parcel.writeByte((byte) (upscaled ? 1 : 0));
+        parcel.writeByte((byte) (upsampled ? 1 : 0));
+        parcel.writeDouble(measuredDR);
+        parcel.writeInt(measuredBitDept);
+        parcel.writeLong(measuredSamplingRate);
     }
 
     public MusicTag getOriginTag() {
@@ -731,7 +765,7 @@ public class MusicTag implements Cloneable, Parcelable {
     public void setTrackDR(double trackDR) {
         this.gainTrackDR = trackDR;
     }
-
+/*
     public double getAlbumTruePeak() {
         return gainAlbumTruePeak;
     }
@@ -746,7 +780,7 @@ public class MusicTag implements Cloneable, Parcelable {
 
     public void setAlbumRG(double albumRG) {
         this.gainAlbumRG = albumRG;
-    }
+    } */
     /*
     public double getTrackRange() {
         return gainTrackRange;
@@ -756,13 +790,14 @@ public class MusicTag implements Cloneable, Parcelable {
         this.gainTrackRange = ebur128Range;
     } */
 
+    /*
     public double getTrackLoudness() {
         return gainTrackLoudness;
     }
 
     public void setTrackLoudness(double ebur128Loudness) {
         this.gainTrackLoudness = ebur128Loudness;
-    }
+    } */
 
     public boolean isReadError() {
         return mmReadError;
@@ -770,5 +805,45 @@ public class MusicTag implements Cloneable, Parcelable {
 
     public void setReadError(boolean readError) {
         this.mmReadError = readError;
+    }
+
+    public double getMeasuredDR() {
+        return measuredDR;
+    }
+
+    public void setMeasuredDR(double measuredDR) {
+        this.measuredDR = measuredDR;
+    }
+
+    public int getMeasuredBitDept() {
+        return measuredBitDept;
+    }
+
+    public void setMeasuredBitDept(int measuredBitDept) {
+        this.measuredBitDept = measuredBitDept;
+    }
+
+    public long getMeasuredSamplingRate() {
+        return measuredSamplingRate;
+    }
+
+    public void setMeasuredSamplingRate(long measuredSamplingRate) {
+        this.measuredSamplingRate = measuredSamplingRate;
+    }
+
+    public boolean isUpscaled() {
+        return upscaled;
+    }
+
+    public void setUpscaled(boolean upscaled) {
+        this.upscaled = upscaled;
+    }
+
+    public boolean isUpsampled() {
+        return upsampled;
+    }
+
+    public void setUpsampled(boolean upsampled) {
+        this.upsampled = upsampled;
     }
 }

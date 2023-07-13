@@ -22,10 +22,13 @@ android {
 }
 
 dependencies {
+    implementation deps.androidx.activity
     implementation deps.androidx.appCompat
     implementation deps.google.material
     implementation deps.androidx.constraintlayout
+    implementation deps.androidx.annotation
+
     testImplementation deps.junit
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

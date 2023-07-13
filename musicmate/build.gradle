@@ -30,8 +30,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 71
-        versionName  "3.7.1"+ versions.buildDate
+        versionCode 72
+        versionName  "3.7.2"+ versions.buildDate
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
 		renderscriptTargetApi versions.compileSdk
@@ -111,6 +111,7 @@ dependencies {
     implementation deps.androidx.activity
     implementation deps.androidx.recyclerView
     implementation deps.androidx.recyclerView_selection
+    implementation deps.androidx.coordinatorlayout
     implementation deps.androidx.appCompat
     implementation deps.androidx.cardView
     implementation deps.androidx.annotation
@@ -120,7 +121,9 @@ dependencies {
     implementation deps.androidx.preference
     implementation deps.androidx.documentFile
     implementation deps.androidx.work
-
+    implementation deps.androidx.drawerlayout
+    implementation deps.androidx.loader
+    implementation deps.androidx.localbroadcastmanager
     // room
     //implementation deps.androidx.room
     //annotationProcessor deps.androidx.room_compiler
@@ -193,6 +196,13 @@ dependencies {
     implementation deps.google.gson
     implementation deps.retrofit.runtime
     implementation deps.retrofit.gson
+
+    implementation deps.apache.commons_codec
+    implementation deps.apache.commons_io
+
+    implementation deps.kotlin.stdlib
+    implementation deps.androidx.annotation
+    implementation deps.jetbrains.annotations
 
     // Glide (Image Loader & Caching)
    // implementation deps.glide.runtime

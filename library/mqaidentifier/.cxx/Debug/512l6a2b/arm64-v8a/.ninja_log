@@ -1,0 +1,16 @@
+# ninja log v5
+0	25	0	clean	2d7e0bd9f154a3e9
+0	3719	1688196503055679906	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	bb486960b50dec95
+3722	4259	1688196503529698389	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/512l6a2b/obj/arm64-v8a/libmqaidentifier.so	b478abf86c94cf14
+0	36	0	clean	2d7e0bd9f154a3e9
+3	6836	1688294766455129587	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	bb486960b50dec95
+6837	7562	1688294767134229423	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/512l6a2b/obj/arm64-v8a/libmqaidentifier.so	b478abf86c94cf14
+0	24	0	clean	2d7e0bd9f154a3e9
+2	9743	1688907939100400732	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	bb486960b50dec95
+9744	10762	1688907939888542013	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/512l6a2b/obj/arm64-v8a/libmqaidentifier.so	b478abf86c94cf14
+0	27	0	clean	2d7e0bd9f154a3e9
+2	7785	1688994859454108088	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	bb486960b50dec95
+7787	8579	1688994860182204364	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/512l6a2b/obj/arm64-v8a/libmqaidentifier.so	b478abf86c94cf14
+0	26	0	clean	2d7e0bd9f154a3e9
+2	9066	1689061075093886229	CMakeFiles/mqaidentifier.dir/mqaid.cpp.o	bb486960b50dec95
+9067	9871	1689061075751698006	/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/Debug/512l6a2b/obj/arm64-v8a/libmqaidentifier.so	b478abf86c94cf14

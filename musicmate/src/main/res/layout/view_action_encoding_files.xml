@@ -20,7 +20,7 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
         android:textSize="14sp"
-        android:text="Encoding music files"
+        android:text="Convert to FLAC encoding"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>
@@ -47,7 +47,7 @@
                 android:orientation="horizontal"
                 tools:ignore="UselessParent">
                 <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/mediaEncodingAIFF"
+                    android:id="@+id/mediaEncodingALAC"
                     android:layout_width="wrap_content"
                     android:layout_height="@dimen/dimen_32_dp"
                     app:shapeAppearance="@style/Rounded"
@@ -57,7 +57,7 @@
                     android:paddingRight="@dimen/dimen_8_dp"
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:textColor="@color/white"
-                    android:text="AIFF"/>
+                    android:text="Apple ALAC"/>
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/mediaEncodingFLAC"
                     android:layout_width="wrap_content"
@@ -70,6 +70,7 @@
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:textColor="@color/white"
                     android:text="FLAC"/>
+                <!--
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/mediaEncodingMPEG"
                     android:layout_width="wrap_content"
@@ -81,7 +82,7 @@
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:background="@drawable/shape_edittext_border"
                     android:textColor="@color/white"
-                    android:text="MPEG"/>
+                    android:text="MPEG"/> -->
             </RadioGroup>
             <!--
             <TextView

@@ -134,7 +134,8 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("fileSize = 0 or ((fileFormat ='aac' or fileFormat = 'mpeg') and audioBitRate < 32000) or (fileFormat not in ('aac','mpeg') and fileSizeRatio < 40) order by fileSize");
+           // builder.where().raw("fileSize = 0 or ((fileFormat ='aac' or fileFormat = 'mpeg') and audioBitRate < 32000) or (fileFormat not in ('aac','mpeg') and fileSizeRatio < 40) order by fileSize");
+            builder.where().raw("fileSize < 5120 or ((measuredDR>0 AND measuredDR<90 AND audioBitsDepth<=16) OR (measuredDR>0 AND measuredDR<120 AND audioBitsDepth>16)) order by title");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -181,7 +182,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("fileFormat in ('aac', 'mpeg') and (audioBitsDepth < 16 or audioSampleRate < 44100)");
+            builder.where().raw(" fileFormat in ('aac', 'mpeg') ");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -204,7 +205,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("audiobitrate=1 order by title, artist");
+            builder.where().raw("audioBitsDept=1 order by title, artist");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;

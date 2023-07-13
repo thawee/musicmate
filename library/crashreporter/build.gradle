@@ -27,10 +27,12 @@ dependencies {
    // api 'com.android.support:recyclerview-v7:' + rootProject.ext.support_version
    // api 'com.android.support:appcompat-v7:' + rootProject.ext.support_version
    // api 'com.android.support:design:' + rootProject.ext.support_version
+    implementation deps.androidx.activity
     implementation deps.google.material
     implementation deps.androidx.recyclerView
     implementation deps.androidx.appCompat
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation deps.androidx.annotation
+    //implementation 'androidx.appcompat:appcompat:1.4.1'
+   // implementation 'androidx.recyclerview:recyclerview:1.2.1'
     testImplementation deps.junit
 }
