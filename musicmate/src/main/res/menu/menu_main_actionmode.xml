@@ -19,7 +19,7 @@
 		app:showAsAction="always"/>
 
 	<item
-		android:icon="@drawable/ic_round_audio_file_24"
+		android:icon="@drawable/round_analytics_24"
 		android:id="@+id/action_calculate_replay_gain"
 		android:title="Check Audio Quality"
 		app:showAsAction="always"/>
