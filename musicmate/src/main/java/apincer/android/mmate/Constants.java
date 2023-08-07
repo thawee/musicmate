@@ -25,6 +25,14 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
+    public static final double SPL_8BIT_IN_DB = 49.8;
+    public static final double SPL_16BIT_IN_DB = 96.33;
+    public static final double SPL_24BIT_IN_DB = 144.49;
+
+    public static final double MIN_SPL_RATIO = 0.9; //0.72; //just magic number, it's should be 1.0 for actual results
+    public static final double MIN_SPL_16BIT_IN_DB = SPL_16BIT_IN_DB*MIN_SPL_RATIO;
+    public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;
+
     public static final long QUALITY_SAMPLING_RATE_192 = 192000;
     public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static final int QUALITY_SAMPLING_RATE_48 = 48000;
@@ -152,6 +160,9 @@ public final class Constants {
    // public static final int INFO_RESOLUTIONS_HEIGHT = 28;
    // public static final int INFO_SAMPLE_RATE_WIDTH = 180; //164;
    // public static final int INFO_HEIGHT = 32;
+
+
+
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";

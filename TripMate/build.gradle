@@ -30,6 +30,7 @@ android {
 dependencies { 
 
 //    implementation deps.androidx.recyclerView
+    implementation deps.androidx.core
     implementation deps.androidx.appCompat
 //    implementation deps.androidx.cardView
     annotationProcessor deps.androidx.annotation

@@ -120,7 +120,7 @@ public class TagsEditorFragment extends Fragment {
         // popup list
         setupListValuePopup(txtArtist, MusicTagRepository.getArtistList(), 3, false);
         setupListValuePopup(txtAlbumArtist, MusicTagRepository.getDefaultAlbumArtistList(getContext()),1, false);
-        setupListValuePopup(txtGenre, MusicTagRepository.getDefaultGenreList(getContext()),3, true);
+        setupListValuePopup(txtGenre, MusicTagRepository.getDefaultGenreList(getContext()),2, true);
         setupListValuePopup(txtGrouping, MusicTagRepository.getDefaultGroupingList(getContext()),1, true);
         setupListValuePopup(txtPublisher, MusicTagRepository.getDefaultPublisherList(getContext()),3, false);
         setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1, true);

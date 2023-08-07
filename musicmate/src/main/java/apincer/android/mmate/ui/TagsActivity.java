@@ -57,6 +57,7 @@ import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -100,6 +101,9 @@ public class TagsActivity extends AppCompatActivity {
     private volatile boolean isEditing;
     FileRepository repos;
     private Fragment activeFragment;
+
+    private TriangleLabelView mManageStatus1;
+    private TriangleLabelView mManageStatus2;
 
     @Override
     public void onBackPressed() {
@@ -255,6 +259,8 @@ public class TagsActivity extends AppCompatActivity {
         drView = findViewById(R.id.icon_dr);
         drDBView = findViewById(R.id.icon_drDB);
         rgView = findViewById(R.id.icon_replay_gain);
+        mManageStatus1 = findViewById(R.id.item_new_label1);
+        mManageStatus2 = findViewById(R.id.item_new_label2);
     }
 
     public void updateTitlePanel() {
@@ -282,13 +288,29 @@ public class TagsActivity extends AppCompatActivity {
         Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
         //drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
         drView.setText(MusicTagUtils.getTrackDR(displayTag));
-        drView.setBackground(resolutionBackground);
+        //drView.setBackground(resolutionBackground);
 
         drDBView.setText(MusicTagUtils.getMeasuredDR(displayTag) +" dB");
-        drDBView.setBackground(resolutionBackground);
+        if(MusicTagUtils.isDSD(displayTag)) {
+
+        }else if (displayTag.getMeasuredDR()>0.0) {
+            if(MusicTagUtils.isUpScaled(displayTag)) {
+                if(MusicTagUtils.isBadUpScaled(displayTag)) {
+                    drDBView.setBackgroundColor(getColor(R.color.quality_bad));
+                }else {
+                    drDBView.setBackgroundColor(getColor(R.color.quality_good));
+                }
+            }else {
+                drDBView.setBackgroundColor(getColor(R.color.quality_best));
+            }
+        }else {
+            drDBView.setBackgroundColor(getColor(R.color.quality_unknown));
+        }
+       // drDBView.setTextColor();
+        //drDBView.setBackground(resolutionBackground);
 
         rgView.setText(MusicTagUtils.getTrackReplayGainString(displayTag));
-        rgView.setBackground(resolutionBackground);
+        //rgView.setBackground(resolutionBackground);
 
         // Track Replay Gain
         //resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
@@ -357,7 +379,38 @@ public class TagsActivity extends AppCompatActivity {
        // String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
             //mateInd = " "+StringUtils.SYMBOL_ATTENTION;
-            pathDrive.setTextColor(getColor(R.color.warningColor));
+            String path = displayTag.getPath().toUpperCase();
+            if(path.contains("/music/") && !path.contains("/telegram/")) {
+                //pathDrive.setTextColor(getColor(R.color.warningColor));
+                mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
+                mManageStatus1.setPrimaryTextColorResource(R.color.grey800);
+                mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
+                mManageStatus1.setPrimaryText("New");
+                mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
+                mManageStatus2.setPrimaryTextColorResource(R.color.grey800);
+                mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
+                mManageStatus2.setPrimaryText("--/\\--");
+               // pathDrive.setTextColor(getColor(R.color.warningColor));
+            }else {
+                mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_red_900);
+                mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
+                mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
+                mManageStatus1.setPrimaryText("New");
+                mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_red_900);
+                mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
+                mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
+                mManageStatus2.setPrimaryText("--/\\--");
+               // pathDrive.setTextColor(getColor(R.color.errorColor));
+            }
+        }else {
+            mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
+            mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
+            mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
+            mManageStatus1.setPrimaryText(" M ");
+            mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
+            mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
+            mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
+            mManageStatus2.setPrimaryText("--/\\--");
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {

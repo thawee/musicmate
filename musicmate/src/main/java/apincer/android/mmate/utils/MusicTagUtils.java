@@ -1,5 +1,9 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
+import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
+import static apincer.android.mmate.Constants.SPL_16BIT_IN_DB;
+import static apincer.android.mmate.Constants.SPL_8BIT_IN_DB;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -993,7 +997,7 @@ public class MusicTagUtils {
         return 2; // default channels
     }
 
-    @Deprecated
+    /*@Deprecated
     public static File getCoverArt( Context context, MusicTag tag) {
         //PH|SD_AR|R_album|filename.png
         //md5 digest
@@ -1020,7 +1024,7 @@ public class MusicTagUtils {
             }
         }
         return pathFile;
-    }
+    }*/
 
     public static boolean isLossless(MusicTag tag) {
         return isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag);
@@ -1223,10 +1227,10 @@ public class MusicTagUtils {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
-    @Deprecated
+    /*@Deprecated
     public static int getDSDSampleRateModulation(MusicTag tag) {
         return (int) ((tag.getAudioBitRate()/1000.0)/(Constants.QUALITY_SAMPLING_RATE_44/1000.0));
-    }
+    } */
 
     public static String getTrackQuality(MusicTag tag) {
         if(tag.isDSD()) {
@@ -1858,15 +1862,30 @@ public class MusicTagUtils {
 
     public static boolean isUpScaled(MusicTag tag) {
         if(tag.getMeasuredDR()==0) return false;
-        if(tag.getAudioBitsDepth() ==16) {
+        if(tag.getAudioBitsDepth() <=16) {
             // less than 90 is upscaled
-            return tag.getMeasuredDR() < 90; // SNR 96.33 db
+            return tag.getMeasuredDR() <= MIN_SPL_16BIT_IN_DB; // SNR 96.33 db
         }else  if(tag.getAudioBitsDepth() >=24) {
             // less than 120 is upscaled
-            return tag.getMeasuredDR() < 120; // SNR 144.49 db
+            return tag.getMeasuredDR() <= MIN_SPL_24BIT_IN_DB; // SNR 144.49 db
        // }else  if(tag.getAudioBitsDepth() ==32) {
             // less than 190 is upscaled
         //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
+        }
+        return false;
+    }
+
+    public static boolean isBadUpScaled(MusicTag tag) {
+        if(tag.getMeasuredDR()==0) return false;
+        if(tag.getAudioBitsDepth() <=16) {
+            // less than 90 is upscaled
+            return tag.getMeasuredDR() <= SPL_8BIT_IN_DB; // SNR 96.33 db
+        }else  if(tag.getAudioBitsDepth() >=24) {
+            // less than 120 is upscaled
+            return tag.getMeasuredDR() <= SPL_16BIT_IN_DB; // SNR 144.49 db
+            // }else  if(tag.getAudioBitsDepth() ==32) {
+            // less than 190 is upscaled
+            //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
         }
         return false;
     }

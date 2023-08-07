@@ -458,11 +458,13 @@ public class FFMPeg extends TagReader {
             tag.setPath(path);
             readFileInfo(context,tag);
             parseStreamInfo(tag,output);
+            detectFileFormat(tag);
             parseDurationInfo(tag, output);
+
             parseTagsInfo(tag);
             // parseReplayGain(tag);
           //  parseDynamicRange(tag);
-            detectFileFormat(tag);
+
            // tag.setLossless(isLossless(tag));
            // tag.setFileSizeRatio(getFileSizeRatio(tag));
             return tag;
@@ -476,11 +478,12 @@ public class FFMPeg extends TagReader {
             tag.setPath(path);
             readFileInfo(context,tag);
             parseStreamInfo(tag,output);
+            detectFileFormat(tag);
             parseDurationInfo(tag,output);
             parseTagsInfo(tag);
             // parseReplayGain(tag);
            // parseDynamicRange(tag);
-            detectFileFormat(tag);
+
            // tag.setLossless(isLossless(tag));
            // tag.setFileSizeRatio(getFileSizeRatio(tag));
             session.cancel();
@@ -540,7 +543,9 @@ public class FFMPeg extends TagReader {
        String data = tag.getData();
        String []lines = data.split("\n");
         Map<String, String> tags = new HashMap<>();
+        String prevKey="";
        for(String line: lines) {
+           line = trimToEmpty(line);
            int ind = line.indexOf(":");
            if(ind >0) {
               // String[] field = line.split(":");
@@ -549,6 +554,15 @@ public class FFMPeg extends TagReader {
                if (!tags.containsKey(toUpperCase(key))) {
                    tags.put(toUpperCase(key), trimToEmpty(val)); // all upper case
                    tags.put(trimToEmpty(key), trimToEmpty(val)); // as is from file
+               }
+               prevKey = key;
+           }else if(ind==0){
+               // 2nd line
+               String val = trimToEmpty(line.substring(ind+1)); //getField(field, 1);
+               if (tags.containsKey(toUpperCase(prevKey))) {
+                   String vl = trimToEmpty(tags.get(toUpperCase(prevKey))); // all upper case
+                   tags.put(toUpperCase(prevKey), vl+"\n"+trimToEmpty(val)); // all upper case
+                   tags.put(trimToEmpty(prevKey), vl+"\n"+trimToEmpty(val)); // as is from file
                }
            }
        }
@@ -1318,13 +1332,13 @@ public class FFMPeg extends TagReader {
         int end = comment.indexOf("</##>");
         if(start >= 0 && end > start) {
             // found metadata comment
-            String metadata = comment.substring(start+7, end);
-            if(comment.length()>(end+8)) {
-                comment = comment.substring(end+8);
+            String metadata = comment.substring(start+4, end);
+            if(comment.length()>(end+5)) {
+                comment = comment.substring(end+5);
             }else {
                 comment = "";
             }
-            String []text = metadata.split("#");
+            String []text = metadata.split("#",-1);
 
             tag.setDisc(getField(text, 0));
             tag.setGrouping(getField(text, 1));

@@ -2,6 +2,7 @@ package apincer.android.mmate.fs;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.Uri.Builder;
@@ -18,6 +19,7 @@ import java.io.FileInputStream;
 
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 
 public final class MusicCoverArtProvider extends ContentProvider {
@@ -55,14 +57,33 @@ public final class MusicCoverArtProvider extends ContentProvider {
         throw new UnsupportedOperationException("No support query");
     }
 
+    public static String getCacheCover(File file) {
+        File pathDir = file;
+        String absPath = file.getAbsolutePath().toLowerCase();
+        if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
+            // use folder for managed files, others use full file path
+            pathDir = file.getParentFile();
+        }
+
+        String path = DigestUtils.md5Hex(pathDir.getAbsolutePath())+".png";
+
+        return "/CoverArts/"+path;
+    }
+
     public ParcelFileDescriptor openFile(Uri uri, String str) {
             try {
                 File file = getFileForUri(uri);
                 File dir =  getContext().getExternalCacheDir();
-                File pathDir = file.getParentFile();
+               /* File pathDir = file;
+                if(file.getAbsolutePath().contains("/Music/")) {
+                    // use folder for managed files, others use full file path
+                    pathDir = file.getParentFile();
+                }
+
                 String path = DigestUtils.md5Hex(pathDir.getAbsolutePath())+".png";
 
-                path = "/CoverArts/"+path;
+                path = "/CoverArts/"+path; */
+                String path = getCacheCover(file);
 
                 File pathFile = new File(dir, path);
                 if(!pathFile.exists()) {

@@ -1,5 +1,9 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
+import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
+import static apincer.android.mmate.Constants.SPL_16BIT_IN_DB;
+import static apincer.android.mmate.Constants.SPL_8BIT_IN_DB;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -135,7 +139,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
            // builder.where().raw("fileSize = 0 or ((fileFormat ='aac' or fileFormat = 'mpeg') and audioBitRate < 32000) or (fileFormat not in ('aac','mpeg') and fileSizeRatio < 40) order by fileSize");
-            builder.where().raw("fileSize < 5120 or ((measuredDR>0 AND measuredDR<90 AND audioBitsDepth<=16) OR (measuredDR>0 AND measuredDR<120 AND audioBitsDepth>16)) order by title");
+            builder.where().raw("fileSize < 5120 or ((measuredDR>0 AND measuredDR <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (measuredDR>0 AND measuredDR <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24)) order by title");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;

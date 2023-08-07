@@ -417,24 +417,43 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             //holder.mMediaQualityView.setVisibility(View.GONE);
         }
 
-        if (tag.getMeasuredDR()>0.0) {
-            if(MusicTagUtils.isUpScaled(tag)) {
-                holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.errorColor));
-                holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-            }else {
-                holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.audiophile_label1));
+        if(MusicTagUtils.isDSD(tag)) {
+            holder.mMediaUpScaledView.setVisibility(View.GONE);
+            holder.mMediaUpSampledView.setVisibility(View.GONE);
+            holder.mDynamicRange.setVisibility(View.GONE);
+        } else if(!MusicTagUtils.isLossless(tag)) {
+            holder.mMediaUpScaledView.setVisibility(View.GONE);
+            holder.mMediaUpSampledView.setVisibility(View.GONE);
+        }else {
+            // DR
+            holder.mDynamicRange.setVisibility(View.VISIBLE);
+            holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
+
+            // upScale
+            if (tag.getMeasuredDR() > 0.0) {
+                if (MusicTagUtils.isUpScaled(tag)) {
+                    if (MusicTagUtils.isBadUpScaled(tag)) {
+                        holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_bad));
+                        holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_good));
+                        holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_best));
+                    holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
+                }
+            } else {
+                holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_unknown));
                 holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
             }
-        }else {
-            holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
-            holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-            //holder.mMediaUpScaledView.setVisibility(View.GONE);
-        }
 
-        if (MusicTagUtils.isUpSampled(tag)) {
-            holder.mMediaUpSampledView.setVisibility(View.VISIBLE);
-        }else {
-            holder.mMediaUpSampledView.setVisibility(View.GONE);
+            // UpSampling
+            if (MusicTagUtils.isUpSampled(tag)) {
+                holder.mMediaUpSampledView.setVisibility(View.VISIBLE);
+            }else {
+                holder.mMediaUpSampledView.setVisibility(View.GONE);
+            }
         }
 
         if (isListening) {
@@ -494,9 +513,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        // holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
 
         // Dynamic Range
-        resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        holder.mDynamicRange.setBackground(resolutionBackground);
-        holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
+        //resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        //holder.mDynamicRange.setBackground(resolutionBackground);
+       // holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
         //holder.mDynamicRange.setText(MusicTagUtils.getTrackDRandGainString(tag));
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());

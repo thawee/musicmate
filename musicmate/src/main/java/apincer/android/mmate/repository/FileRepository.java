@@ -20,6 +20,7 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -409,15 +410,16 @@ public class FileRepository {
 
     private boolean importAudioTag(MusicTag tag) {
             String newPath = buildCollectionPath(tag);
-            File cacheCoverArt = MusicTagUtils.getCoverArt(getContext(), tag);
+           // File cacheCoverArt = MusicTagUtils.getCoverArt(getContext(), tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 return true;
             }
             if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
                 copyRelatedFiles(tag, newPath);
-                if(cacheCoverArt!=null) {
-                    com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverArt);
-                }
+                cleanCacheCover(getContext(), tag);
+               // if(cacheCoverArt!=null) {
+               //     com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverArt);
+               // }
 
                 File file = new File(tag.getPath());
                 cleanMediaDirectory(file.getParentFile());
@@ -507,10 +509,11 @@ public class FileRepository {
             BroadcastHelper.playNextSongOnMatched(getContext(), item);
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
-                File cacheCoverart = MusicTagUtils.getCoverArt(getContext(), item);
-                if(cacheCoverart!=null) {
-                    com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverart);
-                }
+                cleanCacheCover(getContext(), item);
+               // File cacheCoverart = MusicTagUtils.getCoverArt(getContext(), item);
+               // if(cacheCoverart!=null) {
+               //     com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverart);
+               // }
                 MusicTagRepository.removeTag(item);
                 File file = new File(item.getPath());
                 cleanMediaDirectory(file.getParentFile());
@@ -519,5 +522,19 @@ public class FileRepository {
             status = false;
         }
 		return status;
+    }
+
+    private void cleanCacheCover(Context context, MusicTag item) {
+        File path = new File(item.getPath());
+        String coverFile = MusicCoverArtProvider.getCacheCover(path);
+        File dir =  getContext().getExternalCacheDir();
+        File pathFile = new File(dir, coverFile);
+        if(pathFile.exists()) {
+            com.anggrayudi.storage.file.FileUtils.forceDelete(pathFile);
+        }
+        // File cacheCoverart = MusicTagUtils.getCoverArt(getContext(), item);
+        // if(cacheCoverart!=null) {
+        //     com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverart);
+        // }
     }
 }

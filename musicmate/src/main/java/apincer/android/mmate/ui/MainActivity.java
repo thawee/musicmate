@@ -1611,9 +1611,10 @@ public class MainActivity extends AppCompatActivity {
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_encoding_files, null);
 
-        List<MusicTag> doneList = new ArrayList<>();
-        List<MusicTag> failList = new ArrayList<>();
-        List<MusicTag> skipList = new ArrayList<>();
+       // List<MusicTag> doneList = new ArrayList<>();
+       // List<MusicTag> failList = new ArrayList<>();
+       // List<MusicTag> skipList = new ArrayList<>();
+        Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1639,12 +1640,8 @@ public class MainActivity extends AppCompatActivity {
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
-                if(doneList.contains(tag)) {
-                    status.setText("Done");
-                }else if(failList.contains(tag)) {
-                    status.setText("Fail");
-                }else if(skipList.contains(tag)) {
-                    status.setText("Skip");
+                if(statusList.containsKey(tag)) {
+                    status.setText(statusList.get(tag));
                 }else {
                     status.setText("-");
                 }
@@ -1653,11 +1650,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-       // final String[] encoding = {null};
         View btnOK = cview.findViewById(R.id.btn_ok);
         View btnCancel = cview.findViewById(R.id.btn_cancel);
 
-        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         MaterialRadioButton btnAlac = cview.findViewById(R.id.mediaEncodingALAC);
         MaterialRadioButton btnFlac = cview.findViewById(R.id.mediaEncodingFLAC);
@@ -1681,18 +1676,12 @@ public class MainActivity extends AppCompatActivity {
                 btnAlac.setEnabled(true);
                 btnFlac.setEnabled(false);
                 btnOK.setEnabled(true);
-             //   btnMPeg.setEnabled(true);
-
-              //  btnAiff.setChecked(true);
-              //  encoding[0]="AIFF";
         }else {
-           // btnFlac.setChecked(true);
-            btnOK.setEnabled(false);
+            btnAlac.setEnabled(true);
+            btnFlac.setEnabled(true);
+            btnFlac.setChecked(true);
+            btnOK.setEnabled(true);
         }
-
-       // btnOK.setEnabled(false);
-
-      //  btnOK.setEnabled(true);
 
         int block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         int sizeInBlock = MAX_PROGRESS/block;
@@ -1714,8 +1703,6 @@ public class MainActivity extends AppCompatActivity {
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-
 
         btnOK.setOnClickListener(v -> {
             busy = true;
@@ -1742,11 +1729,18 @@ public class MainActivity extends AppCompatActivity {
                         String filePath = FileUtils.removeExtension(tag.getPath());
                         String targetPath = filePath+"."+ finalTargetExt;
                         int bitdept = tag.getAudioBitsDepth();
+                        statusList.put(tag, "Converting");
+                        runOnUiThread(() -> {
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct + rate));
+                            progressBar.invalidate();
+                            itemsView.invalidateViews();
+                        });
 
                         if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, cLevel, bitdept)) {
-                            doneList.add(tag);
+                           // doneList.add(tag);
+                            statusList.put(tag, "Done");
                             repos.scanMusicFile(new File(targetPath),false); // re scan file
-
                             runOnUiThread(() -> {
                                     int pct = progressBar.getProgress();
                                     progressBar.setProgress((int) (pct+rate));
@@ -1754,7 +1748,8 @@ public class MainActivity extends AppCompatActivity {
                                     itemsView.invalidateViews();
                                 });
                         }else {
-                            failList.add(tag);
+                            //failList.add(tag);
+                            statusList.put(tag, "Fail");
                             runOnUiThread(() -> {
                                 int pct = progressBar.getProgress();
                                 progressBar.setProgress((int) (pct+rate));
@@ -1764,7 +1759,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                         //});
                     }else {
-                        skipList.add(tag);
+                        //skipList.add(tag);
+                        statusList.put(tag, "Skip");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));

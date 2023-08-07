@@ -124,6 +124,7 @@ dependencies {
     implementation deps.androidx.drawerlayout
     implementation deps.androidx.loader
     implementation deps.androidx.localbroadcastmanager
+    implementation deps.androidx.drawerlayout
     // room
     //implementation deps.androidx.room
     //annotationProcessor deps.androidx.room_compiler
@@ -204,6 +205,8 @@ dependencies {
     implementation deps.androidx.annotation
     implementation deps.jetbrains.annotations
 
+    implementation deps.slf4j
+
     // Glide (Image Loader & Caching)
    // implementation deps.glide.runtime
    // annotationProcessor deps.glide.compiler
@@ -213,6 +216,9 @@ dependencies {
    // implementation "com.github.Commit451.coil-transformations:transformations:1.1.2"
     //implementation "com.github.Commit451.coil-transformations:transformations-gpu:1.1.2"
   //  implementation('de.esoco:coroutines:0.9.1')
+
+    implementation deps.fasterxml.jackson_core
+    implementation deps.fasterxml.jackson_databind
 
     // Logging and Debugging
    // implementation deps.timber
