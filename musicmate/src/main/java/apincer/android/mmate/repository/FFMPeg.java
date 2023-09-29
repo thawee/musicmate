@@ -65,6 +65,7 @@ public class FFMPeg extends TagReader {
 
     public static void extractCoverArt(String path, File pathFile) {
         //if(!isEmpty(tag.getEmbedCoverArt())) {
+        try {
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -72,7 +73,9 @@ public class FFMPeg extends TagReader {
             String cmd = " -hide_banner -nostats -i \"" + path + "\" " + options + " \"" + targetPath + "\"";
 
             FFmpegKit.execute(cmd); // do not clear the result
-       // }
+        }catch (Exception ex) {
+            Log.e("FFMPeg.extractCoverArt", ex.getMessage());
+        }
     }
 
     public static String removeCoverArt(Context context, MusicTag tag) {
@@ -1474,7 +1477,11 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
         }
 
         if (targetPath.toLowerCase().endsWith(".flac")) {
-                options = options+" -y -vn -c:a flac -compression_level "+cLevel; //alac
+            if(cLevel >=0) {
+                options = options + " -y -vn -c:a flac -compression_level " + cLevel; //alac
+            }else {
+                options = options + " -y -vn -c:a flac -compression_level 0 ";
+            }
        // }else if (targetPath.toLowerCase().endsWith(".mp3")) {
             // convert to 320k bitrate
       //      options = " -ar 44100 -ab 320k ";

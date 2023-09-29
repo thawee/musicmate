@@ -113,12 +113,19 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         this.onListItemClick = context;
     }
 
-    public int getMusicTagPosition(MusicTag nowPlaying) {
-        int i =0;
+    public int getMusicTagPosition(MusicTag selectedSong) {
+       int i =0;
         for(MusicTag tag : localDataSet) {
-            if(tag.equals(nowPlaying)) return i;
+            if(tag.equals(selectedSong)) return i;
             i++;
         }
+        /*for(int i=0;i<getItemCount();i++) {
+            MusicTag tag = getMusicTag(i);
+            if(tag.equals(selectedSong)) {
+                return i;
+            }
+            i++;
+        }*/
         return RecyclerView.NO_POSITION;
     }
 
@@ -224,8 +231,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         this.mTracker = mTracker;
     }
 
-    public MusicTag getContent(int position) {
+    public MusicTag getMusicTag(int position) {
         if(position == RecyclerView.NO_POSITION) return null;
+        if(position >=localDataSet.size()) return null;
         return localDataSet.get(position);
     }
 
@@ -242,17 +250,18 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void notifyItemChanged(MusicTag song) {
+    public void notifyMusicTagChanged(MusicTag song) {
         int position = getMusicTagPosition(song);
         if(position != RecyclerView.NO_POSITION) {
             notifyItemChanged(position);
         }
     }
 
-    public void removeItem(MusicTag song) {
+    public void removeMusicTag(int position, MusicTag song) {
         localDataSet.remove( song);
-        notifyDataSetChanged();
-        //removeItem(position);;
+       // notifyDataSetChanged();
+        notifyItemChanged(position, localDataSet);
+        //removeItem(position);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -539,7 +548,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     @Override
     public long getItemId(int position) {
-        return getContent(position).getId();
+        return getMusicTag(position).getId();
     }
 }
 

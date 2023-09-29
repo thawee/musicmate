@@ -19,11 +19,6 @@ package co.lujun.androidtagview;
 import android.content.Context;
 import android.graphics.Color;
 
-/**
- * Author: lujun(http://blog.lujun.co)
- * Date: 2016-12-7 21:53
- */
-
 public class Utils {
 
     public static float dp2px(Context context, float dp) {

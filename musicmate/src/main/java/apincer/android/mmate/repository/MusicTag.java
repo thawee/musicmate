@@ -22,7 +22,7 @@ public class MusicTag implements Cloneable, Parcelable {
 
     private MusicTag originTag;
 
-    @DatabaseField(generatedId = true)
+    @DatabaseField(generatedId = true,allowGeneratedIdInsert = true)
     protected long id;
 
     @DatabaseField(uniqueIndex = true)
@@ -32,8 +32,8 @@ public class MusicTag implements Cloneable, Parcelable {
     public boolean equals(@Nullable Object obj) {
         if (obj == null) return false;
         if (obj instanceof MusicTag) {
-            return id == ((MusicTag) obj).getId();
-           // return uniqueKey.equals(((MusicTag) obj).uniqueKey);
+           // return id == ((MusicTag) obj).getId();
+            return uniqueKey.equals(((MusicTag) obj).uniqueKey);
         }
         return false;
     }

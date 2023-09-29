@@ -4,6 +4,14 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
 public class MusicPlayerInfo {
+    public MusicPlayerInfo() {
+
+    }
+    public MusicPlayerInfo(String playerPackage,String playerName,Drawable playerIconDrawable) {
+        this.playerName = playerName;
+        this.playerPackage = playerPackage;
+        this.playerIconDrawable = playerIconDrawable;
+    }
     String playerPackage;
     String playerName;
 

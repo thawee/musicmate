@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory android:title="@string/preferences_sub_appearance"
+    <PreferenceCategory
+        android:summary="Music Mate Streaming.">
+    <SwitchPreferenceCompat
+        android:key="preference_http_streaming_server"
+        android:summary="Start HTTP Server, for streaming to MPD/myMPD.\n(http://&lt;ip&gt;/)"
+        android:title="HTTP Streaming Server"
+        android:defaultValue="false"/>
+    </PreferenceCategory>
+    <PreferenceCategory
         android:summary="Music Mate Look &amp; Feel.">
         <SwitchPreferenceCompat
             android:key="preference_night_mode_only"
@@ -24,17 +32,17 @@
             android:title="Show Track Number"
             android:defaultValue="false"/>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/preferences_sub_next_song"
-        android:summary="Now Playing Song Notification.">
+    <PreferenceCategory
+        android:summary="Now Playing Song &amp; Notification.">
         <SwitchPreferenceCompat
             android:key="preference_open_now_playing"
-            android:summary="Always open song details on next playing song."
-            android:title="Open TAGs Screen for Now Playing"
+            android:summary="Always show details of listing song on current preview screen."
+            android:title="Preview Now Playing song"
             android:defaultValue="false"/>
         <SwitchPreferenceCompat
             android:key="preference_follow_now_playing"
-            android:summary="Always open song details following playing song."
-            android:title="Refresh TAGs Screen for Now Playing"
+            android:summary="Auto scroll to display currently listening song."
+            android:title="Show Now Playing song"
             android:defaultValue="false"/>
         <SwitchPreferenceCompat
             android:key="preference_default_next_by_media_buttons"

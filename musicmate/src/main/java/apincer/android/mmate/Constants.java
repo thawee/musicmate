@@ -25,6 +25,8 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
+    public static final int http_port = 8011;
+
     public static final double SPL_8BIT_IN_DB = 49.8;
     public static final double SPL_16BIT_IN_DB = 96.33;
     public static final double SPL_24BIT_IN_DB = 144.49;
@@ -70,17 +72,19 @@ public final class Constants {
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     static {
-        IMAGE_COVERS.add("front.png");
-        IMAGE_COVERS.add("cover.png");
+       // IMAGE_COVERS.add("front.png");
+       // IMAGE_COVERS.add("cover.png");
         IMAGE_COVERS.add("folder.png"); // not supported by UAPP
-        IMAGE_COVERS.add("artwork.png"); // supported by UAAP
-        IMAGE_COVERS.add("front.jpg"); // support by neplayer
-        IMAGE_COVERS.add("cover.jpg");
+       // IMAGE_COVERS.add("artwork.png"); // supported by UAAP
+       // IMAGE_COVERS.add("front.jpg"); // support by neplayer
+       // IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
-        IMAGE_COVERS.add("artwork.jpg"); // UAAP
+      //  IMAGE_COVERS.add("artwork.jpg"); // UAAP
      //   IMAGE_COVERS.add("front.jpeg");
      //   IMAGE_COVERS.add("cover.jpeg");
       //  IMAGE_COVERS.add("folder.jpeg"); // not supported by UAPP
+        //symphonic-mpd
+        //
     }
 
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
@@ -119,7 +123,7 @@ public final class Constants {
     public static final String MEDIA_PATH_HRA = "Hi-Res"; //HRA
     public static final String MEDIA_PATH_SACD = "SACD";
     public static final String MEDIA_PATH_HIFI = "Hi-Fi";
-    public static final String MEDIA_PATH_HIGH_QUALITY = "High Quality";
+    public static final String MEDIA_PATH_HIGH_QUALITY = "Hi-Quality";
    // public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
    // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
    // public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless

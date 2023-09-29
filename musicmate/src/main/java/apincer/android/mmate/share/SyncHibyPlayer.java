@@ -1,4 +1,4 @@
-package apincer.android.mmate.hiby;
+package apincer.android.mmate.share;
 
 import android.content.Context;
 import android.util.Log;
@@ -26,7 +26,7 @@ public class SyncHibyPlayer {
 
     public static void list(String hibyEndpoint, String path) {
         Retrofit ret = createHibyRetrofit(hibyEndpoint);
-        API api = ret.create(API.class);
+        HibyAPI api = ret.create(HibyAPI.class);
         Map<String, String> map = new HashMap();
         map.put("path", "/mnt/sd_0/"+path+"/");
         Call call =  api.list(map);
@@ -43,7 +43,7 @@ public class SyncHibyPlayer {
 
     private static void createDir(String hibyEndpoint,String dir) {
         Retrofit ret = createHibyRetrofit(hibyEndpoint);
-        API api = ret.create(API.class);
+        HibyAPI api = ret.create(HibyAPI.class);
         try {
             //Map map = new HashMap();
             //map.put("path", "/mnt/sd_0/"+dir+"/");  //?path=/mnt/sd_0/{dir}/
@@ -66,7 +66,7 @@ public class SyncHibyPlayer {
 
     private static void upload(String hibyEndpoint,String dir, String filename, File file) throws IOException {
         Retrofit ret = createHibyRetrofit(hibyEndpoint);
-        API api = ret.create(API.class);
+        HibyAPI api = ret.create(HibyAPI.class);
      //   try {
             //Map map = new HashMap();
             //map.put("path", "/mnt/sd_0/"+dir+"/");  //?path=/mnt/sd_0/{dir}/

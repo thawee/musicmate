@@ -233,6 +233,10 @@ public class MusicTagRepository {
         }
     }
 
+    public static MusicTag getMusicTag(long id) {
+        return MusixMateApp.getInstance().getOrmLite().findById(id);
+    }
+
     public static List<MusicTag> getAllMusics() {
         return MusixMateApp.getInstance().getOrmLite().findMySongs();
     }

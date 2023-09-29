@@ -11,11 +11,16 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.webkit.MimeTypeMap;
 
+import org.apache.http.conn.util.InetAddressUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -168,5 +173,32 @@ public class ApplicationUtils {
             intent.putExtra(Constants.KEY_FILTER_TYPE,StringUtils.trimToEmpty(criteria.getFilterType()));
             intent.putExtra(Constants.KEY_FILTER_KEYWORD,StringUtils.trimToEmpty(criteria.getFilterText()));
         }
+    }
+
+    public static String getIPAddress(boolean useIPv4) {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+                for (InetAddress addr : addrs) {
+                    if (!addr.isLoopbackAddress()) {
+                        String sAddr = addr.getHostAddress().toUpperCase();
+                        boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        if (useIPv4) {
+                            if (isIPv4)
+                                return sAddr;
+                        } else {
+                            if (!isIPv4) {
+                                int delim = sAddr.indexOf('%'); // drop ip6 port suffix
+                                return delim<0 ? sAddr : sAddr.substring(0, delim);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }

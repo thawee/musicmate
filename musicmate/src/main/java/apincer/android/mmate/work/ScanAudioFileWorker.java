@@ -36,7 +36,7 @@ public class ScanAudioFileWorker extends Worker {
     public Result doWork() {
         MusicTagRepository.cleanMusicMate();
 
-        List<File> list = list();
+        List<File> list = pathList(getApplicationContext());
         for(File file: list) {
             List<Path> paths = search(file.getAbsolutePath());
             for(Path path: paths) {
@@ -71,19 +71,19 @@ public class ScanAudioFileWorker extends Worker {
         return false;
     }
 
-    private List<File> list() {
-        List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
+    public static List<File> pathList(Context context) {
+        List<String> storageIds = DocumentFileCompat.getStorageIds(context);
         List<File> files = new ArrayList<>();
         for (String sid : storageIds) {
-            File file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Music"));
+            File file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Music"));
             if (file.exists()) {
                 files.add(file);
             }
-            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "Download"));
+            file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Download"));
             if (file.exists()) {
                 files.add(file);
             }
-            file = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, "IDMP"));
+            file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "IDMP"));
             if (file.exists()) {
                 files.add(file);
             }

@@ -453,6 +453,77 @@ public class UIUtils  {
             TextView estimateInfo = inf.findViewById(R.id.estimateStorageInfo);
             ProgressBar actualProgressBar = inf.findViewById(R.id.progressBarActual);
             ProgressBar estimateProgressBar = inf.findViewById(R.id.progressBarEstimated);
+            estimateInfo.setVisibility(View.GONE);
+            estimateProgressBar.setVisibility(View.GONE);
+
+            long free = DocumentFileCompat.getFreeSpace(application.getApplicationContext(), sid);
+            long total = DocumentFileCompat.getStorageCapacity(application.getApplicationContext(), sid);
+            long actual = actualSize.get(sid);
+            long estimateSpace = (total - actual) + estimatedSize.get(sid);
+
+            float pcnt = (((total - free) * 100) / total);
+            float estimatePcnt = (((estimateSpace-free) * 100) / total);
+
+            if (StorageId.PRIMARY.equals(sid)) {
+                icon.setImageDrawable(ContextCompat.getDrawable(application, R.drawable.ic_memory_white_24dp));
+            } else {
+                icon.setImageDrawable(ContextCompat.getDrawable(application, R.drawable.ic_sd_storage_white_24dp));
+            }
+
+            int barColor = Color.GRAY;
+            //int estimateBarColor = ContextCompat.getColor(application.getApplicationContext(), R.color.material_color_blue_grey_200);
+            actualInfo.setText(StringUtils.formatStorageSizeGB(free) + "/" + StringUtils.formatStorageSizeGB(total) + " GB - " + ((int) pcnt) + "%");
+           // estimateInfo.setText(StringUtils.formatStorageSizeGB((total-estimateSpace)+free) + "/" + StringUtils.formatStorageSizeGB(total) + " GB - " + ((int) estimatePcnt) + "%");
+
+            if (pcnt > 99) {
+                barColor = application.getColor(R.color.meteial_color_orange_800);
+            } else if (pcnt > 98) {
+                barColor = application.getColor(R.color.meteial_color_amber_800);
+            } else if (pcnt > 95) {
+                barColor = application.getColor(R.color.material_color_yellow_800);
+            } else if (pcnt > 90) {
+                barColor = application.getColor(R.color.material_color_lime_800);
+            } else if (pcnt > 75) {
+                barColor = application.getColor(R.color.material_color_light_green_800);
+            } else {  // 50, 75
+                barColor = application.getColor(R.color.material_color_green_800);
+            }
+
+            List<Long> valueList = new ArrayList<>();
+            valueList.add(50L);
+            valueList.add(25L);
+            valueList.add(15L);
+            valueList.add(5L);
+            valueList.add(3L);
+            valueList.add(1L);
+            valueList.add(1L);
+            actualProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+            actualProgressBar.setMax(100);
+            actualProgressBar.setProgress((int) pcnt);
+           // estimateProgressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(estimateBarColor, Color.GRAY, valueList, 8f));
+           // estimateProgressBar.setMax(100);
+           // estimateProgressBar.setProgress((int) estimatePcnt);
+            vStoragesLayout.addView(inf);
+        }
+        vStoragesLayout.setVisibility(View.VISIBLE);
+    }
+
+    public static void buildStoragesUsedOld(Application application, LinearLayout vStoragesLayout, Map<String, Long> actualSize, Map<String, Long> estimatedSize) {
+        if (vStoragesLayout == null) return;
+
+        vStoragesLayout.setVisibility(View.GONE);
+        vStoragesLayout.removeAllViews();
+        vStoragesLayout.setOrientation(LinearLayout.VERTICAL);
+
+        List<String> storageIds = DocumentFileCompat.getStorageIds(application.getApplicationContext());
+        for(String sid: storageIds) {
+            LayoutInflater layoutInflater = LayoutInflater.from(application);
+            View inf = layoutInflater.inflate(R.layout.view_storage_space_estimated, null);
+            ImageView icon = inf.findViewById(R.id.storage_box);
+            TextView actualInfo = inf.findViewById(R.id.actualStorageInfo);
+            TextView estimateInfo = inf.findViewById(R.id.estimateStorageInfo);
+            ProgressBar actualProgressBar = inf.findViewById(R.id.progressBarActual);
+            ProgressBar estimateProgressBar = inf.findViewById(R.id.progressBarEstimated);
 
             long free = DocumentFileCompat.getFreeSpace(application.getApplicationContext(), sid);
             long total = DocumentFileCompat.getStorageCapacity(application.getApplicationContext(), sid);

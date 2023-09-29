@@ -225,7 +225,7 @@
                 android:layout_marginEnd="@dimen/dimen_12_dp"
                 android:paddingStart="@dimen/dimen_8_dp"
                 android:contentDescription="@string/app_name"
-                android:src="@drawable/ic_view_carousel_white_24dp" />
+                android:src="@drawable/round_subscriptions_24" />
 <!--
             <TextView
                 style="?android:attr/borderlessButtonStyle"

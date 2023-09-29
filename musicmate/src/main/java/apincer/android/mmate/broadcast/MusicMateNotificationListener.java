@@ -14,6 +14,11 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
     public static final String SHANLING_EDDICTPLAYER = "com.shanling.eddictplayer";
+
+    public static final String NEUTRON_MUSIC_PLAYER = "com.neutroncode.mp";
+
+    public static String UAPP = "com.extreamsd.usbaudioplayerpro";
+
     private String prvPack;
     private String prvTitle;
     private String prvArtist;
@@ -46,10 +51,18 @@ public class MusicMateNotificationListener extends NotificationListenerService {
             String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
         } else if (SHANLING_EDDICTPLAYER.equals(pack)) {
-                String title = extras.getString("android.title");
-                String artist = String.valueOf (extras.getCharSequence("android.text"));
-                sendBroadcast(pack, title, artist);
-            }
+            String title = extras.getString("android.title");
+            String artist = String.valueOf (extras.getCharSequence("android.text"));
+            sendBroadcast(pack, title, artist);
+        } else if (NEUTRON_MUSIC_PLAYER.equals(pack)) {
+            String title = extras.getString("android.title");
+            String artist = String.valueOf (extras.getCharSequence("android.text"));
+            sendBroadcast(pack, title, artist);
+        } else if (UAPP.equals(pack)) {
+            String title = extras.getString("android.title");
+            String artist = String.valueOf (extras.getCharSequence("android.text"));
+            sendBroadcast(pack, title, artist);
+        }
     }
 
     public void sendBroadcast(String pack, String title, String artist) {

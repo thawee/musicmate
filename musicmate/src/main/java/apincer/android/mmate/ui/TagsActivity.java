@@ -50,6 +50,7 @@ import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
+import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
@@ -188,7 +189,7 @@ public class TagsActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
-        // call from EventBus
+        // call from EventBus on preview/edit selected tags from main screen
         try {
             criteria = event.getSearchCriteria();
             editItems.clear();
@@ -202,6 +203,26 @@ public class TagsActivity extends AppCompatActivity {
             }
         }catch (Exception e) {
             Log.e(TAG, "onMessageEvent", e);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    public void onMessageEvent(AudioTagPlayingEvent event) {
+        // call from now playing lisener
+        if(Preferences.isOpenNowPlaying(getBaseContext())) {
+            try {
+                editItems.clear();
+                editItems.add(event.getPlayingSong());
+                displayTag = buildDisplayTag();
+                if (displayTag != null) {
+                    runOnUiThread(() -> {
+                        updateTitlePanel();
+                        setUpPageViewer();
+                    });
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "onMessageEvent", e);
+            }
         }
     }
 
@@ -385,32 +406,33 @@ public class TagsActivity extends AppCompatActivity {
                 mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
                 mManageStatus1.setPrimaryTextColorResource(R.color.grey800);
                 mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus1.setPrimaryText("New");
+                mManageStatus1.setPrimaryText("--/\\--");
                 mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
                 mManageStatus2.setPrimaryTextColorResource(R.color.grey800);
                 mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus2.setPrimaryText("--/\\--");
+                mManageStatus2.setPrimaryText("-NEW-");
                // pathDrive.setTextColor(getColor(R.color.warningColor));
             }else {
                 mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_red_900);
                 mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
                 mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus1.setPrimaryText("New");
+                mManageStatus1.setPrimaryText("--/\\--");
                 mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_red_900);
                 mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
                 mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus2.setPrimaryText("--/\\--");
+                mManageStatus2.setPrimaryText("-NEW-");
                // pathDrive.setTextColor(getColor(R.color.errorColor));
             }
         }else {
-            mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
+            //mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
+            mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_blue_grey_600);
             mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
             mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            mManageStatus1.setPrimaryText(" M ");
-            mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
+            mManageStatus1.setPrimaryText("--/\\--");
+            mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_blue_grey_900);
             mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
             mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            mManageStatus2.setPrimaryText("--/\\--");
+            mManageStatus2.setPrimaryText("--\\/--");
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {

@@ -168,7 +168,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 
     public void register(Context context) {
         IntentFilter iF = new IntentFilter();
-
+/*
         // USB Audio Player Pro
         iF.addAction("com.extreamsd.usbaudioplayershared.metachanged"); // API < 14
         //iF.addAction("com.extreamsd.usbaudioplayershared.playstatechanged"); // API >= 14, no need
@@ -224,7 +224,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 
         // hiby
         iF.addAction("com.hiby.music");
-
+*/
         // get forward from notification reader
         iF.addAction("apincer.android.mmate");
 
@@ -234,12 +234,12 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
       //  iF.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED);
 	  
 	    // Android
-        iF.addAction("com.android.music.metachanged");
+       /* iF.addAction("com.android.music.metachanged");
         iF.addAction("com.android.music.playstatechanged");
         iF.addAction("com.android.music.playbackcomplete");
         iF.addAction("com.android.music.queuechanged");
         iF.addAction("com.android.music.updateprogress");
-
+*/
         iF.addCategory("");
 
         context.registerReceiver(this, iF);

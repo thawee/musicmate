@@ -1,14 +1,13 @@
 package apincer.android.mmate;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Constraints;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -23,11 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import apincer.android.mmate.broadcast.BroadcastData;
+import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicMateOrmLite;
+import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.share.HTTPStreamingServer;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
@@ -35,6 +35,7 @@ public class MusixMateApp extends Application {
     private static final String TAG = MusixMateApp.class.getName();
 
     private static MusixMateApp INSTANCE;
+    private static HTTPStreamingServer server;
 
     public static MusixMateApp getInstance() {
         return INSTANCE;
@@ -42,13 +43,14 @@ public class MusixMateApp extends Application {
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
         try {
-            BroadcastData data = new BroadcastData()
+          /*  BroadcastData data = new BroadcastData()
                     .setAction(BroadcastData.Action.PLAYING)
                     .setStatus(BroadcastData.Status.COMPLETED)
                     .setTagInfo(song)
                     .setMessage("");
             Intent intent = data.getIntent();
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(intent); */
+            AudioTagPlayingEvent.publishPlayingSong(song);
         } catch (Exception ex) {
             Log.e(TAG, "BroadcastHelper", ex);
         }
@@ -62,6 +64,13 @@ public class MusixMateApp extends Application {
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
+    }
+
+    public static void statHttpServer(Activity activity) {
+        if(server==null) {
+            server = new HTTPStreamingServer();
+        }
+        server.startServer(activity);
     }
 
     public static List<MusicTag> getPendingItems(String name) {
@@ -92,17 +101,27 @@ public class MusixMateApp extends Application {
         return broadcastHelper.getPlayerInfo();
     }
 
+    public static void setPlaying(MusicPlayerInfo playerInfo, MusicTag listening) {
+       broadcastHelper.setPlayerInfo(playerInfo);
+       broadcastHelper.setPlayingSong(listening);
+    }
+
     public static void playNextSong(Context applicationContext) {
         BroadcastHelper.playNextSong(applicationContext);
     }
 
-   // public static MusicMateDatabase getDatabase() {
-  //     return database;
-  //  }
+    public static void stopHttpServer(Activity activity) {
+        if(server!=null) {
+            server.stopServer(activity);
+        }
+    }
 
     @Override
     public void onTerminate() {
         super.onTerminate();
+        if(server!=null) {
+            server.stopServer(null);
+        }
         broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
     }
@@ -115,10 +134,10 @@ public class MusixMateApp extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         //database = MusicMateDatabase.getDatabase(this);
 
-        if (BuildConfig.DEBUG) {
+       // if (BuildConfig.DEBUG) {
             //initialise reporter with external path
             CrashReporter.initialize(this);
-        }
+        //}
 
         broadcastHelper.onCreate(this);
 
@@ -253,6 +272,12 @@ public class MusixMateApp extends Application {
        //         .setConstraints(constraints)
        //         .build();
        // WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
+
+      //  MusicMateServer.startServer();
+
+       // server = new HTTPStreamingServer();
+       // server.startServer(getApplicationContext());
+
     }
 
     /*
@@ -264,5 +289,10 @@ Provides the SQLite Helper Object among the application
         }
         return ormLite; */
         return OpenHelperManager.getHelper(this, MusicMateOrmLite.class);
+    }
+
+    public boolean isHttpServerRunning() {
+        if(server == null) return false;
+        return server.isRunning();
     }
 }

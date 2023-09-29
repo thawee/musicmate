@@ -42,6 +42,7 @@
     android:layout_margin="@dimen/dimen_1_dp"
     android:layout_marginBottom="@dimen/dimen_4_dp"
     android:orientation="vertical">
+    <!--
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -52,6 +53,7 @@
         android:textColor="@color/white"
         android:textStyle="bold"
         android:text="@string/app_statistics"/>
+        -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -172,6 +174,7 @@
         app:shadow="8dp"/>
 -->
 
+    <!--
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -182,6 +185,7 @@
         android:textColor="@color/white"
         android:textStyle="bold"
         android:text="Digital Music"/>
+-->
 
             <com.github.irshulx.Editor
                 android:layout_width="match_parent"

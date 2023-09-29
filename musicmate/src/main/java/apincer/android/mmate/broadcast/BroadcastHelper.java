@@ -40,7 +40,7 @@ public class BroadcastHelper {
     private volatile static MusicPlayerInfo playerInfo;
     private static final List<MusicBroadcastReceiver> receivers = new ArrayList<>();
     private final Callback callback;
-    private FileRepository provider; // = AudioFileRepository.newInstance(context);
+    private static FileRepository provider; // = AudioFileRepository.newInstance(context);
 
     public BroadcastHelper(@NonNull Callback callback) {
         this.callback = callback;
@@ -111,7 +111,7 @@ public class BroadcastHelper {
         }
     }
 
-    protected void setPlayerInfo(MusicPlayerInfo playerInfo) {
+    public void setPlayerInfo(MusicPlayerInfo playerInfo) {
         BroadcastHelper.playerInfo = playerInfo;
     }
 
@@ -208,5 +208,9 @@ public class BroadcastHelper {
 
     public void onTerminate(Application musixMateApp) {
         unregisterReceivers(musixMateApp);
+    }
+
+    public void setPlayingSong(MusicTag listening) {
+        this.playingSong = listening;
     }
 }

@@ -20,7 +20,7 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
         android:textSize="14sp"
-        android:text="Convert to FLAC encoding"
+        android:text="Convert to FLAC file"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>
@@ -47,18 +47,6 @@
                 android:orientation="horizontal"
                 tools:ignore="UselessParent">
                 <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/mediaEncodingALAC"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    app:shapeAppearance="@style/Rounded"
-                    android:background="@drawable/shape_edittext_border"
-                    android:layout_marginLeft="@dimen/dimen_8_dp"
-                    android:layout_marginRight="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:textColor="@color/white"
-                    android:text="Apple ALAC"/>
-                <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/mediaEncodingFLAC"
                     android:layout_width="wrap_content"
                     android:layout_height="@dimen/dimen_32_dp"
@@ -69,7 +57,21 @@
                     android:paddingRight="@dimen/dimen_8_dp"
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:textColor="@color/white"
-                    android:text="FLAC"/>
+                    android:text="FLAC (CL0)"/>
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/mediaEncodingFLACOPT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    app:shapeAppearance="@style/Rounded"
+                    android:background="@drawable/shape_edittext_border"
+                    android:layout_marginLeft="@dimen/dimen_8_dp"
+                    android:layout_marginRight="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:textColor="@color/white"
+                    android:text="FLAC (Optimal)"/>
+
                 <!--
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/mediaEncodingMPEG"

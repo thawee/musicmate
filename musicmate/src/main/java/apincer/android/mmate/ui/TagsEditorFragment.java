@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -364,7 +365,11 @@ public class TagsEditorFragment extends Fragment {
                 unused -> {
                     stopProgressBar();
                     // set updated item on main activity
-                    bindViews();
+                    getActivity().runOnUiThread(() -> {
+                        bypassChange = true;
+                        bindViews();
+                        bypassChange = false;
+                    });
                 }
         ).exceptionally(
                 throwable -> {
@@ -425,7 +430,7 @@ public class TagsEditorFragment extends Fragment {
                         tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
                         if(!StringUtils.isEmpty(tag.getArtist()) && tag.getArtist().contains(",")) {
                             // split reformat to ;
-                            tag.setArtist(tag.getArtist().replaceAll(",",";"));
+                            tag.setArtist(StringUtils.formatTitle(tag.getArtist().replaceAll(",",";")));
                         }
                         tag.setArtist(StringUtils.formatTitle(tag.getArtist()));
                         tag.setAlbum(StringUtils.formatTitle(tag.getAlbum()));
@@ -440,7 +445,7 @@ public class TagsEditorFragment extends Fragment {
                         }
                         // if album empty, add single
                         if(StringUtils.isEmpty(tag.getAlbum())) {
-                            tag.setAlbum(MusicTagUtils.getDefaultAlbum(tag));
+                            tag.setAlbum(StringUtils.formatTitle(MusicTagUtils.getDefaultAlbum(tag)));
                         }
                     }
                 }
@@ -448,9 +453,14 @@ public class TagsEditorFragment extends Fragment {
                 unused -> {
                     stopProgressBar();
                     // set updated item on main activity
-                    bypassChange = true;
-                    bindViews();
-                    bypassChange = false;
+                   // bypassChange = true;
+                    getActivity().runOnUiThread(() -> {
+                        bypassChange = true;
+                        bindViews();
+                        bypassChange = false;
+                    });
+//                    bindViews();
+                  //  bypassChange = false;
                 }
         ).exceptionally(
                 throwable -> {
@@ -472,6 +482,11 @@ public class TagsEditorFragment extends Fragment {
         txtGrouping.setText(tag.getGrouping());
         txtMediaType.setText(tag.getMediaType());
         txtPublisher.setText(tag.getPublisher());
+
+        txtTitle.invalidate();
+        txtArtist.invalidate();
+        txtAlbum.invalidate();
+        txtAlbumArtist.invalidate();
 
         // quality
         rdAudiophile.setChecked(Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality()));

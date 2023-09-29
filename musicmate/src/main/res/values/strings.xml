@@ -124,6 +124,7 @@
     <string name="editor_musicmate_info">Music Mate information</string>
     <string name="sync_to_hiby_label">Sync</string>
     <string name="sample_dr">DR14</string>
+    <string name="preferences_sub_streaming">Streaming</string>
 
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">

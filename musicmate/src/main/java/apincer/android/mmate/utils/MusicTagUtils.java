@@ -946,6 +946,30 @@ public class MusicTagUtils {
         return title;
     }
 
+    public static String escapeURI(String s) {
+        int len = s.length();
+        StringBuilder sb = new StringBuilder(len + 30);
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            String ref = null;
+            if(Character.isSpaceChar(s.charAt(i))) {
+                sb.append("_");
+            }else if(Character.isLetterOrDigit(s.charAt(i))) {
+                sb.append(s.charAt(i));
+            }else {
+                sb.append("_");
+            }
+           /* switch (s.charAt(i)) {
+                case ' ': ref = "%20"; break;
+            }
+            if (ref != null) {
+                sb.append(s.substring(start, i)).append(ref);
+                start = i + 1;
+            } */
+        }
+        return start == 0 ? s : sb.append(s.substring(start)).toString();
+    }
+
     public static String getFormattedSubtitle(MusicTag tag) {
         String album = StringUtils.trimTitle(tag.getAlbum());
         String artist = StringUtils.trimTitle(tag.getArtist());

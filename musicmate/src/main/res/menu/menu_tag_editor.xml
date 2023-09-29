@@ -18,8 +18,8 @@
       xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <item
-        android:icon="@drawable/ic_baseline_auto_fix_normal_24"
         android:id="@+id/menu_editor_format_tag"
+        android:icon="@drawable/round_auto_awesome_24"
         android:title="Re-format Tags"
         app:showAsAction="ifRoom" />
 
