@@ -1569,7 +1569,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Checking Audio Quality");
+        titleText.setText("Analyst Audio Files");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1640,7 +1640,7 @@ public class MainActivity extends AppCompatActivity {
             for(MusicTag tag: selections) {
                 MusicMateExecutors.move(() -> {
                     try {
-                        statusList.put(tag, "Checking");
+                        statusList.put(tag, "Analysing");
                         runOnUiThread(() -> {
                             itemsView.invalidateViews();
                         });

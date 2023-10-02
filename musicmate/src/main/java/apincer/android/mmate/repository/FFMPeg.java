@@ -1153,7 +1153,7 @@ public class FFMPeg extends TagReader {
             // MQA Studio|96000
             // MQA|96000
             if(!isEmpty(mqaInfo) && mqaInfo.contains("|")) {
-                String[] tags = mqaInfo.split("\\|");
+                String[] tags = mqaInfo.split("\\|", -1);
                 tag.setMqaInd(trimToEmpty(tags[0]));
                 tag.setMqaSampleRate(toLong(tags[1]));
                 tag.setMqaScanned(true);

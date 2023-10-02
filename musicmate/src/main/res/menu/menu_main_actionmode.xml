@@ -19,9 +19,9 @@
 		app:showAsAction="always"/>
 
 	<item
-		android:icon="@drawable/round_analytics_24"
+		android:icon="@drawable/round_troubleshoot_24"
 		android:id="@+id/action_calculate_replay_gain"
-		android:title="Check Audio Quality"
+		android:title="Detect Quality"
 		app:showAsAction="always"/>
 
 	<item android:id="@+id/action_select_all"
@@ -33,25 +33,25 @@
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_encoding_file"
-		android:title="Encode Selected Files"
+		android:title="Encode Files"
 		app:showAsAction="collapseActionView"/>
 
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_export_playlist"
-		android:title="Make Local Playlist"
+		android:title="Make Playlist"
 		app:showAsAction="collapseActionView"/>
 
 	<item
 		android:icon="@drawable/round_upload_file_24"
 		android:id="@+id/action_send_to_streaming"
-		android:title="Send song to Streaming Player"
+		android:title="Send files to Streamer"
 		app:showAsAction="collapseActionView"/>
 
 	<item
 		android:icon="@drawable/round_upload_file_24"
 		android:id="@+id/action_send_playlist_to_streaming"
-		android:title="Send as Playlist to Streaming Player"
+		android:title="Send as playlist to Streamer"
 		app:showAsAction="collapseActionView"/>
 <!--
 	<item
