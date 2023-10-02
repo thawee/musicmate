@@ -33,7 +33,7 @@
 	<item
 		android:icon="@drawable/ic_round_audio_file_24"
 		android:id="@+id/action_encoding_file"
-		android:title="Convert Audio Files"
+		android:title="Encode Selected Files"
 		app:showAsAction="collapseActionView"/>
 
 	<item
@@ -53,10 +53,11 @@
 		android:id="@+id/action_send_playlist_to_streaming"
 		android:title="Send as Playlist to Streaming Player"
 		app:showAsAction="collapseActionView"/>
-
+<!--
 	<item
 		android:icon="@drawable/round_upload_file_24"
 		android:id="@+id/action_send_to_hibyos"
 		android:title="Send to Hiby DAP"
 		app:showAsAction="collapseActionView"/>
+		-->
 </menu>

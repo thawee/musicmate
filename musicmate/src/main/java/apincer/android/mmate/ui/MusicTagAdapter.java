@@ -253,14 +253,20 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     public void notifyMusicTagChanged(MusicTag song) {
         int position = getMusicTagPosition(song);
         if(position != RecyclerView.NO_POSITION) {
-            notifyItemChanged(position);
+            if(position < getItemCount()) {
+                notifyItemChanged(position);
+            }
         }
     }
 
     public void removeMusicTag(int position, MusicTag song) {
         localDataSet.remove( song);
        // notifyDataSetChanged();
-        notifyItemChanged(position, localDataSet);
+        if(position < localDataSet.size()) {
+            notifyItemChanged(position, localDataSet);
+        }else {
+            notifyDataSetChanged();
+        }
         //removeItem(position);
     }
 

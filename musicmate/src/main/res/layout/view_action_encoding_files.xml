@@ -20,7 +20,7 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
         android:textSize="14sp"
-        android:text="Convert to FLAC file"
+        android:text="Encode to FLAC format"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>

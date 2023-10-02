@@ -1387,10 +1387,10 @@ public class MainActivity extends AppCompatActivity {
                 doEncodingAudioFiles(getSelections());
                 mode.finish();
                 return true;
-            }else if (id == R.id.action_send_to_hibyos) {
+           /* }else if (id == R.id.action_send_to_hibyos) {
                 doSendFilesToHibyDAP(getSelections());
                 mode.finish();
-                return true;
+                return true;*/
             }else if (id == R.id.action_send_to_streaming) {
                 doSendFilesToStreamingPlayer(getSelections());
                 mode.finish();
@@ -1782,7 +1782,7 @@ https://aaaaa.com
 
            // List<String> filenames = new ArrayList();
             for (MusicTag tag:currentSelections) {
-                String url = baseUrl+tag.getId()+"."+tag.getFileFormat();
+                String url = baseUrl+tag.getId()+"."+ FileUtils.getExtension(tag.getPath());
                 String imgUrl = baseImgUrl+tag.getId();
                /* String file = url.replace(":","_");
                 file = file.replace("/","_");
@@ -1973,7 +1973,7 @@ https://aaaaa.com
            // btnAlac.setEnabled(true);
             btnFlacOptimal.setEnabled(true);
             btnFlac.setEnabled(true);
-            btnFlac.setChecked(true);
+            btnFlacOptimal.setChecked(true);
             btnOK.setEnabled(true);
       //  }
 
