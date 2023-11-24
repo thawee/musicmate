@@ -13,7 +13,7 @@
 		app:showAsAction="always"/>
 
 	<item
-		android:icon="@drawable/round_preview_24"
+		android:icon="@drawable/round_view_carousel_24"
 		android:id="@+id/action_edit_metadata"
 		android:title="Preview Tags"
 		app:showAsAction="always"/>

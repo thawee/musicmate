@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
@@ -55,10 +54,9 @@ import apincer.android.mmate.broadcast.BroadcastData;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -92,8 +90,8 @@ public class TagsActivity extends AppCompatActivity {
     private TextView rgView;
     private ImageView audiophileView;
     private ImageView resolutionView;
-    private View coverArtLayout;
-    private View panelLabels;
+   // private View coverArtLayout;
+   // private View panelLabels;
     private CollapsingToolbarLayout toolBarLayout;
     private int toolbar_from_color;
     private int toolbar_to_color;
@@ -103,8 +101,9 @@ public class TagsActivity extends AppCompatActivity {
     FileRepository repos;
     private Fragment activeFragment;
 
-    private TriangleLabelView mManageStatus1;
-    private TriangleLabelView mManageStatus2;
+   // private TriangleLabelView mManageStatus1;
+   // private TriangleLabelView mManageStatus2;
+    private ImageView srcdir;
 
     @Override
     public void onBackPressed() {
@@ -173,8 +172,8 @@ public class TagsActivity extends AppCompatActivity {
         //broadcastHelper = new BroadcastHelper(this);
         repos = FileRepository.newInstance(getApplicationContext());
 
-        coverArtLayout = findViewById(R.id.panel_cover_art_layout);
-        panelLabels = findViewById(R.id.panel_labels);
+       // coverArtLayout = findViewById(R.id.panel_cover_art_layout);
+      //  panelLabels = findViewById(R.id.panel_labels);
         coverArtView = findViewById(R.id.panel_cover_art);
         toolBarLayout = findViewById(R.id.toolbar_layout);
         int statusBarHeight = getStatusBarHeight();
@@ -280,8 +279,9 @@ public class TagsActivity extends AppCompatActivity {
         drView = findViewById(R.id.icon_dr);
         drDBView = findViewById(R.id.icon_drDB);
         rgView = findViewById(R.id.icon_replay_gain);
-        mManageStatus1 = findViewById(R.id.item_new_label1);
-        mManageStatus2 = findViewById(R.id.item_new_label2);
+        srcdir = findViewById(R.id.icon_source_dir);
+      //  mManageStatus1 = findViewById(R.id.item_new_label1);
+      //  mManageStatus2 = findViewById(R.id.item_new_label2);
     }
 
     public void updateTitlePanel() {
@@ -305,16 +305,21 @@ public class TagsActivity extends AppCompatActivity {
                 .build();
         imageLoader.enqueue(request);
 
-        // Dynamic Range
-        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
-        //drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
-        drView.setText(MusicTagUtils.getTrackDR(displayTag));
-        //drView.setBackground(resolutionBackground);
+        if(MusicTagUtils.isDSD(displayTag) || !MusicTagUtils.isLossless(displayTag)) {
+            drView.setVisibility(View.GONE);
+        }else {    // Dynamic Range
+           // Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
+            //drView.setText(String.format(Locale.US, "DR%.0f",displayTag.getTrackDR()));
+            drView.setText(MusicTagUtils.getTrackDR(displayTag));
+            drView.setVisibility(View.VISIBLE);
+            //drView.setBackground(resolutionBackground);
+        }
 
         drDBView.setText(MusicTagUtils.getMeasuredDR(displayTag) +" dB");
-        if(MusicTagUtils.isDSD(displayTag)) {
-
+        if(MusicTagUtils.isDSD(displayTag)|| !MusicTagUtils.isLossless(displayTag)) {
+            drDBView.setVisibility(View.GONE);
         }else if (displayTag.getMeasuredDR()>0.0) {
+            drDBView.setVisibility(View.VISIBLE);
             if(MusicTagUtils.isUpScaled(displayTag)) {
                 if(MusicTagUtils.isBadUpScaled(displayTag)) {
                     drDBView.setBackgroundColor(getColor(R.color.quality_bad));
@@ -327,8 +332,6 @@ public class TagsActivity extends AppCompatActivity {
         }else {
             drDBView.setBackgroundColor(getColor(R.color.quality_unknown));
         }
-       // drDBView.setTextColor();
-        //drDBView.setBackground(resolutionBackground);
 
         rgView.setText(MusicTagUtils.getTrackReplayGainString(displayTag));
         //rgView.setBackground(resolutionBackground);
@@ -389,9 +392,17 @@ public class TagsActivity extends AppCompatActivity {
             });
         }
         String mediaTypeAndPublisher;
+        if((!isEmpty(displayTag.getAlbumArtist()))) {
+            mediaTypeAndPublisher = " " +displayTag.getAlbumArtist()+" ";
+        }else {
+            mediaTypeAndPublisher = " " +StringUtils.SYMBOL_SEP+" ";
+        }
+        /*
         mediaTypeAndPublisher = isEmpty(displayTag.getMediaType())?Constants.UNKNOWN_MEDIA_TYPE:displayTag.getMediaType();
         mediaTypeAndPublisher += " "+StringUtils.SYMBOL_SEP+" ";
         mediaTypeAndPublisher += isEmpty(displayTag.getPublisher())?Constants.UNKNOWN_PUBLISHER:displayTag.getPublisher();
+
+         */
         genreView.setText(mediaTypeAndPublisher);
 
         filename.setText("["+FileSystem.getFilename(displayTag.getPath())+"]");
@@ -402,7 +413,8 @@ public class TagsActivity extends AppCompatActivity {
             //mateInd = " "+StringUtils.SYMBOL_ATTENTION;
             String path = displayTag.getPath().toUpperCase();
             if(path.contains("/music/") && !path.contains("/telegram/")) {
-                //pathDrive.setTextColor(getColor(R.color.warningColor));
+                srcdir.setColorFilter(getColor(R.color.warningColor));
+                /*//pathDrive.setTextColor(getColor(R.color.warningColor));
                 mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
                 mManageStatus1.setPrimaryTextColorResource(R.color.grey800);
                 mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
@@ -411,9 +423,10 @@ public class TagsActivity extends AppCompatActivity {
                 mManageStatus2.setPrimaryTextColorResource(R.color.grey800);
                 mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
                 mManageStatus2.setPrimaryText("-NEW-");
-               // pathDrive.setTextColor(getColor(R.color.warningColor));
+               // pathDrive.setTextColor(getColor(R.color.warningColor)); */
             }else {
-                mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_red_900);
+                srcdir.setColorFilter(getColor(R.color.errorColor));
+                /*mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_red_900);
                 mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
                 mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
                 mManageStatus1.setPrimaryText("--/\\--");
@@ -421,10 +434,12 @@ public class TagsActivity extends AppCompatActivity {
                 mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
                 mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
                 mManageStatus2.setPrimaryText("-NEW-");
-               // pathDrive.setTextColor(getColor(R.color.errorColor));
+               // pathDrive.setTextColor(getColor(R.color.errorColor)); */
             }
         }else {
-            //mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
+            // fully managed
+            srcdir.setColorFilter(getColor(R.color.successColor));
+           /* //mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
             mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_blue_grey_600);
             mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
             mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
@@ -432,7 +447,7 @@ public class TagsActivity extends AppCompatActivity {
             mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_blue_grey_900);
             mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
             mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            mManageStatus2.setPrimaryText("--\\/--");
+            mManageStatus2.setPrimaryText("--\\/--"); */
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
@@ -476,35 +491,37 @@ public class TagsActivity extends AppCompatActivity {
         int linkPressBgColor = ContextCompat.getColor(getApplicationContext(), R.color.grey200);
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
-        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-            Intent resultIntent = new Intent();
-            if(criteria!=null) {
-                criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
-                criteria.setFilterText(trimToEmpty(displayTag.getGrouping()));
-                ApplicationUtils.setSearchCriteria(resultIntent,criteria);
-            }
-            setResult(RESULT_OK, resultIntent);
-            finish();
-        }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline())
-                .append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold())
-                .appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                            if(!isEmpty(displayTag.getGenre())) {
-                                Intent resultIntent = new Intent();
-                                if (criteria != null) {
-                                    criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
-                                    criteria.setFilterText(trimToEmpty(displayTag.getGenre()));
-                                    ApplicationUtils.setSearchCriteria(resultIntent, criteria);
-                                }
-                                setResult(RESULT_OK, resultIntent);
-                                finish();
-                            }
-                        }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                        new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN_GENRE:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
-        if(!isEmpty(displayTag.getAlbumArtist())) {
-            tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold())
-                    .appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
+        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
+                    if(!isEmpty(displayTag.getGenre())) {
+                        Intent resultIntent = new Intent();
+                        if (criteria != null) {
+                            criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
+                            criteria.setFilterText(trimToEmpty(displayTag.getGenre()));
+                            ApplicationUtils.setSearchCriteria(resultIntent, criteria);
+                        }
+                        setResult(RESULT_OK, resultIntent);
+                        finish();
+                    }
+                }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+                new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN_GENRE:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
+
+        tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
+        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
+                    Intent resultIntent = new Intent();
+                    if(criteria!=null) {
+                        criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
+                        criteria.setFilterText(trimToEmpty(displayTag.getGrouping()));
+                        ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+                    }
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+                new SpecialTextUnit(isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
+/*
+        if((!isEmpty(displayTag.getAlbumArtist())) && !displayTag.getAlbumArtist().equals(displayTag.getArtist()) ) {
+            tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
+            tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
                         if (!isEmpty(displayTag.getAlbumArtist())) {
                             Intent resultIntent = new Intent();
                             if (criteria != null) {
@@ -517,7 +534,7 @@ public class TagsActivity extends AppCompatActivity {
                         }
                     }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                     new SpecialTextUnit(isEmpty(displayTag.getAlbumArtist()) ? " - " : displayTag.getAlbumArtist()).setTextSize(14).useTextBold().showUnderline());
-        }
+        } */
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagInfo.setText(tagSpan.build());
 

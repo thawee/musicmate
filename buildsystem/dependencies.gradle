@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '8.1.1', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '8.2.0-rc01', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 30, // support running on android 11 ot higher
@@ -13,10 +13,10 @@ ext.versions = [
         compileSdk         : 34, //33, // required 33 for photopicker
         buildTools         : '34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.9.10', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '1.9.20', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
-        objectbox          : '3.7.0', //''3.6.0', //''3.2.1' , //'3.1.3',
+        objectbox          : '3.7.1', //''3.6.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
         aboutlibraries     : '10.9.1', //''10.8.3', //''10.3.1',
         //versionsCheck      : '0.42.
@@ -35,23 +35,24 @@ def deps = [:]
 
 def google = [:]
 // https://github.com/material-components/material-components-android/releases
-google.material = "com.google.android.material:material:1.9.0" //1.7.0-rc01" //1.6.1" // 1.6.0-beta01" //1.5.0"
+google.material = "com.google.android.material:material:1.10.0" //1.9.0" //1.7.0-rc01" //1.6.1" // 1.6.0-beta01" //1.5.0"
 google.gson = "com.google.code.gson:gson:2.10.1" //2.8.9"
 google.android_maps_utils = "com.google.maps.android:android-maps-utils:2.3.0" //0.5" //23/06/2019
 deps.google = google
 
 def apache = [:]
 apache.httpclient = "org.apache.httpcomponents:httpclient:4.5.14"
+apache.httpcore = "org.apache.httpcomponents:httpcore:4.5.14"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.16.0"
-apache.commons_io = "commons-io:commons-io:2.13.0"
+apache.commons_io = "commons-io:commons-io:2.15.0"
 deps.apache = apache
 
 def androidx = [:]
 //https://developer.android.com/jetpack/androidx/releases/core
 androidx.core = "androidx.core:core:1.12.0" //
 //https://developer.android.com/jetpack/androidx/releases/activity
-androidx.activity = "androidx.activity:activity:1.7.2" //1.4.0"
+androidx.activity = "androidx.activity:activity:1.8.1" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.7.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
@@ -63,7 +64,7 @@ androidx.constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
 //https://developer.android.com/jetpack/androidx/releases/coordinatorlayout
 androidx.coordinatorlayout = "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
 //https://developer.android.com/jetpack/androidx/releases/recyclerview
-androidx.recyclerView = "androidx.recyclerview:recyclerview:1.3.1"
+androidx.recyclerView = "androidx.recyclerview:recyclerview:1.3.2"
 androidx.recyclerView_selection = "androidx.recyclerview:recyclerview-selection:1.1.0"
 //https://developer.android.com/jetpack/androidx/releases/palette
 androidx.palette = "androidx.palette:palette:1.0.0"
@@ -97,14 +98,14 @@ androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestrea
 androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.6.2"
 
 // Room
-androidx.room = "androidx.room:room-runtime:2.5.2" //23/06/2019
-androidx.room_compiler = "androidx.room:room-compiler:2.5.2" // use kapt for Kotlin //23/06/2019
+androidx.room = "androidx.room:room-runtime:2.6.0" //2.5.2" //23/06/2019
+androidx.room_compiler = "androidx.room:room-compiler:2.6.0" //2.5.2" // use kapt for Kotlin //23/06/2019
 // optional - RxJava support for Room
-androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.5.2" //23/06/2019
+androidx.room_rxjava2 = "androidx.room:room-rxjava2:2.6.0" //2.5.2" //23/06/2019
 // optional - Guava support for Room, including Optional and ListenableFuture
-androidx.room_guava = "androidx.room:room-guava:2.5.2" //23/06/2019
+androidx.room_guava = "androidx.room:room-guava:2.6.0" //2.5.2" //23/06/2019
 // Test helpers
-androidx.room_testing = "androidx.room:room-testing:2.5.2" //23/06/2019
+androidx.room_testing = "androidx.room:room-testing:2.6.0" //2.5.2" //23/06/2019
 
 // Paging
 //https://developer.android.com/jetpack/androidx/releases/paging
@@ -122,7 +123,7 @@ deps.androidx = androidx
 
 def maps = [:]
 //https://github.com/osmdroid/osmdroid
-maps.osmdroid = "org.osmdroid:osmdroid-android:6.1.16"
+maps.osmdroid = "org.osmdroid:osmdroid-android:6.1.17"
 maps.osmdroid_shape = "org.osmdroid:osmdroid-shape:6.1.11"
 maps.osmbonuspack = "com.github.MKergall:osmbonuspack:6.9.0"
 deps.maps = maps
@@ -137,8 +138,8 @@ retrofit.okhttp_logging_interceptor = "com.squareup.okhttp3:logging-interceptor:
 deps.retrofit = retrofit
 
 def fasterxml = [:]
-fasterxml.jackson_core = "com.fasterxml.jackson.core:jackson-core:2.15.2"
-fasterxml.jackson_databind = "com.fasterxml.jackson.core:jackson-databind:2.15.2"
+fasterxml.jackson_core = "com.fasterxml.jackson.core:jackson-core:2.16.0"
+fasterxml.jackson_databind = "com.fasterxml.jackson.core:jackson-databind:2.16.0"
 deps.fasterxml = fasterxml
 
 def dagger = [:]
@@ -167,7 +168,7 @@ kotlin.test = "org.jetbrains.kotlin:kotlin-test-junit:$versions.kotlin" //23/06/
 deps.kotlin = kotlin
 
 def jetbrains = [:]
-jetbrains.annotations = "org.jetbrains:annotations:24.0.1"
+jetbrains.annotations = "org.jetbrains:annotations:24.1.0"
 deps.jetbrains = jetbrains
 
 def ui = [:]
@@ -245,8 +246,8 @@ ui.photoview = 'com.github.chrisbanes:PhotoView:2.3.0'
 // https://github.com/VrUnd14/VPAwesomeWidgets
 ui.vpawesomewidgets = 'awesome.vrund.vpawesomewidgets:VPAwesomeWidgets:1.5.2'
 //https://github.com/scwang90/SmartRefreshLayout
-ui.refresh_layout_kernel = 'io.github.scwang90:refresh-layout-kernel:2.0.6'
-ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.0.6'
+ui.refresh_layout_kernel = 'io.github.scwang90:refresh-layout-kernel:2.1.0'
+ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.1.0'
 //https://github.com/soulqw/CoCo
 ui.coco ='com.github.soulqw:CoCo:1.1.2'
 //https://github.com/medyo/android-about-page
@@ -291,7 +292,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.4.0" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.5.0" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]

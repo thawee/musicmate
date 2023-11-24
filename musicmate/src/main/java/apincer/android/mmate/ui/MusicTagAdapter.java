@@ -261,13 +261,12 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public void removeMusicTag(int position, MusicTag song) {
         localDataSet.remove( song);
-       // notifyDataSetChanged();
-        if(position < localDataSet.size()) {
+        notifyDataSetChanged();
+      /*  if(position < localDataSet.size()) {
             notifyItemChanged(position, localDataSet);
         }else {
             notifyDataSetChanged();
-        }
-        //removeItem(position);
+        } */
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -439,6 +438,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         } else if(!MusicTagUtils.isLossless(tag)) {
             holder.mMediaUpScaledView.setVisibility(View.GONE);
             holder.mMediaUpSampledView.setVisibility(View.GONE);
+            // DR
+            holder.mDynamicRange.setVisibility(View.VISIBLE);
+            holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
         }else {
             // DR
             holder.mDynamicRange.setVisibility(View.VISIBLE);

@@ -4,7 +4,7 @@
         android:summary="Music Mate Streaming.">
     <SwitchPreferenceCompat
         android:key="preference_http_streaming_server"
-        android:summary="Start HTTP Server, for streaming to MPD/myMPD.\n(http://&lt;ip&gt;/)"
+        android:summary="Start HTTP streaming server.\n(http://&lt;ip&gt;/)"
         android:title="HTTP Streaming Server"
         android:defaultValue="false"/>
     </PreferenceCategory>
@@ -36,13 +36,13 @@
         android:summary="Now Playing Song &amp; Notification.">
         <SwitchPreferenceCompat
             android:key="preference_open_now_playing"
-            android:summary="Always show details of listing song on current preview screen."
-            android:title="Preview Now Playing song"
+            android:summary="Always update preview screen on listing song changed."
+            android:title="Re-fresh Preview on new Playing Song"
             android:defaultValue="false"/>
         <SwitchPreferenceCompat
             android:key="preference_follow_now_playing"
-            android:summary="Auto scroll to display currently listening song."
-            android:title="Show Now Playing song"
+            android:summary="Auto scroll to currently listening song."
+            android:title="Auto Scroll to Now Playing song"
             android:defaultValue="false"/>
         <SwitchPreferenceCompat
             android:key="preference_default_next_by_media_buttons"

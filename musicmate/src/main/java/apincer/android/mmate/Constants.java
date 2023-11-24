@@ -140,7 +140,7 @@ public final class Constants {
 
     //public static final String TITLE_RECORDING_QUALITY = "Recording Quality";
     public static final String TITLE_DUPLICATE = "Duplicate";
-    public static final String TITLE_BROKEN = "Broken";
+    public static final String TITLE_BROKEN = "Bad";
     //public static final String TITLE_AUDIOPHILE = "Audiophile";
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";

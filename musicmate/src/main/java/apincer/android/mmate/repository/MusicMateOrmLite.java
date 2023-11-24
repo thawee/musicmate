@@ -162,7 +162,11 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("grouping",grouping.replace("'","''"));
+            if(StringUtils.isEmpty(grouping)) {
+                builder.where().isNull("grouping").or().eq("grouping", "");
+            }else {
+                builder.where().eq("grouping", grouping.replace("'", "''"));
+            }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;

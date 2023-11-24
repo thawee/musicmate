@@ -27,6 +27,7 @@ dependencies {
    // api 'com.android.support:recyclerview-v7:' + rootProject.ext.support_version
    // api 'com.android.support:appcompat-v7:' + rootProject.ext.support_version
    // api 'com.android.support:design:' + rootProject.ext.support_version
+    implementation deps.androidx.core
     implementation deps.androidx.activity
     implementation deps.google.material
     implementation deps.androidx.recyclerView

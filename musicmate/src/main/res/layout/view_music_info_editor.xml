@@ -195,12 +195,12 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/editor_label_disc"
+                        android:hint="@string/editor_label_track"
                         app:endIconMode="clear_text"
                         app:endIconTint="@color/colorPrimaryDark"
                         app:shapeAppearance="@style/Rounded">
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/input_disc"
+                            android:id="@+id/input_track"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             tools:ignore="SpeakableTextPresentCheck" />
@@ -217,17 +217,16 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/editor_label_track"
+                        android:hint="@string/editor_label_disc"
                         app:endIconMode="clear_text"
                         app:endIconTint="@color/colorPrimaryDark"
                         app:shapeAppearance="@style/Rounded">
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/input_track"
+                            android:id="@+id/input_disc"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             tools:ignore="SpeakableTextPresentCheck" />
                     </com.google.android.material.textfield.TextInputLayout>
-
                 </LinearLayout>
                 <LinearLayout
                     android:layout_width="0dp"

@@ -1,6 +1,8 @@
 package apincer.android.mmate.ui;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -29,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.BuildConfig;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
@@ -88,7 +89,15 @@ public class AboutActivity extends AppCompatActivity {
             View v = inflater.inflate(R.layout.fragment_about, container, false);
 
             TextView version = v.findViewById(R.id.app_version);
-            version.setText(BuildConfig.VERSION_NAME);
+            //version.setText("");
+            try {
+                PackageInfo packageInfo = getActivity().getPackageManager().getPackageInfo(getActivity().getPackageName(), 0);
+                version.setText(packageInfo.versionName);
+
+            }
+            catch (PackageManager.NameNotFoundException e) {
+
+            }
             MusicMateExecutors.db(new Runnable() {
                 @Override
                 public void run() {
