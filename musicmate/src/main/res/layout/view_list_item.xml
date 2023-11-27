@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:paddingTop="4dp"
     android:paddingBottom="4dp"
     android:layout_width="match_parent"
@@ -107,9 +105,22 @@
                 android:textSize="9sp"
                 android:textStyle="bold"/> -->
 
+            <!--
             <ImageView
-                android:id="@+id/item_hires_icon"
+                android:id="@+id/item_resolution_icon"
                 android:layout_width="@dimen/dimen_52_dp"
+                android:layout_height="18dp"
+                android:layout_marginStart="@dimen/dimen_2_dp"
+                android:layout_marginEnd="@dimen/dimen_2_dp"
+                android:layout_toRightOf="@id/item_type_label"
+                android:paddingStart="@dimen/dimen_2_dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_format_mqa_white" />
+            -->
+
+            <ImageView
+                android:id="@+id/item_resolution_icon"
+                android:layout_width="@dimen/dimen_64_dp"
                 android:layout_height="18dp"
                 android:layout_marginStart="@dimen/dimen_2_dp"
                 android:layout_marginEnd="@dimen/dimen_2_dp"
@@ -124,28 +135,30 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/dimen_2_dp"
                 android:layout_marginBottom="@dimen/dimen_2_dp"
-                android:padding="@dimen/dimen_1_dp"
+                android:layout_toRightOf="@id/item_resolution_icon"
                 android:background="@drawable/shape_background_dr"
-                android:layout_toRightOf="@id/item_hires_icon"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="@dimen/dimen_1_dp">
+
                 <ImageView
                     android:layout_width="@dimen/dimen_20_dp"
                     android:layout_height="@dimen/dimen_16_dp"
-                    android:gravity="center"
                     android:layout_gravity="start|center_vertical"
-                    android:src="@drawable/dynamic_range"/>
+                    android:gravity="center"
+                    android:src="@drawable/dynamic_range" />
+
                 <TextView
                     android:id="@+id/item_dr_icon"
-                    android:layout_width="@dimen/dimen_16_dp"
+                    android:layout_width="@dimen/dimen_24_dp"
                     android:layout_height="16dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/shape_background_unknown"
+                    android:layout_gravity="top"
+                    android:background="@drawable/shape_background_dr_text"
                     android:fontFamily="@font/oswald_bold"
                     android:gravity="center"
                     android:text="10"
                     android:textColor="@color/black"
                     android:textSize="10sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
             </LinearLayout>
             <!--
             <ImageView
@@ -158,7 +171,21 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_format_mqa_white"
                 tools:ignore="RtlSymmetry" /> -->
-
+            <!--
+            <ImageView
+                android:id="@+id/item_source_quality"
+                android:layout_width="@dimen/dimen_32_dp"
+                android:layout_height="@dimen/dimen_20_dp"
+                android:layout_marginStart="@dimen/dimen_4_dp"
+                android:layout_toEndOf="@id/item_dr_icon_panel"
+                android:scaleType="fitCenter"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"
+                android:padding="@dimen/dimen_1_dp"
+                android:src="@drawable/ic_audiophile"
+                android:background="@drawable/shape_background_quality"/>
+-->
+            <!--
             <TextView
                 android:id="@+id/item_media_quality_label"
                 android:layout_width="@dimen/dimen_16_dp"
@@ -208,6 +235,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 tools:ignore="RtlSymmetry,SmallSp" />
+                -->
 <!--
             <ImageView
                 android:id="@+id/item_audiophile_label"
@@ -223,7 +251,7 @@
                 android:layout_width="@dimen/dimen_32_dp"
                 android:layout_height="18dp"
                 android:layout_gravity="center"
-                android:layout_toEndOf="@id/item_media_upsampled_label"
+                android:layout_toEndOf="@id/item_dr_icon_panel"
                 android:padding="1dp"
                 android:src="@drawable/icon_cd" />
             <!--

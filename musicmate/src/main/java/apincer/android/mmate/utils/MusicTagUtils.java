@@ -2,6 +2,9 @@ package apincer.android.mmate.utils;
 
 import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
+import static apincer.android.mmate.Constants.QUALITY_AUDIOPHILE;
+import static apincer.android.mmate.Constants.QUALITY_NORMAL;
+import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.SPL_8BIT_IN_DB;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
@@ -171,7 +174,362 @@ public class MusicTagUtils {
     private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
         int width = 340; // 24x85, 16x56, 18x63
         int height = 96;
+
        // int whiteColor = context.getColor(R.color.white);
+        int greyColor = context.getColor(R.color.grey200);
+        int blackColor = context.getColor(R.color.black);
+        int bgBlackColor = context.getColor(R.color.grey900);
+        int resolutionColor = getResolutionColor(context,tag);
+        int qualityColor = context.getColor(R.color.quality_unknown);
+        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_good);
+        }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_good);
+        }else if(QUALITY_NORMAL.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_average);
+        }
+        int upscaleColor = context.getColor(R.color.quality_unknown);
+        if (tag.getMeasuredDR() > 0.0) {
+            if (isUpScaled(tag)) {
+                upscaleColor = (isBadUpScaled(tag) ? context.getColor(R.color.quality_bad) : context.getColor(R.color.quality_average));
+            }else {
+                // not upscale, good
+                upscaleColor = context.getColor(R.color.quality_good);
+            }
+        }
+        int upsampledColor = context.getColor(R.color.quality_unknown);; //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
+        int barColor = context.getColor(R.color.material_color_blue_grey_200);
+        String label;
+        String labelBPS = "";
+        boolean isPCM = false;
+        boolean isLossless = isLossless(tag);
+        String samplingRate = StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
+
+        if(tag.isDSD()) {
+            // dsd use bitrate
+            label = "DSD";
+            samplingRate = StringUtils.formatAudioSampleRateAbvUnit(tag.getAudioBitRate());
+        }else if(isMQA(tag)) {
+            label = "MQA"; //tag.getMqaInd();
+            samplingRate = StringUtils.formatAudioSampleRate(tag.getMqaSampleRate(),false);
+            if(isMQAStudio(tag)) {
+                barColor = context.getColor(R.color.mqa_studio);
+            }else {
+                barColor = context.getColor(R.color.mqa_master);
+            }
+        } else {
+            // PCM, draw bit
+            label = "BIT"; //"PCM";
+            labelBPS = String.valueOf(tag.getAudioBitsDepth());
+            isPCM = true;
+           // isLossless = tag.isLossless();
+            if(!isLossless) {
+                // compress rate
+                label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
+                samplingRate = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
+            }
+        }
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding;
+        int cornerRadius = 12;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw border dark grey
+        RectF rectangle = new RectF(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(greyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        //draw back color
+        padding = 4;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw quality background box
+        padding = 8;
+        int topPadding = 12;
+        rectangle = new RectF(
+                padding, // Left
+                topPadding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - topPadding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(resolutionColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw right back box
+        padding = 12;
+
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setColor(bgBlackColor);
+        paint.setStyle(Paint.Style.FILL);
+
+        Path path = new Path();
+        path.moveTo((float) (bounds.width()/2), padding); //x1,y1 - top left
+        path.lineTo(bounds.width()-8, padding);   //x2,y1 - top right
+        path.lineTo(bounds.width()-8, bounds.height()-padding);   //x2,y2 - bottom right
+        path.lineTo((float) (bounds.width()/2.1), bounds.height()-padding); //x1,y2 - bottom left
+        path.lineTo((float) (bounds.width()/2), padding); //x1,y1 - top left
+        myCanvas.drawPath(path, paint);
+
+        // draw enc, black color
+        // AAC, MPEG, PCM 16, PCM 24, MQA, DSD
+
+        if(isPCM) {
+            // PCM xx
+            Typeface font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+            int letterTextSize = 40; //34; //42;
+
+            if(isLossless) {
+                // draw label bit label
+                Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                //mLetterPaint.setColor(whiteColor);
+                mLetterPaint.setColor(resolutionColor);
+                mLetterPaint.setTypeface(font);
+                mLetterPaint.setAntiAlias(true);
+                mLetterPaint.setTextSize(letterTextSize);
+                mLetterPaint.setTextAlign(Paint.Align.CENTER);
+                // Text draws from the baselineAdd some top padding to center vertically.
+                Rect textMathRect = new Rect();
+                mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+                float mLetterTop = textMathRect.height() / 3f;
+                float mPositionY = bounds.exactCenterY(); //-(bounds.exactCenterY()/16));
+                myCanvas.drawText(label,
+                        //(float) (bounds.exactCenterX() + (bounds.exactCenterX() / 4))+2, // left
+                        (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
+                        mLetterTop + mPositionY, //bounds.exactCenterY(), //top
+                        mLetterPaint);
+
+                // draw bps
+                int bpsSize = 52;
+                font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+                mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                //mLetterPaint.setColor(whiteColor);
+                mLetterPaint.setColor(resolutionColor);
+                mLetterPaint.setTypeface(font);
+                mLetterPaint.setAntiAlias(true);
+                mLetterPaint.setTextSize(bpsSize);
+                mLetterPaint.setTextAlign(Paint.Align.CENTER);
+                // Text draws from the baselineAdd some top padding to center vertically.
+                textMathRect = new Rect();
+                mLetterPaint.getTextBounds(labelBPS, 0, 1, textMathRect);
+                // mLetterTop = textMathRect.height() / 2.5f;
+                mPositionY = (float) (bounds.bottom) - textMathRect.height();
+                myCanvas.drawText(labelBPS,
+                        // (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
+                        bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 2, // left
+                        mPositionY,  // top
+                        mLetterPaint);
+            }else {
+                // draw encoding
+                int bpsSize = 52;
+                font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+                Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                //mLetterPaint.setColor(whiteColor);
+                mLetterPaint.setColor(resolutionColor);
+                mLetterPaint.setTypeface(font);
+                mLetterPaint.setAntiAlias(true);
+                mLetterPaint.setTextSize(bpsSize);
+                mLetterPaint.setTextAlign(Paint.Align.CENTER);
+                // Text draws from the baselineAdd some top padding to center vertically.
+                Rect textMathRect = new Rect();
+                mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+                // mLetterTop = textMathRect.height() / 2.5f;
+                float mPositionY = (float) (bounds.bottom) - textMathRect.height();
+                myCanvas.drawText(label,
+                        // (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
+                        bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 36, // left
+                        mPositionY,  // top
+                        mLetterPaint);
+            }
+
+            // draw PCM bar
+          //  float y = (float) (myCanvas.getHeight() / 2) + 14;
+         //   float startx = (float) (myCanvas.getWidth() * 0.56);
+
+            // draw bottom bar curve
+            /*
+            paint = new Paint();
+            paint.setColor(qualityColor);
+           // paint.setColor(barColor);
+            paint.setStrokeWidth(8);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            path = new Path();
+            path.moveTo(startx - 14, y + 4);
+            path.lineTo(startx - 16, y + 12);
+            path.lineTo(width - 12, y + 12);
+            myCanvas.drawPath(path, paint); */
+        } else if (tag.isDSD()) {
+            // DSD,
+            Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+            int letterTextSize = 60; //28;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            //mLetterPaint.setColor(whiteColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setColor(resolutionColor);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+            float mLetterTop = textMathRect.height() / 3f;
+            float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/18);
+            myCanvas.drawText(label,
+                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
+                    mLetterTop + mPositionY+4,  //top
+                    mLetterPaint);
+        }else {
+            // MQA
+            Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+            int letterTextSize = 48; //28;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            //mLetterPaint.setColor(whiteColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setColor(barColor);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+            float mLetterTop = textMathRect.height() / 3f;
+            float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
+            myCanvas.drawText(label,
+                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
+                    mLetterTop + mPositionY, //top
+                    mLetterPaint);
+
+            // draw mqa studio master indicator
+            /*
+            int barWidth = 6;
+            float y = (float) (myCanvas.getHeight()/2)+22;
+            float startx = (float) (myCanvas.getWidth() *0.57)+8;
+
+            paint = new Paint();
+            paint.setColor(barColor);
+            paint.setStrokeWidth(barWidth);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            for(int i=0;i<5;i++) {
+                drawRhombus(myCanvas, paint, (int) (startx+(i*24)), (int) y, 12);
+            } */
+        }
+
+        // draw quality,upscaled, upsampled indicator
+        float y = (float) (myCanvas.getHeight() / 2) + 30;
+        float startx = (float) (myCanvas.getWidth() * 0.56)+8;
+        int barHigh = 12;
+        int barWidth = 42;
+        int barSpace = 6;
+        //quality
+        startx = startx - 16;
+        float endx = startx+barWidth; //width-100;
+        paint = new Paint();
+        paint.setColor(qualityColor);
+        paint.setStrokeWidth(barHigh);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        path = new Path();
+        //path.moveTo(startx +2, y + 4);
+        path.moveTo(startx, y);
+        path.lineTo(endx, y);
+        myCanvas.drawPath(path, paint);
+
+        //upscale
+        startx = endx+barSpace;
+        endx = startx+barWidth;
+        paint = new Paint();
+        paint.setColor(upscaleColor);
+        paint.setStrokeWidth(barHigh);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        path = new Path();
+        path.moveTo(startx, y);
+        path.lineTo(endx, y);
+        myCanvas.drawPath(path, paint);
+
+        //upsampled
+        startx = endx+barSpace;
+        endx = startx+barWidth;
+        paint = new Paint();
+        paint.setColor(upsampledColor);
+        paint.setStrokeWidth(barHigh);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        path = new Path();
+        path.moveTo(startx, y);
+        path.lineTo(endx, y);
+        myCanvas.drawPath(path, paint);
+
+        // draw sampling rate, black color
+        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
+        int letterTextSize = 60; //82;
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
+        float mLetterTop = (textMathRect.height() / 4f);
+        float mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/4);
+        myCanvas.drawText(samplingRate,
+                (float) (bounds.exactCenterX()-(bounds.exactCenterX()/2.2)),
+                mLetterTop + mPositionY,
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
+    private static Bitmap createEncodingSamplingRateIconBAK(Context context, MusicTag tag) {
+        int width = 340; // 24x85, 16x56, 18x63
+        int height = 96;
+        // int whiteColor = context.getColor(R.color.white);
         int greyColor = context.getColor(R.color.grey200);
         int blackColor = context.getColor(R.color.black);
         int bgBlackColor = context.getColor(R.color.grey900);
@@ -200,7 +558,7 @@ public class MusicTagUtils {
             label = "BIT"; //"PCM";
             labelBPS = String.valueOf(tag.getAudioBitsDepth());
             isPCM = true;
-           // isLossless = tag.isLossless();
+            // isLossless = tag.isLossless();
             if(!isLossless) {
                 // compress rate
                 label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
@@ -360,7 +718,7 @@ public class MusicTagUtils {
             // draw bottom bar curve
             paint = new Paint();
             paint.setColor(qualityColor);
-           // paint.setColor(barColor);
+            // paint.setColor(barColor);
             paint.setStrokeWidth(8);
             paint.setAntiAlias(true);
             paint.setDither(true);
@@ -458,248 +816,7 @@ public class MusicTagUtils {
         return trimToEmpty(tag.getMqaInd()).contains("MQA");
     }
 
-    private static Bitmap createEncodingSamplingRateIcon2(Context context, MusicTag tag) {
-        int width = 340; // 24x85, 16x56, 18x63
-        int height = 96;
-        int whiteColor = context.getColor(R.color.white);
-        int greyColor = context.getColor(R.color.grey200);
-        int blackColor = context.getColor(R.color.black);
-        int bgBlackColor = context.getColor(R.color.grey900);
-        int qualityColor = getResolutionColor(context,tag);
-        int barColor = context.getColor(R.color.material_color_blue_grey_200);
-        String label;
-        String labelBPS = "";
-        boolean isPCM = false;
-        String samplingRate = StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
 
-        if(tag.isDSD()) {
-            label = "DSD";
-        }else if(isMQA(tag)) {
-            label = "MQA";
-            samplingRate = StringUtils.formatAudioSampleRate(tag.getMqaSampleRate(),false);
-            if(isMQAStudio(tag)) {
-                barColor = context.getColor(R.color.mqa_studio);
-            }else {
-                barColor = context.getColor(R.color.mqa_master);
-            }
-        } else {
-            //
-            label = "PCM";
-            labelBPS = String.valueOf(tag.getAudioBitsDepth());
-            isPCM = true;
-            if(!isLossless(tag)) {
-                // compress rate
-                samplingRate = StringUtils.formatAudioBitRateNoUnit(tag.getAudioBitRate());
-            }
-        }
-
-        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas myCanvas = new Canvas(myBitmap);
-        int padding;
-        int cornerRadius = 12;
-        Rect bounds = new Rect(
-                0, // Left
-                0, // Top
-                myCanvas.getWidth(), // Right
-                myCanvas.getHeight() // Bottom
-        );
-
-        // Initialize a new Round Rect object
-        // draw border dark grey
-        RectF rectangle = new RectF(
-                0, // Left
-                0, // Top
-                myCanvas.getWidth(), // Right
-                myCanvas.getHeight() // Bottom
-        );
-
-        Paint bgPaint =  new Paint();
-        bgPaint.setAntiAlias(true);
-        bgPaint.setColor(greyColor);
-        bgPaint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
-
-        //draw back color
-        padding = 4;
-        rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - padding // Bottom
-        );
-
-        bgPaint =  new Paint();
-        bgPaint.setAntiAlias(true);
-        bgPaint.setColor(blackColor);
-        bgPaint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
-
-        // draw quality background box
-        padding = 8;
-        int topPadding = 12;
-        rectangle = new RectF(
-                padding, // Left
-                topPadding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - topPadding // Bottom
-        );
-
-        bgPaint =  new Paint();
-        bgPaint.setAntiAlias(true);
-        bgPaint.setColor(qualityColor);
-        bgPaint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
-
-        // draw right back box
-        padding = 12;
-
-        Paint paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(bgBlackColor);
-        paint.setStyle(Paint.Style.FILL);
-
-        Path path = new Path();
-        path.moveTo((float) (bounds.width()/2), padding); //x1,y1 - top left
-        path.lineTo(bounds.width()-8, padding);   //x2,y1 - top right
-        path.lineTo(bounds.width()-8, bounds.height()-padding);   //x2,y2 - bottom right
-        path.lineTo((float) (bounds.width()/2.1), bounds.height()-padding); //x1,y2 - bottom left
-        path.lineTo((float) (bounds.width()/2), padding); //x1,y1 - top left
-        myCanvas.drawPath(path, paint);
-
-        // draw enc, black color
-        // AAC, MPEG, PCM 16, PCM 24, MQA, DSD
-
-        if(isPCM) {
-            // PCM xx
-            Typeface font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-            int letterTextSize = 40; //34; //42;
-
-            // draw label pcm
-            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            mLetterPaint.setColor(whiteColor);
-            mLetterPaint.setTypeface(font);
-            mLetterPaint.setTextSize(letterTextSize);
-            mLetterPaint.setTextAlign(Paint.Align.CENTER);
-            // Text draws from the baselineAdd some top padding to center vertically.
-            Rect textMathRect = new Rect();
-            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
-            float mLetterTop = textMathRect.height() / 3f;
-            float mPositionY = bounds.exactCenterY(); //-(bounds.exactCenterY()/16));
-            myCanvas.drawText(label,
-                    bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 2, // left
-                    mLetterTop + mPositionY, //bounds.exactCenterY(), //top
-                    mLetterPaint);
-
-            // draw bps
-            int bpsSize = 52;
-            font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-            mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            mLetterPaint.setColor(whiteColor);
-            mLetterPaint.setTypeface(font);
-            mLetterPaint.setTextSize(bpsSize);
-            mLetterPaint.setTextAlign(Paint.Align.CENTER);
-            // Text draws from the baselineAdd some top padding to center vertically.
-            textMathRect = new Rect();
-            mLetterPaint.getTextBounds(labelBPS, 0, 1, textMathRect);
-            // mLetterTop = textMathRect.height() / 2.5f;
-            mPositionY = (float) (bounds.bottom) - textMathRect.height();
-            myCanvas.drawText(labelBPS,
-                    (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
-                    mPositionY,  // top
-                    mLetterPaint);
-
-            // draw PCM bar
-            float y = (float) (myCanvas.getHeight() / 2) + 14;
-            float startx = (float) (myCanvas.getWidth() * 0.56);
-
-            // draw bottom bar curve
-            paint = new Paint();
-            paint.setColor(barColor);
-            paint.setStrokeWidth(8);
-            paint.setAntiAlias(true);
-            paint.setDither(true);
-            paint.setStyle(Paint.Style.STROKE);
-
-            path = new Path();
-            path.moveTo(startx - 14, y + 4);
-            path.lineTo(startx - 16, y + 12);
-            path.lineTo(width - 12, y + 12);
-            myCanvas.drawPath(path, paint);
-        } else if (tag.isDSD()) {
-            // DSD,
-            Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-            int letterTextSize = 60; //28;
-            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            mLetterPaint.setColor(whiteColor);
-            mLetterPaint.setTypeface(font);
-            mLetterPaint.setTextSize(letterTextSize);
-            mLetterPaint.setTextAlign(Paint.Align.CENTER);
-            // Text draws from the baselineAdd some top padding to center vertically.
-            Rect textMathRect = new Rect();
-            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
-            float mLetterTop = textMathRect.height() / 3f;
-            float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/18);
-            myCanvas.drawText(label,
-                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
-                    mLetterTop + mPositionY+4,  //top
-                    mLetterPaint);
-        }else {
-            // MQA
-            Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-            int letterTextSize = 48; //28;
-            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            mLetterPaint.setColor(whiteColor);
-            mLetterPaint.setTypeface(font);
-            mLetterPaint.setTextSize(letterTextSize);
-            mLetterPaint.setTextAlign(Paint.Align.CENTER);
-            // Text draws from the baselineAdd some top padding to center vertically.
-            Rect textMathRect = new Rect();
-            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
-            float mLetterTop = textMathRect.height() / 3f;
-            float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
-            myCanvas.drawText(label,
-                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
-                    mLetterTop + mPositionY, //top
-                    mLetterPaint);
-
-            // draw mqa studio master indicator
-            int barWidth = 6;
-            float y = (float) (myCanvas.getHeight()/2)+22;
-            float startx = (float) (myCanvas.getWidth() *0.57)+8;
-
-            paint = new Paint();
-            paint.setColor(barColor);
-            paint.setStrokeWidth(barWidth);
-            paint.setAntiAlias(true);
-            paint.setDither(true);
-            paint.setStyle(Paint.Style.STROKE);
-
-            for(int i=0;i<5;i++) {
-                drawRhombus(myCanvas, paint, (int) (startx+(i*24)), (int) y, 12);
-            }
-        }
-
-        // draw sampling rate, black color
-        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
-        int letterTextSize = 60; //82;
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
-        float mLetterTop = (textMathRect.height() / 4f);
-        float mPositionY= bounds.exactCenterY()+(bounds.exactCenterY()/4);
-        myCanvas.drawText(samplingRate,
-                (float) (bounds.exactCenterX()-(bounds.exactCenterX()/2.2)),
-                mLetterTop + mPositionY,
-                mLetterPaint);
-
-        return myBitmap;
-    }
     public static void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
         int halfWidth = width / 2;
 
@@ -727,10 +844,148 @@ public class MusicTagUtils {
         canvas.drawPath(path, paint);
     }
 
+    public static Bitmap createSourceQualityIcon(Context context, String qualityText, boolean upscaled, boolean upsampled) {
+        int width = 192;
+        int height = 96;
+        int bgColor = context.getColor(R.color.material_color_blue_grey_900);
+        int recordsColor = context.getColor(R.color.audiophile_label2);
+        int blackColor = context.getColor(R.color.black);
+        int qualityColor = context.getColor(R.color.audiophile_label1);
+       // String label1 = trimToEmpty(qualityText); //;"Audiophile";
+       // String label2 = "R e c o r d s";
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding;
+        int cornerRadius = 12;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        //draw back color
+        padding = 0;
+        RectF rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw audiophile background
+        padding = 8;
+        rectangle = new RectF(
+                padding, // Left
+                padding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(bgColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw grey shade colors
+        int []colors = new int[7];
+
+        colors[6] = context.getColor(R.color.material_color_blue_grey_300);
+        colors[5] = context.getColor(R.color.material_color_blue_grey_400);
+        colors[4] = context.getColor(R.color.material_color_blue_grey_500);
+        colors[3] = context.getColor(R.color.material_color_blue_grey_600);
+        colors[2] = context.getColor(R.color.material_color_blue_grey_700);
+        colors[1] = context.getColor(R.color.material_color_blue_grey_800);
+        colors[0] = context.getColor(R.color.material_color_blue_grey_900);
+
+        int barWidth = 6;
+        int rndNo =0;
+        padding=8;
+        int bottomPos = height-padding-4;
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            Path path = new Path();
+            path.moveTo(12+(rndNo*barWidth), padding);
+            path.lineTo(12+(rndNo*barWidth), bottomPos-(rndNo*barWidth));
+            path.lineTo( width-padding, bottomPos-(rndNo*barWidth));
+
+            float radius = 36.0f;
+
+            CornerPathEffect cornerPathEffect =
+                    new CornerPathEffect(radius);
+
+            paint.setPathEffect(cornerPathEffect);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
+        // draw label "Records", grey color
+       /* Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+            int letterTextSize = 24; //28;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            mLetterPaint.setColor(recordsColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setDither(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(label2, 0, 1, textMathRect);
+            float mLetterTop = textMathRect.height() ;
+            float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+            myCanvas.drawText(label2,
+                    (float) (bounds.width()-(textMathRect.width()*6.5)), // left
+                    mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
+                    mLetterPaint);
+*/
+        // draw label "Audiophile", quality color
+       // font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+       // if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
+            // Audiophile
+       //     letterTextSize = 40; //82;
+       // }else {
+       //     letterTextSize = 30; //82;
+      //      qualityColor = recordsColor;
+      //  }
+      //  mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+      //  mLetterPaint.setColor(qualityColor);
+      //  mLetterPaint.setTypeface(font);
+      //  mLetterPaint.setAntiAlias(true);
+      //  mLetterPaint.setDither(true);
+       // mLetterPaint.setTextSize(letterTextSize);
+      //  mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+       // textMathRect = new Rect();
+       // mLetterPaint.getTextBounds(label1, 0, 1, textMathRect);
+       // mLetterTop = (textMathRect.height() / 6f);
+       // mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
+       // myCanvas.drawText(label1,
+       //         bounds.exactCenterX() +20, //left
+       //         mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
+        //        mLetterPaint);
+
+        return myBitmap;
+    }
+
     public static Bitmap createSourceQualityIcon(Context context, String qualityText) {
         int width = 280; // 16x46, 24x70
         int height = 96;
-       // int greyColor = context.getColor(R.color.grey200);
+        // int greyColor = context.getColor(R.color.grey200);
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
         int recordsColor = context.getColor(R.color.audiophile_label2);
         int blackColor = context.getColor(R.color.black);
@@ -819,23 +1074,23 @@ public class MusicTagUtils {
 
         // draw label "Records", grey color
         Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
-            int letterTextSize = 24; //28;
-            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            mLetterPaint.setColor(recordsColor);
-            mLetterPaint.setTypeface(font);
-            mLetterPaint.setAntiAlias(true);
-            mLetterPaint.setDither(true);
-            mLetterPaint.setTextSize(letterTextSize);
-            mLetterPaint.setTextAlign(Paint.Align.CENTER);
-            // Text draws from the baselineAdd some top padding to center vertically.
-            Rect textMathRect = new Rect();
-            mLetterPaint.getTextBounds(label2, 0, 1, textMathRect);
-            float mLetterTop = textMathRect.height() ;
-            float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
-            myCanvas.drawText(label2,
-                    (float) (bounds.width()-(textMathRect.width()*6.5)), // left
-                    mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
-                    mLetterPaint);
+        int letterTextSize = 24; //28;
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(recordsColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setDither(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label2, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() ;
+        float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+        myCanvas.drawText(label2,
+                (float) (bounds.width()-(textMathRect.width()*6.5)), // left
+                mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
+                mLetterPaint);
 
         // draw label "Audiophile", quality color
         font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
@@ -856,7 +1111,7 @@ public class MusicTagUtils {
         // Text draws from the baselineAdd some top padding to center vertically.
         textMathRect = new Rect();
         mLetterPaint.getTextBounds(label1, 0, 1, textMathRect);
-       // mLetterTop = (textMathRect.height() / 6f);
+        // mLetterTop = (textMathRect.height() / 6f);
         mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
         myCanvas.drawText(label1,
                 bounds.exactCenterX() +20, //left
@@ -1074,6 +1329,20 @@ public class MusicTagUtils {
         }else {
             path = path + tag.getFileFormat()+"_" + tag.getAudioBitRate();
         }
+
+        // file quality
+        if(QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+            path = path + "_A";
+        } else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
+            path = path +"_R";
+        }else {
+            path = path +"_N";
+        }
+
+        // upscale
+        path = path+tag.getMeasuredDR();
+        // upsampled
+        //path = path+(tag.isUpsampled()?"1":"0");
 
         File pathFile = new File(dir, path+".png");
         if(!pathFile.exists()) {

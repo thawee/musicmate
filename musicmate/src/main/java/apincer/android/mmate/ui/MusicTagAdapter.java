@@ -285,10 +285,12 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         TextView mDynamicRange;
         Context mContext;
         ImageView mPlayerView;
-        TextView mMediaQualityView;
-        TextView mMediaUpScaledView;
-        TextView mMediaUpSampledView;
-        ImageView mAudioHiResView;
+       // TextView mMediaQualityView;
+        //TextView mMediaUpScaledView;
+       // TextView mMediaUpSampledView;
+        ImageView mAudioResolutionView;
+
+       // ImageView mAudioSourceQualityView;
         //ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
         // TextView mTrackReplayGainView;
@@ -304,12 +306,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
-            this.mMediaQualityView = view.findViewById(R.id.item_media_quality_label);
-            this.mMediaUpScaledView = view.findViewById(R.id.item_media_upscaled_label);
-            this.mMediaUpSampledView = view.findViewById(R.id.item_media_upsampled_label);
+          //  this.mAudioSourceQualityView = view.findViewById(R.id.item_source_quality);
+           // this.mMediaQualityView = view.findViewById(R.id.item_media_quality_label);
+           // this.mMediaUpScaledView = view.findViewById(R.id.item_media_upscaled_label);
+          //  this.mMediaUpSampledView = view.findViewById(R.id.item_media_upsampled_label);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
-            this.mAudioHiResView = view.findViewById(R.id.item_hires_icon);
+            this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
             //this.mFileBrokenView = view.findViewById(R.id.item_broken_file_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
@@ -416,6 +419,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         MusicTag listeningItem = MusixMateApp.getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
 
+      //  holder.mAudioSourceQualityView.setImageBitmap(MusicTagUtils.createSourceQualityIcon(holder.mContext, tag.getMediaQuality(), tag.isUpscaled(), tag.isUpsampled()));
+
+        /*
         if (!StringUtils.isEmpty(tag.getMediaQuality())) {
             if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
                 holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label1));
@@ -429,15 +435,15 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
             holder.mMediaQualityView.setVisibility(View.VISIBLE);
             //holder.mMediaQualityView.setVisibility(View.GONE);
-        }
+        } */
 
         if(MusicTagUtils.isDSD(tag)) {
-            holder.mMediaUpScaledView.setVisibility(View.GONE);
-            holder.mMediaUpSampledView.setVisibility(View.GONE);
+           // holder.mMediaUpScaledView.setVisibility(View.GONE);
+           // holder.mMediaUpSampledView.setVisibility(View.GONE);
             holder.mDynamicRange.setVisibility(View.GONE);
         } else if(!MusicTagUtils.isLossless(tag)) {
-            holder.mMediaUpScaledView.setVisibility(View.GONE);
-            holder.mMediaUpSampledView.setVisibility(View.GONE);
+          //  holder.mMediaUpScaledView.setVisibility(View.GONE);
+           // holder.mMediaUpSampledView.setVisibility(View.GONE);
             // DR
             holder.mDynamicRange.setVisibility(View.VISIBLE);
             holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
@@ -447,30 +453,32 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
 
             // upScale
+            /*
             if (tag.getMeasuredDR() > 0.0) {
                 if (MusicTagUtils.isUpScaled(tag)) {
                     if (MusicTagUtils.isBadUpScaled(tag)) {
                         holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_bad));
                         holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
                     } else {
-                        holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_good));
+                        holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_average));
                         holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
                     }
                 } else {
-                    holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_best));
+                    holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_good));
                     holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
                 }
             } else {
                 holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_unknown));
                 holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-            }
+            }*/
 
             // UpSampling
+            /*
             if (MusicTagUtils.isUpSampled(tag)) {
                 holder.mMediaUpSampledView.setVisibility(View.VISIBLE);
             }else {
                 holder.mMediaUpSampledView.setVisibility(View.GONE);
-            }
+            }*/
         }
 
         if (isListening) {
@@ -515,7 +523,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         request = new ImageRequest.Builder(holder.mContext)
                 .data(MusicTagUtils.getEncResolutionIcon(holder.mContext, tag))
                 .crossfade(false)
-                .target(holder.mAudioHiResView)
+                .target(holder.mAudioResolutionView)
                 .build();
         imageLoader.enqueue(request);
 

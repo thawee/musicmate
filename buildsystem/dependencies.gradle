@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '8.2.0-rc01', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '8.2.0-rc03', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 30, // support running on android 11 ot higher
@@ -13,7 +13,7 @@ ext.versions = [
         compileSdk         : 34, //33, // required 33 for photopicker
         buildTools         : '34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.9.20', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '1.9.21', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.7.1', //''3.6.0', //''3.2.1' , //'3.1.3',

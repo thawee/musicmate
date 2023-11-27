@@ -324,10 +324,10 @@ public class TagsActivity extends AppCompatActivity {
                 if(MusicTagUtils.isBadUpScaled(displayTag)) {
                     drDBView.setBackgroundColor(getColor(R.color.quality_bad));
                 }else {
-                    drDBView.setBackgroundColor(getColor(R.color.quality_good));
+                    drDBView.setBackgroundColor(getColor(R.color.quality_average));
                 }
             }else {
-                drDBView.setBackgroundColor(getColor(R.color.quality_best));
+                drDBView.setBackgroundColor(getColor(R.color.quality_good));
             }
         }else {
             drDBView.setBackgroundColor(getColor(R.color.quality_unknown));
@@ -397,57 +397,22 @@ public class TagsActivity extends AppCompatActivity {
         }else {
             mediaTypeAndPublisher = " " +StringUtils.SYMBOL_SEP+" ";
         }
-        /*
-        mediaTypeAndPublisher = isEmpty(displayTag.getMediaType())?Constants.UNKNOWN_MEDIA_TYPE:displayTag.getMediaType();
-        mediaTypeAndPublisher += " "+StringUtils.SYMBOL_SEP+" ";
-        mediaTypeAndPublisher += isEmpty(displayTag.getPublisher())?Constants.UNKNOWN_PUBLISHER:displayTag.getPublisher();
 
-         */
         genreView.setText(mediaTypeAndPublisher);
 
         filename.setText("["+FileSystem.getFilename(displayTag.getPath())+"]");
         String matePath = repos.buildCollectionPath(displayTag, true);
         String sid = displayTag.getStorageId();
-       // String mateInd = "";
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            //mateInd = " "+StringUtils.SYMBOL_ATTENTION;
             String path = displayTag.getPath().toUpperCase();
             if(path.contains("/music/") && !path.contains("/telegram/")) {
-                srcdir.setColorFilter(getColor(R.color.warningColor));
-                /*//pathDrive.setTextColor(getColor(R.color.warningColor));
-                mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
-                mManageStatus1.setPrimaryTextColorResource(R.color.grey800);
-                mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus1.setPrimaryText("--/\\--");
-                mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
-                mManageStatus2.setPrimaryTextColorResource(R.color.grey800);
-                mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus2.setPrimaryText("-NEW-");
-               // pathDrive.setTextColor(getColor(R.color.warningColor)); */
+                srcdir.setColorFilter(getColor(R.color.quality_average));
             }else {
-                srcdir.setColorFilter(getColor(R.color.errorColor));
-                /*mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_red_900);
-                mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
-                mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus1.setPrimaryText("--/\\--");
-                mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_red_900);
-                mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
-                mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-                mManageStatus2.setPrimaryText("-NEW-");
-               // pathDrive.setTextColor(getColor(R.color.errorColor)); */
+                srcdir.setColorFilter(getColor(R.color.quality_unknown));
             }
         }else {
             // fully managed
-            srcdir.setColorFilter(getColor(R.color.successColor));
-           /* //mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_yellow_900);
-            mManageStatus1.setTriangleBackgroundColorResource(R.color.material_color_blue_grey_600);
-            mManageStatus1.setPrimaryTextColorResource(R.color.grey200);
-            mManageStatus1.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            mManageStatus1.setPrimaryText("--/\\--");
-            mManageStatus2.setTriangleBackgroundColorResource(R.color.material_color_blue_grey_900);
-            mManageStatus2.setPrimaryTextColorResource(R.color.grey200);
-            mManageStatus2.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            mManageStatus2.setPrimaryText("--\\/--"); */
+            srcdir.setColorFilter(getColor(R.color.quality_good));
         }
         String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {
