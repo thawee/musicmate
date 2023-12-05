@@ -182,7 +182,7 @@ public class MusicTagRepository {
                 if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
                     list = MusixMateApp.getInstance().getOrmLite().findMySongs();
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-                    list = MusixMateApp.getInstance().getOrmLite().findMyIncommingSongs();
+                    list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {

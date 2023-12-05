@@ -368,16 +368,19 @@ public class FileRepository {
         //}else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsDepth() > 16) {
             // Lossless Hi-Res
         //    return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
+        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
+                 Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
             // lounge
             return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
+        }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping()) ||
+                 Constants.GROUPING_THAI_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
             // lounge
             return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
+        }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping()) ||
+                Constants.GROUPING_THAI_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
                 // Acoustic
                 return STORAGE_PRIMARY;
-            }
+        }
         return STORAGE_SECONDARY;
     }
 

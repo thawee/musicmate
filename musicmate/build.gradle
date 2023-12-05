@@ -204,6 +204,7 @@ dependencies {
 
     implementation deps.apache.commons_codec
     implementation deps.apache.commons_io
+    implementation deps.apache.commons_logging
     //implementation deps.apache.httpclient
     //implementation deps.apache.httpcore
 
