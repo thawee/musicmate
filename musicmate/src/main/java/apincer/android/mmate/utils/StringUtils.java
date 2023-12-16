@@ -2,6 +2,8 @@ package apincer.android.mmate.utils;
 
 import android.annotation.SuppressLint;
 
+import androidx.annotation.Nullable;
+
 import java.io.UnsupportedEncodingException;
 import java.text.BreakIterator;
 import java.time.Duration;
@@ -736,5 +738,16 @@ public class StringUtils {
     public static String getM3UArtist(String artist) {
         if(isEmpty(artist)) return "";
         return artist.replaceAll("-", ".");
+    }
+
+    public static String removeTrackNo(@Nullable String title) {
+        if(title==null) return "";
+        if(title.contains(".")) {
+            String no = title.substring(0,title.indexOf("."));
+            if(isDigitOnly(no)) {
+                title = title.substring(title.indexOf(".")+1);
+            }
+        }
+        return title;
     }
 }

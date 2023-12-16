@@ -78,7 +78,7 @@ public final class Constants {
        // IMAGE_COVERS.add("cover.png");
         IMAGE_COVERS.add("folder.png"); // not supported by UAPP
        // IMAGE_COVERS.add("artwork.png"); // supported by UAAP
-       // IMAGE_COVERS.add("front.jpg"); // support by neplayer
+        IMAGE_COVERS.add("front.jpg"); // support by neplayer
        // IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
       //  IMAGE_COVERS.add("artwork.jpg"); // UAAP

@@ -40,7 +40,7 @@
                android:id="@+id/musicsAppBar"
                android:layout_width="match_parent"
                android:layout_height="wrap_content"
-               android:background="@color/black"
+               android:background="@color/colorPrimary_light"
                app:layout_constraintTop_toTopOf="parent">
 			   <!--
 			   <LinearLayout
@@ -86,27 +86,60 @@
 				   android:layout_height="wrap_content"
 				   android:orientation="vertical"
 				   android:background="@drawable/shape_header_panel">
+
+				   <!--
+				   <com.heaven7.android.trapezoid.TrapezoidPartsView
+					   android:id="@+id/header_tpv"
+					   android:layout_width="match_parent"
+					   android:layout_height="@dimen/tab_height"
+					   android:paddingStart="@dimen/dimen_2_dp"
+					   android:paddingEnd="@dimen/dimen_2_dp"
+					   android:fillViewport="true"
+					   app:layout_constraintEnd_toEndOf="parent"
+					   app:layout_constraintStart_toStartOf="parent"
+					   app:layout_constraintTop_toTopOf="parent"
+					   app:tpv_angle="68"
+					   app:tpv_image_aspect_ratio="2"
+					   app:tpv_text_color="@android:color/white"
+					   app:tpv_text_margin_top="24dp"
+					   app:tpv_text_margin_bottom="5dp"
+					   app:tpv_space="8dp"
+					   app:tpv_text_size="14sp"
+					   app:tpv_touch_alpha="0.7"
+					   app:tpv_debug="false"
+					   app:tpv_all_parallelogram="false"
+					   /> -->
+				   <!--
+				    app:tpv_image_aspect_ratio="1.848485"
+				   -->
+
 				   <com.google.android.material.tabs.TabLayout
 					   app:tabTextAppearance="@style/TabTextAppearance"
 					   android:id="@+id/header_tab"
 					   android:layout_width="match_parent"
-					   android:layout_height="@dimen/dimen_32_dp"
+					   android:layout_height="@dimen/tab_height"
 					   android:layout_marginTop="@dimen/dimen_1_dp"
-					   app:tabGravity="center"
 					   app:tabSelectedTextColor="@color/white"
 					   app:tabTextColor="@color/grey600"
 					   app:tabBackground="@color/transparent"
 					   app:tabIndicatorColor="@color/colorPrimary_light"
-					   app:tabMode="scrollable"
-					   app:tabPaddingStart="@dimen/dimen_16_dp"
-					   app:tabPaddingEnd="@dimen/dimen_16_dp"
-					   android:elevation="8dp"
+					   app:tabPaddingStart="@dimen/dimen_1_dp"
+					   app:tabPaddingEnd="@dimen/dimen_1_dp"
+					   android:elevation="2dp"
+					   app:tabMaxWidth="0dp"
+					   app:tabGravity="fill"
+					   app:tabMode="auto"
 					   app:layout_constraintEnd_toEndOf="parent"
 					   app:layout_constraintStart_toStartOf="parent"
 					   app:layout_constraintTop_toTopOf="parent"
 					   app:tabIndicatorAnimationMode="elastic"
 					   android:contentDescription="labels header"
 					   tools:ignore="HardcodedText" />
+				   <!--
+				    app:tabPaddingStart="@dimen/dimen_16_dp"
+					   app:tabPaddingEnd="@dimen/dimen_16_dp"
+				   		app:tabMode="scrollable"
+				   -->
 				   <TextView
 					   android:id="@+id/header_subtitle"
 					   android:layout_width="match_parent"
@@ -120,7 +153,7 @@
 					   android:gravity="center"/>
 				   <View
 					   android:layout_width="match_parent"
-					   android:layout_height="1dp"
+					   android:layout_height="2dp"
 					   android:background="@drawable/divider_header_horizontal" />
 			   </LinearLayout>
 
@@ -140,7 +173,7 @@
 						   android:layout_width="match_parent"
 						   android:layout_height="match_parent"
 						   android:background="@color/black"
-						   app:srlPrimaryColor="@color/grey900"
+						   app:srlPrimaryColor="@color/colorPrimary_light"
 						   app:srlAccentColor="@android:color/white">
 					   <com.scwang.smart.refresh.header.ClassicsHeader
 						   android:layout_width="match_parent"

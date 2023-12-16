@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.github.irshulx.Editor;
@@ -166,8 +167,8 @@ public class AboutActivity extends AppCompatActivity {
 
         private void setupEncodingChart(View v, Map<String, Integer> encList, String title) {
             PieChart chart = v.findViewById(R.id.chart1);
-            //chart.setUsePercentValues(false);
-            chart.setUsePercentValues(true);
+            chart.setUsePercentValues(false);
+            //chart.setUsePercentValues(true);
             chart.getDescription().setEnabled(false);
             chart.setExtraOffsets(0, 4, 0, 0);
             //chart.setExtraOffsets(5, 10, 5, 10);
@@ -227,17 +228,21 @@ public class AboutActivity extends AppCompatActivity {
             mappedColors.put("Lossless", ColorTemplate.rgb("#bc5090"));
             mappedColors.put("High Quality", ColorTemplate.rgb("#ff6361")); */
 
-            mappedColors.put("DSD", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
-            mappedColors.put("Lounge", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
-            mappedColors.put("MQA", ColorTemplate.rgb("#a8aa41"));
-            mappedColors.put("Live", ColorTemplate.rgb("#a8aa41"));
-            mappedColors.put("Hi-Res", ColorTemplate.rgb("#488f31"));
-            mappedColors.put("English", ColorTemplate.rgb("#488f31"));
-            mappedColors.put("Lossless", ColorTemplate.rgb("#dcb85a"));
-            mappedColors.put(Constants.UNKNOWN_GROUP, ColorTemplate.rgb("#dcb85a"));
-            mappedColors.put("High Quality", ColorTemplate.rgb("#de425b"));
-            mappedColors.put("Thai", ColorTemplate.rgb("#de425b"));
-            mappedColors.put("World", ColorTemplate.rgb("#f48558"));
+          //  mappedColors.put("DSD", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
+            mappedColors.put("Lounge", ContextCompat.getColor(getContext(), R.color.material_color_green_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
+            mappedColors.put("Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_400));//ColorTemplate.rgb("#a8aa41"));
+          //  mappedColors.put("MQA", ColorTemplate.rgb("#a8aa41"));
+            mappedColors.put("Live", ContextCompat.getColor(getContext(), R.color.material_color_yellow_100)); //ColorTemplate.rgb("#a8aa41"));
+          //  mappedColors.put("Hi-Res", ColorTemplate.rgb("#488f31"));
+            mappedColors.put("English", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_600)); //ColorTemplate.rgb("#488f31"));
+           // mappedColors.put("Lossless", ColorTemplate.rgb("#dcb85a"));
+            mappedColors.put(Constants.UNKNOWN_GROUP, ContextCompat.getColor(getContext(), R.color.red_light)); //ColorTemplate.rgb("#de425b"));
+           // mappedColors.put("High Quality", ColorTemplate.rgb("#de425b"));
+            mappedColors.put("Thai", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_200)); //ColorTemplate.rgb("#de425b"));
+            mappedColors.put("Thai Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_800)); //ColorTemplate.rgb("#488f31"));
+            mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
+            mappedColors.put("Thai Lounge", ContextCompat.getColor(getContext(), R.color.material_color_green_800)); //ColorTemplate.rgb("#dcb85a"));
+            mappedColors.put("World", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_900)); //ColorTemplate.rgb("#f48558"));
             for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));
                 if(mappedColors.containsKey(enc)) {

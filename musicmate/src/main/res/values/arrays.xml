@@ -128,6 +128,10 @@
         <item>Instrument</item>
         <item>Concertos</item>
         <item>Jazz</item>
+        <item>Jazz, Contemporary</item>
+        <item>Jazz, Ballads</item>
+        <item>Jazz, Bossa Nova</item>
+        <item>Jazz, Vocal</item>
         <item>Blues</item>
         <item>Country</item>
         <item>Folk</item>
@@ -138,12 +142,12 @@
         <item>Pop, Dance</item>
         <item>Pop, Rock</item>
         <item>Pop, Indie</item>
+        <item>Pop, Vocal</item>
         <item>Rock</item>
-        <item>Hard Rock</item>
-        <item>Metal</item>
-        <item>Soft Rock</item>
+        <item>Rock, Hard Rock</item>
+        <item>Rock, Metal</item>
+        <item>Rock, Soft Rock</item>
         <item>Reggae, Ska</item>
-        <item>Electronic, Ambiance</item>
         <item>Latin</item>
         <item>Hip Hop</item>
         <item>EDM</item>
@@ -154,12 +158,12 @@
     </string-array>
     <string-array name="default_groupings">
         <item>Acoustic</item>
-        <item>Lounge</item>
-        <item>Live</item>
-        <item>Thai</item>
-        <item>Thai Lounge</item>
-        <item>Thai Acoustic</item>
-        <item>World</item>
         <item>English</item>
+        <item>Lounge</item>
+        <item>Thai</item>
+        <item>Thai Acoustic</item>
+        <item>Thai Country</item>
+        <item>Thai Lounge</item>
+        <item>World</item>
     </string-array>
 </resources>

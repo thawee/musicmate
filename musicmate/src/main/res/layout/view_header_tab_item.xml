@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:padding="@dimen/tab_padding">
+    <TextView
+        android:id="@+id/tabHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:lines="2"
+        android:textStyle="italic"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:visibility="gone"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/tabTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toEndOf="@+id/tabHeader"
+        android:gravity="center"
+        android:textColor="@color/grey400"
+        android:textStyle="italic|bold"
+        android:textSize="12sp"
+        android:layout_marginStart="@dimen/dimen_16_dp"
+        android:paddingStart="@dimen/dimen_2_dp"
+        android:paddingEnd="@dimen/dimen_2_dp"
+        />
+
+</RelativeLayout>

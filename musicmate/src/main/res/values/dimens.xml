@@ -77,4 +77,7 @@
     <dimen name="dimen_38_dp">38dp</dimen>
     <dimen name="dimen_76_dp">76dp</dimen>
     <dimen name="dimen_72_dp">72dp</dimen>
+    <dimen name="tab_height">36dp</dimen>
+    <dimen name="tab_padding">1dp</dimen>
+    <dimen name="tab_icon">18dp</dimen>
 </resources>

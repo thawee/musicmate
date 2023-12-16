@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static net.freeutils.httpserver.HTTPServer.escapeHTML;
 import static apincer.android.mmate.Constants.http_port;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
@@ -65,6 +64,7 @@ import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
+import com.heaven7.android.trapezoid.TrapezoidPartsView;
 import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 
@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar mExitSnackbar;
     //private View mSearchBar;
     private View mHeaderPanel;
+    private TrapezoidPartsView mHeaderTPV;
     private SearchView mSearchView;
     //private ImageView mSearchViewSwitch;
 
@@ -207,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
     Map<MusicTag, String> statusList = new HashMap<>();
     ListView itemsView = cview.findViewById(R.id.itemListView);
     TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Delete Files");
+        titleText.setText(R.string.title_removing_music_files);
         itemsView.setAdapter(new BaseAdapter() {
         @Override
         public int getCount() {
@@ -321,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Manage Files");
+        titleText.setText("Managing music file location");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -556,6 +557,7 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.autoRefresh();
     }
 
+    @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
         if(mResideMenu.isOpened()) {
@@ -684,6 +686,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
+       /* mHeaderTPV = findViewById(R.id.header_tpv);
+        mHeaderTPV.setOnTrapezoidPartClickListener((view, part) -> {
+            adapter.resetFilter();
+            adapter.setKeyword(part.getText().toString());
+            refreshLayout.autoRefresh();
+        }); */
+
         headerTab = findViewById(R.id.header_tab);
         headerSubtitle = findViewById(R.id.header_subtitle);
         headerTab.addOnTabSelectedListener(new OnTabSelectedListener(){
@@ -694,16 +703,27 @@ public class MainActivity extends AppCompatActivity {
                     adapter.setKeyword(tab.getText().toString());
                     refreshLayout.autoRefresh();
                 }
+                TextView tv = tab.getCustomView().findViewById(R.id.tabTitle);
+                tv.setTextColor(Color.WHITE);
+               // tv.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary_light));
+                //tab.setTabLabelVisibility(TabLayout.TAB_LABEL_VISIBILITY_LABELED);
+               // tab.getCustomView().findViewById(R.id.tabHeader).setVisibility(View.GONE);
+              //  tab.getCustomView().findViewById(R.id.tabTitle).setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
+                TextView tv = tab.getCustomView().findViewById(R.id.tabTitle);
+                tv.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey400));
+                //tab.setTabLabelVisibility(TabLayout.TAB_LABEL_VISIBILITY_UNLABELED);
+               // tab.getCustomView().findViewById(R.id.tabHeader).setVisibility(View.VISIBLE);
+               // tab.getCustomView().findViewById(R.id.tabTitle).setVisibility(View.GONE);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
+               // tab.getCustomView().findViewById(R.id.tabHeader).setVisibility(View.GONE);
+               // tab.getCustomView().findViewById(R.id.tabTitle).setVisibility(View.VISIBLE);
             }
         });
     }
@@ -965,13 +985,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putParcelable("main_screen_type", adapter.getCriteria());
     }
 
     @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
+    public void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
     }
 
@@ -1274,19 +1294,71 @@ public class MainActivity extends AppCompatActivity {
         mStateView.hideStates();
     }
 
+    public View getTabView(String title) {
+        // Given you have a custom layout in `res/layout/custom_tab.xml` with a TextView and ImageView
+        View v = LayoutInflater.from(this).inflate(R.layout.view_header_tab_item, null);
+        TextView hv = (TextView) v.findViewById(R.id.tabHeader);
+        hv.setText(StringUtils.getAbvByUpperCase(title));
+        TextView tv = (TextView) v.findViewById(R.id.tabTitle);
+        tv.setText(title);
+       // ImageView img = (ImageView) v.findViewById(R.id.imgView);
+       // img.setImageResource(imageResId[position]);
+        return v;
+    }
+
+    private List<TrapezoidPartsView.TrapezoidPart> createTrapezoidParts() {
+        List<TrapezoidPartsView.TrapezoidPart> list = new ArrayList<>();
+        List<String> titles = this.adapter.getHeaderTitles(getApplicationContext());
+        String headerTitle = this.adapter.getHeaderTitle();
+        int i=0;
+        for(String title: titles) {
+            TrapezoidPartsView.TrapezoidPart part = new TrapezoidPartsView.TrapezoidPart();
+            if(i==0) {
+                part.setBgIcon(UIUtils.getBitmap(this, R.drawable.tab_start_bg));
+            }else if(i == (titles.size()-1)){
+                part.setBgIcon(UIUtils.getBitmap(this, R.drawable.tab_end_bg));
+            }else {
+                part.setBgIcon(UIUtils.getBitmap(this, R.drawable.tab_bg));
+            }
+            if(title.equals(headerTitle)) {
+                part.setSelected(true);
+            }
+
+           // part.setIcon(getResources().getDrawable(mIconIds[i]));
+            part.setText(title);
+            part.setShortText(StringUtils.getAbvByUpperCase(title));
+            list.add(part);
+            i++;
+        }
+        return list;
+    }
+
     private void updateHeaderPanel() {
-        onSetup = true;
+       // mHeaderTPV.setParts(createTrapezoidParts());
+
         headerTab.removeAllTabs();
+        onSetup = true;
         List<String> titles = adapter.getHeaderTitles(getApplicationContext());
         String headerTitle = adapter.getHeaderTitle();
+        int i=0;
         for(String title: titles) {
             TabLayout.Tab firstTab = headerTab.newTab(); // Create a new Tab names
+            View tabItemView = getTabView(title);
+            firstTab.setCustomView(tabItemView);
             firstTab.setText(title); // set the Text for the first Tab
             if(StringUtils.equals(headerTitle, title)) {
                 headerTab.addTab(firstTab, true);
             }else {
                 headerTab.addTab(firstTab);
             }
+            if(i==0) {
+                tabItemView.setBackgroundResource(R.drawable.tab_start_bg);
+            }else if(i == (titles.size()-1)){
+                tabItemView.setBackgroundResource(R.drawable.tab_end_bg);
+            }else {
+                tabItemView.setBackgroundResource(R.drawable.tab_bg);
+            }
+            i++;
         }
         onSetup = false;
 
@@ -1433,8 +1505,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private List<MusicTag> getSelections() {
-            List<MusicTag> list = new ArrayList<>();
-            list.addAll(selections);
+            List<MusicTag> list = new ArrayList<>(selections);
             return list;
         }
     }
@@ -1502,7 +1573,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0; i< block;i++) {
             valueList.add((long) sizeInBlock);
         }
-        final float rate = 100/selections.size(); // pcnt per 1 song
+        final float rate = 100f/selections.size(); // pcnt per 1 song
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
@@ -2161,7 +2232,7 @@ https://aaaaa.com
         for(int i=0; i< block;i++) {
             valueList.add((long) sizeInBlock);
         }
-        final float rate = 100/selections.size(); // pcnt per 1 song
+        final float rate = 100f/selections.size(); // pcnt per 1 song
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
