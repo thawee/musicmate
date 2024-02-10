@@ -1,6 +1,8 @@
 package apincer.android.mmate.ui;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -45,6 +47,11 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.MusicMateExecutors;
 
 public class AboutActivity extends AppCompatActivity {
+    public static void showAbout(Activity activity) {
+        Intent myIntent = new Intent(activity, AboutActivity.class);
+        activity.startActivity(myIntent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if(Preferences.isOnNightModeOnly(getApplicationContext())) {

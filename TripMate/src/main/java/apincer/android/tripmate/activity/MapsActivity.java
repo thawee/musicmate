@@ -45,7 +45,6 @@ import org.osmdroid.views.overlay.simplefastpoint.SimplePointTheme;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.tripmate.BuildConfig;
 import apincer.android.tripmate.R;
 import apincer.android.tripmate.objectbox.ObjectBox;
 import apincer.android.tripmate.objectbox.Place;
@@ -88,7 +87,7 @@ public class MapsActivity extends AppCompatActivity {
 
         placeResultView = findViewById(R.id.header_results);
 
-        Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
+       // Configuration.getInstance().setUserAgentValue(BuildConfig.APPLICATION_ID);
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
         map.setMultiTouchControls(true);

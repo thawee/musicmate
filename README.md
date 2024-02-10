@@ -68,3 +68,10 @@ git add .
 git commit -m "update…"
 git remote add origin https://github.com/thawee/musicmate.git
 git push -u origin master 
+
+proxy
+set proxy in ~/.gradle/gradle.properties
+systemProp.http.proxyHost=10.100.1.189
+systemProp.http.proxyPort=8080
+systemProp.https.proxyHost=10.100.1.189
+systemProp.https.proxyPort=8080

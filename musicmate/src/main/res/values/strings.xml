@@ -127,6 +127,104 @@
     <string name="preferences_sub_streaming">Streaming</string>
     <string name="title_removing_music_files">Removing music files</string>
 
+    <string name="this_device">this device</string>
+    <string name="play">play</string>
+    <string name="stop">stop</string>
+    <string name="pause">pause</string>
+    <string name="previous">previous</string>
+    <string name="next">next</string>
+    <string name="exit">Exit</string>
+
+    <string name="playerCurrentItem">currentItem</string>
+    <string name="musicActivityNextLabel">"Next: "</string>
+    <string name="playerNextItem">nextItem</string>
+    <string name="playerPosition">Position</string>
+    <string name="playerTiming">Timing: </string>
+    <string name="playerTimeDuration">Duration</string>
+    <string name="playerTimeSeparator"> / </string>
+    <string name="playerTimeElapsed">Elapsed</string>
+    <string name="images">Images</string>
+    <string name="albums">Albums</string>
+    <string name="all">All</string>
+    <string name="artists">Artists</string>
+    <string name="genres">Genres</string>
+    <string name="music">Music</string>
+    <string name="playerNameAvTransport">remote</string>
+    <string name="playerNameMusic">music</string>
+    <string name="playerShortNameMusic">Music</string>
+    <string name="activity_remote_player_mute">Mute</string>
+    <string name="activity_remote_player_volume">Volume</string>
+    <string name="title_activity_server_list">Server</string>
+    <string name="title_activity_content_list">Content</string>
+    <string name="title_activity_receiver_list">Receiver</string>
+    <string name="title_activity_player_list">Player</string>
+    <string name="avtransportPlayerActivityImageView">Device</string>
+    <string name="avtransportPlayerActivityNextLabel">Next:</string>
+    <string name="upnp_server_stop_server">stop server</string>
+    <string name="upnp_server_start_server">start server</string>
+    <string name="musicActivityImageView">Cover</string>
+    <string name="menu_settings">MusicMate settings</string>
+    <string name="about">About</string>
+
+    <string name="channel_name">MusicMate</string>
+    <string name="channel_description">MusicMate notifications</string>
+
+    <string name="error_no_receiver_device_found">No receiver device found</string>
+
+    <string name="settings_browse_thumbnails_coverlookup_chkbx" translatable="false">thumbnail_cover_lookup_chkbx</string>
+    <string name="settings_selected_receivers_title">Current media receivers</string>
+    <string name="settings_selected_provider_title">Current media provider</string>
+    <string name="settings_default_duration">default item duration</string>
+    <string name="settings_default_duration_key">default item duration</string>
+    <string name="settings_silence_duration">silence duration</string>
+    <string name="settings_silence_duration_key">silence duration</string>
+    <string name="settings_local_server_title">Local server configuration</string>
+    <string name="settings_local_server_started">local server is started</string>
+    <string name="settings_local_server_stopped">local server is stopped</string>
+    <string name="settings_local_server_chkbx">local_server_chkbx</string>
+    <string name="settings_local_server_receiver_off">media receiver is disabled</string>
+    <string name="settings_local_server_receiver_on">media receiver is enabled</string>
+    <string name="settings_local_server_receiver_chkbx">local_server_receiver_chkbx</string>
+    <string name="settings_local_server_provider_off">content directory is disabled</string>
+    <string name="settings_local_server_provider_on">content directory is enabled</string>
+    <string name="settings_local_server_provider_chkbx">local_server_provider_chkbx</string>
+    <string name="settings_local_server_testcontent">local server using test content</string>
+    <string name="settings_local_server_mediastore">local server using mediastore</string>
+    <string name="settings_local_server_testcontent_chkbx" translatable="false">local_server_testcontent_chkbx</string>
+    <string name="settings_local_server_serve_images_off">serve images is disabled</string>
+    <string name="settings_local_server_serve_images_on">serve images is enabled</string>
+    <string name="settings_local_server_serve_images_chkbx">local_server_serve_images_chkbx</string>
+    <string name="settings_local_server_serve_music_off">serve music is disabled</string>
+    <string name="settings_local_server_serve_music_on">serve music is enabled</string>
+    <string name="settings_local_server_serve_music_chkbx">local_server_serve_music_chkbx</string>
+    <string name="settings_local_server_serve_video_off">serve video is disabled</string>
+    <string name="settings_local_server_serve_video_on">serve video is enabled</string>
+    <string name="settings_local_server_serve_video_chkbx">local_server_serve_video_chkbx</string>
+    <string name="settings_local_server_name">network name for local server</string>
+    <string name="settings_local_server_name_key">Local server name</string>
+    <string name="settings_local_server_autostart_deactivated">Server will not start after booting</string>
+    <string name="settings_local_server_autostart_activated">Server will start after booting</string>
+    <string name="settings_local_server_autostart_chkbx">settings_local_server_autostart_chkbx</string>
+    <string name="settings_sending_upnp_alive_interval">Sending upnp alive notifications</string>
+    <string name="settings_sending_upnp_alive_interval_key" translatable="false">settings_sending_upnp_alive_interval_key</string>
+    <string name="settings_category_playing">Media playing behavior</string>
+    <string name="settings_replay_playlist_chkbx">settings_replay_playlist_chkbx</string>
+    <string name="settings_replay_playlist_on">Replay playlist</string>
+    <string name="settings_replay_playlist_off">Don\'t replay playlist</string>
+    <string name="settings_music_player_shuffle_chkbx">settings_music_player_chkbx</string>
+    <string name="settings_music_player_shuffle_on">Shuffled music play</string>
+    <string name="settings_music_player_shuffle_off">Ordered music play</string>
+    <string name="settings_category_synchronization">Synchronization settings</string>
+    <string name="settings_default_playback_delay">Playback delay</string>
+    <string name="settings_default_playback_delay_key">settings_default_playback_delay_key</string>
+    <string name="settings_device_playback_offset">Device offset</string>
+    <string name="settings_device_playback_offset_summ">offset in ms</string>
+    <string name="settings_device_playback_offset_key">settings_device_playback_offset_key</string>
+    <string name="settings_local_server_provider_uuid_key">settings_local_server_provider_uuid_key</string>
+    <string name="settings_local_server_receiver_uuid_key">settings_local_server_receiver_uuid_key</string>
+    <string name="style">Style</string>
+
+
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>

@@ -4,7 +4,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="340dp"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/dimen_60_dp"
     android:background="#504F4F"
     android:layout_gravity="bottom"
     app:shape_diagonal_angle="-10"
@@ -271,7 +272,7 @@
                     android:layout_height="wrap_content"
                     android:paddingTop="@dimen/dimen_2_dp"
                     android:fontFamily="@font/k2d_bold"
-                    android:textSize="8sp"
+                    android:textSize="10sp"
                     android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
                     android:gravity="center|bottom"
                     android:textColor="@android:color/white"
@@ -299,6 +300,7 @@
                 android:layout_height="@dimen/dimen_16_dp"
                 android:layout_marginRight="@dimen/dimen_4_dp"
                 android:scaleType="fitXY"/>-->
+<!--
             <TextView
                 android:id="@+id/panel_path_drive"
                 android:layout_width="wrap_content"
@@ -327,9 +329,10 @@
                 android:ellipsize="start"
                 android:gravity="center"
                 android:layout_gravity="center"
-                android:singleLine="true" />
+                android:singleLine="true" /> -->
 
         </LinearLayout>
+        <!--
         <TextView
             android:id="@+id/panel_filename"
             android:layout_width="wrap_content"
@@ -343,7 +346,7 @@
             android:text="filename"
             android:gravity="center"
             android:layout_gravity="center"
-            android:singleLine="true" />
+            android:singleLine="true" /> -->
 <!--
         <LinearLayout
             android:layout_width="wrap_content"

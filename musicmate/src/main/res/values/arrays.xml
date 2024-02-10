@@ -122,8 +122,6 @@
 
     <string-array name="default_genres">
         <item>Acoustic</item>
-        <item>Alternative</item>
-        <item>Vocal</item>
         <item>Classical</item>
         <item>Instrument</item>
         <item>Concertos</item>
@@ -152,9 +150,16 @@
         <item>Hip Hop</item>
         <item>EDM</item>
         <item>Rap</item>
+        <item>Thai Traditional</item>
+        <item>Thai Pop</item>
+        <item>Thai Pop, Indie</item>
+        <item>Thai Pop, Rock</item>
+        <item>Thai Pop, Vocal</item>
+        <item>Thai Rock</item>
+        <item>Thai Folk</item>
+        <item>Luk Krung</item>
         <item>Luk Thung</item>
         <item>Mor Lum</item>
-        <item>Phuea Chiwit</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Acoustic</item>
@@ -162,7 +167,6 @@
         <item>Lounge</item>
         <item>Thai</item>
         <item>Thai Acoustic</item>
-        <item>Thai Country</item>
         <item>Thai Lounge</item>
         <item>World</item>
     </string-array>

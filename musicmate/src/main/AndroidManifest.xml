@@ -24,10 +24,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission
+        android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -69,11 +72,16 @@
             android:name="apincer.android.mmate.broadcast.MusicMateNotificationListener"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".share.MusicServerService"
+            android:enabled="true" />
+
         <!-- Main activity for music browsing on phone -->
         <!--
         <activity

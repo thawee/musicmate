@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0" xmlns:dlna="urn:schemas-dlna-org:device-1-0">
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+    <URLBase>http://[host]:[port]/</URLBase>
+    <device>
+        <dlna:X_DLNADOC xmlns:dlna="urn:schemas-dlna-org:device-1-0">DMS-1.50</dlna:X_DLNADOC>
+        <dlna:X_DLNADOC xmlns:dlna="urn:schemas-dlna-org:device-1-0">M-DMS-1.50</dlna:X_DLNADOC>
+        <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
+        <friendlyName>MusicMate</friendlyName>
+        <manufacturer>Apincer</manufacturer>
+        <manufacturerURL/>
+        <modelDescription>MusicMate Media Server</modelDescription>
+        <modelName>MusicMate([model])</modelName>
+        <modelNumber>01</modelNumber>
+        <modelURL/>
+        <serialNumber/>
+        <UPC/>
+        <UDN>[uuid]</UDN>
+        <presentationURL>http://[host]:[port]</presentationURL>
+        <iconList>
+            <icon>
+                <mimetype>image/png</mimetype>
+                <width>256</width>
+                <height>256</height>
+                <depth>24</depth>
+                <url>/images/icon-256.png</url>
+            </icon>
+        </iconList>
+        <serviceList>
+            <service>
+                <serviceType>urn:schemas-upnp-org:service:ContentDirectory:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>
+                <SCPDURL>/upnp/UPnP_AV_ContentDirectory_1.0.xml</SCPDURL>
+                <controlURL>/upnp/service/cd/control</controlURL>
+                <eventSubURL>/upnp/service/cd/event</eventSubURL>
+            </service>
+            <service>
+                <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+                <SCPDURL>/upnp/UPnP_AV_ConnectionManager_1.0.xml</SCPDURL>
+                <controlURL>/upnp/service/cm/control</controlURL>
+                <eventSubURL>/upnp/service/cm/event</eventSubURL>
+            </service>
+            <!--
+            <service>
+                <serviceType>urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1</serviceType>
+                <serviceId>urn:microsoft.com:serviceId:X_MS_MediaReceiverRegistrar</serviceId>
+                <SCPDURL>/upnp/UPnP_AV_X_MS_MediaReceiverRegistrar_1.0.xml</SCPDURL>
+                <controlURL>/upnp/control/x_ms_mediareceiverregistrar</controlURL>
+                <eventSubURL>/upnp/event/x_ms_mediareceiverregistrar</eventSubURL>
+            </service> -->
+        </serviceList>
+    </device>
+</root>

@@ -16,15 +16,27 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
 
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
+import apincer.android.mmate.utils.StringUtils;
 
 public final class MusicCoverArtProvider extends ContentProvider {
     private static final String TAG = MusicCoverArtProvider.class.getName();
         public static Uri getUriForMusicTag(MusicTag item) {
+            String absPath = item.getPath().toLowerCase();
+            if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
+                // if has alblum, use parent dir
+                if(!StringUtils.isEmpty(item.getAlbum())) {
+                    // use directory
+                    File file = new File(item.getPath());
+                    return new Builder().scheme("content").authority("apincer.android.mmate.coverart.provider").path(file.getParentFile().getAbsolutePath()).build();
+                }
+            }
+            // use music file
             return new Builder().scheme("content").authority("apincer.android.mmate.coverart.provider").path(item.getPath()).build();
         }
 
@@ -58,14 +70,13 @@ public final class MusicCoverArtProvider extends ContentProvider {
     }
 
     public static String getCacheCover(File file) {
-        File pathDir = file;
-        String absPath = file.getAbsolutePath().toLowerCase();
+        /* String absPath = file.getAbsolutePath().toLowerCase();
         if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
             // use folder for managed files, others use full file path
             pathDir = file.getParentFile();
-        }
+        }*/
 
-        String path = DigestUtils.md5Hex(pathDir.getAbsolutePath())+".png";
+        String path = DigestUtils.md5Hex(file.getAbsolutePath())+".png";
 
         return "/CoverArts/"+path;
     }
@@ -93,7 +104,7 @@ public final class MusicCoverArtProvider extends ContentProvider {
                         FileRepository.extractCoverArt(file.getAbsolutePath(), pathFile);
                 }
 
-                return ParcelFileDescriptorUtil.pipeFrom(new FileInputStream(pathFile));
+                return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
             } catch (Exception e) {
                 Log.e(TAG,"Open CoverArt File: "+e.getMessage());
             }

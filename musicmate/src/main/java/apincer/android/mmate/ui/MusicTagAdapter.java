@@ -157,6 +157,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_BROKEN);
+            titles.add(Constants.TITLE_NOT_DR);
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
             titles.add(Constants.TITLE_DSD_AUDIO);

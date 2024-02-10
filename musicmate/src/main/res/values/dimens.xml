@@ -80,4 +80,6 @@
     <dimen name="tab_height">36dp</dimen>
     <dimen name="tab_padding">1dp</dimen>
     <dimen name="tab_icon">18dp</dimen>
+    <dimen name="dimen_320_dp">320dp</dimen>
+    <dimen name="dimen_480_dp">480dp</dimen>
 </resources>

@@ -104,26 +104,6 @@ public class MusicTagRepository {
         return list;
     }
 
-    public static List<String> getGroupingList(Context context) {
-        List<String> list = new ArrayList<>();
-        List<String> names = MusixMateApp.getInstance().getOrmLite().getGrouping();
-            for (String group:names) {
-                if(StringUtils.isEmpty(group)) {
-                    list.add(StringUtils.EMPTY);
-                }else {
-                    list.add(group);
-                }
-            }
-        String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
-        for(String grp: groupings) {
-            if(!list.contains(grp)) {
-                list.add(grp);
-            }
-        }
-        Collections.sort(list);
-        return list;
-    }
-
     public static List<String> getActualGroupingList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGrouping();
@@ -185,6 +165,8 @@ public class MusicTagRepository {
                     list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
+                } else if (Constants.TITLE_NOT_DR.equals(criteria.getKeyword())) {
+                    list = MusixMateApp.getInstance().getOrmLite().findMyNoneDRSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
                 }

@@ -1,0 +1,1 @@
+/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/build/intermediates/cxx/RelWithDebInfo/4d5v3z70/obj/arm64-v8a

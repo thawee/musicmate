@@ -25,8 +25,6 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-    public static final int http_port = 8011;
-
     public static final double SPL_8BIT_IN_DB = 49.8;
     public static final double SPL_16BIT_IN_DB = 96.33;
     public static final double SPL_24BIT_IN_DB = 144.49;
@@ -63,6 +61,8 @@ public final class Constants {
     public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
     public static final String GROUPING_THAI_LIVE = "Thai Live";
     public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
+    public static final String PREF_PREVIEW_FOLLW_NOW_PLAYING = "preference_preview_follows_now_playing";
+    public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
 
     public static String FIELD_SEP = ";";
    public static double MIN_TITLE = 0.80;
@@ -143,7 +143,7 @@ public final class Constants {
     //public static final String TITLE_RECORDING_QUALITY = "Recording Quality";
     public static final String TITLE_DUPLICATE = "Duplicate";
     public static final String TITLE_BROKEN = "Bad";
-    //public static final String TITLE_AUDIOPHILE = "Audiophile";
+    public static final String TITLE_NOT_DR = "NO DR/RG";
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
@@ -159,8 +159,8 @@ public final class Constants {
    // public static final String PREF_SHOW_NOTIFICATION = "preference_notification";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
-    public static final String PREF_FOLLOW_NOW_PLAYING = "preference_follow_now_playing";
-    public static final String PREF_OPEN_NOW_PLAYING = "preference_open_now_playing";
+   // public static final String PREF_FOLLOW_NOW_PLAYING = "preference_follow_now_playing";
+   // public static final String PREF_OPEN_NOW_PLAYING = "preference_open_now_playing";
 
    // public static final int INFO_RESOLUTIONS_WIDTH = 280;
    // public static final int INFO_RESOLUTIONS_HEIGHT = 28;

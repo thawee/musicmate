@@ -30,6 +30,7 @@ buildscript {
         // NOTE: Do not place application dependencies here; they belong
         // in the individual module build.gradle files
     }
+
     repositories {
         mavenCentral()
         gradlePluginPortal()

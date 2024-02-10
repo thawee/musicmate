@@ -16,10 +16,10 @@ import java.util.UUID;
 
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
-import fm.last.musicbrainz.coverart.CoverArt;
-import fm.last.musicbrainz.coverart.CoverArtArchiveClient;
-import fm.last.musicbrainz.coverart.CoverArtImage;
-import fm.last.musicbrainz.coverart.impl.DefaultCoverArtArchiveClient;
+//import fm.last.musicbrainz.coverart.CoverArt;
+//import fm.last.musicbrainz.coverart.CoverArtArchiveClient;
+//import fm.last.musicbrainz.coverart.CoverArtImage;
+//import fm.last.musicbrainz.coverart.impl.DefaultCoverArtArchiveClient;
 
 public final class MusicbrainzCoverArtProvider extends ContentProvider {
     private static final String TAG = MusicbrainzCoverArtProvider.class.getName();
@@ -50,7 +50,7 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
     }
 
     public ParcelFileDescriptor openFile(Uri uri, String str) {
-            try {
+         /*   try {
                 CoverArtArchiveClient client = new DefaultCoverArtArchiveClient(true);
                 String path = uri.getPath();
                 if(path.startsWith("/")) {
@@ -70,7 +70,7 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
                 }
             } catch (Exception e) {
                 Log.e(TAG,"openFile",e);
-            }
+            } */
             return null;
         }
 

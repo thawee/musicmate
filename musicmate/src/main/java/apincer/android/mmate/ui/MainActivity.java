@@ -1,6 +1,6 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.http_port;
+import static apincer.android.mmate.share.MusicServerService.PORT;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -106,6 +107,7 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.share.MusicServerService;
 import apincer.android.mmate.share.SyncHibyPlayer;
 import apincer.android.mmate.share.SyncRaspberry;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
@@ -114,6 +116,7 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
+import apincer.android.mmate.utils.HostInterface;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
@@ -146,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
     private static final double MAX_PROGRESS = 100.00;
 
     private MusicTag nowPlaying = null;
-
 
     ActivityResultLauncher<Intent> editorLauncher;
 
@@ -1083,8 +1085,36 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MediaBrowserActivity.this, LogMessageActivity.class);
             startActivity(myIntent);
             return true;*/
+        }else if(item.getItemId() == R.id.menu_media_server) {
+            doShowMediaServerControl();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void doShowMediaServerControl() {
+        View cview = getLayoutInflater().inflate(R.layout.view_action_media_server, null);
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(true);
+        Button startButton = cview.findViewById(R.id.startServer);
+        startButton.setOnClickListener(view -> {
+            //DLNAMediaServer server = new DLNAMediaServer();
+           // server.start();
+            startForegroundService(new Intent(getApplicationContext(),
+                    MusicServerService.class));
+        });
+        Button stopButton = cview.findViewById(R.id.stopServer);
+        stopButton.setOnClickListener(view -> stopService(new Intent(getApplicationContext(),
+                MusicServerService.class)));
+
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        alert.show();
     }
 
     private void doShowSignalPath() {
@@ -1407,7 +1437,7 @@ public class MainActivity extends AppCompatActivity {
             //doShowNowPlayingSongFAB(song);
             //scrollToSong(song);
             //if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
-            if(Preferences.isFollowNowPlaying(getBaseContext())) {
+            if(Preferences.isListFollowNowPlaying(getBaseContext())) {
                     if(timer!=null) {
                             timer.cancel();
                     }
@@ -1834,8 +1864,12 @@ https://aaaaa.com
 
             // pls
             SyncRaspberry streamer = new SyncRaspberry();
-            String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/music/";
-            String baseImgUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/images/";
+            String host = HostInterface.getIPv4Address();
+
+           // String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/music/";
+           // String baseImgUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/images/";
+             String baseUrl = HostInterface.getHostURL(host,PORT,"/music/");
+             String baseImgUrl = HostInterface.getHostURL(host,PORT,"/images/");
            // int cnt=0;
              String file = adapter.getCriteria().getKeyword();
                 file = file.replace("/","_");
@@ -1927,7 +1961,9 @@ https://aaaaa.com
             out.write("#PLAYLIST: MusicMate Playlist - "+adapter.getCriteria().getKeyword()+"\n\n");
 
             ///music/id - arist - title.flac
-            String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/music/";
+            String host = HostInterface.getIPv4Address();
+            String baseUrl = HostInterface.getHostURL(host,PORT,"/music/");
+           // String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/music/";
             for (MusicTag tag:currentSelections) {
                 out.write("#EXTINF:"+tag.getAudioDuration()+","+StringUtils.getM3UArtist(tag.getArtist())+" - "+tag.getTitle()+"\n");
                // String location =  baseUrl+tag.getStorageId()+"/"+tag.getSimpleName();

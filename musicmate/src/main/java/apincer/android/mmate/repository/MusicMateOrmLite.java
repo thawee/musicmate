@@ -126,7 +126,18 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("mmManaged",false).or().eq("measuredDR",0);
+            builder.where().eq("mmManaged",false);
+            return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
+        } catch (SQLException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public List<MusicTag> findMyNoneDRSongs()  {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().eq("measuredDR",0);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;

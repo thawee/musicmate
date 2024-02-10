@@ -19,19 +19,17 @@ public class Preferences {
                 PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_NIGHT_MODE_ONLY,true);
     }
-
-
-
-    public static boolean isOpenNowPlaying(Context context) {
+/*
+    public static boolean isPreviewFollowNowPlaying(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_OPEN_NOW_PLAYING,false);
-    }
+        return prefs.getBoolean(Constants.PREF_PREVIEW_FOLLW_NOW_PLAYING,false);
+    } */
 
-    public static boolean isFollowNowPlaying(Context context) {
+    public static boolean isListFollowNowPlaying(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_FOLLOW_NOW_PLAYING,false);
+        return prefs.getBoolean(Constants.PREF_LIST_FOLLOW_NOW_PLAYING,false);
     }
 
     public static boolean isShowTrackNumber(Context context) {

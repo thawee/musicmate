@@ -56,18 +56,29 @@ public class FileRepository {
             Log.e(TAG, "extractCoverArt",e);
         }
     }
-    public static void extractCoverArt(String path, File pathFile) {
+    public static void extractCoverArt(String path, File targetFile) {
         try {
-            File dir = pathFile.getParentFile();
+            File dir = targetFile.getParentFile();
             dir.mkdirs();
             File coverArtFile = getFolderCoverArt(path);
             if(coverArtFile!=null) {
                 // check directory images
-                FileSystem.copy(coverArtFile, pathFile);
+                FileSystem.copy(coverArtFile, targetFile);
             }else {
                 // extract from media file
-                //TODO: extarch by justflac for flac
-                FFMPeg.extractCoverArt(path, pathFile);
+                // if path is folder, extract from first music file in folder
+                File pathFile = new File(path);
+                if(pathFile.isDirectory()) {
+                    // find first music file in path
+                    File[] files = pathFile.listFiles();
+                    for(File file: files) {
+                        if(FFMPeg.isSupportedFileFormat(file.getAbsolutePath())) {
+                            path = file.getAbsolutePath();
+                            break;
+                        }
+                    }
+                }
+                FFMPeg.extractCoverArt(path, targetFile);
             }
         } catch (Exception e) {
             Log.e(TAG, "extractCoverArt",e);
@@ -120,7 +131,10 @@ public class FileRepository {
 
         File mediaFile = new File(path);
         File coverFile = null;
-        File coverDir = mediaFile.getParentFile();
+        File coverDir = mediaFile;
+        if(mediaFile.isFile()) {
+            coverDir = mediaFile.getParentFile();
+        }
 
         for (String f : Constants.IMAGE_COVERS) {
             File cover = new File(coverDir, f);
