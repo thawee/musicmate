@@ -68,7 +68,7 @@
     <string name="alert_btn_cancel">CANCEL</string>
     <string name="alert_btn_set">UPDATE</string>
 
-    <string name="title_many">Selected %1$d songs</string>
+    <string name="title_many">%1$d songs</string>
 
     <string name="preferences_sub_next_song">Now Playing Song</string>
     <string name="preferences_sub_appearance">Appearance</string>
@@ -223,6 +223,7 @@
     <string name="settings_local_server_provider_uuid_key">settings_local_server_provider_uuid_key</string>
     <string name="settings_local_server_receiver_uuid_key">settings_local_server_receiver_uuid_key</string>
     <string name="style">Style</string>
+    <string name="sample_file_type">FLAC</string>
 
 
     <!-- new editor -->

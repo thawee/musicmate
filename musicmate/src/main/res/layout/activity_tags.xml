@@ -75,6 +75,7 @@
                     android:background="@drawable/shape_btn_background"
                     android:src="@drawable/ic_baseline_skip_next_24"
                     />
+                <!--
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/music_refreshPreview"
                     android:layout_width="wrap_content"
@@ -93,7 +94,7 @@
                     android:backgroundTint="@color/black_transparent_40"
                     android:background="@drawable/shape_btn_background"
                     android:src="@drawable/ic_baseline_refresh_24"
-                    />
+                    /> -->
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -162,6 +163,39 @@
                         android:src="@drawable/ic_format_mqa_white"/>
 -->
 
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:background="@drawable/shape_background_dr"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
+                        android:padding="@dimen/dimen_2_dp">
+                    <TextView
+                        android:id="@+id/icon_file_type"
+                        android:layout_width="@dimen/dimen_36_dp"
+                        android:layout_height="@dimen/dimen_20_dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/shape_background_unknown"
+                        android:fontFamily="@font/oswald_bold"
+                        android:gravity="center"
+                        android:text="@string/sample_file_type"
+                        android:textColor="@color/black"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                    </LinearLayout>
+                    <ImageView
+                        android:id="@+id/icon_resolution"
+                        android:layout_width="@dimen/dimen_78_dp"
+                        android:layout_height="@dimen/dimen_24_dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:contentDescription="@string/editor_musicmate_info"
+                        android:gravity="center"
+                        android:scaleType="fitXY"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
+                        android:padding="@dimen/dimen_1_dp"
+                        android:src="@drawable/ic_format_hires" />
+
+                    <!--
                     <ImageView
                         android:id="@+id/icon_audiophile"
                         android:layout_width="@dimen/dimen_72_dp"
@@ -175,6 +209,7 @@
                         android:paddingBottom="@dimen/dimen_1_dp"
                         android:scaleType="fitXY"
                         android:src="@drawable/ic_audiophile" />
+                        -->
                     <!--
                     <ImageView
                         android:id="@+id/icon_loudness"
@@ -202,6 +237,7 @@
                         android:paddingBottom="@dimen/dimen_2_dp"
                         android:src="@drawable/ic_format_hires"
                         android:contentDescription="@string/editor_musicmate_info"/> -->
+                    <!--
                     <TextView
                         android:id="@+id/icon_drDB"
                         android:layout_width="@dimen/dimen_56_dp"
@@ -218,42 +254,41 @@
                         android:textColor="@color/black"
                         android:textSize="12sp"
                         android:textStyle="bold" />
+                        -->
 
                     <LinearLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/dimen_24_dp"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_marginEnd="@dimen/dimen_4_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:padding="@dimen/dimen_2_dp"
                         android:background="@drawable/shape_background_dr"
                         android:gravity="center"
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="@dimen/dimen_24_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_width="@dimen/dimen_32_dp"
+                            android:layout_height="@dimen/dimen_20_dp"
                             android:layout_gravity="start|center_vertical"
                             android:gravity="center"
-                            android:paddingTop="@dimen/dimen_2_dp"
-                            android:paddingBottom="@dimen/dimen_2_dp"
+                            android:scaleType="fitXY"
                             android:src="@drawable/dynamic_range" />
 
                         <TextView
                             android:id="@+id/icon_dr"
                             android:layout_width="@dimen/dimen_24_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_height="@dimen/dimen_20_dp"
                             android:layout_gravity="end|center_vertical"
                             android:background="@drawable/shape_background_unknown"
                             android:fontFamily="@font/oswald_bold"
                             android:gravity="center"
-                            android:paddingTop="@dimen/dimen_2_dp"
-                            android:paddingBottom="@dimen/dimen_2_dp"
                             android:text="@string/sample_dr"
                             android:textColor="@color/black"
-                            android:textSize="15sp"
+                            android:textSize="14sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
+                    <!--
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="@dimen/dimen_24_dp"
@@ -289,7 +324,8 @@
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
+                    -->
+<!--
                     <ImageView
                         android:id="@+id/icon_resolution"
                         android:layout_width="@dimen/dimen_78_dp"
@@ -302,19 +338,31 @@
                         android:paddingTop="@dimen/dimen_2_dp"
                         android:paddingBottom="@dimen/dimen_2_dp"
                         android:src="@drawable/ic_format_hires" />
-
+-->
                     <ImageView
                         android:id="@+id/icon_source_dir"
                         android:layout_width="@dimen/dimen_24_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
                         android:contentDescription="@string/editor_musicmate_info"
                         android:gravity="end|center_vertical"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:scaleType="fitXY"
                         android:src="@drawable/round_source_24"
+                        android:background="@drawable/shape_background_dr"/>
+
+                    <ImageView
+                        android:id="@+id/icon_audiophile"
+                        android:layout_width="@dimen/dimen_72_dp"
+                        android:layout_height="@dimen/dimen_24_dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
+                        android:contentDescription="@string/editor_musicmate_info"
+                        android:gravity="end|center_vertical"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_audiophile"
                         android:background="@drawable/shape_background_dr"/>
 
                     <!--

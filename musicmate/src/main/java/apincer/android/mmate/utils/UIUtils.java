@@ -155,6 +155,7 @@ public class UIUtils  {
     }
 
     public static Drawable getTintedDrawable(@NonNull Drawable inputDrawable, @ColorInt int color) {
+
         Drawable wrapDrawable = DrawableCompat.wrap(inputDrawable);
         DrawableCompat.setTint(wrapDrawable, color);
         DrawableCompat.setTintMode(wrapDrawable, PorterDuff.Mode.SRC_IN);

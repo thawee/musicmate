@@ -46,12 +46,14 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.work.MusicMateExecutors;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
 import coil.Coil;
@@ -208,12 +210,36 @@ public class TagsEditorFragment extends Fragment {
                 doShowReadTagsPreview();
             } else if (item.getItemId() == R.id.menu_editor_format_tag) {
                 doFormatTags();
-            }
-            if (item.getItemId() == R.id.menu_editor_save) {
+            } else if (item.getItemId() == R.id.menu_editor_calculate_dr) {
+                doAnalystDRRG();
+            }else if (item.getItemId() == R.id.menu_editor_save) {
                 doSaveMediaItem();
             }
             return false;
         };
+    }
+
+    private void doAnalystDRRG() {
+        CompletableFuture.runAsync(
+                () -> {
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        //calculate track RG
+                        FFMPeg.detectQuality(tag);
+                        //write RG to file
+                        FFMPeg.writeTagQualityToFile(getActivity(), tag);
+                        // update MusicMate Library
+                        MusicTagRepository.saveTag(tag);
+                    }
+                }
+        ).thenAccept(
+                unused -> {
+                    // refresh refresh
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                        EventBus.getDefault().postSticky(message);
+                    }
+                }
+        );
     }
 
     private void doShowReadTagsPreview() {

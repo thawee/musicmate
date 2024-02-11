@@ -495,10 +495,10 @@ public class StringUtils {
     public static String formatAudioBitRate(long audioBitRate) {
         if(audioBitRate>1000000) {
             double dBitrate = audioBitRate/1000000.00;
-            return String.format(Locale.getDefault(), "%.1fMbps", dBitrate);
+            return String.format(Locale.getDefault(), "%.1f Mbps", dBitrate);
         }else {
             double dBitrate = audioBitRate/1000.00;
-            return String.format(Locale.getDefault(), "%.0fKbps", dBitrate);
+            return String.format(Locale.getDefault(), "%.0f Kbps", dBitrate);
         }
     }
     public static String formatAudioBitRateShortUnit(long audioBitRate) {

@@ -82,4 +82,5 @@
     <dimen name="tab_icon">18dp</dimen>
     <dimen name="dimen_320_dp">320dp</dimen>
     <dimen name="dimen_480_dp">480dp</dimen>
+    <dimen name="dimen_18_dp">18dp</dimen>
 </resources>

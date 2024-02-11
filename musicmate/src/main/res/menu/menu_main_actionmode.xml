@@ -21,7 +21,7 @@
 	<item
 		android:icon="@drawable/round_troubleshoot_24"
 		android:id="@+id/action_calculate_replay_gain"
-		android:title="Detect Quality"
+		android:title="Analyst DR/RG"
 		app:showAsAction="always"/>
 
 	<item android:id="@+id/action_select_all"
