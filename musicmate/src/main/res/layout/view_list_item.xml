@@ -85,11 +85,10 @@
             <ImageView
                 android:id="@+id/item_resolution_icon"
                 android:layout_width="@dimen/dimen_68_dp"
-                android:layout_height="@dimen/dimen_20_dp"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginEnd="@dimen/dimen_2_dp"
+                android:layout_height="@dimen/dimen_18_dp"
                 android:layout_toRightOf="@id/item_type_panel"
-                android:paddingStart="@dimen/dimen_2_dp"
+                android:layout_marginLeft="@dimen/dimen_4_dp"
+                android:layout_marginTop="@dimen/dimen_1_dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/ic_format_mqa_white" />
 
@@ -97,7 +96,7 @@
                 android:id="@+id/item_dr_icon_panel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/dimen_2_dp"
+                android:layout_marginLeft="@dimen/dimen_4_dp"
                 android:layout_marginBottom="@dimen/dimen_2_dp"
                 android:layout_toRightOf="@id/item_resolution_icon"
                 android:background="@drawable/shape_background_dr"
@@ -129,11 +128,14 @@
             <ImageView
                 android:id="@+id/item_src_icon"
                 android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="18dp"
+                android:layout_height="@dimen/dimen_20_dp"
                 android:layout_gravity="center"
                 android:layout_toEndOf="@id/item_dr_icon_panel"
-                android:padding="1dp"
-                android:src="@drawable/icon_cd" />
+                android:padding="2dp"
+                android:layout_marginLeft="@dimen/dimen_4_dp"
+                android:src="@drawable/icon_cd"
+                android:scaleType="fitCenter"
+                android:background="@drawable/shape_background_dr"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"
