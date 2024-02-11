@@ -181,7 +181,9 @@ public class MusicTagUtils {
         int bgBlackColor = context.getColor(R.color.grey900);
         int resolutionColor = getResolutionColor(context,tag);
         int qualityColor = context.getColor(R.color.quality_unknown);
-        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+        if(!(isDSD(tag) || isLossless(tag))) { // QUALITY_NORMAL.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_bad);
+        }else if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_good);
         }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_good);
@@ -198,11 +200,12 @@ public class MusicTagUtils {
             }
         }
         int upsampledColor = context.getColor(R.color.quality_unknown);; //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
-        int barColor = context.getColor(R.color.material_color_blue_grey_200);
+       // int barColor = context.getColor(R.color.material_color_blue_grey_200);
+        int labelColor = context.getColor(R.color.material_color_blue_grey_200);
         String label;
-        String labelBPS = "";
-        boolean isPCM = false;
-        boolean isLossless = isLossless(tag);
+      //  String labelBPS = "";
+      //  boolean isPCM = false;
+       // boolean isLossless = isLossless(tag);
         String samplingRate = StringUtils.formatAudioSampleRate(tag.getAudioSampleRate(),false);
 
         if(tag.isDSD()) {
@@ -213,20 +216,23 @@ public class MusicTagUtils {
             label = "MQA"; //tag.getMqaInd();
             samplingRate = StringUtils.formatAudioSampleRate(tag.getMqaSampleRate(),false);
             if(isMQAStudio(tag)) {
-                barColor = context.getColor(R.color.mqa_studio);
+               // barColor = context.getColor(R.color.mqa_studio);
+                labelColor = context.getColor(R.color.mqa_studio);
             }else {
-                barColor = context.getColor(R.color.mqa_master);
+               // barColor = context.getColor(R.color.mqa_master);
+                labelColor = context.getColor(R.color.mqa_master);
             }
         } else {
             // PCM, draw bit
-            label = "BIT"; //"PCM";
-            labelBPS = String.valueOf(tag.getAudioBitsDepth());
-            isPCM = true;
-           // isLossless = tag.isLossless();
-            if(!isLossless) {
+            label = tag.getAudioBitsDepth() +"B"; //"PCM";
+            labelColor = resolutionColor;
+            //labelBPS = String.valueOf(tag.getAudioBitsDepth());
+           // isPCM = true;
+            if(!isLossless(tag)) {
                 // compress rate
-                label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
-                samplingRate = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
+               // label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
+               // samplingRate = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
+                label = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
             }
         }
 
@@ -307,12 +313,13 @@ public class MusicTagUtils {
         // draw enc, black color
         // AAC, MPEG, PCM 16, PCM 24, MQA, DSD
 
+        /*
         if(isPCM) {
             // PCM xx
             Typeface font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
             int letterTextSize = 40; //34; //42;
 
-            if(isLossless) {
+          //  if(isLossless) {
                 // draw label bit label
                 Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
                 //mLetterPaint.setColor(whiteColor);
@@ -351,8 +358,8 @@ public class MusicTagUtils {
                         // (float) (bounds.exactCenterX() + (bounds.exactCenterX() / 1.4)), //left
                         bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 2, // left
                         mPositionY,  // top
-                        mLetterPaint);
-            }else {
+                        mLetterPaint); */
+        /*    }else {
                 // draw encoding
                 int bpsSize = 52;
                 font = ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
@@ -373,7 +380,7 @@ public class MusicTagUtils {
                         bounds.exactCenterX() + (bounds.exactCenterX() / 4) + 36, // left
                         mPositionY,  // top
                         mLetterPaint);
-            }
+            } */
 
             // draw PCM bar
           //  float y = (float) (myCanvas.getHeight() / 2) + 14;
@@ -394,7 +401,8 @@ public class MusicTagUtils {
             path.lineTo(startx - 16, y + 12);
             path.lineTo(width - 12, y + 12);
             myCanvas.drawPath(path, paint); */
-        } else if (tag.isDSD()) {
+       // } else
+        if (tag.isDSD()) {
             // DSD,
             Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
             int letterTextSize = 60; //28;
@@ -415,13 +423,13 @@ public class MusicTagUtils {
                     mLetterTop + mPositionY+4,  //top
                     mLetterPaint);
         }else {
-            // MQA
+            // MQA & PCM
             Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
             int letterTextSize = 48; //28;
             Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             //mLetterPaint.setColor(whiteColor);
             mLetterPaint.setTypeface(font);
-            mLetterPaint.setColor(barColor);
+            mLetterPaint.setColor(labelColor);
             mLetterPaint.setAntiAlias(true);
             mLetterPaint.setTextSize(letterTextSize);
             mLetterPaint.setTextAlign(Paint.Align.CENTER);

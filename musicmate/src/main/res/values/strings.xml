@@ -224,6 +224,7 @@
     <string name="settings_local_server_receiver_uuid_key">settings_local_server_receiver_uuid_key</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
+    <string name="file_status_new">New!</string>
 
 
     <!-- new editor -->

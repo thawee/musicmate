@@ -88,6 +88,8 @@ public class TagsActivity extends AppCompatActivity {
     //private TextView drDBView;
     private TextView fileTypeView;
    // private TextView rgView;
+   private TextView newView;
+    private View newPanelView;
     private ImageView audiophileView;
     private ImageView resolutionView;
    // private View coverArtLayout;
@@ -102,7 +104,7 @@ public class TagsActivity extends AppCompatActivity {
 
    // private TriangleLabelView mManageStatus1;
    // private TriangleLabelView mManageStatus2;
-    private ImageView srcdir;
+   // private ImageView srcdir;
     private FloatingActionButton playerBtn;
    // private FloatingActionButton refreshOnNewSongBtn;
     private boolean refreshOnNewSong;
@@ -236,8 +238,10 @@ public class TagsActivity extends AppCompatActivity {
             }else {
                 refreshOnNewSong = true;
                 UIUtils.getTintedDrawable(item.getIcon(), Color.GREEN);
-                if(MusixMateApp.getPlayingSong() != null) {
-                    updatePreview(MusixMateApp.getPlayingSong());
+                MusicTag tag = MusixMateApp.getPlayingSong();
+                if(tag != null) {
+                    MusicTagRepository.load(tag);
+                    updatePreview(tag);
                 }
             }
             return true;
@@ -274,7 +278,11 @@ public class TagsActivity extends AppCompatActivity {
             playerBtn.setVisibility(View.VISIBLE);
             //refreshOnNewSongBtn.setVisibility(View.VISIBLE);
             if (refreshOnNewSong) {
-                updatePreview(event.getPlayingSong());
+                MusicTag tag = event.getPlayingSong();
+                if(tag != null) {
+                    MusicTagRepository.load(tag);
+                    updatePreview(tag);
+                }
             }
         }
     }
@@ -350,26 +358,13 @@ public class TagsActivity extends AppCompatActivity {
        // drDBView = findViewById(R.id.icon_drDB);
        // rgView = findViewById(R.id.icon_replay_gain);
         fileTypeView = findViewById(R.id.icon_file_type);
-        srcdir = findViewById(R.id.icon_source_dir);
+       // srcdir = findViewById(R.id.icon_source_dir);
+        newView = findViewById(R.id.icon_new);
+        newPanelView = findViewById(R.id.icon_new_panel);
       //  mManageStatus1 = findViewById(R.id.item_new_label1);
       //  mManageStatus2 = findViewById(R.id.item_new_label2);
         playerBtn = findViewById(R.id.music_player);
         playerBtn.setOnClickListener(view -> MusixMateApp.playNextSong(getApplicationContext()));
-/*
-        refreshOnNewSongBtn = findViewById(R.id.music_refreshPreview);
-        refreshOnNewSongBtn.setOnClickListener(view -> {
-            if(refreshOnNewSong) {
-                refreshOnNewSong = false;
-                refreshOnNewSongBtn.setImageTintList(ColorStateList.valueOf(Color.WHITE));
-            }else {
-                refreshOnNewSong = true;
-                refreshOnNewSongBtn.setImageTintList(ColorStateList.valueOf(Color.GREEN));
-                if(MusixMateApp.getPlayingSong() != null) {
-                    updatePreview(MusixMateApp.getPlayingSong());
-                }
-            }
-        }); */
-
     }
 
     public void updateTitlePanel() {
@@ -379,9 +374,10 @@ public class TagsActivity extends AppCompatActivity {
         }else {
             playerBtn.setVisibility(View.GONE);
         }
-        String title = getString(R.string.title_many, getEditItems().size());
-        toolbar.setTitle(title);
+       // String title = getString(R.string.title_many, getEditItems().size());
+       // toolbar.setTitle(title);
         if(getEditItems().size()>1) {
+            String title = getString(R.string.title_many, getEditItems().size());
             titleView.setText(title);
         }else {
             //toolbar.setTitle(MusicTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
@@ -503,15 +499,19 @@ public class TagsActivity extends AppCompatActivity {
         String matePath = repos.buildCollectionPath(displayTag, true);
        // String sid = displayTag.getStorageId();
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            String path = displayTag.getPath().toUpperCase();
-            if(path.contains("/music/") && !path.contains("/telegram/")) {
+           // String path = displayTag.getPath().toUpperCase();
+           /* if(path.contains("/music/") && !path.contains("/telegram/")) {
                 srcdir.setColorFilter(getColor(R.color.quality_average));
             }else {
                 srcdir.setColorFilter(getColor(R.color.quality_unknown));
-            }
+            }*/
+            newView.setTextColor(getColor(R.color.material_color_red_900));
+            newView.setBackground(resolutionBackground);
+            newPanelView.setVisibility(View.VISIBLE);
         }else {
+            newPanelView.setVisibility(View.GONE);
             // fully managed
-            srcdir.setColorFilter(getColor(R.color.quality_good));
+           // srcdir.setColorFilter(getColor(R.color.quality_good));
         }
        /* String simplePath = displayTag.getSimpleName();
         if(simplePath.contains("/")) {

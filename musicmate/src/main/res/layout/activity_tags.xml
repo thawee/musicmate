@@ -339,6 +339,7 @@
                         android:paddingBottom="@dimen/dimen_2_dp"
                         android:src="@drawable/ic_format_hires" />
 -->
+                    <!--
                     <ImageView
                         android:id="@+id/icon_source_dir"
                         android:layout_width="@dimen/dimen_24_dp"
@@ -351,6 +352,7 @@
                         android:scaleType="fitXY"
                         android:src="@drawable/round_source_24"
                         android:background="@drawable/shape_background_dr"/>
+                    -->
 
                     <ImageView
                         android:id="@+id/icon_audiophile"
@@ -365,6 +367,27 @@
                         android:src="@drawable/ic_audiophile"
                         android:background="@drawable/shape_background_dr"/>
 
+                    <LinearLayout
+                        android:id="@+id/icon_new_panel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:background="@drawable/shape_background_dr"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
+                        android:padding="@dimen/dimen_2_dp">
+                        <TextView
+                            android:id="@+id/icon_new"
+                            android:layout_width="@dimen/dimen_36_dp"
+                            android:layout_height="@dimen/dimen_20_dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/shape_background_unknown"
+                            android:fontFamily="@font/oswald_bold"
+                            android:gravity="center"
+                            android:text="@string/file_status_new"
+                            android:textColor="@color/black"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                     <!--
                     <FrameLayout
                         android:layout_width="@dimen/dimen_24_dp"
