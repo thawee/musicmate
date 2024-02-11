@@ -75,26 +75,6 @@
                     android:background="@drawable/shape_btn_background"
                     android:src="@drawable/ic_baseline_skip_next_24"
                     />
-                <!--
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/music_refreshPreview"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:fabSize="normal"
-                    android:layout_marginTop="@dimen/dimen_4_dp"
-                    android:layout_marginRight="@dimen/dimen_4_dp"
-                    android:layout_marginBottom="@dimen/dimen_480_dp"
-                    android:layout_marginEnd="@dimen/dimen_64_dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
-                    android:contentDescription="refreshPreview"
-                    android:visibility="visible"
-                    app:tint="@color/white"
-                    android:padding="@dimen/dimen_2_dp"
-                    android:backgroundTint="@color/black_transparent_40"
-                    android:background="@drawable/shape_btn_background"
-                    android:src="@drawable/ic_baseline_refresh_24"
-                    /> -->
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -136,32 +116,6 @@
                     android:paddingRight="@dimen/dimen_12_dp"
                     android:paddingLeft="@dimen/dimen_12_dp"
                     android:background="@drawable/shape_btn_background">
-                    <!--
-                    <ImageView
-                        android:id="@+id/icon_dsd"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="@dimen/dimen_32_dp"
-                        android:layout_marginRight="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_12_dp"
-                        android:layout_gravity="right"
-                        android:gravity="right"
-                        android:src="@drawable/ic_format_dsd_white" />
-                        -->
-
-
-                    <!--
-                    <ImageView
-                        android:id="@+id/icon_mqa"
-                        android:layout_width="@dimen/dimen_48_dp"
-                        android:layout_height="@dimen/dimen_32_dp"
-                        android:layout_gravity="right"
-                        android:layout_marginRight="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_8_dp"
-                        android:gravity="right"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
-                        android:src="@drawable/ic_format_mqa_white"/>
--->
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -195,67 +149,6 @@
                         android:padding="@dimen/dimen_1_dp"
                         android:src="@drawable/ic_format_hires" />
 
-                    <!--
-                    <ImageView
-                        android:id="@+id/icon_audiophile"
-                        android:layout_width="@dimen/dimen_72_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_1_dp"
-                        android:contentDescription="@string/editor_musicmate_info"
-                        android:gravity="end|center_vertical"
-                        android:paddingTop="@dimen/dimen_1_dp"
-                        android:paddingBottom="@dimen/dimen_1_dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/ic_audiophile" />
-                        -->
-                    <!--
-                    <ImageView
-                        android:id="@+id/icon_loudness"
-                        android:layout_width="@dimen/dimen_86_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_marginRight="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical"
-                        android:layout_alignParentRight="true"
-                        android:src="@drawable/ic_format_hires" />
-                        -->
-                    <!--
-                    <ImageView
-                        android:id="@+id/icon_hires"
-                        android:layout_width="@dimen/dimen_78_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:gravity="end|center_vertical"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
-                        android:src="@drawable/ic_format_hires"
-                        android:contentDescription="@string/editor_musicmate_info"/> -->
-                    <!--
-                    <TextView
-                        android:id="@+id/icon_drDB"
-                        android:layout_width="@dimen/dimen_56_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_4_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:background="@drawable/shape_background_unknown"
-                        android:fontFamily="@font/oswald_bold"
-                        android:gravity="center"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
-                        android:text="@string/sample_dr"
-                        android:textColor="@color/black"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                        -->
-
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -287,72 +180,6 @@
                             android:textSize="14sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
-                    <!--
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="center"
-                        android:layout_marginEnd="@dimen/dimen_4_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:background="@drawable/shape_background_dr"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="@dimen/dimen_16_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
-                            android:layout_gravity="start|center_vertical"
-                            android:background="@drawable/shape_background_unknown"
-                            android:gravity="center"
-                            android:paddingTop="@dimen/dimen_2_dp"
-                            android:paddingBottom="@dimen/dimen_2_dp"
-                            android:src="@drawable/round_volume_up_black_24" />
-
-                        <TextView
-                            android:id="@+id/icon_replay_gain"
-                            android:layout_width="@dimen/dimen_36_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
-                            android:layout_gravity="end|center_vertical"
-                            android:background="@drawable/shape_background_unknown"
-                            android:fontFamily="@font/oswald_bold"
-                            android:gravity="center"
-                            android:paddingTop="@dimen/dimen_2_dp"
-                            android:paddingBottom="@dimen/dimen_2_dp"
-                            android:text="@string/sample_dr"
-                            android:textColor="@color/black"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                    -->
-<!--
-                    <ImageView
-                        android:id="@+id/icon_resolution"
-                        android:layout_width="@dimen/dimen_78_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:contentDescription="@string/editor_musicmate_info"
-                        android:gravity="end|center_vertical"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
-                        android:src="@drawable/ic_format_hires" />
--->
-                    <!--
-                    <ImageView
-                        android:id="@+id/icon_source_dir"
-                        android:layout_width="@dimen/dimen_24_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_4_dp"
-                        android:contentDescription="@string/editor_musicmate_info"
-                        android:gravity="end|center_vertical"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/round_source_24"
-                        android:background="@drawable/shape_background_dr"/>
-                    -->
 
                     <ImageView
                         android:id="@+id/icon_audiophile"
@@ -388,96 +215,8 @@
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-                    <!--
-                    <FrameLayout
-                        android:layout_width="@dimen/dimen_24_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:background="@drawable/shape_background_dr">
-
-                        <apincer.android.mmate.ui.view.TriangleLabelView
-                            android:id="@+id/item_new_label1"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_alignParentTop="true"
-                            android:layout_alignParentRight="true"
-                            android:layout_gravity="top|right"
-                            android:layout_margin="@dimen/dimen_2_dp"
-                            android:paddingRight="@dimen/dimen_4_dp"
-                            app:backgroundColor="@color/material_color_yellow_900"
-                            app:corner="rightTop"
-                            app:labelBottomPadding="2dp"
-                            app:labelCenterPadding="0dp"
-                            app:labelTopPadding="4dp"
-                            app:primaryText="New"
-                            app:primaryTextColor="@color/material_color_yellow_500"
-                            app:primaryTextSize="8sp"
-                            app:secondaryText=""
-                            app:secondaryTextColor="@color/material_color_yellow_100"
-                            app:secondaryTextSize="6sp" />
-
-                        <apincer.android.mmate.ui.view.TriangleLabelView
-                            android:id="@+id/item_new_label2"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_alignParentTop="true"
-                            android:layout_alignParentRight="true"
-                            android:layout_gravity="bottom|left"
-                            android:layout_margin="@dimen/dimen_2_dp"
-                            android:paddingRight="@dimen/dimen_4_dp"
-                            app:backgroundColor="@color/material_color_yellow_900"
-                            app:corner="leftBottom"
-                            app:labelBottomPadding="2dp"
-                            app:labelCenterPadding="0dp"
-                            app:labelTopPadding="4dp"
-                            app:primaryText="New"
-                            app:primaryTextColor="@color/material_color_yellow_500"
-                            app:primaryTextSize="8sp"
-                            app:secondaryText=""
-                            app:secondaryTextColor="@color/material_color_yellow_100"
-                            app:secondaryTextSize="6sp" />
-                    </FrameLayout> -->
-                    <!--
-                    <TextView
-                        android:id="@+id/icon_track_rg"
-                        android:layout_width="@dimen/dimen_46_dp"
-                        android:layout_height="@dimen/dimen_24_dp"
-                        android:layout_gravity="right|center_vertical"
-                        android:layout_marginRight="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:background="@drawable/shape_background_unknown"
-                        android:fontFamily="@font/oswald_bold"
-                        android:gravity="center"
-                        android:paddingTop="@dimen/dimen_2_dp"
-                        android:paddingBottom="@dimen/dimen_2_dp"
-                        android:text="G 0.00"
-                        android:textColor="@color/black"
-                        android:textSize="12sp"
-                        android:textStyle="bold" /> -->
-
                 </LinearLayout>
                 </LinearLayout>
-
-                <!--
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_centerInParent="true"
-                    android:layout_marginRight="@dimen/dimen_12_dp"
-                    android:paddingTop="@dimen/dimen_8_dp"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
-                    android:paddingBottom="@dimen/dimen_8_dp"
-                    android:layout_marginBottom="@dimen/dimen_24_dp"
-                    android:background="@drawable/shadow">
-
-                   <TextView
-                       android:id="@+id/icon_quality_text"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:textStyle="bold|italic"
-                       android:text="Lossless"/>
-                </LinearLayout> -->
             </RelativeLayout>
 
             <include layout="@layout/view_tag_layout" />
@@ -503,13 +242,6 @@
                 app:navigationIcon="@drawable/ic_baseline_arrow_back"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
                 app:title="Title" />
-<!--
-            <FrameLayout
-                android:id="@+id/reserve_space"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:layout_gravity="bottom"
-                app:layout_collapseMode="pin"/> -->
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
