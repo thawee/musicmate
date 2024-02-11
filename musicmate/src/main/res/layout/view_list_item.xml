@@ -60,71 +60,35 @@
             android:layout_marginLeft="36dp"
             android:layout_marginBottom="6dp">
 
+            <LinearLayout
+                android:id="@+id/item_type_panel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/dimen_2_dp"
+                android:background="@drawable/shape_background_dr"
+                android:orientation="horizontal"
+                android:padding="@dimen/dimen_2_dp">
             <TextView
                 android:id="@+id/item_type_label"
                 android:layout_width="@dimen/dimen_28_dp"
-                android:layout_height="18dp"
+                android:layout_height="16dp"
                 android:layout_gravity="center"
                 android:background="@drawable/shape_background_unknown"
                 android:fontFamily="@font/oswald_bold"
                 android:gravity="center"
-                android:paddingLeft="@dimen/dimen_1_dp"
                 android:text="FLAC"
                 android:textColor="@color/black"
                 android:textSize="10sp"
                 android:textStyle="bold" />
-            <!--
-            <TextView
-                android:id="@+id/item_dr_icon"
-                android:layout_width="@dimen/dimen_48_dp"
-                android:layout_height="16dp"
-                android:layout_toRightOf="@id/item_type_label"
-                android:layout_marginLeft="@dimen/dimen_2_dp"
-                android:layout_gravity="center"
-                android:background="@drawable/shape_background_unknown"
-                android:fontFamily="@font/oswald_bold"
-                android:gravity="center"
-                android:text="DR16"
-                android:textColor="@color/black"
-                android:textSize="9sp"
-                android:textStyle="bold"/> -->
-
-            <!--
-            <TextView
-                android:id="@+id/item_track_rg_icon"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="16dp"
-                android:layout_toRightOf="@id/item_dr_icon"
-                android:layout_marginLeft="@dimen/dimen_2_dp"
-                android:layout_gravity="center"
-                android:background="@drawable/shape_background_unknown"
-                android:fontFamily="@font/oswald_bold"
-                android:gravity="center"
-                android:text="RG 0.00"
-                android:textColor="@color/black"
-                android:textSize="9sp"
-                android:textStyle="bold"/> -->
-
-            <!--
-            <ImageView
-                android:id="@+id/item_resolution_icon"
-                android:layout_width="@dimen/dimen_52_dp"
-                android:layout_height="18dp"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_marginEnd="@dimen/dimen_2_dp"
-                android:layout_toRightOf="@id/item_type_label"
-                android:paddingStart="@dimen/dimen_2_dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_format_mqa_white" />
-            -->
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/item_resolution_icon"
-                android:layout_width="@dimen/dimen_64_dp"
-                android:layout_height="18dp"
+                android:layout_width="@dimen/dimen_68_dp"
+                android:layout_height="@dimen/dimen_20_dp"
                 android:layout_marginStart="@dimen/dimen_2_dp"
                 android:layout_marginEnd="@dimen/dimen_2_dp"
-                android:layout_toRightOf="@id/item_type_label"
+                android:layout_toRightOf="@id/item_type_panel"
                 android:paddingStart="@dimen/dimen_2_dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/ic_format_mqa_white" />
@@ -138,13 +102,14 @@
                 android:layout_toRightOf="@id/item_resolution_icon"
                 android:background="@drawable/shape_background_dr"
                 android:orientation="horizontal"
-                android:padding="@dimen/dimen_1_dp">
+                android:padding="@dimen/dimen_2_dp">
 
                 <ImageView
                     android:layout_width="@dimen/dimen_20_dp"
                     android:layout_height="@dimen/dimen_16_dp"
                     android:layout_gravity="start|center_vertical"
                     android:gravity="center"
+                    android:scaleType="fitXY"
                     android:src="@drawable/dynamic_range" />
 
                 <TextView
@@ -160,92 +125,7 @@
                     android:textSize="10sp"
                     android:textStyle="bold" />
             </LinearLayout>
-            <!--
-            <ImageView
-                android:id="@+id/item_loudness_icon"
-                android:layout_width="@dimen/dimen_52_dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_toRightOf="@id/item_hires_icon"
-                android:paddingStart="@dimen/dimen_2_dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_format_mqa_white"
-                tools:ignore="RtlSymmetry" /> -->
-            <!--
-            <ImageView
-                android:id="@+id/item_source_quality"
-                android:layout_width="@dimen/dimen_32_dp"
-                android:layout_height="@dimen/dimen_20_dp"
-                android:layout_marginStart="@dimen/dimen_4_dp"
-                android:layout_toEndOf="@id/item_dr_icon_panel"
-                android:scaleType="fitCenter"
-                android:layout_centerInParent="true"
-                android:layout_gravity="center"
-                android:padding="@dimen/dimen_1_dp"
-                android:src="@drawable/ic_audiophile"
-                android:background="@drawable/shape_background_quality"/>
--->
-            <!--
-            <TextView
-                android:id="@+id/item_media_quality_label"
-                android:layout_width="@dimen/dimen_16_dp"
-                android:layout_height="18dp"
-                android:layout_centerInParent="true"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/dimen_4_dp"
-                android:layout_toRightOf="@id/item_dr_icon_panel"
-                android:background="@drawable/shape_background_quality"
-                android:fontFamily="@font/oswald_bold"
-                android:gravity="center"
-                android:text="A"
-                android:textColor="@color/audiophile_label1"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                tools:ignore="RtlSymmetry,SmallSp" />
 
-            <TextView
-                android:id="@+id/item_media_upscaled_label"
-                android:layout_width="@dimen/dimen_16_dp"
-                android:layout_height="18dp"
-                android:layout_centerInParent="true"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/dimen_4_dp"
-                android:layout_toRightOf="@id/item_media_quality_label"
-                android:background="@drawable/shape_background_quality"
-                android:fontFamily="@font/oswald_bold"
-                android:gravity="center"
-                android:text="B"
-                android:textColor="@color/warningColor"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                tools:ignore="RtlSymmetry,SmallSp" />
-            <TextView
-                android:id="@+id/item_media_upsampled_label"
-                android:layout_width="@dimen/dimen_16_dp"
-                android:layout_height="18dp"
-                android:layout_centerInParent="true"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/dimen_4_dp"
-                android:layout_toRightOf="@id/item_media_upscaled_label"
-                android:background="@drawable/shape_background_quality"
-                android:fontFamily="@font/oswald_bold"
-                android:gravity="center"
-                android:text="S"
-                android:textColor="@color/warningColor"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                tools:ignore="RtlSymmetry,SmallSp" />
-                -->
-<!--
-            <ImageView
-                android:id="@+id/item_audiophile_label"
-                android:layout_width="@dimen/dimen_24_dp"
-                android:layout_height="@dimen/dimen_16_dp"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_toEndOf="@id/item_media_quality_label"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_audiophile"/>
--->
             <ImageView
                 android:id="@+id/item_src_icon"
                 android:layout_width="@dimen/dimen_32_dp"
@@ -254,40 +134,12 @@
                 android:layout_toEndOf="@id/item_dr_icon_panel"
                 android:padding="1dp"
                 android:src="@drawable/icon_cd" />
-            <!--
-            <ImageView
-                android:id="@+id/item_broken_file_icon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/dimen_2_dp"
-                android:layout_toEndOf="@id/item_src_icon"
-                android:padding="1dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_round_broken_image_24" /> -->
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:orientation="horizontal">
-                <!--
-                <ImageView
-                    android:id="@+id/item_duration"
-                    android:layout_width="40dp"
-                    android:layout_height="16dp"
-                    android:padding="1dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/shape_bottom_background"/>
-
-                <ImageView
-                    android:id="@+id/item_file_size"
-                    android:layout_width="50dp"
-                    android:layout_height="16dp"
-                    android:padding="1dp"
-                    android:layout_marginRight="2dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/shape_bottom_background"/> -->
 
                 <TextView
                     android:id="@+id/item_duration"
