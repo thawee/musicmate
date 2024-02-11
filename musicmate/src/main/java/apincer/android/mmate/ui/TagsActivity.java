@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -113,6 +114,8 @@ public class TagsActivity extends AppCompatActivity {
    // private FloatingActionButton refreshOnNewSongBtn;
     private boolean refreshOnNewSong;
 
+    private boolean previewState = true;
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -199,13 +202,14 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.menu_tag_preview, menu);
+        setupToolBarMenu();
+       // getMenuInflater().inflate(R.menu.menu_tag_preview, menu);
         // Inflate the menu; this adds items to the action bar if it is present.
         //setupToolBarMenuPreview();
-        Drawable drawable = menu.findItem(R.id.menu_preview_following_listening).getIcon();
-        if(refreshOnNewSong && drawable!= null) {
-            UIUtils.getTintedDrawable(drawable, Color.GREEN);
-        }
+       // Drawable drawable = menu.findItem(R.id.menu_preview_following_listening).getIcon();
+       // if(refreshOnNewSong && drawable!= null) {
+        //    UIUtils.getTintedDrawable(drawable, Color.GREEN);
+       // }
         return true;
     }
 
@@ -301,6 +305,7 @@ public class TagsActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 activeFragment = adapter.fragments.get(position);
+                setupToolBarMenu();
             }
 
             @Override
@@ -310,6 +315,10 @@ public class TagsActivity extends AppCompatActivity {
         });
 
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
+      // // TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+       //     tab.setText(adapter.getPageTitle(position));
+            //setupToolBarMenu();
+       // });
         tabLayoutMediator.attach();
 
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
@@ -694,6 +703,20 @@ public class TagsActivity extends AppCompatActivity {
             toolbar.inflateMenu(R.menu.menu_tag_technical);
             toolbar.setOnMenuItemClickListener(listener);
     }
+    public void setupMenuPreview(Toolbar.OnMenuItemClickListener listener) {
+        toolbar.getMenu().clear();
+        toolbar.inflateMenu(R.menu.menu_tag_preview);
+        toolbar.setOnMenuItemClickListener(listener);
+        for(int i=0;i<toolbar.getMenu().size();i++) {
+            MenuItem item = toolbar.getMenu().getItem(i);
+            if(item.getItemId() == R.id.menu_preview_following_listening) {
+                Drawable drawable = item.getIcon();
+                 if(refreshOnNewSong && drawable!= null) {
+                    UIUtils.getTintedDrawable(drawable, Color.GREEN);
+                 }
+            }
+        }
+    }
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
         double prevScrollOffset = -1;
@@ -710,10 +733,14 @@ public class TagsActivity extends AppCompatActivity {
             prevScrollOffset = vScrollOffset;
             if (verticalOffset == 0) {
                 // fully EXPANDED, on preview screen
+                // FIXME: should setup menu hear
+                previewState = true;
+                setupToolBarMenu();
                 buildDisplayTag();
                 updateTitlePanel();
             } else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange()) {
                 // fully COLLAPSED, on editing screen
+                previewState = false;
                 setupToolBarMenu();
             }else if (Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset) >= 0.8) {
                 // should display menus
@@ -739,9 +766,32 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    private Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
+            return item -> {
+                if (item.getItemId() == R.id.menu_preview_calculate_dr) {
+                    doAnalystDRRG();
+                } else if (item.getItemId() == R.id.menu_preview_following_listening) {
+                    if (refreshOnNewSong) {
+                        refreshOnNewSong = false;
+                        UIUtils.getTintedDrawable(item.getIcon(), Color.WHITE);
+                    } else {
+                        refreshOnNewSong = true;
+                        UIUtils.getTintedDrawable(item.getIcon(), Color.GREEN);
+                        MusicTag tag = MusixMateApp.getPlayingSong();
+                        if (tag != null) {
+                            MusicTagRepository.load(tag);
+                            updatePreview(tag);
+                        }
+                    }
+                }
+                return false;
+            };
+    }
+
     private void setupToolBarMenu() {
-      //  setupToolBarMenuPreview();
-        if(activeFragment!= null) {
+        if (previewState) {
+            setupMenuPreview(getOnMenuItemClickListener());
+        }else if(activeFragment!= null) {
             if (activeFragment instanceof TagsEditorFragment) {
                 setupMenuEditor(((TagsEditorFragment) activeFragment).getOnMenuItemClickListener());
             } else if (activeFragment instanceof TagsTechnicalFragment) {

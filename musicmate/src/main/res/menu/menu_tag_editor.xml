@@ -22,11 +22,12 @@
         android:icon="@drawable/round_auto_awesome_24"
         android:title="Re-format Tags"
         app:showAsAction="always" />
+    <!--
     <item
         android:id="@+id/menu_editor_calculate_dr"
         android:icon="@drawable/round_troubleshoot_24"
         android:title="Analyst DR/RG"
-        app:showAsAction="always" />
+        app:showAsAction="always" /> -->
 
     <item
         android:icon="@drawable/ic_file_rename_outline_24"

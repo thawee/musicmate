@@ -266,6 +266,20 @@
                             android:textSize="8sp" />
                     </RelativeLayout>
                 </RelativeLayout> -->
+
+                <TextView
+                    android:id="@+id/panel_enc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="@dimen/dimen_2_dp"
+                    android:fontFamily="@font/k2d_bold"
+                    android:textSize="10sp"
+                    android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
+                    android:gravity="center|bottom"
+                    android:singleLine="true"
+                    android:textColor="@android:color/white"
+                    android:layout_gravity="center_horizontal"/>
+
                 <TextView
                     android:id="@+id/panel_path"
                     android:layout_width="wrap_content"
@@ -281,18 +295,6 @@
                     android:gravity="center"
                     android:layout_gravity="center"
                     android:singleLine="true" />
-                <TextView
-                    android:id="@+id/panel_enc"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="@dimen/dimen_2_dp"
-                    android:fontFamily="@font/k2d_bold"
-                    android:textSize="10sp"
-                    android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
-                    android:gravity="center|bottom"
-                    android:singleLine="true"
-                    android:textColor="@android:color/white"
-                    android:layout_gravity="center_horizontal"/>
             </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
