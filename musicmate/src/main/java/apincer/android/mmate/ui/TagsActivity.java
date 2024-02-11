@@ -11,6 +11,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -38,6 +40,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -84,6 +87,7 @@ public class TagsActivity extends AppCompatActivity {
     private TextView albumView ;
     private TextView genreView;
     private TextView encInfo;
+    private TextView pathInfo;
     private TextView drView;
     //private TextView drDBView;
     private TextView fileTypeView;
@@ -185,8 +189,8 @@ public class TagsActivity extends AppCompatActivity {
         int statusBarHeight = getStatusBarHeight();
         int height = UIUtils.getScreenHeight(this); // getWindow().getWindowManager().getDefaultDisplay().getHeight();
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
-       // toolbar_from_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
-      //  toolbar_to_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
+        toolbar_from_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
+        toolbar_to_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
         mStateView = findViewById(R.id.status_page);
         mStateView.hideStates();
         setUpTitlePanel();
@@ -325,6 +329,7 @@ public class TagsActivity extends AppCompatActivity {
         albumView = findViewById(R.id.panel_album);
         genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
+        pathInfo = findViewById(R.id.panel_path);
         tagInfo = findViewById(R.id.panel_tag);
         audiophileView = findViewById(R.id.icon_audiophile);
         resolutionView = findViewById(R.id.icon_resolution);
@@ -484,6 +489,32 @@ public class TagsActivity extends AppCompatActivity {
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagInfo.setText(tagSpan.build());
+
+        // Path Info
+        String simplePath = displayTag.getSimpleName();
+        if(simplePath.contains("/")) {
+            simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
+        }
+        SpannableString content = new SpannableString(simplePath);// + mateInd);
+        content.setSpan(new UnderlineSpan(), 0, simplePath.length(), 0);
+        pathInfo.setText(content);
+
+        pathInfo.setOnClickListener(view -> {
+            if (criteria != null && displayTag.getPath() != null) {
+                Intent resultIntent = new Intent();
+                criteria.setFilterType(Constants.FILTER_TYPE_PATH);
+                File file = new File(displayTag.getPath());
+                if (!file.isDirectory()) {
+                    file = file.getParentFile();
+                }
+                String filterPath = file.getAbsolutePath() + File.separator;
+                criteria.setFilterText(filterPath);
+                ApplicationUtils.setSearchCriteria(resultIntent, criteria);
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            }
+        });
+
 
         // ENC info
         int metaInfoTextSize = 12; //10

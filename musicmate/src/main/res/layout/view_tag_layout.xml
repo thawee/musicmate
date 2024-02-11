@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/dimen_60_dp"
+    android:layout_marginBottom="@dimen/dimen_56_dp"
     android:background="#504F4F"
     android:layout_gravity="bottom"
     app:shape_diagonal_angle="-10"
@@ -267,6 +267,21 @@
                     </RelativeLayout>
                 </RelativeLayout> -->
                 <TextView
+                    android:id="@+id/panel_path"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="@dimen/dimen_4_dp"
+                    android:drawablePadding="@dimen/dimen_4_dp"
+                    android:paddingTop="@dimen/dimen_1_dp"
+                    android:fontFamily="@font/sfthonburi_regular"
+                    android:textSize="10sp"
+                    android:text="file path"
+                    android:ellipsize="start"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:singleLine="true" />
+                <TextView
                     android:id="@+id/panel_enc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -275,6 +290,7 @@
                     android:textSize="10sp"
                     android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
                     android:gravity="center|bottom"
+                    android:singleLine="true"
                     android:textColor="@android:color/white"
                     android:layout_gravity="center_horizontal"/>
             </LinearLayout>
