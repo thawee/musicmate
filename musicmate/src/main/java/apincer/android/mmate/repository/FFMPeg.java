@@ -427,6 +427,7 @@ public class FFMPeg extends TagReader {
         }
     }
 
+    /*
     private static void parseVolume(MusicTag tag, String data) {
         try {
             // Overall DR: 14.0357
@@ -439,7 +440,7 @@ public class FFMPeg extends TagReader {
         }catch (Exception ex) {
             Log.e(TAG, "parseVolume", ex);
         }
-    }
+    } */
 
     public static MusicTag readTagFromFile(Context context, String path) {
         // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";

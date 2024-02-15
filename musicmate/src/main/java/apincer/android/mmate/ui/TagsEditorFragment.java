@@ -1,7 +1,6 @@
 package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
-import static apincer.android.mmate.utils.StringUtils.merge;
 import static apincer.android.mmate.utils.StringUtils.toLowwerCase;
 
 import android.content.Context;
@@ -208,12 +207,8 @@ public class TagsEditorFragment extends Fragment {
                 doShowReadTagsPreview();
             } else if (item.getItemId() == R.id.menu_editor_format_tag) {
                 doFormatTags();
-//            } else if (item.getItemId() == R.id.menu_editor_calculate_dr) {
- //               doAnalystDRRG();
             }else if (item.getItemId() == R.id.menu_editor_save) {
                 doSaveMediaItem();
-           // }else {
-           //     getActivity().onOptionsItemSelected(item);
             }
             return false;
         };

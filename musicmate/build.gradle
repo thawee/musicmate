@@ -234,7 +234,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.14.0'
 
-    //implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
+    implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
    // implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
    // implementation 'org.apache.httpcomponents.core5:httpcore5:5.3.1' //5.2.4'
 
@@ -280,7 +280,7 @@ dependencies {
     implementation project(':library:objectrelations')
    // implementation project(':library:esoco-common')
    // implementation project(':library:esoco-monads')
-    //implementation project(':library:cling')
+    implementation project(':library:cling')
 }
 
 aboutLibraries {

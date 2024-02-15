@@ -81,6 +81,9 @@
         <service
             android:name=".share.MusicServerService"
             android:enabled="true" />
+        <service
+            android:name=".dlna.DMSService"
+            android:enabled="true" />
 
         <!-- Main activity for music browsing on phone -->
         <!--

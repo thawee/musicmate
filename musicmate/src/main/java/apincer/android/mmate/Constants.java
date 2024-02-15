@@ -125,7 +125,7 @@ public final class Constants {
     public static final String MEDIA_PATH_HRA = "Hi-Res"; //HRA
     public static final String MEDIA_PATH_SACD = "SACD";
     public static final String MEDIA_PATH_HIFI = "Hi-Fi";
-    public static final String MEDIA_PATH_HIGH_QUALITY = "Hi-Quality";
+    public static final String MEDIA_PATH_HIGH_QUALITY = "HQ";
    // public static final String MEDIA_PATH_HR = "Hi-Res"; //Hi-Res
    // public static final String MEDIA_PATH_HRMS = "Hi-Res Master";
    // public static final String MEDIA_PATH_ALAC = "ALAC"; //Lossless

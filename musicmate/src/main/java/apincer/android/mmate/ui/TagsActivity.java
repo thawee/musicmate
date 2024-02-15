@@ -1,6 +1,7 @@
 package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.animation.ArgbEvaluator;
@@ -21,7 +22,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -95,26 +95,23 @@ public class TagsActivity extends AppCompatActivity {
    // private TextView rgView;
    private TextView newView;
     private View newPanelView;
+    private View hiresView;
     private ImageView audiophileView;
     private ImageView resolutionView;
-   // private View coverArtLayout;
-   // private View panelLabels;
+
     private CollapsingToolbarLayout toolBarLayout;
     private int toolbar_from_color;
     private int toolbar_to_color;
     private StateView mStateView;
-   // private TagsEditorFragment  tagsEditorFragment = new TagsEditorFragment();
     FileRepository repos;
     private Fragment activeFragment;
 
-   // private TriangleLabelView mManageStatus1;
-   // private TriangleLabelView mManageStatus2;
-   // private ImageView srcdir;
     private FloatingActionButton playerBtn;
-   // private FloatingActionButton refreshOnNewSongBtn;
     private boolean refreshOnNewSong;
 
     private boolean previewState = true;
+
+    private AlertDialog progressDialog;
 
     @Override
     public void onBackPressed() {
@@ -137,6 +134,7 @@ public class TagsActivity extends AppCompatActivity {
     public void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
+        stopProgressBar();
     }
 
     private void doAnalystDRRG() {
@@ -161,6 +159,7 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        stopProgressBar();
     }
     @Override
     protected void onResume() {
@@ -202,40 +201,9 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        setupToolBarMenu();
-       // getMenuInflater().inflate(R.menu.menu_tag_preview, menu);
-        // Inflate the menu; this adds items to the action bar if it is present.
-        //setupToolBarMenuPreview();
-       // Drawable drawable = menu.findItem(R.id.menu_preview_following_listening).getIcon();
-       // if(refreshOnNewSong && drawable!= null) {
-        //    UIUtils.getTintedDrawable(drawable, Color.GREEN);
-       // }
+        setupMenuToolbar();
         return true;
     }
-
-    @Override public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_preview_calculate_dr) {
-            doAnalystDRRG();
-            return true;
-        } else if (item.getItemId() == R.id.menu_preview_following_listening) {
-            if(refreshOnNewSong) {
-                refreshOnNewSong = false;
-                UIUtils.getTintedDrawable(item.getIcon(), Color.WHITE);
-            }else {
-                refreshOnNewSong = true;
-                UIUtils.getTintedDrawable(item.getIcon(), Color.GREEN);
-                MusicTag tag = MusixMateApp.getPlayingSong();
-                if(tag != null) {
-                    MusicTagRepository.load(tag);
-                    updatePreview(tag);
-                }
-            }
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
@@ -249,6 +217,7 @@ public class TagsActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     updateTitlePanel();
                     setUpPageViewer();
+                    stopProgressBar();
                 });
             }
         }catch (Exception e) {
@@ -267,6 +236,7 @@ public class TagsActivity extends AppCompatActivity {
                 if(tag != null) {
                     MusicTagRepository.load(tag);
                     updatePreview(tag);
+                    stopProgressBar();
                 }
             }
         }
@@ -297,15 +267,14 @@ public class TagsActivity extends AppCompatActivity {
 
        // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
         adapter.addNewTab(new TagsEditorFragment(), "Information");
-        adapter.addNewTab(new TagsTechnicalFragment(), "Nerd!");
-       // adapter.addNewTab(tagsEditorFragment, "METADATA");
+        adapter.addNewTab(new TagsTechnicalFragment(), "NERD!");
         viewPager.setAdapter(adapter);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 activeFragment = adapter.fragments.get(position);
-                setupToolBarMenu();
+                setupMenuToolbar();
             }
 
             @Override
@@ -315,10 +284,6 @@ public class TagsActivity extends AppCompatActivity {
         });
 
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(adapter.getPageTitle(position)));
-      // // TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-       //     tab.setText(adapter.getPageTitle(position));
-            //setupToolBarMenu();
-       // });
         tabLayoutMediator.attach();
 
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
@@ -340,6 +305,7 @@ public class TagsActivity extends AppCompatActivity {
         encInfo = findViewById(R.id.panel_enc);
         pathInfo = findViewById(R.id.panel_path);
         tagInfo = findViewById(R.id.panel_tag);
+        hiresView = findViewById(R.id.icon_hires);
         audiophileView = findViewById(R.id.icon_audiophile);
         resolutionView = findViewById(R.id.icon_resolution);
         drView = findViewById(R.id.icon_dr);
@@ -347,7 +313,12 @@ public class TagsActivity extends AppCompatActivity {
         newView = findViewById(R.id.icon_new);
         newPanelView = findViewById(R.id.icon_new_panel);
         playerBtn = findViewById(R.id.music_player);
-        playerBtn.setOnClickListener(view -> MusixMateApp.playNextSong(getApplicationContext()));
+        playerBtn.setOnClickListener(view -> {
+            if(refreshOnNewSong) {
+                startProgressBar();
+            }
+            MusixMateApp.playNextSong(getApplicationContext());
+        });
     }
 
     public void updateTitlePanel() {
@@ -357,16 +328,13 @@ public class TagsActivity extends AppCompatActivity {
         }else {
             playerBtn.setVisibility(View.GONE);
         }
-       // String title = getString(R.string.title_many, getEditItems().size());
-       // toolbar.setTitle(title);
         if(getEditItems().size()>1) {
             String title = getString(R.string.title_many, getEditItems().size());
             titleView.setText(title);
         }else {
-            //toolbar.setTitle(MusicTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
-            titleView.setText(MusicTagUtils.getFormattedTitle(getApplicationContext(), displayTag));
+            titleView.setText(trim(displayTag.getTitle(), " - "));
         }
-        artistView.setText(trimToEmpty(displayTag.getArtist())+" ");
+        artistView.setText(trim(displayTag.getArtist(), " - "));
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), displayTag))
@@ -380,6 +348,11 @@ public class TagsActivity extends AppCompatActivity {
         }else {    // Dynamic Range
             drView.setText(MusicTagUtils.getTrackDR(displayTag));
             drView.setVisibility(View.VISIBLE);
+        }
+        if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isPCMHiRes(displayTag)) {
+            hiresView.setVisibility(View.VISIBLE);
+        }else {
+            hiresView.setVisibility(View.GONE);
         }
 
         Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
@@ -443,8 +416,8 @@ public class TagsActivity extends AppCompatActivity {
 
         String matePath = repos.buildCollectionPath(displayTag, true);
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            newView.setTextColor(getColor(R.color.material_color_red_900));
-            newView.setBackground(resolutionBackground);
+            newView.setTextColor(getColor(R.color.grey200));
+            newView.setBackgroundColor(getColor(R.color.material_color_red_900));
             newPanelView.setVisibility(View.VISIBLE);
         }else {
             newPanelView.setVisibility(View.GONE);
@@ -542,7 +515,7 @@ public class TagsActivity extends AppCompatActivity {
             //spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()), encColor).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(MusicTagUtils.getMeasuredDR(displayTag) +" dB", encColor))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit("TRG "+ displayTag.getTrackRG(), encColor).setTextSize(metaInfoTextSize))
+                    .append(new SpecialTextUnit("Rg "+displayTag.getTrackRG(), encColor).setTextSize(metaInfoTextSize))
                     // .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
                    // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                    // .append(new SpecialTextUnit(StringUtils.formatChannels(displayTag.getAudioChannels()),encColor).setTextSize(metaInfoTextSize))
@@ -654,6 +627,8 @@ public class TagsActivity extends AppCompatActivity {
                     }
                     if(MusixMateApp.getPlayerInfo() == null || !refreshOnNewSong) {
                         finish(); // back to prev activity
+                    }else {
+                        startProgressBar();
                     }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -684,6 +659,8 @@ public class TagsActivity extends AppCompatActivity {
                     setResult(RESULT_OK, resultIntent);
                     if(MusixMateApp.getPlayerInfo() == null || !refreshOnNewSong) {
                         finish(); // back to prev activity
+                    }else {
+                        startProgressBar();
                     }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -711,9 +688,12 @@ public class TagsActivity extends AppCompatActivity {
             MenuItem item = toolbar.getMenu().getItem(i);
             if(item.getItemId() == R.id.menu_preview_following_listening) {
                 Drawable drawable = item.getIcon();
-                 if(refreshOnNewSong && drawable!= null) {
+                if(drawable==null) return;
+                if(refreshOnNewSong) {
                     UIUtils.getTintedDrawable(drawable, Color.GREEN);
-                 }
+                }else {
+                     UIUtils.getTintedDrawable(drawable, Color.WHITE);
+                }
             }
         }
     }
@@ -735,13 +715,13 @@ public class TagsActivity extends AppCompatActivity {
                 // fully EXPANDED, on preview screen
                 // FIXME: should setup menu hear
                 previewState = true;
-                setupToolBarMenu();
+                setupMenuToolbar();
                 buildDisplayTag();
                 updateTitlePanel();
             } else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange()) {
                 // fully COLLAPSED, on editing screen
                 previewState = false;
-                setupToolBarMenu();
+                setupMenuToolbar();
             }else if (Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset) >= 0.8) {
                 // should display menus
                ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
@@ -788,7 +768,7 @@ public class TagsActivity extends AppCompatActivity {
             };
     }
 
-    private void setupToolBarMenu() {
+    private void setupMenuToolbar() {
         if (previewState) {
             setupMenuPreview(getOnMenuItemClickListener());
         }else if(activeFragment!= null) {
@@ -811,5 +791,29 @@ public class TagsActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    public void startProgressBar() {
+        runOnUiThread(() -> {
+            try {
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
+                dialogBuilder.setView(R.layout.progress_dialog_layout);
+                dialogBuilder.setCancelable(true);
+                progressDialog = dialogBuilder.create();
+                progressDialog.setCanceledOnTouchOutside(true);
+                progressDialog.show();
+            }catch (Exception ex) {
+                Log.e(TAG, "startProgressBar",ex);
+            }
+        });
+    }
+
+    public void stopProgressBar() {
+        runOnUiThread(() -> {
+            if(progressDialog!=null) {
+                progressDialog.dismiss();
+                progressDialog = null;
+            }
+        });
     }
 }

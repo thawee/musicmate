@@ -24,7 +24,7 @@
         app:showAsAction="always" />
 
     <item
-        android:icon="@drawable/ic_baseline_refresh_24"
+        android:icon="@drawable/round_wallpaper_24"
         android:id="@+id/menu_preview_following_listening"
         android:title="Follows listening song"
         app:showAsAction="always" />

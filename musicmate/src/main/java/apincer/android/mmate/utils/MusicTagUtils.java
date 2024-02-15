@@ -181,9 +181,10 @@ public class MusicTagUtils {
         int bgBlackColor = context.getColor(R.color.grey900);
         int resolutionColor = getResolutionColor(context,tag);
         int qualityColor = context.getColor(R.color.quality_unknown);
-        if(!(isDSD(tag) || isLossless(tag))) { // QUALITY_NORMAL.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_bad);
-        }else if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+       // if(!(isDSD(tag) || isLossless(tag))) { // QUALITY_NORMAL.equals(tag.getMediaQuality())) {
+       //     qualityColor = context.getColor(R.color.quality_bad);
+       // }else
+        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_good);
         }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_good);
@@ -191,7 +192,9 @@ public class MusicTagUtils {
             qualityColor = context.getColor(R.color.quality_average);
         }
         int upscaleColor = context.getColor(R.color.quality_unknown);
-        if (tag.getMeasuredDR() > 0.0) {
+        if(!(isDSD(tag) || isLossless(tag))) {
+            upscaleColor = context.getColor(R.color.quality_bad);
+        }else if (tag.getMeasuredDR() > 0.0) {
             if (isUpScaled(tag)) {
                 upscaleColor = (isBadUpScaled(tag) ? context.getColor(R.color.quality_bad) : context.getColor(R.color.quality_average));
             }else {

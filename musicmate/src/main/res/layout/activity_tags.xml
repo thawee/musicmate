@@ -40,7 +40,7 @@
             <RelativeLayout
                 android:id="@+id/panel_cover_art_layout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/dimen_1_dp"
                 android:layout_gravity="top"
                 android:gravity="top"
@@ -62,11 +62,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:fabSize="normal"
-                    android:layout_marginTop="@dimen/dimen_4_dp"
-                    android:layout_marginRight="@dimen/dimen_4_dp"
-                    android:layout_marginBottom="@dimen/dimen_480_dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
+                    android:layout_marginTop="@dimen/dimen_6_dp"
+                    android:layout_marginEnd="@dimen/dimen_6_dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
                     android:contentDescription="Music Player"
                     android:visibility="visible"
                     app:tint="@color/white"
@@ -76,6 +75,7 @@
                     android:src="@drawable/ic_baseline_skip_next_24"
                     />
 
+                <!--
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -87,7 +87,20 @@
                     android:background="@drawable/shadow"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
-
+                -->
+                <!--
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_below="@+id/panel_cover_art"
+                    android:layout_gravity="top"
+                    android:layout_marginStart="@dimen/dimen_2_dp"
+                    android:layout_marginEnd="@dimen/dimen_2_dp"
+                    android:layout_marginBottom="@dimen/dimen_2_dp"
+                    android:background="@drawable/shadow"
+                    android:gravity="top|center_horizontal"
+                    android:orientation="vertical">
 
 
                     <TextView
@@ -95,7 +108,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Song Title"
-                        android:singleLine="true"
+                        android:maxLines="2"
+                        android:lines="2"
                         android:gravity="top|center_horizontal"
                         android:layout_marginTop="@dimen/dimen_1_dp"
                         android:layout_marginEnd="@dimen/dimen_1_dp"
@@ -148,6 +162,19 @@
                         android:padding="@dimen/dimen_1_dp"
                         android:src="@drawable/ic_format_hires" />
 
+                    <ImageView
+                        android:id="@+id/icon_audiophile"
+                        android:layout_width="@dimen/dimen_72_dp"
+                        android:layout_height="@dimen/dimen_24_dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
+                        android:contentDescription="@string/editor_musicmate_info"
+                        android:gravity="end|center_vertical"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_audiophile"
+                        android:background="@drawable/shape_background_dr"/>
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -181,16 +208,16 @@
                     </LinearLayout>
 
                     <ImageView
-                        android:id="@+id/icon_audiophile"
-                        android:layout_width="@dimen/dimen_72_dp"
+                        android:id="@+id/icon_hires"
+                        android:layout_width="@dimen/dimen_32_dp"
                         android:layout_height="@dimen/dimen_24_dp"
                         android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="@dimen/dimen_4_dp"
                         android:contentDescription="@string/editor_musicmate_info"
-                        android:gravity="end|center_vertical"
-                        android:padding="@dimen/dimen_2_dp"
+                        android:gravity="center"
                         android:scaleType="fitXY"
-                        android:src="@drawable/ic_audiophile"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:layout_marginEnd="@dimen/dimen_4_dp"
+                        android:src="@drawable/ic_format_hires"
                         android:background="@drawable/shape_background_dr"/>
 
                     <LinearLayout
@@ -216,9 +243,168 @@
                     </LinearLayout>
                 </LinearLayout>
                 </LinearLayout>
+                -->
             </RelativeLayout>
 
-            <include layout="@layout/view_tag_layout" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:layout_marginStart="@dimen/dimen_2_dp"
+                    android:layout_marginEnd="@dimen/dimen_2_dp"
+                    android:background="@drawable/shadow"
+                    android:gravity="top|center_horizontal"
+                    android:orientation="vertical">
+
+
+                    <TextView
+                        android:id="@+id/panel_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Song Title"
+                        android:maxLines="2"
+                        android:lines="2"
+                        android:gravity="top|center_horizontal"
+                        android:layout_marginTop="@dimen/dimen_1_dp"
+                        android:layout_marginEnd="@dimen/dimen_1_dp"
+                        android:layout_gravity="top|center_horizontal"
+                        android:fontFamily="@font/sfthonburi_regular"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        android:textSize="16sp"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="center_horizontal"
+                        android:paddingTop="@dimen/dimen_12_dp"
+                        android:paddingBottom="@dimen/dimen_8_dp"
+                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:background="@drawable/shape_btn_background">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:background="@drawable/shape_background_dr"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:padding="@dimen/dimen_2_dp">
+                            <TextView
+                                android:id="@+id/icon_file_type"
+                                android:layout_width="@dimen/dimen_36_dp"
+                                android:layout_height="@dimen/dimen_20_dp"
+                                android:layout_gravity="center"
+                                android:background="@drawable/shape_background_unknown"
+                                android:fontFamily="@font/oswald_bold"
+                                android:gravity="center"
+                                android:text="@string/sample_file_type"
+                                android:textColor="@color/black"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                        <ImageView
+                            android:id="@+id/icon_resolution"
+                            android:layout_width="@dimen/dimen_78_dp"
+                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:contentDescription="@string/editor_musicmate_info"
+                            android:gravity="center"
+                            android:scaleType="fitXY"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:padding="@dimen/dimen_1_dp"
+                            android:src="@drawable/ic_format_hires" />
+
+                        <ImageView
+                            android:id="@+id/icon_audiophile"
+                            android:layout_width="@dimen/dimen_72_dp"
+                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:contentDescription="@string/editor_musicmate_info"
+                            android:gravity="end|center_vertical"
+                            android:padding="@dimen/dimen_2_dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/ic_audiophile"
+                            android:background="@drawable/shape_background_dr"/>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:padding="@dimen/dimen_2_dp"
+                            android:background="@drawable/shape_background_dr"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="@dimen/dimen_32_dp"
+                                android:layout_height="@dimen/dimen_20_dp"
+                                android:layout_gravity="start|center_vertical"
+                                android:gravity="center"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/dynamic_range" />
+
+                            <TextView
+                                android:id="@+id/icon_dr"
+                                android:layout_width="@dimen/dimen_24_dp"
+                                android:layout_height="@dimen/dimen_20_dp"
+                                android:layout_gravity="end|center_vertical"
+                                android:background="@drawable/shape_background_unknown"
+                                android:fontFamily="@font/oswald_bold"
+                                android:gravity="center"
+                                android:text="@string/sample_dr"
+                                android:textColor="@color/black"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/icon_hires"
+                            android:layout_width="@dimen/dimen_32_dp"
+                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:contentDescription="@string/editor_musicmate_info"
+                            android:gravity="center"
+                            android:scaleType="fitXY"
+                            android:padding="@dimen/dimen_2_dp"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:src="@drawable/ic_format_hires"
+                            android:background="@drawable/shape_background_dr"/>
+
+                        <LinearLayout
+                            android:id="@+id/icon_new_panel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:background="@drawable/shape_background_dr"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:padding="@dimen/dimen_2_dp">
+                            <TextView
+                                android:id="@+id/icon_new"
+                                android:layout_width="@dimen/dimen_36_dp"
+                                android:layout_height="@dimen/dimen_20_dp"
+                                android:layout_gravity="center"
+                                android:background="@drawable/shape_background_unknown"
+                                android:fontFamily="@font/oswald_bold"
+                                android:gravity="center"
+                                android:text="@string/file_status_new"
+                                android:textColor="@color/black"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+                <include layout="@layout/view_tag_layout" />
+            </LinearLayout>
 
             <sakout.mehdi.StateViews.StateView
                 android:id="@+id/status_page"

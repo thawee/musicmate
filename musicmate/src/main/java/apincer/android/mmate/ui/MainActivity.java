@@ -100,6 +100,7 @@ import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.dlna.DMSService;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.repository.FFMPeg;
@@ -107,7 +108,6 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.share.MusicServerService;
 import apincer.android.mmate.share.SyncHibyPlayer;
 import apincer.android.mmate.share.SyncRaspberry;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
@@ -160,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
 
     private OnBackPressedCallback onBackPressedCallback;
 
-    //private MusicTagController epoxyController;
     private MusicTagAdapter adapter;
     private SelectionTracker<Long> mTracker;
 
@@ -1105,12 +1104,15 @@ public class MainActivity extends AppCompatActivity {
         startButton.setOnClickListener(view -> {
             //DLNAMediaServer server = new DLNAMediaServer();
            // server.start();
+          //  startForegroundService(new Intent(getApplicationContext(),
+          //          MusicServerService.class));
             startForegroundService(new Intent(getApplicationContext(),
-                    MusicServerService.class));
+                    DMSService.class));
         });
         Button stopButton = cview.findViewById(R.id.stopServer);
         stopButton.setOnClickListener(view -> stopService(new Intent(getApplicationContext(),
-                MusicServerService.class)));
+                //MusicServerService.class)));
+                DMSService.class)));
 
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1414,29 +1416,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    // Define the callback for what to do when data is received
-    /*
-    private final BroadcastReceiver operationReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            BroadcastData broadcastData = BroadcastData.getBroadcastData(intent);
-            if(broadcastData!=null) {
-                if (broadcastData.getAction() == BroadcastData.Action.PLAYING) {
-                    MusicMateExecutors.main(() -> {
-                        MusicTag tag = broadcastData.getTagInfo();
-                        onPlaying(tag);
-                    });
-                }
-            }
-        }
-    }; */
-
     public void onPlaying(MusicTag song) {
         if(song!=null) {
             runOnUiThread(() -> doShowNowPlayingSongFAB(song));
-            //doShowNowPlayingSongFAB(song);
-            //scrollToSong(song);
-            //if((!song.equals(lastPlaying)) && Preferences.isOpenNowPlaying(getBaseContext())) {
             if(Preferences.isListFollowNowPlaying(getBaseContext())) {
                     if(timer!=null) {
                             timer.cancel();
@@ -1501,13 +1483,12 @@ public class MainActivity extends AppCompatActivity {
             }else if (id == R.id.action_send_playlist_to_streaming) {
                 final List<MusicTag> list = getSelections();
                 MusicMateExecutors.move(() -> {
-                    //doSendPlaylistToStreamer(list);
                     doSendRadioStationToStreamer(list);
                 });
                 mode.finish();
                 return true;
             }else if (id == R.id.action_calculate_replay_gain) {
-                doCalculateReplayGain(getSelections());
+                doAnalystDRRG(getSelections());
                 mode.finish();
                 return true;
             }else if (id == R.id.action_export_playlist) {
@@ -1662,7 +1643,7 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    private void doCalculateReplayGain(List<MusicTag> selections) {
+    private void doAnalystDRRG(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
@@ -1670,7 +1651,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Analyst File Quality");
+        titleText.setText("Analyst Dynamic Range and ReplayGain");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -2133,7 +2114,7 @@ https://aaaaa.com
                         String filePath = FileUtils.removeExtension(tag.getPath());
                         String targetPath = filePath+"."+ finalTargetExt;
                         int bitdept = tag.getAudioBitsDepth();
-                        statusList.put(tag, "Converting");
+                        statusList.put(tag, "Encoding");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
