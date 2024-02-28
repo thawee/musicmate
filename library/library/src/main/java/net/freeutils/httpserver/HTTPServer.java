@@ -2296,7 +2296,7 @@ public class HTTPServer {
             }
         }
         if (status == 404)
-            status = handler.serve(req, resp);
+             status = handler.serve(req, resp);
         if (status > 0)
             resp.sendError(status);
     }

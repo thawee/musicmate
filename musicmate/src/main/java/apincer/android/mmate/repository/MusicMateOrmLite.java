@@ -4,6 +4,7 @@ import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
 import static apincer.android.mmate.Constants.SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.SPL_8BIT_IN_DB;
+import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -14,6 +15,7 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.GenericRawResults;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 
@@ -280,7 +282,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             keyword = "'%"+keyword.replace("'","''")+"%'";
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("title like "+keyword+" or artist like "+keyword);
+            builder.where().raw("title like "+keyword+" or artist like "+keyword +" or album like "+keyword);
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -399,6 +401,49 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             return dao.queryForId(id);
         } catch (SQLException e) {
             return null;
+        }
+    }
+
+    public List<String> getArtistForGrouping(String grouping) {
+        try {
+            List<String> list = new ArrayList<>();
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("distinct artist");
+            if(EMPTY.equalsIgnoreCase(grouping)) {
+                builder.where().isNull("grouping");
+            }else {
+                builder.where().eq("grouping", grouping);
+            }
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            for(String[] vals : results.getResults()) {
+                list.add(vals[0]);
+            }
+            return list;
+        } catch (SQLException e) {
+            Log.e("MusicMateORMLite","getArtistForGrouping: "+e.getMessage());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public List<MusicTag> findByGroupingAndArtist(String grouping, String artist)  {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            Where where = builder.where();
+            if(EMPTY.equals(grouping)) {
+                where.isNull("grouping").or().eq("grouping", "");
+            }else {
+                where.eq("grouping", grouping);
+            }
+            if(EMPTY.equals(artist)) {
+                where.and().isNull("artist").or().eq("artist", "");
+            }else {
+                where.and().eq("artist",artist);
+            }
+            return builder.groupBy("title").groupBy("artist").query();
+        } catch (SQLException e) {
+            return Collections.EMPTY_LIST;
         }
     }
 }

@@ -106,7 +106,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public void setSearchString(String text) {
-        criteria.searchFor(text);
+        if(isEmpty(text)) {
+            criteria.resetSearch();
+        }else {
+            criteria.searchFor(text);
+        }
     }
 
     public void setClickListener(OnListItemClick context) {
@@ -247,7 +251,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public boolean isSearchMode() {
-        return criteria.getType() == SearchCriteria.TYPE.SEARCH;
+        //return criteria.getType() == SearchCriteria.TYPE.SEARCH;
+        return criteria.isSearchMode();
     }
 
     @SuppressLint("NotifyDataSetChanged")

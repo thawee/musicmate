@@ -150,16 +150,16 @@
         <item>Hip Hop</item>
         <item>EDM</item>
         <item>Rap</item>
-        <item>Thai Traditional</item>
+        <item>Thai Classical</item>
         <item>Thai Pop</item>
-        <item>Thai Pop, Indie</item>
-        <item>Thai Pop, Rock</item>
-        <item>Thai Pop, Vocal</item>
+        <item>Thai Indie</item>
+        <item>Thai Vocal</item>
         <item>Thai Rock</item>
         <item>Thai Folk</item>
-        <item>Luk Krung</item>
+        <item>Thai Jazz</item>
         <item>Luk Thung</item>
         <item>Mor Lum</item>
+        <item>Kantrum</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Acoustic</item>

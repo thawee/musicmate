@@ -1,5 +1,7 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -11,6 +13,25 @@ public class SearchCriteria implements Parcelable {
     public SearchCriteria(TYPE type) {
         this.type = type;
     }
+
+    public boolean isSearchMode() {
+        return searchMode;
+    }
+
+    public void setSearchMode(boolean searchMode) {
+        this.searchMode = searchMode;
+    }
+
+    public String getSearchText() {
+        return searchText;
+    }
+
+    public void setSearchText(String searchText) {
+        this.searchText = searchText;
+    }
+
+    private boolean searchMode;
+    private String searchText;
     public SearchCriteria(TYPE type, String keyword) {
         this.type = type;
         this.keyword = keyword;
@@ -21,7 +42,8 @@ public class SearchCriteria implements Parcelable {
     }
 
     // public enum TYPE {MY_SONGS, AUDIOPHILE, SEARCH, SEARCH_BY_ARTIST,SEARCH_BY_ALBUM,GENRE,AUDIO_FORMAT,DOWNLOAD,SIMILAR_TITLE,DUPLICATE,GROUPING,AUDIO_SQ,AUDIO_SAMPLE_RATE}
-    public enum TYPE {MY_SONGS, MEDIA_QUALITY, PUBLISHER, SEARCH, SEARCH_BY_ARTIST,SEARCH_BY_ALBUM,GENRE,AUDIO_FORMAT,GROUPING,AUDIO_SQ,AUDIO_SAMPLE_RATE} //,AUDIO_PCM,AUDIO_HIRES,AUDIO_HIFI}
+   // public enum TYPE {MY_SONGS, MEDIA_QUALITY, PUBLISHER, SEARCH, SEARCH_BY_ARTIST,SEARCH_BY_ALBUM,GENRE,AUDIO_FORMAT,GROUPING,AUDIO_SQ,AUDIO_SAMPLE_RATE} //,AUDIO_PCM,AUDIO_HIRES,AUDIO_HIFI}
+ public enum TYPE {MY_SONGS, MEDIA_QUALITY, PUBLISHER, SEARCH_BY_ARTIST,SEARCH_BY_ALBUM,GENRE,AUDIO_FORMAT,GROUPING,AUDIO_SQ,AUDIO_SAMPLE_RATE} //,AUDIO_PCM,AUDIO_HIRES,AUDIO_HIFI}
 
     public enum RESULT_TYPE {ALL,TOP_RESULT,ARTIST,ALBUM,TRACKS}
 
@@ -40,9 +62,9 @@ public class SearchCriteria implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(type.name());
-        dest.writeString(StringUtils.trimToEmpty(keyword));
-        dest.writeString(StringUtils.trimToEmpty(filterType));
-        dest.writeString(StringUtils.trimToEmpty(filterText));
+        dest.writeString(trimToEmpty(keyword));
+        dest.writeString(trimToEmpty(filterType));
+        dest.writeString(trimToEmpty(filterText));
     }
 
     @Override
@@ -86,19 +108,24 @@ public class SearchCriteria implements Parcelable {
 
     public void searchFor(String searchFor) {
         //if(type != TYPE.SEARCH || type != TYPE.SEARCH_BY_ALBUM || type != TYPE.SEARCH_BY_ARTIST) {
-        if(type != TYPE.SEARCH) {
+      /*  if(type != TYPE.SEARCH) {
             previousType = type;
             previousKeyword = keyword;
         }
         type = TYPE.SEARCH;
         keyword = searchFor;
+        */
+        searchMode = true;
+        searchText = trimToEmpty(searchFor);
     }
 
     public void resetSearch() {
-        if(type == TYPE.SEARCH) {
+      /*  if(type == TYPE.SEARCH) {
             type = previousType;
             keyword = previousKeyword;
-        }
+        } */
+        searchMode = false;
+        searchText = null;
     }
 
     protected String keyword;
@@ -125,6 +152,6 @@ public class SearchCriteria implements Parcelable {
         return type;
     }
     private TYPE type;
-    private TYPE previousType;
-    protected String previousKeyword;
+    //private TYPE previousType;
+    //protected String previousKeyword;
 }

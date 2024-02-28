@@ -56,9 +56,9 @@
                     android:src="@drawable/ic_broken_image_black_24dp"
                     app:heightRatio="2"
                     app:widthRatio="1" />
-
+<!--
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/music_player"
+                    android:id="@+id/music_player2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:fabSize="normal"
@@ -73,7 +73,7 @@
                     android:backgroundTint="@color/black_transparent_40"
                     android:background="@drawable/shape_btn_background"
                     android:src="@drawable/ic_baseline_skip_next_24"
-                    />
+                    /> -->
 
                 <!--
                 <LinearLayout
@@ -251,6 +251,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:orientation="vertical">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -261,6 +262,22 @@
                     android:gravity="top|center_horizontal"
                     android:orientation="vertical">
 
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/music_player"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:fabSize="normal"
+                        android:layout_marginTop="@dimen/dimen_24_dp"
+                        android:layout_marginEnd="@dimen/dimen_6_dp"
+                        android:contentDescription="Music Player"
+                        android:layout_gravity="end"
+                        android:visibility="visible"
+                        app:tint="@color/white"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:backgroundTint="@color/black_transparent_40"
+                        android:background="@drawable/shape_btn_background"
+                        android:src="@drawable/ic_baseline_skip_next_24"
+                        />
 
                     <TextView
                         android:id="@+id/panel_title"

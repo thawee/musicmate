@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.share.MusicServerService.PORT;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
@@ -100,23 +99,20 @@ import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.dlna.DMSService;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.nas.NASServerService;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.share.SyncHibyPlayer;
-import apincer.android.mmate.share.SyncRaspberry;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
-import apincer.android.mmate.utils.HostInterface;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
@@ -770,6 +766,10 @@ public class MainActivity extends AppCompatActivity {
 
            @Override
            public boolean onQueryTextChange(String newText) {
+               if(isEmpty(newText) || newText.length() >=3) {
+                   adapter.setSearchString(newText);
+                   refreshLayout.autoRefresh();
+               }
                return false;
            }
        });
@@ -807,7 +807,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doHideSearch() {
-        mSearchView.setVisibility(View.GONE);
+        adapter.setSearchString("");
+        //mSearchView.setVisibility(View.GONE);
+        refreshLayout.autoRefresh();
     }
 	
 	private boolean doPlayNextSong() {
@@ -1106,13 +1108,17 @@ public class MainActivity extends AppCompatActivity {
            // server.start();
           //  startForegroundService(new Intent(getApplicationContext(),
           //          MusicServerService.class));
+         //   startForegroundService(new Intent(getApplicationContext(),
+          //          DMSService.class));
             startForegroundService(new Intent(getApplicationContext(),
-                    DMSService.class));
+                    NASServerService.class));
+
         });
         Button stopButton = cview.findViewById(R.id.stopServer);
         stopButton.setOnClickListener(view -> stopService(new Intent(getApplicationContext(),
                 //MusicServerService.class)));
-                DMSService.class)));
+               // DMSService.class)));
+                NASServerService.class)));
 
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1475,18 +1481,18 @@ public class MainActivity extends AppCompatActivity {
                 doSendFilesToHibyDAP(getSelections());
                 mode.finish();
                 return true;*/
-            }else if (id == R.id.action_send_to_streaming) {
-                doSendFilesToStreamingPlayer(getSelections());
-                mode.finish();
+           // }else if (id == R.id.action_send_to_streaming) {
+             //   doSendFilesToStreamingPlayer(getSelections());
+             //   mode.finish();
 
-                return true;
-            }else if (id == R.id.action_send_playlist_to_streaming) {
-                final List<MusicTag> list = getSelections();
-                MusicMateExecutors.move(() -> {
-                    doSendRadioStationToStreamer(list);
-                });
-                mode.finish();
-                return true;
+             //   return true;
+           // }else if (id == R.id.action_send_playlist_to_streaming) {
+              //  final List<MusicTag> list = getSelections();
+              //  MusicMateExecutors.move(() -> {
+              //      doSendRadioStationToStreamer(list);
+              //  });
+              //  mode.finish();
+              //  return true;
             }else if (id == R.id.action_calculate_replay_gain) {
                 doAnalystDRRG(getSelections());
                 mode.finish();
@@ -1521,127 +1527,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doSendFilesToStreamingPlayer(List<MusicTag> selections) {
-        if(selections.isEmpty()) return;
-
-       // Context context = getApplicationContext();
-        View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
-        Map<MusicTag, String> doneList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        EditText targetURL = cview.findViewById(R.id.targetURL);
-        EditText targetIP = cview.findViewById(R.id.targetIP);
-        //targetURL.setText("Sync to Streamer (VolumIO)");
-        targetURL.setText("Sync to Raspberry");
-       // targetURL.setText("Sync to Streamer (HifiberryOS)");
-        targetIP.setVisibility(View.GONE);
-
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
-            }
-
-            @Override
-            public Object getItem(int i) {
-                return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                MusicTag tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-                seq.setText(String.valueOf(i+1));
-                if(doneList.containsKey(tag)) {
-                    status.setText(doneList.get(tag));
-                }else {
-                    status.setText("-");
-                }
-                name.setText(FileSystem.getFilename(tag.getPath()));
-                return view;
-            }
-        });
-
-        // final String[] encoding = {null};
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
-
-        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-
-        btnOK.setEnabled(true);
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS/block;
-        List<Long> valueList = new ArrayList<>();
-        for(int i=0; i< block;i++) {
-            valueList.add((long) sizeInBlock);
-        }
-        final float rate = 100f/selections.size(); // pcnt per 1 song
-        int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
-
-        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
-        // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            progressBar.setProgress(getInitialProgress(selections.size(), rate));
-           // String finalUrl = String.valueOf(targetURL.getText());
-            MusicMateExecutors.move(() -> {
-               // SyncVolumio streamer = new SyncVolumio();
-               // SyncMoode streamer = new SyncMoode();
-               // SyncHifiberry streamer = new SyncHifiberry();
-                SyncRaspberry streamer = new SyncRaspberry();
-                for(MusicTag tag: selections) {
-                    try {
-                        doneList.put(tag, "Sending");
-                        runOnUiThread(() -> itemsView.invalidateViews());
-                        streamer.sync(getApplicationContext(), tag);
-                        doneList.put(tag, "Done");
-                        runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
-                            itemsView.invalidateViews();
-                            progressBar.invalidate();
-                        });
-                    } catch (Exception ex) {
-                        try {
-                            doneList.put(tag, "Fail");
-                            runOnUiThread(() -> {
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                itemsView.invalidateViews();
-                                progressBar.invalidate();
-                            });
-                        } catch (Exception e) {
-                        }
-                    }
-                }
-                runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Selected file are send to raspberry."));
-                //streamer.finallise();
-            });
-            btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
-        });
-        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
-        alert.show();
-    }
 
     private void doAnalystDRRG(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
@@ -1810,189 +1695,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doSendRadioStationToStreamer(List<MusicTag> currentSelections) {
-        /*
-        mympd webradio
-           ///var/lib/mympd/webradios/
-        // https___aaaaa_com.m3u
 
-        #EXTM3U
-#EXTINF:-1,Test
-#EXTGENRE:Pop
-#PLAYLIST:Test
-#EXTIMG:
-#HOMEPAGE:
-#COUNTRY:
-#LANGUAGE:
-#DESCRIPTION:scsdfszvzvz
-#CODEC:
-#BITRATE:320
-https://aaaaa.com
-         */
-
-        try {
-           // SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-hhmmss", Locale.US);
-           // String path = "/Playlist/mmate-"+adapter.getCriteria().getKeyword()+".m3u";
-            String dirPath = DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, "/Playlist/radios/");
-            File dir = new File(dirPath);
-           /* if(dir.exists()) {
-                dir.delete();
-                dir = new File(dirPath);
-            }*/
-            if(!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            // pls
-            SyncRaspberry streamer = new SyncRaspberry();
-            String host = HostInterface.getIPv4Address();
-
-           // String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/music/";
-           // String baseImgUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/images/";
-             String baseUrl = HostInterface.getHostURL(host,PORT,"/music/");
-             String baseImgUrl = HostInterface.getHostURL(host,PORT,"/images/");
-           // int cnt=0;
-             String file = adapter.getCriteria().getKeyword();
-                file = file.replace("/","_");
-                file = file.replace("-","_");
-                file = file.replace(" ","_");
-                file = file.replace(":","_");
-                Writer out = null;
-                String path = "/Playlist/radios/"+file+".m3u";
-                path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
-                File filepath = new File(path);
-                out = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(filepath,false), StandardCharsets.UTF_8));
-
-                out.write("\n#EXTM3U\n");
-
-           // List<String> filenames = new ArrayList();
-            for (MusicTag tag:currentSelections) {
-                String url = baseUrl+tag.getId()+"."+ FileUtils.getExtension(tag.getPath());
-                String imgUrl = baseImgUrl+tag.getId();
-               /* String file = url.replace(":","_");
-                file = file.replace("/","_");
-                file = file.replace(".","_");
-                Writer out = null;
-                String path = "/Playlist/radios/"+file+".m3u";
-                path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
-                File filepath = new File(path);
-                File folder = filepath.getParentFile();
-               // if(!folder.exists()) {
-               //     folder.mkdirs();
-               // }
-                out = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(filepath,false), StandardCharsets.UTF_8)); */
-
-
-                out.write("#EXTINF:"+tag.getAudioDuration()+","+tag.getTitle()+"\n");
-                out.write("#EXTGENRE:"+tag.getGenre()+"\n");
-                out.write("#PLAYLIST:"+tag.getTitle()+"\n");
-                out.write("#EXTIMG:"+imgUrl+"\n");
-                out.write("#HOMEPAGE:\n");
-                out.write("#COUNTRY:"+tag.getGrouping()+"\n");
-                out.write("#LANGUAGE:\n");
-                out.write("#DESCRIPTION:"+MusicTagUtils.getFormattedSubtitle(tag)+" \n");
-                out.write("#CODEC:"+tag.getAudioEncoding()+"\n");
-                out.write("#BITRATE:"+StringUtils.formatAudioBitRateInKbps(tag.getAudioBitRate())+"\n");
-                out.write(url) ;
-                out.write("\n") ;
-              //  filenames.add(path);
-               // streamer.syncRadioPlaylist(getApplicationContext(), path);
-            }
-            out.close();
-           // streamer.syncRadioPlaylist(filenames);
-           // streamer.syncRadioPlaylist(getApplicationContext(), path);
-            streamer.syncPlaylist(getApplicationContext(), path);
-
-            runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Playlist created and send to raspberry."));
-        } catch (Exception e) {
-            e.printStackTrace();
-            runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Problem on creating and sending playlist to raspberry."));
-
-        }
-    }
-
-    private void doSendPlaylistToStreamer(List<MusicTag> currentSelections) {
-        /*
-        #EXTM3U
-        #PLAYLIST: The title of the playlist
-
-        #EXTINF:111, Sample artist name - Sample track title
-        C:\Music\SampleMusic.mp3
-
-        #EXTINF:222,Example Artist name - Example track title
-        C:\Music\ExampleMusic.mp3
-         */
-        Writer out = null;
-        try {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-hhmmss", Locale.US);
-            // String path = "/Playlist/mmate-"+adapter.getCriteria().getKeyword()+".m3u";
-            String path = "/Playlist/mmate-"+adapter.getCriteria().getType()+"-"+adapter.getCriteria().getKeyword()+"-"+simpleDateFormat.format(new Date())+".m3u";
-            path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
-            File filepath = new File(path);
-            File folder = filepath.getParentFile();
-            if(!folder.exists()) {
-                folder.mkdirs();
-            }
-            out = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(filepath,true), StandardCharsets.UTF_8));
-            //m3u
-            out.write("#EXTM3U\n");
-            out.write("#PLAYLIST: MusicMate Playlist - "+adapter.getCriteria().getKeyword()+"\n\n");
-
-            ///music/id - arist - title.flac
-            String host = HostInterface.getIPv4Address();
-            String baseUrl = HostInterface.getHostURL(host,PORT,"/music/");
-           // String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/music/";
-            for (MusicTag tag:currentSelections) {
-                out.write("#EXTINF:"+tag.getAudioDuration()+","+StringUtils.getM3UArtist(tag.getArtist())+" - "+tag.getTitle()+"\n");
-               // String location =  baseUrl+tag.getStorageId()+"/"+tag.getSimpleName();
-               // out.write(baseUrl+tag.getId()+ escapeHTML( " - "+tag.getAlbum()+" - "+tag.getTitle()+"."+tag.getFileFormat())+"\n\n");
-               // out.write(baseUrl+tag.getId()+ escapeHTML( " - "+tag.getAlbum()+" - "+tag.getTitle()+"."+tag.getFileFormat())+"\n\n");
-              //  String title = MusicTagUtils.getFormattedTitle(getApplicationContext(), tag);
-              //  title = MusicTagUtils.escapeURI(title);
-                out.write(baseUrl+tag.getId()+"."+tag.getFileFormat());
-                out.write("\n\n");
-                // may user id#<artist>-<title>. fill space with _
-            }
-
-            // xspf - https://www.xspf.org/quickstart
-            /*
-            out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-            out.write("<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\n");
-            out.write("  <title>MusicMate Playlist - "+adapter.getCriteria().getKeyword()+"</title>\n\n");
-
-            String baseUrl = "http://"+ ApplicationUtils.getIPAddress(true)+":"+http_port+"/";
-            for (MusicTag tag:currentSelections) {
-                String location = baseUrl+tag.getStorageId()+"/"+tag.getSimpleName();
-                out.write("  <track>\n");
-                out.write("    <location>"+baseUrl+tag.getId()+"</location>\n");
-                out.write("    <album>"+tag.getAlbum()+"</album>\n");
-                out.write("    <title>"+tag.getTitle()+"</title>\n");
-                //        <!-- song length, in milliseconds -->
-                out.write("    <duration>"+tag.getAudioDuration()+"</duration>\n");
-                //        <!-- album art -->
-            //   <image>http://images.amazon.com/images/P/B000002J0B.01.MZZZZZZZ.jpg</image>
-
-                out.write("  </track>\n\n");
-            }
-            out.write("</playlist>\n");
-            */
-
-            SyncRaspberry streamer = new SyncRaspberry();
-            streamer.syncPlaylist(getApplicationContext(), path);
-            runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Playlist created and send to raspberry."));
-        } catch (Exception e) {
-            e.printStackTrace();
-            runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Problem on creating and sending playlist to raspberry."));
-
-        } finally {
-            try {
-                out.close();
-            }catch (Exception ex) {}
-        }
-    }
 
     private void doEncodingAudioFiles(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
@@ -2156,145 +1859,6 @@ https://aaaaa.com
                 }
 
             });
-            btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
-        });
-        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
-        alert.show();
-    }
-
-    private void doSendFilesToHibyDAP(List<MusicTag> selections) {
-        if(selections.isEmpty()) return;
-
-        Context context = getApplicationContext();
-        WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        int ipAddress = wm.getConnectionInfo().getIpAddress();
-        String ip = String.format(Locale.ENGLISH, "%d.%d.%d.%d", (ipAddress & 0xff),(ipAddress >> 8 & 0xff),(ipAddress >> 16 & 0xff),(ipAddress >> 24 & 0xff));
-        ip = ip.substring(0, ip.lastIndexOf("."))+".xxx";
-        //String url = "http://10.100.1.242:4399/";
-        AtomicReference<String> url = new AtomicReference<>("http://" + ip + ":4399/");
-        View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
-        Map<MusicTag, String> doneList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        EditText targetURL = cview.findViewById(R.id.targetURL);
-        EditText targetIP = cview.findViewById(R.id.targetIP);
-        String finalIp = ip;
-        targetIP.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                String newIp = finalIp.substring(0, finalIp.lastIndexOf("."));
-                newIp = newIp+"."+targetIP.getText();
-                url.set("http://" + newIp + ":4399/");
-                targetURL.setText(url.get());
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
-        targetURL.setText(url.get());
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
-            }
-
-            @Override
-            public Object getItem(int i) {
-               return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                MusicTag tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-                seq.setText(String.valueOf(i+1));
-                if(doneList.containsKey(tag)) {
-                    status.setText(doneList.get(tag));
-                }else {
-                    status.setText("-");
-                }
-                name.setText(FileSystem.getFilename(tag.getPath()));
-                return view;
-            }
-        });
-
-        // final String[] encoding = {null};
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
-
-        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-
-        btnOK.setEnabled(true);
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS/block;
-        List<Long> valueList = new ArrayList<>();
-        for(int i=0; i< block;i++) {
-            valueList.add((long) sizeInBlock);
-        }
-        final float rate = 100f/selections.size(); // pcnt per 1 song
-        int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
-
-        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
-        // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            progressBar.setProgress(getInitialProgress(selections.size(), rate));
-            String finalUrl = String.valueOf(targetURL.getText());
-            MusicMateExecutors.move(() -> {
-                    for(MusicTag tag: selections) {
-                        try {
-                            doneList.put(tag, "Sending");
-                            runOnUiThread(() -> itemsView.invalidateViews());
-                            SyncHibyPlayer.sync(getApplicationContext(), finalUrl, tag);
-                            doneList.put(tag, "Done");
-                            runOnUiThread(() -> {
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                itemsView.invalidateViews();
-                                progressBar.invalidate();
-                            });
-                        } catch (Exception ex) {
-                            try {
-                                doneList.put(tag, "Fail");
-                                runOnUiThread(() -> {
-                                    int pct = progressBar.getProgress();
-                                    progressBar.setProgress((int) (pct + rate));
-                                    itemsView.invalidateViews();
-                                    progressBar.invalidate();
-                                });
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                });
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
         });

@@ -15,10 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.URLEncoder;
-import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -78,6 +75,17 @@ public class ApplicationUtils {
 
         return tContents;
 
+    }
+
+    public static InputStream getAssetsAsStream(Context activity, String inFile) {
+
+        try {
+            return activity.getAssets().open(inFile);
+        } catch (IOException e) {
+            // Handle exceptions here
+        }
+
+        return null;
     }
 
     public static String getAssetsText(Context context, String inFile) {

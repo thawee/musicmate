@@ -42,7 +42,7 @@ deps.google = google
 
 def apache = [:]
 apache.httpclient = "org.apache.httpcomponents:httpclient:4.5.14"
-apache.httpcore = "org.apache.httpcomponents:httpcore:4.5.14"
+apache.httpcore = "org.apache.httpcomponents:httpcore:4.4.16"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.16.1"
 apache.commons_io = "commons-io:commons-io:2.15.1"
@@ -340,6 +340,13 @@ deps.objectrelations ='org.obrel:objectrelations:1.3.0'
 //https://github.com/esoco/esoco-common
 deps.esococommon = 'de.esoco:esoco-common:1.2.0'
 deps.slf4j = 'org.slf4j:slf4j-api:1.7.36' //2.0.9'
+//https://www.filesys.org/jfileserver.html
+deps.jfileserver = 'org.filesys:jfileserver:1.3.16'
+//https://github.com/dCache/nfs4j
+deps.nfs4j = 'org.dcache:nfs4j-core:0.25.0'
+// https://github.com/google/jimfs
+deps.jimfs = 'com.google.jimfs:jimfs:1.3.0'
+//deps.high_scale_lib = 'com.boundary:high-scale-lib:1.0.6'
 ext.deps = deps
 
 def developer = [:]
@@ -366,6 +373,11 @@ def addRepos(org.gradle.api.artifacts.dsl.RepositoryHandler handler) {
     handler.maven {url "https://mvnrepository.com"}
     handler.maven {url "https://mvnrepository.com/artifact/"}
     handler.maven {url "https://mvnrepository.com/repos/jcenter/"}
+    handler.maven {url "https://download.dcache.org/nexus/content/repositories/releases/"}
+    handler.maven {url "https://maven.indexdata.com/"}
+    handler.maven {url "https://www.filesys.org/maven/"}
+
+
 }
 ext.addRepos = this.&addRepos
 

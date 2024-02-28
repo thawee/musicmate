@@ -314,9 +314,20 @@ public class TagsActivity extends AppCompatActivity {
         newPanelView = findViewById(R.id.icon_new_panel);
         playerBtn = findViewById(R.id.music_player);
         playerBtn.setOnClickListener(view -> {
-            if(refreshOnNewSong) {
-                startProgressBar();
+            refreshOnNewSong = true;
+            for(int i=0;i<toolbar.getMenu().size();i++) {
+                MenuItem item = toolbar.getMenu().getItem(i);
+                if(item.getItemId() == R.id.menu_preview_following_listening) {
+                    Drawable drawable = item.getIcon();
+                    if(drawable==null) return;
+                    if(refreshOnNewSong) {
+                        UIUtils.getTintedDrawable(drawable, Color.GREEN);
+                    }else {
+                        UIUtils.getTintedDrawable(drawable, Color.WHITE);
+                    }
+                }
             }
+            startProgressBar();
             MusixMateApp.playNextSong(getApplicationContext());
         });
     }

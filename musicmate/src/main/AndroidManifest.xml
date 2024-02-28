@@ -77,12 +77,8 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-
         <service
-            android:name=".share.MusicServerService"
-            android:enabled="true" />
-        <service
-            android:name=".dlna.DMSService"
+            android:name=".nas.NASServerService"
             android:enabled="true" />
 
         <!-- Main activity for music browsing on phone -->

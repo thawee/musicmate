@@ -75,3 +75,11 @@ systemProp.http.proxyHost=10.100.1.189
 systemProp.http.proxyPort=8080
 systemProp.https.proxyHost=10.100.1.189
 systemProp.https.proxyPort=8080
+
+
+test DAV by curl
+curl -X DELETE
+curl -X OPTIONS
+curl -X PROPFIND 
+
+curl -X PROPFIND  http://10.100.1.189:8082/music/

@@ -158,7 +158,10 @@ public class MusicTagRepository {
     }
     private static List<MusicTag> searchMediaTag(SearchCriteria criteria) {
         List<MusicTag> list = new ArrayList<>();
-            if (criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
+        if (criteria.isSearchMode()) {
+            // search title only, limit 5 songs
+            list = MusixMateApp.getInstance().getOrmLite().findByKeyword(criteria.getSearchText());
+        }else if (criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
                 if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
                     list = MusixMateApp.getInstance().getOrmLite().findMySongs();
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
@@ -198,9 +201,9 @@ public class MusicTagRepository {
                     val = "";
                 }
                 list = MusixMateApp.getInstance().getOrmLite().findByGenre(val);
-            } else if (criteria.getType() == SearchCriteria.TYPE.SEARCH) {
+          //  } else if (criteria.getType() == SearchCriteria.TYPE.SEARCH) {
                 // search title only, limit 5 songs
-                list = MusixMateApp.getInstance().getOrmLite().findByKeyword(criteria.getKeyword());
+          //      list = MusixMateApp.getInstance().getOrmLite().findByKeyword(criteria.getKeyword());
             } else {
                 // default for MY_SONGS and others
                 list = MusixMateApp.getInstance().getOrmLite().findMySongs();
@@ -281,5 +284,23 @@ public class MusicTagRepository {
         if(newTag !=null) {
             tag.cloneFrom(newTag);
         }
+    }
+
+    public static List<String> getArtistForGrouping(Context context, String grouping) {
+        List<String> list = new ArrayList<>();
+        List<String> names = MusixMateApp.getInstance().getOrmLite().getArtistForGrouping(grouping);
+        for (String group:names) {
+            if(StringUtils.isEmpty(group)) {
+                list.add(StringUtils.EMPTY);
+            }else {
+                list.add(group);
+            }
+        }
+        Collections.sort(list);
+        return list;
+    }
+
+    public static List<MusicTag> getMusicTags(Context context, String grouping, String artist) {
+        return MusixMateApp.getInstance().getOrmLite().findByGroupingAndArtist(grouping, artist);
     }
 }

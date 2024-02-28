@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.nas;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -13,9 +13,6 @@ import androidx.core.app.NotificationCompat;
 
 import net.freeutils.httpserver.HTTPServer;
 
-import org.fourthline.cling.UpnpService;
-import org.fourthline.cling.UpnpServiceImpl;
-
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -27,15 +24,15 @@ import apincer.android.mmate.NotificationId;
 import apincer.android.mmate.R;
 import apincer.android.mmate.ui.MainActivity;
 
-public class DMSService extends Service {
-    public static int PORT = 49152;
+public class NASServerService extends Service {
+    private static final int WEBDAV_PORT = 8082;
+    private HTTPServer httpServer;
+
     private static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
-    private HTTPServer httpServer;
-    private UpnpService upnpService;
-    protected IBinder binder = new MusicServerServiceBinder();
+    protected IBinder binder = new NASServerService.MusicServerServiceBinder();
 
     /*
      * (non-Javadoc)
@@ -44,7 +41,7 @@ public class DMSService extends Service {
      */
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(this.getClass().getName(), "On Bind");
+        Log.d(this.getClass().getName(), "On Bind NAS service");
         // do nothing
         return binder;
     }
@@ -65,7 +62,7 @@ public class DMSService extends Service {
             Thread initializationThread = new Thread(this::initialize);
             initializationThread.start();
             showNotification();
-            Log.d(this.getClass().getName(), "End On Start");
+            Log.d(this.getClass().getName(), "End On Start NAS service");
             Log.d(this.getClass().getName(), "on start took: " + (System.currentTimeMillis() - start));
         }catch (Exception ex) {
             ex.printStackTrace();
@@ -73,16 +70,25 @@ public class DMSService extends Service {
         return START_STICKY;
     }
 
+    private void createHttpServer() {
+        try {
+            httpServer = new HTTPServer(WEBDAV_PORT);
+            HTTPServer.VirtualHost host = httpServer.getVirtualHost(null); // default host
+            host.setAllowGeneratedIndex(false);
+            host.setDirectoryIndex(null); // disable auto suffix index.html
+            host.addContext("/music/", new WebDAVContextHandler(getApplicationContext()), "GET","OPTIONS","PROPFIND");
+            httpServer.start();
+        } catch (Exception e) {
+            System.err.println("error: " + e);
+        }
+    }
+
     @Override
     public void onDestroy() {
-        Log.d(this.getClass().getName(), "Destroying the service");
+        Log.d(this.getClass().getName(), "Destroying the NAS service");
         if (httpServer != null) {
             httpServer.stop();
             httpServer = null;
-        }
-        if(upnpService!= null) {
-            upnpService.shutdown();
-            upnpService = null;
         }
         cancelNotification();
         super.onDestroy();
@@ -92,25 +98,7 @@ public class DMSService extends Service {
      *
      */
     private void initialize()  {
-        try {
-            upnpService = new UpnpServiceImpl(new UpnpConfiguration(DMSService.PORT));
-            upnpService.getRegistry().addDevice(new MediaServer("MusicMate").getDevice());
-            createHttpServer();
-        }catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void createHttpServer() {
-        try {
-            httpServer = new HTTPServer(PORT);
-            HTTPServer.VirtualHost host = httpServer.getVirtualHost(null); // default host
-            host.setAllowGeneratedIndex(false);
-            host.addContext("/", new HttpContextHandler(getApplicationContext()));
-             httpServer.start();
-        } catch (Exception e) {
-            System.err.println("error: " + e);
-        }
+        createHttpServer();
     }
 
     /**
@@ -142,64 +130,6 @@ public class DMSService extends Service {
         ((MusixMateApp) getApplicationContext()).cancelGroupNotification();
     }
 
-
-    /**
-     * creates a http request thread
-     */
-    /*
-    private void createHttpServer() {
-        // Create a HttpService for providing content in the network.
-        try {
-
-            //FIXME set correct timeout
-            SocketConfig socketConfig = SocketConfig.custom()
-                    .setSoKeepAlive(true)
-                    .setTcpNoDelay(false)
-                   // .setSoTimeout(10, TimeUnit.SECONDS)
-                    .build();
-
-            // Set up the HTTP service
-            if (httpServer == null) {
-                httpServer = ServerBootstrap.bootstrap()
-                        .setListenerPort(PORT)
-                        .setSocketConfig(socketConfig)
-                        .setExceptionListener(new ExceptionListener() {
-
-                            @Override
-                            public void onError(final Exception ex) {
-                                Log.i(getClass().getName(), "HttpServer throws exception:", ex);
-                            }
-
-                            @Override
-                            public void onError(final HttpConnection conn, final Exception ex) {
-                                if (ex instanceof SocketTimeoutException) {
-                                    Log.i(getClass().getName(), "connection timeout:", ex);
-                                } else if (ex instanceof ConnectionClosedException) {
-                                    Log.i(getClass().getName(), "connection closed:", ex);
-                                } else {
-                                    Log.i(getClass().getName(), "connection error:", ex);
-                                }
-                            }
-
-                        })
-                        .setCanonicalHostName(getIpAddress())
-                        .register("*", new MusicHttpHandler(getApplicationContext()))
-                        .create();
-
-                httpServer.start();
-            }
-
-        } catch (BindException e) {
-            Log.w(this.getClass().getName(), "Server already running");
-        } catch (IOException e) {
-            // FIXME Ignored right error handling on rebind needed
-            Log.w(this.getClass().getName(), "ContentProvider can not be initialized!", e);
-            // throw new
-            // IllegalStateException("ContentProvider can not be initialized!",
-            // e);
-        }
-    } */
-
     /**
      * get the ip address of the device
      *
@@ -229,7 +159,7 @@ public class DMSService extends Service {
                 }
             }
         } catch (SocketException se) {
-            Log.d(DMSService.class.getName(),
+            Log.d(apincer.android.mmate.nas.NASServerService.class.getName(),
                     "Error while retrieving network interfaces", se);
         }
         // maybe wifi is off we have to use the loopback device
@@ -239,8 +169,8 @@ public class DMSService extends Service {
 
 
     public class MusicServerServiceBinder extends Binder {
-        public DMSService getService() {
-            return DMSService.this;
+        public NASServerService getService() {
+            return NASServerService.this;
         }
     }
 }
