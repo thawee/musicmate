@@ -25,6 +25,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.ui.MainActivity;
 
 public class NASServerService extends Service {
+    static NASServerService INSTANCE;
     private static final int WEBDAV_PORT = 8082;
     private HTTPServer httpServer;
 
@@ -33,6 +34,10 @@ public class NASServerService extends Service {
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
     protected IBinder binder = new NASServerService.MusicServerServiceBinder();
+
+    public static NASServerService getInstance() {
+        return INSTANCE;
+    }
 
     /*
      * (non-Javadoc)
@@ -62,6 +67,7 @@ public class NASServerService extends Service {
             Thread initializationThread = new Thread(this::initialize);
             initializationThread.start();
             showNotification();
+            INSTANCE = this;
             Log.d(this.getClass().getName(), "End On Start NAS service");
             Log.d(this.getClass().getName(), "on start took: " + (System.currentTimeMillis() - start));
         }catch (Exception ex) {
@@ -76,7 +82,9 @@ public class NASServerService extends Service {
             HTTPServer.VirtualHost host = httpServer.getVirtualHost(null); // default host
             host.setAllowGeneratedIndex(false);
             host.setDirectoryIndex(null); // disable auto suffix index.html
-            host.addContext("/music/", new WebDAVContextHandler(getApplicationContext()), "GET","OPTIONS","PROPFIND");
+            host.addContext("/music/", new DAVContextHandler(getApplicationContext()), "GET","OPTIONS","PROPFIND");
+            host.addContext("/playlist/", new PlaylistContextHandler(getApplicationContext()));
+            host.addContext("/file/", new FileContextHandler(getApplicationContext()));
             httpServer.start();
         } catch (Exception e) {
             System.err.println("error: " + e);
@@ -165,6 +173,13 @@ public class NASServerService extends Service {
         // maybe wifi is off we have to use the loopback device
         hostAddress = hostAddress == null ? "0.0.0.0" : hostAddress;
         return hostAddress;
+    }
+
+    public boolean isStarted() {
+        if(httpServer != null) {
+            return true;
+        }
+        return false;
     }
 
 

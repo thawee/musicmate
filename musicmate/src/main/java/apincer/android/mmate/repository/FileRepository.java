@@ -30,7 +30,7 @@ import apincer.android.utils.FileUtils;
  * Created by e1022387 on 5/10/2017.
  */
 public class FileRepository {
-    private static final String TAG = JustFLACReader.class.getName();
+    private static final String TAG = FileRepository.class.getName();
     private final Context context;
     private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
@@ -386,10 +386,10 @@ public class FileRepository {
                  Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
             // lounge
             return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping()) ||
-                 Constants.GROUPING_THAI_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
+       // }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping()) ||
+      //           Constants.GROUPING_THAI_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
             // lounge
-            return STORAGE_PRIMARY;
+          //  return STORAGE_PRIMARY;
         }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping()) ||
                 Constants.GROUPING_THAI_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
                 // Acoustic
@@ -549,9 +549,5 @@ public class FileRepository {
         if(pathFile.exists()) {
             com.anggrayudi.storage.file.FileUtils.forceDelete(pathFile);
         }
-        // File cacheCoverart = MusicTagUtils.getCoverArt(getContext(), item);
-        // if(cacheCoverart!=null) {
-        //     com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverart);
-        // }
     }
 }

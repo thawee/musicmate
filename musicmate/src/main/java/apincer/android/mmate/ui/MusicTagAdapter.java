@@ -425,66 +425,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         MusicTag listeningItem = MusixMateApp.getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
 
-      //  holder.mAudioSourceQualityView.setImageBitmap(MusicTagUtils.createSourceQualityIcon(holder.mContext, tag.getMediaQuality(), tag.isUpscaled(), tag.isUpsampled()));
-
-        /*
-        if (!StringUtils.isEmpty(tag.getMediaQuality())) {
-            if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
-                holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label1));
-            }else {
-                holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
-            }
-            holder.mMediaQualityView.setText(StringUtils.getAbvByUpperCase(tag.getMediaQuality()));
-            holder.mMediaQualityView.setVisibility(View.VISIBLE);
-        } else {
-            holder.mMediaQualityView.setText(StringUtils.getAbvByUpperCase(Constants.QUALITY_NORMAL));
-            holder.mMediaQualityView.setTextColor(holder.mContext.getColor(R.color.audiophile_label2));
-            holder.mMediaQualityView.setVisibility(View.VISIBLE);
-            //holder.mMediaQualityView.setVisibility(View.GONE);
-        } */
-
+        holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
         if(MusicTagUtils.isDSD(tag)) {
-           // holder.mMediaUpScaledView.setVisibility(View.GONE);
-           // holder.mMediaUpSampledView.setVisibility(View.GONE);
             holder.mDynamicRange.setVisibility(View.GONE);
-        } else if(!MusicTagUtils.isLossless(tag)) {
-          //  holder.mMediaUpScaledView.setVisibility(View.GONE);
-           // holder.mMediaUpSampledView.setVisibility(View.GONE);
-            // DR
-            holder.mDynamicRange.setVisibility(View.VISIBLE);
-            holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
+       // } else if(!MusicTagUtils.isLossless(tag)) {
+       //     holder.mDynamicRange.setVisibility(View.VISIBLE);
         }else {
             // DR
             holder.mDynamicRange.setVisibility(View.VISIBLE);
-            holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
-
-            // upScale
-            /*
-            if (tag.getMeasuredDR() > 0.0) {
-                if (MusicTagUtils.isUpScaled(tag)) {
-                    if (MusicTagUtils.isBadUpScaled(tag)) {
-                        holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_bad));
-                        holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-                    } else {
-                        holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_average));
-                        holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-                    }
-                } else {
-                    holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_good));
-                    holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-                }
-            } else {
-                holder.mMediaUpScaledView.setTextColor(holder.mContext.getColor(R.color.quality_unknown));
-                holder.mMediaUpScaledView.setVisibility(View.VISIBLE);
-            }*/
-
-            // UpSampling
-            /*
-            if (MusicTagUtils.isUpSampled(tag)) {
-                holder.mMediaUpSampledView.setVisibility(View.VISIBLE);
-            }else {
-                holder.mMediaUpSampledView.setVisibility(View.GONE);
-            }*/
         }
 
         if (isListening) {
@@ -521,6 +469,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 // .size(800, 800)
                 .crossfade(false)
                 .target(holder.mCoverArtView)
+               //.placeholder(R.drawable.no_image0)
+               .placeholder(R.drawable.progress)
+               .error(R.drawable.no_image0)
                 .transformations(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request);
@@ -536,18 +487,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
-        // file format
-        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        holder.mFileTypeView.setText(trimToEmpty(tag.getFileFormat()).toUpperCase(Locale.US));
+        // file encoding format
+        Drawable resolutionBackground = MusicTagUtils.getFileFormatBackground(holder.mContext, tag); //MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        holder.mFileTypeView.setText(trimToEmpty(tag.getAudioEncoding()).toUpperCase(Locale.US));
         holder.mFileTypeView.setBackground(resolutionBackground);
-
-       // holder.mFileBrokenView.setVisibility(MusicTagUtils.isFileCouldBroken(tag)?View.VISIBLE:View.GONE);
-
-        // Dynamic Range
-        //resolutionBackground = MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-        //holder.mDynamicRange.setBackground(resolutionBackground);
-       // holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
-        //holder.mDynamicRange.setText(MusicTagUtils.getTrackDRandGainString(tag));
         // duration
         holder.mDurationView.setText(tag.getAudioDurationAsString());
 

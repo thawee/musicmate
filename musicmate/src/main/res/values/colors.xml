@@ -213,20 +213,35 @@
     <color name="quality_sd">@color/material_color_amber_200</color>
     <color name="quality_low">@color/material_color_grey_500</color>
 -->
+    <!-- IFI DAC v2
+        yellow - pcm 44.1/48
+        white  - pcm >= 88.2
+        cyan   - dsd 64/128
+        red    - dsd 256
+        green  - MQA
+        blue   - MQA Studio
+    -->
 
-    // following dragonfly red LED color
-    // following dragonfly red LED color
+    <color name="resolution_pcm_44_48">#FFFF00</color>
+    <color name="resolution_pcm_88">#FFFFFF</color>
+    <color name="resolution_dsd_64_128">#00FFFF</color>
+    <color name="resolution_dsd_256">#FF0000</color>
+    <color name="resolution_mqa">#00FF00</color>
+    <color name="resolution_mqa_studio">#0000FF</color>
 
     <color name="quality_hd">#ffb300</color>
-    <color name="quality_h24bits">#FEC500</color>
+    <color name="quality_h24bits">#FEDD55</color>
     <color name="quality_sd">#ffecb3</color>
     <color name="quality_unknown">@color/grey400</color>
     <color name="quality_unknown_black">#000000</color>
 
+    <color name="file_format_dsd">#ffb300</color>
+    <color name="file_format_lossless">#ffecb3</color>
+    <color name="file_format_lossy">@color/grey300</color>
+
     <!--
     <color name="quality_bad">#EF2350</color>
     <color name="quality_good">#ef7350</color>
-
     -->
 
     <color name="quality_good">#ffb300</color>
@@ -287,6 +302,7 @@
     <color name="audiophile">#FFFFFF</color>
     <color name="mqa_master">#4CAF50</color>
     <color name="mqa_studio">#2196F3</color>
+    <color name="mqa_cd">#ffeeeeee</color>
 
     <!--
     https://m3.material.io/theme-builder#/custom

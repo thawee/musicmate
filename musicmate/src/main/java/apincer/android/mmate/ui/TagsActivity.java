@@ -8,7 +8,6 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -17,8 +16,8 @@ import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -33,7 +32,6 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -106,7 +104,7 @@ public class TagsActivity extends AppCompatActivity {
     FileRepository repos;
     private Fragment activeFragment;
 
-    private FloatingActionButton playerBtn;
+    private ImageButton playerBtn;
     private boolean refreshOnNewSong;
 
     private boolean previewState = true;
@@ -315,6 +313,8 @@ public class TagsActivity extends AppCompatActivity {
         playerBtn = findViewById(R.id.music_player);
         playerBtn.setOnClickListener(view -> {
             refreshOnNewSong = true;
+            playerBtn.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
+/*
             for(int i=0;i<toolbar.getMenu().size();i++) {
                 MenuItem item = toolbar.getMenu().getItem(i);
                 if(item.getItemId() == R.id.menu_preview_following_listening) {
@@ -326,16 +326,30 @@ public class TagsActivity extends AppCompatActivity {
                         UIUtils.getTintedDrawable(drawable, Color.WHITE);
                     }
                 }
-            }
+            } */
             startProgressBar();
             MusixMateApp.playNextSong(getApplicationContext());
+        });
+        playerBtn.setOnLongClickListener(view -> {
+            refreshOnNewSong = !refreshOnNewSong;
+            if(refreshOnNewSong) {
+                playerBtn.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
+            }else {
+                playerBtn.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background));
+            }
+            return true;
         });
     }
 
     public void updateTitlePanel() {
         if(MusixMateApp.getPlayerInfo() != null) {
-            playerBtn.setBackgroundDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+
             playerBtn.setVisibility(View.VISIBLE);
+            if(refreshOnNewSong) {
+                playerBtn.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
+            }else {
+                playerBtn.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background));
+            }
         }else {
             playerBtn.setVisibility(View.GONE);
         }
@@ -354,21 +368,22 @@ public class TagsActivity extends AppCompatActivity {
                 .build();
         imageLoader.enqueue(request);
 
-        if(MusicTagUtils.isDSD(displayTag) || !MusicTagUtils.isLossless(displayTag)) {
+        drView.setText(MusicTagUtils.getTrackDR(displayTag));
+        if(MusicTagUtils.isDSD(displayTag)) { //] || !MusicTagUtils.isLossless(displayTag)) {
             drView.setVisibility(View.GONE);
         }else {    // Dynamic Range
-            drView.setText(MusicTagUtils.getTrackDR(displayTag));
             drView.setVisibility(View.VISIBLE);
         }
+
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isPCMHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
         }else {
             hiresView.setVisibility(View.GONE);
         }
 
-        Drawable resolutionBackground = MusicTagUtils.getResolutionBackground(getApplicationContext(), displayTag);
+        Drawable resolutionBackground = MusicTagUtils.getFileFormatBackground(getApplicationContext(), displayTag);
         fileTypeView.setBackground(resolutionBackground);
-        fileTypeView.setText(trimToEmpty(displayTag.getFileFormat()).toUpperCase(Locale.US));
+        fileTypeView.setText(trimToEmpty(displayTag.getAudioEncoding()).toUpperCase(Locale.US));
 
         if (!isEmpty(displayTag.getMediaQuality())) {
             request = new ImageRequest.Builder(getApplicationContext())
@@ -382,11 +397,6 @@ public class TagsActivity extends AppCompatActivity {
             audiophileView.setVisibility(View.GONE);
         }
 
-        if(displayTag.isDSD()) {
-            drView.setVisibility(View.GONE);
-        }else {
-            drView.setVisibility(View.VISIBLE);
-        }
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
@@ -439,9 +449,9 @@ public class TagsActivity extends AppCompatActivity {
                 .data(MusicCoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
                 .transformations(new ReflectionTransformation())
-                //.placeholder(R.drawable.progress)
-                .placeholder(R.drawable.ic_broken_image_black_24dp)
-                .error(R.drawable.ic_broken_image_black_24dp)
+                .placeholder(R.drawable.progress)
+                //.placeholder(R.drawable.no_image0)
+                .error(R.drawable.no_image0)
                 .target(coverArtView)
                 .build();
         imageLoader.enqueue(request);
@@ -516,21 +526,24 @@ public class TagsActivity extends AppCompatActivity {
         spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor).setTextSize(metaInfoTextSize));
 
         try {
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP,encColor).setTextSize(metaInfoTextSize))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+            if(MusicTagUtils.isLossless(displayTag)) {
+                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize))
 
-            // spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize))
+                        // spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize))
+                        // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+                        // .append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize))
+                        // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+                        //spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()), encColor).setTextSize(metaInfoTextSize))
+                        .append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor));
+            }
                    // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                   // .append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize))
-                   // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-            //spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()), encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(MusicTagUtils.getMeasuredDR(displayTag) +" dB", encColor))
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit("Rg "+displayTag.getTrackRG(), encColor).setTextSize(metaInfoTextSize))
+                   // .append(new SpecialTextUnit("RG "+displayTag.getTrackRG(), encColor).setTextSize(metaInfoTextSize))
+                    //.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()), encColor).setTextSize(metaInfoTextSize))
                     // .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
                    // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                    // .append(new SpecialTextUnit(StringUtils.formatChannels(displayTag.getAudioChannels()),encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize))
@@ -695,7 +708,7 @@ public class TagsActivity extends AppCompatActivity {
         toolbar.getMenu().clear();
         toolbar.inflateMenu(R.menu.menu_tag_preview);
         toolbar.setOnMenuItemClickListener(listener);
-        for(int i=0;i<toolbar.getMenu().size();i++) {
+       /* for(int i=0;i<toolbar.getMenu().size();i++) {
             MenuItem item = toolbar.getMenu().getItem(i);
             if(item.getItemId() == R.id.menu_preview_following_listening) {
                 Drawable drawable = item.getIcon();
@@ -706,7 +719,7 @@ public class TagsActivity extends AppCompatActivity {
                      UIUtils.getTintedDrawable(drawable, Color.WHITE);
                 }
             }
-        }
+        } */
     }
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
@@ -761,7 +774,7 @@ public class TagsActivity extends AppCompatActivity {
             return item -> {
                 if (item.getItemId() == R.id.menu_preview_calculate_dr) {
                     doAnalystDRRG();
-                } else if (item.getItemId() == R.id.menu_preview_following_listening) {
+               /* } else if (item.getItemId() == R.id.menu_preview_following_listening) {
                     if (refreshOnNewSong) {
                         refreshOnNewSong = false;
                         UIUtils.getTintedDrawable(item.getIcon(), Color.WHITE);
@@ -773,7 +786,7 @@ public class TagsActivity extends AppCompatActivity {
                             MusicTagRepository.load(tag);
                             updatePreview(tag);
                         }
-                    }
+                    }*/
                 }
                 return false;
             };

@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagReader;
 
 public class ScanAudioFileWorker extends Worker {
     FileRepository repos;
@@ -63,7 +64,7 @@ public class ScanAudioFileWorker extends Worker {
     private boolean filter(Path path) {
         try {
             String pathString = path.toString();
-           return FFMPeg.isSupportedFileFormat(pathString);
+           return TagReader.isSupportedFileFormat(pathString);
         } catch(Exception e) {
             e.printStackTrace();
         }

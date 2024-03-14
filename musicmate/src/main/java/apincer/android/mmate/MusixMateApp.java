@@ -4,6 +4,7 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -34,6 +35,7 @@ import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicMateNotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.nas.NASServerService;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
@@ -403,5 +405,14 @@ Provides the SQLite Helper Object among the application
             }
         }
 
+    }
+
+    public boolean isNASRunning() {
+        //NASServerService service = getSystemService(NASServerService.class);
+        NASServerService service = NASServerService.getInstance(); //getSystemService(NASServerService.class);
+        if(service != null) {
+            return service.isStarted();
+        }
+        return false;
     }
 }

@@ -9,6 +9,8 @@ import java.text.BreakIterator;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
 import apincer.android.storage.StorageVolume;
@@ -53,6 +55,8 @@ public class StringUtils {
     public static final String CHARSET_ISO8859_1 = "ISO-8859-1";
     public static final String SYMBOL_RES_SEP = " \u25C8 ";
     public static final String EMPTY = " - "; // must left as empty for dropdown list
+
+    private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
 
     public static String encodeText(String text, String encode) {
         if(StringUtils.isEmpty(encode)) {
@@ -749,5 +753,31 @@ public class StringUtils {
             }
         }
         return title;
+    }
+
+    public static String escapeXml(String title) {
+        Matcher m = ESCAPE_XML_CHARS.matcher(trimToEmpty(title));
+        StringBuffer buf = new StringBuffer();
+        while (m.find()) {
+            switch (m.group().codePointAt(0)) {
+                case '"':
+                    m.appendReplacement(buf, "&quot;");
+                    break;
+                case '&':
+                    m.appendReplacement(buf, "&amp;");
+                    break;
+                case '\'':
+                    m.appendReplacement(buf, "&apos;");
+                    break;
+                case '<':
+                    m.appendReplacement(buf, "&lt;");
+                    break;
+                case '>':
+                    m.appendReplacement(buf, "&gt;");
+                    break;
+            }
+        }
+        m.appendTail(buf);
+        return buf.toString();
     }
 }

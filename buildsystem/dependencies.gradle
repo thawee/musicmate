@@ -11,14 +11,14 @@ ext.versions = [
         minSdk             : 30, // support running on android 11 ot higher
         targetSdk          : 33, // required 33 for photopicker, android 13
         compileSdk         : 34, //33, // required 33 for photopicker
-        buildTools         : '34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '35.0.0-rc1', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.9.22', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '1.9.23', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.7.1', //''3.6.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '10.10.0', //''10.8.3', //''10.3.1',
+        aboutlibraries     : '11.1.0', //''10.8.3', //''10.3.1',
         //versionsCheck      : '0.42.
         ]
 
@@ -84,7 +84,7 @@ androidx.localbroadcastmanager = "androidx.localbroadcastmanager:localbroadcastm
 //  ktx - kotlin
 //androidx.ktx = "androidx.core:core-ktx:1.0.2" //23/06/2019
 //https://developer.android.com/jetpack/androidx/releases/viewpager2
-androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.0.0" //1.1.0-beta02"
+androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.1.0-beta02" //1.0.0" //1.1.0-beta02"
 // Lifecycle ViewModel and LiveData
 //https://developer.android.com/jetpack/androidx/releases/lifecycle
 androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.7.0" //2.4.0"
@@ -293,7 +293,7 @@ deps.material_dialogs = material_dialogs
 //https://coil-kt.github.io/coil/changelog/
 def coil = [:]
 coil.runtime = "io.coil-kt:coil:1.4.0"
-coil.runtime2 = "io.coil-kt:coil:2.5.0" // has defect on set large image to imageview
+coil.runtime2 = "io.coil-kt:coil:2.6.0" // has defect on set large image to imageview
 deps.coil = coil
 
 def glide = [:]

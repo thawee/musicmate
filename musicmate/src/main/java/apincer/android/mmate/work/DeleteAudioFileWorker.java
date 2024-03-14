@@ -16,8 +16,8 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTag;
 
 public class DeleteAudioFileWorker extends Worker {
     private static final String TAG = DeleteAudioFileWorker.class.getName();
@@ -35,21 +35,6 @@ public class DeleteAudioFileWorker extends Worker {
     public Result doWork() {
        List<MusicTag> list = list();
        list.parallelStream().forEach(this::delete);
-
-       /*
-        Coroutine<?, ?> cIterating =
-                first(supply(this::list)).then(
-                        forEach(consume(this::delete)));
-
-        launch(
-                scope ->
-                {
-                   // for (int i = 0; i < COROUTINE_COUNT; i++)
-                   // {
-                        cIterating.runAsync(scope, null);
-                   // }
-                });
-        */
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -76,25 +61,4 @@ public class DeleteAudioFileWorker extends Worker {
             Log.e(TAG, "delete",e);
         }
     }
-/*
-    private final class DeleteRunnable  implements Runnable {
-        private final MusicTag tag;
-
-        private DeleteRunnable(MusicTag tag) {
-            this.tag = tag;
-        }
-        @Override
-        public void run() {
-            try {
-                boolean status = repos.deleteMediaItem(tag);
-                //String txt = status?getApplicationContext().getString(R.string.alert_delete_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_delete_fail, tag.getTitle());
-
-                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                //AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, null);
-                EventBus.getDefault().postSticky(message);
-            } catch (Exception e) {
-                Timber.e(e);
-            }
-        }
-    } */
 }

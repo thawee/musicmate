@@ -262,6 +262,7 @@
                     android:gravity="top|center_horizontal"
                     android:orientation="vertical">
 
+                    <!--
                     <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/music_player"
                         android:layout_width="wrap_content"
@@ -274,8 +275,23 @@
                         android:visibility="visible"
                         app:tint="@color/white"
                         android:padding="@dimen/dimen_2_dp"
-                        android:backgroundTint="@color/black_transparent_40"
-                        android:background="@drawable/shape_btn_background"
+                        android:background="@drawable/shape_play_next_background"
+                        android:src="@drawable/ic_baseline_skip_next_24"
+                        /> -->
+
+                    <ImageButton
+                        android:id="@+id/music_player"
+                        android:layout_width="@dimen/dimen_48_dp"
+                        android:layout_height="@dimen/dimen_48_dp"
+                        app:fabSize="normal"
+                        android:layout_marginTop="@dimen/dimen_24_dp"
+                        android:layout_marginEnd="@dimen/dimen_6_dp"
+                        android:contentDescription="Music Player"
+                        android:layout_gravity="end"
+                        android:visibility="visible"
+                        app:tint="@color/white"
+                        android:padding="@dimen/dimen_2_dp"
+                        android:background="@drawable/shape_play_next_background"
                         android:src="@drawable/ic_baseline_skip_next_24"
                         />
 
@@ -338,7 +354,7 @@
                             android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:padding="@dimen/dimen_1_dp"
                             android:src="@drawable/ic_format_hires" />
-
+<!--
                         <ImageView
                             android:id="@+id/icon_audiophile"
                             android:layout_width="@dimen/dimen_72_dp"
@@ -351,7 +367,7 @@
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_audiophile"
                             android:background="@drawable/shape_background_dr"/>
-
+-->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -383,6 +399,19 @@
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/icon_audiophile"
+                            android:layout_width="@dimen/dimen_72_dp"
+                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:contentDescription="@string/editor_musicmate_info"
+                            android:gravity="end|center_vertical"
+                            android:padding="@dimen/dimen_2_dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/ic_audiophile"
+                            android:background="@drawable/shape_background_dr"/>
 
                         <ImageView
                             android:id="@+id/icon_hires"

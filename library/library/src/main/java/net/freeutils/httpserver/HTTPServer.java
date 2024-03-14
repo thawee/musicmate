@@ -155,6 +155,7 @@ public class HTTPServer {
         statuses[200] = "OK";
         statuses[204] = "No Content";
         statuses[206] = "Partial Content";
+        statuses[207] = "Multi-Status";
         statuses[301] = "Moved Permanently";
         statuses[302] = "Found";
         statuses[304] = "Not Modified";

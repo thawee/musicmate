@@ -35,20 +35,6 @@ public class ImportAudioFileWorker extends Worker {
     public Result doWork() {
         List<MusicTag> list = list();
         list.parallelStream().forEach(this::importFile);
-        /*
-        Coroutine<?, ?> cIterating =
-                first(supply(this::list)).then(
-                        forEach(consume(this::move)));
-
-        launch(
-                scope ->
-                {
-                   // for (int i = 0; i < COROUTINE_COUNT; i++)
-                   // {
-                        cIterating.runAsync(scope, null);
-                   // }
-                });
-*/
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -75,23 +61,4 @@ public class ImportAudioFileWorker extends Worker {
             Log.e(TAG,"importFile",e);
         }
     }
-/*
-    private final class ImportRunnable  implements Runnable {
-        private final MusicTag tag;
-
-        private ImportRunnable(MusicTag tag) {
-            this.tag = tag;
-        }
-        @Override
-        public void run() {
-            try {
-                boolean status = repos.importAudioFile(tag);
-
-                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().postSticky(message);
-            } catch (Exception e) {
-                Timber.e(e);
-            }
-        }
-    } */
 }

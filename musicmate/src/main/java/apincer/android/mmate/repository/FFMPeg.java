@@ -1,5 +1,6 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.repository.MQADetector.detectMQA;
 import static apincer.android.mmate.utils.MusicTagUtils.isAIFFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isFLACFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isMPegFile;
@@ -21,7 +22,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
-import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.FFprobeKit;
@@ -44,15 +44,13 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mqaidentifier.NativeLib;
 import apincer.android.utils.FileUtils;
 
 public class FFMPeg extends TagReader {
     private static final String TAG = FFMPeg.class.getName();
-    public static final String KEY_MUSICMATE_DR = "MM_MDR";
 
     public static void extractCoverArt(MusicTag tag, File pathFile) {
-        if(!isEmpty(tag.getEmbedCoverArt())) {
+        if(!isEmpty(tag.getCoverartMime())) {
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -79,7 +77,7 @@ public class FFMPeg extends TagReader {
     }
 
     public static String removeCoverArt(Context context, MusicTag tag) {
-        if(!isEmpty(tag.getEmbedCoverArt())) {
+        if(!isEmpty(tag.getCoverartMime())) {
             String pathFile = tag.getPath();
             String ext = FileUtils.getExtension(pathFile);
             pathFile = pathFile.replace("."+ext, "no_embed."+ext);
@@ -99,67 +97,12 @@ public class FFMPeg extends TagReader {
         return null;
     }
 
-    public enum SupportedFileFormat
-    {
-        // OGG("ogg", "Ogg"),
-        // OGA("oga", "Oga"),
-        MP3("mp3", "Mp3"),
-        FLAC("flac", "Flac"),
-        //MP4("mp4", "Mp4"),
-        M4A("m4a", "Mp4"),
-        // M4P("m4p", "M4p"),
-        // WMA("wma", "Wma"),
-        WAV("wav", "Wav"),
-        //  RA("ra", "Ra"),
-        //  RM("rm", "Rm"),
-        //  M4B("m4b", "Mp4"),
-        AIF("aif", "Aif"),
-
-        APE("ape", "Ape"),
-        AIFF("aiff", "Aif"),
-        //  AIFC("aifc", "Aif Compressed"),
-        DSF("dsf", "Dsf"),
-        DFF("dff", "Dff");
-
-        /**
-         * File Suffix
-         */
-        private String filesuffix;
-
-        /**
-         * User Friendly Name
-         */
-        private String displayName;
-
-        /** Constructor for internal use by this enum.
-         */
-        SupportedFileFormat(String filesuffix, String displayName)
-        {
-            this.filesuffix = filesuffix;
-            this.displayName = displayName;
-        }
-
-        /**
-         *  Returns the file suffix (lower case without initial .) associated with the format.
-         */
-        public String getFilesuffix()
-        {
-            return filesuffix;
-        }
-
-
-        public String getDisplayName()
-        {
-            return displayName;
-        }
-    }
-
     private static final String KEY_BIT_RATE = "bit_rate";
    // private static final String KEY_FORMAT_NAME = "format_name";
     private static final String KEY_START_TIME = "start_time";
     private static final String KEY_DURATION = "duration";
     private static final String KEY_SIZE = "size";
-    private static final String KEY_MQA = "MQA";
+    private static final String KEY_MM_MQA = "MQA";
     private static final String KEY_TAG = "TAG:";
     private static final String KEY_TAG_ARTIST = "ARTIST";
     private static final String KEY_TAG_ALBUM = "ALBUM";
@@ -174,11 +117,9 @@ public class FFMPeg extends TagReader {
     private static final String KEY_TAG_PUBLISHER = "PUBLISHER";
     //private static final String KEY_TAG_LANGUAGE = "LANGUAGE";
     private static final String KEY_TAG_ENCODER = "ENCODER";
-    private static final String KEY_TAG_MQA_ORIGINAL_SAMPLERATE = "ORIGINALSAMPLERATE";
     private static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
-    private static final String KEY_TAG_MEDIA = "MEDIA";
+
     private static final String KEY_TAG_RATING = "RATING";
-    private static final String KEY_TAG_QUALITY = "QUALITY";
     private static final String KEY_TAG_TITLE = "TITLE";
     private static final String KEY_TAG_YEAR = "YEAR";
 
@@ -222,7 +163,8 @@ public class FFMPeg extends TagReader {
 
     // QuickTime/MOV/MP4/M4A
     // https://wiki.multimedia.cx/index.php/FFmpeg_Metadata
-    private static final String KEY_TAG_MP4_ARTIST = "author"; //artist
+    private static final String KEY_TAG_MP4_ARTIST = "artist"; //for aac
+    private static final String KEY_TAG_MP4_AUTHOR = "author"; // for alac
     private static final String KEY_TAG_MP4_ALBUM = "album"; // album
     private static final String KEY_TAG_MP4_ALBUM_ARTIST = "album_artist";
     private static final String KEY_TAG_MP4_GENRE = "genre"; //genre
@@ -254,14 +196,6 @@ public class FFMPeg extends TagReader {
     private static final String KEY_TAG_MP3_DISC = "disc";
     private static final String KEY_TAG_MP3_COMMENT = "comment";  // comment
     //private static final String KEY_TAG_MP3_PUBLISHER = "copyright"; //copy right
-
-    private static final String KEY_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
-    private static final String KEY_TRACK_PEAK = "REPLAYGAIN_TRACK_PEAK"; // added by thawee
-    private static final String KEY_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
-    private static final String KEY_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
-    private static final String KEY_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS";
-
-    private static final String KEY_TRACK_DYNAMIC_RANGE = "TRACK_DYNAMIC_RANGE";
 
     private static final String METADATA_KEY = "-metadata";
 
@@ -398,7 +332,7 @@ public class FFMPeg extends TagReader {
         String data = session.getOutput();
         //    String data = getFFmpegOutputData(session);
         parseReplayGain(tag, data);
-        parseDynamicRange(tag, data);
+        parseDynamicRangeMeter(tag, data);
        // parseVolume(tag, data);
         parseASTATS(tag, data);
         session.cancel();
@@ -419,7 +353,7 @@ public class FFMPeg extends TagReader {
             Matcher matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
-                tag.setMeasuredDR(toDouble(info));
+                tag.setDynamicRange(toDouble(info));
                // tag.setAstatDR(toDouble(info));
             }
         }catch (Exception ex) {
@@ -619,13 +553,11 @@ public class FFMPeg extends TagReader {
             tag.setTitle(FileUtils.getFileName(tag.getPath()));
         }
 
-        tag.setTrackDR(toDouble(getValueForKey(tags, KEY_TRACK_DYNAMIC_RANGE)));
-
         // KEY_TRACK_GAIN
-        tag.setTrackRG(toDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
+       // tag.setTrackRG(toDouble(getValueForKey(tags, KEY_MM_TRACK_GAIN)));
 
         //KEY_TRACK_PEAK
-        tag.setTrackTruePeak(toDouble(getValueForKey(tags, KEY_TRACK_PEAK)));
+       // tag.setTrackTruePeak(toDouble(getValueForKey(tags, KEY_MM_TRACK_PEAK)));
 
         // KEY_ALBUM_GAIN
        // tag.setAlbumRG(toDouble(getValueForKey(tags, KEY_ALBUM_GAIN)));
@@ -636,25 +568,25 @@ public class FFMPeg extends TagReader {
         // publisher
         tag.setPublisher(getValueForKey(tags, KEY_TAG_PUBLISHER));
 
-
         // replay gain
         // tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_TRACK_LOUDNESS)));
-        tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_TRACK_GAIN)));
-        tag.setTrackTruePeak(toDouble(getValueForKey(tags, KEY_TRACK_PEAK)));
+        tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_MM_TRACK_GAIN)));
+        tag.setTrackTP(toDouble(getValueForKey(tags, KEY_MM_TRACK_PEAK)));
         // tag.setAlbumRG(gainToDouble(getValueForKey(tags, KEY_ALBUM_GAIN)));
         // tag.setAlbumTruePeak(toDouble(getValueForKey(tags, KEY_ALBUM_PEAK)));
-        tag.setMeasuredDR(toDouble(getValueForKey(tags, KEY_MUSICMATE_DR)));
+        tag.setDynamicRange(toDouble(getValueForKey(tags, KEY_MM_MEASURED_DR)));
+        tag.setDynamicRangeMeter(toDouble(getValueForKey(tags, KEY_MM_TRACK_DYNAMIC_RANGE)));
 
         // MQA from tag and encoder
-        String encoder = getValueForKey(tags, KEY_TAG_ENCODER);
+       /* String encoder = getValueForKey(tags, KEY_TAG_ENCODER);
         String mqaEncoder = getValueForKey(tags, KEY_TAG_MQA_ENCODER);
         if(!MusicTagUtils.isFLACFile(tag)) {
             tag.setMqaInd("None");
-        }else if(encoder.contains(KEY_MQA) || !isEmpty(mqaEncoder)) {
+        }else if(encoder.contains(KEY_MM_MQA) || !isEmpty(mqaEncoder)) {
             tag.setMqaInd("MQA");
             tag.setMqaSampleRate(toLong(getValueForKey(tags, KEY_TAG_MQA_ORIGINAL_SAMPLERATE)));
             tag.setMqaScanned(false);
-        }
+        } */
 
         // read Quick time Specific tags
         if(isMp4File(tag)) {
@@ -705,21 +637,21 @@ public class FFMPeg extends TagReader {
             matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
-                tag.setTrackTruePeak(toDouble(info));
+                tag.setTrackTP(toDouble(info));
             }
         }catch (Exception ex) {
             Log.e(TAG, "parseReplayGain", ex);
         }
     }
 
-    private static void parseDynamicRange(MusicTag tag, String data) {
+    private static void parseDynamicRangeMeter(MusicTag tag, String data) {
         try {
             // Overall DR: 14.0357
             Pattern pattern = Pattern.compile("\\s*Overall DR:\\s*(\\S*)");
             Matcher matcher = pattern.matcher(data);
             if (matcher.find()) {
                 String info = matcher.group(1);
-                tag.setTrackDR(toDouble(info));
+                tag.setDynamicRangeMeter(toDouble(info));
             }
         }catch (Exception ex) {
             Log.e(TAG, "parseDynamicRange", ex);
@@ -747,7 +679,7 @@ public class FFMPeg extends TagReader {
             parseDurationInfo(tag, session.getOutput());
             parseTagsInfo(tag);
             // parseReplayGain(tag);
-            parseDynamicRange(tag, data);
+            parseDynamicRangeMeter(tag, data);
             detectFileFormat(tag);
             // tag.setLossless(isLossless(tag));
            // tag.setFileSizeRatio(getFileSizeRatio(tag));
@@ -948,6 +880,7 @@ public class FFMPeg extends TagReader {
     private static String getMetadataTrackKeysForMp4(MusicTag tag) {
         String tags = getMetadataTrackKey(KEY_TAG_MP4_TITLE, tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_MP4_ALBUM, tag.getAlbum()) +
+                getMetadataTrackKey(KEY_TAG_MP4_AUTHOR, tag.getArtist()) +
                 getMetadataTrackKey(KEY_TAG_MP4_ARTIST, tag.getArtist()) +
                 getMetadataTrackKey(KEY_TAG_MP4_ALBUM_ARTIST, tag.getAlbumArtist()) +
                 getMetadataTrackKey(KEY_TAG_MP4_COMPOSER, tag.getComposer()) +
@@ -1017,9 +950,9 @@ public class FFMPeg extends TagReader {
                 "#"+musicTag.getRating()+
                 "#"+StringUtils.trimToEmpty(musicTag.getAlbumArtist())+
                 "#"+StringUtils.trimToEmpty(musicTag.getComposer())+
-                "#"+musicTag.getTrackDR()+
-                "#"+musicTag.getMeasuredDR()+
-                "#"+musicTag.getMeasuredSamplingRate()+
+                "#"+musicTag.getDynamicRangeMeter()+
+                "#"+musicTag.getDynamicRange()+
+               // "#"+musicTag.getMeasuredSamplingRate()+
                 "</##> ";
         return comment;
     }
@@ -1071,17 +1004,17 @@ public class FFMPeg extends TagReader {
             tags = " -write_id3v2 1 ";
         }
 
-        if(tag.getTrackDR() == 0.0) {
+        if(tag.getDynamicRangeMeter() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_TRACK_DYNAMIC_RANGE, "");
+                    getMetadataTrackKey(KEY_MM_TRACK_DYNAMIC_RANGE, "");
         }else {
             tags = tags +
-                    getMetadataTrackKey(KEY_TRACK_DYNAMIC_RANGE, tag.getTrackDR());
+                    getMetadataTrackKey(KEY_MM_TRACK_DYNAMIC_RANGE, tag.getDynamicRangeMeter());
         }
 
        // if(tag.getTrackLoudness() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_TRACK_LOUDNESS, "");
+                    getMetadataTrackKey(KEY_MM_TRACK_LOUDNESS, "");
       /*  }else {
             tags = tags +
                     getMetadataTrackKey(KEY_TRACK_LOUDNESS, tag.getTrackLoudness());
@@ -1089,24 +1022,24 @@ public class FFMPeg extends TagReader {
 
         if(tag.getTrackRG() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_TRACK_GAIN, "") +
-                    getMetadataTrackKey(KEY_TRACK_PEAK, "");
+                    getMetadataTrackKey(KEY_MM_TRACK_GAIN, "") +
+                    getMetadataTrackKey(KEY_MM_TRACK_PEAK, "");
         }else {
             tags = tags +
-                    getMetadataTrackKey(KEY_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
-                    getMetadataTrackKey(KEY_TRACK_PEAK, String.format("%,.6f", tag.getTrackTruePeak()));
+                    getMetadataTrackKey(KEY_MM_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
+                    getMetadataTrackKey(KEY_MM_TRACK_PEAK, String.format("%,.6f", tag.getTrackTP()));
         }
        // if(tag.getAlbumRG() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_ALBUM_GAIN, "") +
-                    getMetadataTrackKey(KEY_ALBUM_PEAK, "");
+                    getMetadataTrackKey(KEY_MM_ALBUM_GAIN, "") +
+                    getMetadataTrackKey(KEY_MM_ALBUM_PEAK, "");
 
-        if(tag.getMeasuredDR() == 0.0) {
+        if(tag.getDynamicRange() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_MUSICMATE_DR, "");
+                    getMetadataTrackKey(KEY_MM_MEASURED_DR, "");
         }else {
             tags = tags +
-                    getMetadataTrackKey(KEY_MUSICMATE_DR, tag.getMeasuredDR());
+                    getMetadataTrackKey(KEY_MM_MEASURED_DR, tag.getDynamicRange());
         }
        /* }else {
             tags = tags +
@@ -1122,70 +1055,15 @@ public class FFMPeg extends TagReader {
         return tags;
     }
 
-    public static void detectMQA(MusicTag tag, long millis) {
-        final Object lock = new Object();
-        new Thread(() -> {
-            detectMQA(tag);
-            synchronized (lock) {
-                lock.notify();
-            }
-        }).start();
-        synchronized (lock) {
-            try {
-                // Wait for specific millis and release the lock.
-                // If blockingMethod is done during waiting time, it will wake
-                // me up and give me the lock, and I will finish directly.
-                // Otherwise, when the waiting time is over and the
-                // blockingMethod is still
-                // running, I will reacquire the lock and finish.
-                lock.wait(millis);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
-    public static void detectMQA(MusicTag tag) {
-        if(!MusicTagUtils.isFLACFile(tag)) return; // scan only flac
-        if(tag.isMqaScanned()) return; //prevent re scan
-        try {
-            NativeLib lib = new NativeLib();
-            String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(tag.getPath()));
-            // MQA Studio|96000
-            // MQA|96000
-            if(!isEmpty(mqaInfo) && mqaInfo.contains("|")) {
-                String[] tags = mqaInfo.split("\\|", -1);
-                tag.setMqaInd(trimToEmpty(tags[0]));
-                tag.setMqaSampleRate(toLong(tags[1]));
-                tag.setMqaScanned(true);
-            }else {
-                tag.setMqaInd("None");
-                tag.setMqaScanned(true);
-            }
-        }catch (Exception ex) {
-            tag.setMqaInd("None");
-            tag.setMqaScanned(true);
-            Log.e(TAG, "detectMQA", ex);
-        }
-    }
-
-    public static boolean isSupportedFileFormat(String path) {
-        try {
-            String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
-            SupportedFileFormat.valueOf(ext.toUpperCase());
-            return true;
-        }catch(Exception ex) {
-            return false;
-        }
-    }
-
+    /*
     private static void readFileInfo(Context context, MusicTag tag) {
         File file = new File(tag.getPath());
         tag.setFileLastModified(file.lastModified());
         tag.setFileSize(file.length());
         tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
         tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
-    }
+    } */
 
     private static boolean isLossless(MusicTag tag) {
         if(Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getFileFormat())) return true;
@@ -1206,9 +1084,9 @@ public class FFMPeg extends TagReader {
             for (String line: lines) {
                 if(!isEmpty(line) && line.contains("=")) {
                     String []vals = line.split("=");
-                    tags.put(toUpperCase(vals[0]), getField(vals, 1)); // all upper case
+                    tags.put(toUpperCase(vals[0]), extractField(vals, 1)); // all upper case
                     //tags.put(StringUtils.toLowwerCase(vals[0]), trimToEmpty(vals[1])); // all lower case
-                    tags.put(vals[0], getField(vals, 1)); // as is from file
+                    tags.put(vals[0], extractField(vals, 1)); // as is from file
                 }
             }
 
@@ -1271,10 +1149,10 @@ public class FFMPeg extends TagReader {
             tag.setTitle(getTagforKey(tags, KEY_TAG_TITLE));
 
             // KEY_TRACK_GAIN
-            tag.setTrackRG(toDouble(getTagforKey(tags, KEY_TRACK_GAIN)));
+            tag.setTrackRG(toDouble(getTagforKey(tags, KEY_MM_TRACK_GAIN)));
 
             //KEY_TRACK_PEAK
-            tag.setTrackTruePeak(toDouble(getTagforKey(tags, KEY_TRACK_PEAK)));
+            tag.setTrackTP(toDouble(getTagforKey(tags, KEY_MM_TRACK_PEAK)));
 
             // KEY_ALBUM_GAIN
            // tag.setAlbumRG(toDouble(getTagforKey(tags, KEY_ALBUM_GAIN)));
@@ -1286,15 +1164,15 @@ public class FFMPeg extends TagReader {
             tag.setPublisher(getTagforKey(tags, KEY_TAG_PUBLISHER));
 
             // MQA from tag and encoder
-            String encoder = getTagforKey(tags, KEY_TAG_ENCODER);
+           /* String encoder = getTagforKey(tags, KEY_TAG_ENCODER);
             String mqaEncoder = getTagforKey(tags, KEY_TAG_MQA_ENCODER);
             if(!MusicTagUtils.isFLACFile(tag)) {
                 tag.setMqaInd("None");
-            }else if(encoder.contains(KEY_MQA) || !isEmpty(mqaEncoder)) {
+            }else if(encoder.contains(KEY_MM_MQA) || !isEmpty(mqaEncoder)) {
                 tag.setMqaInd("MQA");
                 tag.setMqaSampleRate(toLong(getTagforKey(tags, KEY_TAG_MQA_ORIGINAL_SAMPLERATE)));
                 tag.setMqaScanned(false);
-            }
+            } */
 
             // read Quick time Specific tags
             if(isMp4File(tag)) {
@@ -1344,15 +1222,15 @@ public class FFMPeg extends TagReader {
             }
             String []text = metadata.split("#",-1);
 
-            tag.setDisc(getField(text, 0));
-            tag.setGrouping(getField(text, 1));
-            tag.setMediaQuality(getField(text,2));
-            tag.setRating(toInt(getField(text, 3)));
-            tag.setAlbumArtist(getField(text, 4));
-            tag.setComposer(getField(text, 5));
-            tag.setTrackDR(toDouble(getField(text, 6)));
-            tag.setMeasuredDR(toDouble(getField(text, 7)));
-            tag.setMeasuredSamplingRate(toLong(getField(text, 8)));
+            tag.setDisc(extractField(text, 0));
+            tag.setGrouping(extractField(text, 1));
+            tag.setMediaQuality(extractField(text,2));
+            tag.setRating(toInt(extractField(text, 3)));
+            tag.setAlbumArtist(extractField(text, 4));
+            tag.setComposer(extractField(text, 5));
+            tag.setDynamicRangeMeter(toDouble(extractField(text, 6)));
+            tag.setDynamicRange(toDouble(extractField(text, 7)));
+          //  tag.setMeasuredSamplingRate(toLong(extractField(text, 8)));
         }
 
         tag.setComment(StringUtils.trimToEmpty(comment));
@@ -1388,7 +1266,7 @@ public class FFMPeg extends TagReader {
             String info = matcher.group(1);
 
             String [] tags = info.split(",", -1);
-            tag.setAudioEncoding(getField(tags, 0));
+            tag.setAudioEncoding(extractField(tags, 0));
             tag.setAudioSampleRate(parseSampleRate(tags, 1));
             tag.setAudioChannels(parseChannels(tags, 2));
             tag.setAudioBitsDepth(parseBitDepth(tags, 3));
@@ -1399,9 +1277,9 @@ public class FFMPeg extends TagReader {
             String info = matcher.group(1);
 
            // String [] tags = info.split(",");
-            tag.setEmbedCoverArt(getWord(info,",",0));
+            tag.setCoverartMime(getWord(info,",",0));
         }else {
-            tag.setEmbedCoverArt("");
+            tag.setCoverartMime("");
         }
     }
 
@@ -1445,12 +1323,13 @@ public class FFMPeg extends TagReader {
         return 0L;
     }
 
+    /*
     private static String getField(String[] tags, int i) {
         if(tags.length>i) {
             return trimToEmpty(tags[i]);
         }
         return "";
-    }
+    } */
 
     public static void calculateSNR () {
     /*

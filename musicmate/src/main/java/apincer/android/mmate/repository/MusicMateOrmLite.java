@@ -139,7 +139,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("measuredDR",0);
+            builder.where().eq("dynamicRange",0);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -151,8 +151,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-           // builder.where().raw("fileSize = 0 or ((fileFormat ='aac' or fileFormat = 'mpeg') and audioBitRate < 32000) or (fileFormat not in ('aac','mpeg') and fileSizeRatio < 40) order by fileSize");
-            builder.where().raw("fileSize < 5120 or ((measuredDR>0 AND measuredDR <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (measuredDR>0 AND measuredDR <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24)) order by title");
+            builder.where().raw("fileSize < 5120 or ((dynamicRange>0 AND dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange>0 AND dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24)) order by title");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -191,7 +190,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("fileFormat in ('alac', 'flac','aiff', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 48000 and mqaInd not like 'MQA%'");
+            builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 48000 and mqaInd not like 'MQA%'");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -203,7 +202,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw(" fileFormat in ('aac', 'mpeg') ");
+            builder.where().raw(" audioEncoding in ('aac', 'mpeg') ");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -226,7 +225,8 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("audioBitsDepth=1 order by title, artist");
+           // builder.where().raw("audioBitsDepth=1 order by title, artist");
+            builder.where().raw("audioEncoding in ('dsd', 'dff') order by title, artist");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -270,7 +270,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
 
-                builder.where().raw("fileFormat in ('flac','alac','aiff','wave') and mqaInd not like 'MQA%'  order by title, artist");
+                builder.where().raw("audioEncoding in ('flac','alac','aiff','wave') and mqaInd not like 'MQA%'  order by title, artist");
                 return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -445,5 +445,59 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
+    }
+
+    public long getTotalSongCont() {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            return dao.countOf();
+        } catch (SQLException e) {
+
+        }
+        return 0;
+    }
+
+    public long getMaxId() {
+        long id= 0;
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("max(id)");
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            for(String[] vals : results.getResults()) {
+                id = StringUtils.toLong(vals[0]);
+            }
+        } catch (SQLException e) {
+            id =0;
+        }
+        return id;
+    }
+
+    public List<MusicTag> findByIdRanges(long idRange1, long idRange2) {
+        // 1000 - 1100
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().raw("id BETWEEN "+idRange1+" AND "+idRange2);
+            return builder.query();
+        } catch (SQLException e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public long getMinId() {
+        long id= 0;
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("min(id)");
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            for(String[] vals : results.getResults()) {
+                id = StringUtils.toLong(vals[0]);
+            }
+        } catch (SQLException e) {
+            id =0;
+        }
+        return id;
     }
 }

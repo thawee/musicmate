@@ -303,4 +303,20 @@ public class MusicTagRepository {
     public static List<MusicTag> getMusicTags(Context context, String grouping, String artist) {
         return MusixMateApp.getInstance().getOrmLite().findByGroupingAndArtist(grouping, artist);
     }
+
+    public static long getTotalSongCont() {
+        return MusixMateApp.getInstance().getOrmLite().getTotalSongCont();
+    }
+
+    public static long getMaxId() {
+        return MusixMateApp.getInstance().getOrmLite().getMaxId();
+    }
+
+    public static long getMinId() {
+        return MusixMateApp.getInstance().getOrmLite().getMinId();
+    }
+
+    public static List<MusicTag> getMusicTags(long idRange1, long idRange2) {
+        return MusixMateApp.getInstance().getOrmLite().findByIdRanges(idRange1, idRange2);
+    }
 }

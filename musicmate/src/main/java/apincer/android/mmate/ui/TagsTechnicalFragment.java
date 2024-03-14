@@ -107,7 +107,7 @@ public class TagsTechnicalFragment extends Fragment {
 
         MusicTag tag = tagsActivity.getEditItems().get(0);
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag, true);
-        filename.setText(String.format("MediaPath:\n%s\n\nMusicMatePath:\n%s", tag.getPath(), musicMatePath));
+        filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
         MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getActivity().getApplicationContext(), tag.getPath()).get(0);
 
@@ -130,7 +130,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv1 = new TextView(getContext());
-        tv1.setText("MusicMate");
+        tv1.setText("Current");
         tv1.setTextColor(Color.WHITE);
         cell.addView(tv1);
         tbrow0.addView(cell);
@@ -187,7 +187,8 @@ public class TagsTechnicalFragment extends Fragment {
             cell.setLayoutParams(llp);//2px border on the right for the cell
             TextView t1v = new TextView(getContext());
             t1v.setText(field.getName());
-            t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
+            //t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
+            t1v.setTextColor(StringUtils.equals(stdVal, ffmpegVal)?Color.WHITE:Color.RED);
             t1v.setGravity(Gravity.LEFT);
             t1v.setPadding(24,0,0,0);
             cell.addView(t1v);
@@ -252,7 +253,7 @@ public class TagsTechnicalFragment extends Fragment {
         CompletableFuture.runAsync(
                 () -> {
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        String coverArtPath = tag.getEmbedCoverArt();
+                        String coverArtPath = tag.getCoverartMime();
                         if(!isEmpty(coverArtPath)) {
                             String path = tag.getPath();
                             coverArtPath = path.substring(0, path.lastIndexOf("."))+"."+coverArtPath;

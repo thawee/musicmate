@@ -22,10 +22,11 @@
         android:icon="@drawable/round_troubleshoot_24"
         android:title="Analyst DR/RG"
         app:showAsAction="always" />
-
+<!--
     <item
         android:icon="@drawable/round_wallpaper_24"
         android:id="@+id/menu_preview_following_listening"
         android:title="Follows listening song"
         app:showAsAction="always" />
+        -->
 </menu>

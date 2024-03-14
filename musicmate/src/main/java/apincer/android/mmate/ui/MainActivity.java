@@ -3,20 +3,16 @@ package apincer.android.mmate.ui;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -89,7 +85,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicReference;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -98,10 +93,10 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
-import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.nas.NASServerService;
+import apincer.android.mmate.nas.SyncMusic;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
@@ -113,6 +108,7 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
+import apincer.android.mmate.utils.HostInterface;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
@@ -449,16 +445,18 @@ public class MainActivity extends AppCompatActivity {
                 //.data(MusicTagUtils.getCoverArt(this, song))
                 .data(MusicCoverArtProvider.getUriForMusicTag(song))
                 .allowHardware(false)
-                .placeholder(R.drawable.progress)
-                .error(R.drawable.ic_broken_image_black_24dp)
+                //.placeholder(R.drawable.progress)
+              //  .error(R.drawable.ic_broken_image_black_24dp)
+               // .error(R.drawable.no_image0)
                 .target(new Target() {
                     @Override
                     public void onStart(@Nullable Drawable drawable) {
-                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_broken_image_black_24dp));
+                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.progress));
                     }
 
                     @Override
                     public void onError(@Nullable Drawable drawable) {
+                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.no_image0));
                     }
 
                     @Override
@@ -1018,10 +1016,6 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-       // }else if(item.getItemId() == R.id.menu_recordings_quality) {
-       //     doHideSearch();
-       //     doStartRefresh(SearchCriteria.TYPE.MEDIA_QUALITY, Constants.QUALITY_NORMAL);
-      //      return true;
         } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HIGH_QUALITY);
@@ -1035,10 +1029,6 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getActualGroupingList(getApplicationContext()).get(0));
             return true;
-       /* }else if(item.getItemId() == R.id.menu_publisher) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.PUBLISHER, null);
-            return true; */
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getActualGenreList(getApplicationContext()).get(0));
@@ -1047,10 +1037,6 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(myIntent);
             return true;
-       /* }else if(item.getItemId() == R.id.menu_statistics) {
-            Intent myIntent = new Intent(MediaBrowserActivity.this, StatisticsActivity.class);
-            startActivity(myIntent);
-            return true; */
         } else if(item.getItemId() == R.id.menu_sd_permission) {
             //setUpPermissionSAF();
             Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
@@ -1069,23 +1055,10 @@ public class MainActivity extends AppCompatActivity {
         }else if(item.getItemId() == R.id.navigation_settings) {
             doShowRightMenus();
             return true;
-       // } else if(item.getItemId() == R.id.navigation_search) {
-       //     doShowSearch();
-       //     return true;
-       /* } else if(item.getItemId() == R.id.menu_signal_path) {
-            doShowSignalPath();
-            return true; */
-       /* } else if(item.getItemId() == R.id.menu_storage) {
-            doDeepScan();
-            return true;*/
         }else if(item.getItemId() == R.id.menu_about_crash) {
             Intent myIntent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(myIntent);
             return true;
-        /*}else if(item.getItemId() == R.id.menu_about_log) {
-            Intent myIntent = new Intent(MediaBrowserActivity.this, LogMessageActivity.class);
-            startActivity(myIntent);
-            return true;*/
         }else if(item.getItemId() == R.id.menu_media_server) {
             doShowMediaServerControl();
             return true;
@@ -1095,6 +1068,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void doShowMediaServerControl() {
         View cview = getLayoutInflater().inflate(R.layout.view_action_media_server, null);
+        TextView ip = cview.findViewById(R.id.server_ip_address);
+        TextView status = cview.findViewById(R.id.server_status);
+        ip.setText(HostInterface.getIPv4Address());
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
@@ -1102,29 +1078,35 @@ public class MainActivity extends AppCompatActivity {
                 .create();
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(true);
-        Button startButton = cview.findViewById(R.id.startServer);
+        Button startButton = cview.findViewById(R.id.manageServer);
+        if(MusixMateApp.getInstance().isNASRunning()) {
+            status.setText("Status: STARTED");
+            startButton.setText("Stop Server");
+        }else {
+            status.setText("Status: STOPED");
+            startButton.setText("Start Server");
+        }
         startButton.setOnClickListener(view -> {
-            //DLNAMediaServer server = new DLNAMediaServer();
-           // server.start();
-          //  startForegroundService(new Intent(getApplicationContext(),
-          //          MusicServerService.class));
-         //   startForegroundService(new Intent(getApplicationContext(),
-          //          DMSService.class));
-            startForegroundService(new Intent(getApplicationContext(),
-                    NASServerService.class));
-
+            if(MusixMateApp.getInstance().isNASRunning()) {
+                stopService(new Intent(getApplicationContext(),NASServerService.class));
+            }else {
+                startForegroundService(new Intent(getApplicationContext(),NASServerService.class));
+            }
+            if(MusixMateApp.getInstance().isNASRunning()) {
+                status.setText("Status: STARTED");
+                startButton.setText("Stop Server");
+            }else {
+                status.setText("Status: STOPED");
+                startButton.setText("Start Server");
+            }
         });
-        Button stopButton = cview.findViewById(R.id.stopServer);
-        stopButton.setOnClickListener(view -> stopService(new Intent(getApplicationContext(),
-                //MusicServerService.class)));
-               // DMSService.class)));
-                NASServerService.class)));
 
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alert.show();
     }
 
+    /*
     private void doShowSignalPath() {
         MusicTag tag = MusixMateApp.getPlayingSong();
 
@@ -1180,7 +1162,7 @@ public class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setPositiveButton("Dismiss", (dialogInterface, i) -> dialogInterface.dismiss());
         builder.show();
-    }
+    } */
 
     private void doShowEditActivity(MusicTag mediaItem) {
         if(FileRepository.isMediaFileExist(mediaItem)) {
@@ -1218,6 +1200,125 @@ public class MainActivity extends AppCompatActivity {
             EventBus.getDefault().postSticky(message);
             editorLauncher.launch(myIntent);
         }
+    }
+
+
+    private void doSendToStreamingServer(List<MusicTag> selections) {
+        if(selections.isEmpty()) return;
+
+        // Context context = getApplicationContext();
+        View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
+        Map<MusicTag, String> doneList = new HashMap<>();
+        ListView itemsView = cview.findViewById(R.id.itemListView);
+        EditText targetURL = cview.findViewById(R.id.targetURL);
+        EditText targetIP = cview.findViewById(R.id.targetIP);
+        //targetURL.setText("Sync to Streamer (VolumIO)");
+        targetURL.setText("Sync to Streaming Server");
+        // targetURL.setText("Sync to Streamer (HifiberryOS)");
+        targetIP.setVisibility(View.GONE);
+
+        itemsView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return selections.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+                return null;
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @Override
+            public View getView(int i, View view, ViewGroup viewGroup) {
+                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+                MusicTag tag = selections.get(i);
+                TextView seq = view.findViewById(R.id.seq);
+                TextView name = view.findViewById(R.id.name);
+                TextView status = view.findViewById(R.id.status);
+                seq.setText(String.valueOf(i+1));
+                if(doneList.containsKey(tag)) {
+                    status.setText(doneList.get(tag));
+                }else {
+                    status.setText("-");
+                }
+                name.setText(FileSystem.getFilename(tag.getPath()));
+                return view;
+            }
+        });
+
+        // final String[] encoding = {null};
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+
+        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
+        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setEnabled(true);
+
+        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
+        double sizeInBlock = MAX_PROGRESS/block;
+        List<Long> valueList = new ArrayList<>();
+        for(int i=0; i< block;i++) {
+            valueList.add((long) sizeInBlock);
+        }
+        final float rate = 100/selections.size(); // pcnt per 1 song
+        int barColor = getColor(R.color.material_color_green_400);
+        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
+        progressBar.setMax((int) MAX_PROGRESS);
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        btnOK.setOnClickListener(v -> {
+            busy = true;
+            progressBar.setProgress(getInitialProgress(selections.size(), rate));
+            MusicMateExecutors.move(() -> {
+                SyncMusic streamer = new SyncMusic();
+                for(MusicTag tag: selections) {
+                    try {
+                        doneList.put(tag, "Sending");
+                        runOnUiThread(() -> itemsView.invalidateViews());
+                        streamer.sync(getApplicationContext(), tag);
+                        doneList.put(tag, "Done");
+                        runOnUiThread(() -> {
+                            int pct = progressBar.getProgress();
+                            progressBar.setProgress((int) (pct + rate));
+                            itemsView.invalidateViews();
+                            progressBar.invalidate();
+                        });
+                    } catch (Exception ex) {
+                        try {
+                            doneList.put(tag, "Fail");
+                            runOnUiThread(() -> {
+                                int pct = progressBar.getProgress();
+                                progressBar.setProgress((int) (pct + rate));
+                                itemsView.invalidateViews();
+                                progressBar.invalidate();
+                            });
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+                runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Selected file are send to raspberry."));
+                //streamer.finallise();
+            });
+            btnOK.setEnabled(false);
+            btnOK.setVisibility(View.GONE);
+        });
+        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
+        alert.show();
     }
 
     private void doShowAboutApp() {
@@ -1481,11 +1582,10 @@ public class MainActivity extends AppCompatActivity {
                 doSendFilesToHibyDAP(getSelections());
                 mode.finish();
                 return true;*/
-           // }else if (id == R.id.action_send_to_streaming) {
-             //   doSendFilesToStreamingPlayer(getSelections());
-             //   mode.finish();
-
-             //   return true;
+            }else if (id == R.id.action_send_to_streaming) {
+                doSendToStreamingServer(getSelections());
+                mode.finish();
+                return true;
            // }else if (id == R.id.action_send_playlist_to_streaming) {
               //  final List<MusicTag> list = getSelections();
               //  MusicMateExecutors.move(() -> {
@@ -1497,10 +1597,10 @@ public class MainActivity extends AppCompatActivity {
                 doAnalystDRRG(getSelections());
                 mode.finish();
                 return true;
-            }else if (id == R.id.action_export_playlist) {
+           /* }else if (id == R.id.action_export_playlist) {
                 doExportAsPlaylist(getSelections());
                 mode.finish();
-                return true;
+                return true; */
             }else if (id == R.id.action_select_all) {
                 if(mTracker.getSelection().size() == adapter.getItemCount()) {
                     // selected all, reset selection

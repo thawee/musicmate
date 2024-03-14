@@ -1,13 +1,11 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.FFMPeg.detectMQA;
+import static apincer.android.mmate.repository.MQADetector.detectMQA;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.util.Log;
-
-import com.anggrayudi.storage.file.DocumentFileCompat;
 
 import org.kc7bfi.jflac.FLACDecoder;
 import org.kc7bfi.jflac.FrameListener;
@@ -17,9 +15,8 @@ import org.kc7bfi.jflac.metadata.Picture;
 import org.kc7bfi.jflac.metadata.StreamInfo;
 import org.kc7bfi.jflac.metadata.VorbisComment;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.utils.StringUtils;
@@ -32,8 +29,7 @@ public class JustFLACReader extends TagReader{
     public static boolean isSupportedFileFormat(String path) {
         try {
             String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
-            SupportedFileFormat.valueOf(ext.toUpperCase());
-            return true;
+            return SupportedFileFormat.FLAC.equals(SupportedFileFormat.valueOf(ext.toUpperCase()));
         }catch(Exception ex) {
             return false;
         }
@@ -53,7 +49,7 @@ public class JustFLACReader extends TagReader{
             readFileInfo(context,tag);
            // tag.setFileSizeRatio(getFileSizeRatio(tag));
             detectMQA(tag,5000); // timeout 5 seconds
-            return Arrays.asList(tag);
+            return Collections.singletonList(tag);
         } catch (Exception e) {
             Log.e(TAG, "ReadMusicTag: "+e.getMessage());
         }
@@ -80,13 +76,14 @@ public class JustFLACReader extends TagReader{
         return 0L;
     }
 
+    /*
     private static void readFileInfo(Context context, MusicTag tag) {
         File file = new File(tag.getPath());
         tag.setFileLastModified(file.lastModified());
         tag.setFileSize(file.length());
         tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
         tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
-    }
+    } */
 
     private static double getFirstDouble(VorbisComment comment, String key) {
         String val = getFirstString(comment, key);
@@ -106,44 +103,6 @@ public class JustFLACReader extends TagReader{
         }
         catch ( final Exception e ){
             return name;
-        }
-    }
-
-    public enum SupportedFileFormat
-    {
-
-        FLAC("flac", "Flac");
-
-        /**
-         * File Suffix
-         */
-        private String filesuffix;
-
-        /**
-         * User Friendly Name
-         */
-        private String displayName;
-
-        /** Constructor for internal use by this enum.
-         */
-        SupportedFileFormat(String filesuffix, String displayName)
-        {
-            this.filesuffix = filesuffix;
-            this.displayName = displayName;
-        }
-
-        /**
-         *  Returns the file suffix (lower case without initial .) associated with the format.
-         */
-        public String getFilesuffix()
-        {
-            return filesuffix;
-        }
-
-
-        public String getDisplayName()
-        {
-            return displayName;
         }
     }
 
@@ -178,15 +137,15 @@ public class JustFLACReader extends TagReader{
                 tag.setGrouping(getFirstString(comment, "GROUPING"));
                 tag.setPublisher(getFirstString(comment, "PUBLISHER"));
                 tag.setRating(getFirstInt(comment, "RATING"));
-                tag.setTrackDR(getFirstDouble(comment, "TRACK_DYNAMIC_RANGE"));
-                tag.setTrackTruePeak(getFirstDouble(comment, "REPLAYGAIN_TRACK_PEAK"));
-                tag.setTrackRG(getFirstDouble(comment, "REPLAYGAIN_TRACK_GAIN", " dB"));
-                tag.setMeasuredDR(getFirstDouble(comment,  FFMPeg.KEY_MUSICMATE_DR));
+                tag.setDynamicRangeMeter(getFirstDouble(comment, KEY_MM_TRACK_DYNAMIC_RANGE));
+                tag.setTrackTP(getFirstDouble(comment, KEY_MM_TRACK_PEAK));
+                tag.setTrackRG(getFirstDouble(comment,  KEY_MM_TRACK_GAIN, " dB"));
+                tag.setDynamicRange(getFirstDouble(comment,  KEY_MM_MEASURED_DR));
                 tag.setMediaType(getFirstString(comment, "MEDIA"));
                 tag.setComment(getFirstString(comment, "DESCRIPTION"));
             }else if (metadata instanceof Picture) {
                 Picture pict = ((Picture)metadata);
-                tag.setEmbedCoverArt(parseMimeString(pict.getMimeString()));
+                tag.setCoverartMime(parseMimeString(pict.getMimeString()));
               //  pict.
             }
         }
