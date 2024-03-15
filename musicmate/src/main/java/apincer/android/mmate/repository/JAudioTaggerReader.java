@@ -154,12 +154,12 @@ public class JAudioTaggerReader extends TagReader{
 
                 // read replay gain fields
                 Map<String, String> tags = parseCustomTagFields(tag);
-                if (tags.containsKey(KEY_MM_TRACK_GAIN)) {
-                    metadata.setTrackRG(extractDouble(tags.get(KEY_MM_TRACK_GAIN), " dB"));
+                if (tags.containsKey(KEY_TAG_TRACK_GAIN)) {
+                    metadata.setTrackRG(extractDouble(tags.get(KEY_TAG_TRACK_GAIN), " dB"));
                     //metadata.setTrackRG(extractDouble(getTagFieldCustom(tag, KEY_MM_TRACK_GAIN), " dB"));
                 }
-                if (tags.containsKey(KEY_MM_TRACK_PEAK)) {
-                    metadata.setTrackTP(toDouble(tags.get(KEY_MM_TRACK_PEAK)));
+                if (tags.containsKey(KEY_TAG_TRACK_PEAK)) {
+                    metadata.setTrackTP(toDouble(tags.get(KEY_TAG_TRACK_PEAK)));
                    // metadata.setTrackTP(toDouble(getTagFieldCustom(tag, KEY_MM_TRACK_PEAK)));
                 }
                 if (tags.containsKey(KEY_MM_TRACK_DYNAMIC_RANGE)) {
@@ -309,7 +309,7 @@ public class JAudioTaggerReader extends TagReader{
 
             data[0] = data[0].substring(13, data[0].length() - 1).toUpperCase();
 
-            if (data[0].equals("TRACK")) {data[0] = KEY_MM_TRACK_GAIN;}
+            if (data[0].equals("TRACK")) {data[0] = KEY_TAG_TRACK_GAIN;}
             // else if (data[0].equals("ALBUM")) {data[0] = REPLAYGAIN_ALBUM_GAIN;}
 
             tags.put(data[0], extractId3Val(data[1]));

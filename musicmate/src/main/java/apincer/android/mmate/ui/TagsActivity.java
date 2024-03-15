@@ -518,36 +518,23 @@ public class TagsActivity extends AppCompatActivity {
             }
         });
 
-
         // ENC info
-        int metaInfoTextSize = 12; //10
-        int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
-        SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-        spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor).setTextSize(metaInfoTextSize));
-
         try {
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
-            if(MusicTagUtils.isLossless(displayTag)) {
-                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize))
+            int metaInfoTextSize = 12; //10
+            int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
+            SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
 
-                        // spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize))
-                        // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                        // .append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize))
-                        // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                        //spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()), encColor).setTextSize(metaInfoTextSize))
-                        .append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor));
+            if(MusicTagUtils.isLossless(displayTag)) {
+                spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
+                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
             }
-                   // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                   // .append(new SpecialTextUnit("RG "+displayTag.getTrackRG(), encColor).setTextSize(metaInfoTextSize))
-                    //.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()), encColor).setTextSize(metaInfoTextSize))
-                    // .append(new SpecialTextUnit(mqaSampleRate,encColor).setTextSize(10))
-                   // .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                   // .append(new SpecialTextUnit(StringUtils.formatChannels(displayTag.getAudioChannels()),encColor).setTextSize(metaInfoTextSize))
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP))
                     .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP))
                     .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor).setTextSize(metaInfoTextSize));
+                    .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor));
             encInfo.setText(spannableEnc.build());
         }catch (Exception ex) {
             Log.e(TAG, "updateTitlePanel", ex);

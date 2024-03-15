@@ -123,13 +123,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             if(tag.equals(selectedSong)) return i;
             i++;
         }
-        /*for(int i=0;i<getItemCount();i++) {
-            MusicTag tag = getMusicTag(i);
-            if(tag.equals(selectedSong)) {
-                return i;
-            }
-            i++;
-        }*/
         return RecyclerView.NO_POSITION;
     }
 
@@ -265,14 +258,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void removeMusicTag(int position, MusicTag song) {
         localDataSet.remove( song);
         notifyDataSetChanged();
-      /*  if(position < localDataSet.size()) {
-            notifyItemChanged(position, localDataSet);
-        }else {
-            notifyDataSetChanged();
-        } */
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -286,18 +275,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         TextView mFileSizeView;
         ImageView mCoverArtView;
         ImageView mFileSourceView;
-       // ImageView mFileBrokenView;
         TextView mFileTypeView;
         TextView mDynamicRange;
         Context mContext;
         ImageView mPlayerView;
-       // TextView mMediaQualityView;
-        //TextView mMediaUpScaledView;
-       // TextView mMediaUpSampledView;
         ImageView mAudioResolutionView;
-
-       // ImageView mAudioSourceQualityView;
-        //ImageView mAudioLoudnessView;
         TriangleLabelView mNewLabelView;
         // TextView mTrackReplayGainView;
 
@@ -312,15 +294,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
-          //  this.mAudioSourceQualityView = view.findViewById(R.id.item_source_quality);
-           // this.mMediaQualityView = view.findViewById(R.id.item_media_quality_label);
-           // this.mMediaUpScaledView = view.findViewById(R.id.item_media_upscaled_label);
-          //  this.mMediaUpSampledView = view.findViewById(R.id.item_media_upsampled_label);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
             this.mFileSourceView = view.findViewById(R.id.item_src_icon);
-            //this.mFileBrokenView = view.findViewById(R.id.item_broken_file_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
@@ -428,8 +405,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
         if(MusicTagUtils.isDSD(tag)) {
             holder.mDynamicRange.setVisibility(View.GONE);
-       // } else if(!MusicTagUtils.isLossless(tag)) {
-       //     holder.mDynamicRange.setVisibility(View.VISIBLE);
         }else {
             // DR
             holder.mDynamicRange.setVisibility(View.VISIBLE);

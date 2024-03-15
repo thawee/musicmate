@@ -150,7 +150,6 @@ public class TagsEditorFragment extends Fragment {
                             .filter(rValue -> toLowwerCase(rValue).contains(txt))
                             .limit(10)
                             .forEach(s -> items.add(new PowerMenuItem(s)));
-                   // if(items.size()>0 && !(items.size()==1 && txt.equalsIgnoreCase(String.valueOf(items.get(0).getTitle())))) {
                     if((!autoSelect) || items.size()>=1) {
                         powerMenu = new PowerMenu.Builder(context)
                                 .setWidth(textInput.getWidth()+24)
@@ -175,7 +174,6 @@ public class TagsEditorFragment extends Fragment {
                                 })
                                 .build();
                         powerMenu.setShowBackground(false); // do not showing background.
-                        //powerMenu.setFocusable(true); // makes focusing only on the menu popup.
                         int height = powerMenu.getContentViewHeight();
                         powerMenu.showAsDropDown(textInput,0, (-1)*height*(items.size()+1)); // view is an anchor
                     }else if(autoSelect && items.size()==1) {
@@ -301,7 +299,6 @@ public class TagsEditorFragment extends Fragment {
                 artist.setText(StringUtils.trimToEmpty(mdata.getArtist()));
                 album.setText(StringUtils.trimToEmpty(mdata.getAlbum()));
                 track.setText(StringUtils.trimToEmpty(mdata.getTrack()));
-                //item.setOriginTag(null); // clear pending tag
             }catch (Exception ex) {
                 Log.e(TAG, "doShowReadTagsPreview",ex);
             }
@@ -451,14 +448,11 @@ public class TagsEditorFragment extends Fragment {
                 unused -> {
                     stopProgressBar();
                     // set updated item on main activity
-                   // bypassChange = true;
                     getActivity().runOnUiThread(() -> {
                         bypassChange = true;
                         bindViews();
                         bypassChange = false;
                     });
-//                    bindViews();
-                  //  bypassChange = false;
                 }
         ).exceptionally(
                 throwable -> {

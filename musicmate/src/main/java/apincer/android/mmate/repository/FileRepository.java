@@ -39,6 +39,7 @@ public class FileRepository {
         return new FileRepository(application);
     }
 
+    /*
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         try {
@@ -55,7 +56,8 @@ public class FileRepository {
         } catch (Exception e) {
             Log.e(TAG, "extractCoverArt",e);
         }
-    }
+    }*/
+
     public static void extractCoverArt(String path, File targetFile) {
         try {
             File dir = targetFile.getParentFile();
@@ -398,13 +400,14 @@ public class FileRepository {
         return STORAGE_SECONDARY;
     }
 
+    /*
     private String getAlbumArtistOrArtist(String artist, String albumArtist) {
         if(StringUtils.isEmpty(albumArtist)) {
             albumArtist = artist;
         }
 
         return StringUtils.trimToEmpty(albumArtist);
-    }
+    }*/
 
     public static boolean isMediaFileExist(MusicTag item) {
         if(item == null || item.getPath()==null) {
@@ -476,19 +479,19 @@ public class FileRepository {
                     }
                 }
             }
-          //  if(toClean) {
-                // directory is empty or no others media files
-                if(toDelete.size()>0) {
+
+            // directory is empty or no others media files
+            if(toDelete.size()>0) {
                     for (File file: toDelete) {
                         FileSystem.delete(getContext(), file);
                     }
-                }
-                // trying delete parent folder
-                File parentFolder = mediaDir.getParentFile();
-                FileSystem.delete(getContext(), mediaDir);
-                cleanMediaDirectory(parentFolder);
             }
-       // }
+
+            // trying delete parent folder
+            File parentFolder = mediaDir.getParentFile();
+            FileSystem.delete(getContext(), mediaDir);
+            cleanMediaDirectory(parentFolder);
+        }
      }
 
     private void copyRelatedFiles(MusicTag item, String newPath) {
@@ -527,10 +530,6 @@ public class FileRepository {
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
                 cleanCacheCover(getContext(), item);
-               // File cacheCoverart = MusicTagUtils.getCoverArt(getContext(), item);
-               // if(cacheCoverart!=null) {
-               //     com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverart);
-               // }
                 MusicTagRepository.removeTag(item);
                 File file = new File(item.getPath());
                 cleanMediaDirectory(file.getParentFile());

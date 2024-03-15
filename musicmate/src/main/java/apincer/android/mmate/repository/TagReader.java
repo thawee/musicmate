@@ -72,18 +72,18 @@ public abstract class TagReader {
         }
     }
 
-    //protected static final String KEY_MM_MEASURED_DR = "ZMEASURED_DR";
     protected static final String KEY_MM_MEASURED_DR = "MM_MDR";
+    protected static final String KEY_MM_TRACK_DYNAMIC_RANGE = "TRACK_DYNAMIC_RANGE";
     protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
-    protected static final String KEY_MM_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
-    protected static final String KEY_MM_TRACK_PEAK = "REPLAYGAIN_TRACK_PEAK"; // added by thawee
-    protected static final String KEY_MM_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
-    protected static final String KEY_MM_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
-    protected static final String KEY_MM_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS"; // for reset existing value
+    protected static final String KEY_TAG_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
+    protected static final String KEY_TAG_TRACK_PEAK = "REPLAYGAIN_TRACK_PEAK"; // added by thawee
+    protected static final String KEY_TAG_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
+    protected static final String KEY_TAG_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
+    protected static final String KEY_TAG_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS"; // for reset existing value
    // protected static final String KEY_TAG_MQA_ORIGINAL_SAMPLERATE = "ORIGINALSAMPLERATE";
 
    // protected static final String KEY_MM_TRACK_DYNAMIC_RANGE = "ZDYNAMIC_RANGE_TRACK";
-    protected static final String KEY_MM_TRACK_DYNAMIC_RANGE = "TRACK_DYNAMIC_RANGE";
+
     protected static final String KEY_TAG_QUALITY = "QUALITY";
     protected static final String KEY_TAG_MEDIA = "MEDIA";
 

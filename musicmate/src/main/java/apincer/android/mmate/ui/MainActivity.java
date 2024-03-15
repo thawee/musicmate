@@ -188,8 +188,6 @@ public class MainActivity extends AppCompatActivity {
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
 
-    //selected song to scroll
-   // private MusicTag lastPlaying;
     private boolean onSetup = true;
     private int positionToScroll = -1;
 
@@ -236,11 +234,9 @@ public class MainActivity extends AppCompatActivity {
         }
     });
 
-    // final String[] encoding = {null};
     View btnOK = cview.findViewById(R.id.btn_ok);
     View btnCancel = cview.findViewById(R.id.btn_cancel);
 
-    //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
     ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
         btnOK.setEnabled(false);
@@ -315,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Managing music file location");
+        titleText.setText("Import to Music directory");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -350,14 +346,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // final String[] encoding = {null};
         View btnOK = cview.findViewById(R.id.btn_ok);
         View btnCancel = cview.findViewById(R.id.btn_cancel);
 
-        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
-        btnOK.setEnabled(false);
+       // btnOK.setEnabled(false);
 
         btnOK.setEnabled(true);
 
@@ -530,15 +524,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doStartRefresh(SearchCriteria criteria) {
-       // if(criteria == null) {
-         /*   if (epoxyController.getCriteria() != null) {
-                searchCriteria = epoxyController.getCriteria();
-            } else { */
-           //     searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
-           // }
-       // }else {
-        //    searchCriteria = criteria;
-       // }
         if(criteria!= null) {
             doStartRefresh(criteria.getType(), criteria.getKeyword());
         }else {
@@ -651,42 +636,11 @@ public class MainActivity extends AppCompatActivity {
                 SearchCriteria criteria = ApplicationUtils.getSearchCriteria(result.getData());
                 adapter.loadDataSets(criteria);
             }
-           // adapter.notifyDataSetChanged();
-/*
-            SearchCriteria criteria;
-            if (result.getData() != null) {
-                // if retrun criteria, use it otherwise provide null
-                criteria = ApplicationUtils.getSearchCriteria(result.getData());
-            }else {
-                //FIXME -- should not happend
-                Log.e("MainActivity","FIXME! MUST use criteria before open tag to  re load tags");
-                criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
-            }
-
-            SearchCriteria finalCriteria = criteria;
-            backFromEditor = true;
-            runOnUiThread(() -> {
-                adapter.loadDataSets(finalCriteria);
-               // adapter.notifyDataSetChanged();
-            }); */
-          //  new Timer().schedule(new TimerTask() {
-         //       @Override
-          //      public void run() {
-                   // runOnUiThread(() -> epoxyController.loadSource(finalCriteria));
-          //          runOnUiThread(() -> adapter.loadDataSets(finalCriteria));
-           //     }
-          //  }, 200);
         });
     }
 
     private void setUpHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
-       /* mHeaderTPV = findViewById(R.id.header_tpv);
-        mHeaderTPV.setOnTrapezoidPartClickListener((view, part) -> {
-            adapter.resetFilter();
-            adapter.setKeyword(part.getText().toString());
-            refreshLayout.autoRefresh();
-        }); */
 
         headerTab = findViewById(R.id.header_tab);
         headerSubtitle = findViewById(R.id.header_subtitle);
@@ -700,25 +654,16 @@ public class MainActivity extends AppCompatActivity {
                 }
                 TextView tv = tab.getCustomView().findViewById(R.id.tabTitle);
                 tv.setTextColor(Color.WHITE);
-               // tv.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary_light));
-                //tab.setTabLabelVisibility(TabLayout.TAB_LABEL_VISIBILITY_LABELED);
-               // tab.getCustomView().findViewById(R.id.tabHeader).setVisibility(View.GONE);
-              //  tab.getCustomView().findViewById(R.id.tabTitle).setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
                 TextView tv = tab.getCustomView().findViewById(R.id.tabTitle);
                 tv.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey400));
-                //tab.setTabLabelVisibility(TabLayout.TAB_LABEL_VISIBILITY_UNLABELED);
-               // tab.getCustomView().findViewById(R.id.tabHeader).setVisibility(View.VISIBLE);
-               // tab.getCustomView().findViewById(R.id.tabTitle).setVisibility(View.GONE);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-               // tab.getCustomView().findViewById(R.id.tabHeader).setVisibility(View.GONE);
-               // tab.getCustomView().findViewById(R.id.tabTitle).setVisibility(View.VISIBLE);
             }
         });
     }
@@ -742,21 +687,16 @@ public class MainActivity extends AppCompatActivity {
 
         //set bottom bar to Action bar as it is similar like Toolbar
         setSupportActionBar(bottomAppBar);
-       // TextView label = bottomAppBar.findViewById(R.id.navigation_collections_label);
         ImageView leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
         UIUtils.getTintedDrawable(leftMenu.getDrawable(), Color.WHITE);
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
         mSearchView = bottomAppBar.findViewById(R.id.searchView);
-       // ImageView searchMenu = bottomAppBar.findViewById(R.id.navigation_search);
 
         UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
            @Override
            public boolean onQueryTextSubmit(String query) {
-              // SearchCriteria criteria = epoxyController.getCriteria();
-              // criteria.searchFor(query);
-              // doStartRefresh(criteria);
                adapter.setSearchString(query);
                refreshLayout.autoRefresh();
                return false;
@@ -806,7 +746,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void doHideSearch() {
         adapter.setSearchString("");
-        //mSearchView.setVisibility(View.GONE);
         refreshLayout.autoRefresh();
     }
 	
@@ -847,35 +786,8 @@ public class MainActivity extends AppCompatActivity {
         // create right menus
 
         mResideMenu.setMenuRes(R.menu.menu_music_collection, ResideMenu.DIRECTION_LEFT);
-       // View storageView = getLayoutInflater().inflate(R.layout.view_header_right_menu, null);
-       // mResideMenu.setRightHeader(storageView);
         mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_dsd_white, Constants.AUDIO_SQ_DSD, ResideMenu.DIRECTION_LEFT);
-       // mResideMenu.addMenuItem(MENU_ID_HIRES, R.drawable.ic_format_hires_white, Constants.AUDIO_SQ_PCM_HRMS, ResideMenu.DIRECTION_LEFT);
-       // mResideMenu.addMenuItem(MENU_ID_HIRES, R.drawable.ic_format_hires_white, Constants.AUDIO_SQ_HIRES, ResideMenu.DIRECTION_LEFT);
-      //  mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_mqa_white, Constants.AUDIO_SQ_PCM_MQA, ResideMenu.DIRECTION_LEFT);
         mResideMenu.addMenuItem(MENU_ID_QUALITY_PCM, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_PCM, ResideMenu.DIRECTION_LEFT);
-        // mResideMenu.addMenuItem(MENU_ID_HIFI, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_HIFI, ResideMenu.DIRECTION_LEFT);
-       // mResideMenu.addMenuItem(MENU_ID_HIFI, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave_line, Color.WHITE), Constants.AUDIO_SQ_PCM_HQ, ResideMenu.DIRECTION_LEFT);
-        // mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_mqa_white, Constants.AUDIO_SQ_PCM_LOSSLESS, ResideMenu.DIRECTION_LEFT);
-/*
-        if(Preferences.isShowPCMAudio(getApplicationContext())) {
-           // Bitmap bitmap = MediaItemUtils.createBitmapFromTextSquare(this, 40,40,"HRA",Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT);
-            Bitmap bitmap = AudioTagUtils.createButtonFromText(this, 52,52,"HDA",Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT);
-            mResideMenu.addMenuItem(MENU_ID_QUALITY, new BitmapDrawable(getResources(), bitmap), Constants.AUDIO_SQ_PCM_HD, ResideMenu.DIRECTION_LEFT);
-           // bitmap = MediaItemUtils.createBitmapFromTextSquare(this, 56,56,"CRA",Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT);
-            bitmap = AudioTagUtils.createButtonFromText(this, 52,52,"SDA",Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT);
-            mResideMenu.addMenuItem(MENU_ID_QUALITY, new BitmapDrawable(getResources(), bitmap), Constants.AUDIO_SQ_PCM_SD, ResideMenu.DIRECTION_LEFT);
-           // bitmap = MediaItemUtils.createBitmapFromTextSquare(this, 40,40,"LRA",Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT);
-            bitmap = AudioTagUtils.createButtonFromText(this, 52,52,"LDA",Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT);
-            mResideMenu.addMenuItem(MENU_ID_QUALITY, new BitmapDrawable(getResources(), bitmap), Constants.AUDIO_SQ_PCM_LD, ResideMenu.DIRECTION_LEFT);
-        } */
-/*
-        if(Preferences.isShowAudioSampleRate(getApplicationContext())) {
-            List<String> sampleRateList = AudioTagRepository.getInstance(getApplication()).getSampleRates();
-            for (String sampleRate : sampleRateList) {
-                mResideMenu.addMenuItem(MENU_ID_SAMPLE_RATE, R.drawable.ic_waves_white, sampleRate, ResideMenu.DIRECTION_LEFT);
-            }
-        } */
     }
 
     private void setUpPermissions() {
@@ -896,7 +808,7 @@ public class MainActivity extends AppCompatActivity {
         scrollToPosition(positionToScroll,true);
     }
 
-    private int scrollToPosition(int position, boolean offset) {
+    private void scrollToPosition(int position, boolean offset) {
         if(position != RecyclerView.NO_POSITION) {
             if(offset) {
                 int positionWithOffset = position - RECYCLEVIEW_ITEM_POSITION_OFFSET;
@@ -910,7 +822,6 @@ public class MainActivity extends AppCompatActivity {
                 mRecyclerView.scrollToPosition(position);
             }
         }
-        return position;
     }
 
     @Override
@@ -946,27 +857,9 @@ public class MainActivity extends AppCompatActivity {
                     int position = adapter.getMusicTagPosition(event.getItem());
                     if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
                         adapter.removeMusicTag(position, event.getItem());
-                       // adapter.notifyItemRemoved(position);
-                        // }else if(AudioTagEditResultEvent.ACTION_MOVE.equals(event.getAction())) {
                     }else if(adapter.isMatchFilter(event.getItem())) {
-                         /*   MusicTag tag = adapter.getContent(position);
-                            if(tag != null) {
-                                MusicTagRepository.load(tag);
-                                adapter.notifyItemChanged(position);
-                            } */
                         adapter.loadDataSets();
-                   // }else {
-                        //adapter.removeItem(event.getItem());
-                            //adapter.removeItem(position);
-                           // adapter.notifyItemRemoved(position);
                     }
-                   /* }else {
-                        MusicTag tag = adapter.getContent(position);
-                        if(tag != null) {
-                            MusicTagRepository.load(tag);
-                            adapter.notifyItemChanged(position);
-                        } */
-                  //  }
                 }
             });
         }catch (Exception e) {
@@ -1107,63 +1000,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-    private void doShowSignalPath() {
-        MusicTag tag = MusixMateApp.getPlayingSong();
-
-        MusicPlayerInfo playerInfo = MusixMateApp.getPlayerInfo();
-
-        // file
-        // player
-        // output
-        LayoutInflater inflater = getLayoutInflater();
-        View view = inflater.inflate(R.layout.dialog_signal_path, null);
-        ImageView sourceIcon =  view.findViewById(R.id.panel_source_img);
-        TextView sourceText =  view.findViewById(R.id.panel_source_text);
-        ImageView playerIcon =  view.findViewById(R.id.panel_player_img);
-        TextView playerText =  view.findViewById(R.id.panel_player_text);
-        ImageView outputIcon =  view.findViewById(R.id.panel_output_img);
-        TextView outputText =  view.findViewById(R.id.panel_output_text);
-        TextView outputlabel = view.findViewById(R.id.panel_output_label);
-        String quality;
-        String qualityDetails = "";
-        if(tag != null && !isEmpty(tag.getPath())) {
-            ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-            ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                    .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), tag))
-                    .crossfade(false)
-                    .target(sourceIcon)
-                    .build();
-            imageLoader.enqueue(request);
-            quality = MusicTagUtils.getTrackQuality(tag);
-            qualityDetails = MusicTagUtils.getTrackQualityDetails(tag);
-            sourceText.setText(quality);
-        }else {
-            sourceText.setText("-");
-        }
-        if(playerInfo != null) {
-            playerText.setText(playerInfo.getPlayerName());
-            playerIcon.setImageDrawable(playerInfo.getPlayerIconDrawable());
-        }else {
-            playerText.setText("-");
-        }
-
-        AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> {
-            outputIcon.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), device));
-            outputText.setText(device.getName());
-            outputlabel.setText(device.getDescription());
-        });
-        if(isEmpty(qualityDetails)) {
-            qualityDetails = "Track details is not available.";
-        }
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this, R.style.SignalPathDialogTheme)
-                .setTitle("Signal Path \u266A") //+quality)
-                .setMessage(qualityDetails) // + text)
-                .setView(view)
-                .setPositiveButton("Dismiss", (dialogInterface, i) -> dialogInterface.dismiss());
-        builder.show();
-    } */
-
     private void doShowEditActivity(MusicTag mediaItem) {
         if(FileRepository.isMediaFileExist(mediaItem)) {
             ArrayList<MusicTag> tagList = new ArrayList<>();
@@ -1173,7 +1009,7 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, TagsActivity.class);
             editorLauncher.launch(myIntent);
         }
-    }
+    }*/
 
     private void doShowEditActivity(List<MusicTag> selections) {
         ArrayList<MusicTag> tagList = new ArrayList<>();
@@ -1206,15 +1042,12 @@ public class MainActivity extends AppCompatActivity {
     private void doSendToStreamingServer(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
-        // Context context = getApplicationContext();
         View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
         Map<MusicTag, String> doneList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         EditText targetURL = cview.findViewById(R.id.targetURL);
         EditText targetIP = cview.findViewById(R.id.targetIP);
-        //targetURL.setText("Sync to Streamer (VolumIO)");
         targetURL.setText("Sync to Streaming Server");
-        // targetURL.setText("Sync to Streamer (HifiberryOS)");
         targetIP.setVisibility(View.GONE);
 
         itemsView.setAdapter(new BaseAdapter() {
@@ -1251,11 +1084,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // final String[] encoding = {null};
         View btnOK = cview.findViewById(R.id.btn_ok);
         View btnCancel = cview.findViewById(R.id.btn_cancel);
 
-        //PowerSpinnerView mEncodingView = cview.findViewById(R.id.target_encoding);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
         btnOK.setEnabled(true);
@@ -1312,7 +1143,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Selected file are send to raspberry."));
-                //streamer.finallise();
+
             });
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
@@ -1363,8 +1194,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mRecyclerView = findViewById(R.id.recycler_view);
-        mRecyclerView.setItemViewCacheSize(0); //Setting ViewCache to 0 (default=2) will animate items better while scrolling down+up with LinearLayout
-       // mRecyclerView.setWillNotCacheDrawing(true);
+        mRecyclerView.setItemViewCacheSize(0);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setHasFixedSize(true); //Size of RV will not change
@@ -1436,15 +1266,14 @@ public class MainActivity extends AppCompatActivity {
     public View getTabView(String title) {
         // Given you have a custom layout in `res/layout/custom_tab.xml` with a TextView and ImageView
         View v = LayoutInflater.from(this).inflate(R.layout.view_header_tab_item, null);
-        TextView hv = (TextView) v.findViewById(R.id.tabHeader);
+        TextView hv = v.findViewById(R.id.tabHeader);
         hv.setText(StringUtils.getAbvByUpperCase(title));
-        TextView tv = (TextView) v.findViewById(R.id.tabTitle);
+        TextView tv = v.findViewById(R.id.tabTitle);
         tv.setText(title);
-       // ImageView img = (ImageView) v.findViewById(R.id.imgView);
-       // img.setImageResource(imageResId[position]);
         return v;
     }
 
+    /*
     private List<TrapezoidPartsView.TrapezoidPart> createTrapezoidParts() {
         List<TrapezoidPartsView.TrapezoidPart> list = new ArrayList<>();
         List<String> titles = this.adapter.getHeaderTitles(getApplicationContext());
@@ -1470,7 +1299,7 @@ public class MainActivity extends AppCompatActivity {
             i++;
         }
         return list;
-    }
+    } */
 
     private void updateHeaderPanel() {
        // mHeaderTPV.setParts(createTrapezoidParts());
@@ -1534,14 +1363,11 @@ public class MainActivity extends AppCompatActivity {
                     timer.schedule(new TimerTask() {
                         @Override
                         public void run() {
-                           // runOnUiThread(() -> doShowEditActivity(song));
                             if(!busy) {
                                 runOnUiThread(() -> scrollToListening());
                             }
                         }
                     }, 1500); // 1.5 seconds
-           // }else {
-           //     epoxyController.loadSource();
             }
         }
     }
@@ -1636,7 +1462,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Analyst Dynamic Range and ReplayGain");
+        titleText.setText("Dynamic Range and ReplayGain");
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1676,7 +1502,7 @@ public class MainActivity extends AppCompatActivity {
 
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
-        btnOK.setEnabled(false);
+       // btnOK.setEnabled(false);
 
         btnOK.setEnabled(true);
 
@@ -1795,8 +1621,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     private void doEncodingAudioFiles(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
         // convert WAVE to AIFF, FLAC, ALAC
@@ -1897,7 +1721,7 @@ public class MainActivity extends AppCompatActivity {
                // targetExt = "m4a";
                 cLevel = 4;
             }else {
-               // compressLevel = 2; // 5 = default, 0 less, 8 most cpmpress
+               // compressLevel = 2; // 5 = default, 0 less, 8 most compress
                // targetExt = "FLAC";
                 cLevel = -1;
             }
@@ -1916,7 +1740,7 @@ public class MainActivity extends AppCompatActivity {
                         String srcPath = tag.getPath();
                         String filePath = FileUtils.removeExtension(tag.getPath());
                         String targetPath = filePath+"."+ finalTargetExt;
-                        int bitdept = tag.getAudioBitsDepth();
+                        int bitDepth = tag.getAudioBitsDepth();
                         statusList.put(tag, "Encoding");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
@@ -1925,8 +1749,7 @@ public class MainActivity extends AppCompatActivity {
                             itemsView.invalidateViews();
                         });
 
-                        if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitdept)) {
-                           // doneList.add(tag);
+                        if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
                             statusList.put(tag, "Done");
                             repos.scanMusicFile(new File(targetPath),false); // re scan file
                             runOnUiThread(() -> {
@@ -1936,7 +1759,6 @@ public class MainActivity extends AppCompatActivity {
                                     itemsView.invalidateViews();
                                 });
                         }else {
-                            //failList.add(tag);
                             statusList.put(tag, "Fail");
                             runOnUiThread(() -> {
                                 int pct = progressBar.getProgress();
@@ -1945,9 +1767,7 @@ public class MainActivity extends AppCompatActivity {
                                 itemsView.invalidateViews();
                             });
                         }
-                        //});
                     }else {
-                        //skipList.add(tag);
                         statusList.put(tag, "Skip");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();

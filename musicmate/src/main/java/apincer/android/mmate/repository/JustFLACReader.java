@@ -138,8 +138,8 @@ public class JustFLACReader extends TagReader{
                 tag.setPublisher(getFirstString(comment, "PUBLISHER"));
                 tag.setRating(getFirstInt(comment, "RATING"));
                 tag.setDynamicRangeMeter(getFirstDouble(comment, KEY_MM_TRACK_DYNAMIC_RANGE));
-                tag.setTrackTP(getFirstDouble(comment, KEY_MM_TRACK_PEAK));
-                tag.setTrackRG(getFirstDouble(comment,  KEY_MM_TRACK_GAIN, " dB"));
+                tag.setTrackTP(getFirstDouble(comment, KEY_TAG_TRACK_PEAK));
+                tag.setTrackRG(getFirstDouble(comment,  KEY_TAG_TRACK_GAIN, " dB"));
                 tag.setDynamicRange(getFirstDouble(comment,  KEY_MM_MEASURED_DR));
                 tag.setMediaType(getFirstString(comment, "MEDIA"));
                 tag.setComment(getFirstString(comment, "DESCRIPTION"));

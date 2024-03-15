@@ -2,8 +2,6 @@ package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
-import static apincer.android.mmate.Constants.SPL_16BIT_IN_DB;
-import static apincer.android.mmate.Constants.SPL_8BIT_IN_DB;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
@@ -102,7 +100,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             String keyword = escapeString(tag.getUniqueKey());
 
-            if(dao.queryForEq("uniqueKey", keyword).size()>0) {
+            if(dao.queryForEq("uniqueKey", keyword).isEmpty()) {
                 dao.update(tag);
             }else {
                 dao.create(tag);

@@ -62,8 +62,6 @@ public class TagsTechnicalFragment extends Fragment {
                 doRemoveEmbedCoverart();
             }if(item.getItemId() == R.id.menu_editor_tech_replaygain) {
                 doUpdateReplayGain();
-           // }else {
-           //     getActivity().onOptionsItemSelected(item);
             }
             return false;
         };
@@ -300,7 +298,6 @@ public class TagsTechnicalFragment extends Fragment {
             progressDialog.show();
         });
     }
-
 
     private void stopProgressBar() {
         getActivity().runOnUiThread(() -> {

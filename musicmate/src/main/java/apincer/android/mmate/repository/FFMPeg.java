@@ -570,8 +570,8 @@ public class FFMPeg extends TagReader {
 
         // replay gain
         // tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_TRACK_LOUDNESS)));
-        tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_MM_TRACK_GAIN)));
-        tag.setTrackTP(toDouble(getValueForKey(tags, KEY_MM_TRACK_PEAK)));
+        tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_TAG_TRACK_GAIN)));
+        tag.setTrackTP(toDouble(getValueForKey(tags, KEY_TAG_TRACK_PEAK)));
         // tag.setAlbumRG(gainToDouble(getValueForKey(tags, KEY_ALBUM_GAIN)));
         // tag.setAlbumTruePeak(toDouble(getValueForKey(tags, KEY_ALBUM_PEAK)));
         tag.setDynamicRange(toDouble(getValueForKey(tags, KEY_MM_MEASURED_DR)));
@@ -1014,7 +1014,7 @@ public class FFMPeg extends TagReader {
 
        // if(tag.getTrackLoudness() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_MM_TRACK_LOUDNESS, "");
+                    getMetadataTrackKey(KEY_TAG_TRACK_LOUDNESS, "");
       /*  }else {
             tags = tags +
                     getMetadataTrackKey(KEY_TRACK_LOUDNESS, tag.getTrackLoudness());
@@ -1022,17 +1022,17 @@ public class FFMPeg extends TagReader {
 
         if(tag.getTrackRG() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_MM_TRACK_GAIN, "") +
-                    getMetadataTrackKey(KEY_MM_TRACK_PEAK, "");
+                    getMetadataTrackKey(KEY_TAG_TRACK_GAIN, "") +
+                    getMetadataTrackKey(KEY_TAG_TRACK_PEAK, "");
         }else {
             tags = tags +
-                    getMetadataTrackKey(KEY_MM_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
-                    getMetadataTrackKey(KEY_MM_TRACK_PEAK, String.format("%,.6f", tag.getTrackTP()));
+                    getMetadataTrackKey(KEY_TAG_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
+                    getMetadataTrackKey(KEY_TAG_TRACK_PEAK, String.format("%,.6f", tag.getTrackTP()));
         }
        // if(tag.getAlbumRG() == 0.0) {
             tags = tags +
-                    getMetadataTrackKey(KEY_MM_ALBUM_GAIN, "") +
-                    getMetadataTrackKey(KEY_MM_ALBUM_PEAK, "");
+                    getMetadataTrackKey(KEY_TAG_ALBUM_GAIN, "") +
+                    getMetadataTrackKey(KEY_TAG_ALBUM_PEAK, "");
 
         if(tag.getDynamicRange() == 0.0) {
             tags = tags +
@@ -1149,10 +1149,10 @@ public class FFMPeg extends TagReader {
             tag.setTitle(getTagforKey(tags, KEY_TAG_TITLE));
 
             // KEY_TRACK_GAIN
-            tag.setTrackRG(toDouble(getTagforKey(tags, KEY_MM_TRACK_GAIN)));
+            tag.setTrackRG(toDouble(getTagforKey(tags, KEY_TAG_TRACK_GAIN)));
 
             //KEY_TRACK_PEAK
-            tag.setTrackTP(toDouble(getTagforKey(tags, KEY_MM_TRACK_PEAK)));
+            tag.setTrackTP(toDouble(getTagforKey(tags, KEY_TAG_TRACK_PEAK)));
 
             // KEY_ALBUM_GAIN
            // tag.setAlbumRG(toDouble(getTagforKey(tags, KEY_ALBUM_GAIN)));

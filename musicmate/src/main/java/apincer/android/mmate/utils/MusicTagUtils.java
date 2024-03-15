@@ -1146,7 +1146,7 @@ public class MusicTagUtils {
             return context.getColor(R.color.quality_hd);
         }else if(isPCMHiRes(tag)) {
             return context.getColor(R.color.quality_hd);
-        }else if(is24Bits(tag)) {
+        }else if(isPCM24Bits(tag)) {
             return context.getColor(R.color.quality_h24bits);
         }else if(isPCMLossless(tag)){
             return context.getColor(R.color.quality_sd);
@@ -1181,6 +1181,7 @@ public class MusicTagUtils {
         }
     }
 
+    /*
     public static Drawable getResolutionBackground(Context context, MusicTag tag) {
         // DSD - DSD
         // Hi-Res Lossless - >= 24 bits and >= 48 kHz
@@ -1199,7 +1200,7 @@ public class MusicTagUtils {
         }else {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_unknown);
         }
-    }
+    } */
 
     public static Drawable getFileFormatBackground(Context context, MusicTag tag) {
         if(isDSD(tag)) {
@@ -1211,7 +1212,7 @@ public class MusicTagUtils {
         }
     }
 
-    public static boolean is24Bits(MusicTag tag) {
+    public static boolean isPCM24Bits(MusicTag tag) {
         return ( isLossless(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
 
@@ -1251,8 +1252,8 @@ public class MusicTagUtils {
     public static boolean isPCMLossless(MusicTag tag) {
         // 16/*
         // 24/48
-        return ((tag.getAudioBitRate() == Constants.QUALITY_BIT_CD ||
-                ((tag.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)))); // ||
+        return ((tag.getAudioBitsDepth() == Constants.QUALITY_BIT_CD ||
+                ((tag.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() < Constants.QUALITY_SAMPLING_RATE_88)))); // ||
                 // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
     }
 
