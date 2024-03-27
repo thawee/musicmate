@@ -1203,9 +1203,21 @@ public class MusicTagUtils {
     } */
 
     public static Drawable getFileFormatBackground(Context context, MusicTag tag) {
-        if(isDSD(tag)) {
+      /*  if(isDSD(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_dsd);
         }else if(isLossless(tag)){
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
+        }else {
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossy);
+        } */
+
+        if(isDSD(tag)) {
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_dsd);
+        }else if(isPCMHiRes(tag)) {
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
+        }else if(isPCM24Bits(tag)) {
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
+        }else if(isPCMLossless(tag)){
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
         }else {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossy);

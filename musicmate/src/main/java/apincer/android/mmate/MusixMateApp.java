@@ -4,7 +4,6 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -155,12 +154,8 @@ public class MusixMateApp extends Application {
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-        //database = MusicMateDatabase.getDatabase(this);
 
-       // if (BuildConfig.DEBUG) {
-            //initialise reporter with external path
-            CrashReporter.initialize(this);
-        //}
+        CrashReporter.initialize(this);
 
         broadcastHelper.onCreate(this);
 
@@ -329,7 +324,6 @@ Provides the SQLite Helper Object among the application
         int importance = NotificationManager.IMPORTANCE_DEFAULT;
         NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance);
         channel.setDescription(description);
-
 
         // Register the channel with the system; you can't change the importance
         // or other notification behaviors after this

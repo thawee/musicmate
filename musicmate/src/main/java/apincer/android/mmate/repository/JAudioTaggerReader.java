@@ -38,12 +38,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 public class JAudioTaggerReader extends TagReader{
+    public JAudioTaggerReader() {
+        Logger logger = Logger.getLogger("org.jaudiotagger");
+        logger.setLevel(Level.SEVERE);
+        logger = Logger.getLogger("org.jaudiotagger.audio");
+        logger.setLevel(Level.SEVERE);
+        logger = Logger.getLogger("org.jaudiotagger.audio.flac");
+        logger.setLevel(Level.SEVERE);
+    }
+
     private static final String KEY_TAG_WAVE_GROUP = "IKEY";
     private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
     private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG";
@@ -60,10 +71,12 @@ public class JAudioTaggerReader extends TagReader{
             readFileInfo(context, tag);
             readHeader(read, tag);
             readTags(read, tag);
-            detectMQA(tag,5000); // timeout 5 seconds
+            detectMQA(tag);
+            tag.setAudioStartTime(0);
+           // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         }
-        return null;
+        return Collections.EMPTY_LIST;
     }
 
     private void readHeader(AudioFile read, MusicTag metadata) {
@@ -222,29 +235,31 @@ public class JAudioTaggerReader extends TagReader{
                     metadata.setComment(comment);
                 }else if (MusicTagUtils.isMPegFile(metadata)) {
                     String comment = tags.get(KEY_TAG_MP3_COMMENT);
-                    int start = comment.indexOf("<##>");
-                    int end = comment.indexOf("</##>");
-                    if (start >= 0 && end > start) {
-                        // found metadata comment
-                        String mdata = comment.substring(start + 4, end);
-                        if (comment.length() > (end + 5)) {
-                            comment = comment.substring(end + 5);
-                        } else {
-                            comment = "";
+                    if(!isEmpty(comment)) {
+                        int start = comment.indexOf("<##>");
+                        int end = comment.indexOf("</##>");
+                        if (start >= 0 && end > start) {
+                            // found metadata comment
+                            String mdata = comment.substring(start + 4, end);
+                            if (comment.length() > (end + 5)) {
+                                comment = comment.substring(end + 5);
+                            } else {
+                                comment = "";
+                            }
+
+                            String[] text = mdata.split("#", -1);
+
+                            metadata.setDisc(extractField(text, 0));
+                            metadata.setGrouping(extractField(text, 1));
+                            metadata.setMediaQuality(extractField(text, 2));
+                            metadata.setRating(toInt(extractField(text, 3)));
+                            metadata.setAlbumArtist(extractField(text, 4));
+                            metadata.setComposer(extractField(text, 5));
+                            metadata.setDynamicRangeMeter(toDouble(extractField(text, 6)));
+                            metadata.setDynamicRange(toDouble(extractField(text, 7)));
                         }
-
-                        String[] text = mdata.split("#", -1);
-
-                        metadata.setDisc(extractField(text, 0));
-                        metadata.setGrouping(extractField(text, 1));
-                        metadata.setMediaQuality(extractField(text, 2));
-                        metadata.setRating(toInt(extractField(text, 3)));
-                        metadata.setAlbumArtist(extractField(text, 4));
-                        metadata.setComposer(extractField(text, 5));
-                        metadata.setDynamicRangeMeter(toDouble(extractField(text, 6)));
-                        metadata.setDynamicRange(toDouble(extractField(text, 7)));
+                        metadata.setComment(comment);
                     }
-                    metadata.setComment(comment);
                 } else {
                     // WAV file not support these fields
                     metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));

@@ -17,8 +17,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto" >
     <item
-        android:icon="@drawable/ic_round_refresh_24"
-        android:id="@+id/menu_editor_tech_reload"
+        android:icon="@drawable/round_restore_page_24"
+        android:id="@+id/menu_editor_tech_refresh"
         android:title="Reload Music Tags"
         app:showAsAction="always" />
     <item
@@ -31,9 +31,11 @@
         android:id="@+id/menu_editor_tech_remove_coverart"
         android:title="Remove Coverart"
         app:showAsAction="always" />
+    <!--
     <item
         android:icon="@drawable/round_volume_up_24"
         android:id="@+id/menu_editor_tech_replaygain"
         android:title="Replaygain"
         app:showAsAction="always" />
+        -->
 </menu>

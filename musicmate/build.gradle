@@ -74,13 +74,9 @@ android {
     }
     packagingOptions {
         resources {
-            excludes += ['META-INF/library_release.kotlin_module', 'META-INF/library-core_release.kotlin_module']
+            excludes += ['META-INF/library_release.kotlin_module', 'META-INF/library-core_release.kotlin_module', 'META-INF/LICENSE.md', 'META-INF/NOTICE.md', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+            pickFirsts += ['META-INF/DEPENDENCIES']
         }
-        pickFirst 'META-INF/DEPENDENCIES'
-        exclude("META-INF/LICENSE.md")
-        exclude("META-INF/NOTICE.md")
-        exclude("META-INF/AL2.0")
-        exclude("META-INF/LGPL2.1")
     }
 
     testOptions {

@@ -98,15 +98,14 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
     public void save(MusicTag tag)   {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            String keyword = escapeString(tag.getUniqueKey());
-
-            if(dao.queryForEq("uniqueKey", keyword).isEmpty()) {
-                dao.update(tag);
-            }else {
+            //if(dao.queryForEq("uniqueKey", tag.getUniqueKey()).isEmpty()) {
+            if(tag.id ==0) {
                 dao.create(tag);
+            }else {
+                dao.update(tag);
             }
         } catch (SQLException e) {
-
+            e.printStackTrace();
         }
     }
 

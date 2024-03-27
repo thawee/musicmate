@@ -33,6 +33,10 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.TagReader;
 import apincer.android.mmate.utils.StringUtils;
+import coil.Coil;
+import coil.ImageLoader;
+import coil.disk.DiskCache;
+import coil.util.CoilUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
 public class TagsTechnicalFragment extends Fragment {
@@ -54,14 +58,14 @@ public class TagsTechnicalFragment extends Fragment {
 
     public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
         return item -> {
-            if(item.getItemId() == R.id.menu_editor_tech_reload) {
+            if(item.getItemId() == R.id.menu_editor_tech_refresh) {
                 doReloadTagFromFile();
             }else if(item.getItemId() == R.id.menu_editor_tech_extract_coverart) {
                 doExtractEmbedCoverart();
             }if(item.getItemId() == R.id.menu_editor_tech_remove_coverart) {
                 doRemoveEmbedCoverart();
-            }if(item.getItemId() == R.id.menu_editor_tech_replaygain) {
-                doUpdateReplayGain();
+           // }if(item.getItemId() == R.id.menu_editor_tech_replaygain) {
+           //     doUpdateReplayGain();
             }
             return false;
         };
@@ -107,9 +111,9 @@ public class TagsTechnicalFragment extends Fragment {
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag, true);
         filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
-        MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getActivity().getApplicationContext(), tag.getPath()).get(0);
+        MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getContext(), tag.getPath()).get(0);
 
-        MusicTag ffmpegTag = FFMPeg.readTagFromFile(getActivity().getApplicationContext(), tag.getPath());
+        MusicTag ffmpegTag = FFMPeg.readTagFromFile(getContext(), tag.getPath());
         metada.setText(String.format("FFmpeg:\n%s", ffmpegTag.getData()));
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -119,7 +123,7 @@ public class TagsTechnicalFragment extends Fragment {
         LinearLayout cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
-        tv0.setText(" Attribute ");
+        tv0.setText(" Field ");
         tv0.setTextColor(Color.WHITE);
         cell.addView(tv0);
         tbrow0.addView(cell);
@@ -230,10 +234,10 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
+                    FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        String path = FFMPeg.removeCoverArt(getActivity().getApplicationContext(), tag);
-                        repos.scanMusicFile(new File(path), true);
+                        FFMPeg.removeCoverArt(getContext(), tag);
+                        repos.scanMusicFile(new File(tag.getPath()), true);
                     }
                 }
         ).thenAccept(
@@ -274,8 +278,9 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
+                    FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
+                        repos.cleanCacheCover(getContext(), tag);
                         repos.scanMusicFile(new File(tag.getPath()), true);
                     }
                 }

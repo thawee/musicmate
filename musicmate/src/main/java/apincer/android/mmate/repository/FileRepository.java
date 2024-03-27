@@ -251,7 +251,7 @@ public class FileRepository {
             TagReader reader = TagReader.getReader(mediaPath);
             // if timestamp is outdated
             if(MusicTagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
-                Log.d(TAG, "Reading -> "+mediaPath);
+                Log.i(TAG, "Reading -> "+mediaPath);
                 List<MusicTag> tags = reader.readMusicTag(getContext(), mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
@@ -540,7 +540,7 @@ public class FileRepository {
 		return status;
     }
 
-    private void cleanCacheCover(Context context, MusicTag item) {
+    public void cleanCacheCover(Context context, MusicTag item) {
         File path = new File(item.getPath());
         String coverFile = MusicCoverArtProvider.getCacheCover(path);
         File dir =  getContext().getExternalCacheDir();

@@ -27,9 +27,14 @@ public class MusicTagRepository {
         lossyAudioFormatList.add("WMA");
     }
 
+    private static String escapeString(String text) {
+        return text.replace("'","''");
+    }
+
     public static void saveTag(MusicTag tag) {
         if(StringUtils.isEmpty(tag.getUniqueKey())) {
-            tag.setUniqueKey(tag.getPath()+"_"+ tag.getAudioStartTime());
+            String keyword = escapeString(tag.getPath()+"_"+ tag.getAudioStartTime());
+            tag.setUniqueKey(keyword);
         }
 
         MusixMateApp.getInstance().getOrmLite().save(tag);
