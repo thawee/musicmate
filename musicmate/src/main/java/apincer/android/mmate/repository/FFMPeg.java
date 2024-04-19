@@ -61,6 +61,18 @@ public class FFMPeg extends TagReader {
         }
     }
 
+    public static void writeCoverArt(MusicTag tag, File pathFile) {
+        if(!isEmpty(tag.getCoverartMime())) {
+            String targetPath = pathFile.getAbsolutePath();
+            targetPath = escapePathForFFMPEG(targetPath);
+            String options = " -c:v copy ";
+
+            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + targetPath + "\"";
+
+            FFmpegKit.execute(cmd); // do not clear the result
+        }
+    }
+
     public static void extractCoverArt(String path, File pathFile) {
         //if(!isEmpty(tag.getEmbedCoverArt())) {
         try {
@@ -273,6 +285,16 @@ public class FFMPeg extends TagReader {
         Log.d(TAG, "FFMpeg -> "+path);
         MusicTag tag = readTagFromFile(context, path);
        // MusicTag tag = readFFprobe(context, path);
+       // detectMQA(tag,50000); // timeout 50 seconds
+        //analystStatFromFile(context, tag,60000); // timeout 50 seconds
+        return Arrays.asList(tag);
+    }
+
+    public List<MusicTag> readFullMusicTag(Context context, String path) {
+        //return readFFprobe(path);
+        Log.d(TAG, "FFMpeg -> "+path);
+        MusicTag tag = readTagFromFile(context, path);
+        // MusicTag tag = readFFprobe(context, path);
         detectMQA(tag,50000); // timeout 50 seconds
         //analystStatFromFile(context, tag,60000); // timeout 50 seconds
         return Arrays.asList(tag);
@@ -1358,7 +1380,7 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
 
         if (targetPath.toLowerCase().endsWith(".flac")) {
             if(cLevel >=0) {
-                options = options + " -y -vn -c:a flac -compression_level " + cLevel; //alac
+                options = options + " -y -vn -c:a flac -compression_level " + cLevel;
             }else {
                 options = options + " -y -vn -c:a flac -compression_level 0 ";
             }

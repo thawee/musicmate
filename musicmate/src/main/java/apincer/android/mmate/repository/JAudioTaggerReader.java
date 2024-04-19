@@ -43,7 +43,6 @@ import java.util.logging.Logger;
 
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.utils.FileUtils;
 
 public class JAudioTaggerReader extends TagReader{
     public JAudioTaggerReader() {
@@ -71,9 +70,26 @@ public class JAudioTaggerReader extends TagReader{
             readFileInfo(context, tag);
             readHeader(read, tag);
             readTags(read, tag);
-            detectMQA(tag);
+            //detectMQA(tag);
             tag.setAudioStartTime(0);
            // detectMQA(tag,5000); // timeout 5 seconds
+            return Collections.singletonList(tag);
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    @Override
+    public List<MusicTag> readFullMusicTag(Context context, String mediaPath) {
+        AudioFile read = getAudioFile(mediaPath);
+        if(read != null) {
+            MusicTag tag = new MusicTag();
+            tag.setPath(mediaPath);
+            readFileInfo(context, tag);
+            readHeader(read, tag);
+            readTags(read, tag);
+            detectMQA(tag);
+            tag.setAudioStartTime(0);
+            // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         }
         return Collections.EMPTY_LIST;
@@ -128,6 +144,7 @@ public class JAudioTaggerReader extends TagReader{
 
     }
 
+    /*
     private static boolean isValidJAudioTagger(String path) {
         try {
             String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
@@ -136,8 +153,7 @@ public class JAudioTaggerReader extends TagReader{
         }catch(Exception ex) {
             return false;
         }
-    }
-
+    }*/
 
     private MusicTag readTags(AudioFile audioFile, MusicTag metadata) {
             Tag tag = audioFile.getTag();

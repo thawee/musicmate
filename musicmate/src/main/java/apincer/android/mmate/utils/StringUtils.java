@@ -632,6 +632,11 @@ public class StringUtils {
         }
     }
 
+    public static long formatDSDRate(long audioBitRate) {
+           return audioBitRate/Constants.QUALITY_SAMPLING_RATE_44;
+         //   return String.valueOf(dBitrate); // String.format(Locale.getDefault(), "%.0f", dBitrate);
+    }
+
     public static String formatAudioBitRateInKbps(long audioBitRate) {
             double dBitrate = audioBitRate/1000.00;
             return String.format(Locale.getDefault(), "%.0f", dBitrate);

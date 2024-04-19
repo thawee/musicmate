@@ -8,7 +8,9 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.SpannableString;
@@ -138,6 +140,7 @@ public class TagsActivity extends AppCompatActivity {
     private void doAnalystDRRG() {
         CompletableFuture.runAsync(
                 () -> {
+                    startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
                         //calculate track RG
                         FFMPeg.detectQuality(tag);
@@ -149,7 +152,8 @@ public class TagsActivity extends AppCompatActivity {
 
                     // may need go reload from db
                     displayTag = buildDisplayTag();
-                    updateTitlePanel();
+                    runOnUiThread(this::updateTitlePanel);
+                    stopProgressBar();
                 }
         );
     }
@@ -346,9 +350,9 @@ public class TagsActivity extends AppCompatActivity {
 
             playerBtn.setVisibility(View.VISIBLE);
             if(refreshOnNewSong) {
-                playerBtn.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
+                playerBtn.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
             }else {
-                playerBtn.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background));
+                playerBtn.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background));
             }
         }else {
             playerBtn.setVisibility(View.GONE);
@@ -369,11 +373,11 @@ public class TagsActivity extends AppCompatActivity {
         imageLoader.enqueue(request);
 
         drView.setText(MusicTagUtils.getTrackDR(displayTag));
-        if(MusicTagUtils.isDSD(displayTag)) { //] || !MusicTagUtils.isLossless(displayTag)) {
+       /* if(MusicTagUtils.isDSD(displayTag)) { //] || !MusicTagUtils.isLossless(displayTag)) {
             drView.setVisibility(View.GONE);
         }else {    // Dynamic Range
             drView.setVisibility(View.VISIBLE);
-        }
+        } */
 
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isPCMHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
@@ -645,6 +649,7 @@ public class TagsActivity extends AppCompatActivity {
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog alertDialog = builder.create();
         alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+       // alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alertDialog.show();
     }
 
@@ -804,6 +809,21 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    public void startProgressBar(final String label) {
+        runOnUiThread(() -> {
+            try {
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
+                dialogBuilder.setView(R.layout.progress_dialog_layout);
+                dialogBuilder.setCancelable(true);
+                progressDialog = dialogBuilder.create();
+                progressDialog.setCanceledOnTouchOutside(true);
+                progressDialog.show();
+            }catch (Exception ex) {
+                Log.e(TAG, "startProgressBar",ex);
+            }
+        });
+    }
+
     public void startProgressBar() {
         runOnUiThread(() -> {
             try {
@@ -812,6 +832,7 @@ public class TagsActivity extends AppCompatActivity {
                 dialogBuilder.setCancelable(true);
                 progressDialog = dialogBuilder.create();
                 progressDialog.setCanceledOnTouchOutside(true);
+                progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 progressDialog.show();
             }catch (Exception ex) {
                 Log.e(TAG, "startProgressBar",ex);

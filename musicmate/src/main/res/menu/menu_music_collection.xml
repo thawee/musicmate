@@ -20,13 +20,13 @@
     <item
         android:icon="@drawable/ic_round_library_music_24"
         android:id="@+id/menu_all_music"
-        android:title="My Songs"
+        android:title="Library"
         app:showAsAction="always" />
 
     <item
         android:icon="@drawable/ic_round_local_play_24"
         android:id="@+id/menu_groupings"
-        android:title="Groupings"
+        android:title="Grouping"
         app:showAsAction="always" />
 <!--
     <item

@@ -170,4 +170,10 @@
         <item>Thai Lounge</item>
         <item>World</item>
     </string-array>
+    <string-array name="file_qualities">
+        <item>Audiophile</item>
+        <item>Recommended</item>
+        <item>Good</item>
+        <item>Bad</item>
+    </string-array>
 </resources>

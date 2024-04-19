@@ -234,7 +234,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            if (isEmpty(keyword) || Constants.QUALITY_NORMAL.equals(keyword)) {
+            if (isEmpty(keyword)) {
                 builder.where().raw("mediaQuality is null order by title, artist");
                 return builder.query();
             } else {
@@ -427,7 +427,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            Where where = builder.where();
+            Where<MusicTag, ?> where = builder.where();
             if(EMPTY.equals(grouping)) {
                 where.isNull("grouping").or().eq("grouping", "");
             }else {
@@ -496,5 +496,16 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             id =0;
         }
         return id;
+    }
+
+    public List<MusicTag> findNoEmbedCoverArtSong() {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().raw("coverartMime is null or coverartMime = '' order by title, artist");
+            return builder.query();
+        } catch (SQLException e) {
+            return Collections.EMPTY_LIST;
+        }
     }
 }

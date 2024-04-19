@@ -246,13 +246,14 @@ public class FileRepository {
             String mediaPath = file.getAbsolutePath();
             long lastModified = file.lastModified();
             if(forceRead) {
-                lastModified = System.currentTimeMillis()+2000;
+               // lastModified = System.currentTimeMillis()+2000;
+                lastModified = -1;
             }
             TagReader reader = TagReader.getReader(mediaPath);
             // if timestamp is outdated
             if(MusicTagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
                 Log.i(TAG, "Reading -> "+mediaPath);
-                List<MusicTag> tags = reader.readMusicTag(getContext(), mediaPath);
+                List<MusicTag> tags = reader.readFullMusicTag(getContext(), mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
                         String matePath = buildCollectionPath(tag);

@@ -112,7 +112,42 @@
 				   <!--
 				    app:tpv_image_aspect_ratio="1.848485"
 				   -->
-
+				   <RelativeLayout
+					   android:layout_width="match_parent"
+					   android:layout_height="@dimen/dimen_48_dp"
+					   android:background="@color/transparent">
+					   <com.skydoves.elasticviews.ElasticLayout
+						   android:id="@+id/title_panel"
+						   android:gravity="start"
+						   android:orientation="vertical"
+						   android:layout_width="@dimen/dimen_150_dp"
+						   android:layout_height="match_parent"
+						   android:background="@drawable/tab_start_bg">
+						   <TextView
+							   android:id="@+id/title_label"
+							   android:layout_width="match_parent"
+							   android:layout_height="match_parent"
+							   android:textAppearance="@style/TitleTextStyle"
+							   android:textColor="@color/material_color_grey_400"
+							   android:textStyle="bold|italic"
+							   android:gravity="center_vertical"
+							   android:paddingStart="@dimen/dimen_8_dp"
+							   android:paddingBottom="@dimen/dimen_8_dp"
+							   android:drawablePadding="@dimen/dimen_4_dp"
+							   android:text="MusicMate"/>
+					   </com.skydoves.elasticviews.ElasticLayout>
+					   <TextView
+							android:id="@+id/title_text"
+							android:layout_toRightOf="@id/title_panel"
+									android:layout_width="wrap_content"
+									android:layout_height="match_parent"
+									android:textAppearance="@style/TitleTextStyle"
+									android:textColor="@color/white"
+									android:gravity="center_vertical"
+									android:paddingStart="@dimen/dimen_16_dp"
+									android:text="..."/>
+				   </RelativeLayout>
+<!--
 				   <com.google.android.material.tabs.TabLayout
 					   app:tabTextAppearance="@style/TabTextAppearance"
 					   android:id="@+id/header_tab"
@@ -135,22 +170,24 @@
 					   app:tabIndicatorAnimationMode="elastic"
 					   android:contentDescription="labels header"
 					   tools:ignore="HardcodedText" />
+					   -->
 				   <!--
 				    app:tabPaddingStart="@dimen/dimen_16_dp"
 					   app:tabPaddingEnd="@dimen/dimen_16_dp"
 				   		app:tabMode="scrollable"
 				   -->
-				   <TextView
-					   android:id="@+id/header_subtitle"
-					   android:layout_width="match_parent"
-					   android:layout_height="wrap_content"
-					   android:layout_marginTop="@dimen/dimen_2_dp"
-					   android:paddingLeft="@dimen/dimen_12_dp"
-					   android:paddingRight="@dimen/dimen_12_dp"
-					   android:paddingBottom="@dimen/dimen_4_dp"
-					   android:textColor="@color/grey300"
-					   android:textSize="8pt"
-					   android:gravity="center"/>
+
+					   <TextView
+						   android:id="@+id/header_subtitle"
+						   android:layout_width="match_parent"
+						   android:layout_height="wrap_content"
+						   android:layout_marginTop="@dimen/dimen_4_dp"
+						   android:paddingLeft="@dimen/dimen_12_dp"
+						   android:paddingRight="@dimen/dimen_12_dp"
+						   android:paddingBottom="@dimen/dimen_8_dp"
+						   android:textColor="@color/material_color_grey_400"
+						   android:textSize="8pt"
+						   android:gravity="center"/>
 				   <View
 					   android:layout_width="match_parent"
 					   android:layout_height="2dp"

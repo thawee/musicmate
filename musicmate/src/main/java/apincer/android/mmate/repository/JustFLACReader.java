@@ -48,6 +48,27 @@ public class JustFLACReader extends TagReader{
             tag.setFileFormat("flac");
             readFileInfo(context,tag);
            // tag.setFileSizeRatio(getFileSizeRatio(tag));
+           // detectMQA(tag,5000); // timeout 5 seconds
+            return Collections.singletonList(tag);
+        } catch (Exception e) {
+            Log.e(TAG, "ReadMusicTag: "+e.getMessage());
+        }
+        return null;
+    }
+
+    public List<MusicTag> readFullMusicTag(Context context, String mediaPath) {
+        Log.d(TAG, "JustFLAC -> "+mediaPath);
+        try {
+            MusicTag tag = new MusicTag();
+            FileInputStream is = new FileInputStream(mediaPath);
+            FLACDecoder decoder = new FLACDecoder(is);
+            decoder.addFrameListener(new MetadataReader(tag));
+            decoder.decode();
+            tag.setPath(mediaPath);
+            tag.setAudioEncoding("flac");
+            tag.setFileFormat("flac");
+            readFileInfo(context,tag);
+            // tag.setFileSizeRatio(getFileSizeRatio(tag));
             detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         } catch (Exception e) {

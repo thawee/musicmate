@@ -5,20 +5,20 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '8.3.1', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 30, // support running on android 11 ot higher
         targetSdk          : 33, // required 33 for photopicker, android 13
         compileSdk         : 34, //33, // required 33 for photopicker
-        buildTools         : '35.0.0-rc2', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '35.0.0-rc3', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
         kotlin             : '1.9.23', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '11.1.1', //''10.8.3', //''10.3.1',
+        aboutlibraries     : '11.1.3', //''10.8.3', //''10.3.1',
         //versionsCheck      : '0.42.
         ]
 
@@ -45,15 +45,15 @@ apache.httpclient = "org.apache.httpcomponents:httpclient:4.5.14"
 apache.httpcore = "org.apache.httpcomponents:httpcore:4.4.16"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.16.1"
-apache.commons_io = "commons-io:commons-io:2.15.1"
-apache.commons_logging = "commons-logging:commons-logging:1.3.0"
+apache.commons_io = "commons-io:commons-io:2.16.1" //2.15.1"
+apache.commons_logging = "commons-logging:commons-logging:1.3.1"
 deps.apache = apache
 
 def androidx = [:]
 //https://developer.android.com/jetpack/androidx/releases/core
-androidx.core = "androidx.core:core:1.12.0" //
+androidx.core = "androidx.core:core:1.13.0" //
 //https://developer.android.com/jetpack/androidx/releases/activity
-androidx.activity = "androidx.activity:activity:1.8.2" //1.4.0"
+androidx.activity = "androidx.activity:activity:1.9.0" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.7.1"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
@@ -131,16 +131,16 @@ deps.maps = maps
 
 def retrofit = [:]
 //https://github.com/square/retrofit/releases
-retrofit.runtime = "com.squareup.retrofit2:retrofit:2.9.0" //23/06/2019
-retrofit.gson = "com.squareup.retrofit2:converter-gson:2.9.0" //23/06/2019
-retrofit.mock = "com.squareup.retrofit2:retrofit-mock:2.9.0" //23/06/2019
+retrofit.runtime = "com.squareup.retrofit2:retrofit:2.11.0" //2.9.0" //23/06/2019
+retrofit.gson = "com.squareup.retrofit2:converter-gson:2.11.0" //2.9.0" //23/06/2019
+retrofit.mock = "com.squareup.retrofit2:retrofit-mock:2.11.0" //2.9.0" //23/06/2019
 //https://github.com/square/okhttp/tree/master/okhttp-logging-interceptor
 retrofit.okhttp_logging_interceptor = "com.squareup.okhttp3:logging-interceptor:4.9.2"
 deps.retrofit = retrofit
 
 def fasterxml = [:]
-fasterxml.jackson_core = "com.fasterxml.jackson.core:jackson-core:2.16.0" //2.16.1 not work
-fasterxml.jackson_databind = "com.fasterxml.jackson.core:jackson-databind:2.16.0"
+fasterxml.jackson_core = "com.fasterxml.jackson.core:jackson-core:2.17.0" //2.16.1 not work
+fasterxml.jackson_databind = "com.fasterxml.jackson.core:jackson-databind:2.17.0"
 deps.fasterxml = fasterxml
 
 def dagger = [:]
@@ -267,6 +267,8 @@ ui.groupie = 'com.github.lisawray.groupie:groupie:2.10.1'
 
 //https://github.com/amarjain07/StickyScrollView
 ui.StickyScrollView= 'com.github.amarjain07:StickyScrollView:1.0.3'
+//https://github.com/gabriel-TheCode/AestheticDialogs
+ui.AestheticDialogs='com.github.gabriel-TheCode:AestheticDialogs:1.3.8'
 deps.ui = ui
 
 def epoxy = [:]

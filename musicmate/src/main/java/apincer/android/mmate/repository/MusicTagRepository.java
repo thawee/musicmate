@@ -68,7 +68,9 @@ public class MusicTagRepository {
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGeners();
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
-                    list.add(StringUtils.EMPTY);
+                    if(!list.contains(StringUtils.EMPTY)) {
+                        list.add(StringUtils.EMPTY);
+                    }
                 }else {
                     list.add(group);
                 }
@@ -114,7 +116,9 @@ public class MusicTagRepository {
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGrouping();
         for (String group:names) {
             if(StringUtils.isEmpty(group)) {
-                list.add(StringUtils.EMPTY);
+                if(!list.contains(StringUtils.EMPTY)) {
+                    list.add(StringUtils.EMPTY);
+                }
             }else {
                 list.add(group);
             }
@@ -177,6 +181,8 @@ public class MusicTagRepository {
                     list = MusixMateApp.getInstance().getOrmLite().findMyNoneDRSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
+                } else if (Constants.TITLE_NO_COVERART.equals(criteria.getKeyword())) {
+                    list = MusixMateApp.getInstance().getOrmLite().findNoEmbedCoverArtSong();
                 }
             } else if (criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
                 list = MusixMateApp.getInstance().getOrmLite().findByPublisher(criteria.getKeyword());
@@ -274,14 +280,15 @@ public class MusicTagRepository {
     public static boolean cleanOutdatedMusicTag(String mediaPath, long lastModified) {
         // clean all existing outdated tag in database
         List<MusicTag> tags = findByPath(mediaPath);
-        if(tags ==null || tags.size()==0) return true;
-        if(tags.get(0).getFileLastModified() < lastModified) {
-            for (MusicTag tag : tags) {
+        if(tags ==null || tags.isEmpty()) return true;
+        boolean toRead = false;
+        for (MusicTag tag : tags) {
+            if((lastModified < 0) || tag.getFileLastModified() < lastModified) {
                 removeTag(tag);
+                toRead = true;
             }
-            return true;
         }
-        return false;
+        return toRead;
     }
 
     public static void load(MusicTag tag) {

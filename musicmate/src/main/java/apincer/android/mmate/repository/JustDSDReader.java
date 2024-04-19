@@ -116,6 +116,11 @@ public class JustDSDReader extends TagReader{
         return null;
     }
 
+    @Override
+    public List<MusicTag> readFullMusicTag(Context context, String path) {
+        return readMusicTag(context,path);
+    }
+
     private void readJSON(MusicTag metadata) {
         try {
             File f = new File(metadata.getPath());

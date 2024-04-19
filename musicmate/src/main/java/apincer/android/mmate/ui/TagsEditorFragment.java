@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toLowwerCase;
 
 import android.content.Context;
@@ -27,12 +26,14 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.skydoves.powermenu.CircularEffect;
 import com.skydoves.powermenu.MenuAnimation;
 import com.skydoves.powermenu.PowerMenu;
 import com.skydoves.powermenu.PowerMenuItem;
+import com.skydoves.powerspinner.IconSpinnerAdapter;
+import com.skydoves.powerspinner.IconSpinnerItem;
+import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -51,6 +52,7 @@ import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.utils.UIUtils;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
 import coil.Coil;
@@ -79,9 +81,10 @@ public class TagsEditorFragment extends Fragment {
     private TextInputEditText txtGrouping;
     private TextInputEditText txtMediaType;
     private TextInputEditText txtPublisher;
-    private MaterialRadioButton rdAudiophile;
-    private MaterialRadioButton rdRecommended;
-    private MaterialRadioButton rdRegular;
+   // private MaterialRadioButton rdAudiophile;
+   // private MaterialRadioButton rdRecommended;
+   // private MaterialRadioButton rdRegular;
+    private PowerSpinnerView fileQuality;
     private PowerMenu powerMenu;
     private volatile boolean bypassChange = false;
 
@@ -113,9 +116,11 @@ public class TagsEditorFragment extends Fragment {
         txtMediaType = v.findViewById(R.id.input_media_type);
         txtPublisher = v.findViewById(R.id.input_publisher);
         // quality
-        rdAudiophile = v.findViewById(R.id.mediaQualityAudioPhile);
-        rdRecommended = v.findViewById(R.id.mediaQualityRecommended);
-        rdRegular = v.findViewById(R.id.mediaQualityRegular);
+        //rdAudiophile = v.findViewById(R.id.mediaQualityAudioPhile);
+        //rdRecommended = v.findViewById(R.id.mediaQualityRecommended);
+        //rdRegular = v.findViewById(R.id.mediaQualityRegular);
+        fileQuality = v.findViewById(R.id.mediaFileQuality);
+        setupFileQualityList(fileQuality);
 
         // popup list
         setupListValuePopup(txtArtist, MusicTagRepository.getArtistList(), 3, false);
@@ -126,6 +131,25 @@ public class TagsEditorFragment extends Fragment {
         setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1, true);
 
         return v;
+    }
+
+    private void setupFileQualityList(PowerSpinnerView fileQuality) {
+       // fileQuality.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener<Object>() {
+       // });
+        List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Audiophile"));
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Recommended"));
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Good"));
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Bad"));
+        fileQuality.setItems(iconSpinnerItems);
+        IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(fileQuality);
+        fileQuality.setSpinnerAdapter(iconSpinnerAdapter);
+        fileQuality.setItems(iconSpinnerItems);
+        fileQuality.setLifecycleOwner(this);
+    }
+
+    private IconSpinnerItem createIconSpinnerItem(Context context, String title) {
+        return new IconSpinnerItem(title, UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
     }
 
     private void setupListValuePopup(TextInputEditText textInput, @NonNull List<String> defaultList, int minChar, boolean autoSelect) {
@@ -163,7 +187,7 @@ public class TagsEditorFragment extends Fragment {
                                 .setTextSize(12)
                                 .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
                                 .setSelectedTextColor(Color.WHITE)
-                                .setMenuColor(ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_100))
+                                .setMenuColor(ContextCompat.getColor(context, R.color.material_color_blue_grey_100))
                                 .setSelectedMenuColor(ContextCompat.getColor(context, R.color.colorPrimary))
                                 .setAutoDismiss(true)
                                 .setOnMenuItemClickListener((position, item) -> {
@@ -398,10 +422,20 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private String buildQualityTag() {
-        if (rdAudiophile.isChecked()) {
+       /* if (rdAudiophile.isChecked()) {
             return Constants.QUALITY_AUDIOPHILE;
         } else if (rdRecommended.isChecked()) {
             return Constants.QUALITY_RECOMMENDED;
+        }*/
+        int indx = fileQuality.getSelectedIndex();
+        if(indx ==0) {
+            return Constants.QUALITY_AUDIOPHILE;
+        }else  if(indx ==1) {
+            return Constants.QUALITY_RECOMMENDED;
+        }else  if(indx ==2) {
+            return Constants.QUALITY_GOOD;
+        }else  if(indx ==3) {
+            return Constants.QUALITY_BAD;
         }
         return "";
     }
@@ -481,9 +515,18 @@ public class TagsEditorFragment extends Fragment {
         txtAlbumArtist.invalidate();
 
         // quality
-        rdAudiophile.setChecked(Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality()));
-        rdRecommended.setChecked(Constants.QUALITY_RECOMMENDED.equalsIgnoreCase(tag.getMediaQuality()));
-        rdRegular.setChecked(isEmpty(tag.getMediaQuality()));
+        //rdAudiophile.setChecked(Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality()));
+        //rdRecommended.setChecked(Constants.QUALITY_RECOMMENDED.equalsIgnoreCase(tag.getMediaQuality()));
+        //rdRegular.setChecked(isEmpty(tag.getMediaQuality()));
+        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+            fileQuality.selectItemByIndex(0);
+        }else if(Constants.QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
+            fileQuality.selectItemByIndex(1);
+        }else if(Constants.QUALITY_GOOD.equals(tag.getMediaQuality())) {
+            fileQuality.selectItemByIndex(2);
+        }else if(Constants.QUALITY_BAD.equals(tag.getMediaQuality())) {
+            fileQuality.selectItemByIndex(3);
+        }
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {
@@ -511,6 +554,7 @@ public class TagsEditorFragment extends Fragment {
                 dialogBuilder.setView(R.layout.progress_dialog_layout);
                 dialogBuilder.setCancelable(false);
                 progressDialog = dialogBuilder.create();
+                progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 progressDialog.show();
             }catch (Exception ex) {
                 Log.e(TAG, "startProgressBar",ex);

@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.TagReader;

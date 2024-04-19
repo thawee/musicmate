@@ -20,7 +20,7 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
         android:textSize="14sp"
-        android:text="Encode to FLAC format"
+        android:text="Encoding audio files"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>
@@ -35,9 +35,30 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:orientation="horizontal"
             android:layout_weight="1">
+            <com.skydoves.powerspinner.PowerSpinnerView
+                android:id="@+id/audioEncoding"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/black_transparent_64"
+                android:gravity="center"
+                android:hint="@string/label_encoding"
+                android:padding="10dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:textSize="14.5sp"
+                app:spinner_arrow_gravity="end"
+                app:spinner_arrow_padding="8dp"
+                app:spinner_divider_color="@color/white"
+                app:spinner_divider_show="true"
+                app:spinner_divider_size="0.4dp"
+                app:spinner_item_height="46dp"
+                app:spinner_popup_animation="dropdown"
+                app:spinner_popup_background="@color/black_transparent_64"
+                app:spinner_popup_elevation="14dp" />
+            <!--
             <RadioGroup
                 android:id="@+id/mediaEncoding"
                 android:layout_width="match_parent"
@@ -71,7 +92,7 @@
                     android:paddingLeft="@dimen/dimen_8_dp"
                     android:textColor="@color/white"
                     android:text="FLAC (Optimal)"/>
-
+-->
                 <!--
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/mediaEncodingMPEG"
@@ -85,7 +106,9 @@
                     android:background="@drawable/shape_edittext_border"
                     android:textColor="@color/white"
                     android:text="MPEG"/> -->
+            <!--
             </RadioGroup>
+            -->
             <!--
             <TextView
                 android:layout_width="wrap_content"

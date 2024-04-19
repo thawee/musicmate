@@ -178,6 +178,7 @@
             -->
     <color name="black_transparent_98">#FA000000</color>
     <color name="black_transparent_80">#CC000000</color>
+    <color name="black_transparent_64">#A3000000</color>
     <color name="black_transparent_50">#80000000</color>
     <color name="black_transparent_40">#66000000</color>
     <color name="black_transparent_25">#40000000</color>
@@ -226,8 +227,8 @@
     <color name="resolution_pcm_88">#FFFFFF</color>
     <color name="resolution_dsd_64_128">#00FFFF</color>
     <color name="resolution_dsd_256">#FF0000</color>
-    <color name="resolution_mqa">#00FF00</color>
-    <color name="resolution_mqa_studio">#0000FF</color>
+    <color name="resolution_mqa">#4CAF50</color>
+    <color name="resolution_mqa_studio">#2196F3</color>
 
     <color name="quality_hd">#ffb300</color>
     <color name="quality_h24bits">#FEDD55</color>
@@ -303,6 +304,7 @@
     <color name="mqa_master">#4CAF50</color>
     <color name="mqa_studio">#2196F3</color>
     <color name="mqa_cd">#ffeeeeee</color>
+    <color name="dsd_256">#2196F3</color>
 
     <!--
     https://m3.material.io/theme-builder#/custom

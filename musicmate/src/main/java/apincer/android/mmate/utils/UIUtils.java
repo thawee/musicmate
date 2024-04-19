@@ -203,6 +203,10 @@ public class UIUtils  {
         return wrapDrawable;
     }
 
+    public static Drawable toDrawable(Context context, Bitmap bitmap) {
+        return new BitmapDrawable(context.getResources(), bitmap);
+    }
+
     /**
      * Get a color value from a theme attribute.
      * @param context used for getting the color.

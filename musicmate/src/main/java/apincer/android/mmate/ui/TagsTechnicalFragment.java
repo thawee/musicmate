@@ -27,16 +27,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagReader;
 import apincer.android.mmate.utils.StringUtils;
-import coil.Coil;
-import coil.ImageLoader;
-import coil.disk.DiskCache;
-import coil.util.CoilUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
 public class TagsTechnicalFragment extends Fragment {
@@ -71,6 +66,7 @@ public class TagsTechnicalFragment extends Fragment {
         };
     }
 
+    /*
     private void doUpdateReplayGain() {
         // calculate RG
         // update RG on files
@@ -98,7 +94,7 @@ public class TagsTechnicalFragment extends Fragment {
                     return null;
                 }
         );
-    }
+    } */
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -237,7 +233,7 @@ public class TagsTechnicalFragment extends Fragment {
                     FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
                         FFMPeg.removeCoverArt(getContext(), tag);
-                        repos.scanMusicFile(new File(tag.getPath()), true);
+                        repos.scanMusicFile(new File(tag.getPath()), false);
                     }
                 }
         ).thenAccept(

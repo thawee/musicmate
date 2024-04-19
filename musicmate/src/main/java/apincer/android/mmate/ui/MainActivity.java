@@ -1,5 +1,10 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.Constants.TITLE_DSD;
+import static apincer.android.mmate.Constants.TITLE_GENRE;
+import static apincer.android.mmate.Constants.TITLE_GROUPING;
+import static apincer.android.mmate.Constants.TITLE_LIBRARY;
+import static apincer.android.mmate.Constants.TITLE_PCM;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
@@ -15,6 +20,7 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.transition.Slide;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -56,13 +62,15 @@ import com.anggrayudi.storage.file.StorageId;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayout.OnTabSelectedListener;
-import com.heaven7.android.trapezoid.TrapezoidPartsView;
 import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.skydoves.powermenu.MenuAnimation;
+import com.skydoves.powermenu.PowerMenu;
+import com.skydoves.powermenu.PowerMenuItem;
+import com.skydoves.powerspinner.IconSpinnerAdapter;
+import com.skydoves.powerspinner.IconSpinnerItem;
+import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -133,8 +141,8 @@ import sakout.mehdi.StateViews.StateView;
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
-    private static final int RECYCLEVIEW_ITEM_POSITION_OFFSET=16; //start scrolling from 4 items
-    private static final int RECYCLEVIEW_ITEM_OFFSET= 48; // scroll item to offset+1 position on list
+    private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET= 16; //start scrolling from 4 items
+    private static final int RECYCLEVIEW_ITEM_OFFSET= 48; //48; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
     private static final int MENU_ID_QUALITY_PCM = 55550000;
     private static final double MAX_PROGRESS_BLOCK = 10.00;
@@ -160,7 +168,10 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar mExitSnackbar;
     //private View mSearchBar;
     private View mHeaderPanel;
-    private TrapezoidPartsView mHeaderTPV;
+    private View titlePanel;
+    private TextView titleLabel;
+    private TextView titleText;
+    //private TrapezoidPartsView mHeaderTPV;
     private SearchView mSearchView;
     //private ImageView mSearchViewSwitch;
 
@@ -177,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView nowPlayingOutputDevice;
 
     // header panel
-    TabLayout headerTab;
+    //TabLayout headerTab;
     TextView headerSubtitle;
 
     // open tag timer
@@ -224,11 +235,12 @@ public class MainActivity extends AppCompatActivity {
             TextView name = view.findViewById(R.id.name);
             TextView status = view.findViewById(R.id.status);
             seq.setText(String.valueOf(i+1));
-            if(statusList.containsKey(tag)) {
+            status.setText(statusList.getOrDefault(tag, "-"));
+           /* if(statusList.containsKey(tag)) {
                 status.setText(statusList.get(tag));
             }else {
                 status.setText("-");
-            }
+            }*/
             name.setText(FileSystem.getFilename(tag.getPath()));
             return view;
         }
@@ -272,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     boolean status = repos.deleteMediaItem(tag);
                     if(status) {
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, Constants.STATUS_SUCCESS, tag);
                         EventBus.getDefault().postSticky(message);
                         statusList.put(tag, "Deleted");
                     }else {
@@ -311,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Import to Music directory");
+        titleText.setText(R.string.title_import_to_music_directory);
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -336,11 +348,12 @@ public class MainActivity extends AppCompatActivity {
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
-                if(statusList.containsKey(tag)) {
+                status.setText(statusList.getOrDefault(tag, "-"));
+               /* if(statusList.containsKey(tag)) {
                     status.setText(statusList.get(tag));
                 }else {
                     status.setText("-");
-                }
+                }*/
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
@@ -391,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                         boolean status = repos.importAudioFile(tag);
                         if(status) {
-                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, tag);
+                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, tag);
                             EventBus.getDefault().postSticky(message);
                             statusList.put(tag, "Done");
                         }else {
@@ -642,9 +655,18 @@ public class MainActivity extends AppCompatActivity {
     private void setUpHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
 
-        headerTab = findViewById(R.id.header_tab);
+        titlePanel = findViewById(R.id.title_panel);
+        titleLabel = findViewById(R.id.title_label);
+        titleText = findViewById(R.id.title_text);
+        titleText.setOnClickListener(v -> {
+            adapter.resetFilter();
+            adapter.setKeyword(titleText.getText().toString());
+            refreshLayout.autoRefresh();
+        });
+
+       // headerTab = findViewById(R.id.header_tab);
         headerSubtitle = findViewById(R.id.header_subtitle);
-        headerTab.addOnTabSelectedListener(new OnTabSelectedListener(){
+        /*headerTab.addOnTabSelectedListener(new OnTabSelectedListener(){
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if(!onSetup) {
@@ -665,7 +687,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
-        });
+        }); */
     }
 
     private void loadDataSets(Bundle startIntent) {
@@ -811,16 +833,21 @@ public class MainActivity extends AppCompatActivity {
     private void scrollToPosition(int position, boolean offset) {
         if(position != RecyclerView.NO_POSITION) {
             if(offset) {
-                int positionWithOffset = position - RECYCLEVIEW_ITEM_POSITION_OFFSET;
+                int positionWithOffset = position - RECYCLEVIEW_ITEM_SCROLLING_OFFSET;
                 if (positionWithOffset < 0) {
                     positionWithOffset = 0;
                 }
                 mRecyclerView.scrollToPosition(positionWithOffset);
-                LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-                Objects.requireNonNull(layoutManager).scrollToPositionWithOffset(position, RECYCLEVIEW_ITEM_OFFSET);
-            }else {
-                mRecyclerView.scrollToPosition(position);
             }
+            if(position-1 >RecyclerView.NO_POSITION) {
+                // show as 2nd item on screen
+                position = position -1;
+            }
+            LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            Objects.requireNonNull(layoutManager).scrollToPositionWithOffset(position,RECYCLEVIEW_ITEM_OFFSET);
+            //}else {
+            //    mRecyclerView.scrollToPosition(position);
+            //}
         }
     }
 
@@ -999,18 +1026,6 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    /*
-    private void doShowEditActivity(MusicTag mediaItem) {
-        if(FileRepository.isMediaFileExist(mediaItem)) {
-            ArrayList<MusicTag> tagList = new ArrayList<>();
-            tagList.add(mediaItem);
-            AudioTagEditEvent message = new AudioTagEditEvent("edit", adapter.getCriteria(), tagList);
-            EventBus.getDefault().postSticky(message);
-            Intent myIntent = new Intent(MainActivity.this, TagsActivity.class);
-            editorLauncher.launch(myIntent);
-        }
-    }*/
-
     private void doShowEditActivity(List<MusicTag> selections) {
         ArrayList<MusicTag> tagList = new ArrayList<>();
         for(MusicTag tag: selections) {
@@ -1019,7 +1034,7 @@ public class MainActivity extends AppCompatActivity {
             }else {
                 new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
                     .setTitle("Problem")
-                    .setMessage(getString(R.string.alert_invalid_media_file, tag.getTitle()))
+                    .setMessage(getString(R.string.alert_invalid_media_file, tag.getPath()))
                     .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                         repos.deleteMediaItem(tag);
                         adapter.loadDataSets();
@@ -1047,7 +1062,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         EditText targetURL = cview.findViewById(R.id.targetURL);
         EditText targetIP = cview.findViewById(R.id.targetIP);
-        targetURL.setText("Sync to Streaming Server");
+        targetURL.setText(R.string.title_sync_to_streaming_server);
         targetIP.setVisibility(View.GONE);
 
         itemsView.setAdapter(new BaseAdapter() {
@@ -1074,11 +1089,12 @@ public class MainActivity extends AppCompatActivity {
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
-                if(doneList.containsKey(tag)) {
+                status.setText(doneList.getOrDefault(tag,"-"));
+                /*if(doneList.containsKey(tag)) {
                     status.setText(doneList.get(tag));
                 }else {
                     status.setText("-");
-                }
+                } */
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
@@ -1120,7 +1136,7 @@ public class MainActivity extends AppCompatActivity {
                 for(MusicTag tag: selections) {
                     try {
                         doneList.put(tag, "Sending");
-                        runOnUiThread(() -> itemsView.invalidateViews());
+                        runOnUiThread(itemsView::invalidateViews);
                         streamer.sync(getApplicationContext(), tag);
                         doneList.put(tag, "Done");
                         runOnUiThread(() -> {
@@ -1304,6 +1320,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateHeaderPanel() {
        // mHeaderTPV.setParts(createTrapezoidParts());
 
+        /*
         headerTab.removeAllTabs();
         onSetup = true;
         List<String> titles = adapter.getHeaderTitles(getApplicationContext());
@@ -1329,6 +1346,61 @@ public class MainActivity extends AppCompatActivity {
             i++;
         }
         onSetup = false;
+         */
+
+        List<String> titles = adapter.getHeaderTitles(getApplicationContext());
+        String headerTitle = adapter.getHeaderTitle();
+        titlePanel.setOnClickListener(v -> {
+            List<PowerMenuItem> items = new ArrayList<>();
+            titles.forEach(s -> items.add(new PowerMenuItem(s)));
+            int height = UIUtils.getScreenHeight(this)/2;
+            int width = UIUtils.getScreenWidth(this)/2;
+            PowerMenu powerMenu = new PowerMenu.Builder(this)
+                    .setWidth(width)
+                    .setHeight(height)
+                    .setLifecycleOwner(MainActivity.this)
+                    .addItemList(items) // list has "Novel", "Poetry", "Art"
+                    .setAnimation(MenuAnimation.SHOWUP_TOP_LEFT) // Animation start point (TOP | LEFT).
+                    .setMenuRadius(8f) // sets the corner radius.
+                    .setMenuShadow(8f) // sets the shadow.
+                    .setTextColor(ContextCompat.getColor(getBaseContext(), R.color.grey200))
+                    .setTextGravity(Gravity.START)
+                    .setTextSize(14)
+                   // .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
+                    .setSelectedTextColor(Color.WHITE)
+                    .setMenuColor(ContextCompat.getColor(getBaseContext(), R.color.black_transparent_80))
+                    .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
+                    .setAutoDismiss(true)
+                    .setSelectedEffect(false)
+                    .setOnMenuItemClickListener((position, item) -> {
+                        adapter.resetFilter();
+                        adapter.setKeyword(String.valueOf(item.title));
+                        refreshLayout.autoRefresh();
+                    })
+                    .build();
+           // powerMenu.setShowBackground(false); // do not showing background.
+           // int height = powerMenu.getContentViewHeight();
+           // int height = 480;
+            powerMenu.showAsDropDown(titleLabel); //,0, (-1)*height*(items.size()+1)); // view is an anchor
+        });
+
+        String label = adapter.getHeaderLabel();
+        Drawable icon = null;
+        if(TITLE_LIBRARY.equals(label)) {
+            icon = ContextCompat.getDrawable(getBaseContext(),R.drawable.ic_round_library_music_24);
+        }else  if(TITLE_GENRE.equals(label)) {
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_style_24);
+        } else if(TITLE_GROUPING.equals(label)) {
+                icon = ContextCompat.getDrawable(getBaseContext(),R.drawable.ic_round_local_play_24);
+        } else if(TITLE_PCM.equals(label)) {
+            icon = UIUtils.getTintedDrawable(getBaseContext(), R.drawable.ic_sound_wave, Color.WHITE);
+        } else if(TITLE_DSD.equals(label)) {
+            icon = ContextCompat.getDrawable(getBaseContext(),R.drawable.ic_format_dsd_white);
+        }
+        //titleLabel.setCompoundDrawablePadding(2);
+        titleLabel.setCompoundDrawablesWithIntrinsicBounds(icon,null,null,null);
+        titleLabel.setText(label);
+        titleText.setText(headerTitle);
 
         int count = adapter.getTotalSongs();
         long totalSize = adapter.getTotalSize();
@@ -1462,7 +1534,7 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
-        titleText.setText("Dynamic Range and ReplayGain");
+        titleText.setText(R.string.title_dynamic_range_and_replay_gain);
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1487,11 +1559,12 @@ public class MainActivity extends AppCompatActivity {
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
-                if(statusList.containsKey(tag)) {
+                status.setText(statusList.getOrDefault(tag, "-"));
+               /* if(statusList.containsKey(tag)) {
                     status.setText(statusList.get(tag));
                 }else {
                     status.setText("-");
-                }
+                } */
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
@@ -1534,9 +1607,7 @@ public class MainActivity extends AppCompatActivity {
                 MusicMateExecutors.move(() -> {
                     try {
                         statusList.put(tag, "Analysing");
-                        runOnUiThread(() -> {
-                            itemsView.invalidateViews();
-                        });
+                        runOnUiThread(itemsView::invalidateViews);
                         //calculate track RG
                         FFMPeg.detectQuality(tag);
                         //write RG to file
@@ -1623,8 +1694,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void doEncodingAudioFiles(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
-        // convert WAVE to AIFF, FLAC, ALAC
-        // convert AIFF to WAVE, FLAC, ALAC
+        // convert WAVE to FLAC, ALAC
+        // convert AIFF to FLAC, ALAC
         // convert FLAC to ALAC
         // convert ALAC to FLAC
 
@@ -1632,6 +1703,41 @@ public class MainActivity extends AppCompatActivity {
 
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
+        PowerSpinnerView encodingList = cview.findViewById(R.id.audioEncoding);
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
+      //  List<String> encodingItems = new ArrayList<>();
+        if(MusicTagUtils.isAIFFile(selections.get(0)) ||
+                MusicTagUtils.isWavFile(selections.get(0)) ||
+                MusicTagUtils.isDSD(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
+            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Level 0)", null));
+            iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
+          //  encodingItems.add("Apple Lossless Audio Codec (ALAC)");
+           // encodingItems.add("Free Lossless Audio Codec (FLAC)");
+          //  encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
+        }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
+           // encodingItems.add("Apple Lossless Audio Codec (ALAC)");
+        }else if(MusicTagUtils.isALACFile(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
+            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Level 0)", null));
+         //   encodingItems.add("Free Lossless Audio Codec (FLAC)");
+         //   encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
+        }
+        IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(encodingList);
+        encodingList.setSpinnerAdapter(iconSpinnerAdapter);
+        encodingList.setItems(iconSpinnerItems);
+        if(!iconSpinnerItems.isEmpty()) {
+            encodingList.selectItemByIndex(0);
+            btnOK.setEnabled(true);
+        }
+        encodingList.setLifecycleOwner(this);
+
+       // encodingList.
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1656,22 +1762,19 @@ public class MainActivity extends AppCompatActivity {
                 TextView name = view.findViewById(R.id.name);
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
-                if(statusList.containsKey(tag)) {
+                status.setText(statusList.getOrDefault(tag, "-"));
+                /*if(statusList.containsKey(tag)) {
                     status.setText(statusList.get(tag));
                 }else {
                     status.setText("-");
-                }
+                }*/
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
         });
 
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
-
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-        MaterialRadioButton btnFlacOptimal = cview.findViewById(R.id.mediaEncodingFLACOPT);
-        MaterialRadioButton btnFlac = cview.findViewById(R.id.mediaEncodingFLAC);
+       // MaterialRadioButton btnFlacOptimal = cview.findViewById(R.id.mediaEncodingFLACOPT);
+       // MaterialRadioButton btnFlac = cview.findViewById(R.id.mediaEncodingFLAC);
        /* if(MusicTagUtils.isALACFile(selections.get(0))) {
             btnFlacOptimal.setEnabled(false);
             btnFlac.setEnabled(true);
@@ -1686,10 +1789,10 @@ public class MainActivity extends AppCompatActivity {
        //         btnOK.setEnabled(true);
        // }else {
            // btnAlac.setEnabled(true);
-            btnFlacOptimal.setEnabled(true);
-            btnFlac.setEnabled(true);
-            btnFlacOptimal.setChecked(true);
-            btnOK.setEnabled(true);
+           // btnFlacOptimal.setEnabled(true);
+          //  btnFlac.setEnabled(true);
+           // btnFlacOptimal.setChecked(true);
+
       //  }
 
         double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
@@ -1715,20 +1818,31 @@ public class MainActivity extends AppCompatActivity {
 
         btnOK.setOnClickListener(v -> {
             busy = true;
-            int cLevel = 0; // for flac 0 un-compressed, 8 most compress
+            int cLevel = 4; // for flac 0 un-compressed, 8 most compress
             String targetExt = "FLAC";
-            if(btnFlacOptimal.isChecked()) {
+
+            IconSpinnerItem item = iconSpinnerItems.get(encodingList.getSelectedIndex());
+            if("FLAC (Optimal)".equals(item.getText())) {
+                targetExt = "FLAC";
+                cLevel = 4; // default is 5
+            }else if("FLAC (Level 0)".equals(item.getText())) {
+                targetExt = "FLAC";
+                cLevel = -1;
+            }else if("ALAC".equals(item.getText())) {
+                targetExt = "M4A";
+            }
+          /*  if(btnFlacOptimal.isChecked()) {
                // targetExt = "m4a";
                 cLevel = 4;
             }else {
                // compressLevel = 2; // 5 = default, 0 less, 8 most compress
                // targetExt = "FLAC";
                 cLevel = -1;
-            }
+            } */
 
-            if(isEmpty(targetExt)) {
-                return;
-            }
+          //  if(isEmpty(targetExt)) {
+          //      return;
+          //  }
 
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
 
@@ -1751,7 +1865,7 @@ public class MainActivity extends AppCompatActivity {
 
                         if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
                             statusList.put(tag, "Done");
-                            repos.scanMusicFile(new File(targetPath),false); // re scan file
+                            repos.scanMusicFile(new File(targetPath),true); // re scan file
                             runOnUiThread(() -> {
                                     int pct = progressBar.getProgress();
                                     progressBar.setProgress((int) (pct+rate));

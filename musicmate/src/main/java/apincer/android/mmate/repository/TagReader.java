@@ -42,12 +42,12 @@ public abstract class TagReader {
         /**
          * File Suffix
          */
-        private String filesuffix;
+        private final String filesuffix;
 
         /**
          * User Friendly Name
          */
-        private String displayName;
+        private final String displayName;
 
         /** Constructor for internal use by this enum.
          */
@@ -80,9 +80,6 @@ public abstract class TagReader {
     protected static final String KEY_TAG_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
     protected static final String KEY_TAG_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
     protected static final String KEY_TAG_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS"; // for reset existing value
-   // protected static final String KEY_TAG_MQA_ORIGINAL_SAMPLERATE = "ORIGINALSAMPLERATE";
-
-   // protected static final String KEY_MM_TRACK_DYNAMIC_RANGE = "ZDYNAMIC_RANGE_TRACK";
 
     protected static final String KEY_TAG_QUALITY = "QUALITY";
     protected static final String KEY_TAG_MEDIA = "MEDIA";
@@ -157,4 +154,6 @@ public abstract class TagReader {
     }
 
     public abstract List<MusicTag> readMusicTag(Context context, String mediaPath);
+
+    public abstract List<MusicTag> readFullMusicTag(Context context, String mediaPath);
 }

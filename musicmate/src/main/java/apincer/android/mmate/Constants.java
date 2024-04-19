@@ -14,8 +14,8 @@ import java.util.List;
 public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
-    public static final String QUALITY_POOR = "Poor";
-    public static final String QUALITY_NORMAL = "Regular";
+    public static final String QUALITY_BAD = "Bad";
+    public static final String QUALITY_GOOD = "Good";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
@@ -34,9 +34,10 @@ public final class Constants {
     public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;
 
    // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
+   public static final long QUALITY_SAMPLING_RATE_96 = 96000;
     public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static final int QUALITY_SAMPLING_RATE_48 = 48000;
-   // public static final int QUALITY_SAMPLING_RATE_44 = 44100;
+    public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_CD = 16;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
@@ -59,6 +60,14 @@ public final class Constants {
     public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
    // public static final String PREF_PREVIEW_FOLLW_NOW_PLAYING = "preference_preview_follows_now_playing";
     public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
+    public static final String TITLE_LIBRARY = "Library";
+    public static final String TITLE_GROUPING = "Grouping";
+    public static final String TITLE_GENRE = "Genre";
+    public static final String TITLE_PUBLISHER = "Publisher";
+    public static final String TITLE_PCM = "PCM";
+    public static final String TITLE_QUALITY = "File Quality";
+    public static final String TITLE_DSD = "DSD";
+    public static final String TITLE_NO_COVERART = "No Embed Cover Art";
 
     public static String FIELD_SEP = ";";
    public static double MIN_TITLE = 0.80;

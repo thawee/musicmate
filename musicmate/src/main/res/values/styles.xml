@@ -210,7 +210,7 @@ M2
         <item name="elevation">0dp</item>
         <item name="materialAlertDialogTitleTextStyle">@style/SignalPathTitleTextStyle</item>
         <item name="materialAlertDialogBodyTextStyle">@style/SignalPathBodyTextStyle</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
 
@@ -232,23 +232,43 @@ M2
         <item name="elevation">0dp</item>
         <item name="materialAlertDialogTitleTextStyle">@style/TitleTextStyle</item>
         <item name="materialAlertDialogBodyTextStyle">@style/BodyTextStyle</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
 
     <!--
 M2
 <style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog
+<style name="AlertDialogTheme" parent="Theme.MaterialComponents.Dialog">
 -->
-    <style name="AlertDialogTheme" parent="Theme.MaterialComponents.Dialog"> <!--parent="ThemeOverlay.Material3.MaterialAlertDialog"> -->
-        <item name="colorSurface">@color/grey400</item>
-        <item name="elevation">0dp</item>
+    <style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog"> <!--parent="ThemeOverlay.Material3.MaterialAlertDialog"> -->
+        <item name="colorSurface">@color/black_transparent_80</item>
+        <!-- Title -->
+        <item name="materialAlertDialogTitleTextStyle">@style/MyMaterialComponents.Title.Text</item>
+
+        <!-- Body -->
+        <item name="materialAlertDialogBodyTextStyle">@style/MyMaterialComponents.Body.Text</item>
+        <item name="elevation">4dp</item>
+        <!--
         <item name="materialAlertDialogTitleTextStyle">@style/TitleTextStyle</item>
         <item name="materialAlertDialogBodyTextStyle">@style/BodyTextStyle</item>
+        -->
         <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="buttonBarNeutralButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
+    </style>
+    <style name="MyMaterialComponents.Title.Text" parent="@style/MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAppearance">@style/TitleTextStyle</item>
+    </style>
+
+    <style name="MyMaterialComponents.Body.Text" parent="@style/MaterialAlertDialog.MaterialComponents.Body.Text">
+        <item name="android:textColor">@color/grey200</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/itim_regular</item>
     </style>
     <!--
     M2
@@ -271,21 +291,32 @@ M2
  M2
  <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
  -->
-    <style name="PositiveButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">#d81b60</item>
-        <item name="rippleColor">#3F51B5</item>
-    </style>
-    <!--
-M2
-<style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
--->
-    <style name="NegativeButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">#757575</item>
+    <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/white</item>
         <item name="rippleColor">#a4a4a4</item>
+        <item name="shapeAppearanceOverlay">@style/RoundedShapeAppearance</item>
     </style>
-    <style name="ShapeAppearanceOverlay.MyApp.Dialog.Rounded" parent="">
+    <!-- M2
+    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+    Widget.MaterialComponents.Button.OutlinedButton
+    -->
+    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/colorAccent_light</item>
+        <item name="rippleColor">#a4a4a4</item>
+        <item name="shapeAppearanceOverlay">@style/RoundedShapeAppearance</item>
+    </style>
+
+    <style name="RoundedShapeAppearance" parent="">
+        <item name="cornerFamilyTopLeft">rounded</item>
+        <item name="cornerFamilyBottomLeft">rounded</item>
+        <item name="cornerFamilyTopRight">cut</item>
+        <item name="cornerFamilyBottomRight">cut</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Dialog.Rounded" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">14dp</item>
+        <item name="cornerSize">16dp</item>
     </style>
 
     <declare-styleable name="TriStateToggleButton">
@@ -317,7 +348,7 @@ M2
         <item name="elevation">0dp</item>
         <item name="materialAlertDialogTitleTextStyle">@style/SignalPathTitleTextStyle</item>
         <item name="materialAlertDialogBodyTextStyle">@style/SignalPathBodyTextStyle</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
 
