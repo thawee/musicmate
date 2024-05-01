@@ -301,7 +301,7 @@ M2
     Widget.MaterialComponents.Button.OutlinedButton
     -->
     <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="android:textColor">@color/colorAccent_light</item>
+        <item name="android:textColor">@color/material_color_red_900</item>
         <item name="rippleColor">#a4a4a4</item>
         <item name="shapeAppearanceOverlay">@style/RoundedShapeAppearance</item>
     </style>

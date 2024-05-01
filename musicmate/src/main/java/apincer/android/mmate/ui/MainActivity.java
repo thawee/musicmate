@@ -21,7 +21,6 @@ import android.provider.Settings;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -168,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar mExitSnackbar;
     //private View mSearchBar;
     private View mHeaderPanel;
-    private View titlePanel;
+    //private View titlePanel;
     private TextView titleLabel;
     private TextView titleText;
     //private TrapezoidPartsView mHeaderTPV;
@@ -199,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
 
-    private boolean onSetup = true;
+   // private boolean onSetup = true;
     private int positionToScroll = -1;
 
     private void doDeleteMediaItems(List<MusicTag> selections) {
@@ -227,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
             return 0;
         }
 
+        @SuppressLint({"ViewHolder", "InflateParams"})
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
@@ -340,6 +340,7 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
 
+            @SuppressLint({"ViewHolder", "InflateParams"})
             @Override
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
@@ -426,7 +427,7 @@ public class MainActivity extends AppCompatActivity {
                                 progressBar.invalidate();
                                 itemsView.invalidateViews();
                             });
-                        }catch (Exception ex) {}
+                        }catch (Exception ignored) {}
                     }
                 });
             }
@@ -480,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
                                         nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
                                         nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
                                         nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
-                                    }catch (Exception ex){}
+                                    }catch (Exception ignored){}
                                 });
                             });
                         }catch (Exception ex) {
@@ -655,7 +656,7 @@ public class MainActivity extends AppCompatActivity {
     private void setUpHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
 
-        titlePanel = findViewById(R.id.title_panel);
+        //titlePanel = findViewById(R.id.title_panel);
         titleLabel = findViewById(R.id.title_label);
         titleText = findViewById(R.id.title_text);
         titleText.setOnClickListener(v -> {
@@ -1081,6 +1082,7 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
 
+            @SuppressLint({"ViewHolder", "InflateParams"})
             @Override
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
@@ -1154,7 +1156,7 @@ public class MainActivity extends AppCompatActivity {
                                 itemsView.invalidateViews();
                                 progressBar.invalidate();
                             });
-                        } catch (Exception e) {
+                        } catch (Exception ignored) {
                         }
                     }
                 }
@@ -1279,15 +1281,16 @@ public class MainActivity extends AppCompatActivity {
         mStateView.hideStates();
     }
 
+    /*
     public View getTabView(String title) {
         // Given you have a custom layout in `res/layout/custom_tab.xml` with a TextView and ImageView
-        View v = LayoutInflater.from(this).inflate(R.layout.view_header_tab_item, null);
+        @SuppressLint("InflateParams") View v = LayoutInflater.from(this).inflate(R.layout.view_header_tab_item, null);
         TextView hv = v.findViewById(R.id.tabHeader);
         hv.setText(StringUtils.getAbvByUpperCase(title));
         TextView tv = v.findViewById(R.id.tabTitle);
         tv.setText(title);
         return v;
-    }
+    } */
 
     /*
     private List<TrapezoidPartsView.TrapezoidPart> createTrapezoidParts() {
@@ -1350,7 +1353,7 @@ public class MainActivity extends AppCompatActivity {
 
         List<String> titles = adapter.getHeaderTitles(getApplicationContext());
         String headerTitle = adapter.getHeaderTitle();
-        titlePanel.setOnClickListener(v -> {
+       /* titlePanel.setOnClickListener(v -> {
             List<PowerMenuItem> items = new ArrayList<>();
             titles.forEach(s -> items.add(new PowerMenuItem(s)));
             int height = UIUtils.getScreenHeight(this)/2;
@@ -1382,7 +1385,7 @@ public class MainActivity extends AppCompatActivity {
            // int height = powerMenu.getContentViewHeight();
            // int height = 480;
             powerMenu.showAsDropDown(titleLabel); //,0, (-1)*height*(items.size()+1)); // view is an anchor
-        });
+        }); */
 
         String label = adapter.getHeaderLabel();
         Drawable icon = null;
@@ -1401,6 +1404,39 @@ public class MainActivity extends AppCompatActivity {
         titleLabel.setCompoundDrawablesWithIntrinsicBounds(icon,null,null,null);
         titleLabel.setText(label);
         titleText.setText(headerTitle);
+        titleText.setOnClickListener(v -> {
+            List<PowerMenuItem> items = new ArrayList<>();
+            titles.forEach(s -> items.add(new PowerMenuItem(s)));
+            int height = UIUtils.getScreenHeight(this)/2;
+            int width = UIUtils.getScreenWidth(this)/2;
+            PowerMenu powerMenu = new PowerMenu.Builder(this)
+                    .setWidth(width)
+                    .setHeight(height)
+                    .setLifecycleOwner(MainActivity.this)
+                    .addItemList(items) // list has "Novel", "Poetry", "Art"
+                    .setAnimation(MenuAnimation.SHOWUP_TOP_LEFT) // Animation start point (TOP | LEFT).
+                    .setMenuRadius(16f) // sets the corner radius.
+                    .setMenuShadow(8f) // sets the shadow.
+                    .setTextColor(ContextCompat.getColor(getBaseContext(), R.color.grey200))
+                    .setTextGravity(Gravity.CENTER)
+                    .setTextSize(16)
+                   // .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
+                    .setSelectedTextColor(Color.WHITE)
+                    .setMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary_light))
+                    .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
+                    .setAutoDismiss(true)
+                    .setSelectedEffect(false)
+                    .setOnMenuItemClickListener((position, item) -> {
+                        adapter.resetFilter();
+                        adapter.setKeyword(String.valueOf(item.title));
+                        refreshLayout.autoRefresh();
+                    })
+                    .build();
+           // powerMenu.setShowBackground(false); // do not showing background.
+           // int height = powerMenu.getContentViewHeight();
+           // int height = 480;
+            powerMenu.showAsDropDown(titleText, -96, 0); //,0, (-1)*height*(items.size()+1)); // view is an anchor
+        });
 
         int count = adapter.getTotalSongs();
         long totalSize = adapter.getTotalSize();
@@ -1520,8 +1556,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private List<MusicTag> getSelections() {
-            List<MusicTag> list = new ArrayList<>(selections);
-            return list;
+            return new ArrayList<>(selections);
         }
     }
 
@@ -1551,6 +1586,7 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
 
+            @SuppressLint({"ViewHolder", "InflateParams"})
             @Override
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
@@ -1634,7 +1670,7 @@ public class MainActivity extends AppCompatActivity {
                                 progressBar.invalidate();
                                 itemsView.invalidateViews();
                             });
-                        }catch (Exception ex) {}
+                        }catch (Exception ignored) {}
                     }
                 });
             }
@@ -1688,7 +1724,7 @@ public class MainActivity extends AppCompatActivity {
         } finally {
             try {
                 out.close();
-            }catch (Exception ex) {}
+            }catch (Exception ignored) {}
         }
     }
 
@@ -1754,6 +1790,7 @@ public class MainActivity extends AppCompatActivity {
                 return 0;
             }
 
+            @SuppressLint({"ViewHolder", "InflateParams"})
             @Override
             public View getView(int i, View view, ViewGroup viewGroup) {
                 view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);

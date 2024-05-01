@@ -278,22 +278,23 @@
                         android:background="@drawable/shape_play_next_background"
                         android:src="@drawable/ic_baseline_skip_next_24"
                         /> -->
-
-                    <ImageButton
-                        android:id="@+id/music_player"
-                        android:layout_width="@dimen/dimen_48_dp"
-                        android:layout_height="@dimen/dimen_48_dp"
-                        app:fabSize="normal"
+                    <com.skydoves.elasticviews.ElasticLayout
+                        android:id="@+id/music_player_panel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/shape_play_next_background"
                         android:layout_marginTop="@dimen/dimen_24_dp"
                         android:layout_marginEnd="@dimen/dimen_6_dp"
-                        android:contentDescription="Music Player"
-                        android:layout_gravity="end"
+                        android:layout_gravity="end">
+                    <ImageView
+                        android:id="@+id/music_player"
+                        android:layout_width="@dimen/dimen_32_dp"
+                        android:layout_height="@dimen/dimen_32_dp"
                         android:visibility="visible"
-                        app:tint="@color/white"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:background="@drawable/shape_play_next_background"
-                        android:src="@drawable/ic_baseline_skip_next_24"
+                        android:layout_margin="@dimen/dimen_6_dp"
+                        android:src="@drawable/bg_transparent"
                         />
+                    </com.skydoves.elasticviews.ElasticLayout>
 
                     <TextView
                         android:id="@+id/panel_title"
@@ -307,9 +308,9 @@
                         android:layout_marginEnd="@dimen/dimen_1_dp"
                         android:layout_gravity="top|center_horizontal"
                         android:fontFamily="@font/sfthonburi_regular"
-                        android:textColor="@android:color/white"
+                        android:textColor="@android:color/holo_green_light"
                         android:textStyle="bold"
-                        android:textSize="16sp"/>
+                        android:textSize="18sp"/>
 
                     <LinearLayout
                         android:layout_width="wrap_content"

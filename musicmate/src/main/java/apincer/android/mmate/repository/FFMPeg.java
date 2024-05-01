@@ -899,6 +899,7 @@ public class FFMPeg extends TagReader {
         return tags;
     }
 
+    @SuppressLint("DefaultLocale")
     private static String getMetadataTrackKeysForMp4(MusicTag tag) {
         String tags = getMetadataTrackKey(KEY_TAG_MP4_TITLE, tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_MP4_ALBUM, tag.getAlbum()) +
@@ -918,6 +919,37 @@ public class FFMPeg extends TagReader {
              //   getMetadataTrackKey(KEY_TAG_MP4_RATING, tag.getRating()) +
                 getMetadataTrackKey(KEY_TAG_MP4_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_MP4_YEAR, tag.getYear());
+        if(tag.getDynamicRangeMeter() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_MM_TRACK_DYNAMIC_RANGE, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_MM_TRACK_DYNAMIC_RANGE, tag.getDynamicRangeMeter());
+        }
+
+        tags = tags +
+                getMetadataTrackKey(KEY_TAG_TRACK_LOUDNESS, "");
+
+        if(tag.getTrackRG() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TAG_TRACK_GAIN, "") +
+                    getMetadataTrackKey(KEY_TAG_TRACK_PEAK, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_TAG_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
+                    getMetadataTrackKey(KEY_TAG_TRACK_PEAK, String.format("%,.6f", tag.getTrackTP()));
+        }
+        tags = tags +
+                getMetadataTrackKey(KEY_TAG_ALBUM_GAIN, "") +
+                getMetadataTrackKey(KEY_TAG_ALBUM_PEAK, "");
+
+        if(tag.getDynamicRange() == 0.0) {
+            tags = tags +
+                    getMetadataTrackKey(KEY_MM_MEASURED_DR, "");
+        }else {
+            tags = tags +
+                    getMetadataTrackKey(KEY_MM_MEASURED_DR, tag.getDynamicRange());
+        }
         return tags;
     }
 

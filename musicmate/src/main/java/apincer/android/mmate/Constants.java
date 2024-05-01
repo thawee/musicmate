@@ -76,25 +76,17 @@ public final class Constants {
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     static {
         IMAGE_COVERS.add("front.png");
-       // IMAGE_COVERS.add("cover.png");
+        IMAGE_COVERS.add("cover.png");
         IMAGE_COVERS.add("folder.png"); // not supported by UAPP
-       // IMAGE_COVERS.add("artwork.png"); // supported by UAAP
         IMAGE_COVERS.add("front.jpg"); // support by neplayer
-       // IMAGE_COVERS.add("cover.jpg");
+        IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
-      //  IMAGE_COVERS.add("artwork.jpg"); // UAAP
-     //   IMAGE_COVERS.add("front.jpeg");
-     //   IMAGE_COVERS.add("cover.jpeg");
-      //  IMAGE_COVERS.add("folder.jpeg"); // not supported by UAPP
-        //symphonic-mpd
-        //
     }
 
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
     static {
         RELATED_FILE_TYPES.add("png");
         RELATED_FILE_TYPES.add("jpg");
-        RELATED_FILE_TYPES.add("jpeg");
         RELATED_FILE_TYPES.add("lrc");
         RELATED_FILE_TYPES.add("pdf");
         RELATED_FILE_TYPES.add("md5");
@@ -160,10 +152,9 @@ public final class Constants {
   //  public static final String MEDIA_TYPE_NONE = "-";
 
     public static List<String> getSourceList(Context context) {
-    List<String> list = new ArrayList<>();
-     String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);
-     list.addAll(Arrays.asList(srcs));
-     Collections.sort(list);
+        String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);
+        List<String> list = new ArrayList<>(Arrays.asList(srcs));
+        Collections.sort(list);
 
     return list;
  }

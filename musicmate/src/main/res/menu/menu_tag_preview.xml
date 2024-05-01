@@ -20,7 +20,7 @@
     <item
         android:id="@+id/menu_preview_calculate_dr"
         android:icon="@drawable/round_troubleshoot_24"
-        android:title="Analyst DR/RG"
+        android:title="Analyst MDR&amp;RG"
         app:showAsAction="always" />
 <!--
     <item

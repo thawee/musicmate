@@ -154,18 +154,24 @@ public class MusicTagRepository {
     }
 
     public static List<MusicTag> findMediaTag(SearchCriteria criteria) {
+        List<MusicTag> results = findMediaTagOrEmpty(criteria);
+        if(results.isEmpty()) {
+            // try again
+            results =  findMediaTagOrEmpty(criteria);
+        }
+        return results;
+    }
+
+    private static List<MusicTag> findMediaTagOrEmpty(SearchCriteria criteria) {
         try {
-            return  searchMediaTag(criteria);
-        }catch (IllegalStateException e) {
+            return findMediaTagByCriteria(criteria);
+        }catch (Exception e) {
             // retry one more time
-            try {
-                return searchMediaTag(criteria);
-            }catch (Exception ex) {
-                return Collections.EMPTY_LIST;
-            }
+            return Collections.EMPTY_LIST;
         }
     }
-    private static List<MusicTag> searchMediaTag(SearchCriteria criteria) {
+
+    private static List<MusicTag> findMediaTagByCriteria(SearchCriteria criteria) {
         List<MusicTag> list = new ArrayList<>();
         if (criteria.isSearchMode()) {
             // search title only, limit 5 songs
@@ -222,12 +228,13 @@ public class MusicTagRepository {
         return list;
     }
 
+    /*
     public static void populateAudioTag(MusicTag md) {
         MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(md.getId());
         if(tag != null) {
             md.cloneFrom(tag);
         }
-    }
+    }*/
 
     public static MusicTag getMusicTag(long id) {
         return MusixMateApp.getInstance().getOrmLite().findById(id);
@@ -316,9 +323,10 @@ public class MusicTagRepository {
         return MusixMateApp.getInstance().getOrmLite().findByGroupingAndArtist(grouping, artist);
     }
 
+    /*
     public static long getTotalSongCont() {
         return MusixMateApp.getInstance().getOrmLite().getTotalSongCont();
-    }
+    }*/
 
     public static long getMaxId() {
         return MusixMateApp.getInstance().getOrmLite().getMaxId();

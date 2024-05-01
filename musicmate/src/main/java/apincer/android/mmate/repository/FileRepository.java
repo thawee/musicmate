@@ -138,11 +138,30 @@ public class FileRepository {
             coverDir = mediaFile.getParentFile();
         }
 
-        for (String f : Constants.IMAGE_COVERS) {
-            File cover = new File(coverDir, f);
-            if(cover.exists())  {
+        // get cover file with same name as audio file
+        String ext = FileUtils.getExtension(mediaFile);
+        if(!(isEmpty(ext) && mediaFile.isDirectory())) {
+            String artFile = path.replace("." + ext, ".jpg");
+            File cover = new File(artFile);
+            if (cover.exists()) {
                 coverFile = cover;
-                break;
+            } else {
+                artFile = path.replace("." + ext, ".png");
+                cover = new File(artFile);
+                if (cover.exists()) {
+                    coverFile = cover;
+                }
+            }
+        }
+
+        // get folder images
+        if(coverFile == null) {
+            for (String f : Constants.IMAGE_COVERS) {
+                File cover = new File(coverDir, f);
+                if (cover.exists()) {
+                    coverFile = cover;
+                    break;
+                }
             }
         }
         return coverFile;
@@ -317,13 +336,14 @@ public class FileRepository {
             String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
             boolean addArtist2title = false;
             if("Various Artists".equals(albumArtist)) {
-                if(isEmpty(metadata.getPublisher())) {
+                /*if(isEmpty(metadata.getPublisher())) {
                     filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
                 }else {
                     filename.append(StringUtils.getAbvByUpperCase(metadata.getPublisher())).append(File.separator);
-                }
+                } */
                 addArtist2title = true;
-            }else if(!isEmpty(albumArtist)) {
+            }//else if(!isEmpty(albumArtist)) {
+            if(!isEmpty(albumArtist)) {
                 filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
             }else if (!isEmpty(artist)) {
                 filename.append(StringUtils.formatTitle(artist)).append(File.separator);

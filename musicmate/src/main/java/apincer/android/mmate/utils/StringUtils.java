@@ -517,7 +517,7 @@ public class StringUtils {
 
 
     public static String formatAudioBitsDepth(int bit) {
-            return String.format(Locale.getDefault(), "%dbits", bit);
+            return String.format(Locale.getDefault(), "%d Bits", bit);
     }
 
     public static String formatAudioSampleRate(long rate,boolean includeUnit) {
