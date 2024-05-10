@@ -530,14 +530,18 @@ public class TagsActivity extends AppCompatActivity {
             SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
             spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
 
-            // bps
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
-
+            // DR
             if(MusicTagUtils.isLossless(displayTag)) {
                 spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
                 spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
             }
+
+            // bps
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP))
                     .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
@@ -626,6 +630,7 @@ public class TagsActivity extends AppCompatActivity {
                 .setTitle("Delete Songs")
                 .setMessage(text)
                 .setPositiveButton("DELETE", (dialogInterface, i) -> {
+                    startProgressBar();
                     if(getEditItems().size()==1) {
                         MusicMateExecutors.update(() -> {
                             try {
@@ -645,10 +650,11 @@ public class TagsActivity extends AppCompatActivity {
                         }
                         setResult(RESULT_OK, resultIntent);
                     }
+
                     if(MusixMateApp.getPlayerInfo() == null || !refreshOnNewSong) {
                         finish(); // back to prev activity
-                    }else {
-                        startProgressBar();
+                    //}else {
+                    //    startProgressBar();
                     }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -688,17 +694,18 @@ public class TagsActivity extends AppCompatActivity {
         AlertDialog alertDialog = builder.create();
         alertDialog.getWindow().setGravity(Gravity.BOTTOM);
         alertDialog.show(); */
-
+        startProgressBar();
         ImportAudioFileWorker.startWorker(getApplicationContext(), editItems);
         Intent resultIntent = new Intent();
         if(criteria!=null) {
             ApplicationUtils.setSearchCriteria(resultIntent,criteria);
         }
         setResult(RESULT_OK, resultIntent);
+
         if(MusixMateApp.getPlayerInfo() == null || !refreshOnNewSong) {
             finish(); // back to prev activity
-        }else {
-            startProgressBar();
+       // }else {
+       //     startProgressBar();
         }
     }
 
@@ -858,11 +865,12 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void stopProgressBar() {
-        runOnUiThread(() -> {
-            if(progressDialog!=null) {
+        if(progressDialog!=null) {
+            runOnUiThread(() -> {
+
                 progressDialog.dismiss();
                 progressDialog = null;
-            }
-        });
+            });
+        }
     }
 }

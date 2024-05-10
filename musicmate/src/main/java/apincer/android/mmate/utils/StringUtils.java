@@ -517,15 +517,15 @@ public class StringUtils {
 
 
     public static String formatAudioBitsDepth(int bit) {
-            return String.format(Locale.getDefault(), "%d Bits", bit);
+            return String.format(Locale.getDefault(), "%d Bit", bit);
     }
 
     public static String formatAudioSampleRate(long rate,boolean includeUnit) {
-        String unit = "kHz";
+        String unit = " kHz";
         String str;
         double factor = 1000.00;
         if(rate > 1000000) {
-            unit = "MHz";
+            unit = " MHz";
             factor = 1000000.00;
             double s = rate / factor;
             str = String.format(Locale.getDefault(),"%.1f", s);

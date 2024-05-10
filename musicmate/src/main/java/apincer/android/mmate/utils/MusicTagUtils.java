@@ -1571,9 +1571,10 @@ public class MusicTagUtils {
     public static String getDynamicRangeSAsString(MusicTag tag) {
         String text = "";
         if(tag.getDynamicRange()==0.00) {
-            text = " - ";
+            text = " - dB";
         }else {
-            text = String.format(Locale.US, "%.2f dB", tag.getDynamicRange());
+           // text = String.format(Locale.US, "%.2f dB", tag.getDynamicRange());
+            text = String.format(Locale.US, "%.0f dB", tag.getDynamicRange());
         }
 
         return text;

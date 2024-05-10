@@ -133,6 +133,8 @@ dependencies {
     implementation deps.androidx.loader
     implementation deps.androidx.localbroadcastmanager
     implementation deps.androidx.drawerlayout
+
+    implementation deps.jetbrains.annotations
     // room
     //implementation deps.androidx.room
     //annotationProcessor deps.androidx.room_compiler
@@ -293,10 +295,9 @@ dependencies {
     implementation project(':library:JustFLAC')
     implementation project(':library:library')
     implementation project(':library:androidtagview')
-    implementation 'org.jetbrains:annotations:24.1.0'
     implementation project(':library:jaudiotagger-android')
     debugImplementation project(':library:crashreporter')
-    implementation project(':library:MaterialEditText')
+   // implementation project(':library:MaterialEditText')
     implementation project(':library:mqaidentifier')
    // implementation project(':library:coroutines')
     implementation project(':library:objectrelations')

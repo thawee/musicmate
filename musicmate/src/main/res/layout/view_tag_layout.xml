@@ -275,7 +275,7 @@
                     android:layout_height="wrap_content"
                     android:paddingTop="@dimen/dimen_2_dp"
                     android:fontFamily="@font/k2d_bold"
-                    android:textSize="10sp"
+                    android:textSize="8sp"
                     android:text="[FLAC|16-bit|44.1 kHz|2 ch|2 mins|17.40 MB]"
                     android:gravity="center|bottom"
                     android:singleLine="true"
