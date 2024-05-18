@@ -52,9 +52,9 @@ public class MusicTagRepository {
                 String path = mdata.getPath();
                 if(!FileRepository.isMediaFileExist(path) || mdata.getFileSize()==0.00) {
                     removeTag(mdata);
-                }else if(!mdata.getUniqueKey().equals(mdata.getPath()+"_"+ mdata.getAudioStartTime())) {
+                //}else if(!mdata.getUniqueKey().equals(mdata.getPath()+"_"+ mdata.getAudioStartTime())) {
                     // old files
-                    removeTag(mdata);
+                //    removeTag(mdata);
                 }
             }
         } catch (Exception e) {

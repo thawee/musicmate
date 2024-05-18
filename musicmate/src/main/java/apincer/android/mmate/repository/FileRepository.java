@@ -311,13 +311,10 @@ public class FileRepository {
             }
 
             if (metadata.isSACDISO()) {
-                //encSuffix="-MQA";
                 filename.append(Constants.MEDIA_PATH_SACD);
             }else if (MusicTagUtils.isMQA(metadata)) {
-                //encSuffix="-MQA";
                 filename.append(Constants.MEDIA_PATH_MQA);
             }else if (MusicTagUtils.isPCMHiRes(metadata)) {
-                //encSuffix="-HRA";
                 filename.append(Constants.MEDIA_PATH_HRA);
             }else if(MusicTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);
@@ -325,7 +322,6 @@ public class FileRepository {
                 filename.append(Constants.MEDIA_PATH_HIFI);
             }else {
                 filename.append(Constants.MEDIA_PATH_HIGH_QUALITY);
-                //filename.append(formatTitle(metadata.getFileFormat()));
             }
             filename.append(File.separator);
 

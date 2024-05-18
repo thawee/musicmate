@@ -10,29 +10,35 @@ import java.io.IOException;
 import java.util.List;
 
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MediaServer;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.utils.FileUtils;
 
 public class SyncMusic {
-    private final String      host = "10.100.1.198";
-    private final int         port=22;
-    private final String      username= "tc"; //"pi"; "tc";
-    private final String      password= "piCore"; //piCore";  "raspberry";
+    MediaServer server;
+   // private final String      host = "10.100.1.198";
+  //  private final int         port=22;
+   // private final String      username= "tc"; //"pi"; "tc";
+   // private final String      password= "piCore"; //piCore";  "raspberry";
 
-    private final String      music_path = "/mnt/USB"; ///var/lib/mpd/music/INT"; //""/mnt/mmcblk0p3/music";
+  //  private final String      music_path = "/mnt/USB"; ///var/lib/mpd/music/INT"; //""/mnt/mmcblk0p3/music";
     private final String      radio_path= "/var/lib/mympd/webradios"; //""/mnt/mmcblk0p3/playlists";
     private final String      playlists_path = "/var/lib/mpd/playlists"; ///var/lib/mpd/playlists"; //""/mnt/mmcblk0p3/playlists";
 
+    public SyncMusic(MediaServer server) {
+        this.server = server;
+    }
+
     public void sync(Context context, MusicTag tag) throws IOException {
-        String targetPath = FileRepository.newInstance(context).buildCollectionPath(tag, false);
-       // if(targetPath.startsWith("Music/")) {
-        //    targetPath = targetPath.substring(6);
-       // }
-        String targetDir = appendIfMissing(music_path, "/")+FileUtils.getFolderName(targetPath);
+        String targetPath = tag.getSimpleName(); // FileRepository.newInstance(context).buildCollectionPath(tag, false);
+        if(targetPath.startsWith("Music/")) {
+            targetPath = targetPath.substring(6);
+        }
+        String targetDir = appendIfMissing(server.getPath(), "/")+FileUtils.getFolderName(targetPath);
         String targetFilename = FileUtils.getFullFileName(targetPath);
         SFTPClient client = new SFTPClient();
         try {
-            client.connect(host, port, username, password);
+            client.connect(server.getIp(), server.getPort(), server.getUsername(), server.getPassword());
             client.mkdirs(targetDir);
             client.uploadFile(tag.getPath(),  targetDir,targetFilename);
             // send image file if existed
@@ -59,7 +65,7 @@ public class SyncMusic {
         String targetFilename = FileUtils.getFullFileName(filename);
         SFTPClient client = new SFTPClient();
         try {
-            client.connect(host, port, username, password);
+            client.connect(server.getIp(), server.getPort(), server.getUsername(), server.getPassword());
             client.mkdirs(targetDir);
             client.uploadFile(filename,  targetDir,targetFilename);
         } catch (JSchException e) {
@@ -74,7 +80,7 @@ public class SyncMusic {
         String targetFilename = FileUtils.getFullFileName(filename);
         SFTPClient client = new SFTPClient();
         try {
-            client.connect(host, port, username, password);
+            client.connect(server.getIp(), server.getPort(), server.getUsername(), server.getPassword());
             client.mkdirs(targetDir);
             client.uploadFile(filename,  targetDir,targetFilename);
         } catch (JSchException e) {
@@ -88,7 +94,7 @@ public class SyncMusic {
         String targetDir = appendIfMissing(radio_path, "/");
         SFTPClient client = new SFTPClient();
         try {
-            client.connect(host, port, username, password);
+            client.connect(server.getIp(), server.getPort(), server.getUsername(), server.getPassword());
             client.mkdirs(targetDir);
             for(String filename: filenames) {
                 String targetFilename = FileUtils.getFullFileName(filename);

@@ -106,6 +106,8 @@ import apincer.android.mmate.nas.NASServerService;
 import apincer.android.mmate.nas.SyncMusic;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MediaServer;
+import apincer.android.mmate.repository.MediaServerRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -1055,17 +1057,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void doSendToStreamingServer(List<MusicTag> selections) {
+    private void doSendToMediaServer(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
         Map<MusicTag, String> doneList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
-        EditText targetURL = cview.findViewById(R.id.targetURL);
-        EditText targetIP = cview.findViewById(R.id.targetIP);
-        targetURL.setText(R.string.title_sync_to_streaming_server);
-        targetIP.setVisibility(View.GONE);
+        PowerSpinnerView serverView = cview.findViewById(R.id.send_to_server);
+        List<MediaServer> serverList = MediaServerRepository.getAllServers();
+        List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
 
+        for(MediaServer server: serverList) {
+            iconSpinnerItems.add(new IconSpinnerItem(server.getName()+"["+server.getIp()+"]", null));
+        }
+        IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(serverView);
+        serverView.setSpinnerAdapter(iconSpinnerAdapter);
+        serverView.setItems(iconSpinnerItems);
+        if(!iconSpinnerItems.isEmpty()) {
+            serverView.selectItemByIndex(0);
+        }
+        serverView.setLifecycleOwner(this);
         itemsView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
@@ -1134,7 +1145,8 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             MusicMateExecutors.move(() -> {
-                SyncMusic streamer = new SyncMusic();
+                MediaServer server = serverList.get(serverView.getSelectedIndex());
+                SyncMusic streamer = new SyncMusic(server);
                 for(MusicTag tag: selections) {
                     try {
                         doneList.put(tag, "Sending");
@@ -1516,8 +1528,8 @@ public class MainActivity extends AppCompatActivity {
                 doSendFilesToHibyDAP(getSelections());
                 mode.finish();
                 return true;*/
-            }else if (id == R.id.action_send_to_streaming) {
-                doSendToStreamingServer(getSelections());
+            }else if (id == R.id.action_send_to_media_server) {
+                doSendToMediaServer(getSelections());
                 mode.finish();
                 return true;
            // }else if (id == R.id.action_send_playlist_to_streaming) {
@@ -1528,7 +1540,7 @@ public class MainActivity extends AppCompatActivity {
               //  mode.finish();
               //  return true;
             }else if (id == R.id.action_calculate_replay_gain) {
-                doAnalystDRRG(getSelections());
+                doMeasureDR(getSelections());
                 mode.finish();
                 return true;
            /* }else if (id == R.id.action_export_playlist) {
@@ -1561,7 +1573,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void doAnalystDRRG(List<MusicTag> selections) {
+    private void doMeasureDR(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);

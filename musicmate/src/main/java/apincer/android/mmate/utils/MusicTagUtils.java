@@ -1365,13 +1365,14 @@ public class MusicTagUtils {
         return (int) ((tag.getFileSize()/calSize)*100);
     } */
 
+    /*
     public static double calculateFileSize(MusicTag tag) {
         // audio file size = bit rate * duration of audio in seconds * number of channels
         //bit rate = bit depth * sample rate
         double calSize = tag.getAudioBitsDepth()*tag.getAudioSampleRate();
         calSize = calSize * tag.getAudioDuration()*getChannels(tag);
         return calSize/8;
-    }
+    }*/
 
     private static long getChannels(MusicTag tag) {
         String channels = trimToEmpty(tag.getAudioChannels());

@@ -21,7 +21,7 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
         android:textSize="14sp"
-        android:text="Sync music files to Others"
+        android:text="Send files to Media Server"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>
@@ -30,29 +30,26 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="center_horizontal">
-    <EditText
-        android:id="@+id/targetURL"
-        android:layout_width="wrap_content"
-        android:minWidth="@dimen/dimen_128_dp"
-        android:layout_margin="@dimen/dimen_4_dp"
-        android:layout_marginLeft="@dimen/dimen_8_dp"
-        android:layout_marginRight="@dimen/dimen_8_dp"
-        android:paddingRight="@dimen/dimen_8_dp"
-        android:paddingLeft="@dimen/dimen_4_dp"
-        android:layout_height="wrap_content"
-        android:textColor="@color/grey400"
-        android:enabled="false"/>
-        <EditText
-            android:id="@+id/targetIP"
-            android:layout_width="@dimen/dimen_48_dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_margin="@dimen/dimen_4_dp"
-            android:paddingRight="@dimen/dimen_8_dp"
-            android:paddingLeft="@dimen/dimen_8_dp"
-            android:layout_marginLeft="@dimen/dimen_8_dp"
-            android:layout_marginRight="@dimen/dimen_8_dp"
-            android:textColor="@color/grey200"
-            android:layout_height="wrap_content"/>
+        <com.skydoves.powerspinner.PowerSpinnerView
+            android:id="@+id/send_to_server"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/black_transparent_64"
+            android:gravity="center"
+            android:hint="@string/label_server"
+            android:padding="10dp"
+            android:textColor="@color/white"
+            android:textColorHint="@color/white"
+            android:textSize="14.5sp"
+            app:spinner_arrow_gravity="end"
+            app:spinner_arrow_padding="8dp"
+            app:spinner_divider_color="@color/white"
+            app:spinner_divider_show="true"
+            app:spinner_divider_size="0.4dp"
+            app:spinner_item_height="46dp"
+            app:spinner_popup_animation="dropdown"
+            app:spinner_popup_background="@color/black_transparent_64"
+            app:spinner_popup_elevation="14dp" />
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

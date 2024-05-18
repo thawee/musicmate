@@ -44,7 +44,7 @@
 -->
 	<item
 		android:icon="@drawable/round_upload_file_24"
-		android:id="@+id/action_send_to_streaming"
+		android:id="@+id/action_send_to_media_server"
 		android:title="Send to Media Server"
 		app:showAsAction="collapseActionView"/>
 <!--

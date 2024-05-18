@@ -35,6 +35,7 @@ import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicMateNotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.nas.NASServerService;
+import apincer.android.mmate.repository.MediaServer;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
@@ -299,6 +300,20 @@ public class MusixMateApp extends Application {
        // server = new HTTPStreamingServer();
        // server.startServer(getApplicationContext());
 
+        // init mediaServer if nothing, to be deleted after implement maintain media server screen
+        // FIXME - do UI and delete these code
+        if(getOrmLite().getMediaServers().isEmpty()) {
+            List list = new ArrayList();
+            MediaServer server = new MediaServer();
+            server.setIp("10.100.1.198");
+            server.setPort(22);
+            server.setName("tc@pcp.local");
+            server.setUsername("tc");
+            server.setPassword("piCore");
+            server.setPath("/mnt/mmcblk0p2/media");
+            list.add(server);
+            getOrmLite().saveMediaServers(list);
+        }
     }
 
     /*

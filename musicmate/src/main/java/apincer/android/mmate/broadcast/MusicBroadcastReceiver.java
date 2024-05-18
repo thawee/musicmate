@@ -10,8 +10,11 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.List;
 
@@ -166,6 +169,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     public void register(Context context) {
         IntentFilter iF = new IntentFilter();
 /*
@@ -228,6 +232,9 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         // get forward from notification reader
         iF.addAction("apincer.android.mmate");
 
+        // LMS Material App
+        iF.addAction("com.craigd.lmsmaterial.app");
+
         //Audio
        // iF.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED);
        // iF.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED);
@@ -242,7 +249,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 */
         iF.addCategory("");
 
-        context.registerReceiver(this, iF);
+        context.registerReceiver(this, iF, Context.RECEIVER_NOT_EXPORTED);
     }
 
     protected void extractTitle(String playerPackage, Bundle bundle) {

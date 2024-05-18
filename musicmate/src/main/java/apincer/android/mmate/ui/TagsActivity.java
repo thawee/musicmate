@@ -107,7 +107,7 @@ public class TagsActivity extends AppCompatActivity {
 
     private ImageView playerBtn;
     private View playerPanel;
-    private boolean refreshOnNewSong;
+    private boolean closePreview = true;
 
     private boolean previewState = true;
 
@@ -166,6 +166,11 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if(MusixMateApp.getPlayerInfo()!=null && getEditItems().size() == 1) {
+            if(MusixMateApp.getPlayingSong().equals(getEditItems().get(0))) {
+                closePreview = false;
+            }
+        }
     }
 
     private TextView tagInfo;
@@ -233,7 +238,7 @@ public class TagsActivity extends AppCompatActivity {
 
         if(MusixMateApp.getPlayerInfo()!= null) {
             playerBtn.setVisibility(View.VISIBLE);
-            if (refreshOnNewSong) {
+            if (!closePreview) {
                 MusicTag tag = event.getPlayingSong();
                 if(tag != null) {
                     MusicTagRepository.load(tag);
@@ -292,7 +297,7 @@ public class TagsActivity extends AppCompatActivity {
 
         findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
         findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItem());
-       // findViewById(R.id.btnSyncHiby).setOnClickListener(v -> doSyncHibyPlayer());
+        findViewById(R.id.btnMDR).setOnClickListener(v -> doAnalystDRRG());
         findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItem());
         findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
         findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
@@ -317,30 +322,17 @@ public class TagsActivity extends AppCompatActivity {
         playerBtn = findViewById(R.id.music_player);
         playerPanel = findViewById(R.id.music_player_panel);
         playerPanel.setOnClickListener(view -> {
-            refreshOnNewSong = true;
-            playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
-/*
-            for(int i=0;i<toolbar.getMenu().size();i++) {
-                MenuItem item = toolbar.getMenu().getItem(i);
-                if(item.getItemId() == R.id.menu_preview_following_listening) {
-                    Drawable drawable = item.getIcon();
-                    if(drawable==null) return;
-                    if(refreshOnNewSong) {
-                        UIUtils.getTintedDrawable(drawable, Color.GREEN);
-                    }else {
-                        UIUtils.getTintedDrawable(drawable, Color.WHITE);
-                    }
-                }
-            } */
             startProgressBar();
+           // closePreview = false;
+            playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
             MusixMateApp.playNextSong(getApplicationContext());
         });
         playerPanel.setOnLongClickListener(view -> {
-            refreshOnNewSong = !refreshOnNewSong;
-            if(refreshOnNewSong) {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
+            closePreview = !closePreview;
+            if(closePreview) {
+                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent));
             }else {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background));
+                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
             }
             return true;
         });
@@ -350,10 +342,10 @@ public class TagsActivity extends AppCompatActivity {
         if(MusixMateApp.getPlayerInfo() != null) {
             playerBtn.setVisibility(View.VISIBLE);
             playerBtn.setBackground(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
-            if(refreshOnNewSong) {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
+            if(closePreview) {
+                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent));
             }else {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background));
+                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
             }
         }else {
             playerBtn.setVisibility(View.GONE);
@@ -530,17 +522,17 @@ public class TagsActivity extends AppCompatActivity {
             SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
             spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
 
-            // DR
-            if(MusicTagUtils.isLossless(displayTag)) {
-                spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
-                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
-            }
-
             // bps
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+
+            // DR
+            if(MusicTagUtils.isLossless(displayTag)) {
+                spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
+                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+            }
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP))
@@ -651,7 +643,7 @@ public class TagsActivity extends AppCompatActivity {
                         setResult(RESULT_OK, resultIntent);
                     }
 
-                    if(MusixMateApp.getPlayerInfo() == null || !refreshOnNewSong) {
+                    if(MusixMateApp.getPlayerInfo() == null || closePreview) {
                         finish(); // back to prev activity
                     //}else {
                     //    startProgressBar();
@@ -702,7 +694,7 @@ public class TagsActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, resultIntent);
 
-        if(MusixMateApp.getPlayerInfo() == null || !refreshOnNewSong) {
+        if(MusixMateApp.getPlayerInfo() == null || closePreview) {
             finish(); // back to prev activity
        // }else {
        //     startProgressBar();
@@ -722,8 +714,9 @@ public class TagsActivity extends AppCompatActivity {
     }
     public void setupMenuPreview(Toolbar.OnMenuItemClickListener listener) {
         toolbar.getMenu().clear();
-        toolbar.inflateMenu(R.menu.menu_tag_preview);
-        toolbar.setOnMenuItemClickListener(listener);
+        //toolbar.setTitle(displayTag.getTitle());
+        //toolbar.inflateMenu(R.menu.menu_tag_preview);
+       // toolbar.setOnMenuItemClickListener(listener);
        /* for(int i=0;i<toolbar.getMenu().size();i++) {
             MenuItem item = toolbar.getMenu().getItem(i);
             if(item.getItemId() == R.id.menu_preview_following_listening) {
@@ -833,6 +826,7 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    /*
     public void startProgressBar(final String label) {
         runOnUiThread(() -> {
             try {
@@ -846,7 +840,7 @@ public class TagsActivity extends AppCompatActivity {
                 Log.e(TAG, "startProgressBar",ex);
             }
         });
-    }
+    }*/
 
     public void startProgressBar() {
         runOnUiThread(() -> {

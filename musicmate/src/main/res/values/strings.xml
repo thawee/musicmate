@@ -107,7 +107,8 @@
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
     <string name="import_songs_label">Import</string>
-    <string name="edit_tags_label">Edit Tags</string>
+    <string name="measure_dr_label">MDR</string>
+    <string name="edit_tags_label">TAGS</string>
     <string name="delete_song_label">Delete</string>
     <string name="aspect_label">Aspect</string>
     <string name="websearch_label">WWW</string>
@@ -230,6 +231,7 @@
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encoding">Audio Encoding</string>
     <string name="label_file_quality">Audio File Quality</string>
+    <string name="label_server">Media Server</string>
 
 
     <!-- new editor -->
