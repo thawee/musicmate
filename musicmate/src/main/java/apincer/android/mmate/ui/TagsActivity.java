@@ -83,6 +83,8 @@ public class TagsActivity extends AppCompatActivity {
     private ImageView coverArtView;
     private TabLayout tabLayout;
     private Toolbar toolbar;
+    private AppBarLayout appBarLayout;
+
     private TextView titleView;
     private TextView artistView ;
     private TextView albumView ;
@@ -265,15 +267,16 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void setUpPageViewer() {
-        final AppBarLayout appBarLayout = findViewById(R.id.appbar);
+        //final AppBarLayout appBarLayout = findViewById(R.id.appbar);
+        appBarLayout = findViewById(R.id.appbar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
        // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
-        adapter.addNewTab(new TagsEditorFragment(), "Information");
-        adapter.addNewTab(new TagsTechnicalFragment(), "NERD!");
+        adapter.addNewTab(new TagsEditorFragment(), "TAGs");
+        adapter.addNewTab(new TagsTechnicalFragment(), "for Nerd");
         viewPager.setAdapter(adapter);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -737,10 +740,17 @@ public class TagsActivity extends AppCompatActivity {
 
         @Override
         public void handleOnBackPressed() {
-            if(criteria!=null) {
-                Intent resultIntent = new Intent();
-                ApplicationUtils.setSearchCriteria(resultIntent,criteria);
-                setResult(RESULT_OK, resultIntent);
+            if(previewState) {
+                if (criteria != null) {
+                    Intent resultIntent = new Intent();
+                    ApplicationUtils.setSearchCriteria(resultIntent, criteria);
+                    setResult(RESULT_OK, resultIntent);
+                }
+                finish();
+            }else {
+                // display preview screen
+                appBarLayout.setExpanded(true, true);
+
             }
         }
     }
