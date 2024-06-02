@@ -5,20 +5,20 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '8.4.0', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '8.4.1', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 30, // support running on android 11 ot higher
         targetSdk          : 33, // required 33 for photopicker, android 13
         compileSdk         : 34, //33, // required 33 for photopicker
-        buildTools         : '35.0.0-rc3', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '35.0.0-rc4', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '1.9.24', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '2.0.0', //''1.9.24', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
-        objectbox          : '3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
+        objectbox          : '4.0.0', //''3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '11.1.4', //''10.8.3', //''10.3.1',
+        aboutlibraries     : '11.2.0', //''11.1.4', //''10.8.3', //''10.3.1',  11.2.1 not work
         //versionsCheck      : '0.42.
         ]
 
@@ -36,18 +36,20 @@ def deps = [:]
 def google = [:]
 // https://github.com/material-components/material-components-android/releases
 google.material = "com.google.android.material:material:1.12.0" //1.9.0" //1.7.0-rc01" //1.6.1" // 1.6.0-beta01" //1.5.0"
-google.gson = "com.google.code.gson:gson:2.10.1" //2.8.5" //2.10.1" //2.8.9"
+google.gson = "com.google.code.gson:gson:2.11.0" //2.8.5" //2.10.1" //2.8.9"
 google.android_maps_utils = "com.google.maps.android:android-maps-utils:2.3.0" //0.5" //23/06/2019
 deps.google = google
 
 def apache = [:]
-apache.httpclient = "org.apache.httpcomponents:httpclient:4.5.14"
-apache.httpcore = "org.apache.httpcomponents:httpcore:4.4.16"
+apache.httpclient = "org.apache.httpcomponents.client5:client5:httpclient5:5.3.1"
+apache.httpcore = "org.apache.httpcomponents.core5:httpcore5:5.2"
+apache.http2core = "org.apache.httpcomponents.core5:httpcore5-h2:5.2"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.17.0"
 apache.commons_io = "commons-io:commons-io:2.16.1" //2.15.1"
-apache.commons_logging = "commons-logging:commons-logging:1.3.1"
+apache.commons_logging = "commons-logging:commons-logging:1.3.2"
 deps.apache = apache
+
 
 def androidx = [:]
 //https://developer.android.com/jetpack/androidx/releases/core
@@ -57,7 +59,7 @@ androidx.activity = "androidx.activity:activity:1.9.0" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
 androidx.annotation = "androidx.annotation:annotation:1.8.0"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
-androidx.appCompat = "androidx.appcompat:appcompat:1.7.0-beta01" //1.6.1"
+androidx.appCompat = "androidx.appcompat:appcompat:1.7.0" //1.6.1"
 //https://developer.android.com/jetpack/androidx/releases/cardview
 androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout
@@ -84,19 +86,19 @@ androidx.localbroadcastmanager = "androidx.localbroadcastmanager:localbroadcastm
 //  ktx - kotlin
 //androidx.ktx = "androidx.core:core-ktx:1.0.2" //23/06/2019
 //https://developer.android.com/jetpack/androidx/releases/viewpager2
-androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.1.0-rc01" //1.0.0" //1.1.0-beta02"
+androidx.viewpager2 = "androidx.viewpager2:viewpager2:1.1.0" //1.0.0" //1.1.0-beta02"
 // Lifecycle ViewModel and LiveData
 //https://developer.android.com/jetpack/androidx/releases/lifecycle
-androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.8.0" //2.4.0"
+androidx.lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:2.8.1" //2.4.0"
 //androidx.lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:2.3.1"
-androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.8.0" //2.4.0"
-androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.8.0" //2.4.0"
+androidx.lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:2.8.1" //2.4.0"
+androidx.lifecycle_process = "androidx.lifecycle:lifecycle-process:2.8.1" //2.4.0"
 // alternately - if using Java8, use the following instead of lifecycle-compiler
-androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.8.0" //2.4.0"
+androidx.lifecycle_common_java8 = "androidx.lifecycle:lifecycle-common-java8:2.8.1" //2.4.0"
 // optional - ReactiveStreams support for LiveData
-androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.8.0" //2.4.0" // use -ktx for Kotlin //23/06/2019
+androidx.lifecycle_reactivestreams = "androidx.lifecycle:lifecycle-reactivestreams:2.8.1" //2.4.0" // use -ktx for Kotlin //23/06/2019
 // optional - Test helpers for LiveData
-androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.8.0"
+androidx.lifecycle_core_testing = "androidx.arch.core:core-testing:2.8.1"
 
 // Room
 androidx.room = "androidx.room:room-runtime:2.6.1" //2.5.2" //23/06/2019

@@ -1,4 +1,4 @@
-package apincer.android.mmate.nas;
+package apincer.android.mmate.share;
 
 import static com.jcraft.jsch.ChannelSftp.OVERWRITE;
 

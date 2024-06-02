@@ -34,8 +34,8 @@ import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicMateNotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.nas.NASServerService;
-import apincer.android.mmate.repository.MediaServer;
+import apincer.android.mmate.server.MediaServerService;
+import apincer.android.mmate.repository.NASServer;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
@@ -304,7 +304,7 @@ public class MusixMateApp extends Application {
         // FIXME - do UI and delete these code
         if(getOrmLite().getMediaServers().isEmpty()) {
             List list = new ArrayList();
-            MediaServer server = new MediaServer();
+            NASServer server = new NASServer();
             server.setIp("10.100.1.198");
             server.setPort(22);
             server.setName("tc@pcp.local");
@@ -418,7 +418,7 @@ Provides the SQLite Helper Object among the application
 
     public boolean isNASRunning() {
         //NASServerService service = getSystemService(NASServerService.class);
-        NASServerService service = NASServerService.getInstance(); //getSystemService(NASServerService.class);
+        MediaServerService service = MediaServerService.getInstance(); //getSystemService(NASServerService.class);
         if(service != null) {
             return service.isStarted();
         }

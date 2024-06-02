@@ -314,7 +314,7 @@ public class FileRepository {
                 filename.append(Constants.MEDIA_PATH_SACD);
             }else if (MusicTagUtils.isMQA(metadata)) {
                 filename.append(Constants.MEDIA_PATH_MQA);
-            }else if (MusicTagUtils.isPCMHiRes(metadata)) {
+            }else if (MusicTagUtils.isPCM88(metadata)) {
                 filename.append(Constants.MEDIA_PATH_HRA);
             }else if(MusicTagUtils.isDSD(metadata)) {
                 filename.append(Constants.MEDIA_PATH_DSD);

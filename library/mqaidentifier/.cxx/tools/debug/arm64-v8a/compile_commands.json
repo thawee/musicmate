@@ -1,6 +1,6 @@
 [
 {
-  "directory": "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/5p1e2c4d/arm64-v8a",
+  "directory": "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/Debug/2e422w5b/arm64-v8a",
   "command": "/Users/thawee.p/Library/Android/sdk/ndk/27.0.11718014/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ --target=aarch64-none-linux-android30 --sysroot=/Users/thawee.p/Library/Android/sdk/ndk/27.0.11718014/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dmqaidentifier_EXPORTS -I/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -o CMakeFiles/mqaidentifier.dir/mqaid.cpp.o -c /Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/mqaid.cpp",
   "file": "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/mqaid.cpp"
 }

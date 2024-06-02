@@ -2,6 +2,7 @@ package apincer.android.mmate;
 
 import android.content.Context;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -68,6 +69,20 @@ public final class Constants {
     public static final String TITLE_QUALITY = "File Quality";
     public static final String TITLE_DSD = "DSD";
     public static final String TITLE_NO_COVERART = "No Embed Cover Art";
+    public static final long DEVICE_SEARCH_INTERVAL_MINUTES = 15;
+    public static final String METADATA_MODEL_NAME = "MusicMate";
+    public static final String METADATA_MANUFACTURER = "Thawee P.";
+    public static final String METADATA_MODEL_DESCRIPTION = "MusicMate Server";
+    public static final String METADATA_MODEL_NUMBER = "v1";
+    /**
+     * Shorter version of org.teleal.cling.model.Constants.MIN_ADVERTISEMENT_AGE_SECONDS.
+     * Remove when Cling 2.0 has a stable release.
+     * http://4thline.org/projects/mailinglists.html#nabble-td2183974
+     * http://4thline.org/projects/mailinglists.html#nabble-td2183974
+     * https://github.com/4thline/cling/issues/41
+     */
+    public static final int MIN_ADVERTISEMENT_AGE_SECONDS = 300;
+    public static final String CONTENT_PATH_PREFIX = "c/";
 
     public static String FIELD_SEP = ";";
    public static double MIN_TITLE = 0.80;

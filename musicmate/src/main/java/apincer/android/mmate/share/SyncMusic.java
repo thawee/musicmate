@@ -1,4 +1,4 @@
-package apincer.android.mmate.nas;
+package apincer.android.mmate.share;
 
 import android.content.Context;
 
@@ -10,12 +10,12 @@ import java.io.IOException;
 import java.util.List;
 
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MediaServer;
+import apincer.android.mmate.repository.NASServer;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.utils.FileUtils;
 
 public class SyncMusic {
-    MediaServer server;
+    NASServer server;
    // private final String      host = "10.100.1.198";
   //  private final int         port=22;
    // private final String      username= "tc"; //"pi"; "tc";
@@ -25,7 +25,7 @@ public class SyncMusic {
     private final String      radio_path= "/var/lib/mympd/webradios"; //""/mnt/mmcblk0p3/playlists";
     private final String      playlists_path = "/var/lib/mpd/playlists"; ///var/lib/mpd/playlists"; //""/mnt/mmcblk0p3/playlists";
 
-    public SyncMusic(MediaServer server) {
+    public SyncMusic(NASServer server) {
         this.server = server;
     }
 

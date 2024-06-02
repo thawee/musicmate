@@ -30,7 +30,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "apincer.android.musicmate.db";
     private static final String TAG = MusicMateOrmLite.class.getName();
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public MusicMateOrmLite(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION) ;//,
@@ -43,7 +43,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             // creates the database table
             TableUtils.createTable(connectionSource, MusicTag.class);
-
+            TableUtils.createTable(connectionSource, NASServer.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -510,19 +510,19 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<MediaServer> getMediaServers() {
+    public List<NASServer> getMediaServers() {
         try {
-            Dao<MediaServer, ?> dao = getDao(MediaServer.class);
+            Dao<NASServer, ?> dao = getDao(NASServer.class);
             return dao.queryForAll();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
     }
 
-    public void saveMediaServers(List<MediaServer> servers) {
+    public void saveMediaServers(List<NASServer> servers) {
         try {
-            Dao<MediaServer, ?> dao = getDao(MediaServer.class);
-            for(MediaServer server: servers) {
+            Dao<NASServer, ?> dao = getDao(NASServer.class);
+            for(NASServer server: servers) {
                 dao.createIfNotExists(server);
             }
         } catch (SQLException e) {

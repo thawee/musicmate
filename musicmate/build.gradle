@@ -34,8 +34,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 81
-        versionName  "3.8.0"+ versions.buildDate
+        versionCode 82
+        versionName  "3.8.1"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -43,17 +43,17 @@ android {
 		renderscriptSupportModeEnabled true
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
 
     tasks.withType(KotlinCompile).configureEach {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
         }
     }
 
@@ -228,18 +228,15 @@ dependencies {
 
     //implementation 'org.nanohttpd:nanohttpd:2.3.1'
    // implementation deps.apache.httpcore
+    //implementation deps.apache.http2core
    // implementation deps.apache.httpclient
     // https://mvnrepository.com/artifact/io.milton/milton-server-ce
     //implementation 'io.milton:milton-server-ce:4.0.1.2009'
-
 
     //implementation deps.nfs4j
     //implementation deps.jimfs
     //implementation 'com.sleepycat:je:18.3.12'
     //implementation deps.high_scale_lib
-
-    // https://mvnrepository.com/artifact/com.jcraft/jsch
-   // implementation 'com.jcraft:jsch:0.1.55'
 
     // cling, only 2.1.1 works on Android
     //noinspection GradleDependency
@@ -257,7 +254,23 @@ dependencies {
     // https://mvnrepository.com/artifact/com.jcraft/jsch
     implementation 'com.jcraft:jsch:0.1.55'
 
-   // implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
+    //https://github.com/jupnp
+    implementation 'org.jupnp:org.jupnp.android:3.0.2'
+    implementation 'org.jupnp:org.jupnp.support:3.0.2'
+    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
+    implementation 'org.eclipse.jetty:jetty-server:9.4.54.v20240208'
+    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet
+    implementation 'org.eclipse.jetty:jetty-servlet:9.4.54.v20240208'
+    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client
+    implementation 'org.eclipse.jetty:jetty-client:9.4.54.v20240208'
+
+    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
+    implementation 'javax.servlet:javax.servlet-api:3.1.0'
+
+    //implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+   // implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.4'
+
+    // implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
    // implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
    // implementation 'org.apache.httpcomponents.core5:httpcore5:5.3.1' //5.2.4'
 

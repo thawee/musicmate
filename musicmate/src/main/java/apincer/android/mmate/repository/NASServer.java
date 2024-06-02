@@ -3,8 +3,8 @@ package apincer.android.mmate.repository;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "mediaserver")
-public class MediaServer {
+@DatabaseTable(tableName = "nasserver")
+public class NASServer {
     @DatabaseField(generatedId = true,allowGeneratedIdInsert = true)
     protected long id;
 

@@ -28,7 +28,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -102,15 +101,15 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.nas.NASServerService;
-import apincer.android.mmate.nas.SyncMusic;
+import apincer.android.mmate.server.MediaServerService;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MediaServer;
+import apincer.android.mmate.repository.NASServer;
 import apincer.android.mmate.repository.MediaServerRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.share.SyncMusic;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -155,11 +154,7 @@ public class MainActivity extends AppCompatActivity {
 
     FileRepository repos;
 
-    private BottomAppBar bottomAppBar;
-
     private ResideMenu mResideMenu;
-
-    private OnBackPressedCallback onBackPressedCallback;
 
     private MusicTagAdapter adapter;
     private SelectionTracker<Long> mTracker;
@@ -553,6 +548,7 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.autoRefresh();
     }
 
+    /*
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
@@ -564,7 +560,7 @@ public class MainActivity extends AppCompatActivity {
         if(actionMode !=null) {
             actionMode.finish();
             return;
-        }
+        }*/
 
        /* not work as expected
        if(mSearchView.isShown()) {
@@ -573,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
             refreshLayout.autoRefresh();
             return;
         } */
-
+/*
         if(adapter!=null && adapter.isSearchMode()) {
             doHideSearch();
             refreshLayout.autoRefresh();
@@ -591,9 +587,10 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mExitSnackbar.dismiss();
             finishAndRemoveTask();
-            System.exit(0);
+            //System.exit(0);
+            finish();
         }
-    }
+    }*/
 
     protected RecyclerView mRecyclerView;
 
@@ -615,15 +612,9 @@ public class MainActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
         }
         super.onCreate(savedInstanceState);
-        onBackPressedCallback = new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                // Your business logic to handle the back pressed event
-                Log.d(TAG, "onBackPressedCallback: handleOnBackPressed");
-                onBackPressed();
-            }
-        };
 
+        // Your business logic to handle the back pressed event
+        OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         repos = FileRepository.newInstance(getApplicationContext());
@@ -708,7 +699,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void setUpBottomAppBar() {
         //find id
-        bottomAppBar = findViewById(R.id.bottom_app_bar);
+        BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
 
         //set bottom bar to Action bar as it is similar like Toolbar
         setSupportActionBar(bottomAppBar);
@@ -1011,9 +1002,9 @@ public class MainActivity extends AppCompatActivity {
         }
         startButton.setOnClickListener(view -> {
             if(MusixMateApp.getInstance().isNASRunning()) {
-                stopService(new Intent(getApplicationContext(),NASServerService.class));
+                stopService(new Intent(getApplicationContext(), MediaServerService.class));
             }else {
-                startForegroundService(new Intent(getApplicationContext(),NASServerService.class));
+                startForegroundService(new Intent(getApplicationContext(), MediaServerService.class));
             }
             if(MusixMateApp.getInstance().isNASRunning()) {
                 status.setText("Status: STARTED");
@@ -1057,17 +1048,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void doSendToMediaServer(List<MusicTag> selections) {
+    private void doSendToNASServer(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
         Map<MusicTag, String> doneList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         PowerSpinnerView serverView = cview.findViewById(R.id.send_to_server);
-        List<MediaServer> serverList = MediaServerRepository.getAllServers();
+        List<NASServer> serverList = MediaServerRepository.getAllServers();
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
 
-        for(MediaServer server: serverList) {
+        for(NASServer server: serverList) {
             iconSpinnerItems.add(new IconSpinnerItem(server.getName()+"["+server.getIp()+"]", null));
         }
         IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(serverView);
@@ -1145,7 +1136,7 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             MusicMateExecutors.move(() -> {
-                MediaServer server = serverList.get(serverView.getSelectedIndex());
+                NASServer server = serverList.get(serverView.getSelectedIndex());
                 SyncMusic streamer = new SyncMusic(server);
                 for(MusicTag tag: selections) {
                     try {
@@ -1492,6 +1483,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private class BackPressedCallback extends OnBackPressedCallback {
+        public BackPressedCallback(boolean enabled) {
+            super(enabled);
+        }
+
+        @Override
+        public void handleOnBackPressed() {
+            if(mResideMenu.isOpened()) {
+                mResideMenu.closeMenu();
+                return;
+            }
+
+            if(actionMode !=null) {
+                actionMode.finish();
+                return;
+            }
+
+            if(adapter!=null && adapter.isSearchMode()) {
+                doHideSearch();
+                refreshLayout.autoRefresh();
+                return;
+            }
+
+            if(adapter!=null && adapter.hasFilter()) {
+                adapter.resetFilter();
+                refreshLayout.autoRefresh();
+                return;
+            }
+
+            if (!mExitSnackbar.isShown()) {
+                mExitSnackbar.show();
+            } else {
+                mExitSnackbar.dismiss();
+                finishAndRemoveTask();
+                //System.exit(0);
+                finish();
+            }
+        }
+    }
+
     private class ActionModeCallback implements ActionMode.Callback {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -1529,7 +1560,7 @@ public class MainActivity extends AppCompatActivity {
                 mode.finish();
                 return true;*/
             }else if (id == R.id.action_send_to_media_server) {
-                doSendToMediaServer(getSelections());
+                doSendToNASServer(getSelections());
                 mode.finish();
                 return true;
            // }else if (id == R.id.action_send_playlist_to_streaming) {
@@ -1761,18 +1792,18 @@ public class MainActivity extends AppCompatActivity {
         if(MusicTagUtils.isAIFFile(selections.get(0)) ||
                 MusicTagUtils.isWavFile(selections.get(0)) ||
                 MusicTagUtils.isDSD(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
             iconSpinnerItems.add(new IconSpinnerItem("FLAC (Level 0)", null));
-            iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
+            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
+           // iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
           //  encodingItems.add("Apple Lossless Audio Codec (ALAC)");
            // encodingItems.add("Free Lossless Audio Codec (FLAC)");
           //  encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
-        }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
+       // }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
+        //    iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
            // encodingItems.add("Apple Lossless Audio Codec (ALAC)");
         }else if(MusicTagUtils.isALACFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
             iconSpinnerItems.add(new IconSpinnerItem("FLAC (Level 0)", null));
+            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
          //   encodingItems.add("Free Lossless Audio Codec (FLAC)");
          //   encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
         }
@@ -1822,28 +1853,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-       // MaterialRadioButton btnFlacOptimal = cview.findViewById(R.id.mediaEncodingFLACOPT);
-       // MaterialRadioButton btnFlac = cview.findViewById(R.id.mediaEncodingFLAC);
-       /* if(MusicTagUtils.isALACFile(selections.get(0))) {
-            btnFlacOptimal.setEnabled(false);
-            btnFlac.setEnabled(true);
-           // btnMPeg.setEnabled(true);
-
-            btnFlac.setChecked(true);
-           // encoding[0] = "FLAC";
-        } else */
-       // if(MusicTagUtils.isFLACFile(selections.get(0))) {
-               // btnAlac.setEnabled(true);
-        //        btnFlac.setEnabled(false);
-       //         btnOK.setEnabled(true);
-       // }else {
-           // btnAlac.setEnabled(true);
-           // btnFlacOptimal.setEnabled(true);
-          //  btnFlac.setEnabled(true);
-           // btnFlacOptimal.setChecked(true);
-
-      //  }
-
         double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         double sizeInBlock = MAX_PROGRESS/block;
         List<Long> valueList = new ArrayList<>();
@@ -1880,18 +1889,6 @@ public class MainActivity extends AppCompatActivity {
             }else if("ALAC".equals(item.getText())) {
                 targetExt = "M4A";
             }
-          /*  if(btnFlacOptimal.isChecked()) {
-               // targetExt = "m4a";
-                cLevel = 4;
-            }else {
-               // compressLevel = 2; // 5 = default, 0 less, 8 most compress
-               // targetExt = "FLAC";
-                cLevel = -1;
-            } */
-
-          //  if(isEmpty(targetExt)) {
-          //      return;
-          //  }
 
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
 

@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -114,17 +115,6 @@ public class TagsActivity extends AppCompatActivity {
     private AlertDialog progressDialog;
 
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-
-        if(criteria!=null) {
-            Intent resultIntent = new Intent();
-            ApplicationUtils.setSearchCriteria(resultIntent,criteria);
-            setResult(RESULT_OK, resultIntent);
-        }
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
@@ -166,6 +156,10 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if(getEditItems()==null) {
+            Intent myIntent = new Intent(TagsActivity.this, MainActivity.class);
+            startActivity(myIntent);
+        }
         if(MusixMateApp.getPlayerInfo()!=null && getEditItems().size() == 1) {
             if(MusixMateApp.getPlayingSong().equals(getEditItems().get(0))) {
                 closePreview = false;
@@ -191,6 +185,11 @@ public class TagsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_tags);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Your business logic to handle the back pressed event
+        OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
+        getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+
         repos = FileRepository.newInstance(getApplicationContext());
 
         coverArtView = findViewById(R.id.panel_cover_art);
@@ -729,6 +728,21 @@ public class TagsActivity extends AppCompatActivity {
                 }
             }
         } */
+    }
+
+    private class BackPressedCallback extends OnBackPressedCallback {
+        public BackPressedCallback(boolean enabled) {
+            super(enabled);
+        }
+
+        @Override
+        public void handleOnBackPressed() {
+            if(criteria!=null) {
+                Intent resultIntent = new Intent();
+                ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+                setResult(RESULT_OK, resultIntent);
+            }
+        }
     }
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {

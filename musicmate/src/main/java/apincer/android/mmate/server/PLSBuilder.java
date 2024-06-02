@@ -1,8 +1,6 @@
-package apincer.android.mmate.nas;
+package apincer.android.mmate.server;
 
 import static apincer.android.mmate.utils.MusicTagUtils.getExtension;
-
-import net.freeutils.httpserver.HTTPServer;
 
 import java.net.URI;
 import java.net.URISyntaxException;

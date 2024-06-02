@@ -1,4 +1,4 @@
-package apincer.android.mmate.nas;
+package apincer.android.mmate.server;
 
 import android.content.Context;
 

@@ -201,7 +201,7 @@
     <string name="settings_local_server_serve_video_off">serve video is disabled</string>
     <string name="settings_local_server_serve_video_on">serve video is enabled</string>
     <string name="settings_local_server_serve_video_chkbx">local_server_serve_video_chkbx</string>
-    <string name="settings_local_server_name">network name for local server</string>
+    <string name="settings_local_server_name">MusicMate MediaServer</string>
     <string name="settings_local_server_name_key">Local server name</string>
     <string name="settings_local_server_autostart_deactivated">Server will not start after booting</string>
     <string name="settings_local_server_autostart_activated">Server will start after booting</string>

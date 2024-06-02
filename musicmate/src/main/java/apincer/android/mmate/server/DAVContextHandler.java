@@ -1,4 +1,4 @@
-package apincer.android.mmate.nas;
+package apincer.android.mmate.server;
 
 import static apincer.android.mmate.utils.MusicTagUtils.getExtension;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;

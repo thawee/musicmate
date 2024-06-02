@@ -78,7 +78,7 @@
             </intent-filter>
         </service>
         <service
-            android:name=".nas.NASServerService"
+            android:name=".server.MediaServerService"
             android:enabled="true" />
 
         <!-- Main activity for music browsing on phone -->

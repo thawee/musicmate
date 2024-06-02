@@ -45,7 +45,7 @@
 	<item
 		android:icon="@drawable/round_upload_file_24"
 		android:id="@+id/action_send_to_media_server"
-		android:title="Send to Media Server"
+		android:title="Send to NAS Server"
 		app:showAsAction="collapseActionView"/>
 <!--
 	<item

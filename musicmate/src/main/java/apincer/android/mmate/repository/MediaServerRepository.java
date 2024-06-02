@@ -5,7 +5,7 @@ import java.util.List;
 import apincer.android.mmate.MusixMateApp;
 
 public class MediaServerRepository {
-    public static List<MediaServer> getAllServers() {
+    public static List<NASServer> getAllServers() {
         return MusixMateApp.getInstance().getOrmLite().getMediaServers();
        /* List list = new ArrayList();
         MediaServer server = new MediaServer();
@@ -19,7 +19,7 @@ public class MediaServerRepository {
         return list; */
     }
 
-    public static void saveServers(List<MediaServer> servers) {
+    public static void saveServers(List<NASServer> servers) {
         MusixMateApp.getInstance().getOrmLite().saveMediaServers(servers);
     }
 }
