@@ -13,16 +13,20 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.R;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.utils.FileUtils;
 
 public final class MusicCoverArtProvider extends ContentProvider {
     private static final String TAG = MusicCoverArtProvider.class.getName();
@@ -102,8 +106,8 @@ public final class MusicCoverArtProvider extends ContentProvider {
                         dir.mkdirs();
                         // extract covert to cache directory
                         FileRepository.extractCoverArt(file.getAbsolutePath(), pathFile);
+                    pathFile = new File(dir, path);
                 }
-
                 return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
             } catch (Exception e) {
                 Log.e(TAG,"Open CoverArt File: "+e.getMessage());

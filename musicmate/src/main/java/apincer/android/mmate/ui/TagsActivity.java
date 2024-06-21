@@ -62,6 +62,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.ApplicationUtils;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -450,7 +451,7 @@ public class TagsActivity extends AppCompatActivity {
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)
                 //.placeholder(R.drawable.no_image0)
-                .error(R.drawable.no_image0)
+                .error(ReflectionTransformation.applyReflection(getApplicationContext(), R.drawable.no_image0, 640, 640))
                 .target(coverArtView)
                 .build();
         imageLoader.enqueue(request);
@@ -532,7 +533,7 @@ public class TagsActivity extends AppCompatActivity {
 
             // DR
             if(MusicTagUtils.isLossless(displayTag)) {
-                spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeSAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
+                spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
                 spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
             }
 
@@ -748,9 +749,17 @@ public class TagsActivity extends AppCompatActivity {
                 }
                 finish();
             }else {
+                startProgressBar();
+                buildDisplayTag();
                 // display preview screen
                 appBarLayout.setExpanded(true, true);
-
+                   // runOnUiThread(() -> {
+                        if(displayTag != null) {
+                            updateTitlePanel();
+                            setUpPageViewer();
+                        }
+                        stopProgressBar();
+                  //  });
             }
         }
     }

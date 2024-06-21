@@ -34,10 +34,9 @@ import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicMateNotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.server.MediaServerService;
-import apincer.android.mmate.repository.NASServer;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.NASServer;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
@@ -414,14 +413,5 @@ Provides the SQLite Helper Object among the application
             }
         }
 
-    }
-
-    public boolean isNASRunning() {
-        //NASServerService service = getSystemService(NASServerService.class);
-        MediaServerService service = MediaServerService.getInstance(); //getSystemService(NASServerService.class);
-        if(service != null) {
-            return service.isStarted();
-        }
-        return false;
     }
 }

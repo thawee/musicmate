@@ -55,7 +55,7 @@
     <color name="grey200">#EEEEEE</color>
     <color name="grey600">#757575</color>
     -->
-	<color name="grey200_transparent">#ADEEEEEE</color>
+	<color name="grey200_transparent">#CCEEEEEE</color>
     <color name="grey600_transparent">#AD757575</color>
     <color name="grey800_transparent">#AD424242</color>
     <color name="grey900_transparent">#AD212121</color>
@@ -233,7 +233,7 @@
     <color name="quality_hd">#ffb300</color>
     <color name="quality_h24bits">#FEDD55</color>
     <color name="quality_sd">#ffecb3</color>
-    <color name="quality_unknown">@color/grey400</color>
+    <color name="quality_unknown">@color/grey300</color>
     <color name="quality_unknown_black">#000000</color>
 
     <color name="file_format_dsd">#ffb300</color>
@@ -245,9 +245,14 @@
     <color name="quality_good">#ef7350</color>
     -->
 
-    <color name="quality_good">#ffb300</color>
-    <color name="quality_average">#ffffff</color>
-    <color name="quality_bad">#FF3D00</color>
+    <color name="quality_audiophile">#ffb300</color>
+    <color name="quality_good">@color/white</color>
+    <color name="quality_bad">@color/grey600</color>
+    <color name="quality_no_rating">@color/grey200_transparent</color>
+
+    <color name="quality_scale_not_test">@color/grey200_transparent</color>
+    <color name="quality_scale_matched">@color/white</color>
+    <color name="quality_scale_not_matched">@color/grey600</color>
     <!--
     <color name="resolution_mqa">#FF00FF</color>
     <color name="resolution_hd">#FF0000</color>

@@ -622,4 +622,11 @@ public class BitmapHelper {
     public static Drawable bitmapToDrawable(Context contex, Bitmap bitmap) {
         return new BitmapDrawable(contex.getResources(), bitmap);
     }
+
+    public static Bitmap drawableToBitmap(Context contex, Drawable drawable) {
+        if(drawable instanceof  BitmapDrawable) {
+            return ((BitmapDrawable)drawable).getBitmap();
+        }
+        return null;
+    }
 }

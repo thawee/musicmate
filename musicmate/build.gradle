@@ -254,21 +254,21 @@ dependencies {
     // https://mvnrepository.com/artifact/com.jcraft/jsch
     implementation 'com.jcraft:jsch:0.1.55'
 
-    //https://github.com/jupnp
+    //https://github.com/jupnp/jupnp
     implementation 'org.jupnp:org.jupnp.android:3.0.2'
     implementation 'org.jupnp:org.jupnp.support:3.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-    implementation 'org.eclipse.jetty:jetty-server:9.4.54.v20240208'
+    //implementation 'org.eclipse.jetty:jetty-server:9.4.54.v20240208'
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet
-    implementation 'org.eclipse.jetty:jetty-servlet:9.4.54.v20240208'
+    //implementation 'org.eclipse.jetty:jetty-servlet:9.4.54.v20240208'
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client
-    implementation 'org.eclipse.jetty:jetty-client:9.4.54.v20240208'
+    //implementation 'org.eclipse.jetty:jetty-client:9.4.54.v20240208'
 
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    implementation 'javax.servlet:javax.servlet-api:3.1.0'
+    //implementation 'javax.servlet:javax.servlet-api:3.1.0'
 
-    //implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
-   // implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.4'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+    implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.4'
 
     // implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
    // implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'

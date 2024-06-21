@@ -10,8 +10,6 @@ import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_48;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_88;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
-import static apincer.android.mmate.Constants.SPL_16BIT_IN_DB;
-import static apincer.android.mmate.Constants.SPL_8BIT_IN_DB;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -184,36 +182,35 @@ public class MusicTagUtils {
         int bgBlackColor = context.getColor(R.color.grey900);
        // int resolutionColor = getResolutionColor(context,tag);
         int bgWhiteColor = getResolutionColor(context, tag); //context.getColor(R.color.grey100);
-        int qualityColor = context.getColor(R.color.quality_unknown);
+        int qualityColor = context.getColor(R.color.quality_no_rating);
         int labelColor = getEncodingColor(context, tag);
        // if(!(isDSD(tag) || isLossless(tag))) { // QUALITY_NORMAL.equals(tag.getMediaQuality())) {
        //     qualityColor = context.getColor(R.color.quality_bad);
        // }else
-        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality()) ||
+                QUALITY_RECOMMENDED.equals(tag.getMediaQuality()) ||
+                QUALITY_GOOD.equals(tag.getMediaQuality())
+        ) {
             qualityColor = context.getColor(R.color.quality_good);
-        }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_good);
-        }else if(QUALITY_GOOD.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_average);
         }else if(QUALITY_BAD.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_bad);
         }
-        int upscaleColor = context.getColor(R.color.quality_unknown);
+        int upscaleColor = context.getColor(R.color.quality_scale_not_test);
        // if(!(isDSD(tag) || isLossless(tag))) {
        //     upscaleColor = context.getColor(R.color.quality_bad);
        // }else if (tag.getDynamicRange() > 0.0) {
         if (tag.getDynamicRange() > 0.0) {
-            if (isUpScaled(tag)) {
-                upscaleColor = (isBadUpScaled(tag) ? context.getColor(R.color.quality_bad) : context.getColor(R.color.quality_average));
-            }else {
+            //if (isUpScaled(tag)) {
+                upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
+           // }else {
                 // not upscale, good
-                upscaleColor = context.getColor(R.color.quality_good);
-            }
+               // upscaleColor = context.getColor(R.color.quality_scale_not_test);
+           // }
         }
-        int upsampledColor = context.getColor(R.color.quality_unknown);; //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
+        int upsampledColor = context.getColor(R.color.quality_scale_not_test);; //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
         // 16 bit should be 44.1 or 48 kHz only
         if(tag.getAudioBitRate() == QUALITY_BIT_CD && tag.getAudioSampleRate() > QUALITY_SAMPLING_RATE_48) {
-            upsampledColor = context.getColor(R.color.quality_bad);
+            upsampledColor = context.getColor(R.color.quality_scale_not_matched);
         }
 
         String label;
@@ -1018,9 +1015,9 @@ public class MusicTagUtils {
         // int greyColor = context.getColor(R.color.grey200);
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
        // int recordsColor = context.getColor(R.color.audiophile_label2);
-        int recordsColor = context.getColor(R.color.quality_average);
+        int recordsColor = context.getColor(R.color.quality_good);
         int blackColor = context.getColor(R.color.black);
-        int qualityColor = context.getColor(R.color.quality_average);
+        int qualityColor = context.getColor(R.color.quality_good);
        // int qualityColor = context.getColor(R.color.audiophile_label1);
         String label1 = trimToEmpty(qualityText); //;"Audiophile";
         String label2 = "R e c o r d s";
@@ -1129,8 +1126,9 @@ public class MusicTagUtils {
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
             // Audiophile
             letterTextSize = 40; //82;
-            qualityColor = context.getColor(R.color.quality_good);
-        }else if(QUALITY_RECOMMENDED.equals(label1)) {
+            qualityColor = context.getColor(R.color.quality_audiophile);
+        }else if(QUALITY_RECOMMENDED.equals(label1) ||
+                (QUALITY_GOOD.equals(label1))) {
             letterTextSize = 30; //82;
             qualityColor = context.getColor(R.color.quality_good);
         }else if(Constants.QUALITY_BAD.equals(label1)) {
@@ -1138,7 +1136,7 @@ public class MusicTagUtils {
             qualityColor = context.getColor(R.color.quality_bad);
         }else {
             letterTextSize = 30; //82;
-            qualityColor = context.getColor(R.color.quality_average); //recordsColor;
+            qualityColor = context.getColor(R.color.quality_no_rating); //recordsColor;
         }
 
         mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -1569,7 +1567,7 @@ public class MusicTagUtils {
         return text;
     }
 
-    public static String getDynamicRangeSAsString(MusicTag tag) {
+    public static String getDynamicRangeAsString(MusicTag tag) {
         String text = "";
         if(tag.getDynamicRange()==0.00) {
             text = " - dB";
@@ -2287,6 +2285,7 @@ public class MusicTagUtils {
         return false;
     }
 
+    /*
     public static boolean isBadUpScaled(MusicTag tag) {
         if(tag.getDynamicRange()==0) return false;
         if(tag.getAudioBitsDepth() <=16) {
@@ -2300,7 +2299,7 @@ public class MusicTagUtils {
             //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
         }
         return false;
-    }
+    } */
 
     public static boolean isUpSampled(MusicTag tag) {
         return false;

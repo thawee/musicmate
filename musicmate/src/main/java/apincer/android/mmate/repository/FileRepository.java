@@ -82,6 +82,7 @@ public class FileRepository {
                 }
                 FFMPeg.extractCoverArt(path, targetFile);
             }
+
         } catch (Exception e) {
             Log.e(TAG, "extractCoverArt",e);
         }

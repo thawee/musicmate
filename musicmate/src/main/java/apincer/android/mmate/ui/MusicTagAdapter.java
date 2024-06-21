@@ -292,6 +292,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         return Constants.TITLE_LIBRARY;
     }
 
+    public boolean isFirstItem(Context context) {
+        return getHeaderTitle().equals(getHeaderTitles(context).get(0));
+    }
+
+    public void resetSelectedItem() {
+        criteria.setKeyword("");
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;

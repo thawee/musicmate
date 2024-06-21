@@ -101,7 +101,7 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.server.MediaServerService;
+import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.NASServer;
@@ -233,11 +233,6 @@ public class MainActivity extends AppCompatActivity {
             TextView status = view.findViewById(R.id.status);
             seq.setText(String.valueOf(i+1));
             status.setText(statusList.getOrDefault(tag, "-"));
-           /* if(statusList.containsKey(tag)) {
-                status.setText(statusList.get(tag));
-            }else {
-                status.setText("-");
-            }*/
             name.setText(FileSystem.getFilename(tag.getPath()));
             return view;
         }
@@ -347,11 +342,6 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-               /* if(statusList.containsKey(tag)) {
-                    status.setText(statusList.get(tag));
-                }else {
-                    status.setText("-");
-                }*/
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
@@ -993,7 +983,7 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(true);
         Button startButton = cview.findViewById(R.id.manageServer);
-        if(MusixMateApp.getInstance().isNASRunning()) {
+        if(MediaServerService.isServerStarted()) {
             status.setText("Status: STARTED");
             startButton.setText("Stop Server");
         }else {
@@ -1001,12 +991,12 @@ public class MainActivity extends AppCompatActivity {
             startButton.setText("Start Server");
         }
         startButton.setOnClickListener(view -> {
-            if(MusixMateApp.getInstance().isNASRunning()) {
+            if((MediaServerService.isServerStarted())) {
                 stopService(new Intent(getApplicationContext(), MediaServerService.class));
             }else {
                 startForegroundService(new Intent(getApplicationContext(), MediaServerService.class));
             }
-            if(MusixMateApp.getInstance().isNASRunning()) {
+            if((MediaServerService.isServerStarted())) {
                 status.setText("Status: STARTED");
                 startButton.setText("Stop Server");
             }else {
@@ -1094,11 +1084,6 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(doneList.getOrDefault(tag,"-"));
-                /*if(doneList.containsKey(tag)) {
-                    status.setText(doneList.get(tag));
-                }else {
-                    status.setText("-");
-                } */
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
@@ -1236,19 +1221,19 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         adapter.injectTracker(mTracker);
 
-        SelectionTracker.SelectionObserver<Long> observer = new SelectionTracker.SelectionObserver<Long>() {
+        SelectionTracker.SelectionObserver<Long> observer = new SelectionTracker.SelectionObserver<>() {
             @Override
             public void onSelectionChanged() {
                 int count = mTracker.getSelection().size();
                 selections.clear();
-                if(count > 0) {
+                if (count > 0) {
                     mTracker.getSelection().forEach(item -> selections.add(adapter.getMusicTag(item.intValue())));//selections += item);
                     if (actionMode == null) {
                         actionMode = startSupportActionMode(actionModeCallback);
                     }
                     actionMode.setTitle(StringUtils.formatSongSize(count));
                     actionMode.invalidate();
-              }else if(actionMode != null){
+                } else if (actionMode != null) {
                     actionMode.setTitle(StringUtils.formatSongSize(count));
                     actionMode.invalidate();
                 }
@@ -1512,6 +1497,13 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            //if not on first item in library
+            if(adapter!=null && !adapter.isFirstItem(getApplicationContext())) {
+                adapter.resetSelectedItem();
+                refreshLayout.autoRefresh();
+                return;
+            }
+
             if (!mExitSnackbar.isShown()) {
                 mExitSnackbar.show();
             } else {
@@ -1639,11 +1631,6 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-               /* if(statusList.containsKey(tag)) {
-                    status.setText(statusList.get(tag));
-                }else {
-                    status.setText("-");
-                } */
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }
@@ -1653,8 +1640,6 @@ public class MainActivity extends AppCompatActivity {
         View btnCancel = cview.findViewById(R.id.btn_cancel);
 
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-
-       // btnOK.setEnabled(false);
 
         btnOK.setEnabled(true);
 
@@ -1788,7 +1773,6 @@ public class MainActivity extends AppCompatActivity {
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
-      //  List<String> encodingItems = new ArrayList<>();
         if(MusicTagUtils.isAIFFile(selections.get(0)) ||
                 MusicTagUtils.isWavFile(selections.get(0)) ||
                 MusicTagUtils.isDSD(selections.get(0))) {
@@ -1843,11 +1827,6 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                /*if(statusList.containsKey(tag)) {
-                    status.setText(statusList.get(tag));
-                }else {
-                    status.setText("-");
-                }*/
                 name.setText(FileSystem.getFilename(tag.getPath()));
                 return view;
             }

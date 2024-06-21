@@ -11,19 +11,19 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.UpnpServiceImpl;
+import org.jupnp.android.AndroidRouter;
 import org.jupnp.android.AndroidUpnpServiceConfiguration;
-import org.jupnp.model.ValidationException;
 import org.jupnp.model.resource.Resource;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.registry.Registry;
+import org.jupnp.transport.Router;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URISyntaxException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,9 +45,10 @@ public class MediaServerService extends Service {
     static MediaServerService INSTANCE;
     private static final int HTTP_CONTENT_PORT =8192;
    // private HTTPServer httpServer;
-    final MyUpnpService upnpService = new MyUpnpService(new MusicMateUpnpServiceConfiguration());
+   // final MyUpnpService upnpService = new MyUpnpService(new MusicMateUpnpServiceConfiguration());
     //private final List<InetAddress> addressesToBind = new ArrayList<>();  // Named this way cos NetworkAddressFactoryImpl has a bindAddresses field.
-    private final Map<String, Resource<?>> registryPathToRes = new HashMap<>();
+   protected UpnpService upnpService;
+   private final Map<String, Resource<?>> registryPathToRes = new HashMap<>();
 
     private static final Pattern IPV4_PATTERN =
             Pattern.compile(
@@ -71,6 +72,16 @@ public class MediaServerService extends Service {
         return binder;
     }
 
+    /**
+     * Starts the UPnP service.
+     */
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        INSTANCE = this;
+        Log.d(this.getClass().getName(), "onCreate MusicMate Server Service");
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -84,10 +95,11 @@ public class MediaServerService extends Service {
         // in order of this circumstance we have to initialize the service
         // asynchronous
         try {
-            Thread initializationThread = new Thread(this::initialize);
-            initializationThread.start();
+           // Thread initializationThread = new Thread(this::initialize);
+           // initializationThread.start();
+            startServers();
             showNotification();
-            INSTANCE = this;
+           // INSTANCE = this;
             Log.d(this.getClass().getName(), "End On Start MusicMate Server Service");
             Log.d(this.getClass().getName(), "on start took: " + (System.currentTimeMillis() - start));
         }catch (Exception ex) {
@@ -113,13 +125,14 @@ public class MediaServerService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(this.getClass().getName(), "Destroying the MusicMate Server Service");
+        Log.d(this.getClass().getName(), "onDestroy the MusicMate Server Service");
        /* if (httpServer != null) {
             httpServer.stop();
             httpServer = null;
         }*/
         if(upnpService !=null) {
             upnpService.shutdown();
+            upnpService = null;
         }
         cancelNotification();
         super.onDestroy();
@@ -128,36 +141,71 @@ public class MediaServerService extends Service {
     /**
      *
      */
-    private void initialize()  {
+    private void startServers()  {
        // createHttpServer();
         try {
-            createDLNAServer();
-        } catch (IOException | ValidationException | URISyntaxException e) {
+            upnpService = new UpnpServiceImpl(createConfiguration()) {
+
+                @Override
+                protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
+                    return MediaServerService.this.createRouter(getConfiguration(), protocolFactory,
+                            MediaServerService.this);
+                }
+
+                @Override
+                public synchronized void shutdown() {
+                    // First have to remove the receiver, so Android won't complain about it leaking
+                    // when the main UI thread exits.
+                    ((AndroidRouter) getRouter()).unregisterBroadcastReceiver();
+
+                    // Now we can concurrently run the Cling shutdown code, without occupying the
+                    // Android main UI thread. This will complete probably after the main UI thread
+                    // is done.
+                    super.shutdown(true);
+                }
+            };
+
+            Thread initializationThread = new Thread(this::createDLNAServer);
+            initializationThread.start();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void createDLNAServer() throws IOException, ValidationException, URISyntaxException {
-        ContentTree contentTree = new ContentTree();
-        DLNASystemId systemId = new DLNASystemId();
-        final String hostName = InetAddress.getLocalHost().getHostName();
-        final InetAddress selfAddress = NetHelper.guessSelfAddress();
+    private UpnpServiceConfiguration createConfiguration() {
+        return new MusicMateUpnpServiceConfiguration();
+    }
 
-        final ExternalUrls externalUrls = new ExternalUrls(selfAddress, HTTP_CONTENT_PORT);
+    protected AndroidRouter createRouter(UpnpServiceConfiguration configuration, ProtocolFactory protocolFactory,
+                                         Context context) {
+        return new AndroidRouter(configuration, protocolFactory, context);
+    }
 
-        final NodeConverter nodeConverter = new NodeConverter(externalUrls);
+    private void createDLNAServer() {
+        try {
+            ContentTree contentTree = new ContentTree();
+            DLNASystemId systemId = new DLNASystemId();
+            final String hostName = InetAddress.getLocalHost().getHostName();
+            final InetAddress selfAddress = NetHelper.guessSelfAddress();
 
-        boolean printAccessLog = true;
-        upnpService.startup();
-        upnpService.getRegistry().addDevice(new MediaServer(systemId, contentTree, nodeConverter, hostName, printAccessLog, externalUrls.getSelfUri()).getDevice());
+            final ExternalUrls externalUrls = new ExternalUrls(selfAddress, HTTP_CONTENT_PORT);
 
-        // Periodic rescan to catch missed devices.
-        final ScheduledExecutorService upnpExSvc = ExecutorHelper.newScheduledExecutor(1, "upnp");
-        upnpExSvc.scheduleWithFixedDelay(() -> {
-            upnpService.getControlPoint().search();
-           // if (args.isVerboseLog()) LOG.info("Scanning for devices.");
-        }, 0, Constants.DEVICE_SEARCH_INTERVAL_MINUTES, TimeUnit.MINUTES);
+            final NodeConverter nodeConverter = new NodeConverter(externalUrls);
 
+            boolean printAccessLog = true;
+            upnpService.startup();
+            upnpService.getRegistry().addDevice(new MediaServer(systemId, contentTree, nodeConverter, hostName, printAccessLog, externalUrls.getSelfUri()).getDevice());
+
+            // Periodic rescan to catch missed devices.
+            final ScheduledExecutorService upnpExSvc = ExecutorHelper.newScheduledExecutor(1, "upnp");
+            upnpExSvc.scheduleWithFixedDelay(() -> {
+                upnpService.getControlPoint().search();
+                // if (args.isVerboseLog()) LOG.info("Scanning for devices.");
+            }, 0, Constants.DEVICE_SEARCH_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        }catch (Exception ex) {
+            Log.d(MediaServerService.class.getName(),
+                    "Error while create dlna media server", ex);
+        }
     }
 
     /**
@@ -171,7 +219,7 @@ public class MediaServerService extends Service {
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate Server")
+                .setContentTitle("MusicMate MediaServer")
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.settings_local_server_name));
         mBuilder.setContentIntent(contentIntent);

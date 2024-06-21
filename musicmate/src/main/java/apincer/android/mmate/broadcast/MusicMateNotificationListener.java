@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.util.Log;
 
 import apincer.android.mmate.utils.StringUtils;
 
@@ -28,13 +29,19 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     }
 
     Context context;
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(this.getClass().getName(), "onDestroy MusicMate Notification");
+    }
+
     @Override
 
     public void onCreate() {
-
         super.onCreate();
         context = getApplicationContext();
-
+        Log.d(this.getClass().getName(), "onCreate MusicMate Notification");
     }
 
     @Override

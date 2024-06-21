@@ -1,5 +1,6 @@
 package apincer.android.mmate.coil;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
@@ -8,15 +9,30 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
+import apincer.android.mmate.utils.BitmapHelper;
+import coil.size.Dimension;
 import coil.size.Size;
 import coil.transform.Transformation;
 import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
 
 public class ReflectionTransformation implements Transformation {
+
+    public static Drawable applyReflection(Context context, int drawableId, int width, int high) {
+        Drawable drawable = ContextCompat.getDrawable(context,drawableId);
+        Bitmap bitmap = BitmapHelper.drawableToBitmap(context, drawable);
+        Size size = new Size(new Dimension.Pixels(width), new Dimension.Pixels(high));
+        ReflectionTransformation tm = new ReflectionTransformation();
+        Bitmap nbitmap = tm.transform(bitmap, size, new DummyContinuation());
+        return BitmapHelper.bitmapToDrawable(context, nbitmap);
+    }
+
     @NonNull
     public String getCacheKey() {
         return ReflectionTransformation.class.getName();
@@ -70,6 +86,19 @@ public class ReflectionTransformation implements Transformation {
                 + reflectionGap, paint);
 
         return bitmapWithReflection;
+    }
+
+    private static class DummyContinuation implements Continuation {
+        @Override
+        public void resumeWith(@NonNull Object o) {
+
+        }
+
+        @NonNull
+        @Override
+        public CoroutineContext getContext() {
+            return null;
+        }
     }
 /*
     @NonNull
