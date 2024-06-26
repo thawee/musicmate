@@ -2,7 +2,6 @@ package apincer.android.mmate.fs;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.Uri.Builder;
@@ -13,20 +12,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.nio.file.Files;
 
-import apincer.android.mmate.R;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.utils.FileUtils;
 
 public final class MusicCoverArtProvider extends ContentProvider {
     private static final String TAG = "MusicCoverArtProvider";

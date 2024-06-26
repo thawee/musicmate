@@ -6,10 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
-import android.os.BatteryManager;
-import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -27,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,7 +34,6 @@ import apincer.android.mmate.broadcast.NotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.NASServer;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
@@ -47,7 +42,6 @@ public class MusixMateApp extends Application {
     private static final String TAG = MusixMateApp.class.getName();
 
     private static MusixMateApp INSTANCE;
-    //private static HTTPStreamingServer server;
 
     public static MusixMateApp getInstance() {
         return INSTANCE;
@@ -55,18 +49,11 @@ public class MusixMateApp extends Application {
 
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
-    private final HashMap<String, PowerManager.WakeLock> wakeLocks = new HashMap<>();
-    private Executor contentLoadThreadPool;
+  //  private final HashMap<String, PowerManager.WakeLock> wakeLocks = new HashMap<>();
+  //  private Executor contentLoadThreadPool;
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
         try {
-          /*  BroadcastData data = new BroadcastData()
-                    .setAction(BroadcastData.Action.PLAYING)
-                    .setStatus(BroadcastData.Status.COMPLETED)
-                    .setTagInfo(song)
-                    .setMessage("");
-            Intent intent = data.getIntent();
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent); */
             AudioTagPlayingEvent.publishPlayingSong(song);
         } catch (Exception ex) {
             Log.e(TAG, "BroadcastHelper", ex);
@@ -76,20 +63,10 @@ public class MusixMateApp extends Application {
    // private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
-   // private static MusicMateDatabase database;
-   // private MusicMateOrmLite ormLite = null;
 
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
     }
-
-    /*
-    public static void statHttpServer(Activity activity) {
-        if(server==null) {
-            server = new HTTPStreamingServer();
-        }
-        server.startServer(activity);
-    } */
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -128,24 +105,11 @@ public class MusixMateApp extends Application {
         BroadcastHelper.playNextSong(applicationContext);
     }
 
-    /*
-    public static void stopHttpServer(Activity activity) {
-        if(server!=null) {
-            server.stopServer(activity);
-        }
-    } */
-
     @Override
     public void onTerminate() {
         super.onTerminate();
 
-      //  upnpClient.shutdown();
-      //  stopService(new Intent(this, UpnpServerService.class));
-      //  stopService(new Intent(this, UpnpRegistryService.class));
         stopService(new Intent(this, NotificationListener.class));
-       /* if(server!=null) {
-            server.stopServer(null);
-        }*/
         broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
     }
@@ -167,7 +131,6 @@ public class MusixMateApp extends Application {
         logger = Logger.getLogger("apincer.android.mmate.ffmpeg-kit");
         logger.setLevel(Level.SEVERE);
 
-//        upnpClient = new UpnpClient(this);
         createNotificationChannel();
 
         //initialize ObjectBox is when your app starts
@@ -309,7 +272,7 @@ public class MusixMateApp extends Application {
 
         // init mediaServer if nothing, to be deleted after implement maintain media server screen
         // FIXME - do UI and delete these code
-        if(getOrmLite().getMediaServers().isEmpty()) {
+       /* if(getOrmLite().getMediaServers().isEmpty()) {
             List list = new ArrayList();
             NASServer server = new NASServer();
             server.setIp("10.100.1.198");
@@ -320,7 +283,7 @@ public class MusixMateApp extends Application {
             server.setPath("/mnt/mmcblk0p2/media");
             list.add(server);
             getOrmLite().saveMediaServers(list);
-        }
+        } */
     }
 
     /*
@@ -334,12 +297,6 @@ Provides the SQLite Helper Object among the application
         return OpenHelperManager.getHelper(this, MusicMateOrmLite.class);
     }
 
-    /*
-    public boolean isHttpServerRunning() {
-        if(server == null) return false;
-        return server.isRunning();
-    }*/
-
     public void createNotificationChannel() {
         CharSequence name = getString(R.string.channel_name);
         String description = getString(R.string.channel_description);
@@ -352,6 +309,7 @@ Provides the SQLite Helper Object among the application
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
     }
+
     public void createGroupNotification() {
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -374,51 +332,5 @@ Provides the SQLite Helper Object among the application
         if (mNotificationManager.getActiveNotifications().length == 1) {
             mNotificationManager.cancel(NotificationId.MAIN.getId());
         }
-    }
-
-    public Executor getContentLoadExecutor() {
-        return contentLoadThreadPool;
-    }
-
-    public boolean isUnplugged() {
-        Intent intent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        boolean unplugged = plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
-        return !(plugged == BatteryManager.BATTERY_PLUGGED_AC ||
-                plugged == BatteryManager.BATTERY_PLUGGED_USB ||
-                unplugged);
-    }
-    public void acquireWakeLock(long timeout, String tag) {
-
-        if (!wakeLocks.containsKey(tag)) {
-            PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            wakeLocks.put(tag, powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, tag));
-        }
-        PowerManager.WakeLock wakeLock = wakeLocks.get(tag);
-        if (wakeLock != null) {
-            if (wakeLock.isHeld()) {
-                releaseWakeLock(tag);
-            }
-            while (!wakeLock.isHeld()) {
-                wakeLock.acquire(timeout);
-            }
-            Log.d(getClass().getName(), "WakeLock aquired Tag:" + tag + " timeout: " + timeout);
-        }
-
-
-    }
-
-    public void releaseWakeLock(String tag) {
-        PowerManager.WakeLock wakeLock = wakeLocks.get(tag);
-        if (wakeLock != null && wakeLock.isHeld()) {
-            try {
-                wakeLock.release();
-                Log.d(getClass().getName(), "WakeLock released: " + tag);
-            } catch (Throwable th) {
-                // ignoring this exception, probably wakeLock was already released
-                Log.d(getClass().getName(), "Ignoring exception on WakeLock (" + tag + ") release maybe no wakelock?");
-            }
-        }
-
     }
 }

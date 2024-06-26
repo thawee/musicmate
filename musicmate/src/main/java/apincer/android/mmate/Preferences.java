@@ -19,12 +19,6 @@ public class Preferences {
                 PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_NIGHT_MODE_ONLY,true);
     }
-/*
-    public static boolean isPreviewFollowNowPlaying(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_PREVIEW_FOLLW_NOW_PLAYING,false);
-    } */
 
     public static boolean isListFollowNowPlaying(Context context) {
         SharedPreferences prefs =

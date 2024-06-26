@@ -104,12 +104,9 @@ import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.FFMPeg;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.NASServer;
-import apincer.android.mmate.repository.MediaServerRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.MusicTagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.share.SyncMusic;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -1037,7 +1034,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+/*
     private void doSendToNASServer(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
@@ -1156,7 +1153,7 @@ public class MainActivity extends AppCompatActivity {
         });
         btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
-    }
+    }*/
 
     private void doShowAboutApp() {
         Intent myIntent = new Intent(MainActivity.this, AboutActivity.class);
@@ -1551,10 +1548,10 @@ public class MainActivity extends AppCompatActivity {
                 doSendFilesToHibyDAP(getSelections());
                 mode.finish();
                 return true;*/
-            }else if (id == R.id.action_send_to_media_server) {
-                doSendToNASServer(getSelections());
-                mode.finish();
-                return true;
+           // }else if (id == R.id.action_send_to_media_server) {
+           //     doSendToNASServer(getSelections());
+            //    mode.finish();
+           //     return true;
            // }else if (id == R.id.action_send_playlist_to_streaming) {
               //  final List<MusicTag> list = getSelections();
               //  MusicMateExecutors.move(() -> {
