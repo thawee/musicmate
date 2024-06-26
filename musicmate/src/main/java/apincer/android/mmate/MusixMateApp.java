@@ -16,6 +16,7 @@ import androidx.work.Constraints;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
+import com.arthenica.ffmpegkit.FFmpegKitConfig;
 import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
@@ -126,10 +127,7 @@ public class MusixMateApp extends Application {
         broadcastHelper.onCreate(this);
 
         // turn off ffmpeg-kit log
-        Logger logger = Logger.getLogger("com.arthenica.ffmpegkit");
-        logger.setLevel(Level.SEVERE);
-        logger = Logger.getLogger("apincer.android.mmate.ffmpeg-kit");
-        logger.setLevel(Level.SEVERE);
+        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_ERROR);
 
         createNotificationChannel();
 

@@ -118,7 +118,8 @@
                         android:background="@drawable/shape_play_next_background"
                         android:layout_marginTop="@dimen/dimen_24_dp"
                         android:layout_marginEnd="@dimen/dimen_6_dp"
-                        android:layout_gravity="center">
+                        android:layout_marginStart="@dimen/dimen_32_dp"
+                        android:layout_gravity="start">
                     <ImageView
                         android:id="@+id/music_player"
                         android:layout_width="@dimen/dimen_32_dp"
@@ -129,7 +130,16 @@
                         />
                     </com.skydoves.elasticviews.ElasticLayout>
 
-
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginStart="@dimen/dimen_2_dp"
+                        android:layout_marginEnd="@dimen/dimen_2_dp"
+                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:background="@drawable/shape_btn_background"
+                        android:orientation="vertical">
+                        <!--
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -139,7 +149,7 @@
                         android:layout_marginEnd="@dimen/dimen_2_dp"
                         android:layout_marginBottom="@dimen/dimen_2_dp"
                         android:layout_gravity="center"
-                        android:gravity="center">
+                        android:gravity="center"> -->
                         <TextView
                             android:id="@+id/panel_title"
                             android:layout_width="wrap_content"
@@ -158,41 +168,24 @@
                             android:paddingStart="@dimen/dimen_1_dp"
                             android:paddingEnd="@dimen/dimen_1_dp"
                             tools:ignore="HardcodedText" />
-<!--
-                        <com.skydoves.elasticviews.ElasticLayout
-                            android:id="@+id/music_player_panel"
-                            android:layout_width="@dimen/dimen_32_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:layout_gravity="center"
-                            android:gravity="center"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:background="@drawable/bg_transparent"
-                            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck">
-
-                            <ImageView
-                                android:id="@+id/music_player"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="center_vertical"
-                                android:layout_margin="@dimen/dimen_4_dp"
-                                android:src="@drawable/bg_transparent"
-                                tools:ignore="ContentDescription" />
-                        </com.skydoves.elasticviews.ElasticLayout>
--->
+                        <!--
                     </LinearLayout>
+                    -->
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:orientation="horizontal"
-                        android:gravity="center_horizontal"
+                        android:gravity="center"
+                        android:layout_gravity="center"
                         android:paddingTop="@dimen/dimen_12_dp"
                         android:paddingBottom="@dimen/dimen_8_dp"
                         android:paddingRight="@dimen/dimen_12_dp"
                         android:paddingLeft="@dimen/dimen_12_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
+                        android:layout_marginBottom="@dimen/dimen_4_dp" >
+                        <!--
                         android:background="@drawable/shape_btn_background">
-
+                        -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -318,6 +311,7 @@
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
+                    </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
                 <include layout="@layout/view_tag_layout" />

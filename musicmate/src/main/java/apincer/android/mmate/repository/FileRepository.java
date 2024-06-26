@@ -60,7 +60,7 @@ public class FileRepository {
 
     public static void extractCoverArt(String path, File targetFile) {
         try {
-            Log.d(TAG, "extractCoverArt: "+path);
+           // Log.d(TAG, "extractCoverArt: "+path);
             File dir = targetFile.getParentFile();
             dir.mkdirs();
             File coverArtFile = getFolderCoverArt(path);

@@ -67,21 +67,14 @@ public final class MusicCoverArtProvider extends ContentProvider {
     }
 
     public static String getCacheCover(File file) {
-        /* String absPath = file.getAbsolutePath().toLowerCase();
-        if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
-            // use folder for managed files, others use full file path
-            pathDir = file.getParentFile();
-        }*/
-
         String path = DigestUtils.md5Hex(file.getAbsolutePath())+".png";
-
         return "/CoverArts/"+path;
     }
 
     public ParcelFileDescriptor openFile(Uri uri, String str) {
             try {
                 File file = getFileForUri(uri);
-                Log.d(TAG,"openFile: "+file);
+                //Log.d(TAG,"openFile: "+file);
                 File dir =  getContext().getExternalCacheDir();
                 String path = getCacheCover(file);
 

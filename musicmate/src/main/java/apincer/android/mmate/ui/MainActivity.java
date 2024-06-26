@@ -1460,7 +1460,7 @@ public class MainActivity extends AppCompatActivity {
                                 runOnUiThread(() -> scrollToListening());
                             }
                         }
-                    }, 1500); // 1.5 seconds
+                    }, 500); // 0.5 seconds
             }
         }
     }
@@ -1563,10 +1563,10 @@ public class MainActivity extends AppCompatActivity {
                 doMeasureDR(getSelections());
                 mode.finish();
                 return true;
-           /* }else if (id == R.id.action_export_playlist) {
+            }else if (id == R.id.action_export_playlist) {
                 doExportAsPlaylist(getSelections());
                 mode.finish();
-                return true; */
+                return true;
             }else if (id == R.id.action_select_all) {
                 if(mTracker.getSelection().size() == adapter.getItemCount()) {
                     // selected all, reset selection
