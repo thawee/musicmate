@@ -16,7 +16,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.utils.StringUtils;
 
 public class MusicTagRepository {
-    private static final String TAG = MusicTagRepository.class.getName();
+    private static final String TAG = "MusicTagRepository";
     public static List<String> lossyAudioFormatList;
 
     MusicTagRepository() {

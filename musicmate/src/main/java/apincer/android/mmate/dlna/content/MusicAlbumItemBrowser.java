@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.dlna.MusicMateContentDirectory;
+import apincer.android.mmate.dlna.ContentDirectory;
 
 
 /**
@@ -37,7 +37,7 @@ public class MusicAlbumItemBrowser extends ContentBrowser {
 
     @SuppressLint("Range")
     @Override
-    public DIDLObject browseMeta(MusicMateContentDirectory contentDirectory,
+    public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         Item result = null;
         String[] projection;
@@ -109,7 +109,7 @@ public class MusicAlbumItemBrowser extends ContentBrowser {
                 String uri = getUriString(contentDirectory, id, mimeType);
                 URI albumArtUri = URI.create("http://"
                         + contentDirectory.getIpAddress() + ":"
-                        + MediaServerService.SERVER_PORT + "/album/" + albumId);
+                        + MediaServerService.CONTENT_SERVER_PORT + "/album/" + albumId);
                 Res resource = new Res(mimeType, size, uri);
                 resource.setDuration(duration);
 
@@ -142,13 +142,13 @@ public class MusicAlbumItemBrowser extends ContentBrowser {
 
     @Override
     public List<Container> browseContainer(
-            MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+            ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
         return new ArrayList<>();
     }
 
     @Override
-    public List<Item> browseItem(MusicMateContentDirectory contentDirectory,
+    public List<Item> browseItem(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Item> result = new ArrayList<>();
         result.add((Item) browseMeta(contentDirectory, myId, firstResult, maxResults, orderby));

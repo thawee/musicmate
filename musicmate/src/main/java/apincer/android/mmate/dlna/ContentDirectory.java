@@ -25,17 +25,8 @@ import org.jupnp.support.model.BrowseFlag;
 import org.jupnp.support.model.BrowseResult;
 import org.jupnp.support.model.DIDLContent;
 import org.jupnp.support.model.DIDLObject;
-import org.jupnp.support.model.PersonWithRole;
-import org.jupnp.support.model.Protocol;
-import org.jupnp.support.model.ProtocolInfo;
-import org.jupnp.support.model.Res;
 import org.jupnp.support.model.SortCriterion;
-import org.jupnp.support.model.container.MusicAlbum;
-import org.jupnp.support.model.container.StorageFolder;
-import org.jupnp.support.model.item.MusicTrack;
-import org.jupnp.util.MimeType;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -53,11 +44,11 @@ import apincer.android.mmate.dlna.content.MusicAllTitlesFolderBrowser;
 import apincer.android.mmate.dlna.content.MusicArtistFolderBrowser;
 import apincer.android.mmate.dlna.content.MusicArtistItemBrowser;
 import apincer.android.mmate.dlna.content.MusicArtistsFolderBrowser;
+import apincer.android.mmate.dlna.content.MusicDownloadedFolderBrowser;
 import apincer.android.mmate.dlna.content.MusicFolderBrowser;
 import apincer.android.mmate.dlna.content.MusicGenreFolderBrowser;
 import apincer.android.mmate.dlna.content.MusicGenreItemBrowser;
 import apincer.android.mmate.dlna.content.MusicGenresFolderBrowser;
-import apincer.android.mmate.dlna.content.RootFolderBrowser;
 
 /**
  * a content directory which uses the content of the MediaStore in order to
@@ -76,7 +67,8 @@ import apincer.android.mmate.dlna.content.RootFolderBrowser;
         @UpnpStateVariable(name = "A_ARG_TYPE_Count", sendEvents = false, datatype = "ui4"),
         @UpnpStateVariable(name = "A_ARG_TYPE_UpdateID", sendEvents = false, datatype = "ui4"),
         @UpnpStateVariable(name = "A_ARG_TYPE_URI", sendEvents = false, datatype = "uri")})
-public class MusicMateContentDirectory {
+public class ContentDirectory {
+    private static final String TAG = "ContentDirectory";
     @UpnpStateVariable(sendEvents = false)
     final private CSV<String> searchCapabilities;
     @UpnpStateVariable(sendEvents = false)
@@ -91,7 +83,7 @@ public class MusicMateContentDirectory {
             0);
     private final String ipAddress;
 
-    public MusicMateContentDirectory(Context context, String ipAddress) {
+    public ContentDirectory(Context context, String ipAddress) {
         this.context = context;
         this.searchCapabilities = new CSVString();
         this.sortCapabilities = new CSVString();
@@ -104,7 +96,7 @@ public class MusicMateContentDirectory {
 
     /**
      *
-     */
+
     private void createContentDirectory() {
         StorageFolder rootContainer = new StorageFolder("0", "-1", "root",
                 "mmate", 2, 907000L);
@@ -118,8 +110,9 @@ public class MusicMateContentDirectory {
         musicAlbum.setRestricted(true);
         rootContainer.addContainer(musicAlbum);
         addContent(musicAlbum.getId(), musicAlbum);
-    }
+    } */
 
+    /*
     private List<MusicTrack> createMusicTracks(String parentId) {
         String album = "Music";
         String creator = "freetestdata.com";
@@ -164,7 +157,7 @@ public class MusicMateContentDirectory {
         result.add(musicTrack);
 
         return result;
-    }
+    } */
 
     // *******************************************************************
 
@@ -241,7 +234,7 @@ public class MusicMateContentDirectory {
         } catch (ContentDirectoryException ex) {
             throw ex;
         } catch (Exception ex) {
-            Log.d(getClass().getName(), "exception on browse", ex);
+            Log.d(TAG, "exception on browse", ex);
             throw new ContentDirectoryException(ErrorCode.ACTION_FAILED,
                     ex.toString());
         }
@@ -251,7 +244,7 @@ public class MusicMateContentDirectory {
                                String filter, long firstResult, long maxResults,
                                SortCriterion[] orderby) throws ContentDirectoryException {
 
-        Log.d(getClass().getName(), "Browse: objectId: " + objectID
+        Log.d(TAG, "Browse: objectId: " + objectID
                 + " browseFlag: " + browseFlag + " filter: " + filter
                 + " firstResult: " + firstResult + " maxResults: " + maxResults
                 + " orderby: " + stream(orderby).map(SortCriterion::toString).collect(Collectors.joining(",")));
@@ -312,7 +305,7 @@ public class MusicMateContentDirectory {
         try {
             // Generate output with nested items
             String didlXml = new DIDLParser().generate(didl, false);
-            Log.d(getClass().getName(), "CDResponse: " + didlXml);
+            Log.d(TAG, "CDResponse: " + didlXml);
             result = new BrowseResult(didlXml, childCount, childCount);
         } catch (Exception e) {
             throw new ContentDirectoryException(
@@ -325,9 +318,9 @@ public class MusicMateContentDirectory {
 
     private ContentBrowser findBrowserFor(String objectID) {
         ContentBrowser result = null;
-        if (objectID == null || objectID.equals("") || ContentDirectoryIDs.ROOT.getId().equals(objectID)) {
-            result = new RootFolderBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
+        if (objectID == null || objectID.equals("") || ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
+        //    result = new RootFolderBrowser(getContext());
+       // } else if (ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
             result = new MusicFolderBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId().equals(objectID)) {
             result = new MusicGenresFolderBrowser(getContext());
@@ -351,6 +344,8 @@ public class MusicMateContentDirectory {
             result = new MusicAlbumItemBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
             result = new MusicArtistItemBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId())) {
+            result = new MusicDownloadedFolderBrowser(getContext());
         }
 
         return result;

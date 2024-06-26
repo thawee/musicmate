@@ -488,7 +488,7 @@ public class StringUtils {
             }
             formatText = StringUtils.trimToEmpty(formatText);
         }else {
-            formatText = String.format(Locale.getDefault(), format, h,m, s);
+            formatText = String.format(Locale.getDefault(), format, h,m,s);
             while(formatText.startsWith("00:")) {
                 formatText = formatText.substring(formatText.indexOf("00:")+("00:".length()));
             }

@@ -9,15 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.drawable.AdaptiveIconDrawable;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.preference.PreferenceManager;
 
 import org.apache.commons.io.IOUtils;
@@ -52,7 +48,6 @@ import org.jupnp.transport.spi.NetworkAddressFactory;
 import org.jupnp.transport.spi.StreamClient;
 import org.jupnp.transport.spi.StreamServer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -72,18 +67,20 @@ import apincer.android.mmate.NotificationId;
 import apincer.android.mmate.R;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
+import apincer.android.mmate.utils.StringUtils;
 
 public class MediaServerService extends Service {
+    private static final String TAG = "MediaServerService";
     private static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-    public static int SERVER_PORT = 5001;
-    public static int SSDP_PORT = 2869;
+    public static int CONTENT_SERVER_PORT = 5001;
+    public static int STREAM_SERVER_PORT = 2869;
 
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected IBinder binder = new UpnpRegistryServiceBinder();
-    private LocalService<MusicMateContentDirectory> contentDirectoryService;
+    private LocalService<ContentDirectory> contentDirectoryService;
     private boolean watchdog;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
@@ -114,7 +111,7 @@ public class MediaServerService extends Service {
         INSTANCE = this;
         upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
 
-        Log.d(this.getClass().getName(), "on start took: " + (System.currentTimeMillis() - start));
+        Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
     }
 
     @Override
@@ -127,10 +124,7 @@ public class MediaServerService extends Service {
         // asynchronous
         Thread initializationThread = new Thread(this::initialize);
         initializationThread.start();
-        Log.d(this.getClass().getName(), "End On Start"); 
-
-        
-        Log.d(this.getClass().getName(), "on start took: " + (System.currentTimeMillis() - start));
+        Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
         return START_STICKY;
     }
 
@@ -164,16 +158,16 @@ public class MediaServerService extends Service {
                     .setTcpNoDelay(true)
                     .setSoTimeout(60, TimeUnit.SECONDS)
                     .build();
-            Log.d(getClass().getName(), "Adding present connector: " + bindAddress + ":" + SERVER_PORT);
+            Log.d(TAG, "Adding content connector: " + bindAddress + ":" + CONTENT_SERVER_PORT);
 
             httpServer = H2ServerBootstrap.bootstrap()
            // httpServer = AsyncServerBootstrap.bootstrap()
                     .setIOReactorConfig(config)
                     .setCanonicalHostName(bindAddress)
-                    .register("*", new MediaServerServiceHttpHandler(getApplicationContext()))
+                    .register("*", new ContentServerRequestHandler(getApplicationContext()))
                     .create();
 
-            httpServer.listen(new InetSocketAddress(SERVER_PORT), URIScheme.HTTP);
+            httpServer.listen(new InetSocketAddress(CONTENT_SERVER_PORT), URIScheme.HTTP);
             httpServer.start();
         }
     }
@@ -188,28 +182,32 @@ public class MediaServerService extends Service {
             mediaServerUuid = UUID.randomUUID().toString();
             preferences.edit().putString(getApplicationContext().getString(R.string.settings_local_server_provider_uuid_key), mediaServerUuid).apply();
         }
-        Log.d(this.getClass().getName(), "Create MediaServer with ID: " + mediaServerUuid);
+        Log.d(TAG, "Create MediaServer with ID: " + mediaServerUuid);
         try {
             versionName = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0).versionName;
         } catch (PackageManager.NameNotFoundException ex) {
-            Log.e(this.getClass().getName(), "Error while creating device", ex);
+            Log.e(TAG, "Error while creating device", ex);
             versionName = "??";
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate-UPnP/AV Server", new ManufacturerDetails("Apincer",
+                    "MusicMate :"+getPhoneModel(), new ManufacturerDetails("apincer.com",
                     "http://www.apincer.com"), new ModelDetails("MusicMate", "UPnP/AV MediaServer",
-                    versionName), URI.create("http://" + getIpAddress() + ":" + SERVER_PORT));
+                    versionName), URI.create("http://" + getIpAddress() + ":" + CONTENT_SERVER_PORT));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
             localServer = new LocalDevice(identity, new UDADeviceType("MediaServer"), msDetails, createDeviceIcons(), createMediaServerServices());
             upnpService.getRegistry().addDevice(localServer);
         } catch (ValidationException e) {
-            Log.e(this.getClass().getName(), "Exception during device creation", e);
-            Log.e(this.getClass().getName(), "Exception during device creation Errors:" + e.getErrors());
+            Log.e(TAG, "Exception during device creation", e);
+            Log.e(TAG, "Exception during device creation Errors:" + e.getErrors());
             throw new IllegalStateException("Exception during device creation", e);
         }
+    }
+
+    private String getPhoneModel() {
+        return StringUtils.trimToEmpty(Build.MODEL);
     }
 
     private void showNotification() {
@@ -218,9 +216,9 @@ public class MediaServerService extends Service {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, MusixMateApp.NOTIFICATION_CHANNEL_ID)
                 .setOngoing(true)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate")
+                .setContentTitle("MusicMate - "+getPhoneModel())
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.settings_local_server_name));
         mBuilder.setContentIntent(contentIntent);
@@ -228,48 +226,23 @@ public class MediaServerService extends Service {
 
     }
 
-    private String getLocalServerName() {
-        return "MusicMate";
-    }
-
     private Icon[] createDeviceIcons() {
         ArrayList<Icon> icons = new ArrayList<>();
-        byte[] icon = getIconAsByteArray();
-        if(icon != null) {
-            icons.add(new Icon("image/png", 32, 32, 24, "musicmate.png", icon));
-            icons.add(new Icon("image/png", 64, 64, 24, "musicmate64.png", icon));
-        }
+        icons.add(new Icon("image/png", 32, 32, 24, "musicmate32.png", getIconAsByteArray("iconpng32.png")));
+        icons.add(new Icon("image/png", 48, 48, 24, "musicmate48.png", getIconAsByteArray("iconpng48.png")));
+        icons.add(new Icon("image/png", 120, 120, 24, "musicmate120.png", getIconAsByteArray("iconpng120.png")));
+        icons.add(new Icon("image/png", 192, 192, 24, "musicmate192.png", getIconAsByteArray("iconpng192.png")));
         return icons.toArray(new Icon[]{});
     }
 
-    private byte[] getIconAsByteArray() {
+    private byte[] getIconAsByteArray(String iconFile) {
         try {
-            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "icon.png");
+            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), iconFile);
             return IOUtils.toByteArray(in);
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Log.e("getIconAsByteArray", "cannot get icon file - "+iconFile, ex);
         }
         return null;
-    }
-
-    private byte[] getIconAsByteArray(int drawableId, Bitmap.CompressFormat format) {
-
-        Drawable drawable = ResourcesCompat.getDrawable(getResources(), drawableId, getTheme());
-        byte[] result = null;
-        if (drawable != null) {
-            if(drawable instanceof  BitmapDrawable) {
-                Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(format, 100, stream);
-                result = stream.toByteArray();
-            }else if (drawable instanceof AdaptiveIconDrawable) {
-              /*  Bitmap bitmap = ((AdaptiveIconDrawable) drawable).
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(format, 100, stream);
-                result = stream.toByteArray(); */
-            }
-        }
-        return result;
     }
 
     private LocalService<?>[] createMediaServerServices() {
@@ -354,7 +327,7 @@ public class MediaServerService extends Service {
     }
 
     private LocalService<?> createContentDirectoryService() {
-        contentDirectoryService = new AnnotationLocalServiceBinder().read(MusicMateContentDirectory.class);
+        contentDirectoryService = new AnnotationLocalServiceBinder().read(ContentDirectory.class);
         contentDirectoryService.setManager(new DefaultServiceManager<>(contentDirectoryService, null) {
 
             @Override
@@ -363,8 +336,8 @@ public class MediaServerService extends Service {
             }
 
             @Override
-            protected MusicMateContentDirectory createServiceInstance() {
-                return new MusicMateContentDirectory(getApplicationContext(), getIpAddress());
+            protected ContentDirectory createServiceInstance() {
+                return new ContentDirectory(getApplicationContext(), getIpAddress());
             }
         });
         return contentDirectoryService;
@@ -437,7 +410,7 @@ public class MediaServerService extends Service {
                 }
             }
         } catch (SocketException se) {
-            Log.d(MediaServerService.class.getName(),
+            Log.d(TAG,
                     "Error while retrieving network interfaces", se);
         }
         // maybe wifi is off we have to use the loopback device
@@ -459,7 +432,7 @@ public class MediaServerService extends Service {
 
         @Override
         protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
-            return super.createNetworkAddressFactory(SSDP_PORT, multicastResponsePort);
+            return super.createNetworkAddressFactory(STREAM_SERVER_PORT, multicastResponsePort);
         }
 
         @Override
@@ -469,16 +442,16 @@ public class MediaServerService extends Service {
         }
 
         @Override
-        public StreamServer<MusicMateStreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
+        public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
             //return new MusicMateStreamServerImpl( new MusicMateStreamServerConfigurationImpl(SSDP_PORT)
-            return new MusicMateStreamServerImpl( new MusicMateStreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
+            return new StreamServerImpl( new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
             );
         }
 
         @Override
-        public StreamClient<MusicMateStreamingClientConfigurationImpl> createStreamClient() {
-            return new MusicMateStreamingClientImpl(
-                    new MusicMateStreamingClientConfigurationImpl(
+        public StreamClient<StreamingClientConfigurationImpl> createStreamClient() {
+            return new StreamingClientImpl(
+                    new StreamingClientConfigurationImpl(
                             getSyncProtocolExecutorService()
                     )
             );

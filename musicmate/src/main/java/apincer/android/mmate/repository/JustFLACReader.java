@@ -23,7 +23,7 @@ import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 public class JustFLACReader extends TagReader{
-    private static final String TAG = JustFLACReader.class.getName();
+    private static final String TAG = "JustFLACReader";
     private static final int NO_OF_BITS_IN_BYTE = 8;
     private static final int KILOBYTES_TO_BYTES_MULTIPLIER = 1000;
     public static boolean isSupportedFileFormat(String path) {

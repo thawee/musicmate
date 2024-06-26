@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EntityDetails;
@@ -30,6 +32,7 @@ import org.jupnp.util.MimeType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -38,11 +41,20 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Locale;
 
+import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.R;
+import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
+import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.repository.MusicMateOrmLite;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
+import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.StringUtils;
 
-public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+public class ContentServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+    private static final String TAG = "ContentServerHandler";
     private final Context applicationContext;
-    public MediaServerServiceHttpHandler(Context applicationContext) {
+    public ContentServerRequestHandler(Context applicationContext) {
         this.applicationContext = applicationContext;
     }
 
@@ -53,16 +65,19 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
 
     @Override
     public void handle(Message<HttpRequest, byte[]> request, ResponseTrigger responseTrigger, HttpContext context) throws HttpException, IOException {
-        Log.d(getClass().getName(), "Processing HTTP request: "
+        Log.d(TAG, "Processing HTTP request: "
                 + request.getHead().getRequestUri());
+        Log.d(TAG, "Processing HTTP request: "
+                + request.getHead().getLastHeader("User-Agent"));
         final AsyncResponseBuilder responseBuilder = AsyncResponseBuilder.create(HttpStatus.SC_OK);
         // Extract what we need from the HTTP httpRequest
         String requestMethod = request.getHead().getMethod()
                 .toUpperCase(Locale.ENGLISH);
+        String userAgent = request.getHead().getLastHeader("User-Agent").getValue();
 
         // Only accept HTTP-GET
         if (!requestMethod.equals("GET") && !requestMethod.equals("HEAD")) {
-            Log.d(getClass().getName(),
+            Log.d(TAG,
                     "HTTP request isn't GET or HEAD stop! Method was: "
                             + requestMethod);
             throw new MethodNotSupportedException(requestMethod
@@ -84,7 +99,14 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
         String contentId = "";
         if ("album".equals(type)) {
             albumId = pathSegments.get(1);
-            try {
+            if(StringUtils.isEmpty(albumId)) {
+                responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
+                responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
+                responseTrigger.submitResponse(responseBuilder.build(), context);
+                Log.d(getClass().getName(), "end doService: Access denied");
+                return;
+            }
+           /* try {
                 Long.parseLong(albumId);
             } catch (NumberFormatException nex) {
                 responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
@@ -92,7 +114,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                 responseTrigger.submitResponse(responseBuilder.build(), context);
                 Log.d(getClass().getName(), "end doService: Access denied");
                 return;
-            }
+            } */
         } else if ("thumb".equals(type)) {
             thumbId = pathSegments.get(1);
             try {
@@ -101,7 +123,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                 responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
                 responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
                 responseTrigger.submitResponse(responseBuilder.build(), context);
-                Log.d(getClass().getName(), "end doService: Access denied");
+                Log.d(TAG, "end doService: Access denied");
                 return;
             }
         } else if ("res".equals(type)) {
@@ -112,7 +134,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                 responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
                 responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
                 responseTrigger.submitResponse(responseBuilder.build(), context);
-                Log.d(getClass().getName(), "end doService: Access denied");
+                Log.d(TAG, "end doService: Access denied");
                 return;
             }
         }
@@ -120,14 +142,15 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
         ContentHolder contentHolder = null;
 
         if (!contentId.isEmpty()) {
-            contentHolder = lookupContent(contentId);
+            contentHolder = lookupContent(contentId, userAgent);
         } else if (!albumId.isEmpty()) {
             contentHolder = lookupAlbumArt(albumId);
         } else if (!thumbId.isEmpty()) {
             contentHolder = lookupThumbnail(thumbId);
+        }
             if (contentHolder == null) {
                 // tricky but works
-                Log.d(getClass().getName(), "Resource with id " + contentId
+                Log.d(TAG, "Resource with id " + contentId
                         + albumId + thumbId + pathSegments.get(1) + " not found");
                 responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
                 String response =
@@ -135,14 +158,13 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                                 + thumbId + pathSegments.get(1) + " not found</h1></body></html>";
                 responseBuilder.setEntity(AsyncEntityProducers.create(response, ContentType.TEXT_HTML));
             } else {
-
                 responseBuilder.setStatus(HttpStatus.SC_OK);
                 responseBuilder.setEntity(contentHolder.getEntityProducer());
             }
             responseTrigger.submitResponse(responseBuilder.build(), context);
-            Log.d(getClass().getName(), "end doService: ");
+            Log.d(TAG, "end doService: ");
         }
-    }
+
         private Context getContext() {
             return applicationContext;
         }
@@ -153,47 +175,25 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
          * @param contentId the id of the content
          * @return the content description
          */
-        private ContentHolder lookupContent(String contentId) {
+        private ContentHolder lookupContent(String contentId, String agent) {
             ContentHolder result = null;
 
             if (contentId == null) {
                 return null;
             }
-            Log.d(getClass().getName(), "System media store lookup: " + contentId);
-            String[] projection = {MediaStore.Files.FileColumns._ID,
-                    MediaStore.Files.FileColumns.MIME_TYPE,
-                    MediaStore.Files.FileColumns.DATA};
-            String selection = MediaStore.Files.FileColumns._ID + "=?";
-            String[] selectionArgs = {contentId};
-            try (Cursor mFilesCursor = getContext().getContentResolver().query(
-                    MediaStore.Files.getContentUri("external"), projection,
-                    selection, selectionArgs, null)) {
-
-                if (mFilesCursor != null) {
-                    mFilesCursor.moveToFirst();
-                    while (!mFilesCursor.isAfterLast()) {
-                        @SuppressLint("Range") String dataUri = mFilesCursor.getString(mFilesCursor
-                                .getColumnIndex(MediaStore.Files.FileColumns.DATA));
-
-                        @SuppressLint("Range") String mimeTypeStr = mFilesCursor
-                                .getString(mFilesCursor
-                                        .getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE));
-                        MimeType mimeType = MimeType.valueOf("*/*");
-                        if (mimeTypeStr != null) {
-                            mimeType = MimeType.valueOf(mimeTypeStr);
-                        }
-                        Log.d(getClass().getName(), "Content found: " + mimeType
-                                + " Uri: " + dataUri);
-                        result = new ContentHolder(mimeType, dataUri);
-                        mFilesCursor.moveToNext();
-                    }
-                } else {
-                    Log.d(getClass().getName(), "System media store is empty.");
-                }
+            Log.d(TAG, "MusicMate lookup content: " + contentId);
+            try {
+                MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
+                MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
+                MusicPlayerInfo player = new MusicPlayerInfo(null, agent, ContextCompat.getDrawable(getContext(), R.drawable.ic_baseline_devices_128));
+                MusixMateApp.setPlaying(player, tag);
+                AudioTagPlayingEvent.publishPlayingSong(tag);
+               // byte[] bin = IOUtils.toByteArray(new FileInputStream(tag.getPath()));
+                result = new ContentHolder(mimeType, tag.getPath());
+            }catch (Exception ex) {
+                Log.e(TAG, "lookupContent: - " + contentId, ex);
             }
-
             return result;
-
         }
 
         /**
@@ -203,51 +203,25 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
          * @return the content description
          */
         private ContentHolder lookupAlbumArt(String albumId) {
+            Log.d(TAG, "MusicMate lookup albumArt: " + albumId);
 
-            ContentHolder result = new ContentHolder(MimeType.valueOf("image/png"),
-                    getDefaultIcon());
-            if (albumId == null) {
-                return result;
-            }
-            Log.d(getClass().getName(), "System media store lookup album: "
-                    + albumId);
-            String[] projection = {MediaStore.Audio.Albums._ID,
-                    // FIXME what is the right mime type?
-                    // MediaStore.Audio.Albums.MIME_TYPE,
-                    MediaStore.Audio.Albums.ALBUM_ART};
-            String selection = MediaStore.Audio.Albums._ID + "=?";
-            String[] selectionArgs = {albumId};
-            try (Cursor cursor = getContext().getContentResolver().query(
-                    MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, projection,
-                    selection, selectionArgs, null)) {
+            try {
+                String path = "/CoverArts/" + albumId;
+                File dir = getContext().getExternalCacheDir();
+                File pathFile = new File(dir, path);
+                if (pathFile.exists()) {
+                    byte[] image = IOUtils.toByteArray(new FileInputStream(pathFile));
 
-                if (cursor != null) {
-                    cursor.moveToFirst();
-                    while (!cursor.isAfterLast()) {
-                        @SuppressLint("Range") String dataUri = cursor.getString(cursor
-                                .getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
-
-                        // String mimeTypeStr = null;
-                        // FIXME mime type resolving cursor
-                        // .getString(cursor
-                        // .getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE));
-
-                        MimeType mimeType = MimeType.valueOf("image/png");
-                        // if (mimeTypeStr != null) {
-                        // mimeType = MimeType.valueOf(mimeTypeStr);
-                        // }
-                        if (dataUri != null) {
-                            Log.d(getClass().getName(), "Content found: " + mimeType
-                                    + " Uri: " + dataUri);
-                            result = new ContentHolder(mimeType, dataUri);
-                        }
-                        cursor.moveToNext();
-                    }
-                } else {
-                    Log.d(getClass().getName(), "System media store is empty.");
+                    return new ContentHolder(MimeType.valueOf("image/png"),
+                            image);
                 }
+            }catch (Exception e) {
+                Log.e(TAG, "lookupAlbumArt: - " + albumId, e);
             }
-            return result;
+
+            Log.d(TAG, "Send default albumArt for " + albumId);
+            return new ContentHolder(MimeType.valueOf("image/png"),
+                        getDefaultIcon());
         }
 
         /**
@@ -267,11 +241,11 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
             try {
                 id = Long.parseLong(idStr);
             } catch (NumberFormatException nfe) {
-                Log.d(getClass().getName(), "ParsingError of id: " + idStr, nfe);
+                Log.d(TAG, "ParsingError of id: " + idStr, nfe);
                 return result;
             }
 
-            Log.d(getClass().getName(), "System media store lookup thumbnail: "
+            Log.d(TAG, "System media store lookup thumbnail: "
                     + idStr);
             Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(getContext()
                             .getContentResolver(), id,
@@ -286,22 +260,14 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                 result = new ContentHolder(mimeType, byteArray);
 
             } else {
-                Log.d(getClass().getName(), "System media store is empty.");
+                Log.d(TAG, "System media store is empty.");
             }
             return result;
         }
 
         private byte[] getDefaultIcon() {
-          /*  Drawable drawable = ResourcesCompat.getDrawable(getContext().getResources(),
-                    R.drawable.yaacc192_32, getContext().getTheme());
-            byte[] result = null;
-            if (drawable != null) {
-                Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                result = stream.toByteArray();
-            }*/
-            InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "icon.png");
+          //  InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "iconpng192.png");
+            InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "mstile_310_310.png");
             byte[] result = new byte[0];
             try {
                 result = IOUtils.toByteArray(in);
@@ -310,7 +276,6 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
             }
             return result;
         }
-
 
         /**
          * ValueHolder for media content.
@@ -346,7 +311,6 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                 return mimeType;
             }
 
-
             public AsyncEntityProducer getEntityProducer() {
                 AsyncEntityProducer result = null;
                 if (getUri() != null && !getUri().isEmpty()) {
@@ -354,7 +318,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
 
                         File file = new File(getUri());
                         result = AsyncEntityProducers.create(file, ContentType.parse(getMimeType().toString()));
-                        Log.d(getClass().getName(), "Return file-Uri: " + getUri()
+                        Log.d(TAG, "Return file-Uri: " + getUri()
                                 + "Mimetype: " + getMimeType());
                     } else {
                         //file not found maybe external url
@@ -370,7 +334,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                                         length = con.getContentLength();
                                     }
                                 } catch (IOException e) {
-                                    Log.e(getClass().getName(), "Error opening external content", e);
+                                    Log.e(TAG, "Error opening external content", e);
                                 }
                                 return this;
                             }
@@ -404,7 +368,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
                                     }
 
                                 } catch (IOException e) {
-                                    Log.e(getClass().getName(), "Error reading external content", e);
+                                    Log.e(TAG, "Error reading external content", e);
                                     throw e;
                                 }
                             }
@@ -421,7 +385,7 @@ public class MediaServerServiceHttpHandler implements AsyncServerRequestHandler<
 
                         }.init();
 
-                        Log.d(getClass().getName(), "Return external-Uri: " + getUri()
+                        Log.d(TAG, "Return external-Uri: " + getUri()
                                 + "Mimetype: " + getMimeType());
                     }
                 } else if (content != null) {

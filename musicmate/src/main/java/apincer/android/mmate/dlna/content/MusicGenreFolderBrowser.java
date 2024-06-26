@@ -21,7 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.dlna.MusicMateContentDirectory;
+import apincer.android.mmate.dlna.ContentDirectory;
 
 
 /**
@@ -35,7 +35,7 @@ public class MusicGenreFolderBrowser extends ContentBrowser {
     }
 
     @Override
-    public DIDLObject browseMeta(MusicMateContentDirectory contentDirectory,
+    public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         /*List<MusicTrack> items = browseItem(contentDirectory, myId, firstResult, maxResults, orderby);
         return new MusicAlbum(myId,
@@ -51,7 +51,7 @@ public class MusicGenreFolderBrowser extends ContentBrowser {
 
     }
 
-    private String getName(MusicMateContentDirectory contentDirectory, String myId) {
+    private String getName(ContentDirectory contentDirectory, String myId) {
         String result = "";
         String[] projection = {MediaStore.Audio.Genres.NAME};
         String selection = MediaStore.Audio.Genres._ID + "=?";
@@ -73,7 +73,7 @@ public class MusicGenreFolderBrowser extends ContentBrowser {
         return result;
     }
 
-    private Integer getSize(MusicMateContentDirectory contentDirectory, String myId) {
+    private Integer getSize(ContentDirectory contentDirectory, String myId) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             String[] projection = {MediaStore.Audio.Media._ID};
             String selection = MediaStore.Audio.Media.GENRE_ID + "=?";
@@ -106,13 +106,13 @@ public class MusicGenreFolderBrowser extends ContentBrowser {
 
     @Override
     public List<Container> browseContainer(
-            MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+            ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
         return new ArrayList<>();
     }
 
     @Override
-    public List<MusicTrack> browseItem(MusicMateContentDirectory contentDirectory,
+    public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String[] projection;
@@ -234,7 +234,7 @@ public class MusicGenreFolderBrowser extends ContentBrowser {
                         String uri = getUriString(contentDirectory, id, mimeType);
                         URI albumArtUri = URI.create("http://"
                                 + contentDirectory.getIpAddress() + ":"
-                                + MediaServerService.SERVER_PORT + "/album/" + albumId);
+                                + MediaServerService.CONTENT_SERVER_PORT + "/album/" + albumId);
 
                         Res resource = new Res(mimeType, size, uri);
 

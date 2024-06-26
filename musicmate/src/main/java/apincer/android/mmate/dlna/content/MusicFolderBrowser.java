@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.MusicMateContentDirectory;
+import apincer.android.mmate.dlna.ContentDirectory;
 
 /**
  * Browser  for the music folder.
@@ -26,25 +26,26 @@ public class MusicFolderBrowser extends ContentBrowser {
     }
 
     @Override
-    public DIDLObject browseMeta(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.ROOT.getId(), getContext().getString(R.string.music), "mmate", 4,
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.PARENT_OF_ROOT.getId(), getContext().getString(R.string.music), "mmate", 4,
                 null);
     }
 
     @Override
-    public List<Container> browseContainer(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
         result.add((Container) new MusicAllTitlesFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new MusicDownloadedFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new MusicAlbumsFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new MusicArtistsFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new MusicGenresFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new MusicGroupingsFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
         return result;
     }
 
     @Override
-    public List<Item> browseItem(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new ArrayList<>();
     }
-
 }

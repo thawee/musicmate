@@ -10,7 +10,8 @@ import android.util.Log;
 
 import apincer.android.mmate.utils.StringUtils;
 
-public class MusicMateNotificationListener extends NotificationListenerService {
+public class NotificationListener extends NotificationListenerService {
+    private static final String TAG = "NotificationListener";
      public static final String HIBY_MUSIC = "com.hiby.music";
     public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
@@ -24,7 +25,7 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     private String prvTitle;
     private String prvArtist;
 
-    public MusicMateNotificationListener() {
+    public NotificationListener() {
         super();
     }
 
@@ -33,7 +34,7 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(this.getClass().getName(), "onDestroy MusicMate Notification");
+        Log.d(TAG, "onDestroy MusicMate Notification");
     }
 
     @Override
@@ -41,7 +42,7 @@ public class MusicMateNotificationListener extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
-        Log.d(this.getClass().getName(), "onCreate MusicMate Notification");
+        Log.d(TAG, "onCreate MusicMate Notification");
     }
 
     @Override

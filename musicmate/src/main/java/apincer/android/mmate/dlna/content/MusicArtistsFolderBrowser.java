@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.MusicMateContentDirectory;
+import apincer.android.mmate.dlna.ContentDirectory;
 
 /**
  * Browser  for the music artists folder.
@@ -34,14 +34,14 @@ public class MusicArtistsFolderBrowser extends ContentBrowser {
     }
 
     @Override
-    public DIDLObject browseMeta(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
         return new StorageFolder(ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.artists), "yaacc", getSize(contentDirectory, myId),
                 null);
 
     }
 
-    private Integer getSize(MusicMateContentDirectory contentDirectory, String myId) {
+    private Integer getSize(ContentDirectory contentDirectory, String myId) {
 
         String[] projection = {MediaStore.Audio.Artists._ID};
         String selection = "";
@@ -54,7 +54,7 @@ public class MusicArtistsFolderBrowser extends ContentBrowser {
     }
 
 
-    private Integer getMusicTrackSize(MusicMateContentDirectory contentDirectory, String parentId) {
+    private Integer getMusicTrackSize(ContentDirectory contentDirectory, String parentId) {
         String[] projection = {MediaStore.Audio.Media.ARTIST_ID};
         String selection = MediaStore.Audio.Media.ARTIST_ID + "=?";
         String[] selectionArgs = new String[]{parentId};
@@ -65,7 +65,7 @@ public class MusicArtistsFolderBrowser extends ContentBrowser {
     }
 
     @Override
-    public List<Container> browseContainer(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
         String[] projection = {MediaStore.Audio.Artists._ID, MediaStore.Audio.Artists.ARTIST};
         String selection = "";
@@ -105,7 +105,7 @@ public class MusicArtistsFolderBrowser extends ContentBrowser {
     }
 
     @Override
-    public List<Item> browseItem(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new ArrayList<>();
     }
 

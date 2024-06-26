@@ -8,17 +8,17 @@ import org.jupnp.transport.spi.AbstractStreamClientConfiguration;
 
 import java.util.concurrent.ExecutorService;
 
-public class MusicMateStreamingClientConfigurationImpl extends AbstractStreamClientConfiguration {
+public class StreamingClientConfigurationImpl extends AbstractStreamClientConfiguration {
 
-    public MusicMateStreamingClientConfigurationImpl(ExecutorService timeoutExecutorService) {
+    public StreamingClientConfigurationImpl(ExecutorService timeoutExecutorService) {
         super(timeoutExecutorService);
     }
 
-    public MusicMateStreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds) {
+    public StreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds) {
         super(requestExecutorService, timeoutSeconds);
     }
 
-    public MusicMateStreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds, int logWarningSeconds) {
+    public StreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds, int logWarningSeconds) {
         super(requestExecutorService, timeoutSeconds, logWarningSeconds);
     }
 

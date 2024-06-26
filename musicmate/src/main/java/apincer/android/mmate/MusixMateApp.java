@@ -29,10 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.broadcast.MusicMateNotificationListener;
+import apincer.android.mmate.broadcast.NotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
@@ -140,7 +142,7 @@ public class MusixMateApp extends Application {
       //  upnpClient.shutdown();
       //  stopService(new Intent(this, UpnpServerService.class));
       //  stopService(new Intent(this, UpnpRegistryService.class));
-        stopService(new Intent(this, MusicMateNotificationListener.class));
+        stopService(new Intent(this, NotificationListener.class));
        /* if(server!=null) {
             server.stopServer(null);
         }*/
@@ -158,6 +160,12 @@ public class MusixMateApp extends Application {
         CrashReporter.initialize(this);
 
         broadcastHelper.onCreate(this);
+
+        // turn off ffmpeg-kit log
+        Logger logger = Logger.getLogger("com.arthenica.ffmpegkit");
+        logger.setLevel(Level.SEVERE);
+        logger = Logger.getLogger("apincer.android.mmate.ffmpeg-kit");
+        logger.setLevel(Level.SEVERE);
 
 //        upnpClient = new UpnpClient(this);
         createNotificationChannel();
@@ -356,10 +364,9 @@ Provides the SQLite Helper Object among the application
                 .setGroupSummary(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setContentTitle("MusicMate")
-                .setContentText("MusicMate DMS")
+                .setContentText("")
                 .setContentIntent(pendingIntent);
         notificationManager.notify(NotificationId.MAIN.getId(), mBuilder.build());
-
     }
 
     public void cancelGroupNotification() {

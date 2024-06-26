@@ -22,7 +22,7 @@ import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 public class JustDSDReader extends TagReader{
-    private static final String TAG = JustDSDReader.class.getName();
+    private static final String TAG = "JustDSDReader";
     @Override
     public List<MusicTag> readMusicTag(Context context, String path) {
         Log.d(TAG, "JustDSD -> "+path);

@@ -15,21 +15,21 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
-public class MusicMateStreamServerImpl implements StreamServer<MusicMateStreamServerConfigurationImpl> {
+public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
+    private static final String TAG = "StreamServerImpl";
 
-
-    final protected MusicMateStreamServerConfigurationImpl configuration;
+    final protected StreamServerConfigurationImpl configuration;
    // private final ProtocolFactory protocolFactory;
     protected int localPort;
     private HttpAsyncServer server;
 
-    public MusicMateStreamServerImpl(MusicMateStreamServerConfigurationImpl configuration) {
+    public StreamServerImpl(StreamServerConfigurationImpl configuration) {
         this.configuration = configuration;
         this.localPort = configuration.getListenPort();
        // this.protocolFactory = protocolFactory;
     }
 
-    public MusicMateStreamServerConfigurationImpl getConfiguration() {
+    public StreamServerConfigurationImpl getConfiguration() {
         return configuration;
     }
 
@@ -41,7 +41,7 @@ public class MusicMateStreamServerImpl implements StreamServer<MusicMateStreamSe
                 try {
                     try {
 
-                        Log.d(getClass().getName(), "Adding connector: " + bindAddress + ":" + getConfiguration().getListenPort());
+                        Log.d(TAG, "Adding connector: " + bindAddress + ":" + getConfiguration().getListenPort());
 
                         IOReactorConfig config = IOReactorConfig.custom()
                                 .setSoTimeout(getConfiguration().getAsyncTimeoutSeconds(), TimeUnit.SECONDS)
@@ -50,7 +50,7 @@ public class MusicMateStreamServerImpl implements StreamServer<MusicMateStreamSe
                         server = H2ServerBootstrap.bootstrap()
                                 .setCanonicalHostName(bindAddress.getHostAddress())
                                 .setIOReactorConfig(config)
-                                .register(router.getConfiguration().getNamespace().getBasePath().getPath() + "/*", new MusicMateStreamServerRequestHandler(router.getProtocolFactory()))
+                                .register(router.getConfiguration().getNamespace().getBasePath().getPath() + "/*", new StreamServerHandler(router.getProtocolFactory()))
                                 .create();
                         server.listen(new InetSocketAddress(getConfiguration().getListenPort()), URIScheme.HTTP);
                         server.start();
@@ -77,7 +77,7 @@ public class MusicMateStreamServerImpl implements StreamServer<MusicMateStreamSe
         try {
             server.awaitShutdown(TimeValue.ofSeconds(3));
         } catch (InterruptedException e) {
-            Log.w(getClass().getName(), "got exception on stream server stop ", e);
+            Log.w(TAG, "got exception on stream server stop ", e);
         }
     }
 

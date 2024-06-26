@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.dlna.MusicMateContentDirectory;
+import apincer.android.mmate.dlna.ContentDirectory;
+import apincer.android.mmate.repository.MusicTag;
 
 
 /**
@@ -34,21 +35,21 @@ public abstract class ContentBrowser {
     }
 
 
-    public abstract DIDLObject browseMeta(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
+    public abstract DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
 
     public abstract List<Container> browseContainer(
-            MusicMateContentDirectory content, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
+            ContentDirectory content, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
 
-    public abstract List<? extends Item> browseItem(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
+    public abstract List<? extends Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
 
-    public List<DIDLObject> browseChildren(MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+    public List<DIDLObject> browseChildren(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<DIDLObject> result = new ArrayList<>();
         result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
         result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
         return result;
     }
 
-    public String getUriString(MusicMateContentDirectory contentDirectory, String id, MimeType mimeType) {
+    public String getUriString(ContentDirectory contentDirectory, String id, MimeType mimeType) {
         String fileExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType.toString());
         if (fileExtension == null) {
             Log.d(getClass().getName(), "Can't lookup file extension from mimetype: " + mimeType);
@@ -57,7 +58,12 @@ public abstract class ContentBrowser {
 
         }
         return "http://" + contentDirectory.getIpAddress() + ":"
-                + MediaServerService.SERVER_PORT + "/res/" + id + "/file." + fileExtension;
+                + MediaServerService.CONTENT_SERVER_PORT + "/res/" + id + "/file." + fileExtension;
+    }
+
+    public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
+        return "http://" + contentDirectory.getIpAddress() + ":"
+                + MediaServerService.CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
 
 }

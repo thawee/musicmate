@@ -1,7 +1,7 @@
 package apincer.android.mmate.broadcast;
 
-import static apincer.android.mmate.broadcast.MusicMateNotificationListener.HIBY_MUSIC;
-import static apincer.android.mmate.broadcast.MusicMateNotificationListener.NE_PLAYER_LITE;
+import static apincer.android.mmate.broadcast.NotificationListener.HIBY_MUSIC;
+import static apincer.android.mmate.broadcast.NotificationListener.NE_PLAYER_LITE;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

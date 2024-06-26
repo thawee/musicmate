@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -64,7 +65,9 @@ public class BroadcastHelper {
 
     private void registerReceiver(Context context, MusicBroadcastReceiver receiver) {
         if(receiver != null) {
-            ((MusicBroadcastReceiver)receiver).register(context);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ((MusicBroadcastReceiver)receiver).register(context);
+            }
         }
        // provider = AudioFileRepository.newInstance(context);
         receivers.add(receiver);
@@ -143,6 +146,10 @@ public class BroadcastHelper {
                 Log.e(TAG,"playNextSong",ex);
             }
         }
+        if(playerInfo == null || playerInfo.getPlayerPackage()==null) {
+            // skip control for streaming renderer/controller
+            return;
+        }
 
         if(MusicBroadcastReceiver.PACKAGE_NEUTRON.equals(playerInfo.playerPackage)) {
             // Neutron MP use
@@ -164,17 +171,17 @@ public class BroadcastHelper {
            //long eventTime = SystemClock.uptimeMillis();
            // audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
           //  audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (MusicMateNotificationListener.HIBY_MUSIC.equals(playerInfo.playerPackage)) {
+        }else if (NotificationListener.HIBY_MUSIC.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (MusicMateNotificationListener.SHANLING_EDDICTPLAYER.equals(playerInfo.playerPackage)) {
+        }else if (NotificationListener.SHANLING_EDDICTPLAYER.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (MusicMateNotificationListener.NE_PLAYER_LITE.equals(playerInfo.playerPackage)) {
+        }else if (NotificationListener.NE_PLAYER_LITE.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);

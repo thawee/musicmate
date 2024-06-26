@@ -22,7 +22,7 @@ import java.util.List;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.dlna.MusicMateContentDirectory;
+import apincer.android.mmate.dlna.ContentDirectory;
 
 /**
  * Browser for the music all titles folder.
@@ -35,7 +35,7 @@ public class MusicAllTitlesFolderBrowser extends ContentBrowser {
     }
 
     @Override
-    public DIDLObject browseMeta(MusicMateContentDirectory contentDirectory,
+    public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         /*List<MusicTrack> items = browseItem(contentDirectory, myId, firstResult, maxResults, orderby);
         return new MusicAlbum(
@@ -50,7 +50,7 @@ public class MusicAllTitlesFolderBrowser extends ContentBrowser {
 
     }
 
-    private Integer getSize(MusicMateContentDirectory contentDirectory, String myId) {
+    private Integer getSize(ContentDirectory contentDirectory, String myId) {
 
         String[] projection = {MediaStore.Audio.Media._ID};
         String selection = "";
@@ -67,14 +67,14 @@ public class MusicAllTitlesFolderBrowser extends ContentBrowser {
 
     @Override
     public List<Container> browseContainer(
-            MusicMateContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+            ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
         return new ArrayList<>();
     }
 
     @SuppressLint("Range")
     @Override
-    public List<MusicTrack> browseItem(MusicMateContentDirectory contentDirectory,
+    public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String[] projection;
@@ -147,7 +147,7 @@ public class MusicAllTitlesFolderBrowser extends ContentBrowser {
                         String uri = getUriString(contentDirectory, id, mimeType);
                         URI albumArtUri = URI.create("http://"
                                 + contentDirectory.getIpAddress() + ":"
-                                + MediaServerService.SERVER_PORT + "/album/" + albumId);
+                                + MediaServerService.CONTENT_SERVER_PORT + "/album/" + albumId);
                         Res resource = new Res(mimeType, size, uri);
                         resource.setDuration(duration);
                         MusicTrack musicTrack = new MusicTrack(

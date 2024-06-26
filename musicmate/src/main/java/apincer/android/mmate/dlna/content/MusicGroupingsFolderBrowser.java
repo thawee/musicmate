@@ -1,7 +1,8 @@
 package apincer.android.mmate.dlna.content;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -28,29 +29,21 @@ import apincer.android.mmate.repository.MusicTagRepository;
  *
  * @author openbit (Tobias Schoene)
  */
-public class MusicGenresFolderBrowser extends ContentBrowser {
-    public MusicGenresFolderBrowser(Context context) {
+public class MusicGroupingsFolderBrowser extends ContentBrowser {
+    public MusicGroupingsFolderBrowser(Context context) {
         super(context);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.genres), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.groupings), "mmate", getSize(contentDirectory, myId),
                 null);
 
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-/*
-        String[] projection = {MediaStore.Audio.Genres._ID};
-        String selection = "";
-        String[] selectionArgs = null;
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        } */
-        return MusicTagRepository.getActualGenreList(getContext()).size();
+        return MusicTagRepository.getActualGroupingList(getContext()).size();
     }
 
 
@@ -106,8 +99,7 @@ public class MusicGenresFolderBrowser extends ContentBrowser {
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
 
-        // select genre, count(id) from musictag group by genre order by genre
-
+        // select grouping, count(id) from musictag group by grouping
 
         return result;
     }
@@ -115,8 +107,5 @@ public class MusicGenresFolderBrowser extends ContentBrowser {
     @Override
     public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new ArrayList<>();
-
-
     }
-
 }

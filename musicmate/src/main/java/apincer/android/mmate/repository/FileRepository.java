@@ -30,7 +30,7 @@ import apincer.android.utils.FileUtils;
  * Created by e1022387 on 5/10/2017.
  */
 public class FileRepository {
-    private static final String TAG = FileRepository.class.getName();
+    private static final String TAG = "FileRepository";
     private final Context context;
     private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
@@ -60,6 +60,7 @@ public class FileRepository {
 
     public static void extractCoverArt(String path, File targetFile) {
         try {
+            Log.d(TAG, "extractCoverArt: "+path);
             File dir = targetFile.getParentFile();
             dir.mkdirs();
             File coverArtFile = getFolderCoverArt(path);
@@ -82,9 +83,8 @@ public class FileRepository {
                 }
                 FFMPeg.extractCoverArt(path, targetFile);
             }
-
         } catch (Exception e) {
-            Log.e(TAG, "extractCoverArt",e);
+            Log.d(TAG, "extractCoverArt",e);
         }
     }
 
@@ -265,6 +265,10 @@ public class FileRepository {
         try {
             String mediaPath = file.getAbsolutePath();
             long lastModified = file.lastModified();
+            if(file.length() < 1024) {
+                Log.i(TAG, "scanMusicFile: skip small file - "+mediaPath);
+                return; // skip file less than 1 Mb
+            }
             if(forceRead) {
                // lastModified = System.currentTimeMillis()+2000;
                 lastModified = -1;
@@ -272,7 +276,7 @@ public class FileRepository {
             TagReader reader = TagReader.getReader(mediaPath);
             // if timestamp is outdated
             if(MusicTagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
-                Log.i(TAG, "Reading -> "+mediaPath);
+                Log.i(TAG, "scanMusicFile: reading -> "+mediaPath);
                 List<MusicTag> tags = reader.readFullMusicTag(getContext(), mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {

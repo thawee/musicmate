@@ -29,7 +29,7 @@ import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 public final class MusicCoverArtProvider extends ContentProvider {
-    private static final String TAG = MusicCoverArtProvider.class.getName();
+    private static final String TAG = "MusicCoverArtProvider";
         public static Uri getUriForMusicTag(MusicTag item) {
             String absPath = item.getPath().toLowerCase();
             if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
@@ -88,16 +88,8 @@ public final class MusicCoverArtProvider extends ContentProvider {
     public ParcelFileDescriptor openFile(Uri uri, String str) {
             try {
                 File file = getFileForUri(uri);
+                Log.d(TAG,"openFile: "+file);
                 File dir =  getContext().getExternalCacheDir();
-               /* File pathDir = file;
-                if(file.getAbsolutePath().contains("/Music/")) {
-                    // use folder for managed files, others use full file path
-                    pathDir = file.getParentFile();
-                }
-
-                String path = DigestUtils.md5Hex(pathDir.getAbsolutePath())+".png";
-
-                path = "/CoverArts/"+path; */
                 String path = getCacheCover(file);
 
                 File pathFile = new File(dir, path);
@@ -108,9 +100,11 @@ public final class MusicCoverArtProvider extends ContentProvider {
                         FileRepository.extractCoverArt(file.getAbsolutePath(), pathFile);
                     pathFile = new File(dir, path);
                 }
-                return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
+                if(pathFile.exists()) {
+                    return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
+                }
             } catch (Exception e) {
-                Log.e(TAG,"Open CoverArt File: "+e.getMessage());
+                Log.d(TAG,"openFile: ", e);
             }
             return null;
         }

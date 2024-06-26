@@ -5,13 +5,13 @@ import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.StreamServerConfiguration;
 import org.jupnp.transport.spi.UpnpStream;
 
-public class MusicMateStreamServerConfigurationImpl implements StreamServerConfiguration {
+public class StreamServerConfigurationImpl implements StreamServerConfiguration {
 
     protected int listenPort;
     protected int asyncTimeoutSeconds = 60;
 
 
-    public MusicMateStreamServerConfigurationImpl(int listenPort) {
+    public StreamServerConfigurationImpl(int listenPort) {
         this.listenPort = listenPort;
     }
 

@@ -24,7 +24,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 
 public class FileSystem {
-    private static final String TAG = FileSystem.class.getName();
+    private static final String TAG = "FileSystem";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
    // private final Context mContext;
 

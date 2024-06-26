@@ -58,7 +58,7 @@ public class JAudioTaggerReader extends TagReader{
     private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
     private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG";
     private static final String KEY_TAG_WAVE_QUALITY = "ISBJ";
-    private static final String TAG = JAudioTaggerReader.class.getName();
+    private static final String TAG = "JAudioTaggerReader";
     public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
     @Override
@@ -131,7 +131,7 @@ public class JAudioTaggerReader extends TagReader{
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
                  InvalidAudioFrameException |
                  BufferUnderflowException e) {
-            Log.e(TAG, "getAudioFile: "+e.getMessage());
+            Log.e(TAG, "getAudioFile: "+path +" - "+e.getMessage());
         }
         return null;
     }

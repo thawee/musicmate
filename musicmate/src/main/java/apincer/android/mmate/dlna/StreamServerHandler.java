@@ -30,10 +30,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-public class MusicMateStreamServerRequestHandler extends UpnpStream implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
-//public class MusicMateStreamServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
-
-    protected MusicMateStreamServerRequestHandler(ProtocolFactory protocolFactory ) {
+public class StreamServerHandler extends UpnpStream implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+    private static final String TAG = "StreamServerHandler";
+    protected StreamServerHandler(ProtocolFactory protocolFactory ) {
         super(protocolFactory);
     }
 
@@ -54,25 +53,25 @@ public class MusicMateStreamServerRequestHandler extends UpnpStream implements A
 
         try {
             StreamRequestMessage requestMessage = readRequestMessage(message);
-            Log.v(getClass().getName(), "Processing new request message: " + requestMessage);
+            Log.v(TAG, "Processing new request message: " + requestMessage);
 
             StreamResponseMessage responseMessage = process(requestMessage);
 
             if (responseMessage != null) {
 
-                Log.v(getClass().getName(), "Preparing HTTP response message: " + responseMessage);
+                Log.v(TAG, "Preparing HTTP response message: " + responseMessage);
                 writeResponseMessage(responseMessage, responseBuilder);
             } else {
                 // If it's null, it's 404
-                Log.v(getClass().getName(), "Sending HTTP response status: " + HttpStatus.SC_NOT_FOUND);
+                Log.v(TAG, "Sending HTTP response status: " + HttpStatus.SC_NOT_FOUND);
                 responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
             }
             responseTrigger.submitResponse(responseBuilder.build(), context);
 
         } catch (Throwable t) {
-            Log.i(getClass().getName(), "Exception occurred during UPnP stream processing: " + t);
-            Log.d(getClass().getName(), "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
-            Log.v(getClass().getName(), "returning INTERNAL SERVER ERROR to client");
+            Log.i(TAG, "Exception occurred during UPnP stream processing: " + t);
+            Log.d(TAG, "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
+            Log.v(TAG, "returning INTERNAL SERVER ERROR to client");
             responseBuilder.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
             responseTrigger.submitResponse(responseBuilder.build(), context);
 
@@ -86,7 +85,7 @@ public class MusicMateStreamServerRequestHandler extends UpnpStream implements A
         String requestMethod = request.getMethod();
         String requestURI = request.getRequestUri();
 
-        Log.v(getClass().getName(), "Processing HTTP request: " + requestMethod + " " + requestURI);
+        Log.v(TAG, "Processing HTTP request: " + requestMethod + " " + requestURI);
 
         StreamRequestMessage requestMessage;
         try {
@@ -116,27 +115,27 @@ public class MusicMateStreamServerRequestHandler extends UpnpStream implements A
         if (bodyBytes == null) {
             bodyBytes = new byte[]{};
         }
-        Log.v(getClass().getName(), "Reading request body bytes: " + bodyBytes.length);
+        Log.v(TAG, "Reading request body bytes: " + bodyBytes.length);
 
         if (bodyBytes.length > 0 && requestMessage.isContentTypeMissingOrText()) {
 
-            Log.v(getClass().getName(), "Request contains textual entity body, converting then setting string on message");
+            Log.v(TAG, "Request contains textual entity body, converting then setting string on message");
             requestMessage.setBodyCharacters(bodyBytes);
 
         } else if (bodyBytes.length > 0) {
 
-            Log.v(getClass().getName(), "Request contains binary entity body, setting bytes on message");
+            Log.v(TAG, "Request contains binary entity body, setting bytes on message");
             requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
 
         } else {
-            Log.v(getClass().getName(), "Request did not contain entity body");
+            Log.v(TAG, "Request did not contain entity body");
         }
 
         return requestMessage;
     }
 
     protected void writeResponseMessage(StreamResponseMessage responseMessage, AsyncResponseBuilder responseBuilder) {
-        Log.v(getClass().getName(), "Sending HTTP response status: " + responseMessage.getOperation().getStatusCode());
+        Log.v(TAG, "Sending HTTP response status: " + responseMessage.getOperation().getStatusCode());
 
         responseBuilder.setStatus(responseMessage.getOperation().getStatusCode());
 
@@ -154,7 +153,7 @@ public class MusicMateStreamServerRequestHandler extends UpnpStream implements A
         int contentLength = responseBodyBytes != null ? responseBodyBytes.length : -1;
 
         if (contentLength > 0) {
-            Log.v(getClass().getName(), "Response message has body, writing bytes to stream...");
+            Log.v(TAG, "Response message has body, writing bytes to stream...");
             ContentType ct = ContentType.APPLICATION_XML;
             if (responseMessage.getContentTypeHeader() != null) {
                 ct = ContentType.parse(responseMessage.getContentTypeHeader().getValue().toString());

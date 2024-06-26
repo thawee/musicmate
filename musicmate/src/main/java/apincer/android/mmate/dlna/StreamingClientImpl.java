@@ -36,13 +36,13 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMateStreamingClientConfigurationImpl, HttpUriRequest> {
+public class StreamingClientImpl extends AbstractStreamClient<StreamingClientConfigurationImpl, HttpUriRequest> {
+    private static final String TAG = "StreamingClientImpl";
 
-
-    final protected MusicMateStreamingClientConfigurationImpl configuration;
+    final protected StreamingClientConfigurationImpl configuration;
     final private CloseableHttpClient httpClient;
 
-    public MusicMateStreamingClientImpl(MusicMateStreamingClientConfigurationImpl configuration) throws InitializationException {
+    public StreamingClientImpl(StreamingClientConfigurationImpl configuration) throws InitializationException {
         this.configuration = configuration;
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setDefaultConnectionConfig(ConnectionConfig.custom()
@@ -54,7 +54,7 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
     }
 
     @Override
-    public MusicMateStreamingClientConfigurationImpl getConfiguration() {
+    public StreamingClientConfigurationImpl getConfiguration() {
         return configuration;
     }
 
@@ -67,8 +67,8 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
     protected Callable<StreamResponseMessage> createCallable(final StreamRequestMessage requestMessage,
                                                              final HttpUriRequest request) {
         return () -> {
-            Log.d(getClass().getName(), "Sending HTTP request: " + requestMessage);
-            Log.v(getClass().getName(), "Body: " + requestMessage.getBodyString());
+            Log.d(TAG, "Sending HTTP request: " + requestMessage);
+            Log.v(TAG, "Body: " + requestMessage.getBodyString());
             applyRequestHeader(requestMessage, request);
             applyRequestBody(requestMessage, request);
             return httpClient.execute(request, this::createResponse);
@@ -78,7 +78,7 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
 
     @Override
     protected void abort(HttpUriRequest httpUriRequest) {
-        Log.d(getClass().getName(), "Received request abort, ignoring it!! ");
+        Log.d(TAG, "Received request abort, ignoring it!! ");
         httpUriRequest.abort();
     }
 
@@ -92,7 +92,7 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
         try {
             httpClient.close();
         } catch (Exception ex) {
-            Log.i(getClass().getName(), "Error stopping HTTP client: ", ex);
+            Log.i(TAG, "Error stopping HTTP client: ", ex);
         }
     }
 
@@ -102,13 +102,13 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
                     requestMessage.getUdaMajorVersion(),
                     requestMessage.getUdaMinorVersion());
 
-            Log.d(getClass().getName(), "Setting header '" + UpnpHeader.Type.USER_AGENT.getHttpName() + "': " + value);
+            Log.d(TAG, "Setting header '" + UpnpHeader.Type.USER_AGENT.getHttpName() + "': " + value);
             request.addHeader(UpnpHeader.Type.USER_AGENT.getHttpName(), value);
         }
         for (Map.Entry<String, List<String>> entry : requestMessage.getHeaders().entrySet()) {
             for (String v : entry.getValue()) {
                 String headerName = entry.getKey();
-                Log.d(getClass().getName(), "Setting header '" + headerName + "': " + v);
+                Log.d(TAG, "Setting header '" + headerName + "': " + v);
                 request.addHeader(headerName, v);
             }
         }
@@ -117,7 +117,7 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
     private void applyRequestBody(StreamRequestMessage requestMessage, ClassicHttpRequest request) {
         // Body
         if (requestMessage.hasBody()) {
-            Log.d(getClass().getName(), "Writing textual request body: " + requestMessage);
+            Log.d(TAG, "Writing textual request body: " + requestMessage);
             MimeType contentType =
                     requestMessage.getContentTypeHeader() != null
                             ? requestMessage.getContentTypeHeader().getValue()
@@ -142,7 +142,7 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
                         response.getCode(),
                         Objects.requireNonNull(UpnpResponse.Status.getByStatusCode(response.getCode())).getStatusMsg()
                 );
-        Log.d(getClass().getName(), "Received response: " + responseOperation);
+        Log.d(TAG, "Received response: " + responseOperation);
         StreamResponseMessage responseMessage = new StreamResponseMessage(responseOperation);
         // Headers
         UpnpHeaders headers = new UpnpHeaders();
@@ -154,15 +154,15 @@ public class MusicMateStreamingClientImpl extends AbstractStreamClient<MusicMate
         // Body
         byte[] bytes = EntityUtils.toByteArray(response.getEntity());
         if (bytes != null && bytes.length > 0 && responseMessage.isContentTypeMissingOrText()) {
-            Log.d(getClass().getName(), "Response contains textual entity body, converting then setting string on message");
+            Log.d(TAG, "Response contains textual entity body, converting then setting string on message");
             responseMessage.setBodyCharacters(bytes);
         } else if (bytes != null && bytes.length > 0) {
-            Log.d(getClass().getName(), "Response contains binary entity body, setting bytes on message");
+            Log.d(TAG, "Response contains binary entity body, setting bytes on message");
             responseMessage.setBody(UpnpMessage.BodyType.BYTES, bytes);
         } else {
-            Log.d(getClass().getName(), "Response did not contain entity body");
+            Log.d(TAG, "Response did not contain entity body");
         }
-        Log.d(getClass().getName(), "Response message complete: " + responseMessage);
+        Log.d(TAG, "Response message complete: " + responseMessage);
         return responseMessage;
     }
 
