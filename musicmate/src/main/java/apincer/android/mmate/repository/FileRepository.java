@@ -11,6 +11,7 @@ import com.anggrayudi.storage.file.StorageId;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -19,8 +20,9 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.FileSystem;
+import apincer.android.mmate.provider.MusicCoverArtProvider;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -276,7 +278,7 @@ public class FileRepository {
             TagReader reader = TagReader.getReader(mediaPath);
             // if timestamp is outdated
             if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
-                Log.i(TAG, "scanMusicFile: reading -> "+mediaPath);
+              //  Log.i(TAG, "scanMusicFile: file - "+mediaPath);
                 List<MusicTag> tags = reader.readFullMusicTag(getContext(), mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
@@ -563,8 +565,7 @@ public class FileRepository {
     }
 
     public void cleanCacheCover(Context context, MusicTag item) {
-        File path = new File(item.getPath());
-        String coverFile = MusicCoverArtProvider.getCacheCover(path);
+        String coverFile = CoverArtProvider.COVER_ARTS +item.getAlbumUniqueKey()+".png";
         File dir =  getContext().getExternalCacheDir();
         File pathFile = new File(dir, coverFile);
         if(pathFile.exists()) {

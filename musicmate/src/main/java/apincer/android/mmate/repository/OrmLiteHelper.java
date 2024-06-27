@@ -12,14 +12,18 @@ import android.util.Log;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.GenericRawResults;
+import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.StatementBuilder;
 import com.j256.ormlite.stmt.Where;
+import com.j256.ormlite.support.CompiledStatement;
 import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.support.DatabaseConnection;
+import com.j256.ormlite.support.DatabaseResults;
 import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,7 +35,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = OrmLiteHelper.class.getName();
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     public OrmLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION) ;//,
@@ -666,5 +670,17 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
+    }
+
+    public MusicTag findByAlbumUniqueKey(String albumUniqueKey) {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().eq("albumUniqueKey", albumUniqueKey);
+            return dao.queryForFirst(builder.prepare());
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 }

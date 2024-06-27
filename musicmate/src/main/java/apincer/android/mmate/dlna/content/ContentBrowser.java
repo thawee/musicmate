@@ -74,16 +74,24 @@ public abstract class ContentBrowser {
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
-        String absPath = tag.getPath().toLowerCase();
+       /* String absPath = tag.getPath().toLowerCase();
         if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
             // if has alblum, use parent dir
             if(!StringUtils.isEmpty(tag.getAlbum())) {
                 // use directory
-                absPath = FileUtils.getFolderName(absPath);
+                absPath = FileUtils.getParentName(absPath);
             }
         }
         String uri = DigestUtils.md5Hex(absPath)+".png";
 
+        return URI.create("http://"
+                + contentDirectory.getIpAddress() + ":"
+                + MediaServerService.CONTENT_SERVER_PORT + "/album/" + uri); */
+        return getAlbumArtUri(contentDirectory, tag.getAlbumUniqueKey());
+    }
+
+    protected URI getAlbumArtUri(ContentDirectory contentDirectory, String key) {
+        String uri = key+".png";
         return URI.create("http://"
                 + contentDirectory.getIpAddress() + ":"
                 + MediaServerService.CONTENT_SERVER_PORT + "/album/" + uri);
@@ -119,8 +127,8 @@ public abstract class ContentBrowser {
         musicTrack.setGenres(tag.getGenre().split(",", -1));
         //musicTrack.setOriginalTrackNumber(tag.getTrack());
 
-        Log.d(TAG, "MusicTrack: " + id + " Title: "
-                + title + " Uri: " + uri);
+       // Log.d(TAG, "MusicTrack: " + id + " Title: "
+       //         + title + " Uri: " + uri);
         return musicTrack;
     }
 }

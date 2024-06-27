@@ -45,7 +45,8 @@ import java.util.concurrent.CompletableFuture;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
-import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.MusicCoverArtProvider;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
@@ -533,7 +534,7 @@ public class TagsEditorFragment extends Fragment {
         ImageLoader imageLoader = Coil.imageLoader(tagsActivity.getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(tagsActivity.getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(tagsActivity.getApplicationContext(), tag))
-                .data(MusicCoverArtProvider.getUriForMusicTag(tag))
+                .data(CoverArtProvider.getUriForMusicTag(tag))
                 .transformations(new RoundedCornersTransformation())
                 .crossfade(false)
                 .target(previewCoverart)

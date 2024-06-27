@@ -28,6 +28,17 @@ public class MusicTag implements Cloneable, Parcelable {
     @DatabaseField(uniqueIndex = true)
     protected String uniqueKey;
 
+    public String getAlbumUniqueKey() {
+        return albumUniqueKey;
+    }
+
+    public void setAlbumUniqueKey(String albumUniqueKey) {
+        this.albumUniqueKey = albumUniqueKey;
+    }
+
+    @DatabaseField
+    protected String albumUniqueKey;
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == null) return false;
@@ -211,13 +222,12 @@ public class MusicTag implements Cloneable, Parcelable {
         originTag = in.readParcelable(MusicTag.class.getClassLoader());
         id = in.readLong();
         uniqueKey = in.readString();
+        albumUniqueKey = in.readString();
         path = in.readString();
         fileLastModified = in.readLong();
         fileSize = in.readLong();
-        //fileSizeRatio = in.readInt();
         fileFormat = in.readString();
         audioEncoding = in.readString();
-       // audioLossless = in.readByte() != 0;
         mqaScanned = in.readByte() != 0;
         mqaInd = in.readString();
         mqaSampleRate = in.readLong();
@@ -244,10 +254,6 @@ public class MusicTag implements Cloneable, Parcelable {
         mediaQuality = in.readString();
         gainTrackTP = in.readDouble();
         gainTrackRG = in.readDouble();
-       // gainTrackLoudness = in.readDouble();
-       // gainAlbumTruePeak = in.readDouble();
-       // gainAlbumRG = in.readDouble();
-        //gainAlbumLoudness = in.readDouble();
         compilation = in.readByte() != 0;
         publisher = in.readString();
         coverartMime = in.readString();
@@ -257,8 +263,6 @@ public class MusicTag implements Cloneable, Parcelable {
         upscaled = in.readByte() != 0;
         upsampled = in.readByte() != 0;
         dynamicRange = in.readDouble();
-       // measuredBitDept = in.readInt();
-       // measuredSamplingRate = in.readLong();
     }
 
     public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
@@ -486,6 +490,7 @@ public class MusicTag implements Cloneable, Parcelable {
         MusicTag tag = new MusicTag();
         tag.id = id;
         tag.uniqueKey = uniqueKey;
+        tag.albumUniqueKey = albumUniqueKey;
         tag.path = path;
         tag.storageId = storageId;
         tag.simpleName = simpleName;
@@ -546,6 +551,7 @@ public class MusicTag implements Cloneable, Parcelable {
     public void cloneFrom(MusicTag tag) {
         this.id = tag.id;
         this.uniqueKey = tag.uniqueKey;
+        this.albumUniqueKey = tag.albumUniqueKey;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
         //this.fileSizeRatio = tag.fileSizeRatio;
@@ -612,6 +618,7 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeParcelable(originTag, i);
         parcel.writeLong(id);
         parcel.writeString(uniqueKey);
+        parcel.writeString(albumUniqueKey);
         parcel.writeString(path);
         parcel.writeLong(fileLastModified);
         parcel.writeLong(fileSize);

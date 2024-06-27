@@ -1,4 +1,4 @@
-package apincer.android.mmate.fs;
+package apincer.android.mmate.provider;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -11,38 +11,29 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import java.io.File;
 import java.nio.file.Files;
 
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
-import apincer.android.mmate.utils.StringUtils;
 
-public final class MusicCoverArtProvider extends ContentProvider {
-    private static final String TAG = "MusicCoverArtProvider";
-        public static Uri getUriForMusicTag(MusicTag item) {
-            String absPath = item.getPath().toLowerCase();
-            if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
-                // if has alblum, use parent dir
-                if(!StringUtils.isEmpty(item.getAlbum())) {
-                    // use directory
-                    File file = new File(item.getPath());
-                    return new Builder().scheme("content").authority("apincer.android.mmate.coverart.provider").path(file.getParentFile().getAbsolutePath()).build();
-                }
-            }
+public final class CoverArtProvider extends ContentProvider {
+    private static final String TAG = "CoverArtProvider";
+    public static final String COVER_ARTS = "/CoverArts/";
+
+    public static Uri getUriForMusicTag(MusicTag item) {
             // use music file
-            return new Builder().scheme("content").authority("apincer.android.mmate.coverart.provider").path(item.getPath()).build();
+            return new Builder().scheme("content").authority("apincer.mmate.coverart.provider").path(item.getAlbumUniqueKey()).build();
         }
 
-       private File getFileForUri(Uri uri) {
-        if (getContext() != null) {
-            return new File(uri.getPath());
+       private String getPathForUri(Uri uri) {
+            if (getContext() != null) {
+                return uri.getPath().substring(1);
+            }
+            throw new IllegalStateException("No Context attached");
         }
-        throw new IllegalStateException("No Context attached");
-     }
 
         public int delete(Uri uri, String str, String[] strArr) {
             throw new UnsupportedOperationException("No support delete");
@@ -66,27 +57,27 @@ public final class MusicCoverArtProvider extends ContentProvider {
         throw new UnsupportedOperationException("No support query");
     }
 
-    public static String getCacheCover(File file) {
-        String path = DigestUtils.md5Hex(file.getAbsolutePath())+".png";
-        return "/CoverArts/"+path;
+    public String getCacheCover(Uri uri) {
+        return COVER_ARTS +getPathForUri(uri)+".png";
     }
 
     public ParcelFileDescriptor openFile(Uri uri, String str) {
             try {
-                File file = getFileForUri(uri);
-                //Log.d(TAG,"openFile: "+file);
                 File dir =  getContext().getExternalCacheDir();
-                String path = getCacheCover(file);
+                String albumUniqueKey = getPathForUri(uri);
+                String path = getCacheCover(uri);
 
                 File pathFile = new File(dir, path);
                 if(!pathFile.exists()) {
                         dir = pathFile.getParentFile();
                         dir.mkdirs();
                         // extract covert to cache directory
-                        FileRepository.extractCoverArt(file.getAbsolutePath(), pathFile);
-                    pathFile = new File(dir, path);
+                        MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
+                        FileRepository.extractCoverArt(tag.getPath(), pathFile);
+                        pathFile = new File(dir, path);
                 }
                 if(pathFile.exists()) {
+                    Log.d(TAG,"found "+pathFile.toPath());
                     return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
                 }
             } catch (Exception e) {

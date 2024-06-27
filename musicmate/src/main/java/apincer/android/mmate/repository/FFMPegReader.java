@@ -41,7 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.fs.FileSystem;
+import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -76,7 +76,7 @@ public class FFMPegReader extends TagReader {
     public static void extractCoverArt(String path, File pathFile) {
         //if(!isEmpty(tag.getEmbedCoverArt())) {
         try {
-            Log.d("FFMPeg", "extractCoverArt: "+path);
+            Log.d(TAG, "extractCoverArt: "+path);
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -283,7 +283,7 @@ public class FFMPegReader extends TagReader {
 
     public List<MusicTag> readMusicTag(Context context, String path) {
         //return readFFprobe(path);
-        Log.d(TAG, "FFMpeg -> "+path);
+        Log.d(TAG, "readMusicTag: "+path);
         MusicTag tag = readTagFromFile(context, path);
        // MusicTag tag = readFFprobe(context, path);
        // detectMQA(tag,50000); // timeout 50 seconds
@@ -293,7 +293,7 @@ public class FFMPegReader extends TagReader {
 
     public List<MusicTag> readFullMusicTag(Context context, String path) {
         //return readFFprobe(path);
-        Log.d(TAG, "FFMpeg -> "+path);
+        Log.d(TAG, "readFullMusicTag: "+path);
         MusicTag tag = readTagFromFile(context, path);
         // MusicTag tag = readFFprobe(context, path);
         detectMQA(tag,50000); // timeout 50 seconds

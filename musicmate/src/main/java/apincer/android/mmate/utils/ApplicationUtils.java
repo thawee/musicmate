@@ -19,7 +19,7 @@ import java.net.URLEncoder;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.fs.MusicFileProvider;
+import apincer.android.mmate.provider.MusicFileProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.TagsActivity;

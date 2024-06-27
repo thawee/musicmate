@@ -29,7 +29,7 @@ import java.util.Locale;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -476,7 +476,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // Show AlbumArt
        request = new ImageRequest.Builder(holder.mContext)
                // .data(MusicTagUtils.getCoverArt(holder.mContext, tag))
-               .data(MusicCoverArtProvider.getUriForMusicTag(tag))
+               //.data(MusicCoverArtProvider.getUriForMusicTag(tag))
+               .data(CoverArtProvider.getUriForMusicTag(tag))
                 // .size(800, 800)
                 .crossfade(false)
                 .target(holder.mCoverArtView)

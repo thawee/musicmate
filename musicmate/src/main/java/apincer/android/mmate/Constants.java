@@ -2,7 +2,6 @@ package apincer.android.mmate;
 
 import android.content.Context;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +41,7 @@ public final class Constants {
     public static final int QUALITY_BIT_DEPTH_HD = 24;
     public static final int QUALITY_BIT_CD = 16;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
+
     public static final String FILE_EXT_WAVE = "wav";
     public static final String FILE_EXT_AIF = "aif";
     public static final String FILE_EXT_AIFF = "aiff";
@@ -54,15 +54,13 @@ public final class Constants {
     public static final String UNKNOWN_GROUP = "Unknown";
     public static final String UNKNOWN = "Unknown";
     public static final String NONE = "None";
-    public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
+    public static final String EMPTY = "";
+
     public static final String GROUPING_LOUNGE = "Lounge";
-   // public static final String GROUPING_LIVE = "Live";
     public static final String GROUPING_ACOUSTIC = "Acoustic";
     public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
-   // public static final String GROUPING_THAI_LIVE = "Thai Live";
     public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
-   // public static final String PREF_PREVIEW_FOLLW_NOW_PLAYING = "preference_preview_follows_now_playing";
-    public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
+
     public static final String TITLE_LIBRARY = "Library";
     public static final String TITLE_GROUPING = "Grouping";
     public static final String TITLE_GENRE = "Genre";
@@ -71,24 +69,10 @@ public final class Constants {
     public static final String TITLE_QUALITY = "File Quality";
     public static final String TITLE_DSD = "DSD";
     public static final String TITLE_NO_COVERART = "No Embed Cover Art";
-    public static final long DEVICE_SEARCH_INTERVAL_MINUTES = 15;
-    public static final String METADATA_MODEL_NAME = "MusicMate";
-    public static final String METADATA_MANUFACTURER = "Thawee P.";
-    public static final String METADATA_MODEL_DESCRIPTION = "MusicMate Server";
-    public static final String METADATA_MODEL_NUMBER = "v1";
-    /**
-     * Shorter version of org.teleal.cling.model.Constants.MIN_ADVERTISEMENT_AGE_SECONDS.
-     * Remove when Cling 2.0 has a stable release.
-     * http://4thline.org/projects/mailinglists.html#nabble-td2183974
-     * http://4thline.org/projects/mailinglists.html#nabble-td2183974
-     * https://github.com/4thline/cling/issues/41
-     */
-    public static final int MIN_ADVERTISEMENT_AGE_SECONDS = 300;
-    public static final String CONTENT_PATH_PREFIX = "c/";
 
-    public static String FIELD_SEP = ";";
-   public static double MIN_TITLE = 0.80;
-   public static double MIN_ARTIST = 0.70;
+    public static final String FIELD_SEP = ";";
+    public static final double MIN_TITLE = 0.80;
+    public static final double MIN_ARTIST = 0.70;
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     static {
@@ -111,13 +95,14 @@ public final class Constants {
         RELATED_FILE_TYPES.add("json"); // tags, override to embed iso
     }
 
-    public static String STATUS_SUCCESS="success";
-    public static String STATUS_FAIL="fail";
-    public static String KEY_SEARCH_TYPE="search_criteria_type";
-    public static String KEY_SEARCH_KEYWORD="search_criteria_keyword";
-    public static String KEY_FILTER_TYPE="search_filter_type";
-    public static String KEY_FILTER_KEYWORD="search_filter_keyword";
+    public static final String STATUS_SUCCESS="success";
+    public static final String STATUS_FAIL="fail";
+    public static final String KEY_SEARCH_TYPE="search_criteria_type";
+    public static final String KEY_SEARCH_KEYWORD="search_criteria_keyword";
+    public static final String KEY_FILTER_TYPE="search_filter_type";
+    public static final String KEY_FILTER_KEYWORD="search_filter_keyword";
     public static final String KEY_COVER_ART_PATH = "coverArtPath";
+
     public static final String MEDIA_ENC_AAC="AAC";
     public static final String MEDIA_ENC_MPEG="MPEG";
     public static final String MEDIA_ENC_FLAC="FLAC";
@@ -155,6 +140,8 @@ public final class Constants {
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
+    public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
+    public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";
@@ -166,7 +153,6 @@ public final class Constants {
     public static final String PUBLISHER_SPOTIFY = "Spotify";
     public static final String PUBLISHER_TIDAL = "Tidal";
     public static final String PUBLISHER_YOUTUBE = "Youtube";
-  //  public static final String MEDIA_TYPE_NONE = "-";
 
     public static List<String> getSourceList(Context context) {
         String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);

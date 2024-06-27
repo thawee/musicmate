@@ -1,4 +1,4 @@
-package apincer.android.mmate.fs;
+package apincer.android.mmate.provider;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -6,16 +6,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.net.Uri.Builder;
 import android.os.ParcelFileDescriptor;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.InputStream;
-import java.util.UUID;
-
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 //import fm.last.musicbrainz.coverart.CoverArt;
 //import fm.last.musicbrainz.coverart.CoverArtArchiveClient;
 //import fm.last.musicbrainz.coverart.CoverArtImage;

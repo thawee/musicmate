@@ -99,8 +99,8 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
-import apincer.android.mmate.fs.FileSystem;
-import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
@@ -435,7 +435,8 @@ public class MainActivity extends AppCompatActivity {
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(this, song))
-                .data(MusicCoverArtProvider.getUriForMusicTag(song))
+                //.data(MusicCoverArtProvider.getUriForMusicTag(song))
+                .data(CoverArtProvider.getUriForMusicTag(song))
                 .allowHardware(false)
                 //.placeholder(R.drawable.progress)
               //  .error(R.drawable.ic_broken_image_black_24dp)

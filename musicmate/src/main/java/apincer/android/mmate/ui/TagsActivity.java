@@ -55,7 +55,8 @@ import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.coil.ReflectionTransformation;
-import apincer.android.mmate.fs.MusicCoverArtProvider;
+import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.MusicCoverArtProvider;
 import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
@@ -445,7 +446,7 @@ public class TagsActivity extends AppCompatActivity {
 
         request = new ImageRequest.Builder(getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(getApplicationContext(), displayTag))
-                .data(MusicCoverArtProvider.getUriForMusicTag(displayTag))
+                .data(CoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)

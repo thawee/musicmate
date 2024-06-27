@@ -1,4 +1,4 @@
-package apincer.android.mmate.fs;
+package apincer.android.mmate.provider;
 
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 

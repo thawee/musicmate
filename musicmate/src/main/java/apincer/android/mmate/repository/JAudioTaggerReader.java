@@ -45,6 +45,8 @@ import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class JAudioTaggerReader extends TagReader{
+    private static final String TAG = "JAudioTaggerReader";
+
     public JAudioTaggerReader() {
         Logger logger = Logger.getLogger("org.jaudiotagger");
         logger.setLevel(Level.SEVERE);
@@ -58,7 +60,7 @@ public class JAudioTaggerReader extends TagReader{
     private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
     private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG";
     private static final String KEY_TAG_WAVE_QUALITY = "ISBJ";
-    private static final String TAG = "JAudioTaggerReader";
+
     public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
     @Override
@@ -80,6 +82,7 @@ public class JAudioTaggerReader extends TagReader{
 
     @Override
     public List<MusicTag> readFullMusicTag(Context context, String mediaPath) {
+        Log.i(TAG, "readFullMusicTag: path - "+mediaPath);
         AudioFile read = getAudioFile(mediaPath);
         if(read != null) {
             MusicTag tag = new MusicTag();

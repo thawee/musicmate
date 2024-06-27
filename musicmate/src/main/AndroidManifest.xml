@@ -151,17 +151,22 @@
         </provider>
 
         <provider
-            android:name="apincer.android.mmate.fs.MusicFileProvider"
+            android:name="apincer.android.mmate.provider.MusicFileProvider"
             android:authorities="apincer.android.mmate.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
         <provider
-            android:name="apincer.android.mmate.fs.MusicCoverArtProvider"
+            android:name="apincer.android.mmate.provider.MusicCoverArtProvider"
             android:authorities="apincer.android.mmate.coverart.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
         <provider
-            android:name="apincer.android.mmate.fs.MusicbrainzCoverArtProvider"
+            android:name="apincer.android.mmate.provider.CoverArtProvider"
+            android:authorities="apincer.mmate.coverart.provider"
+            android:exported="false"
+            android:grantUriPermissions="true"/>
+        <provider
+            android:name="apincer.android.mmate.provider.MusicbrainzCoverArtProvider"
             android:authorities="apincer.android.mmate.musicbrainz.coverart.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>

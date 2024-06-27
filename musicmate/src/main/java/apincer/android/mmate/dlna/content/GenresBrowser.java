@@ -6,6 +6,7 @@ import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
 import org.jupnp.support.model.container.MusicAlbum;
+import org.jupnp.support.model.container.MusicGenre;
 import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.Item;
 
@@ -66,11 +67,10 @@ public class GenresBrowser extends ContentBrowser {
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
-        List<MusicFolder> groupings = MusixMateApp.getInstance().getOrmLite().getGenresWithChildrenCount();
-        for(MusicFolder group: groupings) {
-            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), group.getName(), "", 0);
-            musicAlbum.setChildCount((int)group.getChildCount());
-            result.add(musicAlbum);
+        List<MusicFolder> genres = MusixMateApp.getInstance().getOrmLite().getGenresWithChildrenCount();
+        for(MusicFolder genre: genres) {
+            MusicGenre musicGenre = new MusicGenre(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId() + genre.getName(), ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), genre.getName(), "", (int)genre.getChildCount());
+            result.add(musicGenre);
         }
         /*
         String[] projection = {MediaStore.Audio.Genres._ID, MediaStore.Audio.Genres.NAME};

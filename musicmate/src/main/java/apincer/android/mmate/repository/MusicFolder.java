@@ -18,5 +18,15 @@ public class MusicFolder {
     }
 
     private String name;
+
+    public String getUniqueKey() {
+        return uniqueKey;
+    }
+
+    public void setUniqueKey(String uniqueKey) {
+        this.uniqueKey = uniqueKey;
+    }
+
+    private String uniqueKey;
     private long childCount;
 }

@@ -27,10 +27,8 @@ import apincer.android.mmate.utils.StringUtils;
  * @author openbit (Tobias Schoene)
  */
 public class AlbumFolderBrowser extends ContentBrowser {
-    // album (by artist)
-   // private Pattern pattern = Pattern.compile("(?i)(\\w+)\\s*\\(\\s*by\\s*(\\w+)\\s*\\)");
-    //his is album (by this is artist)
-    private Pattern pattern = Pattern.compile("(?i)(.*)\\s*\\(by\\s*(.*)\\)");
+    //this is album (by this is artist)
+    private final Pattern pattern = Pattern.compile("(?i)(.*)\\s*\\(by\\s*(.*)\\)");
     public AlbumFolderBrowser(Context context) {
         super(context);
     }

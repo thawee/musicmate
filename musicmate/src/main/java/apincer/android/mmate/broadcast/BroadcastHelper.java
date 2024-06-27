@@ -78,7 +78,7 @@ public class BroadcastHelper {
             for (MusicBroadcastReceiver receiver : receivers) {
                 try {
                     if(receiver != null) {
-                        context.unregisterReceiver((BroadcastReceiver)receiver);
+                        context.unregisterReceiver(receiver);
                     }
                 } catch (Exception ex) {
                     Log.e(TAG,"unregisterReceivers",ex);

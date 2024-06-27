@@ -7,6 +7,7 @@ import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
 import org.jupnp.support.model.container.MusicAlbum;
+import org.jupnp.support.model.container.MusicArtist;
 import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.Item;
 
@@ -68,7 +69,7 @@ public class ArtistsBrowser extends ContentBrowser {
         List<Container> result = new ArrayList<>();
         List<MusicFolder> groupings = MusixMateApp.getInstance().getOrmLite().getArtistWithChildrenCount();
         for(MusicFolder group: groupings) {
-            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), group.getName(), "", 0);
+            MusicArtist musicAlbum = new MusicArtist(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), group.getName(), "", 0);
             musicAlbum.setChildCount((int)group.getChildCount());
             result.add(musicAlbum);
         }

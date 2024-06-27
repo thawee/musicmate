@@ -1,4 +1,4 @@
-package apincer.android.mmate.fs;
+package apincer.android.mmate.provider;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;

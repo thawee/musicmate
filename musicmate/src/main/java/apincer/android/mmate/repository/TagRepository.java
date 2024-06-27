@@ -3,8 +3,12 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,6 +18,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.utils.FileUtils;
 
 public class TagRepository {
     private static final String TAG = "TagRepository";
@@ -36,14 +41,25 @@ public class TagRepository {
             String keyword = escapeString(tag.getPath()+"_"+ tag.getAudioStartTime());
             tag.setUniqueKey(keyword);
         }
+
+        String path = tag.getPath().toLowerCase();
+        if(path.contains("/music/") && !path.contains("/telegram/")) {
+            // if has alblum, use parent dir
+            if(!StringUtils.isEmpty(tag.getAlbum())) {
+                // use directory
+                path = FileUtils.getParentName(path);
+            }
+        }
+        tag.setAlbumUniqueKey(DigestUtils.md5Hex(path));
+
         if(StringUtils.isEmpty(tag.getGenre())) {
-            tag.setGenre("None");
+            tag.setGenre(Constants.NONE);
         }
         if(StringUtils.isEmpty(tag.getGrouping())) {
-            tag.setGrouping("None");
+            tag.setGrouping(Constants.NONE);
         }
         if(StringUtils.isEmpty(tag.getArtist())) {
-            tag.setArtist("");
+            tag.setArtist(Constants.EMPTY);
         }
         if(StringUtils.isEmpty(tag.getAlbumArtist())) {
             tag.setAlbumArtist(tag.getArtist());
@@ -350,5 +366,9 @@ public class TagRepository {
 
     public static List<MusicTag> getMusicTags(long idRange1, long idRange2) {
         return MusixMateApp.getInstance().getOrmLite().findByIdRanges(idRange1, idRange2);
+    }
+
+    public static MusicTag getMusicTagAlbumUniqueKey(String albumUniqueKey) {
+        return MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
     }
 }

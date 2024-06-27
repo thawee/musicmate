@@ -25,6 +25,7 @@ public class FileUtils {
     private static final String PATH_DOCUMENT = "document";
     public static final String BASIC_MIME_TYPE = "application/octet-stream";
 
+    @Deprecated
     public static String getTypeForFile(File file) {
         if (file.isDirectory()) {
             return DocumentsContract.Document.MIME_TYPE_DIR;
@@ -227,6 +228,7 @@ public class FileUtils {
         return modeBits;
     }
 
+    @Deprecated
     public static boolean isExisted(String s) {
         if(s ==null) return false;
 
@@ -244,6 +246,7 @@ public class FileUtils {
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
+    @Deprecated
     public static String getFullFileName(String mediaPath) {
         if(mediaPath==null) {
             return "";
@@ -252,11 +255,22 @@ public class FileUtils {
         return file.getName();
     }
 
+    @Deprecated
     public static String getFolderName(String mediaPath) {
         if(mediaPath==null) {
             return "";
         }
         File file = new File(mediaPath);
         return file.getParentFile().getPath();
+    }
+
+    public static String getParentName(String path) {
+        if(path != null) {
+            int indx = path.lastIndexOf("/");
+            if(indx>0) {
+                return path.substring(0, indx);
+            }
+        }
+        return "";
     }
 }
