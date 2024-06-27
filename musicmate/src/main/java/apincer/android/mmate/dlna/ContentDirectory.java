@@ -36,19 +36,18 @@ import java.util.stream.Collectors;
 
 import apincer.android.mmate.dlna.content.ContentBrowser;
 import apincer.android.mmate.dlna.content.ContentDirectoryIDs;
-import apincer.android.mmate.dlna.content.MusicAlbumFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicAlbumItemBrowser;
-import apincer.android.mmate.dlna.content.MusicAlbumsFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicAllTitleItemBrowser;
-import apincer.android.mmate.dlna.content.MusicAllTitlesFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicArtistFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicArtistItemBrowser;
-import apincer.android.mmate.dlna.content.MusicArtistsFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicDownloadedFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicGenreFolderBrowser;
-import apincer.android.mmate.dlna.content.MusicGenreItemBrowser;
-import apincer.android.mmate.dlna.content.MusicGenresFolderBrowser;
+import apincer.android.mmate.dlna.content.AlbumFolderBrowser;
+import apincer.android.mmate.dlna.content.AlbumsBrowser;
+import apincer.android.mmate.dlna.content.AllTitlesBrowser;
+import apincer.android.mmate.dlna.content.ArtistFolderBrowser;
+import apincer.android.mmate.dlna.content.ArtistsBrowser;
+import apincer.android.mmate.dlna.content.DownloadsBrowser;
+import apincer.android.mmate.dlna.content.MusicItemBrowser;
+import apincer.android.mmate.dlna.content.LibraryBrowser;
+import apincer.android.mmate.dlna.content.GenreFolderBrowser;
+import apincer.android.mmate.dlna.content.GenresBrowser;
+import apincer.android.mmate.dlna.content.GroupingsBrowser;
+import apincer.android.mmate.dlna.content.GroupingFolderBrowser;
 
 /**
  * a content directory which uses the content of the MediaStore in order to
@@ -321,34 +320,46 @@ public class ContentDirectory {
         if (objectID == null || objectID.equals("") || ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
         //    result = new RootFolderBrowser(getContext());
        // } else if (ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
-            result = new MusicFolderBrowser(getContext());
+            result = new LibraryBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId().equals(objectID)) {
-            result = new MusicGenresFolderBrowser(getContext());
+            result = new GenresBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId().equals(objectID)) {
-            result = new MusicAlbumsFolderBrowser(getContext());
+            result = new AlbumsBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
-            result = new MusicArtistsFolderBrowser(getContext());
+            result = new ArtistsBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId().equals(objectID)) {
-            result = new MusicAllTitlesFolderBrowser(getContext());
+            result = new AllTitlesBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId())) {
-            result = new MusicAlbumFolderBrowser(getContext());
+            result = new AlbumFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
-            result = new MusicArtistFolderBrowser(getContext());
+            result = new ArtistFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId())) {
-            result = new MusicGenreFolderBrowser(getContext());
+            result = new GenreFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId())) {
-            result = new MusicAllTitleItemBrowser(getContext());
+            //result = new MusicAllTitleItemBrowser(getContext());
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId())) {
-            result = new MusicGenreItemBrowser(getContext());
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(),ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId())) {
-            result = new MusicAlbumItemBrowser(getContext());
+        //    result = new MusicAlbumItemBrowser(getContext());
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
-            result = new MusicArtistItemBrowser(getContext());
+           // result = new MusicArtistItemBrowser(getContext());
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId())) {
-            result = new MusicDownloadedFolderBrowser(getContext());
+            result = new DownloadsBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId())) {
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId())) {
+            result = new GroupingsBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId())) {
+            result = new GroupingFolderBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId())) {
+            //    result = new MusicAlbumItemBrowser(getContext());
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
         }
 
-        return result;
+            return result;
     }
 
 

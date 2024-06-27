@@ -1,8 +1,6 @@
 package apincer.android.mmate.dlna;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -45,10 +43,8 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.repository.MusicMateOrmLite;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class ContentServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
@@ -185,10 +181,9 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
             try {
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
                 MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
-                MusicPlayerInfo player = new MusicPlayerInfo(null, agent, ContextCompat.getDrawable(getContext(), R.drawable.ic_baseline_devices_128));
+                MusicPlayerInfo player = MusicPlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
                 MusixMateApp.setPlaying(player, tag);
                 AudioTagPlayingEvent.publishPlayingSong(tag);
-               // byte[] bin = IOUtils.toByteArray(new FileInputStream(tag.getPath()));
                 result = new ContentHolder(mimeType, tag.getPath());
             }catch (Exception ex) {
                 Log.e(TAG, "lookupContent: - " + contentId, ex);

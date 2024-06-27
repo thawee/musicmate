@@ -15,11 +15,11 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.StringUtils;
 
-public class MusicTagRepository {
-    private static final String TAG = "MusicTagRepository";
+public class TagRepository {
+    private static final String TAG = "TagRepository";
     public static List<String> lossyAudioFormatList;
 
-    MusicTagRepository() {
+    TagRepository() {
         lossyAudioFormatList = new ArrayList<>();
         lossyAudioFormatList.add("MP3");
         lossyAudioFormatList.add("AAC");
@@ -35,6 +35,18 @@ public class MusicTagRepository {
         if(StringUtils.isEmpty(tag.getUniqueKey())) {
             String keyword = escapeString(tag.getPath()+"_"+ tag.getAudioStartTime());
             tag.setUniqueKey(keyword);
+        }
+        if(StringUtils.isEmpty(tag.getGenre())) {
+            tag.setGenre("None");
+        }
+        if(StringUtils.isEmpty(tag.getGrouping())) {
+            tag.setGrouping("None");
+        }
+        if(StringUtils.isEmpty(tag.getArtist())) {
+            tag.setArtist("");
+        }
+        if(StringUtils.isEmpty(tag.getAlbumArtist())) {
+            tag.setAlbumArtist(tag.getArtist());
         }
 
         MusixMateApp.getInstance().getOrmLite().save(tag);
@@ -65,7 +77,7 @@ public class MusicTagRepository {
     public static List<String> getActualGenreList(Context context) {
         List<String> list = new ArrayList<>();
 
-        List<String> names = MusixMateApp.getInstance().getOrmLite().getGeners();
+        List<String> names = MusixMateApp.getInstance().getOrmLite().getGenres();
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     if(!list.contains(StringUtils.EMPTY)) {
@@ -82,7 +94,7 @@ public class MusicTagRepository {
 
     public static List<String> getDefaultGenreList(Context context) {
         List<String> list = new ArrayList<>();
-        List<String> names = MusixMateApp.getInstance().getOrmLite().getGeners();
+        List<String> names = MusixMateApp.getInstance().getOrmLite().getGenres();
        // if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {

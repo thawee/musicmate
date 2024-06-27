@@ -19,9 +19,9 @@ import apincer.android.mmate.dlna.ContentDirectory;
  *
  * @author openbit (Tobias Schoene)
  */
-public class MusicFolderBrowser extends ContentBrowser {
+public class LibraryBrowser extends ContentBrowser {
 
-    public MusicFolderBrowser(Context context) {
+    public LibraryBrowser(Context context) {
         super(context);
     }
 
@@ -35,12 +35,12 @@ public class MusicFolderBrowser extends ContentBrowser {
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
-        result.add((Container) new MusicAllTitlesFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new MusicDownloadedFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new MusicAlbumsFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new MusicArtistsFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new MusicGenresFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new MusicGroupingsFolderBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new AllTitlesBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new DownloadsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new AlbumsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new ArtistsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new GenresBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new GroupingsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
         return result;
     }
 

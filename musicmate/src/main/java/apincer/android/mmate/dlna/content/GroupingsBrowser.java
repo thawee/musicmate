@@ -1,10 +1,9 @@
 package apincer.android.mmate.dlna.content;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+
 import android.database.Cursor;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
@@ -15,42 +14,34 @@ import org.jupnp.support.model.item.Item;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.ContentDirectory;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.MusicFolder;
+import apincer.android.mmate.repository.TagRepository;
 
 /**
  * Browser  for the music genres folder.
  *
  * @author openbit (Tobias Schoene)
  */
-public class MusicGenresFolderBrowser extends ContentBrowser {
-    public MusicGenresFolderBrowser(Context context) {
+public class GroupingsBrowser extends ContentBrowser {
+    public GroupingsBrowser(Context context) {
         super(context);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.genres), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.groupings), "mmate", getSize(contentDirectory, myId),
                 null);
 
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-/*
-        String[] projection = {MediaStore.Audio.Genres._ID};
-        String selection = "";
-        String[] selectionArgs = null;
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        } */
-        return MusicTagRepository.getActualGenreList(getContext()).size();
+        return TagRepository.getActualGroupingList(getContext()).size();
     }
 
 
@@ -69,6 +60,13 @@ public class MusicGenresFolderBrowser extends ContentBrowser {
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<Container> result = new ArrayList<>();
+        List<MusicFolder> groupings = MusixMateApp.getInstance().getOrmLite().getGroupingWithChildrenCount();
+        for(MusicFolder group: groupings) {
+            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), group.getName(), "", 0);
+            musicAlbum.setChildCount((int)group.getChildCount());
+            result.add(musicAlbum);
+        }
+/*
         String[] projection = {MediaStore.Audio.Genres._ID, MediaStore.Audio.Genres.NAME};
         String selection = "";
         String[] selectionArgs = null;
@@ -103,11 +101,10 @@ public class MusicGenresFolderBrowser extends ContentBrowser {
             } else {
                 Log.d(getClass().getName(), "System media store is empty.");
             }
-        }
+        } */
         result.sort(Comparator.comparing(DIDLObject::getTitle));
 
-        // select genre, count(id) from musictag group by genre order by genre
-
+        // select grouping, count(id) from musictag group by grouping
 
         return result;
     }
@@ -115,8 +112,5 @@ public class MusicGenresFolderBrowser extends ContentBrowser {
     @Override
     public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new ArrayList<>();
-
-
     }
-
 }

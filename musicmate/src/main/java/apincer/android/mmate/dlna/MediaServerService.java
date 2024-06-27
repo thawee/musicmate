@@ -109,8 +109,6 @@ public class MediaServerService extends Service {
         long start = System.currentTimeMillis();
         super.onCreate();
         INSTANCE = this;
-        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
-
         Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
     }
 
@@ -118,6 +116,7 @@ public class MediaServerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         long start = System.currentTimeMillis();
         showNotification();
+        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
         // the footprint of the onStart() method must be small
         // otherwise android will kill the service
         // in order of this circumstance we have to initialize the service
@@ -161,7 +160,6 @@ public class MediaServerService extends Service {
             Log.d(TAG, "Adding content connector: " + bindAddress + ":" + CONTENT_SERVER_PORT);
 
             httpServer = H2ServerBootstrap.bootstrap()
-           // httpServer = AsyncServerBootstrap.bootstrap()
                     .setIOReactorConfig(config)
                     .setCanonicalHostName(bindAddress)
                     .register("*", new ContentServerRequestHandler(getApplicationContext()))
@@ -191,7 +189,7 @@ public class MediaServerService extends Service {
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate :"+getPhoneModel(), new ManufacturerDetails("apincer.com",
+                    "MusicMate : "+getPhoneModel(), new ManufacturerDetails("apincer.com",
                     "http://www.apincer.com"), new ModelDetails("MusicMate", "UPnP/AV MediaServer",
                     versionName), URI.create("http://" + getIpAddress() + ":" + CONTENT_SERVER_PORT));
 
@@ -218,7 +216,7 @@ public class MediaServerService extends Service {
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate - "+getPhoneModel())
+                .setContentTitle("MusicMate : "+getPhoneModel())
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.settings_local_server_name));
         mBuilder.setContentIntent(contentIntent);
@@ -354,6 +352,13 @@ public class MediaServerService extends Service {
      */
     @Override
     public void onDestroy() {
+        Thread shutdownThread = new Thread(this::shutdown);
+        shutdownThread.start();
+        cancelNotification();
+        super.onDestroy();
+    }
+
+    private void shutdown() {
         if(httpServer != null) {
             httpServer.initiateShutdown();
             try {
@@ -364,11 +369,9 @@ public class MediaServerService extends Service {
             httpServer = null;
         }
 
-        upnpService.getRegistry().removeAllLocalDevices();
-
+       // upnpService.getRegistry().removeAllLocalDevices();
+        upnpService.shutdown();
         initialized = false;
-        cancelNotification();
-        super.onDestroy();
     }
 
     /**

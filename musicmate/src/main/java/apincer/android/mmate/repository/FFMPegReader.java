@@ -46,8 +46,8 @@ import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
-public class FFMPeg extends TagReader {
-    private static final String TAG = "FFMPeg";
+public class FFMPegReader extends TagReader {
+    private static final String TAG = "FFMPegReader";
 
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         if(!isEmpty(tag.getCoverartMime())) {

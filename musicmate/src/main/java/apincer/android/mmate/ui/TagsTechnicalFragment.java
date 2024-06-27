@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.FFMPeg;
+import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagReader;
@@ -109,7 +109,7 @@ public class TagsTechnicalFragment extends Fragment {
 
         MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getContext(), tag.getPath()).get(0);
 
-        MusicTag ffmpegTag = FFMPeg.readTagFromFile(getContext(), tag.getPath());
+        MusicTag ffmpegTag = FFMPegReader.readTagFromFile(getContext(), tag.getPath());
         metada.setText(String.format("FFmpeg:\n%s", ffmpegTag.getData()));
 
         TableRow tbrow0 = new TableRow(getContext());
@@ -232,7 +232,7 @@ public class TagsTechnicalFragment extends Fragment {
                 () -> {
                     FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        FFMPeg.removeCoverArt(getContext(), tag);
+                        FFMPegReader.removeCoverArt(getContext(), tag);
                         repos.scanMusicFile(new File(tag.getPath()), false);
                     }
                 }
@@ -255,7 +255,7 @@ public class TagsTechnicalFragment extends Fragment {
                         if(!isEmpty(coverArtPath)) {
                             String path = tag.getPath();
                             coverArtPath = path.substring(0, path.lastIndexOf("."))+"."+coverArtPath;
-                            FFMPeg.extractCoverArt(tag, new File(coverArtPath));
+                            FFMPegReader.extractCoverArt(tag, new File(coverArtPath));
                         }
                     }
                 }

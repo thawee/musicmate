@@ -26,14 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.NotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
-import apincer.android.mmate.repository.MusicMateOrmLite;
+import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.work.ScanAudioFileWorker;
@@ -287,12 +285,12 @@ public class MusixMateApp extends Application {
     /*
 Provides the SQLite Helper Object among the application
  */
-    public MusicMateOrmLite getOrmLite() {
+    public OrmLiteHelper getOrmLite() {
        /* if (ormLite == null) {
             ormLite = OpenHelperManager.getHelper(this, MusicMateOrmLite.class);
         }
         return ormLite; */
-        return OpenHelperManager.getHelper(this, MusicMateOrmLite.class);
+        return OpenHelperManager.getHelper(this, OrmLiteHelper.class);
     }
 
     public void createNotificationChannel() {

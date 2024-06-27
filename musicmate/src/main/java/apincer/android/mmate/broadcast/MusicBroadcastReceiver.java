@@ -57,17 +57,8 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
     public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
 
     public MusicBroadcastReceiver(BroadcastHelper broadcastHelper ) {
-       // this.service = service;
         this.broadcastHelper = broadcastHelper;
-        playerInfo = new MusicPlayerInfo();
-        initPlayer();
-    }
-
-    private void initPlayer() {
-        playerInfo.playerName = DEAFULT_PLAYER_NAME;
-        playerInfo.playerPackage = "unknown";
-        playerInfo.playerIconBitmap = null;
-        playerInfo.playerIconDrawable = null;
+        playerInfo = MusicPlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
     }
 
     @Override
@@ -148,7 +139,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
     }
 
     protected void setPlayer(Context context, String packageName, String playerName) {
-        initPlayer();
+        playerInfo = MusicPlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
         playerInfo.playerPackage = packageName;
         playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
         try {
@@ -270,13 +261,4 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
             title = bundle.getString("TRACK_NAME");
         }
     }
-/*
-    protected final void displayNotification() {
-        service.setListeningSong(title, artist,album);
-    }
-
-    @Override
-    public MusicPlayerInfo getPlayerInfo() {
-        return playerInfo;
-    } */
 }

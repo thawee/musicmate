@@ -39,7 +39,7 @@ import apincer.android.mmate.Preferences;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -109,7 +109,7 @@ public class AboutActivity extends AppCompatActivity {
             MusicMateExecutors.db(new Runnable() {
                 @Override
                 public void run() {
-                    List<MusicTag> tags = MusicTagRepository.getAllMusics();
+                    List<MusicTag> tags = TagRepository.getAllMusics();
                     Map<String, Integer> encList = new HashMap<>();
                     Map<String, Integer> grpList = new HashMap<>();
                     Map<String, Long> estimatedSize = new HashMap<>();

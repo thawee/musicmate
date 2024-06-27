@@ -56,13 +56,12 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
-import apincer.android.mmate.repository.FFMPeg;
+import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -136,11 +135,11 @@ public class TagsActivity extends AppCompatActivity {
                     startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
                         //calculate track RG
-                        FFMPeg.detectQuality(tag);
+                        FFMPegReader.detectQuality(tag);
                         //write RG to file
-                        FFMPeg.writeTagQualityToFile(this, tag);
+                        FFMPegReader.writeTagQualityToFile(this, tag);
                         // update MusicMate Library
-                        MusicTagRepository.saveTag(tag);
+                        TagRepository.saveTag(tag);
                     }
 
                     // may need go reload from db
@@ -243,7 +242,7 @@ public class TagsActivity extends AppCompatActivity {
             if (!closePreview) {
                 MusicTag tag = event.getPlayingSong();
                 if(tag != null) {
-                    MusicTagRepository.load(tag);
+                    TagRepository.load(tag);
                     updatePreview(tag);
                     stopProgressBar();
                 }
@@ -527,20 +526,20 @@ public class TagsActivity extends AppCompatActivity {
 
             // bps
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
 
             // DR
             if(MusicTagUtils.isLossless(displayTag)) {
                 spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
-                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor));
+                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
             }
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP))
+                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor));
             encInfo.setText(spannableEnc.build());

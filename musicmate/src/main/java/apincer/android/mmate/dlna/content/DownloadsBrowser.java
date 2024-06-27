@@ -2,34 +2,25 @@ package apincer.android.mmate.dlna.content;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jupnp.support.model.DIDLObject;
-import org.jupnp.support.model.PersonWithRole;
-import org.jupnp.support.model.Res;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
 import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
-import org.jupnp.util.MimeType;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.StringUtils;
-import apincer.android.utils.FileUtils;
 
-public class MusicDownloadedFolderBrowser extends ContentBrowser {
-    private static final String TAG = "MusicDownloadedFolderBrowser";
-    public MusicDownloadedFolderBrowser(Context context) {
+public class DownloadsBrowser extends ContentBrowser {
+    private static final String TAG = "DownloadsBrowser";
+    public DownloadsBrowser(Context context) {
         super(context);
     }
 
@@ -60,6 +51,8 @@ public class MusicDownloadedFolderBrowser extends ContentBrowser {
         int currentCount = 0;
         for(MusicTag tag: tags) {
             if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId());
+/*
                 long id = tag.getId();
                 String title = tag.getTitle();
                 MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
@@ -71,7 +64,7 @@ public class MusicDownloadedFolderBrowser extends ContentBrowser {
                 Res resource = new Res(mimeType, tag.getFileSize(), uri);
                 resource.setDuration(tag.getAudioDurationAsString());
                 MusicTrack musicTrack = new MusicTrack(
-                        ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId()
+                        ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId()
                                 + id, ContentDirectoryIDs.MUSIC_FOLDER.getId(),
                         title, "", tag.getAlbum(), tag.getArtist(), resource);
                 musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
@@ -80,29 +73,12 @@ public class MusicDownloadedFolderBrowser extends ContentBrowser {
                 resource.setBitrate(tag.getAudioBitRate());
                 musicTrack.setGenres(tag.getGenre().split(",", -1));
                 //musicTrack.setOriginalTrackNumber(tag.getTrack());
+                */
                 result.add(musicTrack);
-                Log.d(TAG, "MusicTrack: " + id + " Title: "
-                        + title + " Uri: " + uri);
             }
             currentCount++;
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
-    }
-
-    private URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
-        String absPath = tag.getPath().toLowerCase();
-        if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
-            // if has alblum, use parent dir
-            if(!StringUtils.isEmpty(tag.getAlbum())) {
-                // use directory
-                absPath = FileUtils.getFolderName(absPath);
-            }
-        }
-        String uri = DigestUtils.md5Hex(absPath)+".png";
-
-        return URI.create("http://"
-                + contentDirectory.getIpAddress() + ":"
-                 + MediaServerService.CONTENT_SERVER_PORT + "/album/" + uri);
     }
 }

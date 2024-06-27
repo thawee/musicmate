@@ -102,10 +102,10 @@ import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.fs.FileSystem;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.repository.FFMPeg;
+import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
@@ -928,11 +928,11 @@ public class MainActivity extends AppCompatActivity {
 
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, MusicTagRepository.getActualGroupingList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, TagRepository.getActualGroupingList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GENRE, MusicTagRepository.getActualGenreList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GENRE, TagRepository.getActualGenreList(getApplicationContext()).get(0));
             return true;
         }else if(item.getItemId() == R.id.menu_settings) {
             Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
@@ -1670,11 +1670,11 @@ public class MainActivity extends AppCompatActivity {
                         statusList.put(tag, "Analysing");
                         runOnUiThread(itemsView::invalidateViews);
                         //calculate track RG
-                        FFMPeg.detectQuality(tag);
+                        FFMPegReader.detectQuality(tag);
                         //write RG to file
-                        FFMPeg.writeTagQualityToFile(MainActivity.this, tag);
+                        FFMPegReader.writeTagQualityToFile(MainActivity.this, tag);
                         // update MusicMate Library
-                        MusicTagRepository.saveTag(tag);
+                        TagRepository.saveTag(tag);
 
                         AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
                         EventBus.getDefault().postSticky(message);
@@ -1885,7 +1885,7 @@ public class MainActivity extends AppCompatActivity {
                             itemsView.invalidateViews();
                         });
 
-                        if(FFMPeg.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
+                        if(FFMPegReader.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
                             statusList.put(tag, "Done");
                             repos.scanMusicFile(new File(targetPath),true); // re scan file
                             runOnUiThread(() -> {

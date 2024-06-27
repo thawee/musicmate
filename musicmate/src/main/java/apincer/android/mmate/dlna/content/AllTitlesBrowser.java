@@ -2,101 +2,69 @@ package apincer.android.mmate.dlna.content;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.database.Cursor;
-import android.provider.MediaStore;
-import android.util.Log;
 
 import org.jupnp.support.model.DIDLObject;
-import org.jupnp.support.model.PersonWithRole;
-import org.jupnp.support.model.Res;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
 import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
-import org.jupnp.util.MimeType;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import apincer.android.mmate.dlna.MediaServerService;
+import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.ContentDirectory;
-
+import apincer.android.mmate.repository.MusicTag;
 
 /**
- * Browser for a music artist folder.
+ * Browser for the music all titles folder.
  *
  * @author openbit (Tobias Schoene)
  */
-public class MusicArtistFolderBrowser extends ContentBrowser {
-    public MusicArtistFolderBrowser(Context context) {
+public class AllTitlesBrowser extends ContentBrowser {
+    private static final String TAG = "AllTitlesBrowser";
+    public AllTitlesBrowser(Context context) {
         super(context);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-
         /*List<MusicTrack> items = browseItem(contentDirectory, myId, firstResult, maxResults, orderby);
-        return new MusicAlbum(myId,
-                ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), getName(
-                contentDirectory, myId), "yaacc", getSize(
-                contentDirectory, myId), items);
+        return new MusicAlbum(
+                ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(),
+                ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.all), "yaacc",
+                getSize(contentDirectory, myId), items);
 */
 
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), getName(
-                contentDirectory, myId), "yaacc", getSize(
+
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), getContext().getString(R.string.all), "mmate", getSize(
                 contentDirectory, myId), null);
 
     }
 
-    private String getName(ContentDirectory contentDirectory, String myId) {
-        String result = "";
-        String[] projection = {MediaStore.Audio.Artists.ARTIST};
-        String selection = MediaStore.Audio.Artists._ID + "=?";
-        String[] selectionArgs = new String[]{myId.substring(myId
-                .indexOf(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId()))};
-        try (Cursor cursor = contentDirectory
-                .getContext()
-                .getContentResolver()
-                .query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
-                        projection, selection, selectionArgs, null)) {
-
-            if (cursor != null && cursor.getCount() > 0) {
-                cursor.moveToFirst();
-                result = cursor.getString(0);
-                cursor.close();
-            }
-        }
-        return result;
-    }
-
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-
-        String[] projection = {MediaStore.Audio.Media.ARTIST_ID};
-        String selection = MediaStore.Audio.Media.ARTIST_ID + "=?";
-        String[] selectionArgs = new String[]{myId
-                .substring(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId()
-                .length())};
+        return MusixMateApp.getInstance().getOrmLite().findMySongs().size();
+/*
+        String[] projection = {MediaStore.Audio.Media._ID};
+        String selection = "";
+        String[] selectionArgs = null;
         try (Cursor cursor = contentDirectory
                 .getContext()
                 .getContentResolver()
-                .query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection,
+                .query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, projection,
                         selection, selectionArgs, null)) {
             return cursor.getCount();
         }
-
+*/
     }
 
     @Override
     public List<Container> browseContainer(
             ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        /*List<Container> result = new ArrayList<>();
-        result.add((Container) browseMeta(contentDirectory,
-                myId, firstResult, maxResults, orderby));
-        return result;*/
         return new ArrayList<>();
     }
 
@@ -105,6 +73,37 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
     public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
+        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findMySongs();
+        int currentCount = 0;
+        for(MusicTag tag: tags) {
+            if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
+/*
+                long id = tag.getId();
+                String title = tag.getTitle();
+                MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
+                // file parameter only needed for media players which decide
+                // the
+                // ability of playing a file by the file extension
+                String uri = getUriString(contentDirectory, tag);
+                URI albumArtUri = getAlbumArtUri(contentDirectory, tag);
+                Res resource = new Res(mimeType, tag.getFileSize(), uri);
+                resource.setDuration(tag.getAudioDurationAsString());
+                MusicTrack musicTrack = new MusicTrack(
+                        ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId()
+                                + id, ContentDirectoryIDs.MUSIC_FOLDER.getId(),
+                        title, "", tag.getAlbum(), tag.getArtist(), resource);
+                musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
+                        albumArtUri));
+                musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getArtist(), "AlbumArtist")});
+                resource.setBitrate(tag.getAudioBitRate());
+                musicTrack.setGenres(tag.getGenre().split(",", -1));
+                //musicTrack.setOriginalTrackNumber(tag.getTrack()); */
+                result.add(musicTrack);
+            }
+            currentCount++;
+        }
+        /*
         String[] projection;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             projection = new String[]{MediaStore.Audio.Media._ID,
@@ -115,7 +114,6 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
                     MediaStore.Audio.Media.ALBUM_ID,
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.ARTIST,
-                    MediaStore.Audio.Media.ARTIST_ID,
                     MediaStore.Audio.Media.DURATION,
                     MediaStore.Audio.Media.BITRATE,
                     MediaStore.Audio.Media.GENRE};
@@ -128,13 +126,10 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
                     MediaStore.Audio.Media.ALBUM_ID,
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.ARTIST,
-                    MediaStore.Audio.Media.ARTIST_ID,
                     MediaStore.Audio.Media.DURATION};
         }
-        String selection = MediaStore.Audio.Media.ARTIST_ID + "=?";
-        String[] selectionArgs = new String[]{myId
-                .substring(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId()
-                .length())};
+        String selection = "";
+        String[] selectionArgs = null;
         try (Cursor mediaCursor = contentDirectory
                 .getContext()
                 .getContentResolver()
@@ -162,8 +157,6 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
                                 .getColumnIndex(MediaStore.Audio.Media.TITLE));
                         @SuppressLint("Range") String artist = mediaCursor.getString(mediaCursor
                                 .getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                        @SuppressLint("Range") String artistId = mediaCursor.getString(mediaCursor
-                                .getColumnIndex(MediaStore.Audio.Media.ARTIST_ID));
                         @SuppressLint("Range") String duration = mediaCursor.getString(mediaCursor
                                 .getColumnIndex(MediaStore.Audio.Media.DURATION));
                         duration = contentDirectory.formatDuration(duration);
@@ -178,7 +171,6 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
                         // file parameter only needed for media players which decide
                         // the
                         // ability of playing a file by the file extension
-
                         String uri = getUriString(contentDirectory, id, mimeType);
                         URI albumArtUri = URI.create("http://"
                                 + contentDirectory.getIpAddress() + ":"
@@ -186,13 +178,11 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
                         Res resource = new Res(mimeType, size, uri);
                         resource.setDuration(duration);
                         MusicTrack musicTrack = new MusicTrack(
-                                ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId()
-                                        + id,
-                                ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId()
-                                        + artistId, title + "-(" + name + ")", "",
-                                album, artist, resource);
-                        musicTrack
-                                .replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(albumArtUri));
+                                ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId()
+                                        + id, ContentDirectoryIDs.MUSIC_FOLDER.getId(),
+                                title + "-(" + name + ")", "", album, artist, resource);
+                        musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
+                                albumArtUri));
                         musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(artist, "AlbumArtist")});
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                             @SuppressLint("Range") String genre = mediaCursor.getString(mediaCursor
@@ -211,10 +201,12 @@ public class MusicArtistFolderBrowser extends ContentBrowser {
                     mediaCursor.moveToNext();
                 }
 
+
             } else {
                 Log.d(getClass().getName(), "System media store is empty.");
             }
-        }
+        } */
+
         result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
 

@@ -19,20 +19,21 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.utils.StringUtils;
 
-public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
+public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Database name
-    private static final String DATABASE_NAME = "apincer.android.musicmate.db";
-    private static final String TAG = MusicMateOrmLite.class.getName();
+    private static final String DATABASE_NAME = "apincer.musicmate.db";
+    private static final String TAG = OrmLiteHelper.class.getName();
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
     private static final int DATABASE_VERSION = 3;
 
-    public MusicMateOrmLite(Context context) {
+    public OrmLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION) ;//,
                 // R.raw.ormlite_config is a reference to the ormlite_config2.txt file in the
                 // /res/raw/ directory of this project
@@ -43,7 +44,6 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             // creates the database table
             TableUtils.createTable(connectionSource, MusicTag.class);
-            TableUtils.createTable(connectionSource, NASServer.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -160,7 +160,11 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("genre",genre.replace("'","''"));
+            if(StringUtils.isEmpty(genre)) {
+                builder.where().isNull("genre").or().eq("genre", "");
+            }else {
+                builder.where().eq("genre", genre.replace("'", "''"));
+            }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -325,7 +329,7 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<String> getGeners() {
+    public List<String> getGenres() {
         try {
             List<String> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
@@ -359,6 +363,63 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
             return Collections.EMPTY_LIST;
         }
     }
+
+    public List<MusicFolder> getGroupingWithChildrenCount() {
+        try {
+            //select grouping, count(id) from musictag group by grouping
+            List<MusicFolder> list = new ArrayList<>();
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("grouping, count(id)");
+            builder.groupBy("grouping");
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            //return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                MusicFolder group = new MusicFolder();
+                group.setName(vals[0]);
+                group.setChildCount(StringUtils.toLong(vals[1]));
+                if(vals[0] == null) {
+                    group.setName("_NULL");
+                }else if(StringUtils.isEmpty(vals[0])) {
+                    group.setName("_EMPTY");
+                }
+                list.add(group);
+            }
+            return list;
+        } catch (SQLException e) {
+            Log.e("MusicMateORMLite","getGrouping: "+e.getMessage());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public List<MusicFolder> getGenresWithChildrenCount() {
+        try {
+            //select grouping, count(id) from musictag group by grouping
+            List<MusicFolder> list = new ArrayList<>();
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("genre, count(id)");
+            builder.groupBy("genre");
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            //return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                MusicFolder group = new MusicFolder();
+                group.setName(vals[0]);
+                group.setChildCount(StringUtils.toLong(vals[1]));
+                if(vals[0] == null) {
+                    group.setName("_NULL");
+                }else if(StringUtils.isEmpty(vals[0])) {
+                    group.setName("_EMPTY");
+                }
+                list.add(group);
+            }
+            return list;
+        } catch (SQLException e) {
+            Log.e("MusicMateORMLite","genre: "+e.getMessage());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
     public List<String> getPublishers() {
         try {
             List<String> list = new ArrayList<>();
@@ -510,23 +571,100 @@ public class MusicMateOrmLite extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<NASServer> getMediaServers() {
+    public List<MusicFolder> getArtistWithChildrenCount() {
         try {
-            Dao<NASServer, ?> dao = getDao(NASServer.class);
-            return dao.queryForAll();
+            //select grouping, count(id) from musictag group by grouping
+            List<MusicFolder> list = new ArrayList<>();
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("artist, count(id)");
+            builder.groupBy("artist");
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            //return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                MusicFolder group = new MusicFolder();
+                group.setName(vals[0]);
+                group.setChildCount(StringUtils.toLong(vals[1]));
+                if(vals[0] == null) {
+                    group.setName("_NULL");
+                }else if(StringUtils.isEmpty(vals[0])) {
+                    group.setName("_EMPTY");
+                }
+                list.add(group);
+            }
+            return list;
+        } catch (SQLException e) {
+            Log.e("MusicMateORMLite","artist: "+e.getMessage());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public List<MusicFolder> getAlbumAndArtistWithChildrenCount() {
+        try {
+            //select grouping, count(id) from musictag group by grouping
+            List<MusicFolder> list = new ArrayList<>();
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.selectRaw("album, albumartist, count(id)");
+            builder.groupByRaw("album, albumartist");
+            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
+            //return Arrays.asList(result);
+            for(String[] vals : results.getResults()) {
+                MusicFolder group = new MusicFolder();
+                String albumArtist = vals[1];
+                String album = vals[0];
+                group.setChildCount(StringUtils.toLong(vals[1]));
+                if(StringUtils.isEmpty(album)) {
+                    album = Constants.UNKNOWN;
+                }
+                if(StringUtils.isEmpty(albumArtist)) {
+                    group.setName(album);
+                }else if ("Various Artists".equalsIgnoreCase(albumArtist) ||
+                         "Soundtrack".equalsIgnoreCase(albumArtist)) {
+                    group.setName(album);
+                }else {
+                    group.setName(album +" (by "+albumArtist+")");
+                }
+                list.add(group);
+            }
+            return list;
+        } catch (SQLException e) {
+            Log.e("MusicMateORMLite","album: "+e.getMessage());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public List<MusicTag> findByArtist(String name) {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            if(StringUtils.isEmpty(name)) {
+                builder.where().isNull("artist").or().eq("artist", "");
+            }else {
+                builder.where().eq("artist", name.replace("'", "''"));
+            }
+            return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
         }
     }
 
-    public void saveMediaServers(List<NASServer> servers) {
+    public List<MusicTag> findByAlbumAndAlbumArtist(String album, String albumArtist) {
         try {
-            Dao<NASServer, ?> dao = getDao(NASServer.class);
-            for(NASServer server: servers) {
-                dao.createIfNotExists(server);
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            Where<MusicTag, ?> where = builder.where();
+            if(StringUtils.isEmpty(album)) {
+                where.isNull("album").or().eq("album", "");
+            }else {
+                where.eq("album", album.replace("'", "''"));
             }
+            if(!StringUtils.isEmpty(albumArtist)) {
+                where.and().eq("albumArtist", albumArtist.replace("'", "''"));
+            }
+            return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
-            Log.e(TAG,"cleanMusicMate",e);
+            return Collections.EMPTY_LIST;
         }
     }
 }

@@ -48,7 +48,7 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -123,11 +123,11 @@ public class TagsEditorFragment extends Fragment {
         setupFileQualityList(fileQuality);
 
         // popup list
-        setupListValuePopup(txtArtist, MusicTagRepository.getArtistList(), 3, false);
-        setupListValuePopup(txtAlbumArtist, MusicTagRepository.getDefaultAlbumArtistList(getContext()),1, false);
-        setupListValuePopup(txtGenre, MusicTagRepository.getDefaultGenreList(getContext()),2, true);
-        setupListValuePopup(txtGrouping, MusicTagRepository.getDefaultGroupingList(getContext()),1, true);
-        setupListValuePopup(txtPublisher, MusicTagRepository.getDefaultPublisherList(getContext()),3, false);
+        setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
+        setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1, false);
+        setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),2, true);
+        setupListValuePopup(txtGrouping, TagRepository.getDefaultGroupingList(getContext()),1, true);
+        setupListValuePopup(txtPublisher, TagRepository.getDefaultPublisherList(getContext()),3, false);
         setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1, true);
 
         return v;

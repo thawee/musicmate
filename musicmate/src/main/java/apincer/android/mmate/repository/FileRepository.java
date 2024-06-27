@@ -1,6 +1,6 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.FFMPeg.writeTagToFile;
+import static apincer.android.mmate.repository.FFMPegReader.writeTagToFile;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -75,13 +75,13 @@ public class FileRepository {
                     // find first music file in path
                     File[] files = pathFile.listFiles();
                     for(File file: files) {
-                        if(FFMPeg.isSupportedFileFormat(file.getAbsolutePath())) {
+                        if(FFMPegReader.isSupportedFileFormat(file.getAbsolutePath())) {
                             path = file.getAbsolutePath();
                             break;
                         }
                     }
                 }
-                FFMPeg.extractCoverArt(path, targetFile);
+                FFMPegReader.extractCoverArt(path, targetFile);
             }
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);
@@ -193,7 +193,7 @@ public class FileRepository {
 
     public MusicTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
         try {
-            List<MusicTag> list = MusicTagRepository.findMediaByTitle(currentTitle);
+            List<MusicTag> list = TagRepository.findMediaByTitle(currentTitle);
 
             double prvTitleScore = 0.0;
             double prvArtistScore = 0.0;
@@ -239,10 +239,10 @@ public class FileRepository {
 
         item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
 
-        if(FFMPeg.isSupportedFileFormat(item.getPath())) {
+        if(FFMPegReader.isSupportedFileFormat(item.getPath())) {
             writeTagToFile(getContext(), item);
             item.setOriginTag(null); // reset pending tag
-            MusicTagRepository.saveTag(item);
+            TagRepository.saveTag(item);
             return true;
         }else if (JustDSDReader.isSupportedFileFormat(item.getPath())) {
             // write to somewhere else
@@ -253,7 +253,7 @@ public class FileRepository {
             File f = new File(item.getPath());
             String fileName = f.getParentFile().getAbsolutePath()+"/"+item.getTrack()+".json";
             org.apache.commons.io.FileUtils.write(new File(fileName), json);
-            MusicTagRepository.saveTag(item);
+            TagRepository.saveTag(item);
             return true;
         }
 
@@ -275,14 +275,14 @@ public class FileRepository {
             }
             TagReader reader = TagReader.getReader(mediaPath);
             // if timestamp is outdated
-            if(MusicTagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
+            if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
                 Log.i(TAG, "scanMusicFile: reading -> "+mediaPath);
                 List<MusicTag> tags = reader.readFullMusicTag(getContext(), mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
                         String matePath = buildCollectionPath(tag);
                         tag.setMusicManaged(StringUtils.equals(matePath, tag.getPath()));
-                        MusicTagRepository.saveTag(tag);
+                        TagRepository.saveTag(tag);
                     }
                 }
             }
@@ -471,7 +471,7 @@ public class FileRepository {
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
                 tag.setStorageId(DocumentFileCompat.getStorageId(getContext(), newPath));
                 tag.setFileLastModified(file.lastModified());
-                MusicTagRepository.saveTag(tag);
+                TagRepository.saveTag(tag);
                 return true;
             }
         return false;
@@ -552,7 +552,7 @@ public class FileRepository {
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
                 cleanCacheCover(getContext(), item);
-                MusicTagRepository.removeTag(item);
+                TagRepository.removeTag(item);
                 File file = new File(item.getPath());
                 cleanMediaDirectory(file.getParentFile());
             }

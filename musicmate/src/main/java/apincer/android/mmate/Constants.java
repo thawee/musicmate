@@ -52,6 +52,8 @@ public final class Constants {
     public static final String UNKNOWN_GENRE = "Unknown Genre";
   //  public static final String UNKNOWN_MEDIA_TYPE = "Unknown Media Type";
     public static final String UNKNOWN_GROUP = "Unknown";
+    public static final String UNKNOWN = "Unknown";
+    public static final String NONE = "None";
     public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
     public static final String GROUPING_LOUNGE = "Lounge";
    // public static final String GROUPING_LIVE = "Live";

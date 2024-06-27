@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.TagReader;
 
 public class ScanAudioFileWorker extends Worker {
@@ -34,7 +34,7 @@ public class ScanAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        MusicTagRepository.cleanMusicMate();
+        TagRepository.cleanMusicMate();
 
         List<File> list = pathList(getApplicationContext());
         for(File file: list) {

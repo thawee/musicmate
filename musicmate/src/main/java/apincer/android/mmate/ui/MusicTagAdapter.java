@@ -31,7 +31,7 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.fs.MusicCoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.MusicTagRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -54,7 +54,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         localDataSet.clear();
         totalSize =0;
         totalDuration =0;
-        List<MusicTag> list = MusicTagRepository.findMediaTag(criteria);
+        List<MusicTag> list = TagRepository.findMediaTag(criteria);
         boolean noFilters = !hasFilter();
         if(noFilters) {
             for (MusicTag tag : list) {
@@ -170,13 +170,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_HIRES);
             titles.add(Constants.AUDIO_SQ_PCM_MQA);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-            List<String> tabs = MusicTagRepository.getActualGroupingList(context);
+            List<String> tabs = TagRepository.getActualGroupingList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = MusicTagRepository.getActualGenreList(context);
+            List<String> tabs = TagRepository.getActualGenreList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-            List<String> tabs = MusicTagRepository.getPublisherList(context);
+            List<String> tabs = TagRepository.getPublisherList(context);
             titles.addAll(tabs);
         }else {
             titles.add(getHeaderTitle());

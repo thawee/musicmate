@@ -2,48 +2,51 @@ package apincer.android.mmate.dlna.content;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.database.Cursor;
-import android.provider.MediaStore;
-import android.util.Log;
 
 import org.jupnp.support.model.DIDLObject;
-import org.jupnp.support.model.PersonWithRole;
-import org.jupnp.support.model.Res;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
 import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
-import org.jupnp.util.MimeType;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import apincer.android.mmate.dlna.MediaServerService;
+import apincer.android.mmate.Constants;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.dlna.ContentDirectory;
+import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.StringUtils;
 
 /**
  * Browser for a music genre folder.
  *
  * @author openbit (Tobias Schoene)
  */
-public class MusicAlbumFolderBrowser extends ContentBrowser {
-
-    public MusicAlbumFolderBrowser(Context context) {
+public class AlbumFolderBrowser extends ContentBrowser {
+    // album (by artist)
+   // private Pattern pattern = Pattern.compile("(?i)(\\w+)\\s*\\(\\s*by\\s*(\\w+)\\s*\\)");
+    //his is album (by this is artist)
+    private Pattern pattern = Pattern.compile("(?i)(.*)\\s*\\(by\\s*(.*)\\)");
+    public AlbumFolderBrowser(Context context) {
         super(context);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId,
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), myId, "mmate", getSize(
+                contentDirectory, myId), null);
+        /* return new StorageFolder(myId,
                 ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), getName(
                 contentDirectory, myId), "mmate", getSize(
                 contentDirectory, myId),
-                null);
+                null); */
     }
-
+/*
     private String getName(ContentDirectory contentDirectory, String myId) {
         String result = "";
         String[] projection = {MediaStore.Audio.Albums.ALBUM};
@@ -64,9 +67,29 @@ public class MusicAlbumFolderBrowser extends ContentBrowser {
             }
         }
         return result;
-    }
+    } */
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
+        String name = myId.substring(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().length());
+        String album = "";
+        String albumArtist = "";
+        if("_EMPTY".equalsIgnoreCase(name) ||
+                "_NULL".equalsIgnoreCase(name) ||
+                Constants.UNKNOWN.equalsIgnoreCase(name)) {
+            album = "";
+            albumArtist = "";
+        }else {
+            // split album and albumArtist - album (by artist)
+            Matcher matcher = pattern.matcher(name);
+            if (matcher.find()) {
+                album = StringUtils.trimToEmpty(matcher.group(1));
+                albumArtist = StringUtils.trimToEmpty(matcher.group(2));
+            }else {
+                album = name;
+            }
+        }
+        return MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist).size();
+        /*
         String[] projection = {MediaStore.Audio.Media.ALBUM_ID};
         String selection = MediaStore.Audio.Media.ALBUM_ID + "=?";
         String[] selectionArgs = new String[]{myId
@@ -78,7 +101,7 @@ public class MusicAlbumFolderBrowser extends ContentBrowser {
                 .query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection,
                         selection, selectionArgs, null)) {
             return cursor.getCount();
-        }
+        } */
 
     }
 
@@ -95,6 +118,35 @@ public class MusicAlbumFolderBrowser extends ContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
         List<MusicTrack> result = new ArrayList<>();
+        String name = myId.substring(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().length());
+        String album = "";
+        String albumArtist = "";
+        if("_EMPTY".equalsIgnoreCase(name) ||
+                "_NULL".equalsIgnoreCase(name) ||
+                Constants.UNKNOWN.equalsIgnoreCase(name)) {
+            album = "";
+            albumArtist = "";
+        }else {
+            // split album and albumArtist - album (by artist)
+            Matcher matcher = pattern.matcher(name);
+            if (matcher.find()) {
+                album = StringUtils.trimToEmpty(matcher.group(1));
+                albumArtist = StringUtils.trimToEmpty(matcher.group(2));
+            }else {
+                album = name;
+            }
+        }
+
+        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist);
+        int currentCount = 0;
+        for(MusicTag tag: tags) {
+            if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
+                result.add(musicTrack);
+            }
+            currentCount++;
+        }
+        /*
         String[] projection;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             projection = new String[]{MediaStore.Audio.Media._ID,
@@ -201,7 +253,8 @@ public class MusicAlbumFolderBrowser extends ContentBrowser {
             } else {
                 Log.d(getClass().getName(), "System media store is empty.");
             }
-        }
+        } */
+
         result.sort(Comparator.comparing(DIDLObject::getTitle));
 
         return result;
