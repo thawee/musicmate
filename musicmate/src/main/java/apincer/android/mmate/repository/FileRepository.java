@@ -90,6 +90,24 @@ public class FileRepository {
         }
     }
 
+    public static void extractCoverArt(MusicTag tag, File targetFile) {
+        try {
+            // Log.d(TAG, "extractCoverArt: "+path);
+            String path = tag.getPath();
+            File dir = targetFile.getParentFile();
+            dir.mkdirs();
+            File coverArtFile = getFolderCoverArt(path);
+            if(coverArtFile!=null) {
+                // check directory images
+                FileSystem.copy(coverArtFile, targetFile);
+            }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
+                FFMPegReader.extractCoverArt(path, targetFile);
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "extractCoverArt",e);
+        }
+    }
+
     public Context getContext() {
         return context;
     }

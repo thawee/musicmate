@@ -42,10 +42,11 @@ public class GroupingsBrowser extends ContentBrowser {
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-        return TagRepository.getActualGroupingList(getContext()).size();
+        return TagRepository.getActualGroupingList(getContext()).size(); // +1; // +1 for Downloads folder
     }
 
 
+    /*
     private Integer getMusicTrackSize(ContentDirectory contentDirectory, String parentId) {
 
         String[] projection = {MediaStore.Audio.Media._ID};
@@ -56,7 +57,7 @@ public class GroupingsBrowser extends ContentBrowser {
             return cursor.getCount();
         }
 
-    }
+    } */
 
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
@@ -67,6 +68,13 @@ public class GroupingsBrowser extends ContentBrowser {
             musicAlbum.setChildCount((int)group.getChildCount());
             result.add(musicAlbum);
         }
+        /*
+        // add downloads
+        String name = getContext().getString(R.string.downloaded);
+        MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId() + name, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), name, "", 0);
+        musicAlbum.setChildCount(MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs().size());
+        result.add(musicAlbum); */
+
 /*
         String[] projection = {MediaStore.Audio.Genres._ID, MediaStore.Audio.Genres.NAME};
         String selection = "";

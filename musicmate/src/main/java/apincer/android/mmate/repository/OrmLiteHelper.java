@@ -12,14 +12,9 @@ import android.util.Log;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.GenericRawResults;
-import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
-import com.j256.ormlite.stmt.StatementBuilder;
 import com.j256.ormlite.stmt.Where;
-import com.j256.ormlite.support.CompiledStatement;
 import com.j256.ormlite.support.ConnectionSource;
-import com.j256.ormlite.support.DatabaseConnection;
-import com.j256.ormlite.support.DatabaseResults;
 import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
@@ -609,7 +604,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             List<MusicFolder> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.selectRaw("album, albumartist, count(id)");
+            builder.selectRaw("album, albumartist, albumUniqueKey, count(id)");
             builder.groupByRaw("album, albumartist");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
             //return Arrays.asList(result);
@@ -617,6 +612,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 MusicFolder group = new MusicFolder();
                 String albumArtist = vals[1];
                 String album = vals[0];
+                group.setUniqueKey(vals[2]);
                 group.setChildCount(StringUtils.toLong(vals[1]));
                 if(StringUtils.isEmpty(album)) {
                     album = Constants.UNKNOWN;

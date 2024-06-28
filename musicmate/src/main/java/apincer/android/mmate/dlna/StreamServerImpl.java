@@ -19,14 +19,12 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     private static final String TAG = "StreamServerImpl";
 
     final protected StreamServerConfigurationImpl configuration;
-   // private final ProtocolFactory protocolFactory;
     protected int localPort;
     private HttpAsyncServer server;
 
     public StreamServerImpl(StreamServerConfigurationImpl configuration) {
         this.configuration = configuration;
         this.localPort = configuration.getListenPort();
-       // this.protocolFactory = protocolFactory;
     }
 
     public StreamServerConfigurationImpl getConfiguration() {
@@ -34,14 +32,19 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
+
+        if(!MediaServerService.getIpAddress().equals(bindAddress.getHostAddress())) {
+            // start ssdp on wifi network only
+            Log.d(TAG, "Skip stream server connector: " + bindAddress + ":" + getConfiguration().getListenPort());
+            return;
+        }
+
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
-                try {
                     try {
-
-                        Log.d(TAG, "Adding connector: " + bindAddress + ":" + getConfiguration().getListenPort());
+                        Log.d(TAG, "Adding stream server connector: " + bindAddress + ":" + getConfiguration().getListenPort());
 
                         IOReactorConfig config = IOReactorConfig.custom()
                                 .setSoTimeout(getConfiguration().getAsyncTimeoutSeconds(), TimeUnit.SECONDS)
@@ -57,9 +60,6 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
                     } catch (Exception ex) {
                         throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
                     }
-                } catch (Exception e) {
-                    throw new InitializationException("Could run init thread " + getClass().getSimpleName() + ": " + e, e);
-                }
             }
         });
 
@@ -72,12 +72,13 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void stop() {
-
-        server.initiateShutdown();
-        try {
-            server.awaitShutdown(TimeValue.ofSeconds(3));
-        } catch (InterruptedException e) {
-            Log.w(TAG, "got exception on stream server stop ", e);
+        if(server != null) {
+            server.initiateShutdown();
+            try {
+                server.awaitShutdown(TimeValue.ofSeconds(3));
+            } catch (InterruptedException e) {
+                Log.w(TAG, "got exception on stream server stop ", e);
+            }
         }
     }
 

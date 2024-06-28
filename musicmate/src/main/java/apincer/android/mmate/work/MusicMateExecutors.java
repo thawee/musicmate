@@ -8,20 +8,20 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class MusicMateExecutors {
     private static final String TAG = MusicMateExecutors.class.getName();
-    private final Executor mMaintainThread;
-    private final Executor mLoudnessThread;
+    private final ExecutorService mMaintainThread;
+    private final ScheduledExecutorService mScheduleThread;
     private final ExecutorService mScanThread;
-    private final Executor mImportThread;
+    private final ExecutorService mImportThread;
     private final Executor mMainThread;
-    private final Executor mDbThread;
+    private final ExecutorService mDbThread;
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -34,13 +34,13 @@ public class MusicMateExecutors {
 
     private static volatile MusicMateExecutors mInstance;
 
-    private MusicMateExecutors(Executor loudnessThread, Executor maintainThread, ExecutorService scanThread, Executor importThread) {
-        this.mLoudnessThread = loudnessThread;
+    private MusicMateExecutors(ExecutorService maintainThread, ExecutorService scanThread, ExecutorService importThread) {
         this.mMaintainThread = maintainThread;
         this.mScanThread = scanThread;
         this.mImportThread = importThread;
         this.mDbThread = new ThreadPoolExecutor(2, 2,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {};
         this.mMainThread = new MainThreadExecutor();
+        this.mScheduleThread = Executors.newSingleThreadScheduledExecutor();
     }
 
     public static MusicMateExecutors getInstance() {
@@ -53,15 +53,7 @@ public class MusicMateExecutors {
     }
 
     private MusicMateExecutors() {
-        this(new ThreadPoolExecutor(1, 4,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
-                protected void afterExecute(Runnable r, Throwable t) {
-                    try {
-                        Thread.sleep(1000); // wait 1 second
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "MusicMateExecutors",e);
-                    }
-                }},
-                new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+        this(new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
                  protected void afterExecute(Runnable r, Throwable t) {
                      try {
                          Thread.sleep(30); // wait 0.1 second
@@ -79,10 +71,6 @@ public class MusicMateExecutors {
                         }
                     }
                 });
-    }
-
-    public Executor loudness() {
-        return mLoudnessThread;
     }
 
     public Executor db() {
@@ -111,10 +99,6 @@ public class MusicMateExecutors {
     public static void main(@NonNull Runnable command) {
         getInstance().main().execute(command);
     }
-
-    public static void loudness(@NonNull Runnable command) {
-        getInstance().loudness().execute(command);
-    }
     public static void update(@NonNull Runnable command) {
         getInstance().update().execute(command);
     }
@@ -125,16 +109,17 @@ public class MusicMateExecutors {
         getInstance().scan().execute(command);
     }
 
-    public static void scan(@NonNull Runnable command, long timeoutInSeconds) {
-        Future future = getInstance().scan().submit(command);
-        try {
-            future.get(timeoutInSeconds, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            future.cancel(true);
-        } catch (Exception e) {
-            // handle other exceptions
-            Log.e(TAG, "scan",e);
-        }
+    public static void schedule(@NonNull Runnable command, long seconds) {
+        getInstance().mScheduleThread.schedule(command, seconds, TimeUnit.SECONDS);
+    }
+
+    public void shutdown() {
+        this.mScanThread.shutdown();
+        this.mScheduleThread.shutdown();
+        this.mMaintainThread.shutdown();
+        this.mScanThread.shutdown();
+        this.mImportThread.shutdown();
+        this.mDbThread.shutdown();
     }
 
     private static class MainThreadExecutor implements Executor {

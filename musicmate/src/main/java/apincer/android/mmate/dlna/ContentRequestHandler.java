@@ -1,9 +1,7 @@
 package apincer.android.mmate.dlna;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
@@ -28,9 +26,7 @@ import org.apache.hc.core5.http.nio.support.BasicRequestConsumer;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.jupnp.util.MimeType;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -43,14 +39,16 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class ContentServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
-    private static final String TAG = "ContentServerHandler";
+public class ContentRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+    private static final String TAG = "ContentRequestHandler";
     private final Context applicationContext;
-    public ContentServerRequestHandler(Context applicationContext) {
+    private byte[] defaultIconRAW;
+    public ContentRequestHandler(Context applicationContext) {
         this.applicationContext = applicationContext;
     }
 
@@ -62,8 +60,7 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
     @Override
     public void handle(Message<HttpRequest, byte[]> request, ResponseTrigger responseTrigger, HttpContext context) throws HttpException, IOException {
         Log.d(TAG, "Processing HTTP request: "
-                + request.getHead().getRequestUri());
-        Log.d(TAG, "Processing HTTP request: "
+                + request.getHead().getRequestUri()+" - from: "
                 + request.getHead().getLastHeader("User-Agent"));
         final AsyncResponseBuilder responseBuilder = AsyncResponseBuilder.create(HttpStatus.SC_OK);
         // Extract what we need from the HTTP httpRequest
@@ -102,26 +99,6 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
                 Log.d(getClass().getName(), "end doService: Access denied");
                 return;
             }
-           /* try {
-                Long.parseLong(albumId);
-            } catch (NumberFormatException nex) {
-                responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
-                responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
-                responseTrigger.submitResponse(responseBuilder.build(), context);
-                Log.d(getClass().getName(), "end doService: Access denied");
-                return;
-            } */
-        } else if ("thumb".equals(type)) {
-            thumbId = pathSegments.get(1);
-            try {
-                Long.parseLong(thumbId);
-            } catch (NumberFormatException nex) {
-                responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
-                responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
-                responseTrigger.submitResponse(responseBuilder.build(), context);
-                Log.d(TAG, "end doService: Access denied");
-                return;
-            }
         } else if ("res".equals(type)) {
             contentId = pathSegments.get(1);
             try {
@@ -141,8 +118,8 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
             contentHolder = lookupContent(contentId, userAgent);
         } else if (!albumId.isEmpty()) {
             contentHolder = lookupAlbumArt(albumId);
-        } else if (!thumbId.isEmpty()) {
-            contentHolder = lookupThumbnail(thumbId);
+     //   } else if (!thumbId.isEmpty()) {
+     //       contentHolder = lookupThumbnail(thumbId);
         }
             if (contentHolder == null) {
                 // tricky but works
@@ -180,11 +157,13 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
             Log.d(TAG, "MusicMate lookup content: " + contentId);
             try {
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
-                MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
-                MusicPlayerInfo player = MusicPlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
-                MusixMateApp.setPlaying(player, tag);
-                AudioTagPlayingEvent.publishPlayingSong(tag);
-                result = new ContentHolder(mimeType, tag.getPath());
+                if(tag != null) {
+                    MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
+                    MusicPlayerInfo player = MusicPlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
+                    MusixMateApp.setPlaying(player, tag);
+                    AudioTagPlayingEvent.publishPlayingSong(tag);
+                    result = new ContentHolder(mimeType, tag.getPath());
+                }
             }catch (Exception ex) {
                 Log.e(TAG, "lookupContent: - " + contentId, ex);
             }
@@ -198,17 +177,15 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
          * @return the content description
          */
         private ContentHolder lookupAlbumArt(String albumId) {
-            Log.d(TAG, "MusicMate lookup albumArt: " + albumId);
+           // Log.d(TAG, "MusicMate lookup albumArt: " + albumId);
 
             try {
-                String path = "/CoverArts/" + albumId;
+                String path = CoverArtProvider.COVER_ARTS + albumId;
                 File dir = getContext().getExternalCacheDir();
                 File pathFile = new File(dir, path);
                 if (pathFile.exists()) {
-                    byte[] image = IOUtils.toByteArray(new FileInputStream(pathFile));
-
                     return new ContentHolder(MimeType.valueOf("image/png"),
-                            image);
+                            pathFile.getAbsolutePath());
                 }
             }catch (Exception e) {
                 Log.e(TAG, "lookupAlbumArt: - " + albumId, e);
@@ -219,14 +196,9 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
                         getDefaultIcon());
         }
 
-        /**
-         * Lookup a thumbnail content in the mediastore
-         *
-         * @param idStr the id of the thumbnail
-         * @return the content description
-         */
+        /*
         private ContentHolder lookupThumbnail(String idStr) {
-
+            Log.d(TAG, "lookupThumbnail: " + idStr);
             ContentHolder result = new ContentHolder(MimeType.valueOf("image/png"),
                     getDefaultIcon());
             if (idStr == null) {
@@ -258,18 +230,18 @@ public class ContentServerRequestHandler implements AsyncServerRequestHandler<Me
                 Log.d(TAG, "System media store is empty.");
             }
             return result;
-        }
+        } */
 
         private byte[] getDefaultIcon() {
-          //  InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "iconpng192.png");
-            InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "mstile_310_310.png");
-            byte[] result = new byte[0];
-            try {
-                result = IOUtils.toByteArray(in);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if(defaultIconRAW == null) {
+                InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "mstile_310_310.png");
+                try {
+                    defaultIconRAW = IOUtils.toByteArray(in);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            return result;
+            return defaultIconRAW;
         }
 
         /**

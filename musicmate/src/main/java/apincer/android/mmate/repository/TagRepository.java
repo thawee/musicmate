@@ -37,12 +37,11 @@ public class TagRepository {
     }
 
     public static void saveTag(MusicTag tag) {
+        String path = StringUtils.trimToEmpty(tag.getPath()).toLowerCase();
         if(StringUtils.isEmpty(tag.getUniqueKey())) {
-            String keyword = escapeString(tag.getPath()+"_"+ tag.getAudioStartTime());
+            String keyword = escapeString(path+"_"+ tag.getAudioStartTime());
             tag.setUniqueKey(keyword);
         }
-
-        String path = tag.getPath().toLowerCase();
         if(path.contains("/music/") && !path.contains("/telegram/")) {
             // if has alblum, use parent dir
             if(!StringUtils.isEmpty(tag.getAlbum())) {

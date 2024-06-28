@@ -1440,7 +1440,11 @@ public class MainActivity extends AppCompatActivity {
                     .append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP, ContextCompat.getColor(getApplicationContext(), R.color.grey100), UIUtils.sp2px(getApplication(), 10), Color.TRANSPARENT).setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
                     .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
         }else {
-            spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
+            if(adapter.hasFilter()) {
+                spannable.append(new SpecialTextUnit("No Results for filter: "+StringUtils.trimToEmpty(adapter.getCriteria().getFilterText())).setTextSize(12).useTextBold());
+            }else {
+                spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
+            }
         }
         headerSubtitle.setText(spannable.build());
 
@@ -1671,7 +1675,7 @@ public class MainActivity extends AppCompatActivity {
                         statusList.put(tag, "Analysing");
                         runOnUiThread(itemsView::invalidateViews);
                         //calculate track RG
-                        FFMPegReader.detectQuality(tag);
+                        FFMPegReader.measureDRandStat(tag);
                         //write RG to file
                         FFMPegReader.writeTagQualityToFile(MainActivity.this, tag);
                         // update MusicMate Library

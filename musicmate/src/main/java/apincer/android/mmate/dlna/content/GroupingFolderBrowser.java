@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicTag;
 
@@ -33,11 +34,16 @@ public class GroupingFolderBrowser extends ContentBrowser {
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
         String name = myId.substring(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().length());
         if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
-                "None".equalsIgnoreCase(name)) {
+                "_NULL".equalsIgnoreCase(name)) { // ||
+               // "None".equalsIgnoreCase(name)) {
             name = "";
         }
-        return MusixMateApp.getInstance().getOrmLite().findByGrouping(name).size();
+        String downloadName = getContext().getString(R.string.downloaded);
+        if(downloadName.equals(name)) {
+            return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs().size();
+        }else {
+            return MusixMateApp.getInstance().getOrmLite().findByGrouping(name).size();
+        }
     }
 
     @Override
@@ -53,11 +59,17 @@ public class GroupingFolderBrowser extends ContentBrowser {
         List<MusicTrack> result = new ArrayList<>();
         String name = myId.substring(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().length());
         if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
-                "None".equalsIgnoreCase(name)) {
-            name = "";
+                "_NULL".equalsIgnoreCase(name) ) { // ||
+              //  "None".equalsIgnoreCase(name)) {
+            name = null;
         }
-        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByGrouping(name);
+        List<MusicTag> tags;
+        String downloadName = getContext().getString(R.string.downloaded);
+        if(downloadName.equals(name)) {
+            tags = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
+        }else {
+            tags = MusixMateApp.getInstance().getOrmLite().findByGrouping(name);
+        }
         int currentCount = 0;
         for(MusicTag tag: tags) {
             if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){

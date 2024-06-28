@@ -61,6 +61,7 @@ public class FFMPegReader extends TagReader {
         }
     }
 
+    /*
     public static void writeCoverArt(MusicTag tag, File pathFile) {
         if(!isEmpty(tag.getCoverartMime())) {
             String targetPath = pathFile.getAbsolutePath();
@@ -71,7 +72,7 @@ public class FFMPegReader extends TagReader {
 
             FFmpegKit.execute(cmd); // do not clear the result
         }
-    }
+    } */
 
     public static void extractCoverArt(String path, File pathFile) {
         //if(!isEmpty(tag.getEmbedCoverArt())) {
@@ -337,7 +338,7 @@ public class FFMPegReader extends TagReader {
         }
     } */
 
-    public static void detectQuality(MusicTag tag) {
+    public static void measureDRandStat(MusicTag tag) {
         // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
        // String filter = " -filter:a drmeter,replaygain,volumedetect,astats -vn -sn -dn "; // -vn -sn -dn to ignore none audio to speed up the process
          String filter = " -filter:a drmeter,replaygain,astats -vn -sn -dn "; // -vn -sn -dn to ignore none audio to speed up the process
@@ -349,7 +350,7 @@ public class FFMPegReader extends TagReader {
        // String filter = " -filter:a replaygain ";
 
         String cmd ="-hide_banner -nostats -i \""+targetPath+"\""+filter+" -f null -";
-
+        Log.d(TAG, "measureDRandStat: "+tag.getPath());
         FFmpegSession session = FFmpegKit.execute(cmd);
        // if (ReturnCode.isSuccess(session.getReturnCode())) {
         String data = session.getOutput();
@@ -721,8 +722,10 @@ public class FFMPegReader extends TagReader {
     }
 
     public static boolean writeTagQualityToFile(Context context, MusicTag tag) {
-        if(MusicTagUtils.isWavFile(tag)) return false; // wave file not support track gain
-        if(!MusicTagUtils.isLossless(tag)) return false; // no need for compress encoding
+        //if(MusicTagUtils.isWavFile(tag)) return false; // wave file not support track gain
+       // if(!MusicTagUtils.isLossless(tag)) return false; // no need for compress encoding
+
+        Log.d(TAG, "writeTagQualityToFile: "+tag.toString());
         /// check free space on storage
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff
@@ -772,6 +775,7 @@ public class FFMPegReader extends TagReader {
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff
         // ffmpeg -hide_banner -i aiff.aiff -map 0 -y -codec copy -metadata "artist-sort=emon feat sort" aiffout.aiff
+        Log.d(TAG, "writeTagToFile: "+tag.toString());
         String srcPath = tag.getPath();
         File dir = context.getExternalCacheDir();
         //File dir = FileSystem.getDownloadPath(context, "tmp");

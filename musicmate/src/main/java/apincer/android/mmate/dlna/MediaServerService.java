@@ -81,10 +81,8 @@ public class MediaServerService extends Service {
     protected UpnpService upnpService;
     protected IBinder binder = new UpnpRegistryServiceBinder();
     private LocalService<ContentDirectory> contentDirectoryService;
-    private boolean watchdog;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
-    private LocalDevice localServer;
     private HttpAsyncServer httpServer;
 
     public static boolean isServerStarted() {
@@ -116,7 +114,6 @@ public class MediaServerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         long start = System.currentTimeMillis();
         showNotification();
-        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
         // the footprint of the onStart() method must be small
         // otherwise android will kill the service
         // in order of this circumstance we have to initialize the service
@@ -132,9 +129,11 @@ public class MediaServerService extends Service {
      */
     private void initialize() {
         this.initialized = false;
+        shutdown(); // clean up before start
+        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
         upnpService.startup();
-        createHttpServer();
         createMediaServer();
+        createHttpServer();
         this.initialized = true;
     }
 
@@ -143,12 +142,6 @@ public class MediaServerService extends Service {
      */
     private void createHttpServer() {
         // Create a HttpService for providing content in the network.
-        //FIXME set correct timeout
-       // SocketConfig socketConfig = SocketConfig.custom()
-       //         .setSoKeepAlive(true)
-       //         .setTcpNoDelay(false)
-       //         .build();
-
         // Set up the HTTP service
         if (httpServer == null) {
             String bindAddress = getIpAddress();
@@ -162,7 +155,7 @@ public class MediaServerService extends Service {
             httpServer = H2ServerBootstrap.bootstrap()
                     .setIOReactorConfig(config)
                     .setCanonicalHostName(bindAddress)
-                    .register("*", new ContentServerRequestHandler(getApplicationContext()))
+                    .register("*", new ContentRequestHandler(getApplicationContext()))
                     .create();
 
             httpServer.listen(new InetSocketAddress(CONTENT_SERVER_PORT), URIScheme.HTTP);
@@ -172,7 +165,7 @@ public class MediaServerService extends Service {
 
     private void createMediaServer() {
         String versionName;
-        String mediaServerUuid = "";
+        String mediaServerUuid;
         // when the service starts, the preferences are initialized
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mediaServerUuid = preferences.getString(getApplicationContext().getString(R.string.settings_local_server_provider_uuid_key), null);
@@ -189,13 +182,13 @@ public class MediaServerService extends Service {
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate : "+getPhoneModel(), new ManufacturerDetails("apincer.com",
-                    "http://www.apincer.com"), new ModelDetails("MusicMate", "UPnP/AV MediaServer",
+                    "MusicMate Server ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
+                    "http://www.apincer.com"), new ModelDetails("MusicMate Server", "DLNA/UPnP MediaServer",
                     versionName), URI.create("http://" + getIpAddress() + ":" + CONTENT_SERVER_PORT));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
-            localServer = new LocalDevice(identity, new UDADeviceType("MediaServer"), msDetails, createDeviceIcons(), createMediaServerServices());
+            LocalDevice localServer = new LocalDevice(identity, new UDADeviceType("MediaServer"), msDetails, createDeviceIcons(), createMediaServerServices());
             upnpService.getRegistry().addDevice(localServer);
         } catch (ValidationException e) {
             Log.e(TAG, "Exception during device creation", e);
@@ -216,7 +209,7 @@ public class MediaServerService extends Service {
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate : "+getPhoneModel())
+                .setContentTitle("MusicMate ("+getPhoneModel()+")")
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.settings_local_server_name));
         mBuilder.setContentIntent(contentIntent);
@@ -236,7 +229,9 @@ public class MediaServerService extends Service {
     private byte[] getIconAsByteArray(String iconFile) {
         try {
             InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), iconFile);
-            return IOUtils.toByteArray(in);
+            if(in != null) {
+                return IOUtils.toByteArray(in);
+            }
         } catch (IOException ex) {
             Log.e("getIconAsByteArray", "cannot get icon file - "+iconFile, ex);
         }
@@ -364,13 +359,15 @@ public class MediaServerService extends Service {
             try {
                 httpServer.awaitShutdown(TimeValue.ofSeconds(3));
             } catch (InterruptedException e) {
-                Log.w(getClass().getName(), "got exception on stream server stop ", e);
+                Log.w(TAG, "got exception on stream server stop ", e);
             }
             httpServer = null;
         }
 
-       // upnpService.getRegistry().removeAllLocalDevices();
-        upnpService.shutdown();
+        if(upnpService != null) {
+            upnpService.shutdown();
+            upnpService = null;
+        }
         initialized = false;
     }
 
@@ -446,7 +443,6 @@ public class MediaServerService extends Service {
 
         @Override
         public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-            //return new MusicMateStreamServerImpl( new MusicMateStreamServerConfigurationImpl(SSDP_PORT)
             return new StreamServerImpl( new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
             );
         }
@@ -459,5 +455,8 @@ public class MediaServerService extends Service {
                     )
             );
         }
+    }
+
+    private static class MediaReceiverRegistrarService extends AbstractMediaReceiverRegistrarService {
     }
 }

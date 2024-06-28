@@ -34,6 +34,7 @@ import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
+import apincer.android.mmate.work.MusicMateExecutors;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
@@ -111,6 +112,7 @@ public class MusixMateApp extends Application {
         stopService(new Intent(this, NotificationListener.class));
         broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
+        MusicMateExecutors.getInstance().shutdown();
     }
 
     @Override public void onCreate() {
@@ -123,6 +125,9 @@ public class MusixMateApp extends Application {
         CrashReporter.initialize(this);
 
         broadcastHelper.onCreate(this);
+
+        // initialize thread executors
+        MusicMateExecutors.getInstance();
 
         // turn off ffmpeg-kit log
         FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_ERROR);

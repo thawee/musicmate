@@ -46,6 +46,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -56,7 +58,6 @@ import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.coil.ReflectionTransformation;
 import apincer.android.mmate.provider.CoverArtProvider;
-import apincer.android.mmate.provider.MusicCoverArtProvider;
 import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
@@ -116,6 +117,7 @@ public class TagsActivity extends AppCompatActivity {
     private boolean previewState = true;
 
     private AlertDialog progressDialog;
+    private boolean finishOnTimeout = false;
 
     @Override
     public void onStart() {
@@ -136,7 +138,7 @@ public class TagsActivity extends AppCompatActivity {
                     startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
                         //calculate track RG
-                        FFMPegReader.detectQuality(tag);
+                        FFMPegReader.measureDRandStat(tag);
                         //write RG to file
                         FFMPegReader.writeTagQualityToFile(this, tag);
                         // update MusicMate Library
@@ -236,8 +238,8 @@ public class TagsActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagPlayingEvent event) {
+        finishOnTimeout = false;
         // call from now playing listener
-
         if(MusixMateApp.getPlayerInfo()!= null) {
             playerBtn.setVisibility(View.VISIBLE);
             if (!closePreview) {
@@ -648,8 +650,14 @@ public class TagsActivity extends AppCompatActivity {
 
                     if(MusixMateApp.getPlayerInfo() == null || closePreview) {
                         finish(); // back to prev activity
-                    //}else {
-                    //    startProgressBar();
+                    }else {
+                        // set timeout to finish, 5 seconds
+                        finishOnTimeout = true;
+                        MusicMateExecutors.schedule(() -> {
+                            if(finishOnTimeout) {
+                                finish(); // back to prev activity
+                            }
+                        }, 5);
                     }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -699,8 +707,14 @@ public class TagsActivity extends AppCompatActivity {
 
         if(MusixMateApp.getPlayerInfo() == null || closePreview) {
             finish(); // back to prev activity
-       // }else {
-       //     startProgressBar();
+        }else {
+            // set timeout to finish, 5 seconds
+            finishOnTimeout = true;
+            MusicMateExecutors.schedule(() -> {
+                if(finishOnTimeout) {
+                    finish(); // back to prev activity
+                }
+            }, 5);
         }
     }
 

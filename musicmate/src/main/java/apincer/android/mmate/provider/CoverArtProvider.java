@@ -73,16 +73,17 @@ public final class CoverArtProvider extends ContentProvider {
                         dir.mkdirs();
                         // extract covert to cache directory
                         MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
-                        FileRepository.extractCoverArt(tag.getPath(), pathFile);
+                        FileRepository.extractCoverArt(tag, pathFile);
                         pathFile = new File(dir, path);
                 }
                 if(pathFile.exists()) {
-                    Log.d(TAG,"found "+pathFile.toPath());
+                    //Log.d(TAG,"found "+pathFile.toPath());
                     return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
                 }
             } catch (Exception e) {
                 Log.d(TAG,"openFile: ", e);
             }
+            Log.d(TAG,"not found cover art for "+uri.getPath());
             return null;
         }
 

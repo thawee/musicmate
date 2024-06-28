@@ -66,8 +66,8 @@ public class GenreFolderBrowser extends ContentBrowser {
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
         String name = myId.substring(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId().length());
         if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
-                "None".equalsIgnoreCase(name)) {
+                "_NULL".equalsIgnoreCase(name) ) {
+               // "None".equalsIgnoreCase(name)) {
             name = "";
         }
         return MusixMateApp.getInstance().getOrmLite().findByGenre(name).size();
@@ -115,8 +115,7 @@ public class GenreFolderBrowser extends ContentBrowser {
         List<MusicTrack> result = new ArrayList<>();
         String name = myId.substring(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId().length());
         if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
-                "None".equalsIgnoreCase(name)) {
+                "_NULL".equalsIgnoreCase(name) ) {
             name = "";
         }
         List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByGenre(name);
