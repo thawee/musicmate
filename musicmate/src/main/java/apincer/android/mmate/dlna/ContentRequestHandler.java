@@ -154,7 +154,7 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
             if (contentId == null) {
                 return null;
             }
-            Log.d(TAG, "MusicMate lookup content: " + contentId);
+           // Log.d(TAG, "MusicMate lookup content: " + contentId);
             try {
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
                 if(tag != null) {
@@ -188,49 +188,13 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
                             pathFile.getAbsolutePath());
                 }
             }catch (Exception e) {
-                Log.e(TAG, "lookupAlbumArt: - " + albumId, e);
+                Log.e(TAG, "lookupAlbumArt: - not found " + albumId, e);
             }
 
             Log.d(TAG, "Send default albumArt for " + albumId);
             return new ContentHolder(MimeType.valueOf("image/png"),
                         getDefaultIcon());
         }
-
-        /*
-        private ContentHolder lookupThumbnail(String idStr) {
-            Log.d(TAG, "lookupThumbnail: " + idStr);
-            ContentHolder result = new ContentHolder(MimeType.valueOf("image/png"),
-                    getDefaultIcon());
-            if (idStr == null) {
-                return result;
-            }
-            long id;
-            try {
-                id = Long.parseLong(idStr);
-            } catch (NumberFormatException nfe) {
-                Log.d(TAG, "ParsingError of id: " + idStr, nfe);
-                return result;
-            }
-
-            Log.d(TAG, "System media store lookup thumbnail: "
-                    + idStr);
-            Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(getContext()
-                            .getContentResolver(), id,
-                    MediaStore.Images.Thumbnails.MINI_KIND, null);
-            if (bitmap != null) {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-
-                MimeType mimeType = MimeType.valueOf("image/png");
-
-                result = new ContentHolder(mimeType, byteArray);
-
-            } else {
-                Log.d(TAG, "System media store is empty.");
-            }
-            return result;
-        } */
 
         private byte[] getDefaultIcon() {
             if(defaultIconRAW == null) {
@@ -285,8 +249,8 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
 
                         File file = new File(getUri());
                         result = AsyncEntityProducers.create(file, ContentType.parse(getMimeType().toString()));
-                        Log.d(TAG, "Return file-Uri: " + getUri()
-                                + "Mimetype: " + getMimeType());
+                       // Log.d(TAG, "Return file-Uri: " + getUri()
+                       //         + "Mimetype: " + getMimeType());
                     } else {
                         //file not found maybe external url
                         result = new AbstractBinAsyncEntityProducer(0, ContentType.parse(getMimeType().toString())) {
@@ -352,8 +316,8 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
 
                         }.init();
 
-                        Log.d(TAG, "Return external-Uri: " + getUri()
-                                + "Mimetype: " + getMimeType());
+                       // Log.d(TAG, "Return external-Uri: " + getUri()
+                       //         + "Mimetype: " + getMimeType());
                     }
                 } else if (content != null) {
                     result = AsyncEntityProducers.create(content, ContentType.parse(getMimeType().toString()));

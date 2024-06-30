@@ -2,7 +2,6 @@ package apincer.android.mmate.broadcast;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -171,17 +170,17 @@ public class BroadcastHelper {
            //long eventTime = SystemClock.uptimeMillis();
            // audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
           //  audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (NotificationListener.HIBY_MUSIC.equals(playerInfo.playerPackage)) {
+        }else if (NotificationListener.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (NotificationListener.SHANLING_EDDICTPLAYER.equals(playerInfo.playerPackage)) {
+        }else if (NotificationListener.PlayerPackageNames.EDDICTPLAYER_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (NotificationListener.NE_PLAYER_LITE.equals(playerInfo.playerPackage)) {
+        }else if (NotificationListener.PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);

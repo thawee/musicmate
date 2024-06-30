@@ -4,6 +4,7 @@ package apincer.android.mmate.broadcast;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
@@ -12,14 +13,27 @@ import apincer.android.mmate.utils.StringUtils;
 
 public class NotificationListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
-     public static final String HIBY_MUSIC = "com.hiby.music";
-    public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
-    public static final String SHANLING_EDDICTPLAYER = "com.shanling.eddictplayer";
+    /*
+        These are the package names of the apps. for which we want to
+        listen the notifications
+     */
+    public static final class PlayerPackageNames {
+        public static final String HIBY_MUSIC_PACK_NAME = "com.hiby.music";
+        public static final String NE_PLAYER_LITE_PACK_NAME = "jp.co.radius.neplayer_lite_an";
+        public static final String NEUTRON_MUSIC_PACK_NAME = "com.neutroncode.mp";
+        public static final String UAPP_PACK_NAME = "com.extreamsd.usbaudioplayerpro";
+        public static final String EDDICTPLAYER_PACK_NAME = "com.shanling.eddictplayer";
+    }
 
-    public static final String NEUTRON_MUSIC_PLAYER = "com.neutroncode.mp";
+   //  public static final String HIBY_MUSIC = "com.hiby.music";
+   // public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
 
-    public static String UAPP = "com.extreamsd.usbaudioplayerpro";
+   // public static final String SHANLING_EDDICTPLAYER = "com.shanling.eddictplayer";
+
+   // public static final String NEUTRON_MUSIC_PLAYER = "com.neutroncode.mp";
+
+   // public static String UAPP = "com.extreamsd.usbaudioplayerpro";
 
     private String prvPack;
     private String prvTitle;
@@ -30,6 +44,11 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     Context context;
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return super.onBind(intent);
+    }
 
     @Override
     public void onDestroy() {
@@ -50,27 +69,27 @@ public class NotificationListener extends NotificationListenerService {
     public void onNotificationPosted(StatusBarNotification sbn) {
         String pack = sbn.getPackageName();
         Bundle extras = sbn.getNotification().extras;
-        if (HIBY_MUSIC.equals(pack)) {
+        if (PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equals(pack)) {
             String title = extras.getString("android.title");
             title = StringUtils.removeTrackNo(title);
             String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
-        } else if (NE_PLAYER_LITE.equals(pack)) {
+        } else if (PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equals(pack)) {
             String title = extras.getString("android.title");
             title = StringUtils.removeTrackNo(title);
             String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
-        } else if (SHANLING_EDDICTPLAYER.equals(pack)) {
+        } else if (PlayerPackageNames.EDDICTPLAYER_PACK_NAME.equals(pack)) {
             String title = extras.getString("android.title");
             title = StringUtils.removeTrackNo(title);
             String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
-        } else if (NEUTRON_MUSIC_PLAYER.equals(pack)) {
+        } else if (PlayerPackageNames.NEUTRON_MUSIC_PACK_NAME.equals(pack)) {
             String title = extras.getString("android.title");
             title = StringUtils.removeTrackNo(title);
             String artist = String.valueOf (extras.getCharSequence("android.text"));
             sendBroadcast(pack, title, artist);
-        } else if (UAPP.equals(pack)) {
+        } else if (PlayerPackageNames.UAPP_PACK_NAME.equals(pack)) {
             String title = extras.getString("android.title");
             title = StringUtils.removeTrackNo(title);
             String artist = String.valueOf (extras.getCharSequence("android.text"));
@@ -92,9 +111,4 @@ public class NotificationListener extends NotificationListenerService {
         }
     }
 
-    @Override
-
-    public void onNotificationRemoved(StatusBarNotification sbn) {
-
-    }
 }

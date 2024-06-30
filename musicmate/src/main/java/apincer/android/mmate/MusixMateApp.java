@@ -4,9 +4,12 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.os.IBinder;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -29,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.broadcast.NotificationListener;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
@@ -49,8 +51,6 @@ public class MusixMateApp extends Application {
 
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
-  //  private final HashMap<String, PowerManager.WakeLock> wakeLocks = new HashMap<>();
-  //  private Executor contentLoadThreadPool;
 
     private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
         try {
@@ -109,7 +109,6 @@ public class MusixMateApp extends Application {
     public void onTerminate() {
         super.onTerminate();
 
-        stopService(new Intent(this, NotificationListener.class));
         broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
@@ -259,32 +258,6 @@ public class MusixMateApp extends Application {
                 .setConstraints(constraints)
                 .build();
         WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
-
-       // workRequest = new OneTimeWorkRequest.Builder(ScanLoudnessWorker.class)
-       //         .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.MINUTES)
-       //         .setConstraints(constraints)
-       //         .build();
-       // WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
-
-      //  MusicMateServer.startServer();
-
-       // server = new HTTPStreamingServer();
-       // server.startServer(getApplicationContext());
-
-        // init mediaServer if nothing, to be deleted after implement maintain media server screen
-        // FIXME - do UI and delete these code
-       /* if(getOrmLite().getMediaServers().isEmpty()) {
-            List list = new ArrayList();
-            NASServer server = new NASServer();
-            server.setIp("10.100.1.198");
-            server.setPort(22);
-            server.setName("tc@pcp.local");
-            server.setUsername("tc");
-            server.setPassword("piCore");
-            server.setPath("/mnt/mmcblk0p2/media");
-            list.add(server);
-            getOrmLite().saveMediaServers(list);
-        } */
     }
 
     /*

@@ -5,8 +5,10 @@ import static org.jupnp.model.Constants.MIN_ADVERTISEMENT_AGE_SECONDS;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -23,8 +25,6 @@ import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
 import org.jupnp.UpnpService;
-import org.jupnp.UpnpServiceImpl;
-import org.jupnp.android.AndroidUpnpServiceConfiguration;
 import org.jupnp.binding.annotations.AnnotationLocalServiceBinder;
 import org.jupnp.model.DefaultServiceManager;
 import org.jupnp.model.ValidationException;
@@ -35,18 +35,13 @@ import org.jupnp.model.meta.LocalDevice;
 import org.jupnp.model.meta.LocalService;
 import org.jupnp.model.meta.ManufacturerDetails;
 import org.jupnp.model.meta.ModelDetails;
-import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDADeviceType;
-import org.jupnp.model.types.UDAServiceType;
 import org.jupnp.model.types.UDN;
 import org.jupnp.support.connectionmanager.ConnectionManagerService;
 import org.jupnp.support.model.Protocol;
 import org.jupnp.support.model.ProtocolInfo;
 import org.jupnp.support.model.ProtocolInfos;
 import org.jupnp.support.xmicrosoft.AbstractMediaReceiverRegistrarService;
-import org.jupnp.transport.spi.NetworkAddressFactory;
-import org.jupnp.transport.spi.StreamClient;
-import org.jupnp.transport.spi.StreamServer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,15 +70,36 @@ public class MediaServerService extends Service {
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
     public static int CONTENT_SERVER_PORT = 5001;
-    public static int STREAM_SERVER_PORT = 2869;
 
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
-    protected IBinder binder = new UpnpRegistryServiceBinder();
+    protected IBinder binder = new MediaServerServiceBinder();
     private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
     private HttpAsyncServer httpServer;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            upnpService = ((UpnpRegistryService.UpnpRegistryServiceBinder) service).getService().getUpnpService();
+            createMediaServer();
+            createHttpServer();
+            MediaServerService.this.initialized = true;
+
+            /*
+            // Get ready for future device advertisements
+            upnpService.getRegistry().addListener(registryListener);
+            */
+
+            // Search asynchronously for all devices, they will respond soon
+            //androidUpnpService.getControlPoint().search();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            upnpService = null;
+        }
+    };
 
     public static boolean isServerStarted() {
         if(INSTANCE != null) {
@@ -130,11 +146,19 @@ public class MediaServerService extends Service {
     private void initialize() {
         this.initialized = false;
         shutdown(); // clean up before start
-        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
-        upnpService.startup();
-        createMediaServer();
-        createHttpServer();
-        this.initialized = true;
+
+        // This will start the UPnP service if it wasn't already started
+        getApplicationContext().bindService(
+                new Intent(this, UpnpRegistryService.class),
+                serviceConnection,
+                Context.BIND_AUTO_CREATE
+        );
+
+       /* upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
+        upnpService.startup(); */
+       // createMediaServer();
+       // createHttpServer();
+      //  this.initialized = true;
     }
 
     /**
@@ -349,6 +373,8 @@ public class MediaServerService extends Service {
     public void onDestroy() {
         Thread shutdownThread = new Thread(this::shutdown);
         shutdownThread.start();
+        // This will stop the UPnP service if nobody else is bound to it
+        getApplicationContext().unbindService(serviceConnection);
         cancelNotification();
         super.onDestroy();
     }
@@ -363,10 +389,8 @@ public class MediaServerService extends Service {
             }
             httpServer = null;
         }
-
         if(upnpService != null) {
-            upnpService.shutdown();
-            upnpService = null;
+            stopService(new Intent(getApplicationContext(), UpnpRegistryService.class));
         }
         initialized = false;
     }
@@ -418,45 +442,13 @@ public class MediaServerService extends Service {
         return hostAddress;
     }
 
-    protected class UpnpRegistryServiceBinder extends android.os.Binder {
+    protected class MediaServerServiceBinder extends android.os.Binder {
         public MediaServerService getService() {
             return MediaServerService.this;
         }
     }
 
-    private static class MusicMateServiceConfiguration extends AndroidUpnpServiceConfiguration {
-
-        private MusicMateServiceConfiguration() {
-            super();
-        }
-
-        @Override
-        protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
-            return super.createNetworkAddressFactory(STREAM_SERVER_PORT, multicastResponsePort);
-        }
-
-        @Override
-        public ServiceType[] getExclusiveServiceTypes() {
-
-            return new ServiceType[]{new UDAServiceType("ContentDirectory"), new UDAServiceType("ConnectionManager"), new UDAServiceType("X_MS_MediaReceiverRegistrar")};
-        }
-
-        @Override
-        public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-            return new StreamServerImpl( new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
-            );
-        }
-
-        @Override
-        public StreamClient<StreamingClientConfigurationImpl> createStreamClient() {
-            return new StreamingClientImpl(
-                    new StreamingClientConfigurationImpl(
-                            getSyncProtocolExecutorService()
-                    )
-            );
-        }
-    }
-
     private static class MediaReceiverRegistrarService extends AbstractMediaReceiverRegistrarService {
     }
+
 }
