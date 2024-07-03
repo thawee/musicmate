@@ -46,8 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -80,7 +78,7 @@ import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
     private static final String TAG = TagsActivity.class.getName();
-    private static final ArrayList<MusicTag> editItems = new ArrayList<>();
+    private static volatile ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
     private TabLayout tabLayout;
@@ -165,7 +163,7 @@ public class TagsActivity extends AppCompatActivity {
             Intent myIntent = new Intent(TagsActivity.this, MainActivity.class);
             startActivity(myIntent);
         }
-        if(MusixMateApp.getPlayerInfo()!=null && getEditItems().size() == 1) {
+        if(MusixMateApp.isPlaying() && getEditItems().size() == 1) {
             if(MusixMateApp.getPlayingSong().equals(getEditItems().get(0))) {
                 closePreview = false;
             }
@@ -240,7 +238,7 @@ public class TagsActivity extends AppCompatActivity {
     public void onMessageEvent(AudioTagPlayingEvent event) {
         finishOnTimeout = false;
         // call from now playing listener
-        if(MusixMateApp.getPlayerInfo()!= null) {
+        if(MusixMateApp.isPlaying()) {
             playerBtn.setVisibility(View.VISIBLE);
             if (!closePreview) {
                 MusicTag tag = event.getPlayingSong();
@@ -344,7 +342,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void updateTitlePanel() {
-        if(MusixMateApp.getPlayerInfo() != null) {
+        if(MusixMateApp.isPlaying()) {
             playerBtn.setVisibility(View.VISIBLE);
             playerBtn.setBackground(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
             if(closePreview) {
@@ -648,7 +646,7 @@ public class TagsActivity extends AppCompatActivity {
                         setResult(RESULT_OK, resultIntent);
                     }
 
-                    if(MusixMateApp.getPlayerInfo() == null || closePreview) {
+                    if(MusixMateApp.isPlaying() || closePreview) {
                         finish(); // back to prev activity
                     }else {
                         // set timeout to finish, 5 seconds
@@ -705,7 +703,7 @@ public class TagsActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, resultIntent);
 
-        if(MusixMateApp.getPlayerInfo() == null || closePreview) {
+        if(MusixMateApp.isPlaying() || closePreview) {
             finish(); // back to prev activity
         }else {
             // set timeout to finish, 5 seconds
@@ -764,6 +762,8 @@ public class TagsActivity extends AppCompatActivity {
                 finish();
             }else {
                 startProgressBar();
+                // should reload tag from db or file again
+                //xxxx
                 buildDisplayTag();
                 // display preview screen
                 appBarLayout.setExpanded(true, true);
@@ -793,7 +793,6 @@ public class TagsActivity extends AppCompatActivity {
             prevScrollOffset = vScrollOffset;
             if (verticalOffset == 0) {
                 // fully EXPANDED, on preview screen
-                // FIXME: should setup menu hear
                 previewState = true;
                 setupMenuToolbar();
                 buildDisplayTag();

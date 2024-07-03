@@ -419,7 +419,6 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setDisc(buildTag(txtDisc, originTag.getDisc()));
         tagUpdate.setMediaType(buildTag(txtMediaType, originTag.getMediaType()));
         tagUpdate.setMediaQuality(buildQualityTag());
-
     }
 
     private String buildQualityTag() {

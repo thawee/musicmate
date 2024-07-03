@@ -105,6 +105,10 @@ public class MusixMateApp extends Application {
         BroadcastHelper.playNextSong(applicationContext);
     }
 
+    public static boolean isPlaying() {
+        return (getPlayerInfo() != null && getPlayingSong() != null);
+    }
+
     @Override
     public void onTerminate() {
         super.onTerminate();

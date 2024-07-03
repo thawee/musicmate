@@ -40,7 +40,7 @@ public class AllTitlesBrowser extends ContentBrowser {
 */
 
 
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), getContext().getString(R.string.all), "mmate", getSize(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), getContext().getString(R.string.all), creator, getSize(
                 contentDirectory, myId), null);
 
     }
@@ -77,28 +77,8 @@ public class AllTitlesBrowser extends ContentBrowser {
         int currentCount = 0;
         for(MusicTag tag: tags) {
             if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
-/*
-                long id = tag.getId();
-                String title = tag.getTitle();
-                MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
-                // file parameter only needed for media players which decide
-                // the
-                // ability of playing a file by the file extension
-                String uri = getUriString(contentDirectory, tag);
-                URI albumArtUri = getAlbumArtUri(contentDirectory, tag);
-                Res resource = new Res(mimeType, tag.getFileSize(), uri);
-                resource.setDuration(tag.getAudioDurationAsString());
-                MusicTrack musicTrack = new MusicTrack(
-                        ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId()
-                                + id, ContentDirectoryIDs.MUSIC_FOLDER.getId(),
-                        title, "", tag.getAlbum(), tag.getArtist(), resource);
-                musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
-                        albumArtUri));
-                musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getArtist(), "AlbumArtist")});
-                resource.setBitrate(tag.getAudioBitRate());
-                musicTrack.setGenres(tag.getGenre().split(",", -1));
-                //musicTrack.setOriginalTrackNumber(tag.getTrack()); */
+                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
+
                 result.add(musicTrack);
             }
             currentCount++;

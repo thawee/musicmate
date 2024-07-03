@@ -5,6 +5,7 @@ import android.content.Context;
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
+import org.jupnp.support.model.container.GenreContainer;
 import org.jupnp.support.model.container.MusicAlbum;
 import org.jupnp.support.model.container.MusicGenre;
 import org.jupnp.support.model.container.StorageFolder;
@@ -32,37 +33,12 @@ public class GenresBrowser extends ContentBrowser {
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.genres), "mmate", getSize(contentDirectory, myId),
-                null);
-
+        return new GenreContainer(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.genres), creator, getSize(contentDirectory, myId));
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-/*
-        String[] projection = {MediaStore.Audio.Genres._ID};
-        String selection = "";
-        String[] selectionArgs = null;
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        } */
         return TagRepository.getActualGenreList(getContext()).size();
     }
-
-    /*
-
-    private Integer getMusicTrackSize(ContentDirectory contentDirectory, String parentId) {
-
-        String[] projection = {MediaStore.Audio.Media._ID};
-        String selection = MediaStore.Audio.Media.GENRE_ID + "=?";
-        String[] selectionArgs = new String[]{parentId};
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        }
-
-    }*/
 
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {

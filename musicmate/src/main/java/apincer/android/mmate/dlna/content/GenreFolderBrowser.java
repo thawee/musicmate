@@ -5,6 +5,7 @@ import android.content.Context;
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
+import org.jupnp.support.model.container.MusicGenre;
 import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
 
@@ -31,37 +32,9 @@ public class GenreFolderBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), myId, "mmate", getSize(
-                contentDirectory, myId), null);
-
-      /*  return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), getName(
-                contentDirectory, myId), "yaacc", getSize(
-                contentDirectory, myId), null);
-        */
+        return new MusicGenre(myId, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), myId, creator, getSize(
+                contentDirectory, myId));
     }
-
-    /*
-    private String getName(ContentDirectory contentDirectory, String myId) {
-        String result = "";
-        String[] projection = {MediaStore.Audio.Genres.NAME};
-        String selection = MediaStore.Audio.Genres._ID + "=?";
-        String[] selectionArgs = new String[]{myId
-                .substring(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId()
-                .length())};
-        try (Cursor cursor = contentDirectory
-                .getContext()
-                .getContentResolver()
-                .query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
-                        projection, selection, selectionArgs, null)) {
-
-            if (cursor != null && cursor.getCount() > 0) {
-                cursor.moveToFirst();
-                result = cursor.getString(0);
-
-            }
-        }
-        return result;
-    } */
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
         String name = myId.substring(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId().length());
@@ -123,29 +96,9 @@ public class GenreFolderBrowser extends ContentBrowser {
         for(MusicTag tag: tags) {
             if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
                 MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
-                /*long id = tag.getId();
-                String title = tag.getTitle();
-                MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
-                // file parameter only needed for media players which decide
-                // the
-                // ability of playing a file by the file extension
-                String uri = getUriString(contentDirectory, tag);
-                URI albumArtUri = getAlbumArtUri(contentDirectory, tag);
-                Res resource = new Res(mimeType, tag.getFileSize(), uri);
-                resource.setDuration(tag.getAudioDurationAsString());
-                MusicTrack musicTrack = new MusicTrack(
-                        ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId()
-                                + id, myId,
-                        title, "", tag.getAlbum(), tag.getArtist(), resource);
-                musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
-                        albumArtUri));
-                musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getArtist(), "AlbumArtist")});
-                resource.setBitrate(tag.getAudioBitRate());
-                musicTrack.setGenres(tag.getGenre().split(",", -1));
-                //musicTrack.setOriginalTrackNumber(tag.getTrack()); */
                 result.add(musicTrack);
             }
-            currentCount++;
+            if(!forceFullContent)  currentCount++;
         }
         /*
         String[] projection;

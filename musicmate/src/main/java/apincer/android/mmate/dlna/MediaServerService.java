@@ -5,10 +5,8 @@ import static org.jupnp.model.Constants.MIN_ADVERTISEMENT_AGE_SECONDS;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -25,6 +23,7 @@ import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
 import org.jupnp.UpnpService;
+import org.jupnp.UpnpServiceImpl;
 import org.jupnp.binding.annotations.AnnotationLocalServiceBinder;
 import org.jupnp.model.DefaultServiceManager;
 import org.jupnp.model.ValidationException;
@@ -70,7 +69,7 @@ public class MediaServerService extends Service {
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
     public static int CONTENT_SERVER_PORT = 5001;
-
+    public static int STREAM_SERVER_PORT = 2869;
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected IBinder binder = new MediaServerServiceBinder();
@@ -79,34 +78,13 @@ public class MediaServerService extends Service {
     private boolean initialized;
     private HttpAsyncServer httpServer;
 
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            upnpService = ((UpnpRegistryService.UpnpRegistryServiceBinder) service).getService().getUpnpService();
-            createMediaServer();
-            createHttpServer();
-            MediaServerService.this.initialized = true;
-
-            /*
-            // Get ready for future device advertisements
-            upnpService.getRegistry().addListener(registryListener);
-            */
-
-            // Search asynchronously for all devices, they will respond soon
-            //androidUpnpService.getControlPoint().search();
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            upnpService = null;
-        }
-    };
-
+    /*
     public static boolean isServerStarted() {
         if(INSTANCE != null) {
             return INSTANCE.isInitialized();
         }
         return false;
-    }
+    } */
 
     /**
      * @return the initialized
@@ -147,18 +125,11 @@ public class MediaServerService extends Service {
         this.initialized = false;
         shutdown(); // clean up before start
 
-        // This will start the UPnP service if it wasn't already started
-        getApplicationContext().bindService(
-                new Intent(this, UpnpRegistryService.class),
-                serviceConnection,
-                Context.BIND_AUTO_CREATE
-        );
-
-       /* upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
-        upnpService.startup(); */
-       // createMediaServer();
-       // createHttpServer();
-      //  this.initialized = true;
+        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
+        upnpService.startup();
+        createMediaServer();
+        createHttpServer();
+        MediaServerService.this.initialized = true;
     }
 
     /**
@@ -374,7 +345,6 @@ public class MediaServerService extends Service {
         Thread shutdownThread = new Thread(this::shutdown);
         shutdownThread.start();
         // This will stop the UPnP service if nobody else is bound to it
-        getApplicationContext().unbindService(serviceConnection);
         cancelNotification();
         super.onDestroy();
     }
@@ -390,7 +360,8 @@ public class MediaServerService extends Service {
             httpServer = null;
         }
         if(upnpService != null) {
-            stopService(new Intent(getApplicationContext(), UpnpRegistryService.class));
+            upnpService.shutdown();
+            upnpService = null;
         }
         initialized = false;
     }
@@ -442,7 +413,7 @@ public class MediaServerService extends Service {
         return hostAddress;
     }
 
-    protected class MediaServerServiceBinder extends android.os.Binder {
+    public class MediaServerServiceBinder extends android.os.Binder {
         public MediaServerService getService() {
             return MediaServerService.this;
         }

@@ -1,9 +1,6 @@
 package apincer.android.mmate.dlna.content;
 import android.content.Context;
-import android.util.Log;
-import android.webkit.MimeTypeMap;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.PersonWithRole;
 import org.jupnp.support.model.Res;
@@ -20,8 +17,6 @@ import java.util.List;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.StringUtils;
-import apincer.android.utils.FileUtils;
 
 
 /**
@@ -32,6 +27,8 @@ import apincer.android.utils.FileUtils;
 public abstract class ContentBrowser {
     private static final String TAG = "ContentBrowser";
     Context context;
+    protected  String creator = "MusicMate";
+    public static volatile boolean forceFullContent = false;
 
     protected ContentBrowser(Context context) {
         this.context = context;
@@ -54,18 +51,6 @@ public abstract class ContentBrowser {
         result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
         result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
         return result;
-    }
-
-    public String getUriString(ContentDirectory contentDirectory, String id, MimeType mimeType) {
-        String fileExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType.toString());
-        if (fileExtension == null) {
-            Log.d(getClass().getName(), "Can't lookup file extension from mimetype: " + mimeType);
-            //try subtype
-            fileExtension = mimeType.getSubtype();
-
-        }
-        return "http://" + contentDirectory.getIpAddress() + ":"
-                + MediaServerService.CONTENT_SERVER_PORT + "/res/" + id + "/file." + fileExtension;
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
@@ -119,7 +104,7 @@ public abstract class ContentBrowser {
         Res resource = new Res(mimeType, tag.getFileSize(), uri);
         resource.setDuration(tag.getAudioDurationAsString());
         MusicTrack musicTrack = new MusicTrack(itemPrefix + id, parentId,
-                title, "", tag.getAlbum(), tag.getArtist(), resource);
+                title, creator, tag.getAlbum(), tag.getArtist(), resource);
         musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
                 albumArtUri));
         musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getArtist(), "AlbumArtist")});

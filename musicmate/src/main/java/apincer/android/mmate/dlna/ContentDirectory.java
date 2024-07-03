@@ -36,18 +36,14 @@ import java.util.stream.Collectors;
 
 import apincer.android.mmate.dlna.content.ContentBrowser;
 import apincer.android.mmate.dlna.content.ContentDirectoryIDs;
-import apincer.android.mmate.dlna.content.AlbumFolderBrowser;
-import apincer.android.mmate.dlna.content.AlbumsBrowser;
 import apincer.android.mmate.dlna.content.AllTitlesBrowser;
-import apincer.android.mmate.dlna.content.ArtistFolderBrowser;
-import apincer.android.mmate.dlna.content.ArtistsBrowser;
 import apincer.android.mmate.dlna.content.DownloadsBrowser;
+import apincer.android.mmate.dlna.content.GroupingFolderBrowser;
+import apincer.android.mmate.dlna.content.GroupingsBrowser;
 import apincer.android.mmate.dlna.content.MusicItemBrowser;
 import apincer.android.mmate.dlna.content.LibraryBrowser;
 import apincer.android.mmate.dlna.content.GenreFolderBrowser;
 import apincer.android.mmate.dlna.content.GenresBrowser;
-import apincer.android.mmate.dlna.content.GroupingsBrowser;
-import apincer.android.mmate.dlna.content.GroupingFolderBrowser;
 
 /**
  * a content directory which uses the content of the MediaStore in order to
@@ -323,16 +319,16 @@ public class ContentDirectory {
             result = new LibraryBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId().equals(objectID)) {
             result = new GenresBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId().equals(objectID)) {
-            result = new AlbumsBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
-            result = new ArtistsBrowser(getContext());
+       // } else if (ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId().equals(objectID)) {
+       //     result = new AlbumsBrowser(getContext());
+       // } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
+       //     result = new ArtistsBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId().equals(objectID)) {
             result = new AllTitlesBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId())) {
-            result = new AlbumFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
-            result = new ArtistFolderBrowser(getContext());
+       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId())) {
+       //     result = new AlbumFolderBrowser(getContext());
+      //  } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
+      //      result = new ArtistFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId())) {
             result = new GenreFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId())) {
@@ -340,12 +336,12 @@ public class ContentDirectory {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId())) {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(),ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId())) {
+       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId())) {
         //    result = new MusicAlbumItemBrowser(getContext());
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
+       //     result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
+       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
            // result = new MusicArtistItemBrowser(getContext());
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
+      //      result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId())) {
             result = new DownloadsBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId())) {
@@ -355,7 +351,6 @@ public class ContentDirectory {
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId())) {
             result = new GroupingFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId())) {
-            //    result = new MusicAlbumItemBrowser(getContext());
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
         }
 

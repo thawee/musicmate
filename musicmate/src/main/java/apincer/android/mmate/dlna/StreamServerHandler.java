@@ -30,6 +30,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import apincer.android.mmate.dlna.content.ContentBrowser;
+
 public class StreamServerHandler extends UpnpStream implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
     private static final String TAG = "StreamServerHandler";
     protected StreamServerHandler(ProtocolFactory protocolFactory ) {
@@ -54,6 +56,10 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         try {
             StreamRequestMessage requestMessage = readRequestMessage(message);
             Log.v(TAG, "Processing new request message: " + requestMessage);
+            if("CyberGarage-HTTP/1.0".equals(requestMessage.getHeaders().getFirstHeader("User-agent"))) {
+                Log.v(TAG, "Temp FIX for MConnect, show only 20 songs");
+                ContentBrowser.forceFullContent = true;
+            }
 
             StreamResponseMessage responseMessage = process(requestMessage);
 
@@ -69,8 +75,9 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
             responseTrigger.submitResponse(responseBuilder.build(), context);
 
         } catch (Throwable t) {
-            Log.i(TAG, "Exception occurred during UPnP stream processing: " + t);
-            Log.d(TAG, "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
+           // StreamRequestMessage requestMessage = readRequestMessage(message);
+            Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
+           // Log.d(TAG, "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
             Log.v(TAG, "returning INTERNAL SERVER ERROR to client");
             responseBuilder.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
             responseTrigger.submitResponse(responseBuilder.build(), context);

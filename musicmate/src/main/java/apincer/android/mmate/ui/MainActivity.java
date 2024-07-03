@@ -8,7 +8,9 @@ import static apincer.android.mmate.Constants.TITLE_PCM;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.provider.Settings;
 import android.transition.Slide;
 import android.util.Log;
@@ -146,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
     private static final double MAX_PROGRESS = 100.00;
 
     private MusicTag nowPlaying = null;
+    private MediaServerService mediaServerService;
 
     ActivityResultLauncher<Intent> editorLauncher;
 
@@ -981,7 +985,7 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(true);
         Button startButton = cview.findViewById(R.id.manageServer);
-        if(MediaServerService.isServerStarted()) {
+        if(mediaServerService!=null && mediaServerService.isInitialized()) {
             status.setText("Status: STARTED");
             startButton.setText("Stop Server");
         }else {
@@ -989,17 +993,14 @@ public class MainActivity extends AppCompatActivity {
             startButton.setText("Start Server");
         }
         startButton.setOnClickListener(view -> {
-            if((MediaServerService.isServerStarted())) {
+            if((mediaServerService.isInitialized())) {
                 stopService(new Intent(getApplicationContext(), MediaServerService.class));
-            }else {
-                startForegroundService(new Intent(getApplicationContext(), MediaServerService.class));
-            }
-            if((MediaServerService.isServerStarted())) {
-                status.setText("Status: STARTED");
-                startButton.setText("Stop Server");
-            }else {
                 status.setText("Status: STOPED");
                 startButton.setText("Start Server");
+            }else {
+                startForegroundService(new Intent(getApplicationContext(), MediaServerService.class));
+                status.setText("Status: STARTED");
+                startButton.setText("Stop Server");
             }
         });
 
@@ -1596,6 +1597,19 @@ public class MainActivity extends AppCompatActivity {
             return new ArrayList<>(selections);
         }
     }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mediaServerService = ((MediaServerService.MediaServerServiceBinder)service).getService();
+
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mediaServerService = null;
+        }
+    };
+
 
 
     private void doMeasureDR(List<MusicTag> selections) {
