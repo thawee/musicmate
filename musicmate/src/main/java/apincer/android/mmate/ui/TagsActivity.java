@@ -77,7 +77,7 @@ import coil.request.ImageRequest;
 import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
-    private static final String TAG = TagsActivity.class.getName();
+    private static final String TAG = "TagsActivity";
     private static volatile ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
@@ -655,7 +655,7 @@ public class TagsActivity extends AppCompatActivity {
                             if(finishOnTimeout) {
                                 finish(); // back to prev activity
                             }
-                        }, 5);
+                        }, 3);
                     }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -712,7 +712,7 @@ public class TagsActivity extends AppCompatActivity {
                 if(finishOnTimeout) {
                     finish(); // back to prev activity
                 }
-            }, 5);
+            }, 3);
         }
     }
 

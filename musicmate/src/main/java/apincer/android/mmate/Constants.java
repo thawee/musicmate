@@ -142,6 +142,8 @@ public final class Constants {
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
     public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
     public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
+    public static final String PREF_MUSICMATE_DIRECTORIES = "preference_musicmate_directories";
+    public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";

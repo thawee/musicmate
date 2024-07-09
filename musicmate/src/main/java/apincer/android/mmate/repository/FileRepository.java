@@ -11,7 +11,6 @@ import com.anggrayudi.storage.file.StorageId;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -22,7 +21,6 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
-import apincer.android.mmate.provider.MusicCoverArtProvider;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -40,25 +38,6 @@ public class FileRepository {
     public static FileRepository newInstance(Context application) {
         return new FileRepository(application);
     }
-
-    /*
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void extractCoverArt(MusicTag tag, File pathFile) {
-        try {
-            File dir = pathFile.getParentFile();
-            dir.mkdirs();
-            File coverArtFile = getFolderCoverArt(tag);
-            if(coverArtFile!=null) {
-                // check directory images
-                FileSystem.copy(coverArtFile, pathFile);
-            }else {
-                // extract from media file
-                FFMPeg.extractCoverArt(tag, pathFile);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "extractCoverArt",e);
-        }
-    }*/
 
     public static void extractCoverArt(String path, File targetFile) {
         try {
@@ -87,6 +66,21 @@ public class FileRepository {
             }
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);
+        }
+    }
+
+    public void extractCoverArt(MusicTag tag) {
+        try {
+            String coverFile = CoverArtProvider.COVER_ARTS +tag.getAlbumUniqueKey()+".png";
+            File dir =  getContext().getExternalCacheDir();
+            File pathFile = new File(dir, coverFile);
+            if(!pathFile.exists()) {
+                dir = pathFile.getParentFile();
+                dir.mkdirs();
+                extractCoverArt(tag, pathFile);
+            }
+        } catch (Exception e) {
+            Log.d(TAG,"extractCoverArt:", e);
         }
     }
 
@@ -303,6 +297,9 @@ public class FileRepository {
                         String matePath = buildCollectionPath(tag);
                         tag.setMusicManaged(StringUtils.equals(matePath, tag.getPath()));
                         TagRepository.saveTag(tag);
+
+                        // extract cover art
+                        extractCoverArt(tag);
                     }
                 }
             }
@@ -589,5 +586,17 @@ public class FileRepository {
         if(pathFile.exists()) {
             com.anggrayudi.storage.file.FileUtils.forceDelete(pathFile);
         }
+    }
+
+    public List<String> getDefaultMusicPaths() {
+        List<String> storageIds = DocumentFileCompat.getStorageIds(context);
+        List<String> files = new ArrayList<>();
+        for (String sid : storageIds) {
+            File file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Music"));
+            if (file.exists()) {
+                files.add(file.getAbsolutePath());
+            }
+        }
+        return files;
     }
 }

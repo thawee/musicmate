@@ -37,9 +37,9 @@ public class LibraryBrowser extends ContentBrowser {
         List<Container> result = new ArrayList<>();
         result.add((Container) new AllTitlesBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new DownloadsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
-       /* result.add((Container) new AlbumsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new ArtistsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), firstResult, maxResults, orderby));
-       */
+        result.add((Container) new AlbumsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
+       // result.add((Container) new ArtistsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), firstResult, maxResults, orderby));
+
         result.add((Container) new GenresBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), firstResult, maxResults, orderby));
 
         result.add((Container) new GroupingsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));

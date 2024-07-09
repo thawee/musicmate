@@ -4,19 +4,14 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.os.IBinder;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.NotificationCompat;
-import androidx.work.Constraints;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import com.arthenica.ffmpegkit.FFmpegKitConfig;
@@ -28,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
@@ -172,10 +166,6 @@ public class MusixMateApp extends Application {
                 .build());
          */
 
-        // TURN OFF log for JAudioTagger
-            //jAudioTaggerLogger1.setLevel(Level.SEVERE);
-           // jAudioTaggerLogger2.setLevel(Level.SEVERE);
-
         // Do it on main process
        // BlockCanary.install(this, new AppBlockCanaryContext()).start();
 /*
@@ -248,20 +238,23 @@ public class MusixMateApp extends Application {
         // scan music on startup
         // Workmanager intitialize on MusicFileProvider
         // clear existing scanning worker
-        WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanAudioFileWorker");
+       // WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanAudioFileWorker");
        // WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanLoudnessWorker");
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
-        Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .setRequiresStorageNotLow(true)
-                .build();
-
-        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
-                .setConstraints(constraints)
-                .build();
-        WorkManager.getInstance(getApplicationContext()).enqueue(workRequest);
+        if(Preferences.checkDirectoriesSet(getApplicationContext())) {
+          /*  Constraints constraints = new Constraints.Builder()
+                    .setRequiresBatteryNotLow(true)
+                    .setRequiresStorageNotLow(true)
+                    .build();
+            // auto scan on start if directory is defined and permissions is granted
+            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
+                    .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
+                    .setConstraints(constraints)
+                    .build();
+            WorkManager.getInstance(getApplicationContext()).enqueue(workRequest); */
+            ScanAudioFileWorker.startScan(getApplicationContext());
+        }
     }
 
     /*

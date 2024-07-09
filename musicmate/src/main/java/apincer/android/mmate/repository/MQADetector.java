@@ -31,7 +31,7 @@ public class MQADetector {
                 // running, I will reacquire the lock and finish.
                 lock.wait(millis);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "detectMQA", e);
             }
         }
     }

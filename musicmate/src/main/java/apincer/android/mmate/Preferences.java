@@ -5,6 +5,13 @@ import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import apincer.android.mmate.repository.FileRepository;
+
 public class Preferences {
     private static final String TAG = Preferences.class.getSimpleName();
 
@@ -42,5 +49,31 @@ public class Preferences {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_NEXT_SONG_BY_MEDIA_BUTTONS,true);
+    }
+
+    public static List<String> getDirectories(Context context) {
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        List<String> defaultDirs = FileRepository.newInstance(context).getDefaultMusicPaths();
+        Set<String> defaultDirsSet = new HashSet<>(defaultDirs);
+        Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, defaultDirsSet);
+        return new ArrayList<>(dirs);
+    }
+
+    public static void setDirectories(Context context, List<String> dirs) {
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        Set<String> dirsSet = new HashSet<>(dirs);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, dirsSet);
+        edit.apply();
+    }
+
+    public static boolean checkDirectoriesSet(Context context) {
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+        Set<String> dirsSet = new HashSet<>();
+        Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, dirsSet);
+        return !dirs.isEmpty();
     }
 }

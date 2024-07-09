@@ -5,9 +5,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.Size;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -16,14 +19,18 @@ import androidx.preference.PreferenceManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class PermissionUtils {
     private static final String TAG = PermissionUtils.class.getName();
 
     public static String[] PERMISSIONS_ALL = {Manifest.permission.INTERNET,
-            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_CONNECT};
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.READ_MEDIA_AUDIO};
 
-    public static final String ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION =
-            "android.settings.MANAGE_ALL_FILES_ACCESS_PERMISSION";
+   // public static final String ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION =
+   //         "android.settings.MANAGE_ALL_FILES_ACCESS_PERMISSION";
 
     public static boolean hasPermissions(@NonNull Context context, @Size(min = 1) @NonNull String... perms) {
         for (String perm : perms) {
@@ -116,4 +123,28 @@ public class PermissionUtils {
       //      return true;
       //  }
     }
+
+    public static boolean checkAccessPermissions(Context context) {
+        return checkMediaAccessPermissions(context) && checkFullStorageAccessPermissions(context);
+    }
+
+    public static boolean checkFullStorageAccessPermissions(Context context) {
+       // String permission = "android.permission.READ_EXTERNAL_STORAGE";
+       // int res = context.checkCallingOrSelfPermission(permission);
+       // return (res == PackageManager.PERMISSION_GRANTED);
+        return Environment.isExternalStorageManager();
+    }
+
+    @android.annotation.TargetApi(Build.VERSION_CODES.TIRAMISU)
+    public static boolean checkMediaAccessPermissions(Context context) {
+        String audioPermission = Manifest.permission.READ_MEDIA_AUDIO;
+        String imagesPermission = Manifest.permission.READ_MEDIA_IMAGES;
+        String videoPermission = Manifest.permission.READ_MEDIA_VIDEO;
+        // Check for permissions and if permissions are granted then it will return true
+        // You have the permissions, you can proceed with your media file operations.
+        return context.checkSelfPermission(audioPermission) == PackageManager.PERMISSION_GRANTED ||
+                context.checkSelfPermission(imagesPermission) == PackageManager.PERMISSION_GRANTED ||
+                context.checkSelfPermission(videoPermission) == PackageManager.PERMISSION_GRANTED;
+    }
+
 }

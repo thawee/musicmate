@@ -17,6 +17,7 @@ import java.util.List;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.MusicTagUtils;
 
 
 /**
@@ -85,7 +86,7 @@ public abstract class ContentBrowser {
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
         long id = tag.getId();
         String title = tag.getTitle();
-        MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
+        MimeType mimeType = toMimeType(tag); //new MimeType("audio", tag.getAudioEncoding());
         String parentId = folderId;
         // album, artist, genre, grouping
         if(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().equalsIgnoreCase(folderId)) {
@@ -115,5 +116,24 @@ public abstract class ContentBrowser {
        // Log.d(TAG, "MusicTrack: " + id + " Title: "
        //         + title + " Uri: " + uri);
         return musicTrack;
+    }
+
+    private MimeType toMimeType(MusicTag tag) {
+        //new MimeType("audio", tag.getAudioEncoding());
+        if(MusicTagUtils.isAIFFile(tag)) {
+            return new MimeType("audio", "x-aiff");
+        }else  if(MusicTagUtils.isMp4File(tag)) {
+            return new MimeType("audio", "x-m4a");
+        }else  if(MusicTagUtils.isMPegFile(tag)) {
+            return new MimeType("audio", "mpeg");
+        }else  if(MusicTagUtils.isFLACFile(tag)) {
+            return new MimeType("audio", "x-flac");
+        }else  if(MusicTagUtils.isALACFile(tag)) {
+            return new MimeType("audio", "x-m4a");
+        }else  if(MusicTagUtils.isWavFile(tag)) {
+            return new MimeType("audio", "x-wav");
+        }else {
+            return new MimeType("audio", "*");
+        }
     }
 }

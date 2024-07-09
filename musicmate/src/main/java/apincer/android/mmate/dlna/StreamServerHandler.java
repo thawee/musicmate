@@ -56,7 +56,9 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         try {
             StreamRequestMessage requestMessage = readRequestMessage(message);
             Log.v(TAG, "Processing new request message: " + requestMessage);
-            if("CyberGarage-HTTP/1.0".equals(requestMessage.getHeaders().getFirstHeader("User-agent"))) {
+            String userAgent = getUserAgent(requestMessage);
+            if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
+              // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
                 Log.v(TAG, "Temp FIX for MConnect, show only 20 songs");
                 ContentBrowser.forceFullContent = true;
             }
@@ -64,8 +66,7 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
             StreamResponseMessage responseMessage = process(requestMessage);
 
             if (responseMessage != null) {
-
-                Log.v(TAG, "Preparing HTTP response message: " + responseMessage);
+               // Log.v(TAG, "Preparing HTTP response message: " + responseMessage);
                 writeResponseMessage(responseMessage, responseBuilder);
             } else {
                 // If it's null, it's 404
@@ -84,6 +85,14 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
 
             responseException(t);
         }
+    }
+
+    private String getUserAgent(StreamRequestMessage requestMessage) {
+        try {
+            return requestMessage.getHeaders().getFirstHeader("User-agent");
+        }catch (Exception ignore) {
+        }
+        return "";
     }
 
     protected StreamRequestMessage readRequestMessage(Message<HttpRequest, byte[]> message) throws IOException {
@@ -122,22 +131,22 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         if (bodyBytes == null) {
             bodyBytes = new byte[]{};
         }
-        Log.v(TAG, "Reading request body bytes: " + bodyBytes.length);
+       // Log.v(TAG, "Reading request body bytes: " + bodyBytes.length);
 
         if (bodyBytes.length > 0 && requestMessage.isContentTypeMissingOrText()) {
 
-            Log.v(TAG, "Request contains textual entity body, converting then setting string on message");
+           // Log.v(TAG, "Request contains textual entity body, converting then setting string on message");
             requestMessage.setBodyCharacters(bodyBytes);
 
         } else if (bodyBytes.length > 0) {
 
-            Log.v(TAG, "Request contains binary entity body, setting bytes on message");
+           // Log.v(TAG, "Request contains binary entity body, setting bytes on message");
             requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
 
         } else {
             Log.v(TAG, "Request did not contain entity body");
         }
-
+        Log.v(TAG, "Request entity body: "+requestMessage.getBodyString());
         return requestMessage;
     }
 
@@ -160,7 +169,8 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         int contentLength = responseBodyBytes != null ? responseBodyBytes.length : -1;
 
         if (contentLength > 0) {
-            Log.v(TAG, "Response message has body, writing bytes to stream...");
+           // Log.v(TAG, "Response message has body, writing bytes to stream...");
+            Log.d(TAG, "Response message has body, "+new String(responseBodyBytes));
             ContentType ct = ContentType.APPLICATION_XML;
             if (responseMessage.getContentTypeHeader() != null) {
                 ct = ContentType.parse(responseMessage.getContentTypeHeader().getValue().toString());

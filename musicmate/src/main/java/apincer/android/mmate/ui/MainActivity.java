@@ -18,7 +18,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.transition.Slide;
@@ -61,6 +60,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
+import com.developer.filepicker.model.DialogConfigs;
+import com.developer.filepicker.model.DialogProperties;
+import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -88,10 +90,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -118,10 +122,12 @@ import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.HostInterface;
 import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.work.MusicMateExecutors;
+import apincer.android.mmate.work.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -139,8 +145,9 @@ import sakout.mehdi.StateViews.StateView;
 /**
  * Created by Administrator on 11/23/17.
  */
+@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = MainActivity.class.getName();
+    private static final String TAG = "MainActivity";
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET= 16; //start scrolling from 4 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 48; //48; // scroll item to offset+1 position on list
     private static final int MENU_ID_QUALITY = 55555555;
@@ -152,6 +159,9 @@ public class MainActivity extends AppCompatActivity {
     private MediaServerService mediaServerService;
 
     ActivityResultLauncher<Intent> editorLauncher;
+    ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> ScanAudioFileWorker.startScan(getApplicationContext()));
 
     FileRepository repos;
 
@@ -540,50 +550,6 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.autoRefresh();
     }
 
-    /*
-    @SuppressLint("MissingSuperCall")
-    @Override
-    public void onBackPressed() {
-        if(mResideMenu.isOpened()) {
-            mResideMenu.closeMenu();
-            return;
-        }
-
-        if(actionMode !=null) {
-            actionMode.finish();
-            return;
-        }*/
-
-       /* not work as expected
-       if(mSearchView.isShown()) {
-            mSearchView.setIconified(true);
-            adapter.resetSearchString();
-            refreshLayout.autoRefresh();
-            return;
-        } */
-/*
-        if(adapter!=null && adapter.isSearchMode()) {
-            doHideSearch();
-            refreshLayout.autoRefresh();
-            return;
-        }
-
-        if(adapter!=null && adapter.hasFilter()) {
-            adapter.resetFilter();
-            refreshLayout.autoRefresh();
-            return;
-        }
-
-        if (!mExitSnackbar.isShown()) {
-            mExitSnackbar.show();
-        } else {
-            mExitSnackbar.dismiss();
-            finishAndRemoveTask();
-            //System.exit(0);
-            finish();
-        }
-    }*/
-
     protected RecyclerView mRecyclerView;
 
     private void initActivityTransitions() {
@@ -593,7 +559,6 @@ public class MainActivity extends AppCompatActivity {
             getWindow().setReturnTransition(transition);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // create -> restore state --> resume --> running --> pause --> save state --> destroy
@@ -613,7 +578,7 @@ public class MainActivity extends AppCompatActivity {
         initActivityTransitions();
         setContentView(R.layout.activity_main);
         setUpEditorLauncher();
-        setUpPermissions();
+        //setUpPermissions();
         setUpHeaderPanel();
         setUpNowPlayingView();
         setUpBottomAppBar();
@@ -798,6 +763,7 @@ public class MainActivity extends AppCompatActivity {
         mResideMenu.addMenuItem(MENU_ID_QUALITY_PCM, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_PCM, ResideMenu.DIRECTION_LEFT);
     }
 
+    /*
     private void setUpPermissions() {
         if (!Environment.isExternalStorageManager()) {
             //todo when permission is granted      // do not have read/write storage permission
@@ -808,7 +774,7 @@ public class MainActivity extends AppCompatActivity {
                     result -> loadDataSets(null));
             permissionResultLauncher.launch(myIntent);
         }
-    }
+    } */
 
     private void scrollToListening() {
         if(nowPlaying ==null) return;
@@ -914,6 +880,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
@@ -943,11 +910,11 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(myIntent);
             return true;
-        } else if(item.getItemId() == R.id.menu_sd_permission) {
+        /*} else if(item.getItemId() == R.id.menu_sd_permission) {
             //setUpPermissionSAF();
             Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
             startActivity(myIntent);
-            return true;
+            return true; */
         } else if(item.getItemId() == R.id.menu_notification_access) {
             Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             startActivity(intent);
@@ -961,6 +928,9 @@ public class MainActivity extends AppCompatActivity {
         }else if(item.getItemId() == R.id.navigation_settings) {
             doShowRightMenus();
             return true;
+        }else if(item.getItemId() == R.id.menu_directories) {
+            doSetDirectories();
+            return true;
         }else if(item.getItemId() == R.id.menu_about_crash) {
             Intent myIntent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(myIntent);
@@ -970,6 +940,109 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void doSetDirectories() {
+        if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
+            Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
+            permissionResultLauncher.launch(myIntent);
+            return;
+        }
+
+        View cview = getLayoutInflater().inflate(R.layout.view_action_directories, null);
+
+        ListView itemsView = cview.findViewById(R.id.itemListView);
+        LinearLayout btnAddPanel = cview.findViewById(R.id.btn_add_panel);
+        View btnOK = cview.findViewById(R.id.btn_ok);
+        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        List<String> defaultPaths =  FileRepository.newInstance(getApplicationContext()).getDefaultMusicPaths();
+        Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
+        List<String> dirs = Preferences.getDirectories(getApplicationContext());
+
+        itemsView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return dirs.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+                return null;
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @SuppressLint({"ViewHolder", "InflateParams"})
+            @Override
+            public View getView(int i, View view, ViewGroup viewGroup) {
+                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
+                String dir = dirs.get(i);
+                TextView seq = view.findViewById(R.id.seq);
+                TextView name = view.findViewById(R.id.name);
+                TextView status = view.findViewById(R.id.status);
+                seq.setText(String.valueOf(i+1));
+                name.setText(dir);
+                if(defaultPathsSet.contains(dir)) {
+                    status.setText("");
+                }else {
+                    status.setText("X");
+                    status.setOnClickListener(view1 -> {
+                        dirs.remove(dir);
+                        notifyDataSetChanged();
+                    });
+                }
+
+                return view;
+            }
+        });
+
+        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
+                .setTitle("")
+                .setView(cview)
+                .setCancelable(true)
+                .create();
+        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        alert.setCanceledOnTouchOutside(false);
+        // make popup round corners
+        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
+        btnAddPanel.removeAllViews();
+        for (String sid : storageIds) {
+            Button btn = new Button(getApplicationContext());
+            btn.setText(sid);
+            btnAddPanel.addView(btn);
+            btn.setOnClickListener(view -> {
+                DialogProperties properties = new DialogProperties();
+                properties.selection_mode = DialogConfigs.SINGLE_MODE;
+                properties.selection_type = DialogConfigs.DIR_SELECT;
+                properties.root = new File(DocumentFileCompat.buildAbsolutePath(getApplicationContext(), sid, ""));
+                properties.extensions = null;
+                properties.show_hidden_files = false;
+                FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
+                dialog.setTitle("Select Directory");
+                dialog.setPositiveBtnName("Add");
+                dialog.setNegativeBtnName("Cancel");
+                dialog.setDialogSelectionListener(files -> {
+                    dirs.add(files[0]);
+                    ((BaseAdapter) itemsView.getAdapter()).notifyDataSetChanged();
+                });
+                dialog.show();
+            });
+        }
+
+        btnOK.setOnClickListener(v -> {
+            Preferences.setDirectories(getApplicationContext(), dirs);
+            //start scan after set directories
+            loadDataSets(null);
+            alert.dismiss();
+        });
+        btnCancel.setOnClickListener(v -> alert.dismiss());
+        alert.show();
     }
 
     private void doShowMediaServerControl() {
@@ -993,7 +1066,7 @@ public class MainActivity extends AppCompatActivity {
             startButton.setText("Start Server");
         }
         startButton.setOnClickListener(view -> {
-            if((mediaServerService.isInitialized())) {
+            if((mediaServerService != null && mediaServerService.isInitialized())) {
                 stopService(new Intent(getApplicationContext(), MediaServerService.class));
                 status.setText("Status: STOPED");
                 startButton.setText("Start Server");
@@ -1547,7 +1620,7 @@ public class MainActivity extends AppCompatActivity {
                 mode.finish();
                 return true;
             }else if (id == R.id.action_encoding_file) {
-                doEncodingAudioFiles(getSelections());
+                doEncodeAudioFiles(getSelections());
                 mode.finish();
                 return true;
            /* }else if (id == R.id.action_send_to_hibyos) {
@@ -1609,8 +1682,6 @@ public class MainActivity extends AppCompatActivity {
             mediaServerService = null;
         }
     };
-
-
 
     private void doMeasureDR(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
@@ -1772,7 +1843,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doEncodingAudioFiles(List<MusicTag> selections) {
+    private void doEncodeAudioFiles(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
         // convert WAVE to FLAC, ALAC
         // convert AIFF to FLAC, ALAC

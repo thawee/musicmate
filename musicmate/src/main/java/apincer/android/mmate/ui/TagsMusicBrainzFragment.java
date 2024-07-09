@@ -36,7 +36,7 @@ import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
 public class TagsMusicBrainzFragment extends Fragment implements View.OnClickListener {
-    private static final String TAG = TagsMusicBrainzFragment.class.getName();
+    private static final String TAG = "TagsMusicBrainzFragment";
     private static final String NO_RESULTS = "NO_RESULTS";
     private TagsActivity mainActivity;
     private RecyclerView mRecyclerView;

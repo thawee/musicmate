@@ -62,7 +62,7 @@ import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
 
 public class TagsEditorFragment extends Fragment {
-    private static final String TAG = TagsEditorFragment.class.getName();
+    private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
     AlertDialog progressDialog;

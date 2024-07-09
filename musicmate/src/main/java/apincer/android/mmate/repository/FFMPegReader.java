@@ -381,7 +381,7 @@ public class FFMPegReader extends TagReader {
                // tag.setAstatDR(toDouble(info));
             }
         }catch (Exception ex) {
-            Log.e(TAG, "parseVolume", ex);
+            Log.e(TAG, "parseASTATS", ex);
         }
     }
 
@@ -678,7 +678,7 @@ public class FFMPegReader extends TagReader {
                 tag.setDynamicRangeMeter(toDouble(info));
             }
         }catch (Exception ex) {
-            Log.e(TAG, "parseDynamicRange", ex);
+            Log.e(TAG, "parseDynamicRangeMeter", ex);
         }
     }
 

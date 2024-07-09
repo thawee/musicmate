@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
@@ -50,6 +50,7 @@ public class PermissionActivity extends AppCompatActivity {
         setUpPermissions();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String []permissions, @NonNull int[] grantResults) {
@@ -57,14 +58,13 @@ public class PermissionActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_STORAGE_PERMISSION) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //if (!SimpleStorage.hasFullDiskAccess(getApplicationContext(), StorageId.PRIMARY)) {
-                 if (!Environment.isExternalStorageManager()) {
+                // if (!Environment.isExternalStorageManager()) {
+                if(!PermissionUtils.checkFullStorageAccessPermissions(getApplicationContext())) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
                     startActivity(intent);
                 }
                 finish();
             }
-            return;
         }
     }
 
@@ -77,7 +77,7 @@ public class PermissionActivity extends AppCompatActivity {
 
         txtTitle.setText("Permissions for Music Mate");
         txtConfirm.setText("OK");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             //todo when permission is granted
             txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
                     PermissionUtils.PERMISSIONS_ALL,
@@ -86,7 +86,9 @@ public class PermissionActivity extends AppCompatActivity {
 
         // Internet
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
-        panel.addView(getPermissionView(layoutInflater,null, "Full Storage Access", "(Required)", "Read/Write media, and files on device to manage music collection."));
+
+        panel.addView(getPermissionView(layoutInflater,null, "Access Audio Files", "(Required)", "Read audio media files on device."));
+        panel.addView(getPermissionView(layoutInflater,null, "Full Storage Access", "(Required)", "Read/Write music files on device to manage music collection."));
       //  panel.addView(getPermissionView(layoutInflater,null, "Read External Storage", "(Required)", "Read photos, media, and files on device."));
        // panel.addView(getPermissionView(layoutInflater,null, "Write External Storage", "(Required)", "Write media, and files on device to manage music collection."));
         //  panel.addView(getPermissionView(layoutInflater,null, "Internet", "(Optional)", "Access Internet for coverart and MusicBrainz services"));

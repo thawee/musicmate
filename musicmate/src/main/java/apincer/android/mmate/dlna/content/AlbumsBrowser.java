@@ -40,7 +40,7 @@ public class AlbumsBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.albums), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.albums), creator, getSize(contentDirectory, myId),
                 null);
 
     }
@@ -76,7 +76,7 @@ public class AlbumsBrowser extends ContentBrowser {
         List<MusicFolder> groupings = MusixMateApp.getInstance().getOrmLite().getAlbumAndArtistWithChildrenCount();
         for(MusicFolder group: groupings) {
             String name = group.getName();
-            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), group.getName(), "", 0);
+            MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), group.getName(), creator, 0);
             musicAlbum.setChildCount((int)group.getChildCount());
 
             // set artist

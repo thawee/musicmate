@@ -121,7 +121,7 @@ public class JAudioTaggerReader extends TagReader{
                 metadata.setAudioChannels("2");
             }
         }catch (Exception ex) {
-            Log.e(TAG, "readHeader: "+ex.getMessage());
+            Log.e(TAG, "readHeader: ",ex);
         }
     }
 
@@ -134,7 +134,7 @@ public class JAudioTaggerReader extends TagReader{
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
                  InvalidAudioFrameException |
                  BufferUnderflowException e) {
-            Log.e(TAG, "getAudioFile: "+path +" - "+e.getMessage());
+            Log.e(TAG, "getAudioFile: "+path, e);
         }
         return null;
     }
@@ -311,7 +311,7 @@ public class JAudioTaggerReader extends TagReader{
                 tags = parseId3Tags(tag);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "parseCustomTagFields", e);
         }
         return tags;
     }

@@ -23,7 +23,6 @@ plugins {
     id("kotlin-android")
     id("kotlin-kapt")
     id("com.mikepenz.aboutlibraries.plugin")
-   // id("io.objectbox")
 }
 
 android {
@@ -34,8 +33,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 82
-        versionName  "3.8.1"+ versions.buildDate
+        versionCode 83
+        versionName  "3.8.2"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -147,6 +146,12 @@ dependencies {
     // google
     implementation deps.google.material
 
+   // implementation 'com.github.salehyarahmadi:FileAndFolderPicker:1.0.4'
+   // implementation 'com.github.abhishekti7:UnicornFilePicker:1.0.2'
+   // implementation 'com.github.codekidX:storage-chooser:2.0.4.4'
+   // implementation 'com.github.TutorialsAndroid:FilePicker:v9.0.1'
+    implementation 'io.github.tutorialsandroid:filepicker:9.2.5'
+
     implementation deps.jetbrains.annotations
 
     // RxAndroid & Coroutine
@@ -210,6 +215,7 @@ dependencies {
     implementation deps.apache.commons_codec
     implementation deps.apache.commons_io
     implementation deps.apache.commons_logging
+    implementation deps.apache.commons_lang3
     //implementation deps.apache.httpclient
     //implementation deps.apache.httpcore
 
@@ -227,9 +233,6 @@ dependencies {
     //implementation 'com.ibm.icu.text:normalizer:1.3.1'
 
     //implementation 'org.nanohttpd:nanohttpd:2.3.1'
-   // implementation deps.apache.httpcore
-    //implementation deps.apache.http2core
-   // implementation deps.apache.httpclient
     // https://mvnrepository.com/artifact/io.milton/milton-server-ce
     //implementation 'io.milton:milton-server-ce:4.0.1.2009'
 
@@ -238,25 +241,15 @@ dependencies {
     //implementation 'com.sleepycat:je:18.3.12'
     //implementation deps.high_scale_lib
 
-    // cling, only 2.1.1 works on Android
-    //noinspection GradleDependency
-    //implementation 'org.fourthline.cling:cling-core:2.1.1'
-    //noinspection GradleDependency
-    //implementation 'org.seamless:seamless-util:1.1.1'
-    //noinspection GradleDependency
-    //implementation 'org.seamless:seamless-http:1.1.1'
-    //noinspection GradleDependency
-    //implementation 'org.seamless:seamless-xml:1.1.1'
-
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-    implementation 'org.apache.commons:commons-lang3:3.14.0'
+   // implementation 'org.apache.commons:commons-lang3:3.14.0'
 
     // https://mvnrepository.com/artifact/com.jcraft/jsch
    // implementation 'com.jcraft:jsch:0.1.55'
 
     //https://github.com/jupnp/jupnp
-    implementation 'org.jupnp:org.jupnp.android:3.0.2'
-    implementation 'org.jupnp:org.jupnp.support:3.0.2'
+   // implementation 'org.jupnp:org.jupnp.android:3.0.2'
+    //implementation 'org.jupnp:org.jupnp.support:3.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
     //implementation 'org.eclipse.jetty:jetty-server:9.4.54.v20240208'
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet
@@ -267,22 +260,19 @@ dependencies {
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
     //implementation 'javax.servlet:javax.servlet-api:3.1.0'
 
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
-    implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.4'
+    //implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+    //implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.4'
+
+    implementation deps.jupnp_android
+    implementation deps.jupnp_support
+    implementation deps.apache.httpcore
+    implementation deps.apache.httpclient
 
     // implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
    // implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
    // implementation 'org.apache.httpcomponents.core5:httpcore5:5.3.1' //5.2.4'
 
    // implementation 'com.inthebacklog:javampd:7.1.0'
-
-    //https://github.com/cybergarage/cybergarage-upnp
-    // https://mvnrepository.com/artifact/org.cybergarage.upnp/core
-   // implementation 'org.cybergarage.upnp:core:2.1.5'
-
-    // Glide (Image Loader & Caching)
-   // implementation deps.glide.runtime
-   // annotationProcessor deps.glide.compiler
 
     // Coil
     implementation deps.coil.runtime2
@@ -315,7 +305,6 @@ dependencies {
     implementation project(':library:objectrelations')
    // implementation project(':library:esoco-common')
    // implementation project(':library:esoco-monads')
-   // implementation project(':library:cling')
 }
 
 configurations.implementation {
@@ -355,7 +344,7 @@ aboutLibraries {
             ~"commons-io:commons-io",
             ~"commons-logging:commons-logging",
             ~"commons-codec:commons-codec",
-            ~"org.apache.*",
+           // ~"org.apache.*",
             ~"io.coil-kt:coil-base",
             ~"com.airbnb.android:epoxy-annotations",
             ~"io.objectbox:objectbox-kotlin",

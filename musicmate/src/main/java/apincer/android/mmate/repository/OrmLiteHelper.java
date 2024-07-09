@@ -612,8 +612,9 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 MusicFolder group = new MusicFolder();
                 String albumArtist = vals[1];
                 String album = vals[0];
+                String count = vals[3];
                 group.setUniqueKey(vals[2]);
-                group.setChildCount(StringUtils.toLong(vals[1]));
+                group.setChildCount(StringUtils.toLong(count));
                 if(StringUtils.isEmpty(album)) {
                     album = Constants.UNKNOWN;
                 }

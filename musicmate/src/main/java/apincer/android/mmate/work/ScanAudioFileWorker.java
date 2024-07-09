@@ -3,10 +3,11 @@ package apincer.android.mmate.work;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.work.Constraints;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
-
-import com.anggrayudi.storage.file.DocumentFileCompat;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,15 +16,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import apincer.android.mmate.Preferences;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.TagReader;
 
 public class ScanAudioFileWorker extends Worker {
     FileRepository repos;
+    private static final long SCAN_SCHEDULE_TIME = 5;
     private ScanAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
@@ -72,7 +76,12 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     public static List<File> pathList(Context context) {
-        List<String> storageIds = DocumentFileCompat.getStorageIds(context);
+        List<File> files = new ArrayList<>();
+        List<String> dirs = Preferences.getDirectories(context);
+        for(String dir: dirs) {
+            files.add(new File(dir));
+        }
+       /* List<String> storageIds = DocumentFileCompat.getStorageIds(context);
         List<File> files = new ArrayList<>();
         for (String sid : storageIds) {
             File file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Music"));
@@ -87,7 +96,21 @@ public class ScanAudioFileWorker extends Worker {
             if (file.exists()) {
                 files.add(file);
             }
-        }
+        } */
         return files;
+    }
+
+    public static void startScan(Context context) {
+        WorkManager.getInstance(context).cancelAllWorkByTag("apincer.android.mmate.work.ScanAudioFileWorker");
+
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiresStorageNotLow(true)
+                .build();
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
+                .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
+                .setConstraints(constraints)
+                .build();
+        WorkManager.getInstance(context).enqueue(workRequest);
     }
 }

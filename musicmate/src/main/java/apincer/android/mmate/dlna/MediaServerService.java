@@ -78,14 +78,6 @@ public class MediaServerService extends Service {
     private boolean initialized;
     private HttpAsyncServer httpServer;
 
-    /*
-    public static boolean isServerStarted() {
-        if(INSTANCE != null) {
-            return INSTANCE.isInitialized();
-        }
-        return false;
-    } */
-
     /**
      * @return the initialized
      */
