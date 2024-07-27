@@ -152,9 +152,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);
-            titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_BROKEN);
-            titles.add(Constants.TITLE_NOT_DR);
+            titles.add(Constants.TITLE_DUPLICATE);
+            titles.add(Constants.TITLE_NOT_DR_METER);
             titles.add(Constants.TITLE_NO_COVERART);
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
                 Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
@@ -483,7 +483,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .target(holder.mCoverArtView)
                //.placeholder(R.drawable.no_image0)
                .placeholder(R.drawable.progress)
-               .error(R.drawable.no_image0)
+               .error(R.drawable.no_cover2)
                 .transformations(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request);

@@ -23,9 +23,11 @@ import android.content.Context;
 import android.util.Log;
 
 import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.FFmpegKitConfig;
 import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.FFprobeKit;
 import com.arthenica.ffmpegkit.FFprobeSession;
+import com.arthenica.ffmpegkit.Level;
 import com.arthenica.ffmpegkit.ReturnCode;
 import com.arthenica.ffmpegkit.Session;
 
@@ -351,8 +353,10 @@ public class FFMPegReader extends TagReader {
 
         String cmd ="-hide_banner -nostats -i \""+targetPath+"\""+filter+" -f null -";
         Log.d(TAG, "measureDRandStat: "+tag.getPath());
+        FFmpegKitConfig.setLogLevel(Level.AV_LOG_INFO);
         FFmpegSession session = FFmpegKit.execute(cmd);
-       // if (ReturnCode.isSuccess(session.getReturnCode())) {
+        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_ERROR);
+        // if (ReturnCode.isSuccess(session.getReturnCode())) {
         String data = session.getOutput();
         //    String data = getFFmpegOutputData(session);
         parseReplayGain(tag, data);
@@ -725,7 +729,7 @@ public class FFMPegReader extends TagReader {
         //if(MusicTagUtils.isWavFile(tag)) return false; // wave file not support track gain
        // if(!MusicTagUtils.isLossless(tag)) return false; // no need for compress encoding
 
-        Log.d(TAG, "writeTagQualityToFile: "+tag.toString());
+        Log.d(TAG, "writeTagQualityToFile: "+tag.getPath());
         /// check free space on storage
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff

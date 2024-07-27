@@ -39,7 +39,12 @@ public class ReflectionTransformation implements Transformation {
     }
 
     @Nullable
-    public Bitmap transform2(@NonNull Bitmap bitmap, @NonNull Size size, @NonNull Continuation<? super Bitmap> continuation) {
+    public Bitmap transform(@NonNull Bitmap bitmap, @NonNull Size size, @NonNull Continuation<? super Bitmap> continuation) {
+        return BitmapHelper.applyReflection(bitmap);
+    }
+
+        @Nullable
+    public Bitmap transformOld(@NonNull Bitmap bitmap, @NonNull Size size, @NonNull Continuation<? super Bitmap> continuation) {
         // gap space between original and reflected
         final int reflectionGap = 1;
         // get image size
@@ -93,7 +98,7 @@ public class ReflectionTransformation implements Transformation {
     }
 
     @Nullable
-    public Bitmap transform(@NonNull Bitmap bitmap, @NonNull Size size, @NonNull Continuation<? super Bitmap> continuation) {
+    public Bitmap transformNew(@NonNull Bitmap bitmap, @NonNull Size size, @NonNull Continuation<? super Bitmap> continuation) {
         // gap space between original and reflected
         final int reflectionGap = 1;
         // get image size

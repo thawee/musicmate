@@ -8,9 +8,7 @@ import static apincer.android.mmate.Constants.TITLE_PCM;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -18,8 +16,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.provider.Settings;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.Gravity;
@@ -101,14 +97,13 @@ import java.util.TimerTask;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.Preferences;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
-import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
@@ -120,7 +115,6 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
-import apincer.android.mmate.utils.HostInterface;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -156,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
     private static final double MAX_PROGRESS = 100.00;
 
     private MusicTag nowPlaying = null;
-    private MediaServerService mediaServerService;
+   // private MediaServerService mediaServerService;
 
     ActivityResultLauncher<Intent> editorLauncher;
     ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
@@ -463,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(@Nullable Drawable drawable) {
-                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.no_image0));
+                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.no_cover2));
                     }
 
                     @Override
@@ -563,7 +557,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // create -> restore state --> resume --> running --> pause --> save state --> destroy
         // if savedInstanceState == null, fresh start
-        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+        if(Settings.isOnNightModeOnly(getApplicationContext())) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
@@ -728,7 +722,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
     private void doShowLeftMenus() {
-        if(Preferences.isShowStorageSpace(getApplicationContext())) {
+        if(Settings.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
             UIUtils.buildStoragesStatus(getApplication(),panel);
@@ -916,7 +910,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(myIntent);
             return true; */
         } else if(item.getItemId() == R.id.menu_notification_access) {
-            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             startActivity(intent);
             return true;
         }else if(item.getItemId() == R.id.menu_about_libraries) {
@@ -935,9 +929,9 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(myIntent);
             return true;
-        }else if(item.getItemId() == R.id.menu_media_server) {
-            doShowMediaServerControl();
-            return true;
+       // }else if(item.getItemId() == R.id.menu_media_server) {
+        //    doShowMediaServerControl();
+        //    return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -958,7 +952,7 @@ public class MainActivity extends AppCompatActivity {
         View btnCancel = cview.findViewById(R.id.btn_cancel);
         List<String> defaultPaths =  FileRepository.newInstance(getApplicationContext()).getDefaultMusicPaths();
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
-        List<String> dirs = Preferences.getDirectories(getApplicationContext());
+        List<String> dirs = Settings.getDirectories(getApplicationContext());
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1036,7 +1030,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         btnOK.setOnClickListener(v -> {
-            Preferences.setDirectories(getApplicationContext(), dirs);
+            Settings.setDirectories(getApplicationContext(), dirs);
             //start scan after set directories
             loadDataSets(null);
             alert.dismiss();
@@ -1045,11 +1039,12 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
+    /*
     private void doShowMediaServerControl() {
         View cview = getLayoutInflater().inflate(R.layout.view_action_media_server, null);
-        TextView ip = cview.findViewById(R.id.server_ip_address);
+      //  TextView ip = cview.findViewById(R.id.server_ip_address);
         TextView status = cview.findViewById(R.id.server_status);
-        ip.setText(HostInterface.getIPv4Address());
+       // ip.setText(HostInterface.getIPv4Address());
         AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
                 .setTitle("")
                 .setView(cview)
@@ -1080,7 +1075,7 @@ public class MainActivity extends AppCompatActivity {
         // make popup round corners
         alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alert.show();
-    }
+    } */
 
     private void doShowEditActivity(List<MusicTag> selections) {
         ArrayList<MusicTag> tagList = new ArrayList<>();
@@ -1478,13 +1473,16 @@ public class MainActivity extends AppCompatActivity {
                     .setMenuRadius(16f) // sets the corner radius.
                     .setMenuShadow(8f) // sets the shadow.
                     .setTextColor(ContextCompat.getColor(getBaseContext(), R.color.grey200))
-                    .setTextGravity(Gravity.CENTER)
+                    .setTextGravity(Gravity.LEFT)
+                    .setPadding(1)
+                    .setMenuRadius(8)
+                    .setShowBackground(true)
                     .setTextSize(16)
-                   // .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
                     .setSelectedTextColor(Color.WHITE)
                     .setMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary_light))
                     .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
                     .setAutoDismiss(true)
+                    .setDividerHeight(1)
                     .setSelectedEffect(false)
                     .setOnMenuItemClickListener((position, item) -> {
                         adapter.resetFilter();
@@ -1527,7 +1525,7 @@ public class MainActivity extends AppCompatActivity {
     public void onPlaying(MusicTag song) {
         if(song!=null) {
             runOnUiThread(() -> doShowNowPlayingSongFAB(song));
-            if(Preferences.isListFollowNowPlaying(getBaseContext())) {
+            if(Settings.isListFollowNowPlaying(getBaseContext())) {
                     if(timer!=null) {
                             timer.cancel();
                     }
@@ -1671,6 +1669,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
     private final ServiceConnection serviceConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -1681,7 +1680,7 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceDisconnected(ComponentName className) {
             mediaServerService = null;
         }
-    };
+    }; */
 
     private void doMeasureDR(List<MusicTag> selections) {
         if(selections.isEmpty()) return;

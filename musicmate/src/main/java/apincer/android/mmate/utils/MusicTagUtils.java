@@ -37,7 +37,7 @@ import java.nio.file.Files;
 import java.util.Locale;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.Preferences;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
 
@@ -1294,7 +1294,7 @@ public class MusicTagUtils {
 
     public static String getFormattedTitle(Context context, MusicTag tag) {
         String title =  trimToEmpty(tag.getTitle());
-        if(Preferences.isShowTrackNumber(context)) {
+        if(Settings.isShowTrackNumber(context)) {
             String track = trimToEmpty(tag.getTrack());
             if(track.startsWith("0")) {
                 track = track.substring(1);

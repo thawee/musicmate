@@ -17,10 +17,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.utils.StringUtils;
 

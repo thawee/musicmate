@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 
@@ -39,7 +38,6 @@ public abstract class ContentBrowser {
         return context;
     }
 
-
     public abstract DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby);
 
     public abstract List<Container> browseContainer(
@@ -60,19 +58,6 @@ public abstract class ContentBrowser {
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
-       /* String absPath = tag.getPath().toLowerCase();
-        if(absPath.contains("/music/") && !absPath.contains("/telegram/")) {
-            // if has alblum, use parent dir
-            if(!StringUtils.isEmpty(tag.getAlbum())) {
-                // use directory
-                absPath = FileUtils.getParentName(absPath);
-            }
-        }
-        String uri = DigestUtils.md5Hex(absPath)+".png";
-
-        return URI.create("http://"
-                + contentDirectory.getIpAddress() + ":"
-                + MediaServerService.CONTENT_SERVER_PORT + "/album/" + uri); */
         return getAlbumArtUri(contentDirectory, tag.getAlbumUniqueKey());
     }
 

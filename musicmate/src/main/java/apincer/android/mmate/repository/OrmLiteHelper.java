@@ -95,6 +95,18 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    public List<MusicTag> findInPath(String path)  {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().like("path",escapeString(path)+"%");
+            return builder.query();
+        } catch (Exception e) {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
     public void save(MusicTag tag)   {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
@@ -132,11 +144,11 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<MusicTag> findMyNoneDRSongs()  {
+    public List<MusicTag> findMyNoDRMeterSongs()  {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("dynamicRange",0);
+            builder.where().eq("dynamicRangeMeter",0);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;
@@ -148,7 +160,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("fileSize < 5120 or ((dynamicRange>0 AND dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange>0 AND dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24)) order by title");
+            builder.where().raw("fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24)) order by title");
             return builder.query();
         } catch (SQLException e) {
             return Collections.EMPTY_LIST;

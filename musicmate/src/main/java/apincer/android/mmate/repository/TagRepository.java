@@ -3,19 +3,19 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -79,9 +79,6 @@ public class TagRepository {
                 String path = mdata.getPath();
                 if(!FileRepository.isMediaFileExist(path) || mdata.getFileSize()==0.00) {
                     removeTag(mdata);
-                //}else if(!mdata.getUniqueKey().equals(mdata.getPath()+"_"+ mdata.getAudioStartTime())) {
-                    // old files
-                //    removeTag(mdata);
                 }
             }
         } catch (Exception e) {
@@ -110,7 +107,6 @@ public class TagRepository {
     public static List<String> getDefaultGenreList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGenres();
-       // if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     list.add(StringUtils.EMPTY);
@@ -118,8 +114,6 @@ public class TagRepository {
                     list.add(group);
                 }
             }
-           // list.addAll(Arrays.asList(names));
-        //}
         String[] genres =  context.getResources().getStringArray(R.array.default_genres);
         for(String genre: genres) {
             if(!list.contains(genre)) {
@@ -176,6 +170,10 @@ public class TagRepository {
        return MusixMateApp.getInstance().getOrmLite().findByPath(path);
     }
 
+    public static List<MusicTag> findInPath(String path) {
+        return MusixMateApp.getInstance().getOrmLite().findInPath(path);
+    }
+
     public static List<MusicTag> findMediaByTitle(String title) {
         return MusixMateApp.getInstance().getOrmLite().findByTitle(title);
     }
@@ -210,8 +208,8 @@ public class TagRepository {
                     list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
-                } else if (Constants.TITLE_NOT_DR.equals(criteria.getKeyword())) {
-                    list = MusixMateApp.getInstance().getOrmLite().findMyNoneDRSongs();
+                } else if (Constants.TITLE_NOT_DR_METER.equals(criteria.getKeyword())) {
+                    list = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
                 } else if (Constants.TITLE_NO_COVERART.equals(criteria.getKeyword())) {
@@ -255,14 +253,6 @@ public class TagRepository {
         return list;
     }
 
-    /*
-    public static void populateAudioTag(MusicTag md) {
-        MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(md.getId());
-        if(tag != null) {
-            md.cloneFrom(tag);
-        }
-    }*/
-
     public static MusicTag getMusicTag(long id) {
         return MusixMateApp.getInstance().getOrmLite().findById(id);
     }
@@ -274,7 +264,6 @@ public class TagRepository {
     public static List<String> getDefaultPublisherList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getPublishers();
-        //if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     list.add(StringUtils.EMPTY);
@@ -282,7 +271,6 @@ public class TagRepository {
                     list.add(group);
                 }
             }
-       // }
         String[] genres =  context.getResources().getStringArray(R.array.default_publisher);
         for(String genre: genres) {
             if(!list.contains(genre)) {
@@ -297,7 +285,6 @@ public class TagRepository {
     public static List<String> getPublisherList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getPublishers();
-        // if(names!=null) {
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     list.add(StringUtils.EMPTY);
@@ -305,7 +292,6 @@ public class TagRepository {
                     list.add(group);
                 }
             }
-      //  }
 
         Collections.sort(list);
         return list;
@@ -350,11 +336,6 @@ public class TagRepository {
         return MusixMateApp.getInstance().getOrmLite().findByGroupingAndArtist(grouping, artist);
     }
 
-    /*
-    public static long getTotalSongCont() {
-        return MusixMateApp.getInstance().getOrmLite().getTotalSongCont();
-    }*/
-
     public static long getMaxId() {
         return MusixMateApp.getInstance().getOrmLite().getMaxId();
     }
@@ -369,5 +350,23 @@ public class TagRepository {
 
     public static MusicTag getMusicTagAlbumUniqueKey(String albumUniqueKey) {
         return MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
+    }
+
+    public static Collection<MusicFolder> getRootDIRs(Context context) {
+        List<MusicFolder> list = new ArrayList<>();
+        List<String> musicDirs  = Settings.getDirectories(context);
+            for(String musicDir: musicDirs) {
+                    MusicFolder dir = new MusicFolder();
+                    dir.setUniqueKey(musicDir);
+                    int indx = musicDir.lastIndexOf("/");
+                    String name = musicDir;
+                    if(indx >0 && !musicDir.endsWith("/")) {
+                        name = musicDir.substring(indx+1);
+                    }
+                    dir.setName(name);
+                    dir.setChildCount(0);
+                    list.add(dir);
+        }
+        return list;
     }
 }

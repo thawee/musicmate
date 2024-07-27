@@ -6,7 +6,6 @@ import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
 import org.jupnp.support.model.container.MusicGenre;
-import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
 
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.dlna.ContentDirectory;
 import apincer.android.mmate.repository.MusicTag;
 
 

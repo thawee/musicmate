@@ -2,6 +2,7 @@ package apincer.android.mmate.dlna;
 
 import static org.jupnp.model.Constants.MIN_ADVERTISEMENT_AGE_SECONDS;
 
+import android.app.Application;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -56,16 +57,29 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.NotificationId;
 import apincer.android.mmate.R;
+import apincer.android.mmate.dlna.content.ContentDirectory;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
+/**
+ * DLNA Media Server consists of
+ *  - Basic UPnp Framework (addressing, device discovery, content directory service, SOAP, eventing, etc.)
+ *  - UPnP Content Directory Service
+ *     - DLNA Digital Content Decoder
+ *     - DLNA Digital Content Profiler
+ *  - UPnP Connection Manager Service
+ *  - HTTP Streamer - for streaming digital content to client
+ *  - UPnp AV Transport Server (Optional)
+ *
+ */
 public class MediaServerService extends Service {
     private static final String TAG = "MediaServerService";
-    private static final Pattern IPV4_PATTERN =
+    public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
     public static int CONTENT_SERVER_PORT = 5001;
@@ -77,6 +91,14 @@ public class MediaServerService extends Service {
     protected static MediaServerService INSTANCE;
     private boolean initialized;
     private HttpAsyncServer httpServer;
+
+    public static void startMediaServer(Application application) {
+        application.startForegroundService(new Intent(application, MediaServerService.class));
+    }
+
+    public static void stopMediaServer(Application application) {
+        application.stopService(new Intent(application, MediaServerService.class));
+    }
 
     /**
      * @return the initialized
@@ -98,15 +120,17 @@ public class MediaServerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        long start = System.currentTimeMillis();
-        showNotification();
-        // the footprint of the onStart() method must be small
-        // otherwise android will kill the service
-        // in order of this circumstance we have to initialize the service
-        // asynchronous
-        Thread initializationThread = new Thread(this::initialize);
-        initializationThread.start();
-        Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
+        if(!isInitialized()) {
+            long start = System.currentTimeMillis();
+            showNotification();
+            // the footprint of the onStart() method must be small
+            // otherwise android will kill the service
+            // in order of this circumstance we have to initialize the service
+            // asynchronous
+            Thread initializationThread = new Thread(this::initialize);
+            initializationThread.start();
+            Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
+        }
         return START_STICKY;
     }
 
@@ -117,7 +141,7 @@ public class MediaServerService extends Service {
         this.initialized = false;
         shutdown(); // clean up before start
 
-        upnpService = new UpnpServiceImpl(new MusicMateServiceConfiguration());
+        upnpService = new UpnpServiceImpl(new MediaServerServiceConfiguration());
         upnpService.startup();
         createMediaServer();
         createHttpServer();
@@ -142,7 +166,7 @@ public class MediaServerService extends Service {
             httpServer = H2ServerBootstrap.bootstrap()
                     .setIOReactorConfig(config)
                     .setCanonicalHostName(bindAddress)
-                    .register("*", new ContentRequestHandler(getApplicationContext()))
+                    .register("*", new HTTPStreamerRequestHandler(getApplicationContext()))
                     .create();
 
             httpServer.listen(new InetSocketAddress(CONTENT_SERVER_PORT), URIScheme.HTTP);
@@ -155,10 +179,10 @@ public class MediaServerService extends Service {
         String mediaServerUuid;
         // when the service starts, the preferences are initialized
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        mediaServerUuid = preferences.getString(getApplicationContext().getString(R.string.settings_local_server_provider_uuid_key), null);
+        mediaServerUuid = preferences.getString(Constants.PREF_MEDIA_SERVER_UUID_KEY, null);
         if (mediaServerUuid == null) {
             mediaServerUuid = UUID.randomUUID().toString();
-            preferences.edit().putString(getApplicationContext().getString(R.string.settings_local_server_provider_uuid_key), mediaServerUuid).apply();
+            preferences.edit().putString(Constants.PREF_MEDIA_SERVER_UUID_KEY, mediaServerUuid).apply();
         }
         Log.d(TAG, "Create MediaServer with ID: " + mediaServerUuid);
         try {
@@ -169,8 +193,8 @@ public class MediaServerService extends Service {
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate Server ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
-                    "http://www.apincer.com"), new ModelDetails("MusicMate Server", "DLNA/UPnP MediaServer",
+                    "MusicMate MediaServer ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
+                    "http://www.apincer.com"), new ModelDetails("MusicMate MediaServer", "DLNA/UPnP MediaServer",
                     versionName), URI.create("http://" + getIpAddress() + ":" + CONTENT_SERVER_PORT));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
@@ -198,7 +222,7 @@ public class MediaServerService extends Service {
                 .setSilent(true)
                 .setContentTitle("MusicMate ("+getPhoneModel()+")")
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
-                .setContentText(getApplicationContext().getString(R.string.settings_local_server_name));
+                .setContentText(getApplicationContext().getString(R.string.media_server_name));
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
 
@@ -373,6 +397,7 @@ public class MediaServerService extends Service {
      *
      * @return the address or null if anything went wrong
      */
+    @Deprecated
     public static String getIpAddress() {
         String hostAddress = null;
         try {

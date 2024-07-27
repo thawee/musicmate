@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import apincer.android.mmate.Preferences;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.TagReader;
@@ -77,7 +77,7 @@ public class ScanAudioFileWorker extends Worker {
 
     public static List<File> pathList(Context context) {
         List<File> files = new ArrayList<>();
-        List<String> dirs = Preferences.getDirectories(context);
+        List<String> dirs = Settings.getDirectories(context);
         for(String dir: dirs) {
             files.add(new File(dir));
         }

@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.dlna.spi;
 
 
 import android.os.Build;

@@ -68,13 +68,14 @@ public final class Constants {
     public static final String TITLE_PCM = "PCM";
     public static final String TITLE_QUALITY = "File Quality";
     public static final String TITLE_DSD = "DSD";
-    public static final String TITLE_NO_COVERART = "No Embed Cover Art";
+    public static final String TITLE_NO_COVERART = "No Embed Coverart";
 
     public static final String FIELD_SEP = ";";
     public static final double MIN_TITLE = 0.80;
     public static final double MIN_ARTIST = 0.70;
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
+
     static {
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");
@@ -124,9 +125,9 @@ public final class Constants {
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
     public static final String AUDIO_SQ_PCM = "PCM";
 
-    public static final String TITLE_DUPLICATE = "Duplicate";
-    public static final String TITLE_BROKEN = "Bad";
-    public static final String TITLE_NOT_DR = "No DR Meter";
+    public static final String TITLE_DUPLICATE = "Duplicate Song";
+    public static final String TITLE_BROKEN = "Bad Upscale File";
+    public static final String TITLE_NOT_DR_METER = "No DR Meter";
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
@@ -143,7 +144,9 @@ public final class Constants {
     public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
     public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
     public static final String PREF_MUSICMATE_DIRECTORIES = "preference_musicmate_directories";
-    public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
+    //public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
+    public static final String PREF_ENABLE_MEDIA_SERVER = "preference_dlna_media_server";
+    public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";

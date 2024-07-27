@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.dlna.spi;
 
 import android.util.Log;
 
@@ -67,8 +67,8 @@ public class StreamingClientImpl extends AbstractStreamClient<StreamingClientCon
     protected Callable<StreamResponseMessage> createCallable(final StreamRequestMessage requestMessage,
                                                              final HttpUriRequest request) {
         return () -> {
-            Log.d(TAG, "Sending HTTP request: " + requestMessage);
-            Log.v(TAG, "Body: " + requestMessage.getBodyString());
+           // Log.d(TAG, "Sending HTTP request: " + requestMessage);
+           // Log.v(TAG, "Body: " + requestMessage.getBodyString());
             applyRequestHeader(requestMessage, request);
             applyRequestBody(requestMessage, request);
             return httpClient.execute(request, this::createResponse);
@@ -102,13 +102,13 @@ public class StreamingClientImpl extends AbstractStreamClient<StreamingClientCon
                     requestMessage.getUdaMajorVersion(),
                     requestMessage.getUdaMinorVersion());
 
-            Log.d(TAG, "Setting header '" + UpnpHeader.Type.USER_AGENT.getHttpName() + "': " + value);
+           // Log.d(TAG, "Setting header '" + UpnpHeader.Type.USER_AGENT.getHttpName() + "': " + value);
             request.addHeader(UpnpHeader.Type.USER_AGENT.getHttpName(), value);
         }
         for (Map.Entry<String, List<String>> entry : requestMessage.getHeaders().entrySet()) {
             for (String v : entry.getValue()) {
                 String headerName = entry.getKey();
-                Log.d(TAG, "Setting header '" + headerName + "': " + v);
+               // Log.d(TAG, "Setting header '" + headerName + "': " + v);
                 request.addHeader(headerName, v);
             }
         }
@@ -162,7 +162,7 @@ public class StreamingClientImpl extends AbstractStreamClient<StreamingClientCon
         } else {
             Log.d(TAG, "Response did not contain entity body");
         }
-        Log.d(TAG, "Response message complete: " + responseMessage);
+      //  Log.d(TAG, "Response message complete: " + responseMessage);
         return responseMessage;
     }
 

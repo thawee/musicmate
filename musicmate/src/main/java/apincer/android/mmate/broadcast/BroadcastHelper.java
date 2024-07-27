@@ -18,7 +18,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.Preferences;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.StringUtils;
@@ -128,7 +128,7 @@ public class BroadcastHelper {
        //     return;
        // }
 
-        if(Preferences.isVibrateOnNextSong(context)) {
+        if(Settings.isVibrateOnNextSong(context)) {
             try {
                 Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
                 long[] pattern = {10, 40, 10, 40,10 };
@@ -192,7 +192,7 @@ public class BroadcastHelper {
             i = new Intent(Intent.ACTION_MEDIA_BUTTON);
             i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT));
             context.sendOrderedBroadcast(i, null);
-        }else if (Preferences.isUseMediaButtons(context)) {
+        }else if (Settings.isUseMediaButtons(context)) {
             Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
             i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));
             context.sendOrderedBroadcast(i, null);

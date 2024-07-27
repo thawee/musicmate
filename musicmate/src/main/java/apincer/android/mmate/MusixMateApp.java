@@ -27,6 +27,7 @@ import java.util.Map;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.broadcast.BroadcastHelper;
 import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
@@ -53,8 +54,6 @@ public class MusixMateApp extends Application {
             Log.e(TAG, "BroadcastHelper", ex);
         }
     });
-    private static final long SCAN_SCHEDULE_TIME = 5;
-   // private static final long LOUDNESS_SCAN_SCHEDULE_TIME = 15;
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
 
@@ -106,7 +105,7 @@ public class MusixMateApp extends Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
-
+        MediaServerService.stopMediaServer(this);
         broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
@@ -133,6 +132,9 @@ public class MusixMateApp extends Application {
 
         //initialize ObjectBox is when your app starts
         //ObjectBox.init(this);
+        if(Settings.isEnableMediaServer(getApplicationContext())) {
+            MediaServerService.startMediaServer(this);
+        }
 
         StateViewsBuilder
                 .init(this)
@@ -235,24 +237,9 @@ public class MusixMateApp extends Application {
             }
         }).start(); */
 
-        // scan music on startup
-        // Workmanager intitialize on MusicFileProvider
-        // clear existing scanning worker
-       // WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanAudioFileWorker");
-       // WorkManager.getInstance(getApplicationContext()).cancelAllWorkByTag("apincer.android.mmate.work.ScanLoudnessWorker");
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
-        if(Preferences.checkDirectoriesSet(getApplicationContext())) {
-          /*  Constraints constraints = new Constraints.Builder()
-                    .setRequiresBatteryNotLow(true)
-                    .setRequiresStorageNotLow(true)
-                    .build();
-            // auto scan on start if directory is defined and permissions is granted
-            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                    .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
-                    .setConstraints(constraints)
-                    .build();
-            WorkManager.getInstance(getApplicationContext()).enqueue(workRequest); */
+        if(Settings.checkDirectoriesSet(getApplicationContext())) {
             ScanAudioFileWorker.startScan(getApplicationContext());
         }
     }

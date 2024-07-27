@@ -7,6 +7,17 @@
 		app:showAsAction="always"/>
 
 	<item
+		android:icon="@drawable/round_troubleshoot_24"
+		android:id="@+id/action_calculate_replay_gain"
+		android:title="Measure DR"
+		app:showAsAction="ifRoom"/>
+
+	<item
+		android:icon="@drawable/ic_round_audio_file_24"
+		android:id="@+id/action_encoding_file"
+		android:title="Encode Files"
+		app:showAsAction="ifRoom"/>
+	<item
 		android:icon="@drawable/round_view_carousel_24"
 		android:id="@+id/action_edit_metadata"
 		android:title="Preview Tags"
@@ -22,18 +33,6 @@
 		android:title="@string/action_delete"
 		android:icon="@drawable/ic_item_delete_while_24dp"
 		app:showAsAction="always"/>
-
-	<item
-		android:icon="@drawable/round_troubleshoot_24"
-		android:id="@+id/action_calculate_replay_gain"
-		android:title="Measure DR"
-		app:showAsAction="ifRoom"/>
-
-	<item
-		android:icon="@drawable/ic_round_audio_file_24"
-		android:id="@+id/action_encoding_file"
-		android:title="Encode Files"
-		app:showAsAction="ifRoom"/>
 
 	<item
 		android:icon="@drawable/round_playlist_play_24"

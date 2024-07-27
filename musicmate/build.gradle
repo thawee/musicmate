@@ -33,8 +33,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 83
-        versionName  "3.8.2"+ versions.buildDate
+        versionCode 84
+        versionName  "3.8.4"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -276,6 +276,7 @@ dependencies {
 
     // Coil
     implementation deps.coil.runtime2
+    implementation deps.coil.transformations
    // implementation "com.github.Commit451.coil-transformations:transformations:1.1.2"
     //implementation "com.github.Commit451.coil-transformations:transformations-gpu:1.1.2"
   //  implementation('de.esoco:coroutines:0.9.1')
@@ -361,7 +362,8 @@ aboutLibraries {
             ~"io.github.scwang90:refresh-footer-classics",
             ~"io.github.scwang90:refresh-drawable-paint",
             ~"com.afollestad.*",
-            ~"com.github.bumptech.*"
+            ~"com.github.bumptech.*",
+            ~"com.arthenica:*"
     ]
 }
 

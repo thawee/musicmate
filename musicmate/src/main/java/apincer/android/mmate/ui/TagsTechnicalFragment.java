@@ -253,6 +253,7 @@ public class TagsTechnicalFragment extends Fragment {
                     for(MusicTag tag:tagsActivity.getEditItems()) {
                         String coverArtPath = tag.getCoverartMime();
                         if(!isEmpty(coverArtPath)) {
+                            coverArtPath = coverArtPath.replace("/", ".");
                             String path = tag.getPath();
                             coverArtPath = path.substring(0, path.lastIndexOf("."))+"."+coverArtPath;
                             FFMPegReader.extractCoverArt(tag, new File(coverArtPath));

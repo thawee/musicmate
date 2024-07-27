@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.dlna.spi;
 
 import android.util.Log;
 
@@ -23,7 +23,6 @@ import org.jupnp.model.message.UpnpMessage;
 import org.jupnp.model.message.UpnpRequest;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.transport.spi.UpnpStream;
-import org.jupnp.util.Exceptions;
 
 import java.io.IOException;
 import java.net.URI;
@@ -55,11 +54,12 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
 
         try {
             StreamRequestMessage requestMessage = readRequestMessage(message);
-            Log.v(TAG, "Processing new request message: " + requestMessage);
+           // Log.v(TAG, "Processing new request message: " + requestMessage);
+
             String userAgent = getUserAgent(requestMessage);
             if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
               // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
-                Log.v(TAG, "Temp FIX for MConnect, show only 20 songs");
+                Log.v(TAG, "Interim FIX for MConnect, return all songs for MConnect(fix show only 20 songs)");
                 ContentBrowser.forceFullContent = true;
             }
 
@@ -101,7 +101,7 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         String requestMethod = request.getMethod();
         String requestURI = request.getRequestUri();
 
-        Log.v(TAG, "Processing HTTP request: " + requestMethod + " " + requestURI);
+       // Log.v(TAG, "Processing HTTP request: " + requestMethod + " " + requestURI);
 
         StreamRequestMessage requestMessage;
         try {
@@ -146,12 +146,12 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         } else {
             Log.v(TAG, "Request did not contain entity body");
         }
-        Log.v(TAG, "Request entity body: "+requestMessage.getBodyString());
+      //  Log.v(TAG, "Request entity body: "+requestMessage.getBodyString());
         return requestMessage;
     }
 
     protected void writeResponseMessage(StreamResponseMessage responseMessage, AsyncResponseBuilder responseBuilder) {
-        Log.v(TAG, "Sending HTTP response status: " + responseMessage.getOperation().getStatusCode());
+     //   Log.v(TAG, "Sending HTTP response status: " + responseMessage.getOperation().getStatusCode());
 
         responseBuilder.setStatus(responseMessage.getOperation().getStatusCode());
 

@@ -12,8 +12,8 @@ import java.util.Set;
 
 import apincer.android.mmate.repository.FileRepository;
 
-public class Preferences {
-    private static final String TAG = Preferences.class.getSimpleName();
+public class Settings {
+    private static final String TAG = Settings.class.getSimpleName();
 
     public static boolean isShowStorageSpace(Context context) {
         SharedPreferences prefs =
@@ -49,6 +49,11 @@ public class Preferences {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_NEXT_SONG_BY_MEDIA_BUTTONS,true);
+    }
+
+    public static boolean isEnableMediaServer(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER,false);
     }
 
     public static List<String> getDirectories(Context context) {

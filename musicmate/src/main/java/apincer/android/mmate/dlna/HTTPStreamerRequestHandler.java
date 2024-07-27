@@ -44,11 +44,14 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class ContentRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
-    private static final String TAG = "ContentRequestHandler";
+/**
+ * HTTP Streamer - for streaming digital content to client
+ */
+public class HTTPStreamerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+    private static final String TAG = "HTTPStreamerRequestHandler";
     private final Context applicationContext;
     private byte[] defaultIconRAW;
-    public ContentRequestHandler(Context applicationContext) {
+    public HTTPStreamerRequestHandler(Context applicationContext) {
         this.applicationContext = applicationContext;
     }
 
@@ -59,9 +62,9 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
 
     @Override
     public void handle(Message<HttpRequest, byte[]> request, ResponseTrigger responseTrigger, HttpContext context) throws HttpException, IOException {
-        Log.d(TAG, "Processing HTTP request: "
-                + request.getHead().getRequestUri()+" - from: "
-                + request.getHead().getLastHeader("User-Agent"));
+        //Log.d(TAG, "Processing HTTP request: "
+        //        + request.getHead().getRequestUri()+" - from: "
+        //        + request.getHead().getLastHeader("User-Agent"));
         final AsyncResponseBuilder responseBuilder = AsyncResponseBuilder.create(HttpStatus.SC_OK);
         // Extract what we need from the HTTP httpRequest
         String requestMethod = request.getHead().getMethod()
@@ -83,7 +86,7 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
             responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
             responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
             responseTrigger.submitResponse(responseBuilder.build(), context);
-            Log.d(getClass().getName(), "end doService: Access denied");
+           // Log.d(getClass().getName(), "end doService: Access denied");
             return;
         }
         String type = pathSegments.get(0);
@@ -135,7 +138,7 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
                 responseBuilder.setEntity(contentHolder.getEntityProducer());
             }
             responseTrigger.submitResponse(responseBuilder.build(), context);
-            Log.d(TAG, "end doService: ");
+           // Log.d(TAG, "end doService: ");
         }
 
         private Context getContext() {
@@ -191,14 +194,14 @@ public class ContentRequestHandler implements AsyncServerRequestHandler<Message<
                 Log.e(TAG, "lookupAlbumArt: - not found " + albumId, e);
             }
 
-            Log.d(TAG, "Send default albumArt for " + albumId);
+           // Log.d(TAG, "Send default albumArt for " + albumId);
             return new ContentHolder(MimeType.valueOf("image/png"),
                         getDefaultIcon());
         }
 
         private byte[] getDefaultIcon() {
             if(defaultIconRAW == null) {
-                InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "mstile_310_310.png");
+                InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "no_cover2.png");
                 try {
                     defaultIconRAW = IOUtils.toByteArray(in);
                 } catch (IOException e) {

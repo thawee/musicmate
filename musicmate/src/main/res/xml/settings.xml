@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <!--<PreferenceCategory
-        android:summary="Music Mate Streaming.">
+    <PreferenceCategory
+        android:summary="Streaming">
     <SwitchPreferenceCompat
-        android:key="preference_http_streaming_server"
-        android:summary="Start HTTP streaming server.\n(http://&lt;ip&gt;/)"
-        android:title="HTTP Streaming Server"
+        android:key="preference_dlna_media_server"
+        android:summary="Enable DLNA MediaServer, expose music library to others streaming devices."
+        android:title="DLNA MediaServer"
         android:defaultValue="false"/>
-    </PreferenceCategory> -->
+    </PreferenceCategory>
     <PreferenceCategory
         android:summary="User Interface">
         <SwitchPreferenceCompat

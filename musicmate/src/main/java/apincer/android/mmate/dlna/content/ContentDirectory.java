@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.dlna.content;
 
 import static java.util.Arrays.stream;
 
@@ -34,24 +34,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import apincer.android.mmate.dlna.content.AlbumFolderBrowser;
-import apincer.android.mmate.dlna.content.AlbumsBrowser;
-import apincer.android.mmate.dlna.content.ContentBrowser;
-import apincer.android.mmate.dlna.content.ContentDirectoryIDs;
-import apincer.android.mmate.dlna.content.AllTitlesBrowser;
-import apincer.android.mmate.dlna.content.DownloadsBrowser;
-import apincer.android.mmate.dlna.content.GroupingFolderBrowser;
-import apincer.android.mmate.dlna.content.GroupingsBrowser;
-import apincer.android.mmate.dlna.content.MusicItemBrowser;
-import apincer.android.mmate.dlna.content.LibraryBrowser;
-import apincer.android.mmate.dlna.content.GenreFolderBrowser;
-import apincer.android.mmate.dlna.content.GenresBrowser;
-
 /**
- * a content directory which uses the content of the MediaStore in order to
- * provide it via upnp.
+ * UPnP Content Directory Service
+ * a content directory which uses the content of the MusicMate via upnp.
  *
- * @author Tobias Schoene (tobexyz)
  */
 @UpnpService(serviceId = @UpnpServiceId("ContentDirectory"), serviceType = @UpnpServiceType(value = "ContentDirectory"))
 @UpnpStateVariables({
@@ -90,71 +76,6 @@ public class ContentDirectory {
     public Context getContext() {
         return context;
     }
-
-    /**
-     *
-
-    private void createContentDirectory() {
-        StorageFolder rootContainer = new StorageFolder("0", "-1", "root",
-                "mmate", 2, 907000L);
-        rootContainer.setClazz(new DIDLObject.Class("object.container"));
-        rootContainer.setRestricted(true);
-        addContent(rootContainer.getId(), rootContainer);
-        List<MusicTrack> musicTracks = createMusicTracks("1");
-        MusicAlbum musicAlbum = new MusicAlbum("1", rootContainer, "Music",
-                null, musicTracks.size(), musicTracks);
-        musicAlbum.setClazz(new DIDLObject.Class("object.container"));
-        musicAlbum.setRestricted(true);
-        rootContainer.addContainer(musicAlbum);
-        addContent(musicAlbum.getId(), musicAlbum);
-    } */
-
-    /*
-    private List<MusicTrack> createMusicTracks(String parentId) {
-        String album = "Music";
-        String creator = "freetestdata.com";
-        PersonWithRole artist = new PersonWithRole(creator, "");
-        MimeType mimeType = new MimeType("audio", "mpeg");
-        List<MusicTrack> result = new ArrayList<>();
-        Res res = new Res(
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, mimeType.toString(), ProtocolInfo.WILDCARD),
-                123456L,
-                "00:01:27",
-                26752L,
-                "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_2MB_MP3.mp3");
-        res.setSampleFrequency(44100L);
-        res.setNrAudioChannels(2L);
-        MusicTrack musicTrack = new MusicTrack(
-                "101",
-                parentId,
-                "Free_Test_Data_2MB_MP3",
-                creator,
-                album,
-                artist,
-                res);
-        musicTrack.setRestricted(true);
-        addContent(musicTrack.getId(), musicTrack);
-        result.add(musicTrack);
-        mimeType = new MimeType("audio", "ogg");
-        musicTrack = new MusicTrack(
-                "102",
-                parentId,
-                "Free_Test_Data_2MB_OGG",
-                creator,
-                album,
-                artist,
-                new Res(
-                        new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, mimeType.toString(), ProtocolInfo.WILDCARD),
-                        123456L,
-                        "00:01:49",
-                        8192L,
-                        "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_2MB_OGG.ogg"));
-        musicTrack.setRestricted(true);
-        addContent(musicTrack.getId(), musicTrack);
-        result.add(musicTrack);
-
-        return result;
-    } */
 
     // *******************************************************************
 
@@ -248,39 +169,6 @@ public class ContentDirectory {
         int childCount;
         DIDLObject didlObject;
         DIDLContent didl = new DIDLContent();
-       /* if (isUsingTestContent()) {
-            didlObject = content.get(objectID);
-            if (didlObject == null) {
-                // object not found return root
-                didlObject = content.get("0");
-            }
-            if (browseFlag == BrowseFlag.METADATA) {
-                didl.addObject(didlObject);
-                childCount = 1;
-            } else {
-                if (didlObject instanceof Container) {
-                    Container container = (Container) didlObject;
-                    childCount = container.getChildCount();
-                    List<DIDLObject> allChilds = new ArrayList<>();
-                    allChilds.addAll(container.getItems());
-                    allChilds.addAll(container.getContainers());
-                    for (int i = 0; i < allChilds.size(); i++) {
-                        if (i >= firstResult) {
-                            if (allChilds.get(i) instanceof Item) {
-                                didl.addItem((Item) allChilds.get(i));
-                            } else {
-                                didl.addContainer((Container) allChilds.get(i));
-                            }
-                        }
-                    }
-
-                } else {
-                    didl.addObject(didlObject);
-                    childCount = 1;
-                }
-            }
-
-        } else { */
             childCount = 0;
             if (findBrowserFor(objectID) != null) {
                 if (browseFlag == BrowseFlag.METADATA) {
@@ -297,7 +185,6 @@ public class ContentDirectory {
 
                 }
             }
-     //   }
         BrowseResult result;
         try {
             // Generate output with nested items
@@ -319,6 +206,10 @@ public class ContentDirectory {
         //    result = new RootFolderBrowser(getContext());
        // } else if (ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
             result = new LibraryBrowser(getContext());
+        } else if (ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId().equals(objectID)) {
+            result = new DIRsBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId())) {
+            result = new DIRFolderBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId().equals(objectID)) {
             result = new GenresBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId().equals(objectID)) {
@@ -354,6 +245,8 @@ public class ContentDirectory {
             result = new GroupingFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId())) {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
+       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId())) {
+       //     result = new DIRIFolderBrowser(getContext(), ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId(), ContentDirectoryIDs.MUSIC_DIR_ITEM_PREFIX.getId());
         }
 
             return result;

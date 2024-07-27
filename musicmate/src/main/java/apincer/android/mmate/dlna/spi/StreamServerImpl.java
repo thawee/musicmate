@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.dlna.spi;
 
 import android.util.Log;
 
@@ -14,6 +14,8 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+
+import apincer.android.mmate.dlna.MediaServerService;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
     private static final String TAG = "StreamServerImpl";

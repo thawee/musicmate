@@ -31,6 +31,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.commit451.coiltransformations.BlurTransformation;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -49,7 +50,7 @@ import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.Preferences;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
@@ -81,6 +82,7 @@ public class TagsActivity extends AppCompatActivity {
     private static volatile ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
+    private ImageView reflectionView;
     private TabLayout tabLayout;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
@@ -179,7 +181,7 @@ public class TagsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(Preferences.isOnNightModeOnly(getApplicationContext())) {
+        if(Settings.isOnNightModeOnly(getApplicationContext())) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
@@ -196,6 +198,7 @@ public class TagsActivity extends AppCompatActivity {
         repos = FileRepository.newInstance(getApplicationContext());
 
         coverArtView = findViewById(R.id.panel_cover_art);
+        reflectionView = findViewById(R.id.panel_cover_reflection);
         toolBarLayout = findViewById(R.id.toolbar_layout);
         int statusBarHeight = getStatusBarHeight();
         int height = UIUtils.getScreenHeight(this); // getWindow().getWindowManager().getDefaultDisplay().getHeight();
@@ -444,6 +447,7 @@ public class TagsActivity extends AppCompatActivity {
             newPanelView.setVisibility(View.GONE);
         }
 
+        /*
         request = new ImageRequest.Builder(getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(getApplicationContext(), displayTag))
                 .data(CoverArtProvider.getUriForMusicTag(displayTag))
@@ -451,8 +455,25 @@ public class TagsActivity extends AppCompatActivity {
                 .transformations(new ReflectionTransformation())
                 .placeholder(R.drawable.progress)
                 //.placeholder(R.drawable.no_image0)
-                .error(ReflectionTransformation.applyReflection(getApplicationContext(), R.drawable.no_image0, 640, 640))
+                .error(ReflectionTransformation.applyReflection(getApplicationContext(), R.drawable.no_cover2, 640, 640))
                 .target(coverArtView)
+                .build();
+        imageLoader.enqueue(request); */
+        request = new ImageRequest.Builder(getApplicationContext())
+                .data(CoverArtProvider.getUriForMusicTag(displayTag))
+                .size(1024,1024)
+                .placeholder(R.drawable.progress)
+                .error(R.drawable.no_cover2)
+                .target(coverArtView)
+                .build();
+        imageLoader.enqueue(request);
+        request = new ImageRequest.Builder(getApplicationContext())
+                .data(CoverArtProvider.getUriForMusicTag(displayTag))
+                .size(1024,1024)
+                .transformations(new BlurTransformation(getApplicationContext()))
+              //  .placeholder(R.drawable.progress)
+                .error(R.drawable.no_cover2)
+                .target(reflectionView)
                 .build();
         imageLoader.enqueue(request);
 
