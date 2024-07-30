@@ -53,7 +53,7 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy MusicMate Notification");
+       // Log.d(TAG, "onDestroy MusicMate Notification");
     }
 
     @Override
@@ -61,7 +61,7 @@ public class NotificationListener extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
-        Log.d(TAG, "onCreate MusicMate Notification");
+       // Log.d(TAG, "onCreate MusicMate Notification");
     }
 
     @Override

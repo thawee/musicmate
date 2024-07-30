@@ -13,20 +13,21 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 
-import apincer.android.mmate.dlna.spi.StreamServerConfigurationImpl;
-import apincer.android.mmate.dlna.spi.StreamServerImpl;
-import apincer.android.mmate.dlna.spi.StreamingClientConfigurationImpl;
-import apincer.android.mmate.dlna.spi.StreamingClientImpl;
+import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
+import apincer.android.mmate.dlna.transport.StreamingClientConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamingClientImpl;
 
-class MediaServerServiceConfiguration extends AndroidUpnpServiceConfiguration {
+class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
-    MediaServerServiceConfiguration() {
-        super();
+    MediaServerConfiguration(int streamListenPort, int multicastResponsePort) {
+        super(streamListenPort, multicastResponsePort);
     }
 
     @Override
     protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
        // return super.createNetworkAddressFactory(MediaServerService.STREAM_SERVER_PORT, multicastResponsePort);
+      //  return new MusicMateNetworkAddressFactory(MediaServerService.STREAM_SERVER_PORT, multicastResponsePort);
         return new MusicMateNetworkAddressFactory(streamListenPort, multicastResponsePort);
     }
 
@@ -38,7 +39,8 @@ class MediaServerServiceConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-        return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
+        //return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
+        return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getMulticastResponsePort())
         );
     }
 

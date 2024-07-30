@@ -24,6 +24,7 @@ import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
 import org.jupnp.UpnpService;
+import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.UpnpServiceImpl;
 import org.jupnp.binding.annotations.AnnotationLocalServiceBinder;
 import org.jupnp.model.DefaultServiceManager;
@@ -82,10 +83,11 @@ public class MediaServerService extends Service {
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-    public static int CONTENT_SERVER_PORT = 5001;
+    public static int HTTP_STREAMER_PORT = 5001;
     public static int STREAM_SERVER_PORT = 2869;
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
+    protected UpnpServiceConfiguration upnpServiceCfg;
     protected IBinder binder = new MediaServerServiceBinder();
     private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
@@ -141,17 +143,18 @@ public class MediaServerService extends Service {
         this.initialized = false;
         shutdown(); // clean up before start
 
-        upnpService = new UpnpServiceImpl(new MediaServerServiceConfiguration());
+        upnpServiceCfg = new MediaServerConfiguration(HTTP_STREAMER_PORT, STREAM_SERVER_PORT);
+        upnpService = new UpnpServiceImpl(upnpServiceCfg);
         upnpService.startup();
-        createMediaServer();
-        createHttpServer();
+        createMediaServerDevice();
+        createHttpStreamerServer();
         MediaServerService.this.initialized = true;
     }
 
     /**
      * creates a http request thread
      */
-    private void createHttpServer() {
+    private void createHttpStreamerServer() {
         // Create a HttpService for providing content in the network.
         // Set up the HTTP service
         if (httpServer == null) {
@@ -161,7 +164,7 @@ public class MediaServerService extends Service {
                     .setTcpNoDelay(true)
                     .setSoTimeout(60, TimeUnit.SECONDS)
                     .build();
-            Log.d(TAG, "Adding content connector: " + bindAddress + ":" + CONTENT_SERVER_PORT);
+            Log.d(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
 
             httpServer = H2ServerBootstrap.bootstrap()
                     .setIOReactorConfig(config)
@@ -169,12 +172,12 @@ public class MediaServerService extends Service {
                     .register("*", new HTTPStreamerRequestHandler(getApplicationContext()))
                     .create();
 
-            httpServer.listen(new InetSocketAddress(CONTENT_SERVER_PORT), URIScheme.HTTP);
+            httpServer.listen(new InetSocketAddress(HTTP_STREAMER_PORT), URIScheme.HTTP);
             httpServer.start();
         }
     }
 
-    private void createMediaServer() {
+    private void createMediaServerDevice() {
         String versionName;
         String mediaServerUuid;
         // when the service starts, the preferences are initialized
@@ -195,7 +198,7 @@ public class MediaServerService extends Service {
             DeviceDetails msDetails = new DeviceDetails(
                     "MusicMate MediaServer ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
                     "http://www.apincer.com"), new ModelDetails("MusicMate MediaServer", "DLNA/UPnP MediaServer",
-                    versionName), URI.create("http://" + getIpAddress() + ":" + CONTENT_SERVER_PORT));
+                    versionName), URI.create("http://" + getIpAddress() + ":" + HTTP_STREAMER_PORT));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
@@ -341,7 +344,7 @@ public class MediaServerService extends Service {
 
             @Override
             protected ContentDirectory createServiceInstance() {
-                return new ContentDirectory(getApplicationContext(), getIpAddress());
+                return new ContentDirectory(getApplicationContext(), getIpAddress(), HTTP_STREAMER_PORT);
             }
         });
         return contentDirectoryService;

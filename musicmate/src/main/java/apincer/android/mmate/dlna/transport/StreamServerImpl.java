@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.spi;
+package apincer.android.mmate.dlna.transport;
 
 import android.util.Log;
 
@@ -14,8 +14,6 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
-
-import apincer.android.mmate.dlna.MediaServerService;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
     private static final String TAG = "StreamServerImpl";
@@ -34,19 +32,19 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
-
+        /*
         if(!MediaServerService.getIpAddress().equals(bindAddress.getHostAddress())) {
             // start ssdp on wifi network only
             Log.d(TAG, "Skip stream server connector: " + bindAddress + ":" + getConfiguration().getListenPort());
             return;
-        }
+        } */
 
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
                     try {
-                        Log.d(TAG, "Adding stream server connector: " + bindAddress + ":" + getConfiguration().getListenPort());
+                        Log.d(TAG, "Adding multicast server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
 
                         IOReactorConfig config = IOReactorConfig.custom()
                                 .setSoTimeout(getConfiguration().getAsyncTimeoutSeconds(), TimeUnit.SECONDS)

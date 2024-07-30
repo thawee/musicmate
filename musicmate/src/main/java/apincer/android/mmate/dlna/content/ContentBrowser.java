@@ -14,7 +14,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 
@@ -53,8 +52,7 @@ public abstract class ContentBrowser {
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
-        return "http://" + contentDirectory.getIpAddress() + ":"
-                + MediaServerService.CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
+        return "http://" + contentDirectory.getIpAddress() + ":" +contentDirectory.getListenPort() + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
@@ -65,7 +63,7 @@ public abstract class ContentBrowser {
         String uri = key+".png";
         return URI.create("http://"
                 + contentDirectory.getIpAddress() + ":"
-                + MediaServerService.CONTENT_SERVER_PORT + "/album/" + uri);
+                + contentDirectory.getListenPort() + "/album/" + uri);
     }
 
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {

@@ -66,11 +66,18 @@ public class ContentDirectory {
             0);
     private final String ipAddress;
 
-    public ContentDirectory(Context context, String ipAddress) {
+    public int getListenPort() {
+        return listenPort;
+    }
+
+    private final int listenPort;
+
+    public ContentDirectory(Context context, String ipAddress, int listenPort) {
         this.context = context;
         this.searchCapabilities = new CSVString();
         this.sortCapabilities = new CSVString();
         this.ipAddress = ipAddress;
+        this.listenPort = listenPort;
     }
 
     public Context getContext() {
