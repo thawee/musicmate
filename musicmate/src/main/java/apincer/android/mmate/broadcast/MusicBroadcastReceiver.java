@@ -63,12 +63,15 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         Bundle extras = intent.getExtras();
 
         //KEEP for DEBUG
-            String string = "";
+        /*    String string = "";
             if(extras != null) {
                 for (String key : extras.keySet()) {
                     string += " " + key + " => " + extras.get(key) + ";";
                 }
-            }
+            } */
+
+            // skip broadcast and notification lister if play by dlna client
+            if(broadcastHelper.getPlayerInfo()!= null && broadcastHelper.getPlayerInfo().isValidStreamPlayer()) return;
 
             boolean paused = intent.getBooleanExtra("paused", false);
             if(!paused) {

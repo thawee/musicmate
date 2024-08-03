@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
 
 import apincer.android.mmate.utils.StringUtils;
 
@@ -110,5 +109,4 @@ public class NotificationListener extends NotificationListenerService {
             sendBroadcast(intent);
         }
     }
-
 }

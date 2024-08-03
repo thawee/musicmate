@@ -6,8 +6,9 @@ import android.graphics.drawable.Drawable;
 public class MusicPlayerInfo {
     public enum TYPE{LOCAL,DLNA}
     private final TYPE playerType;
-    String playerPackage;
-    String playerName;
+     String playerPackage;
+     String playerName;
+    private long time;
 
     public static MusicPlayerInfo buildStreamPlayer(String playerName,Drawable playerIconDrawable) {
         return new MusicPlayerInfo(TYPE.DLNA, "", playerName, playerIconDrawable);
@@ -22,6 +23,7 @@ public class MusicPlayerInfo {
         this.playerPackage = playerPackage;
         this.playerIconDrawable = playerIconDrawable;
         this.playerType = typ;
+        this.time = System.currentTimeMillis();
     }
 
     public String getPlayerPackage() {
@@ -38,6 +40,14 @@ public class MusicPlayerInfo {
 
     public Drawable getPlayerIconDrawable() {
         return playerIconDrawable;
+    }
+
+    public boolean isValidStreamPlayer() {
+        if(playerType==TYPE.DLNA && time < System.currentTimeMillis()- 300000)  {
+            // play ny dlna in last 5 mins
+            return true;
+        }
+        return false;
     }
 
     Bitmap playerIconBitmap;

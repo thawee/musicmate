@@ -85,6 +85,7 @@ public class FileRepository {
     }
 
     public static void extractCoverArt(MusicTag tag, File targetFile) {
+        if(tag == null) return;
         try {
             // Log.d(TAG, "extractCoverArt: "+path);
             String path = tag.getPath();

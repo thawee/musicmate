@@ -105,18 +105,18 @@ public abstract class ContentBrowser {
         //new MimeType("audio", tag.getAudioEncoding());
         if(MusicTagUtils.isAIFFile(tag)) {
             return new MimeType("audio", "x-aiff");
-        }else  if(MusicTagUtils.isMp4File(tag)) {
-            return new MimeType("audio", "x-m4a");
         }else  if(MusicTagUtils.isMPegFile(tag)) {
             return new MimeType("audio", "mpeg");
         }else  if(MusicTagUtils.isFLACFile(tag)) {
-            return new MimeType("audio", "x-flac");
+            return new MimeType("audio", "flac");
         }else  if(MusicTagUtils.isALACFile(tag)) {
-            return new MimeType("audio", "x-m4a");
+            return new MimeType("audio", "mp4");
+      //  }else  if(MusicTagUtils.isMp4File(tag)) {
+      //      return new MimeType("audio", "aac");
         }else  if(MusicTagUtils.isWavFile(tag)) {
-            return new MimeType("audio", "x-wav");
+            return new MimeType("audio", "wave");
         }else {
-            return new MimeType("audio", "*");
+            return new MimeType("audio", tag.getAudioEncoding());
         }
     }
 }

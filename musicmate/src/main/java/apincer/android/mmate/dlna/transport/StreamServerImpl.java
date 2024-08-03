@@ -32,19 +32,13 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
-        /*
-        if(!MediaServerService.getIpAddress().equals(bindAddress.getHostAddress())) {
-            // start ssdp on wifi network only
-            Log.d(TAG, "Skip stream server connector: " + bindAddress + ":" + getConfiguration().getListenPort());
-            return;
-        } */
 
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
                     try {
-                        Log.d(TAG, "Adding multicast server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
+                        Log.i(TAG, "Adding stream server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
 
                         IOReactorConfig config = IOReactorConfig.custom()
                                 .setSoTimeout(getConfiguration().getAsyncTimeoutSeconds(), TimeUnit.SECONDS)

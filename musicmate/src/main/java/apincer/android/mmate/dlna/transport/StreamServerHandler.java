@@ -59,7 +59,7 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
             String userAgent = getUserAgent(requestMessage);
             if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
               // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
-                Log.v(TAG, "Interim FIX for MConnect, return all songs for MConnect(fix show only 20 songs)");
+                Log.v(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
                 ContentBrowser.forceFullContent = true;
             }
 
@@ -79,7 +79,7 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
            // StreamRequestMessage requestMessage = readRequestMessage(message);
             Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
            // Log.d(TAG, "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
-            Log.v(TAG, "returning INTERNAL SERVER ERROR to client");
+           // Log.v(TAG, "returning INTERNAL SERVER ERROR to client");
             responseBuilder.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
             responseTrigger.submitResponse(responseBuilder.build(), context);
 
@@ -169,8 +169,8 @@ public class StreamServerHandler extends UpnpStream implements AsyncServerReques
         int contentLength = responseBodyBytes != null ? responseBodyBytes.length : -1;
 
         if (contentLength > 0) {
-           // Log.v(TAG, "Response message has body, writing bytes to stream...");
-            Log.d(TAG, "Response message has body, "+new String(responseBodyBytes));
+            Log.v(TAG, "Response message has body, writing bytes to stream...");
+           // Log.d(TAG, "Response message has body, "+new String(responseBodyBytes));
             ContentType ct = ContentType.APPLICATION_XML;
             if (responseMessage.getContentTypeHeader() != null) {
                 ct = ContentType.parse(responseMessage.getContentTypeHeader().getValue().toString());

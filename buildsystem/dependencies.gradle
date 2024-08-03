@@ -377,7 +377,7 @@ def addRepos(org.gradle.api.artifacts.dsl.RepositoryHandler handler) {
 
 	handler.maven {url "https://maven.google.com" }
     //handler.maven {url "http://repository.jetbrains.com/gradle-libs"}
-    handler.maven {url "https://repo1.maven.org/maven2"}
+    handler.maven {url "https://repo1.maven.org/maven2/"}
     handler.maven {url "https://oss.sonatype.org/content/repositories/snapshots/" } //For Snapshots
     //handler.maven {url "http://dl.bintray.com/gigamole/maven/"}
     handler.maven {url "https://mvnrepository.com"}

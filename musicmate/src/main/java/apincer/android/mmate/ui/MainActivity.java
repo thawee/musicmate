@@ -910,6 +910,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(myIntent);
             return true; */
         } else if(item.getItemId() == R.id.menu_notification_access) {
+
             Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             startActivity(intent);
             return true;

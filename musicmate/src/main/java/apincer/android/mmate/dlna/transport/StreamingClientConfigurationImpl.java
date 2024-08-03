@@ -10,18 +10,9 @@ import java.util.concurrent.ExecutorService;
 
 public class StreamingClientConfigurationImpl extends AbstractStreamClientConfiguration {
 
-    public StreamingClientConfigurationImpl(ExecutorService timeoutExecutorService) {
-        super(timeoutExecutorService);
-    }
-
-    public StreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds) {
-        super(requestExecutorService, timeoutSeconds);
-    }
-
     public StreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds, int logWarningSeconds) {
         super(requestExecutorService, timeoutSeconds, logWarningSeconds);
     }
-
 
     @Override
     public String getUserAgentValue(int majorVersion, int minorVersion) {

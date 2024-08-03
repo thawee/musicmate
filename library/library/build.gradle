@@ -34,6 +34,7 @@ dependencies {
     implementation deps.androidx.activity
     implementation deps.androidx.recyclerView
     implementation deps.androidx.annotation
+    implementation deps.slf4j
     //implementation deps.ui.custom_alert_view_dialogue
     //implementation deps.ui.blurview
    // implementation 'com.azoft.carousellayoutmanager:carousel:1.2.4'

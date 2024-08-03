@@ -1,7 +1,5 @@
 package apincer.android.mmate.dlna;
 
-import static org.jupnp.model.Constants.MIN_ADVERTISEMENT_AGE_SECONDS;
-
 import android.app.Application;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -38,11 +36,14 @@ import org.jupnp.model.meta.ManufacturerDetails;
 import org.jupnp.model.meta.ModelDetails;
 import org.jupnp.model.types.UDADeviceType;
 import org.jupnp.model.types.UDN;
+import org.jupnp.protocol.ProtocolFactory;
+import org.jupnp.registry.Registry;
 import org.jupnp.support.connectionmanager.ConnectionManagerService;
 import org.jupnp.support.model.Protocol;
 import org.jupnp.support.model.ProtocolInfo;
 import org.jupnp.support.model.ProtocolInfos;
 import org.jupnp.support.xmicrosoft.AbstractMediaReceiverRegistrarService;
+import org.jupnp.transport.Router;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,6 +64,7 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.NotificationId;
 import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.content.ContentDirectory;
+import apincer.android.mmate.dlna.transport.AndroidRouter;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -80,11 +82,11 @@ import apincer.android.mmate.utils.StringUtils;
  */
 public class MediaServerService extends Service {
     private static final String TAG = "MediaServerService";
+    private static final int MIN_ADVERTISEMENT_AGE_SECONDS = 300;
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-    public static int HTTP_STREAMER_PORT = 5001;
-    public static int STREAM_SERVER_PORT = 2869;
+    public static int HTTP_STREAMER_PORT = 49159; //5001;
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected UpnpServiceConfiguration upnpServiceCfg;
@@ -114,10 +116,10 @@ public class MediaServerService extends Service {
      */
     @Override
     public void onCreate() {
-        long start = System.currentTimeMillis();
+        //long start = System.currentTimeMillis();
         super.onCreate();
         INSTANCE = this;
-        Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
+       // Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
     }
 
     @Override
@@ -131,7 +133,7 @@ public class MediaServerService extends Service {
             // asynchronous
             Thread initializationThread = new Thread(this::initialize);
             initializationThread.start();
-            Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start));
+            Log.d(TAG, "on start took: " + (System.currentTimeMillis() - start) + "ms");
         }
         return START_STICKY;
     }
@@ -143,8 +145,21 @@ public class MediaServerService extends Service {
         this.initialized = false;
         shutdown(); // clean up before start
 
-        upnpServiceCfg = new MediaServerConfiguration(HTTP_STREAMER_PORT, STREAM_SERVER_PORT);
-        upnpService = new UpnpServiceImpl(upnpServiceCfg);
+        upnpServiceCfg = new MediaServerConfiguration();
+        upnpService = new UpnpServiceImpl(upnpServiceCfg) {
+            @Override
+            protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
+                return new AndroidRouter(getConfiguration(), protocolFactory, MediaServerService.this);
+            }
+
+            @Override
+            public synchronized void shutdown() {
+                // Now we can concurrently run the Cling shutdown code, without occupying the
+                // Android main UI thread. This will complete probably after the main UI thread
+                // is done.
+                super.shutdown(true);
+            }
+        };
         upnpService.startup();
         createMediaServerDevice();
         createHttpStreamerServer();
@@ -164,7 +179,7 @@ public class MediaServerService extends Service {
                     .setTcpNoDelay(true)
                     .setSoTimeout(60, TimeUnit.SECONDS)
                     .build();
-            Log.d(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
+            Log.i(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
 
             httpServer = H2ServerBootstrap.bootstrap()
                     .setIOReactorConfig(config)
@@ -206,7 +221,7 @@ public class MediaServerService extends Service {
             upnpService.getRegistry().addDevice(localServer);
         } catch (ValidationException e) {
             Log.e(TAG, "Exception during device creation", e);
-            Log.e(TAG, "Exception during device creation Errors:" + e.getErrors());
+           // Log.e(TAG, "Exception during device creation Errors:" + e.getErrors());
             throw new IllegalStateException("Exception during device creation", e);
         }
     }
@@ -301,6 +316,7 @@ public class MediaServerService extends Service {
     private ProtocolInfos getSourceProtocolInfos() {
         return new ProtocolInfos(
                 new ProtocolInfo("http-get:*:audio:*"),
+                new ProtocolInfo("http-get:*:audio/aac:*"), // added by thawee
                 new ProtocolInfo("http-get:*:audio/mpeg:*"),
                 new ProtocolInfo("http-get:*:audio/x-mpegurl:*"),
                 new ProtocolInfo("http-get:*:audio/x-wav:*"),
@@ -308,11 +324,16 @@ public class MediaServerService extends Service {
                 new ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"),
                 new ProtocolInfo("http-get:*:audio/x-flac:*"),
                 new ProtocolInfo("http-get:*:audio/x-aiff:*"),
+                new ProtocolInfo("http-get:*:audio/x-ogg:*"),
                 new ProtocolInfo("http-get:*:audio/wav:*"),
+                new ProtocolInfo("http-get:*:audio/wave:*"),
+                new ProtocolInfo("http-get:*:audio/x-ape:*"),
                 new ProtocolInfo("http-get:*:audio/x-m4a:*"),
+                new ProtocolInfo("http-get:*:audio/x-mp4:*"), // added by thawee
+                new ProtocolInfo("http-get:*:audio/x-m4b:*"),
                 new ProtocolInfo("http-get:*:audio/basic:*"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=11025;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=22050;channels=2:DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/L16;rate=11025;channels=2:DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/L16;rate=22050;channels=2:DLNA.ORG_PN=LPCM"),
                 new ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"),
                 new ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"),
                 new ProtocolInfo("http-get:*:audio/L16;rate=88200;channels=2:DLNA.ORG_PN=LPCM"),
@@ -326,11 +347,7 @@ public class MediaServerService extends Service {
                 new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_LRG"),
                 new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED"),
                 new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM"),
-                new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"),
-                new ProtocolInfo("http-get:*:image/x-ycbcr-yuv420:*"),
-                new ProtocolInfo("http-get:*:video/mp4:*"),
-                new ProtocolInfo("http-get:*:video/mpeg:*"),
-                new ProtocolInfo("http-get:*:video/x-flc:*"));
+                new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
     }
 
     private LocalService<?> createContentDirectoryService() {

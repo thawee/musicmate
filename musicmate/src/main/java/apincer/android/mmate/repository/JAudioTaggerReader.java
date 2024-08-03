@@ -38,9 +38,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
@@ -48,12 +47,13 @@ public class JAudioTaggerReader extends TagReader{
     private static final String TAG = "JAudioTaggerReader";
 
     public JAudioTaggerReader() {
-        Logger logger = Logger.getLogger("org.jaudiotagger");
+        LogHelper.setJAudioTaggerOff();
+       /* Logger logger = Logger.getLogger("org.jaudiotagger");
         logger.setLevel(Level.SEVERE);
         logger = Logger.getLogger("org.jaudiotagger.audio");
         logger.setLevel(Level.SEVERE);
         logger = Logger.getLogger("org.jaudiotagger.audio.flac");
-        logger.setLevel(Level.SEVERE);
+        logger.setLevel(Level.SEVERE);*/
     }
 
     private static final String KEY_TAG_WAVE_GROUP = "IKEY";
@@ -82,7 +82,7 @@ public class JAudioTaggerReader extends TagReader{
 
     @Override
     public List<MusicTag> readFullMusicTag(Context context, String mediaPath) {
-        Log.i(TAG, "readFullMusicTag: path - "+mediaPath);
+        Log.d(TAG, "readFullMusicTag: path - "+mediaPath);
         AudioFile read = getAudioFile(mediaPath);
         if(read != null) {
             MusicTag tag = new MusicTag();

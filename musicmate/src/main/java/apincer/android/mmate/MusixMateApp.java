@@ -31,6 +31,7 @@ import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
+import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.work.MusicMateExecutors;
 import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
@@ -118,9 +119,12 @@ public class MusixMateApp extends Application {
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
+        LogHelper.setSLF4JOn();
+       // LogHelper.setSLF4JOff();
         CrashReporter.initialize(this);
 
         broadcastHelper.onCreate(this);
+
 
         // initialize thread executors
         MusicMateExecutors.getInstance();
@@ -237,6 +241,7 @@ public class MusixMateApp extends Application {
             }
         }).start(); */
 
+        // scan music files
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
