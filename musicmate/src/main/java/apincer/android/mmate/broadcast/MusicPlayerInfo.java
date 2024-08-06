@@ -8,7 +8,7 @@ public class MusicPlayerInfo {
     private final TYPE playerType;
      String playerPackage;
      String playerName;
-    private long time;
+    private final long time;
 
     public static MusicPlayerInfo buildStreamPlayer(String playerName,Drawable playerIconDrawable) {
         return new MusicPlayerInfo(TYPE.DLNA, "", playerName, playerIconDrawable);
@@ -43,11 +43,8 @@ public class MusicPlayerInfo {
     }
 
     public boolean isValidStreamPlayer() {
-        if(playerType==TYPE.DLNA && time < System.currentTimeMillis()- 300000)  {
-            // play ny dlna in last 5 mins
-            return true;
-        }
-        return false;
+        // play ny dlna in last 10 mins
+        return (playerType == TYPE.DLNA && time < System.currentTimeMillis() - 600000);
     }
 
     Bitmap playerIconBitmap;

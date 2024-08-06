@@ -40,7 +40,7 @@ public class BroadcastHelper {
     private volatile static MusicPlayerInfo playerInfo;
     private static final List<MusicBroadcastReceiver> receivers = new ArrayList<>();
     private final Callback callback;
-    private static FileRepository provider; // = AudioFileRepository.newInstance(context);
+    private FileRepository provider; // = AudioFileRepository.newInstance(context);
 
     public BroadcastHelper(@NonNull Callback callback) {
         this.callback = callback;
@@ -65,10 +65,9 @@ public class BroadcastHelper {
     private void registerReceiver(Context context, MusicBroadcastReceiver receiver) {
         if(receiver != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ((MusicBroadcastReceiver)receiver).register(context);
+                receiver.register(context);
             }
         }
-       // provider = AudioFileRepository.newInstance(context);
         receivers.add(receiver);
     }
 
@@ -124,10 +123,6 @@ public class BroadcastHelper {
     }
 
     public static void playNextSong(Context context) {
-       // if(playerInfo==null) {
-       //     return;
-       // }
-
         if(Settings.isVibrateOnNextSong(context)) {
             try {
                 Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -162,8 +157,8 @@ public class BroadcastHelper {
             intent.setComponent(PAAPI_PLAYER_SERVICE_COMPONENT_NAME);
             context.startForegroundService(intent);
         }else if(MusicBroadcastReceiver.PACKAGE_UAPP.equals(playerInfo.playerPackage) ||
-                MusicBroadcastReceiver.PACKAGE_FOOBAR2000.equals(playerInfo.playerPackage) ||
-                MusicBroadcastReceiver.PREFIX_VLC.equals(playerInfo.playerPackage)) {
+                MusicBroadcastReceiver.PACKAGE_FOOBAR2000.equals(playerInfo.playerPackage) ) {
+              //  MusicBroadcastReceiver.PREFIX_VLC.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);
@@ -217,6 +212,6 @@ public class BroadcastHelper {
     }
 
     public void setPlayingSong(MusicTag listening) {
-        this.playingSong = listening;
+        playingSong = listening;
     }
 }

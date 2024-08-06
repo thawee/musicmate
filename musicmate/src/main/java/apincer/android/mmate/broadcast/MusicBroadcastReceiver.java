@@ -39,7 +39,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
     public static String PACKAGE_FOOBAR2000="com.foobar2000.foobar2000";
     public static String PACKAGE_POWERAMP = "com.maxmpz.audioplayer";
     public static String PREFIX_UAPP = "com.extreamsd.usbaudioplayershared";
-    public static String PREFIX_VLC = "org.videolan.vlc";
+    //public static String PREFIX_VLC = "org.videolan.vlc";
     public static String INTENT_KEY_PACKAGE = "package";
     public static String INTENT_KEY_PLAYER = "player";
     public static String INTENT_KEY_SCROBBLING_SOURCE = "scrobbling_source";

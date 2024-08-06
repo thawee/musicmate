@@ -27,10 +27,10 @@ public final class LoggerFactory implements ILoggerFactory {
         TRACE = LOG.isTraceEnabled();
     }
 
-    private final ConcurrentMap<String, Logger> loggerMap = new ConcurrentHashMap<String, Logger>();
+    private final ConcurrentMap<String, Logger> loggerMap = new ConcurrentHashMap<>();
 
     @Override
-    public final Logger getLogger(final String name) {
+    public Logger getLogger(final String name) {
         final long start = TRACE ? System.nanoTime() : 0;
         final Logger logger = loggerMap.get(name);
         if (logger != null) {

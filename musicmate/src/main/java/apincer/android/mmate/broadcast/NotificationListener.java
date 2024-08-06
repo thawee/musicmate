@@ -25,15 +25,6 @@ public class NotificationListener extends NotificationListenerService {
         public static final String EDDICTPLAYER_PACK_NAME = "com.shanling.eddictplayer";
     }
 
-   //  public static final String HIBY_MUSIC = "com.hiby.music";
-   // public static final String NE_PLAYER_LITE = "jp.co.radius.neplayer_lite_an";
-
-   // public static final String SHANLING_EDDICTPLAYER = "com.shanling.eddictplayer";
-
-   // public static final String NEUTRON_MUSIC_PLAYER = "com.neutroncode.mp";
-
-   // public static String UAPP = "com.extreamsd.usbaudioplayerpro";
-
     private String prvPack;
     private String prvTitle;
     private String prvArtist;

@@ -253,10 +253,6 @@ public class MusixMateApp extends Application {
 Provides the SQLite Helper Object among the application
  */
     public OrmLiteHelper getOrmLite() {
-       /* if (ormLite == null) {
-            ormLite = OpenHelperManager.getHelper(this, MusicMateOrmLite.class);
-        }
-        return ormLite; */
         return OpenHelperManager.getHelper(this, OrmLiteHelper.class);
     }
 

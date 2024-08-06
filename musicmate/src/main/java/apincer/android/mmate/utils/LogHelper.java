@@ -26,4 +26,8 @@ public class LogHelper {
         setLog("com.j256.ormlite.stmt.StatementExecutor", Level.INFO);
         setLog("org.jupnp", Level.INFO);
     }
+
+    public static String getTag(Class cls) {
+        return cls.getSimpleName();
+    }
 }

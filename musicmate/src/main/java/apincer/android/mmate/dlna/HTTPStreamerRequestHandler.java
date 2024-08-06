@@ -32,8 +32,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ThreadLocalRandom;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
@@ -50,9 +52,18 @@ import apincer.android.mmate.utils.StringUtils;
 public class HTTPStreamerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
     private static final String TAG = "HTTPStreamerRequestHandler";
     private final Context applicationContext;
-    private byte[] defaultIconRAW;
+    private List<byte[]> defaultIconRAWs;
+    private static int currentIconIndex = 0;
     public HTTPStreamerRequestHandler(Context applicationContext) {
         this.applicationContext = applicationContext;
+        defaultIconRAWs = new ArrayList<>();
+       // defaultIconRAWs.add(readDefaultCover("no_cover1.jpg"));
+       // defaultIconRAWs.add(readDefaultCover("no_cover2.jpg"));
+        defaultIconRAWs.add(readDefaultCover("no_cover3.jpg"));
+        defaultIconRAWs.add(readDefaultCover("no_cover4.jpg"));
+        defaultIconRAWs.add(readDefaultCover("no_cover5.jpg"));
+        defaultIconRAWs.add(readDefaultCover("no_cover6.jpg"));
+        defaultIconRAWs.add(readDefaultCover("no_cover7.jpg"));
     }
 
     @Override
@@ -195,20 +206,23 @@ public class HTTPStreamerRequestHandler implements AsyncServerRequestHandler<Mes
             }
 
            // Log.d(TAG, "Send default albumArt for " + albumId);
-            return new ContentHolder(MimeType.valueOf("image/png"),
+            return new ContentHolder(MimeType.valueOf("image/jpg"),
                         getDefaultIcon());
         }
 
         private byte[] getDefaultIcon() {
-            if(defaultIconRAW == null) {
-                InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), "no_cover2.png");
-                try {
-                    defaultIconRAW = IOUtils.toByteArray(in);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            currentIconIndex++;
+            if(currentIconIndex >= defaultIconRAWs.size()) currentIconIndex = 0;
+            return defaultIconRAWs.get(currentIconIndex);
+        }
+
+        private byte[] readDefaultCover(String file) {
+            InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), file);
+            try {
+                return IOUtils.toByteArray(in);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            return defaultIconRAW;
         }
 
         /**
