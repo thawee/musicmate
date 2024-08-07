@@ -47,7 +47,6 @@ public class JAudioTaggerReader extends TagReader{
     private static final String TAG = "JAudioTaggerReader";
 
     public JAudioTaggerReader() {
-        LogHelper.setJAudioTaggerOff();
        /* Logger logger = Logger.getLogger("org.jaudiotagger");
         logger.setLevel(Level.SEVERE);
         logger = Logger.getLogger("org.jaudiotagger.audio");

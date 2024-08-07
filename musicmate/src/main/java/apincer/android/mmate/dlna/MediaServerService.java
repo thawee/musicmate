@@ -211,8 +211,8 @@ public class MediaServerService extends Service {
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate MediaServer ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
-                    "http://www.apincer.com"), new ModelDetails("MusicMate MediaServer", "DLNA/UPnP MediaServer",
+                    "MusicMate Server ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
+                    "http://www.apincer.com"), new ModelDetails("MusicMate Server", "DLNA/UPnP MediaServer",
                     versionName), URI.create("http://" + getIpAddress() + ":" + HTTP_STREAMER_PORT));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
@@ -243,7 +243,6 @@ public class MediaServerService extends Service {
                 .setContentText(getApplicationContext().getString(R.string.media_server_name));
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
-
     }
 
     private Icon[] createDeviceIcons() {

@@ -118,7 +118,7 @@ public class MusixMateApp extends Application {
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-
+        LogHelper.initial();
         LogHelper.setSLF4JOn();
        // LogHelper.setSLF4JOff();
         CrashReporter.initialize(this);

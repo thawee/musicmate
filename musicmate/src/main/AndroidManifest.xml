@@ -34,6 +34,7 @@
     <uses-permission
         android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"
         tools:ignore="LeanbackUsesWifi" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -84,7 +85,11 @@
             </intent-filter>
         </service>
 
-        <service android:name=".dlna.MediaServerService" android:enabled="true" android:exported="false"/>
+        <service
+            android:name=".dlna.MediaServerService"
+            android:foregroundServiceType="mediaPlayback"
+            android:enabled="true"
+            android:exported="false"/>
 
         <!-- Main activity for music browsing on phone -->
         <!--

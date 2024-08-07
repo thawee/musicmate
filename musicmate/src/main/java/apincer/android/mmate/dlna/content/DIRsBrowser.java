@@ -15,6 +15,7 @@ import java.util.List;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicFolder;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 
 /**
@@ -48,15 +49,17 @@ public class DIRsBrowser extends ContentBrowser {
         List<Container> result = new ArrayList<>();
         Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
 
+        List<MusicTag> songs = TagRepository.getAllMusics();
+        for(MusicTag tag: songs) {
+                for(MusicFolder dir: rootDIRs) {
+                    if(tag.getPath().startsWith(dir.getUniqueKey())) {
+                        dir.setChildCount(dir.getChildCount()+1);
+                    }
+                }
+        }
+
         for(MusicFolder dir: rootDIRs) {
-            // /English/SupperHits
-            String name = dir.getName();
-            if(dir.getUniqueKey().contains("/emulated/")) {
-                name = "internal://"+name;
-            }else {
-                name = "sdcard://"+name;
-            }
-            StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), name, "", 0, null);
+            StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), dir.getName(), "", 0, null);
             musicDir.setChildCount((int)dir.getChildCount());
             result.add(musicDir);
         }
