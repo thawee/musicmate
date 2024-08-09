@@ -230,10 +230,10 @@ dependencies {
 
     implementation deps.jupnp_android
     implementation deps.jupnp_support
-   // implementation deps.apache.httpcore
+    implementation deps.apache.httpcore
+    implementation deps.apache.http2core
    // implementation deps.apache.httpclient
-    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation deps.okhttp3
 
     // Coil
     implementation deps.coil.runtime2

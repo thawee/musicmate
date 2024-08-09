@@ -26,7 +26,7 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class JLHttpStreamerServer {
-    private String ipAddress;
+    private final String ipAddress;
     private int port;
     private Context context;
     private static final String TAG = "JLHttpStreamerServer";
@@ -47,7 +47,7 @@ public class JLHttpStreamerServer {
         defaultIconRAWs.add(readDefaultCover("no_cover5.jpg"));
         defaultIconRAWs.add(readDefaultCover("no_cover6.jpg"));
         defaultIconRAWs.add(readDefaultCover("no_cover7.jpg"));
-        server = new HTTPServer(port);
+        server = new HTTPServer(this.port);
         server.setSocketTimeout(300);
         HTTPServer.VirtualHost host = server.getVirtualHost(null);  // default virtual host
         host.setAllowGeneratedIndex(false);

@@ -43,7 +43,7 @@ deps.google = google
 def apache = [:]
 apache.httpclient = "org.apache.httpcomponents.client5:httpclient5:5.3.1"
 apache.httpcore = "org.apache.httpcomponents.core5:httpcore5:5.2.5"
-//apache.http2core = "org.apache.httpcomponents.core5:httpcore5-h2:5.2"
+apache.http2core = "org.apache.httpcomponents.core5:httpcore5-h2:5.2.5"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.17.1"
 apache.commons_io = "commons-io:commons-io:2.16.1" //2.15.1"
@@ -347,7 +347,7 @@ deps.coroutines='de.esoco:coroutines:0.9.1'
 deps.objectrelations ='org.obrel:objectrelations:1.3.0'
 //https://github.com/esoco/esoco-common
 deps.esococommon = 'de.esoco:esoco-common:1.2.0'
-deps.slf4j = 'org.slf4j:slf4j-api:2.0.14' //1.7.36' //2.0.9'
+deps.slf4j = 'org.slf4j:slf4j-api:2.0.15' //1.7.36' //2.0.9'
 //https://www.filesys.org/jfileserver.html
 deps.jfileserver = 'org.filesys:jfileserver:1.3.16'
 //https://github.com/dCache/nfs4j
@@ -359,6 +359,8 @@ deps.jimfs = 'com.google.jimfs:jimfs:1.3.0'
 deps.jupnp_android = 'org.jupnp:org.jupnp.android:3.0.2'
 deps.jupnp_support =  'org.jupnp:org.jupnp.support:3.0.2'
 deps.filepicker = 'io.github.tutorialsandroid:filepicker:9.2.5'
+// https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+deps.okhttp3 = 'com.squareup.okhttp3:okhttp:4.12.0'
 ext.deps = deps
 
 def developer = [:]

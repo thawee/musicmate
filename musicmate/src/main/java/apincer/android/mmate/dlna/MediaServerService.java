@@ -43,7 +43,6 @@ import org.jupnp.transport.Router;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
@@ -51,7 +50,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
@@ -89,8 +87,8 @@ public class MediaServerService extends Service {
     private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
-   // private HttpAsyncServer httpServer;
-    private JLHttpStreamerServer server;
+   // private JLHttpStreamerServer server;
+   private HCHttpStreamerServer server;
 
     public static void startMediaServer(Application application) {
         application.startForegroundService(new Intent(application, MediaServerService.class));
@@ -169,30 +167,20 @@ public class MediaServerService extends Service {
         String bindAddress = getIpAddress();
         Log.i(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
         // Create a HttpService for providing content in the network.
-        // Set up the HTTP service
-      /*  if (httpServer == null) {
-            String bindAddress = getIpAddress();
-            IOReactorConfig config = IOReactorConfig.custom()
-                    .setSoKeepAlive(true)
-                    .setTcpNoDelay(true)
-                    .setSoTimeout(60, TimeUnit.SECONDS)
-                    .build();
-            Log.i(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
 
-            httpServer = H2ServerBootstrap.bootstrap()
-                    .setIOReactorConfig(config)
-                    .setCanonicalHostName(bindAddress)
-                    .register("*", new HTTPStreamerRequestHandler(getApplicationContext()))
-                    .create();
-
-            httpServer.listen(new InetSocketAddress(HTTP_STREAMER_PORT + 1), URIScheme.HTTP);
-            httpServer.start();
-        } */
-
+        /*
         if (server == null) {
-           // server = new HttpStreamerServer(getApplicationContext(), getIpAddress(), HTTP_STREAMER_PORT);
             try {
                 server = new JLHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
+                server.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } */
+
+        if(server == null) {
+            try {
+                server = new HCHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
                 server.start();
             } catch (IOException e) {
                 throw new RuntimeException(e);
