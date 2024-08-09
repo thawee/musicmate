@@ -197,9 +197,9 @@ dependencies {
     //implementation deps.coverartarchive
 
     //retrofit and json Librariess
-    //implementation deps.google.gson
-    implementation deps.retrofit.runtime
-    implementation deps.retrofit.gson
+    implementation deps.google.gson
+    //implementation deps.retrofit.runtime
+    //implementation deps.retrofit.gson
 
     implementation deps.apache.commons_codec
     implementation deps.apache.commons_io
@@ -231,7 +231,7 @@ dependencies {
     implementation deps.jupnp_android
     implementation deps.jupnp_support
    // implementation deps.apache.httpcore
-    implementation deps.apache.httpclient
+   // implementation deps.apache.httpclient
     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
