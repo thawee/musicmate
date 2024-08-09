@@ -19,18 +19,21 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.StringUtils;
 
 public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
-    private static final String TAG = OrmLiteHelper.class.getName();
+    private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
     private static final int DATABASE_VERSION = 4;
+    private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
+    private static final List<MusicTag> EMPTY_LIST = null;
+    private static final List<String> EMPTY_STRING_LIST = null;
 
     public OrmLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION) ;//,
@@ -44,7 +47,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             // creates the database table
             TableUtils.createTable(connectionSource, MusicTag.class);
         } catch (SQLException e) {
-            e.printStackTrace();
+            Log.e(TAG,"onCreate", e);
         }
     }
 
@@ -56,7 +59,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             onCreate(database, connectionSource);
 
         } catch (java.sql.SQLException e) {
-            e.printStackTrace();
+            Log.e(TAG,"onUpgrade", e);
         }
     }
 
@@ -66,7 +69,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
             return dao.queryBuilder().orderBy("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -79,7 +82,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().like("title",keyword).or().like("path", keyword);
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -91,7 +94,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().eq("path",escapeString(path));
             return builder.query();
         } catch (Exception e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -103,7 +106,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().like("path",escapeString(path)+"%");
             return builder.query();
         } catch (Exception e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -117,7 +120,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 dao.update(tag);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            Log.e(TAG,"save", e);
         }
     }
 
@@ -140,7 +143,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().eq("mmManaged",false);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -151,7 +154,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().eq("dynamicRangeMeter",0);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -163,7 +166,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24)) order by title");
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -178,7 +181,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
 
     }
@@ -194,7 +197,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
 
     }
@@ -206,7 +209,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 48000 and mqaInd not like 'MQA%'");
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
 
     }
@@ -218,7 +221,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw(" audioEncoding in ('aac', 'mpeg') ");
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
 
     }
@@ -230,7 +233,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("mqaInd like 'MQA%' order by title, artist");
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -242,7 +245,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("audioEncoding in ('dsd', 'dff') order by title, artist");
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -258,7 +261,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 return builder.query();
             }
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -274,7 +277,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 return builder.query();
             }
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -286,7 +289,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 builder.where().raw("audioEncoding in ('flac','alac','aiff','wave') and mqaInd not like 'MQA%'  order by title, artist");
                 return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -298,7 +301,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("title like "+keyword+" or artist like "+keyword +" or album like "+keyword);
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -335,8 +338,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (Exception e) {
-            Log.e("MusicMateORMLite","findDuplicateSong: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"findDuplicateSong: "+e.getMessage());
+            return EMPTY_LIST;
         }
     }
 
@@ -352,8 +355,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","getGeners: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"getGeners: "+e.getMessage());
+            return EMPTY_STRING_LIST;
         }
     }
 
@@ -370,8 +373,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","getGrouping: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"getGrouping: "+e.getMessage());
+            return EMPTY_STRING_LIST;
         }
     }
 
@@ -398,8 +401,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","getGrouping: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"getGrouping: "+e.getMessage());
+            return EMPTY_FOLDER_LIST;
         }
     }
 
@@ -426,8 +429,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","genre: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"genre: "+e.getMessage());
+            return EMPTY_FOLDER_LIST;
         }
     }
 
@@ -443,8 +446,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","getPublishers: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"getPublishers: "+e.getMessage());
+            return EMPTY_STRING_LIST;
         }
     }
 
@@ -460,8 +463,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","getArtits: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"getArtits: "+e.getMessage());
+            return EMPTY_STRING_LIST;
         }
     }
 
@@ -491,8 +494,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","getArtistForGrouping: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"getArtistForGrouping: "+e.getMessage());
+            return EMPTY_STRING_LIST;
         }
     }
 
@@ -513,7 +516,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -551,7 +554,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("id BETWEEN "+idRange1+" AND "+idRange2);
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -578,7 +581,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().raw("coverartMime is null or coverartMime = '' order by title, artist");
             return builder.query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -605,8 +608,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","artist: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"artist: "+e.getMessage());
+            return EMPTY_FOLDER_LIST;
         }
     }
 
@@ -642,8 +645,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e("MusicMateORMLite","album: "+e.getMessage());
-            return Collections.EMPTY_LIST;
+            Log.e(TAG,"album: "+e.getMessage());
+            return EMPTY_FOLDER_LIST;
         }
     }
 
@@ -658,7 +661,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -677,7 +680,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {
-            return Collections.EMPTY_LIST;
+            return EMPTY_LIST;
         }
     }
 
@@ -688,7 +691,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().eq("albumUniqueKey", albumUniqueKey);
             return dao.queryForFirst(builder.prepare());
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Log.e(TAG,"findByAlbumUniqueKey", ex);
         }
         return null;
     }

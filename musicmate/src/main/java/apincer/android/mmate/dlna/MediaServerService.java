@@ -95,6 +95,7 @@ public class MediaServerService extends Service {
     protected static MediaServerService INSTANCE;
     private boolean initialized;
     private HttpAsyncServer httpServer;
+    private JLHttpStreamerServer server;
 
     public static void startMediaServer(Application application) {
         application.startForegroundService(new Intent(application, MediaServerService.class));
@@ -170,9 +171,11 @@ public class MediaServerService extends Service {
      * creates a http request thread
      */
     private void createHttpStreamerServer() {
+        String bindAddress = getIpAddress();
+        Log.i(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
         // Create a HttpService for providing content in the network.
         // Set up the HTTP service
-        if (httpServer == null) {
+      /*  if (httpServer == null) {
             String bindAddress = getIpAddress();
             IOReactorConfig config = IOReactorConfig.custom()
                     .setSoKeepAlive(true)
@@ -187,8 +190,18 @@ public class MediaServerService extends Service {
                     .register("*", new HTTPStreamerRequestHandler(getApplicationContext()))
                     .create();
 
-            httpServer.listen(new InetSocketAddress(HTTP_STREAMER_PORT), URIScheme.HTTP);
+            httpServer.listen(new InetSocketAddress(HTTP_STREAMER_PORT + 1), URIScheme.HTTP);
             httpServer.start();
+        } */
+
+        if (server == null) {
+           // server = new HttpStreamerServer(getApplicationContext(), getIpAddress(), HTTP_STREAMER_PORT);
+            try {
+                server = new JLHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
+                server.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -393,6 +406,10 @@ public class MediaServerService extends Service {
                 Log.w(TAG, "got exception on stream server stop ", e);
             }
             httpServer = null;
+        }
+        if(server != null) {
+            server.stop();
+            server = null;
         }
         if(upnpService != null) {
             upnpService.shutdown();

@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi;
 import java.util.List;
 
 import apincer.android.mmate.utils.BitmapHelper;
+import apincer.android.mmate.utils.LogHelper;
 
 /**
  * Supporting android standard broadcast
@@ -25,14 +26,13 @@ import apincer.android.mmate.utils.BitmapHelper;
  *  - USB Audio Player Pro
  *  - VIVO Music Player, cannot get player details
  *  - FIIO Music Player
- *
  *  NOT supported player - not send any broadcast at all
  *      - HFPlayer (com.onkyo.jp.musicplayer)
  *      - Radsone DCT
  *      - Hiby Music
  */
 public class MusicBroadcastReceiver extends BroadcastReceiver {
-    private static final String TAG = MusicBroadcastReceiver.class.getName();
+    private static final String TAG = LogHelper.getTag(MusicBroadcastReceiver.class);
     public static String PACKAGE_SONY_MUSIC = "com.sonyericson.music";
     public static String PACKAGE_NEUTRON = "com.neutroncode.mp";
     public static String PACKAGE_UAPP = "com.extreamsd.usbaudioplayerpro";
@@ -103,10 +103,10 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         }else {
             playerPackage = intent.getStringExtra(INTENT_KEY_PACKAGE);
             String playerName = intent.getStringExtra(INTENT_KEY_PLAYER);
-            if(NotificationListener.PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equalsIgnoreCase(playerName)) {
+            if(BroadcastHelper.PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equalsIgnoreCase(playerName)) {
                 playerPackage = playerName;
                 playerName = null;
-            }else if(NotificationListener.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equalsIgnoreCase(playerName)) {
+            }else if(BroadcastHelper.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equalsIgnoreCase(playerName)) {
                 playerPackage = playerName;
                 playerName = null;
             }else if(PLAYER_NAME_FOOBAR2000.equalsIgnoreCase(playerName)) {

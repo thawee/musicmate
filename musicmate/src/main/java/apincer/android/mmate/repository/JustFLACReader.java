@@ -7,6 +7,7 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 import android.content.Context;
 import android.util.Log;
 
+import org.jaudiotagger.audio.AudioFile;
 import org.kc7bfi.jflac.FLACDecoder;
 import org.kc7bfi.jflac.FrameListener;
 import org.kc7bfi.jflac.frame.Frame;
@@ -24,8 +25,10 @@ import apincer.android.utils.FileUtils;
 
 public class JustFLACReader extends TagReader{
     private static final String TAG = "JustFLACReader";
-    private static final int NO_OF_BITS_IN_BYTE = 8;
-    private static final int KILOBYTES_TO_BYTES_MULTIPLIER = 1000;
+   // private static final int NO_OF_BITS_IN_BYTE = 8;
+   // private static final int KILOBYTES_TO_BYTES_MULTIPLIER = 1000;
+
+    @Deprecated
     public static boolean isSupportedFileFormat(String path) {
         try {
             String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
@@ -77,10 +80,11 @@ public class JustFLACReader extends TagReader{
         return null;
     }
 
-    private int computeBitrate(float length, long size)
-    {
-        return (int) ((size / KILOBYTES_TO_BYTES_MULTIPLIER) * NO_OF_BITS_IN_BYTE / length);
+    @Override
+    protected String detectAudioEncoding(AudioFile read, boolean isLossless) {
+        return super.detectAudioEncoding(read, isLossless);
     }
+
     private String parseMimeString(String mimeString) {
         if(mimeString.contains("/")) {
             return mimeString.substring(mimeString.indexOf("/")+1);
@@ -96,15 +100,6 @@ public class JustFLACReader extends TagReader{
         }
         return 0L;
     }
-
-    /*
-    private static void readFileInfo(Context context, MusicTag tag) {
-        File file = new File(tag.getPath());
-        tag.setFileLastModified(file.lastModified());
-        tag.setFileSize(file.length());
-        tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
-        tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
-    } */
 
     private static double getFirstDouble(VorbisComment comment, String key) {
         String val = getFirstString(comment, key);

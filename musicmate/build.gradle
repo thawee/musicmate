@@ -73,7 +73,7 @@ android {
     }
     packagingOptions {
         resources {
-            excludes += ['META-INF/library_release.kotlin_module', 'META-INF/library-core_release.kotlin_module', 'META-INF/LICENSE.md', 'META-INF/NOTICE.md', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+            excludes += ['META-INF/library_release.kotlin_module', 'META-INF/library-core_release.kotlin_module', 'META-INF/LICENSE.md', 'META-INF/NOTICE.md', 'META-INF/AL2.0', 'META-INF/LGPL2.1','META-INF/INDEX.LIST']
             pickFirsts += ['META-INF/DEPENDENCIES']
         }
     }
@@ -146,21 +146,9 @@ dependencies {
 
     // google
     implementation deps.google.material
-
-   // implementation 'com.github.salehyarahmadi:FileAndFolderPicker:1.0.4'
-   // implementation 'com.github.abhishekti7:UnicornFilePicker:1.0.2'
-   // implementation 'com.github.codekidX:storage-chooser:2.0.4.4'
-   // implementation 'com.github.TutorialsAndroid:FilePicker:v9.0.1'
-    implementation 'io.github.tutorialsandroid:filepicker:9.2.5'
+    implementation deps.filepicker
 
     implementation deps.jetbrains.annotations
-
-    // RxAndroid & Coroutine
-    //implementation deps.rxjava3_rxandroid
-    //implementation deps.rxjava3
-    //implementation deps.coroutines  // cannot use coz cannot resolve dependency
-    //implementation deps.objectrelations
-    //implementation deps.esococommon;
 
     // epoxy
     //implementation deps.epoxy.runtime
@@ -209,7 +197,7 @@ dependencies {
     //implementation deps.coverartarchive
 
     //retrofit and json Librariess
-    implementation deps.google.gson
+    //implementation deps.google.gson
     implementation deps.retrofit.runtime
     implementation deps.retrofit.gson
 
@@ -217,8 +205,6 @@ dependencies {
     implementation deps.apache.commons_io
     implementation deps.apache.commons_logging
     implementation deps.apache.commons_lang3
-    //implementation deps.apache.httpclient
-    //implementation deps.apache.httpcore
 
     implementation deps.fasterxml.jackson_core
     implementation deps.fasterxml.jackson_databind
@@ -228,12 +214,6 @@ dependencies {
     implementation deps.jetbrains.annotations
 
     implementation deps.slf4j
-   // implementation 'com.noveogroup.android:android-logger:1.3.1'
-    //implementation 'com.github.tony19:logback-android:3.0.0'
-    //implementation 'ch.qos.logback:logback-classic:1.4.7'
-    //implementation 'ch.qos.logback:logback-core:1.4.7'
-  //  implementation "dev.bright.slf4android:slf4android:0.1.8"
-   // implementation 'uk.uuid.slf4j:slf4j-android:2.0.7-0'
     //implementation deps.jfileserver
     //implementation 'org.filesys:jfileserver-enterprise:1.2.16'
     // https://mvnrepository.com/artifact/com.ibm.icu.text/normalizer
@@ -248,45 +228,17 @@ dependencies {
     //implementation 'com.sleepycat:je:18.3.12'
     //implementation deps.high_scale_lib
 
-    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-   // implementation 'org.apache.commons:commons-lang3:3.14.0'
-
-    // https://mvnrepository.com/artifact/com.jcraft/jsch
-   // implementation 'com.jcraft:jsch:0.1.55'
-
-    //https://github.com/jupnp/jupnp
-   // implementation 'org.jupnp:org.jupnp.android:3.0.2'
-    //implementation 'org.jupnp:org.jupnp.support:3.0.2'
-    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-    //implementation 'org.eclipse.jetty:jetty-server:9.4.54.v20240208'
-    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet
-    //implementation 'org.eclipse.jetty:jetty-servlet:9.4.54.v20240208'
-    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client
-    //implementation 'org.eclipse.jetty:jetty-client:9.4.54.v20240208'
-
-    // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    //implementation 'javax.servlet:javax.servlet-api:3.1.0'
-
-    //implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
-    //implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.4'
-
     implementation deps.jupnp_android
     implementation deps.jupnp_support
     implementation deps.apache.httpcore
     implementation deps.apache.httpclient
-
-    // implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1'
-   // implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
-   // implementation 'org.apache.httpcomponents.core5:httpcore5:5.3.1' //5.2.4'
-
-   // implementation 'com.inthebacklog:javampd:7.1.0'
+  //  implementation 'io.fusionauth:java-http:0.3.4'
+// https://mvnrepository.com/artifact/io.undertow/undertow-core
+    implementation 'io.undertow:undertow-core:2.3.15.Final'
 
     // Coil
     implementation deps.coil.runtime2
     implementation deps.coil.transformations
-   // implementation "com.github.Commit451.coil-transformations:transformations:1.1.2"
-    //implementation "com.github.Commit451.coil-transformations:transformations-gpu:1.1.2"
-  //  implementation('de.esoco:coroutines:0.9.1')
 
     // Logging and Debugging
    // implementation deps.timber

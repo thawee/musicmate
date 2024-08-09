@@ -265,7 +265,7 @@ public class MusicTag implements Cloneable, Parcelable {
         dynamicRange = in.readDouble();
     }
 
-    public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
+    public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<>() {
         @Override
         public MusicTag createFromParcel(Parcel in) {
             return new MusicTag(in);
@@ -805,10 +805,6 @@ public class MusicTag implements Cloneable, Parcelable {
     public void setTrackLoudness(double ebur128Loudness) {
         this.gainTrackLoudness = ebur128Loudness;
     } */
-
-    public boolean isReadError() {
-        return mmReadError;
-    }
 
     public void setReadError(boolean readError) {
         this.mmReadError = readError;

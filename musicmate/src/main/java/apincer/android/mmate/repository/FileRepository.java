@@ -123,6 +123,7 @@ public class FileRepository {
         return StorageId.PRIMARY;
     }
 
+    @Deprecated
     public static File getFolderCoverArt(MusicTag mediaItem) {
         // try loading from folder
         // front.png, front.jpg
@@ -182,29 +183,6 @@ public class FileRepository {
         }
         return coverFile;
     }
-
-    /*
-    static InputStream getFolderArtworkAsStream(MusicTag mediaItem) {
-        // try loading from folder
-        // front.png, front.jpg
-        // cover.png, cover.jpg
-
-            File coverFile = new File(mediaItem.getPath());
-            File coverDir = coverFile.getParentFile();
-
-            for (String f : Constants.IMAGE_COVERS) {
-                coverFile = new File(coverDir, f);
-                if(coverFile.exists()) break;
-            }
-            if(coverFile!=null && coverFile.exists()) {
-                try {
-                    return new FileInputStream(coverFile);
-                } catch (FileNotFoundException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            return null;
-    } */
 
     public MusicTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
         try {
@@ -440,15 +418,6 @@ public class FileRepository {
         return STORAGE_SECONDARY;
     }
 
-    /*
-    private String getAlbumArtistOrArtist(String artist, String albumArtist) {
-        if(StringUtils.isEmpty(albumArtist)) {
-            albumArtist = artist;
-        }
-
-        return StringUtils.trimToEmpty(albumArtist);
-    }*/
-
     public static boolean isMediaFileExist(MusicTag item) {
         if(item == null || item.getPath()==null) {
             return false;
@@ -470,20 +439,15 @@ public class FileRepository {
 
     private boolean importAudioTag(MusicTag tag) {
             String newPath = buildCollectionPath(tag);
-           // File cacheCoverArt = MusicTagUtils.getCoverArt(getContext(), tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 return true;
             }
             if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
                 copyRelatedFiles(tag, newPath);
                 cleanCacheCover(getContext(), tag);
-               // if(cacheCoverArt!=null) {
-               //     com.anggrayudi.storage.file.FileUtils.forceDelete(cacheCoverArt);
-               // }
 
                 File file = new File(tag.getPath());
                 cleanMediaDirectory(file.getParentFile());
-               // tag.setObsoletePath(tag.getPath());
                 tag.setPath(newPath);
                 tag.setMusicManaged(true);
                 tag.setSimpleName(DocumentFileCompat.getBasePath(getContext(), newPath));
@@ -577,7 +541,7 @@ public class FileRepository {
         } catch (Exception|OutOfMemoryError ex) {
             status = false;
         }
-		return status;
+        return status;
     }
 
     public void cleanCacheCover(Context context, MusicTag item) {

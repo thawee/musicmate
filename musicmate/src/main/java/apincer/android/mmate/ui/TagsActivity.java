@@ -78,7 +78,7 @@ import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
     private static final String TAG = "TagsActivity";
-    private static volatile ArrayList<MusicTag> editItems = new ArrayList<>();
+    private static final ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
     private ImageView reflectionView;

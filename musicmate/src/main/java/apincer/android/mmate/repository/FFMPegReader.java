@@ -34,7 +34,6 @@ import com.arthenica.ffmpegkit.Session;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -117,8 +116,8 @@ public class FFMPegReader extends TagReader {
    // private static final String KEY_FORMAT_NAME = "format_name";
     private static final String KEY_START_TIME = "start_time";
     private static final String KEY_DURATION = "duration";
-    private static final String KEY_SIZE = "size";
-    private static final String KEY_MM_MQA = "MQA";
+   // private static final String KEY_SIZE = "size";
+   // private static final String KEY_MM_MQA = "MQA";
     private static final String KEY_TAG = "TAG:";
     private static final String KEY_TAG_ARTIST = "ARTIST";
     private static final String KEY_TAG_ALBUM = "ALBUM";
@@ -132,8 +131,8 @@ public class FFMPegReader extends TagReader {
     private static final String KEY_TAG_TRACK = "track";
     private static final String KEY_TAG_PUBLISHER = "PUBLISHER";
     //private static final String KEY_TAG_LANGUAGE = "LANGUAGE";
-    private static final String KEY_TAG_ENCODER = "ENCODER";
-    private static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
+  //  private static final String KEY_TAG_ENCODER = "ENCODER";
+   // private static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
 
     private static final String KEY_TAG_RATING = "RATING";
     private static final String KEY_TAG_TITLE = "TITLE";
@@ -291,7 +290,7 @@ public class FFMPegReader extends TagReader {
        // MusicTag tag = readFFprobe(context, path);
        // detectMQA(tag,50000); // timeout 50 seconds
         //analystStatFromFile(context, tag,60000); // timeout 50 seconds
-        return Arrays.asList(tag);
+        return List.of(tag);
     }
 
     public List<MusicTag> readFullMusicTag(Context context, String path) {
@@ -301,7 +300,7 @@ public class FFMPegReader extends TagReader {
         // MusicTag tag = readFFprobe(context, path);
         detectMQA(tag,50000); // timeout 50 seconds
         //analystStatFromFile(context, tag,60000); // timeout 50 seconds
-        return Arrays.asList(tag);
+        return List.of(tag);
     }
 
     /*
@@ -1386,16 +1385,8 @@ public class FFMPegReader extends TagReader {
         return 0L;
     }
 
-    /*
-    private static String getField(String[] tags, int i) {
-        if(tags.length>i) {
-            return trimToEmpty(tags[i]);
-        }
-        return "";
-    } */
-
+ /*
     public static void calculateSNR () {
-    /*
     Dynamic range refers to the difference between the loudest and quietest parts of a signal, measured in dB (decibels).
 
     Maximum dynamic range in decibels = number of bits x 6
@@ -1406,10 +1397,7 @@ public class FFMPegReader extends TagReader {
 24 x 6 = 144 dB of dynamic range – high resolution dynamic range.
 
 The definition of signal-to-noise ratio (SNR) is the difference in level between the maximum input your gear can handle before noise creeps into the signal.
-
-     */
-
-    }
+    } */
 
     public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
         String options="";

@@ -4,18 +4,12 @@ import static apincer.android.mmate.dlna.MediaServerService.IPV4_PATTERN;
 
 import org.jupnp.android.AndroidNetworkAddressFactory;
 import org.jupnp.android.AndroidUpnpServiceConfiguration;
-import org.jupnp.binding.xml.DeviceDescriptorBinder;
-import org.jupnp.binding.xml.RecoveringUDA10DeviceDescriptorBinderImpl;
-import org.jupnp.binding.xml.ServiceDescriptorBinder;
-import org.jupnp.binding.xml.UDA10ServiceDescriptorBinderSAXImpl;
 import org.jupnp.model.Namespace;
 import org.jupnp.model.meta.Device;
 import org.jupnp.model.meta.Service;
 import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDAServiceType;
-import org.jupnp.transport.spi.GENAEventProcessor;
 import org.jupnp.transport.spi.NetworkAddressFactory;
-import org.jupnp.transport.spi.SOAPActionProcessor;
 import org.jupnp.transport.spi.StreamClient;
 import org.jupnp.transport.spi.StreamServer;
 
@@ -23,8 +17,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URI;
 
+import apincer.android.mmate.dlna.transport.JLHttpUPnpStreamServer;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
-import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.dlna.transport.StreamingClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamingClientImpl;
 
@@ -49,9 +43,8 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-        return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort())
-       // return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getMulticastResponsePort())
-        );
+       // return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }
 
     @Override

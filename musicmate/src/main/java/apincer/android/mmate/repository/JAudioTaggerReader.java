@@ -39,20 +39,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class JAudioTaggerReader extends TagReader{
     private static final String TAG = "JAudioTaggerReader";
+    private static final List<MusicTag> EMPTY_LIST = null;
 
     public JAudioTaggerReader() {
-       /* Logger logger = Logger.getLogger("org.jaudiotagger");
-        logger.setLevel(Level.SEVERE);
-        logger = Logger.getLogger("org.jaudiotagger.audio");
-        logger.setLevel(Level.SEVERE);
-        logger = Logger.getLogger("org.jaudiotagger.audio.flac");
-        logger.setLevel(Level.SEVERE);*/
     }
 
     private static final String KEY_TAG_WAVE_GROUP = "IKEY";
@@ -76,7 +70,7 @@ public class JAudioTaggerReader extends TagReader{
            // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         }
-        return Collections.EMPTY_LIST;
+        return EMPTY_LIST;
     }
 
     @Override
@@ -94,7 +88,7 @@ public class JAudioTaggerReader extends TagReader{
             // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         }
-        return Collections.EMPTY_LIST;
+        return EMPTY_LIST;
     }
 
     private void readHeader(AudioFile read, MusicTag metadata) {
@@ -145,17 +139,6 @@ public class JAudioTaggerReader extends TagReader{
         TagOptionSingleton.getInstance().setId3v24UnicodeTextEncoding(TextEncoding.UTF_16); // default UTF-16
 
     }
-
-    /*
-    private static boolean isValidJAudioTagger(String path) {
-        try {
-            String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
-            SupportedFileFormat.valueOf(ext.toUpperCase());
-            return true;
-        }catch(Exception ex) {
-            return false;
-        }
-    }*/
 
     private MusicTag readTags(AudioFile audioFile, MusicTag metadata) {
             Tag tag = audioFile.getTag();
@@ -324,7 +307,7 @@ public class JAudioTaggerReader extends TagReader{
         return tags;
     }
 
-    private static Map<String, String> parseId3Tags(Tag tag) throws Exception {
+    private static Map<String, String> parseId3Tags(Tag tag) {
         String id = null;
 
         if (tag.hasField("TXXX")) {
@@ -368,15 +351,15 @@ public class JAudioTaggerReader extends TagReader{
         for (TagField field: list) {
             tags.put(field.getId(), StringUtils.trimToEmpty(tag.getFirst(field.getId())));
         }
-       /* if (tag.hasField(KEY_MM_TRACK_GAIN)) {
+      /*  if (tag.hasField(KEY_MM_TRACK_GAIN)) {
             tags.put(KEY_MM_TRACK_GAIN, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_GAIN)));
-        }
+        } */
         if (tag.hasField(KEY_MM_TRACK_DYNAMIC_RANGE)) {
             tags.put(KEY_MM_TRACK_DYNAMIC_RANGE, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DYNAMIC_RANGE)));
         }
         if (tag.hasField(KEY_MM_MEASURED_DR)) {
             tags.put(KEY_MM_MEASURED_DR, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_MEASURED_DR)));
-        } */
+        }
 
         return tags;
     }

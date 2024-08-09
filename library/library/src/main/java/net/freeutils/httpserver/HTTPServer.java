@@ -1,5 +1,5 @@
 /*
- *  Copyright © 2005-2021 Amichai Rothman
+ *  Copyright © 2005-2024 Amichai Rothman
  *
  *  This file is part of JLHTTP - the Java Lightweight HTTP Server.
  *
@@ -14,10 +14,11 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with JLHTTP.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with JLHTTP.  If not, see <https://www.gnu.org/licenses/>.
  *
- *  For additional info see http://www.freeutils.net/source/jlhttp/
+ *  For additional info see https://www.freeutils.net/source/jlhttp/
  */
+
 package net.freeutils.httpserver;
 
 import java.io.*;
@@ -37,11 +38,11 @@ import javax.net.ssl.SSLSocket;
 /**
  * The {@code HTTPServer} class implements a light-weight HTTP server.
  * <p>
- * This server implements all functionality required by RFC 2616 ("Hypertext
- * Transfer Protocol -- HTTP/1.1"), as well as some of the optional
- * functionality (this is termed "conditionally compliant" in the RFC).
- * In fact, a couple of bugs in the RFC itself were discovered
- * (and fixed) during the development of this server.
+ * This server is conformant to RFC 9110 ("HTTP Semantics") and RFC 9112
+ * ("HTTP/1.1") in the role of an "origin server", and also implements
+ * some of the optional functionality and additional features.
+ * In fact, several bugs in the original RFC 2616 and its successors were
+ * discovered during the development of this server, and fixed in superseding RFCs.
  * <p>
  * <b>Feature Overview</b>
  * <ul>
@@ -58,12 +59,13 @@ import javax.net.ssl.SSLSocket;
  * <li>HTTPS - secures all server communications</li>
  * <li>Partial content - download continuation (a.k.a. byte range serving)</li>
  * <li>File upload - multipart/form-data handling as stream or iterator</li>
- * <li>Multiple context handlers - a different handler method per URL path</li>
+ * <li>Multiple context handlers - different handler per URL path and HTTP method</li>
  * <li>@Context annotations - auto-detection of context handler methods</li>
  * <li>Parameter parsing - from query string or x-www-form-urlencoded body</li>
+ * <li>Path parameters - extracted from the URL path itself</li>
  * <li>A single source file - super-easy to integrate into any application</li>
  * <li>Standalone - no dependencies other than the Java runtime</li>
- * <li>Small footprint - standard jar is ~50K, stripped jar is ~35K</li>
+ * <li>Small footprint - standard jar is ~60K, stripped jar is ~40K</li>
  * <li>Extensible design - easy to override, add or remove functionality</li>
  * <li>Reusable utility methods to simplify your custom code</li>
  * <li>Extensive documentation of API and implementation (&gt;40% of source lines)</li>
@@ -125,13 +127,13 @@ public class HTTPServer {
 
     /**
      * The SimpleDateFormat-compatible formats of dates which must be supported.
-     * Note that all generated date fields must be in the RFC 1123 format only,
+     * Note that all generated date fields must be in the IMF-fixdate format only,
      * while the others are supported by recipients for backwards-compatibility.
      */
     public static final String[] DATE_PATTERNS = {
-        "EEE, dd MMM yyyy HH:mm:ss z", // RFC 822, updated by RFC 1123
-        "EEEE, dd-MMM-yy HH:mm:ss z",  // RFC 850, obsoleted by RFC 1036
-        "EEE MMM d HH:mm:ss yyyy"      // ANSI C's asctime() format
+            "EEE, dd MMM yyyy HH:mm:ss z", // [RFC9110#5.6.7] IMF-fixdate format
+            "EEEE, dd-MMM-yy HH:mm:ss z",  // obsolete RFC 850 format
+            "EEE MMM d HH:mm:ss yyyy"      // ANSI C's asctime() format
     };
 
     /** A GMT (UTC) timezone instance. */
@@ -139,8 +141,8 @@ public class HTTPServer {
 
     /** Date format strings. */
     protected static final char[]
-        DAYS = "Sun Mon Tue Wed Thu Fri Sat".toCharArray(),
-        MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".toCharArray();
+            DAYS = "Sun Mon Tue Wed Thu Fri Sat".toCharArray(),
+            MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".toCharArray();
 
     /** A convenience array containing the carriage-return and line feed chars. */
     public static final byte[] CRLF = { 0x0d, 0x0a };
@@ -153,13 +155,14 @@ public class HTTPServer {
         Arrays.fill(statuses, "Unknown Status");
         statuses[100] = "Continue";
         statuses[200] = "OK";
+        statuses[201] = "Created";
         statuses[204] = "No Content";
         statuses[206] = "Partial Content";
-        statuses[207] = "Multi-Status";
         statuses[301] = "Moved Permanently";
         statuses[302] = "Found";
         statuses[304] = "Not Modified";
         statuses[307] = "Temporary Redirect";
+        statuses[308] = "Permanent Redirect";
         statuses[400] = "Bad Request";
         statuses[401] = "Unauthorized";
         statuses[403] = "Forbidden";
@@ -167,15 +170,16 @@ public class HTTPServer {
         statuses[405] = "Method Not Allowed";
         statuses[408] = "Request Timeout";
         statuses[412] = "Precondition Failed";
-        statuses[413] = "Request Entity Too Large";
-        statuses[414] = "Request-URI Too Large";
-        statuses[416] = "Requested Range Not Satisfiable";
+        statuses[413] = "Content Too Large";
+        statuses[414] = "URI Too Long";
+        statuses[416] = "Range Not Satisfiable";
         statuses[417] = "Expectation Failed";
         statuses[500] = "Internal Server Error";
         statuses[501] = "Not Implemented";
         statuses[502] = "Bad Gateway";
         statuses[503] = "Service Unavailable";
-        statuses[504] = "Gateway Time-out";
+        statuses[504] = "Gateway Timeout";
+        statuses[505] = "HTTP Version Not Supported";
     }
 
     /**
@@ -183,7 +187,7 @@ public class HTTPServer {
      * corresponding MIME types.
      */
     protected static final Map<String, String> contentTypes =
-        new ConcurrentHashMap<String, String>();
+            new ConcurrentHashMap<String, String>();
 
     static {
         // add some default common content types
@@ -216,7 +220,7 @@ public class HTTPServer {
 
     /** The MIME types that can be compressed (prefix/suffix wildcards allowed). */
     protected static String[] compressibleContentTypes =
-        { "text/*", "*/javascript", "*icon", "*+xml", "*/json" };
+            { "text/*", "*/javascript", "*icon", "*+xml", "*/json" };
 
     /**
      * The {@code LimitedInputStream} provides access to a limited number
@@ -362,13 +366,13 @@ public class HTTPServer {
          * @throws IllegalArgumentException if the chunk-size line is invalid
          */
         protected static long parseChunkSize(String line) throws IllegalArgumentException {
-            int pos = line.indexOf(';');
-            line = pos < 0 ? line : line.substring(0, pos); // ignore params, if any
+            int pos = line.indexOf(';'); // [RFC9112#7.1.1] ignore extensions and whitespace
+            line = pos < 0 ? line : line.substring(0, pos).trim();
             try {
                 return parseULong(line, 16); // throws NFE
             } catch (NumberFormatException nfe) {
                 throw new IllegalArgumentException(
-                    "invalid chunk size line: \"" + line + "\"");
+                        "invalid chunk size line: \"" + line + "\"");
             }
         }
     }
@@ -502,9 +506,9 @@ public class HTTPServer {
     }
 
     /**
-     * The {@code MultipartInputStream} decodes an InputStream whose data has
-     * a "multipart/*" content type (see RFC 2046), providing the underlying
-     * data of its various parts.
+     * The {@code MultipartInputStream} decodes an InputStream whose
+     * data has a "multipart/*" content type (as defined in RFC 2046),
+     * provoding the underlying data of its various parts.
      * <p>
      * The {@code InputStream} methods (e.g. {@link #read}) relate only to
      * the current part, and the {@link #nextPart} method advances to the
@@ -629,9 +633,9 @@ public class HTTPServer {
             if (state < 8 && len > 0)
                 state |= 2; // found start boundary
             if ((state & 6) == 4 // EOS but no start boundary found
-                || len == 0 && ((state & 0xFC) == 4 // EOS but no last and no more boundaries
+                    || len == 0 && ((state & 0xFC) == 4 // EOS but no last and no more boundaries
                     || read == 0 && tail == head)) // boundary longer than buffer
-                        throw new IOException("missing boundary");
+                throw new IOException("missing boundary");
             if (state >= 0x10) // in epilogue
                 tail = end; // ignore boundaries, return everything
             return tail > head; // available data in current part
@@ -806,20 +810,36 @@ public class HTTPServer {
 
         /**
          * The {@code ContextInfo} class holds a single context's information.
+         * It also serves as a node in the radix tree used to match request paths against contexts.
          */
         public class ContextInfo {
 
-            protected final String path;
-            protected final Map<String, ContextHandler> handlers =
-                new ConcurrentHashMap<String, ContextHandler>(2);
+            protected String path; // full path from root to this node
+            protected String segment; // path segment of this node only
+            protected String param; // parameter name (null if not a param node)
+            protected int rank; // defines the order of precedence of matched contexts
+            protected ContextInfo[] children = new ContextInfo[0];
+            protected Map<String, ContextHandler> handlers =
+                    new ConcurrentHashMap<String, ContextHandler>(2);
 
             /**
-             * Constructs a ContextInfo with the given context path.
+             * Constructs a ContextInfo with the given context path and segment.
              *
-             * @param path the context path (without trailing slash)
+             * @param path the full context path (without trailing slash)
+             * @param segment the path segment matched by this node
              */
-            public ContextInfo(String path) {
+            public ContextInfo(String path, String segment) {
                 this.path = path;
+                this.segment = segment;
+                if (segment.length() > 0 && segment.charAt(0) == '{')
+                    this.param = segment.substring(1, segment.length() - 1);
+                // calculate sorting rank by number of literals (primary) and params (secondary)
+                boolean param = false;
+                for (int i = 0; i < path.length(); i++) {
+                    if (!param)
+                        rank += path.charAt(i) == '{' ? 1 : 1 << 16;
+                    param = param && path.charAt(i) != '}' || path.charAt(i) == '{';
+                }
             }
 
             /**
@@ -854,6 +874,110 @@ public class HTTPServer {
                     VirtualHost.this.methods.add(method); // it's now supported by server
                 }
             }
+
+            /**
+             * Returns or creates a context matching the given path.
+             * <p>
+             * This is implemented as a recursive radix tree node get/create method, where the
+             * nodes are ContextInfos containing segments of the path, and each path parameter
+             * is in a separate node. While slightly complex, this data structure provides
+             * full support for url matching, path parameters, wildcards, ranking etc. all in one,
+             * and with good performance.
+             * <p>
+             * When matching a literal segment or creating a literal or parameter segment, matching
+             * is done literally. When matching a parameter, the match is equivalent to the
+             * reluctant regex "([^/]+?)", i.e. the minimal number of any characters (but at least
+             * one) up to the next slash (or end). A path parameter whose name starts with an
+             * asterisk is a wildcard parameter, which matches zero or more characters including
+             * slashes, equivalent to the regex "(.*?)".
+             * <p>
+             * A matched node is returned only if it is a valid context, i.e. has context handlers.
+             * If multiple contexts match the path, the one with the highest rank is returned.
+             *
+             * @param path a context path
+             * @param i the index within path which should be matched against this context's segment
+             * @param create specifies whether the context should be created if it does not exist
+             * @param rank the minimal allowed rank for a matched node
+             * @param params a list to which the matched path parameters are added (if not null)
+             * @return the matched or created context, or null if there is no match
+             *         (except for the root context that returns itself if there is no match)
+             */
+            protected ContextInfo getContext(String path, int i, boolean create, int rank, List<String[]> params) {
+                int j = 0; // matching index in current node's segment
+                int len = path.length(); // full path length
+                String segment = this.segment; // current node's segment
+                int slen = segment.length(); // current segment length
+                boolean param = this.param != null; // param or literal segment
+
+                if (!param || create) { // literal or add param - match everything literally
+                    for (; j < slen && i < len && segment.charAt(j) == path.charAt(i); i++, j++);
+                    // partial or no match - irrelevant unless creating a non-empty literal segment
+                    if (j < slen && (j == 0 || !create || param))
+                        return null;
+                }
+
+                // search mode - current node is fully matched, so continue to children
+                ContextInfo context = null; // the best matched context
+                if (!create) {
+                    boolean wildcard = param && this.param.charAt(0) == '*';
+                    int start = i;
+                    if (param) // param - match reluctantly until slash or end, i.e. "([^/]+?)"
+                        for (; i < len && (path.charAt(i) != '/' || wildcard); i++); // find maximal param end
+                    int end = i;
+                    // find the highest ranked child matching the rest of the path (recursively)
+                    for (ContextInfo child : children) {
+                        for (j = start + (param && !wildcard ? 1 : 0); j <= end; j++) { // param match >= 1
+                            ContextInfo found = child.getContext(path, j, false, rank, params);
+                            if (found != null) {
+                                context = found; // the best fully matched descendant context
+                                rank = found.rank; // the best matched rank so far
+                                i = j; // the end position of the current segment match
+                            }
+                        }
+                    }
+                    // if no children match but this is a matching node (or the root context)
+                    if (context == null && (i == 0 || this.rank > rank && (i == len
+                            || i == len - 1 && path.charAt(i) == '/') && !getHandlers().isEmpty())) {
+                        context = this; // return this node
+                        if (params != null)
+                            params.clear(); // reset params for the new best match
+                    }
+                    if (params != null && param && context != null) // add this node's param
+                        params.add(new String[] { this.param, path.substring(start, i) });
+                    return context;
+                }
+
+                // create mode - either split this node or continue to children
+                if (j == slen) { // full segment match - continue to children
+                    for (ContextInfo child : children) {
+                        context = child.getContext(path, i, true, rank, null);
+                        if (context != null) // new node was created by descendant
+                            return context; // at most one child can match literally, so we're done
+                    }
+                } else { // partial segment match - split this node at the point the path diverges
+                    context = new ContextInfo(this.path, segment.substring(j));
+                    context.children = this.children;
+                    context.handlers.putAll(this.handlers);
+                    this.path = path.substring(0, i);
+                    this.segment = segment.substring(0, j);
+                    this.rank -= (slen - j) << 16;
+                    this.handlers.clear();
+                    this.children = new ContextInfo[] { context };
+                }
+                if (i == len) // this node (previously existing or currently split) is the context
+                    return this;
+                // append new child node, while splitting params into separate nodes recursively
+                int start = path.indexOf('{', i);
+                int end = start < 0 ? len : start > i ? start : path.indexOf('}', start) + 1;
+                if (end == 0)
+                    throw new IllegalArgumentException("unterminated param: " + path);
+                context = new ContextInfo(path.substring(0, end), path.substring(i, end));
+                ContextInfo[] children = new ContextInfo[this.children.length + 1];
+                System.arraycopy(this.children, 0, children, 0, this.children.length);
+                children[this.children.length] = context;
+                this.children = children;
+                return end == len ? context : context.getContext(path, i, true, rank, null);
+            }
         }
 
         protected final String name;
@@ -861,9 +985,7 @@ public class HTTPServer {
         protected volatile String directoryIndex = "index.html";
         protected volatile boolean allowGeneratedIndex;
         protected final Set<String> methods = new CopyOnWriteArraySet<String>();
-        protected final ContextInfo emptyContext = new ContextInfo(null);
-        protected final ConcurrentMap<String, ContextInfo> contexts =
-            new ConcurrentHashMap<String, ContextInfo>();
+        protected final ContextInfo rootContext = new ContextInfo("", ""); // root of context tree
 
         /**
          * Constructs a VirtualHost with the given name.
@@ -872,7 +994,6 @@ public class HTTPServer {
          */
         public VirtualHost(String name) {
             this.name = name;
-            contexts.put("*", new ContextInfo(null)); // for "OPTIONS *"
         }
 
         /**
@@ -957,28 +1078,24 @@ public class HTTPServer {
         }
 
         /**
-         * Returns the context handler for the given path.
+         * Returns the context info for the given path.
          * <p>
-         * If a context is not found for the given path, the search is repeated for
-         * its parent path, and so on until a base context is found. If neither the
-         * given path nor any of its parents has a context, an empty context is returned.
+         * If a context is not found for the given path, the root context is returned.
          *
          * @param path the context's path
-         * @return the context info for the given path, or an empty context if none exists
+         * @return the context info for the given path, or the root context if none exists
          */
         public ContextInfo getContext(String path) {
             // all context paths are without trailing slash
-            for (path = trimRight(path, '/'); path != null; path = getParentPath(path)) {
-                ContextInfo info = contexts.get(path);
-                if (info != null)
-                    return info;
-            }
-            return emptyContext;
+            return rootContext.getContext(path, 0, false, 0, null);
         }
 
         /**
          * Adds a context and its corresponding context handler to this server.
-         * Paths are normalized by removing trailing slashes (except the root).
+         * Paths are normalized by removing trailing slashes (except the root), and
+         * may contain path parameters surrounded by curly braces, e.g. "/users/{username}"
+         * or wildcard path parameters whose name starts with an asterisk, e.g. "/path/{*}"
+         * (with slash) or "/path{*any}" (with or without slash).
          *
          * @param path the context's path (must start with '/')
          * @param handler the context handler for the given path
@@ -988,11 +1105,10 @@ public class HTTPServer {
         public void addContext(String path, ContextHandler handler, String... methods) {
             if (path == null || !path.startsWith("/") && !path.equals("*"))
                 throw new IllegalArgumentException("invalid path: " + path);
-            path = trimRight(path, '/'); // remove trailing slash
-            ContextInfo info = new ContextInfo(path);
-            ContextInfo existing = contexts.putIfAbsent(path, info);
-            info = existing != null ? existing : info;
-            info.addHandler(handler, methods);
+            if (path.length() > 1)
+                path = trimRight(path, '/'); // remove trailing slash
+            ContextInfo context = rootContext.getContext(path, 0, true, 0, null);
+            context.addHandler(handler, methods);
         }
 
         /**
@@ -1069,8 +1185,10 @@ public class HTTPServer {
     }
 
     /**
-     * The {@code FileContextHandler} services a context by mapping it
-     * to a file or folder (recursively) on disk.
+     * The {@code FileContextHandler} services a context by mapping it to a file
+     * or folder on disk. In order to serve a directory (recursively),
+     * the context path must end with a wildcard path parameter named "*",
+     * e.g. "/path/{*}" (with slash) or "/path{*}" (with or without slash).
      */
     public static class FileContextHandler implements ContextHandler {
 
@@ -1081,7 +1199,10 @@ public class HTTPServer {
         }
 
         public int serve(Request req, Response resp) throws IOException {
-            return serveFile(base, req.getContext().getPath(), req, resp);
+            String path = req.getPath();
+            String filename = req.getParams().get("*");
+            String context = filename == null ? path : path.substring(0, path.length() - filename.length());
+            return serveFile(base, context, req, resp);
         }
     }
 
@@ -1104,10 +1225,10 @@ public class HTTPServer {
             this.obj = obj;
             Class<?>[] params = m.getParameterTypes();
             if (params.length != 2
-                || !Request.class.isAssignableFrom(params[0])
-                || !Response.class.isAssignableFrom(params[1])
-                || !int.class.isAssignableFrom(m.getReturnType()))
-                    throw new IllegalArgumentException("invalid method signature: " + m);
+                    || !Request.class.isAssignableFrom(params[0])
+                    || !Response.class.isAssignableFrom(params[1])
+                    || !int.class.isAssignableFrom(m.getReturnType()))
+                throw new IllegalArgumentException("invalid method signature: " + m);
         }
 
         public int serve(Request req, Response resp) throws IOException {
@@ -1140,9 +1261,8 @@ public class HTTPServer {
          */
         public Header(String name, String value) {
             this.name = name.trim();
-            this.value = value.trim();
-            // RFC2616#14.23 - header can have an empty value (e.g. Host)
-            if (this.name.length() == 0) // but name cannot be empty
+            this.value = value.trim(); // [RFC9110#5.5] value can be empty
+            if (this.name.length() == 0) // [RFC9110#5.1] name cannot be empty
                 throw new IllegalArgumentException("name cannot be empty");
         }
 
@@ -1190,7 +1310,7 @@ public class HTTPServer {
         /**
          * Returns the value of the first header with the given name.
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          * @return the header value, or null if none exists
          */
         public String get(String name) {
@@ -1203,7 +1323,7 @@ public class HTTPServer {
         /**
          * Returns the Date value of the header with the given name.
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          * @return the header value as a Date, or null if none exists
          *         or if the value is not in any supported date format
          */
@@ -1219,7 +1339,7 @@ public class HTTPServer {
         /**
          * Returns whether there exists a header with the given name.
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          * @return whether there exists a header with the given name
          */
         public boolean contains(String name) {
@@ -1230,7 +1350,7 @@ public class HTTPServer {
          * Adds a header with the given name and value to the end of this
          * collection of headers. Leading and trailing whitespace are trimmed.
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          * @param value the header value
          */
         public void add(String name, String value) {
@@ -1260,7 +1380,7 @@ public class HTTPServer {
          * existing header with the same name. If there is no existing header
          * with the same name, it is added as in {@link #add}.
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          * @param value the header value
          * @return the replaced header, or null if none existed
          */
@@ -1279,7 +1399,7 @@ public class HTTPServer {
         /**
          * Removes all headers with the given name (if any exist).
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          */
         public void remove(String name) {
             int j = 0;
@@ -1307,17 +1427,19 @@ public class HTTPServer {
         /**
          * Returns a header's parameters. Parameter order is maintained,
          * and the first key (in iteration order) is the header's value
-         * without the parameters.
+         * without the parameters. Parameter names are converted to lowercase.
          *
-         * @param name the header name (case insensitive)
+         * @param name the header name (case-insensitive)
          * @return the header's parameter names and values
          */
         public Map<String, String> getParams(String name) {
             Map<String, String> params = new LinkedHashMap<String, String>();
             for (String param : split(get(name), ";", -1)) {
                 String[] pair = split(param, "=", 2);
+                // [RFC9110#5.6.6] param names are case-insensitive
+                String p = pair[0].toLowerCase(Locale.US); // normalize to lowercase
                 String val = pair.length == 1 ? "" : trimLeft(trimRight(pair[1], '"'), '"');
-                params.put(pair[0], val);
+                params.put(p, val);
             }
             return params;
         }
@@ -1344,8 +1466,9 @@ public class HTTPServer {
         protected String method;
         protected URI uri;
         protected URL baseURL; // cached value
-        protected String version;
+        protected int version;
         protected Headers headers;
+        protected Headers trailers;
         protected InputStream body;
         protected Socket sock;
         protected Map<String, String> params; // cached value
@@ -1363,22 +1486,23 @@ public class HTTPServer {
             this.sock = sock;
             readRequestLine(in);
             headers = readHeaders(in);
-            // RFC2616#3.6 - if "chunked" is used, it must be the last one
-            // RFC2616#4.4 - if non-identity Transfer-Encoding is present,
-            // it must either include "chunked" or close the connection after
-            // the body, and in any case ignore Content-Length.
-            // if there is no such Transfer-Encoding, use Content-Length
-            // if neither header exists, there is no body
+            // [RFC9112#6.3] Transfer-Encoding overrides Content-Length if it exists.
+            // If "chunked" encoding is the final one then it determines the body length,
+            // otherwise we must return an error and close the connection.
+            // If there is no Transfer-Encoding, use Content-Length to determine the length.
+            // If there is no Transfer-Encoding and no Content-Length, then there is no body.
+            // [RFC9110#8.4] the "identity" transfer coding is no longer valid
             String header = headers.get("Transfer-Encoding");
-            if (header != null && !header.toLowerCase(Locale.US).equals("identity")) {
-                if (Arrays.asList(splitElements(header, true)).contains("chunked"))
-                    body = new ChunkedInputStream(in, headers);
-                else
-                    body = in; // body ends when connection closes
+            if (header != null) {
+                List<String> encodings = Arrays.asList(splitElements(header, true));
+                if (encodings.isEmpty() || !encodings.get(encodings.size() - 1).equals("chunked"))
+                    throw new IOException("final transfer encoding must be \"chunked\"");
+                trailers = new Headers();
+                body = new ChunkedInputStream(in, trailers); // RFC9110#6.5 - separate trailers from headers
             } else {
                 header = headers.get("Content-Length");
                 long len = header == null ? 0 : parseULong(header, 10);
-                body = new LimitedInputStream(in, len, false);
+                body = new LimitedInputStream(in, len, true);
             }
         }
 
@@ -1397,11 +1521,11 @@ public class HTTPServer {
         public URI getURI() { return uri; }
 
         /**
-         * Returns the request version string.
+         * Returns the request version (as a two-digit integer).
          *
-         * @return the request version string
+         * @return the request version
          */
-        public String getVersion() { return version; }
+        public int getVersion() { return version; }
 
         /**
          * Returns the request headers.
@@ -1409,6 +1533,13 @@ public class HTTPServer {
          * @return the request headers
          */
         public Headers getHeaders() { return headers; }
+
+        /**
+         * Returns the request trailers (trailer fields).
+         *
+         * @return the request trailers (which may be null or empty)
+         */
+        public Headers getTrailers() { return trailers; }
 
         /**
          * Returns the input stream containing the request body.
@@ -1444,8 +1575,9 @@ public class HTTPServer {
         public void setPath(String path) {
             try {
                 uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(),
-                    trimDuplicates(path, '/'), uri.getQuery(), uri.getFragment());
+                        trimDuplicates(path, '/'), uri.getQuery(), uri.getFragment());
                 context = null; // clear cached context so it will be recalculated
+                params = null;
             } catch (URISyntaxException use) {
                 throw new IllegalArgumentException("error setting path", use);
             }
@@ -1454,7 +1586,7 @@ public class HTTPServer {
         /**
          * Returns the base URL (scheme, host and port) of the request resource.
          * The host name is taken from the request URI or the Host header or a
-         * default host (see RFC2616#5.2).
+         * default host (see RFC9110#7.1, RFC9112#3.3).
          *
          * @return the base URL of the requested resource, or null if it
          *         is malformed
@@ -1462,16 +1594,16 @@ public class HTTPServer {
         public URL getBaseURL() {
             if (baseURL != null)
                 return baseURL;
-            // normalize host header
+            // [RFC9112#3.2.2] also accept absolute url, which overrides host
             String host = uri.getHost();
             if (host == null) {
                 host = headers.get("Host");
                 if (host == null) // missing in HTTP/1.0
                     host = detectLocalHostName();
             }
-            int pos = host.indexOf(':');
+            int pos = host.indexOf(':'); // ignore request port and use real one
             host = pos < 0 ? host : host.substring(0, pos);
-            try {
+            try { // [RFC9112#3.3] use "https" or "http" scheme as configured
                 return baseURL = new URL(secure ? "https" : "http", host, port, "");
             } catch (MalformedURLException mue) {
                 return null;
@@ -1479,10 +1611,10 @@ public class HTTPServer {
         }
 
         /**
-         * Returns the request parameters, which are parsed both from the query
-         * part of the request URI, and from the request body if its content
-         * type is "application/x-www-form-urlencoded" (i.e. a submitted form).
-         * UTF-8 encoding is assumed in both cases.
+         * Returns the request parameters, which are parsed from the query
+         * part of the request URI, from the request body if its content type
+         * is "application/x-www-form-urlencoded" (i.e. a submitted form),
+         * and from path parameters. UTF-8 encoding is assumed.
          * <p>
          * The parameters are returned as a list of string arrays, each containing
          * the parameter name as the first element and its corresponding value
@@ -1496,24 +1628,20 @@ public class HTTPServer {
          * @see HTTPServer#parseParamsList(String)
          */
         public List<String[]> getParamsList() throws IOException {
-            List<String[]> queryParams = parseParamsList(uri.getRawQuery());
-            List<String[]> bodyParams = Collections.emptyList();
-            String ct = headers.get("Content-Type");
+            List<String[]> params = new ArrayList<String[]>(4);
+            getVirtualHost().rootContext.getContext(getPath(), 0, false, 0, params); // path params
+            String ct = headers.get("Content-Type"); // body params
             if (ct != null && ct.toLowerCase(Locale.US).startsWith("application/x-www-form-urlencoded"))
-                bodyParams = parseParamsList(readToken(body, -1, "UTF-8", 2097152)); // 2MB limit
-            if (bodyParams.isEmpty())
-                return queryParams;
-            if (queryParams.isEmpty())
-                return bodyParams;
-            queryParams.addAll(bodyParams);
-            return queryParams;
+                params.addAll(parseParamsList(readToken(body, -1, "UTF-8", 2097152))); // 2MB limit
+            params.addAll(parseParamsList(uri.getRawQuery())); // query params
+            return params;
         }
 
         /**
-         * Returns the request parameters, which are parsed both from the query
-         * part of the request URI, and from the request body if its content
-         * type is "application/x-www-form-urlencoded" (i.e. a submitted form).
-         * UTF-8 encoding is assumed in both cases.
+         * Returns the request parameters, which are parsed from the query
+         * part of the request URI, from the request body if its content type
+         * is "application/x-www-form-urlencoded" (i.e. a submitted form),
+         * and from path parameters. UTF-8 encoding is assumed.
          * <p>
          * For multivalued parameters (i.e. multiple parameters with the same
          * name), only the first one is considered. For access to all values,
@@ -1534,17 +1662,18 @@ public class HTTPServer {
 
         /**
          * Returns the absolute (zero-based) content range value read
-         * from the Range header. If multiple ranges are requested, a single
-         * range containing all of them is returned.
+         * from the Range header. If multiple ranges are requested,
+         * a single range containing all of them is returned.
+         * The Range header should be ignored for methods other than GET.
          *
          * @param length the full length of the requested resource
-         * @return the requested range, or null if the Range header
-         *         is missing or invalid
+         * @return the start and end positions (inclusive) of the requested
+         *         range, or null if the Range header is missing or invalid
          */
         public long[] getRange(long length) {
-            String header = headers.get("Range");
-            return header == null || !header.startsWith("bytes=")
-                ? null : parseRange(header.substring(6), length);
+            String header = headers.get("Range"); // [RFC9110#14.1] case-insensitive units
+            return header == null || !header.toLowerCase(Locale.US).startsWith("bytes=")
+                    ? null : parseRange(header.substring(6), length);
         }
 
         /**
@@ -1554,44 +1683,56 @@ public class HTTPServer {
          * @throws IOException if an error occurs or the request line is invalid
          */
         protected void readRequestLine(InputStream in) throws IOException {
-            // RFC2616#4.1: should accept empty lines before request line
-            // RFC2616#19.3: tolerate additional whitespace between tokens
-            String line;
-            try {
-                do { line = readLine(in); } while (line.length() == 0);
-            } catch (IOException ioe) { // if EOF, timeout etc.
-                throw new IOException("missing request line"); // signal that the request did not begin
+            // [RFC9112#2.2] accept empty lines before request line
+            // [RFC9112#3] tolerate additional whitespace between tokens
+            int c;
+            byte[] b = null;
+            int i = 0;
+            int len = 0;
+            int token = 0; // number of tokens parsed
+            while ((c = in.read()) != -1) {
+                if (c > ' ') { // append char to token
+                    if (i == len) { // buffer is full
+                        if (i >= 8192)
+                            throw new IOException(
+                                    token == 1 ? "URI too long" : "request line too long");
+                        len = len == 0 ? 128 : 2 * len; // double capacity
+                        byte[] temp = new byte[len]; // lazy init since connection may close between requests
+                        if (b != null)
+                            System.arraycopy(b, 0, temp, 0, i);
+                        b = temp;
+                    }
+                    // if path is a relative uri, we must remove '//' prefix which URI parses as host name
+                    // (we also merge other repeating slashes as is common practice, although not required)
+                    if (c != '/' || i == 0 || b[i - 1] != '/' || b[0] != '/')
+                        b[i++] = (byte)c;
+                } else { // whitespace delimiter
+                    if (i > 0) { // the end of a non-empty token
+                        if (token == 0) { // method
+                            method = new String(b, 0, i, "ISO8859_1");
+                        } else if (token == 1) { // uri
+                            try {
+                                this.uri = new URI(new String(b, 0, i, "ISO8859_1"));
+                            } catch (URISyntaxException use) {
+                                throw new IOException("invalid URI: " + use.getMessage());
+                            }
+                        } else if (token == 2) { // version
+                            if (i != 8 || b[0] != 'H' || b[1] != 'T' || b[2] != 'T' || b[3] != 'P' || b[4] != '/'
+                                    || b[6] != '.' || b[5] < '0' || b[5] > '9' || b[7] < '0' || b[7] > '9')
+                                throw new IOException("invalid version");
+                            version = 10 * (b[5] - '0') + (b[7] - '0'); // parse as 2-digit integer
+                        }
+                        i = 0;
+                        token++;
+                    }
+                    if (c == '\n' && token > 0) { // end of request line (unless it's empty)
+                        if (token == 3) // got our 3 valid tokens
+                            return;
+                        throw new IOException("invalid request line"); // wrong number of tokens
+                    }
+                }
             }
-
-            // support space on uri
-
-            /*
-            try {
-                int spaceIndx = line.indexOf(' ');
-                method = line.substring(0,spaceIndx);
-                int lastSpaceindx = line.lastIndexOf(' ');
-                // must remove '//' prefix which constructor parses as host name
-                String path = trimDuplicates(line.substring(spaceIndx+1, lastSpaceindx), '/');
-
-                path = trimMusicId(path);
-
-                uri = new URI(path);
-                version = line.substring(lastSpaceindx).trim(); // RFC2616#2.1: allow implied LWS; RFC7230#3.1.1: disallow it
-            } catch (URISyntaxException use) {
-                throw new IOException("invalid URI: " + use.getMessage());
-            } */
-
-            String[] tokens = split(line, " ", -1);
-            if (tokens.length != 3)
-                throw new IOException("invalid request line: \"" + line + "\"");
-            try {
-                method = tokens[0];
-                // must remove '//' prefix which constructor parses as host name
-                uri = new URI(trimDuplicates(tokens[1], '/'));
-                version = tokens[2]; // RFC2616#2.1: allow implied LWS; RFC7230#3.1.1: disallow it
-            } catch (URISyntaxException use) {
-                throw new IOException("invalid URI: " + use.getMessage());
-            }
+            throw new IOException("missing request line");
         }
 
         /**
@@ -1603,8 +1744,9 @@ public class HTTPServer {
          */
         public VirtualHost getVirtualHost() {
             return host != null ? host
-                : (host = HTTPServer.this.getVirtualHost(getBaseURL().getHost())) != null ? host
-                : (host = HTTPServer.this.getVirtualHost(null));
+                    : (host = HTTPServer.this.getVirtualHost(
+                    getBaseURL().getHost().toLowerCase(Locale.US))) != null ? host
+                    : (host = HTTPServer.this.getVirtualHost(null));
         }
 
         /**
@@ -1615,14 +1757,6 @@ public class HTTPServer {
         public VirtualHost.ContextInfo getContext() {
             return context != null ? context : (context = getVirtualHost().getContext(getPath()));
         }
-    }
-
-    private String trimMusicId(String path) {
-        path = path.trim();
-        if(path.contains(" ")) {
-            path = path.substring(0,path.indexOf(" "));
-        }
-        return path;
     }
 
     /**
@@ -1712,7 +1846,7 @@ public class HTTPServer {
                 encodedOut = new GZIPOutputStream(encodedOut, 4096);
             else if (ce.contains("deflate") || te.contains("deflate"))
                 encodedOut = new DeflaterOutputStream(encodedOut);
-            return encodedOut; // return the outer-most stream
+            return encodedOut; // return the outermost stream
         }
 
         /**
@@ -1742,7 +1876,7 @@ public class HTTPServer {
                 throw new IOException("headers were already sent");
             if (!headers.contains("Date"))
                 headers.add("Date", formatDate(System.currentTimeMillis()));
-            headers.add("Server", "JLHTTP/2.6");
+            headers.add("Server", "JLHTTP/3.1");
             out.write(getBytes("HTTP/1.1 ", Integer.toString(status), " ", statuses[status]));
             out.write(CRLF);
             headers.writeTo(out);
@@ -1764,7 +1898,7 @@ public class HTTPServer {
          *        or non-positive if unknown. A time in the future will be
          *        replaced with the current system time.
          * @param etag the ETag of the response resource, or null if unknown
-         *        (see RFC2616#3.11)
+         *        (see RFC9110#8.8.3)
          * @param contentType the content type of the response resource, or null
          *        if unknown (in which case "application/octet-stream" will be sent)
          * @param range the content range that will be sent, or null if the
@@ -1772,10 +1906,10 @@ public class HTTPServer {
          * @throws IOException if an error occurs
          */
         public void sendHeaders(int status, long length, long lastModified,
-                String etag, String contentType, long[] range) throws IOException {
+                                String etag, String contentType, long[] range) throws IOException {
             if (range != null) {
                 headers.add("Content-Range", "bytes " + range[0] + "-" +
-                    range[1] + "/" + (length >= 0 ? length : "*"));
+                        range[1] + "/" + (length >= 0 ? length : "*"));
                 length = range[1] - range[0] + 1;
                 if (status == 200)
                     status = 206;
@@ -1786,13 +1920,13 @@ public class HTTPServer {
                 headers.add("Content-Type", ct);
             }
             if (!headers.contains("Content-Length") && !headers.contains("Transfer-Encoding")) {
-                // RFC2616#3.6: transfer encodings are case-insensitive and must not be sent to an HTTP/1.0 client
-                boolean modern = req != null && req.getVersion().endsWith("1.1");
+                // [RFC9112#7] transfer encodings are case-insensitive
+                // [RFC9112#6.1] transfer encodings must not be sent to an HTTP/1.0 client
+                boolean modern = req != null && req.getVersion() == 11;
                 String accepted = req == null ? null : req.getHeaders().get("Accept-Encoding");
-                List<String> encodings = Arrays.asList(splitElements(accepted, true));
-                String compression = encodings.contains("gzip") ? "gzip" :
-                                     encodings.contains("deflate") ? "deflate" : null;
-                if (compression != null && (length < 0 || length > 300) && isCompressible(ct) && modern) {
+                String compression = getHighestQValue(accepted, "identity", "identity", "gzip", "deflate");
+                if (compression != null && !compression.equals("identity") &&
+                        (length < 0 || length > 300) && isCompressible(ct) && modern) {
                     headers.add("Transfer-Encoding", "chunked"); // compressed data is always unknown length
                     headers.add("Content-Encoding", compression);
                 } else if (length < 0 && modern) {
@@ -1801,15 +1935,15 @@ public class HTTPServer {
                     headers.add("Content-Length", Long.toString(length)); // known length
                 }
             }
-            if (!headers.contains("Vary")) // RFC7231#7.1.4: Vary field should include headers
+            if (!headers.contains("Vary")) // [RFC9110#12.5.5] Vary field should include headers
                 headers.add("Vary", "Accept-Encoding"); // that are used in selecting representation
-            if (lastModified > 0 && !headers.contains("Last-Modified")) // RFC2616#14.29
+            if (lastModified > 0 && !headers.contains("Last-Modified")) // [RFC9110#8.8.2.1]
                 headers.add("Last-Modified", formatDate(Math.min(lastModified, System.currentTimeMillis())));
             if (etag != null && !headers.contains("ETag"))
                 headers.add("ETag", etag);
             if (req != null && "close".equalsIgnoreCase(req.getHeaders().get("Connection"))
                     && !headers.contains("Connection"))
-                headers.add("Connection", "close"); // #RFC7230#6.6: should reply to close with close
+                headers.add("Connection", "close"); // #[RFC9112#9.6] should reply to close with close
             sendHeaders(status);
         }
 
@@ -1827,8 +1961,8 @@ public class HTTPServer {
         public void send(int status, String text) throws IOException {
             byte[] content = text.getBytes("UTF-8");
             sendHeaders(status, content.length, -1,
-                "W/\"" + Integer.toHexString(text.hashCode()) + "\"",
-                "text/html; charset=utf-8", null);
+                    "W/\"" + Integer.toHexString(text.hashCode()) + "\"",
+                    "text/html; charset=utf-8", null);
             OutputStream out = getBody();
             if (out != null)
                 out.write(content);
@@ -1846,9 +1980,9 @@ public class HTTPServer {
          */
         public void sendError(int status, String text) throws IOException {
             send(status, String.format(
-                "<!DOCTYPE html>%n<html>%n<head><title>%d %s</title></head>%n" +
-                "<body><h1>%d %s</h1>%n<p>%s</p>%n</body></html>",
-                status, statuses[status], status, statuses[status], escapeHTML(text)));
+                    "<!DOCTYPE html>%n<html>%n<head><title>%d %s</title></head>%n" +
+                            "<body><h1>%d %s</h1>%n<p>%s</p>%n</body></html>",
+                    status, statuses[status], status, statuses[status], escapeHTML(text)));
         }
 
         /**
@@ -1932,7 +2066,7 @@ public class HTTPServer {
                                     handleConnection(sock.getInputStream(), sock.getOutputStream(), sock);
                                 } finally {
                                     try {
-                                        // RFC7230#6.6 - close socket gracefully
+                                        // [RFC9112#9.6] close socket gracefully
                                         // (except SSL socket which doesn't support half-closing)
                                         if (!(sock instanceof SSLSocket)) {
                                             sock.shutdownOutput(); // half-close socket (only output)
@@ -2031,7 +2165,7 @@ public class HTTPServer {
      * @return the virtual host with the given name, or null if it doesn't exist
      */
     public VirtualHost getVirtualHost(String name) {
-        return hosts.get(name == null ? "" : name);
+        return hosts.get(name == null ? "" : name.toLowerCase(Locale.US));
     }
 
     /**
@@ -2051,7 +2185,7 @@ public class HTTPServer {
      */
     public void addVirtualHost(VirtualHost host) {
         String name = host.getName();
-        hosts.put(name == null ? "" : name, host);
+        hosts.put(name == null ? "" : name.toLowerCase(Locale.US), host);
     }
 
     /**
@@ -2089,7 +2223,7 @@ public class HTTPServer {
         // register all host aliases (which may have been modified)
         for (VirtualHost host : getVirtualHosts())
             for (String alias : host.getAliases())
-                hosts.put(alias, host);
+                hosts.put(alias.toLowerCase(Locale.US), host);
         // start handling incoming connections
         new SocketHandlerThread().start();
     }
@@ -2136,7 +2270,9 @@ public class HTTPServer {
                         break; // we're not in the middle of a transaction - so just disconnect
                     resp.getHeaders().add("Connection", "close"); // about to close connection
                     if (t instanceof InterruptedIOException) // e.g. SocketTimeoutException
-                        resp.sendError(408, "Timeout waiting for client request");
+                        resp.sendError(408);
+                    else if (t instanceof IOException && t.getMessage().contains("URI too long"))
+                        resp.sendError(414); // RFC9112#3 - must return 414 if URI is too long
                     else
                         resp.sendError(400, "Invalid request: " + t.getMessage());
                 } else if (!resp.headersSent()) { // if headers were not already sent, we can send an error response
@@ -2150,9 +2286,9 @@ public class HTTPServer {
             }
             // consume any leftover body data so next request can be processed
             transfer(req.getBody(), null, -1);
-            // RFC7230#6.6: persist connection unless client or server close explicitly (or legacy client)
+            // [RFC9112#9.3/9.6] persist connection unless client or server close explicitly (or legacy client)
         } while (!"close".equalsIgnoreCase(req.getHeaders().get("Connection"))
-            && !"close".equalsIgnoreCase(resp.getHeaders().get("Connection")) && req.getVersion().endsWith("1.1"));
+                && !"close".equalsIgnoreCase(resp.getHeaders().get("Connection")) && req.getVersion() == 11);
     }
 
     /**
@@ -2183,34 +2319,31 @@ public class HTTPServer {
      * @throws IOException if an error occurs
      */
     protected boolean preprocessTransaction(Request req, Response resp) throws IOException {
-        Headers reqHeaders = req.getHeaders();
+        Headers headers = req.getHeaders();
         // validate request
-        String version = req.getVersion();
-        if (version.equals("HTTP/1.1")) {
-            if (!reqHeaders.contains("Host")) {
-                // RFC2616#14.23: missing Host header gets 400
-                resp.sendError(400, "Missing required Host header");
+        int version = req.getVersion();
+        if (version == 11) {
+            // [RFC9112#3.2] missing or multiple Host header gets 400
+            String host = headers.get("Host");
+            if (host == null || host.indexOf(',') > -1) {
+                resp.sendError(400, "Exactly one Host header is required");
                 return false;
             }
             // return a continue response before reading body
-            String expect = reqHeaders.get("Expect");
+            String expect = headers.get("Expect");
             if (expect != null) {
                 if (expect.equalsIgnoreCase("100-continue")) {
                     Response tempResp = new Response(resp.getOutputStream());
                     tempResp.sendHeaders(100);
                     resp.getOutputStream().flush();
                 } else {
-                    // RFC2616#14.20: if unknown expect, send 417
+                    // [RFC9110#10.1.1] if unknown expect, send 417
                     resp.sendError(417);
                     return false;
                 }
             }
-        } else if (version.equals("HTTP/1.0") || version.equals("HTTP/0.9")) {
-            // RFC2616#14.10 - remove connection headers from older versions
-            for (String token : splitElements(reqHeaders.get("Connection"), false))
-                reqHeaders.remove(token);
-        } else {
-            resp.sendError(400, "Unknown version: " + version);
+        } else if (version < 10 || version >= 20) {  // [RFC9112#C1] - drop HTTP/0.9 support
+            resp.sendError(505);
             return false;
         }
         return true;
@@ -2226,7 +2359,7 @@ public class HTTPServer {
     protected void handleMethod(Request req, Response resp) throws IOException {
         String method = req.getMethod();
         Map<String, ContextHandler> handlers = req.getContext().getHandlers();
-        // RFC 2616#5.1.1 - GET and HEAD must be supported
+        // [RFC9110#9.1] GET and HEAD must be supported
         if (method.equals("GET") || handlers.containsKey(method)) {
             serve(req, resp); // method is handled by context handler (or 404)
         } else if (method.equals("HEAD")) { // default HEAD handler
@@ -2241,9 +2374,9 @@ public class HTTPServer {
             // "*" is a special server-wide (no-context) request supported by OPTIONS
             boolean isServerOptions = req.getPath().equals("*") && method.equals("OPTIONS");
             methods.addAll(isServerOptions ? req.getVirtualHost().getMethods() : handlers.keySet());
-            resp.getHeaders().add("Allow", join(", ", methods));
+            resp.getHeaders().add("Allow", join(", ", methods)); // [RFC9110#10.2.1]
             if (method.equals("OPTIONS")) { // default OPTIONS handler
-                resp.getHeaders().add("Content-Length", "0"); // RFC2616#9.2
+                resp.getHeaders().add("Content-Length", "0"); // no content
                 resp.sendHeaders(200);
             } else if (req.getVirtualHost().getMethods().contains(method)) {
                 resp.sendHeaders(405); // supported by server, but not this context (nor built-in)
@@ -2262,11 +2395,12 @@ public class HTTPServer {
      */
     public void handleTrace(Request req, Response resp) throws IOException {
         resp.sendHeaders(200, -1, -1, null, "message/http", null);
+        int version = req.getVersion();
         OutputStream out = resp.getBody();
-        out.write(getBytes("TRACE ", req.getURI().toString(), " ", req.getVersion()));
+        out.write(getBytes("TRACE ", req.getURI().toString(), " HTTP/" + version / 10 + "." + version % 10));
         out.write(CRLF);
-        req.getHeaders().writeTo(out);
-        transfer(req.getBody(), out, -1);
+        req.getHeaders().writeTo(out); // warning: this may disclose sensitive headers (cookies, auth etc.)
+        transfer(req.getBody(), out, -1); // RFC9110#9.3.8 - client must not send content (but we echo it anyway)
     }
 
     /**
@@ -2291,13 +2425,15 @@ public class HTTPServer {
         if (path.endsWith("/")) {
             String index = req.getVirtualHost().getDirectoryIndex();
             if (index != null) {
-                req.setPath(path + index);
-                status = handler.serve(req, resp);
+                req.setPath(path + index); // recalculate context and handler with updated path
+                ContextHandler indexHandler = req.getContext().getHandlers().get(req.getMethod());
+                if (indexHandler != null)
+                    status = indexHandler.serve(req, resp);
                 req.setPath(path);
             }
         }
         if (status == 404)
-             status = handler.serve(req, resp);
+            status = handler.serve(req, resp);
         if (status > 0)
             resp.sendError(status);
     }
@@ -2320,9 +2456,9 @@ public class HTTPServer {
     }
 
     /**
-     * Adds Content-Type mappings from a standard mime.types file.
+     * Adds Content-Type mappings from a standard "mime.types" file.
      *
-     * @param in a stream containing a mime.types file
+     * @param in a stream containing a "mime.types" file
      * @throws IOException if an error occurs
      * @throws FileNotFoundException if the file is not found or cannot be read
      */
@@ -2368,8 +2504,8 @@ public class HTTPServer {
         String ct = pos < 0 ? contentType : contentType.substring(0, pos);
         for (String s : compressibleContentTypes)
             if (s.equals(ct) || s.charAt(0) == '*' && ct.endsWith(s.substring(1))
-                || s.charAt(s.length() - 1) == '*' && ct.startsWith(s.substring(0, s.length() - 1)))
-                    return true;
+                    || s.charAt(s.length() - 1) == '*' && ct.startsWith(s.substring(0, s.length() - 1)))
+                return true;
         return false;
     }
 
@@ -2477,13 +2613,15 @@ public class HTTPServer {
                 if (end > max)
                     max = end;
             }
+            if (min < 0)
+                min = 0; // suffix range larger than length
             if (max < 0) // no tokens
                 throw new RuntimeException();
             if (max >= length && min < length)
                 max = length - 1;
-            return new long[] { min, max }; // start might be >= length!
+            return new long[] { min, max }; // min might be >= length!
         } catch (RuntimeException re) { // NFE, IOOBE or explicit RE
-            return null; // RFC2616#14.35.1 - ignore header if invalid
+            return null; // [RFC9110#14.2] ignore Range header if invalid
         }
     }
 
@@ -2509,8 +2647,8 @@ public class HTTPServer {
      * Parses a date string in one of the supported {@link #DATE_PATTERNS}.
      * <p>
      * Received date header values must be in one of the following formats:
-     * Sun, 06 Nov 1994 08:49:37 GMT  ; RFC 822, updated by RFC 1123
-     * Sunday, 06-Nov-94 08:49:37 GMT ; RFC 850, obsoleted by RFC 1036
+     * Sun, 06 Nov 1994 08:49:37 GMT  ; IMF-fixdate
+     * Sunday, 06-Nov-94 08:49:37 GMT ; obsolete RFC 850 format
      * Sun Nov  6 08:49:37 1994       ; ANSI C's asctime() format
      *
      * @param time a string representation of a time value
@@ -2519,6 +2657,8 @@ public class HTTPServer {
      *         a valid date format in any of the supported formats
      */
     public static Date parseDate(String time) {
+        // [RFC9110#5.6.7] interpret 2-digit years >50 years in future as past,
+        // SDF defaults to >20 years which covers it (see set2DigitYearStart)
         for (String pattern : DATE_PATTERNS) {
             try {
                 SimpleDateFormat df = new SimpleDateFormat(pattern, Locale.US);
@@ -2531,10 +2671,10 @@ public class HTTPServer {
     }
 
     /**
-     * Formats the given time value as a string in RFC 1123 format.
+     * Formats the given time value as a string in IMF-fixdate format.
      *
      * @param time the time in milliseconds since January 1, 1970, 00:00:00 GMT
-     * @return the given time value as a string in RFC 1123 format
+     * @return the given time value as a string in IMF-fixdate format
      */
     public static String formatDate(long time) {
         // this implementation performs far better than SimpleDateFormat instances, and even
@@ -2548,7 +2688,7 @@ public class HTTPServer {
         System.arraycopy(MONTHS, 4 * cal.get(Calendar.MONTH), s, 8, 3);
         int n = cal.get(Calendar.DATE);    s[5]  += n / 10;      s[6]  += n % 10;
         n = cal.get(Calendar.YEAR);        s[12] += n / 1000;    s[13] += n / 100 % 10;
-                                           s[14] += n / 10 % 10; s[15] += n % 10;
+        s[14] += n / 10 % 10; s[15] += n % 10;
         n = cal.get(Calendar.HOUR_OF_DAY); s[17] += n / 10;      s[18] += n % 10;
         n = cal.get(Calendar.MINUTE);      s[20] += n / 10;      s[21] += n % 10;
         n = cal.get(Calendar.SECOND);      s[23] += n / 10;      s[24] += n % 10;
@@ -2558,8 +2698,8 @@ public class HTTPServer {
     /**
      * Splits the given element list string (comma-separated header value)
      * into its constituent non-empty trimmed elements.
-     * (RFC2616#2.1: element lists are delimited by a comma and optional LWS,
-     * and empty elements are ignored).
+     * ([RFC9110#5.6.1] element lists are delimited by a comma and
+     * optional whitespace, and empty elements are ignored).
      *
      * @param list the element list string
      * @param lower specifies whether the list elements should be lower-cased
@@ -2567,6 +2707,36 @@ public class HTTPServer {
      */
     public static String[] splitElements(String list, boolean lower) {
         return split(lower && list != null ? list.toLowerCase(Locale.US) : list, ",", -1);
+    }
+
+    /**
+     * Returns the element from the list with the highest quality value that is supported.
+     *
+     * @param list the element list string
+     * @param def the default value to return if none match (and not explicitly excluded)
+     * @param supported the list of supported values (including the default)
+     * @return the element with the highest quality value that is supported,
+     *         or the default value (if not explicitly excluded)
+     */
+    public static String getHighestQValue(String list, String def, String... supported) {
+        String value = null;
+        double qvalue = -1;
+        double wildcard = -1;
+        List<String> items = new ArrayList<String>(Arrays.asList(supported)); // supported but unmentioned values
+        for (String s : splitElements(list, true)) {
+            String[] pair = split(s, ";", -1);
+            double q = pair.length > 1 && pair[1].startsWith("q=") ? Double.parseDouble(pair[1].substring(2)) : 1;
+            if (pair[0].equals("*")) {
+                wildcard = q; // save wildcard qvalue
+            } else if (items.remove(pair[0]) && q >= qvalue && q > 0) {
+                qvalue = q; // best qvalue so far
+                value = pair[0]; // best candidate so far
+            }
+        }
+        // wildcard allows or disallows unmentioned values (including default)
+        // no wildcard disallows unmentioned values (except default)
+        return wildcard < 0 && value == null && items.contains(def) ? def
+                : wildcard > qvalue && wildcard > 0 && !items.isEmpty() ? items.get(0) : value;
     }
 
     /**
@@ -2676,8 +2846,6 @@ public class HTTPServer {
         }
         return s;
     }
-
-
 
     /**
      * Returns a human-friendly string approximating the given data size,
@@ -2791,7 +2959,7 @@ public class HTTPServer {
      *         is reached before the token end is reached
      */
     public static String readToken(InputStream in, int delim,
-            String enc, int maxLength) throws IOException {
+                                   String enc, int maxLength) throws IOException {
         // note: we avoid using a ByteArrayOutputStream here because it
         // suffers the overhead of synchronization for each byte written
         int b;
@@ -2834,10 +3002,9 @@ public class HTTPServer {
     }
 
     /**
-     * Reads headers from the given stream. Headers are read according to the
-     * RFC, including folded headers, element lists, and multiple headers
-     * (which are concatenated into a single element list header).
-     * Leading and trailing whitespace is removed.
+     * Reads headers from the given stream.
+     * Leading and trailing whitespace is removed from values.
+     * Repeated headers are concatenated into a single element list value.
      *
      * @param in the stream from which the headers are read
      * @return the read headers (possibly empty, if none exist)
@@ -2847,27 +3014,18 @@ public class HTTPServer {
     public static Headers readHeaders(InputStream in) throws IOException {
         Headers headers = new Headers();
         String line;
-        String prevLine = "";
         int count = 0;
         while ((line = readLine(in)).length() > 0) {
-            int start; // start of line data (after whitespace)
-            for (start = 0; start < line.length() &&
-                Character.isWhitespace(line.charAt(start)); start++);
-            if (start > 0) // unfold header continuation line
-                line = prevLine + ' ' + line.substring(start);
-            int separator = line.indexOf(':');
-            if (separator < 0)
+            int pos = line.indexOf(':');
+            if (pos <= 0)
                 throw new IOException("invalid header: \"" + line + "\"");
-            String name = line.substring(0, separator);
-            String value = line.substring(separator + 1).trim(); // ignore LWS
-            Header replaced = headers.replace(name, value);
-            // concatenate repeated headers (distinguishing repeated from folded)
-            if (replaced != null && start == 0) {
-                value = replaced.getValue() + ", " + value;
-                line = name + ": " + value;
-                headers.replace(name, value);
-            }
-            prevLine = line;
+            String name = line.substring(0, pos);
+            String value = line.substring(pos + 1).trim(); // [RFC9112#5.1] remove OWS
+            if (!name.equals(name.trim())) // [RFC9112#2.2/5] no WS before line or colon
+                throw new IOException("invalid whitespace in header: \"" + line + "\"");
+            Header prev = headers.replace(name, value);
+            if (prev != null) // [RFC9110#5.3] concatenate repeated headers
+                headers.replace(name, prev.getValue() + ", " + value);
             if (++count > 100)
                 throw new IOException("too many header lines");
         }
@@ -2876,10 +3034,11 @@ public class HTTPServer {
 
     /**
      * Matches the given ETag value against the given ETags. A match is found
-     * if the given ETag is not null, and either the ETags contain a "*" value,
+     * if the given ETag is not null, and either the ETags are a single "*",
      * or one of them is identical to the given ETag. If strong comparison is
-     * used, tags beginning with the weak ETag prefix "W/" never match.
-     * See RFC2616#3.11, RFC2616#13.3.3.
+     * used, tags beginning with the weak ETag prefix "W/" never match. If weak
+     * comparison is used, tag comparison ignores the weak ETag prefix "W/".
+     * See RFC9110#8.8.3.2, RFC9110#13.
      *
      * @param strong if true, strong comparison is used, otherwise weak
      *        comparison is used
@@ -2888,54 +3047,130 @@ public class HTTPServer {
      * @return true if the ETag is matched, false otherwise
      */
     public static boolean match(boolean strong, String[] etags, String etag) {
-        if (etag == null || strong && etag.startsWith("W/"))
+        if (etag == null)
             return false;
-        for (String e : etags)
-            if (e.equals("*") || (e.equals(etag) && !(strong && (e.startsWith("W/")))))
+        if (etags.length == 1 && etags[0].equals("*"))
+            return true;
+        for (String e : etags) {
+            if (strong ? e.equals(etag) && !etag.startsWith("W/") && !e.startsWith("W/") : e.equals(etag)
+                    || etag.length() - e.length() == 2 && etag.startsWith("W/") && etag.startsWith(e, 2)
+                    || etag.length() - e.length() == -2 && e.startsWith("W/") && e.startsWith(etag, 2))
                 return true;
+        }
         return false;
     }
 
     /**
      * Calculates the appropriate response status for the given request and
      * its resource's last-modified time and ETag, based on the conditional
-     * headers present in the request.
+     * headers present in the request. See RFC9110#13.
      *
      * @param req the request
      * @param lastModified the resource's last modified time
+     *        (must be rounded down to seconds and must not be in the future)
      * @param etag the resource's ETag
+     * @param range whether the request has a Range header
      * @return the appropriate response status for the request
      */
-    public static int getConditionalStatus(Request req, long lastModified, String etag) {
+    public static int getConditionalStatus(Request req, long lastModified, String etag, boolean range) {
         Headers headers = req.getHeaders();
         // If-Match
         String header = headers.get("If-Match");
-        if (header != null && !match(true, splitElements(header, false), etag))
-            return 412;
-        // If-Unmodified-Since
-        Date date = headers.getDate("If-Unmodified-Since");
-        if (date != null && lastModified > date.getTime())
-            return 412;
-        // If-Modified-Since
-        int status = 200;
-        boolean force = false;
-        date = headers.getDate("If-Modified-Since");
-        if (date != null && date.getTime() <= System.currentTimeMillis()) {
-            if (lastModified > date.getTime())
-                force = true;
-            else
-                status = 304;
+        if (header != null) {
+            if (!match(true, splitElements(header, false), etag))
+                return 412;
+        } else {
+            // If-Unmodified-Since
+            Date date = headers.getDate("If-Unmodified-Since");
+            if (date != null && lastModified > date.getTime())
+                return 412;
         }
+        boolean isGetOrHead = req.getMethod().equals("GET") || req.getMethod().equals("HEAD");
         // If-None-Match
         header = headers.get("If-None-Match");
         if (header != null) {
-            if (match(false, splitElements(header, false), etag)) // RFC7232#3.2: use weak matching
-                status = req.getMethod().equals("GET")
-                    || req.getMethod().equals("HEAD") ? 304 : 412;
-            else
-                force = true;
+            if (match(false, splitElements(header, false), etag)) // [RFC9110#13.1.2] weak matching
+                return isGetOrHead ? 304 : 412;
+        } else if (isGetOrHead) {
+            // If-Modified-Since
+            Date date = headers.getDate("If-Modified-Since");
+            if (date != null && lastModified <= date.getTime())
+                return 304;
         }
-        return force ? 200 : status;
+        // [RFC9110#14.2] Range is ignored on any method other than GET,
+        // and evaluated only if the response would otherwise be 200 (which is true at this point)
+        if (!range || !isGetOrHead)
+            return 200;
+        // If-Range
+        header = req.getHeaders().get("If-Range"); // either a date or an etag
+        if (header != null) {
+            if (!header.startsWith("\"") && !header.startsWith("W/")) {
+                Date date = req.getHeaders().getDate("If-Range");
+                if (date == null || lastModified != date.getTime()) // [RFC9110#13.1.5] exact match
+                    return 200; // date validator doesn't match - ignore range
+            } else if (!match(true, new String[] { header }, etag)) { // [RFC9110#13.1.5] strong etag
+                return 200; // etag validator doesn't match - ignore range
+            }
+        }
+        return 206; // send partial content according to range
+    }
+
+    /**
+     * Serves the contents of a file, with its corresponding content type,
+     * last modification time, etc. conditional and partial retrievals are
+     * handled according to the RFC.
+     *
+     * @param file the existing and readable file whose contents are served
+     * @param req the request
+     * @param resp the response into which the content is written
+     * @throws IOException if an error occurs
+     */
+    public static void serveFileContent(File file, Request req, Response resp) throws IOException {
+        long len = file.length();
+        long lastModified = file.lastModified(); // [RFC9110#8.8.2.1] must not be in the future
+        String etag = "W/\"" + lastModified + "\""; // weak tag based on modified date milliseconds
+        // we round down timestamps to second resolution, because that's what date headers support
+        // (if a resource changes more than once per second, one should use ETags instead)
+        long lastModifiedSecs = lastModified - lastModified % 1000; // rounded to seconds
+        // handle conditional request and range
+        long[] range = req.getRange(len);
+        int status = getConditionalStatus(req, lastModifiedSecs, etag, range != null);
+        if (status == 206)
+            status = range[0] >= len ? 416 : 200; // unsatisfiable range or 200 flow but with range
+        else
+            range = null; // ignore range
+        // send the response
+        Headers respHeaders = resp.getHeaders();
+        switch (status) {
+            case 304: // [RFC9110#15.4.5] no other headers or body
+                respHeaders.add("ETag", etag);
+                respHeaders.add("Vary", "Accept-Encoding");
+                respHeaders.add("Last-Modified", formatDate(lastModified));
+                resp.sendHeaders(304);
+                break;
+            case 412:
+                resp.sendHeaders(412);
+                break;
+            case 416:
+                respHeaders.add("Content-Range", "bytes */" + len);
+                resp.sendHeaders(416);
+                break;
+            case 200:
+                // send OK response
+                resp.sendHeaders(200, len, lastModified, etag,
+                        getContentType(file.getName(), "application/octet-stream"), range);
+                // send body
+                InputStream in = new FileInputStream(file);
+                try {
+                    resp.sendBody(in, len, range);
+                } finally {
+                    in.close();
+                }
+                break;
+            default:
+                resp.sendHeaders(500); // should never happen
+                break;
+        }
     }
 
     /**
@@ -2958,22 +3193,22 @@ public class HTTPServer {
      * @throws IOException if an error occurs
      */
     public static int serveFile(File base, String context,
-            Request req, Response resp) throws IOException {
-        String relativePath = req.getPath().substring(context.length());
-        File file = new File(base, relativePath).getCanonicalFile();
+                                Request req, Response resp) throws IOException {
+        String path = req.getPath();
+        File file = new File(base, path.substring(context.length())).getCanonicalFile();
         if (!file.exists() || file.isHidden() || file.getName().startsWith(".")) {
             return 404;
         } else if (!file.canRead() || !file.getPath().startsWith(base.getPath())) { // validate
             return 403;
         } else if (file.isDirectory()) {
-            if (relativePath.endsWith("/")) {
+            if (path.endsWith("/")) {
                 if (!req.getVirtualHost().isAllowGeneratedIndex())
                     return 403;
-                resp.send(200, createIndex(file, req.getPath()));
+                resp.send(200, createIndex(file, path));
             } else { // redirect to the normalized directory URL ending with '/'
-                resp.redirect(req.getBaseURL() + req.getPath() + "/", true);
+                resp.redirect(req.getBaseURL() + path + "/", true);
             }
-        } else if (relativePath.endsWith("/")) {
+        } else if (path.endsWith("/")) {
             return 404; // non-directory ending with slash (File constructor removed it)
         } else {
             serveFileContent(file, req, resp);
@@ -2981,78 +3216,6 @@ public class HTTPServer {
         return 0;
     }
 
-    /**
-     * Serves the contents of a file, with its corresponding content type,
-     * last modification time, etc. conditional and partial retrievals are
-     * handled according to the RFC.
-     *
-     * @param file the existing and readable file whose contents are served
-     * @param req the request
-     * @param resp the response into which the content is written
-     * @throws IOException if an error occurs
-     */
-    public static void serveFileContent(File file, Request req, Response resp) throws IOException {
-        long len = file.length();
-        long lastModified = file.lastModified();
-        String etag = "W/\"" + lastModified + "\""; // a weak tag based on date
-        int status = 200;
-        // handle range or conditional request
-        long[] range = req.getRange(len);
-        if (range == null || len == 0) {
-            status = getConditionalStatus(req, lastModified, etag);
-        } else {
-            String ifRange = req.getHeaders().get("If-Range");
-            if (ifRange == null) {
-                if (range[0] >= len)
-                    status = 416; // unsatisfiable range
-                else
-                    status = getConditionalStatus(req, lastModified, etag);
-            } else if (range[0] >= len) {
-                // RFC2616#14.16, 10.4.17: invalid If-Range gets everything
-                range = null;
-            } else { // send either range or everything
-                if (!ifRange.startsWith("\"") && !ifRange.startsWith("W/")) {
-                    Date date = req.getHeaders().getDate("If-Range");
-                    if (date != null && lastModified > date.getTime())
-                        range = null; // modified - send everything
-                } else if (!ifRange.equals(etag)) {
-                    range = null; // modified - send everything
-                }
-            }
-        }
-        // send the response
-        Headers respHeaders = resp.getHeaders();
-        switch (status) {
-            case 304: // no other headers or body allowed
-                respHeaders.add("ETag", etag);
-                respHeaders.add("Vary", "Accept-Encoding");
-                respHeaders.add("Last-Modified", formatDate(lastModified));
-                resp.sendHeaders(304);
-                break;
-            case 412:
-                resp.sendHeaders(412);
-                break;
-            case 416:
-                respHeaders.add("Content-Range", "bytes */" + len);
-                resp.sendHeaders(416);
-                break;
-            case 200:
-                // send OK response
-                resp.sendHeaders(200, len, lastModified, etag,
-                    getContentType(file.getName(), "application/octet-stream"), range);
-                // send body
-                InputStream in = new FileInputStream(file);
-                try {
-                    resp.sendBody(in, len, range);
-                } finally {
-                    in.close();
-                }
-                break;
-            default:
-                resp.sendHeaders(500); // should never happen
-                break;
-        }
-    }
 
     /**
      * Serves the contents of a directory as an HTML file index.
@@ -3073,13 +3236,13 @@ public class HTTPServer {
         // note: we use apache's format, for consistent user experience
         Formatter f = new Formatter(Locale.US);
         f.format("<!DOCTYPE html>%n" +
-            "<html><head><title>Index of %s</title></head>%n" +
-            "<body><h1>Index of %s</h1>%n" +
-            "<pre> Name%" + (w - 5) + "s Last modified      Size<hr>",
-            path, path, "");
+                        "<html><head><title>Index of %s</title></head>%n" +
+                        "<body><h1>Index of %s</h1>%n" +
+                        "<pre> Name%" + (w - 5) + "s Last modified      Size<hr>",
+                path, path, "");
         if (path.length() > 1) // add parent link if not root path
             f.format(" <a href=\"%s/\">Parent Directory</a>%"
-                + (w + 5) + "s-%n", getParentPath(path), "");
+                    + (w + 5) + "s-%n", getParentPath(path), "");
         for (File file : dir.listFiles()) {
             try {
                 String name = file.getName() + (file.isDirectory() ? "/" : "");
@@ -3088,8 +3251,8 @@ public class HTTPServer {
                 String link = new URI(null, path + name, null).toASCIIString();
                 if (!file.isHidden() && !name.startsWith("."))
                     f.format(" <a href=\"%s\">%s</a>%-" + (w - name.length()) +
-                        "s&#8206;%td-%<tb-%<tY %<tR%6s%n",
-                        link, name, "", file.lastModified(), size);
+                                    "s&#8206;%td-%<tb-%<tY %<tR%6s%n",
+                            link, name, "", file.lastModified(), size);
             } catch (URISyntaxException ignore) {}
         }
         f.format("</pre></body></html>");
@@ -3105,8 +3268,8 @@ public class HTTPServer {
         try {
             if (args.length == 0) {
                 System.err.printf("Usage: java [-options] %s <directory> [port]%n" +
-                    "To enable SSL: specify options -Djavax.net.ssl.keyStore, " +
-                    "-Djavax.net.ssl.keyStorePassword, etc.%n", HTTPServer.class.getName());
+                        "To enable SSL: specify options -Djavax.net.ssl.keyStore, " +
+                        "-Djavax.net.ssl.keyStorePassword, etc.%n", HTTPServer.class.getName());
                 return;
             }
             File dir = new File(args[0]);
@@ -3122,7 +3285,7 @@ public class HTTPServer {
                 server.setServerSocketFactory(SSLServerSocketFactory.getDefault());
             VirtualHost host = server.getVirtualHost(null); // default host
             host.setAllowGeneratedIndex(true); // with directory index pages
-            host.addContext("/", new FileContextHandler(dir));
+            host.addContext("/{*}", new FileContextHandler(dir));
             host.addContext("/api/time", new ContextHandler() {
                 public int serve(Request req, Response resp) throws IOException {
                     long now = System.currentTimeMillis();
