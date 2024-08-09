@@ -183,6 +183,7 @@ public class MediaServerService extends Service {
                 server = new HCHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
                 server.start();
             } catch (IOException e) {
+                Log.e(TAG, "createHttpStreamerServer", e);
                 throw new RuntimeException(e);
             }
         }

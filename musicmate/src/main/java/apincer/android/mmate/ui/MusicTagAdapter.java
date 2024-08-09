@@ -435,7 +435,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
 
         // Background, when bound the first time
-        MusicTag listeningItem = MusixMateApp.getPlayingSong();
+        MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
 
         holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
@@ -449,7 +449,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if (isListening) {
             //show music player icon
             // set italic
-            holder.mPlayerView.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+            holder.mPlayerView.setImageDrawable(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
             holder.mPlayerView.setVisibility(View.VISIBLE);
             holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
         } else {

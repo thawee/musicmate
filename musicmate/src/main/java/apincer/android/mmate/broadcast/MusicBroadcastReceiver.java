@@ -15,6 +15,8 @@ import androidx.annotation.RequiresApi;
 
 import java.util.List;
 
+import apincer.android.mmate.player.PlayerControl;
+import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.LogHelper;
 
@@ -31,6 +33,7 @@ import apincer.android.mmate.utils.LogHelper;
  *      - Radsone DCT
  *      - Hiby Music
  */
+@Deprecated
 public class MusicBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = LogHelper.getTag(MusicBroadcastReceiver.class);
     public static String PACKAGE_SONY_MUSIC = "com.sonyericson.music";
@@ -46,16 +49,16 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 
     String PLAYER_NAME_FOOBAR2000 = "foobar2000";
     //private MusicListeningService service;
-    private final BroadcastHelper broadcastHelper;
+    private final PlayerControl broadcastHelper;
     protected String title;
     protected String artist;
     protected String album;
-    protected MusicPlayerInfo playerInfo;
+    protected PlayerInfo playerInfo;
     public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
 
-    public MusicBroadcastReceiver(BroadcastHelper broadcastHelper ) {
+    public MusicBroadcastReceiver(PlayerControl broadcastHelper ) {
         this.broadcastHelper = broadcastHelper;
-        playerInfo = MusicPlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
+        playerInfo = PlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
     }
 
     @Override
@@ -71,7 +74,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
             } */
 
             // skip broadcast and notification lister if play by dlna client
-            if(broadcastHelper.getPlayerInfo()!= null && broadcastHelper.getPlayerInfo().isValidStreamPlayer()) return;
+           // if(broadcastHelper.getPlayerInfo()!= null && broadcastHelper.getPlayerInfo().isValidStreamPlayer(player)) return;
 
             boolean paused = intent.getBooleanExtra("paused", false);
             if(!paused) {
@@ -84,8 +87,8 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                   //  MusicListeningService.getInstance().setPlayingSong(title,artist,album);
                    // service.setListeningReceiver(this);
                   //  if((!StringUtils.isEmpty(playerPackage)) && ApplicationUtils.isAppRunning(context, playerPackage)) {
-                        broadcastHelper.setPlayerInfo(playerInfo);
-                        broadcastHelper.setPlayingSong(context, title, artist, album);
+                       // broadcastHelper.setPlayerInfo(playerInfo);
+                        broadcastHelper.setPlayingSong(context, playerPackage, title, artist, album);
                 //    }
                 }catch (Exception ex) {
                     Log.e(TAG, "onReceive",ex);
@@ -103,10 +106,10 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
         }else {
             playerPackage = intent.getStringExtra(INTENT_KEY_PACKAGE);
             String playerName = intent.getStringExtra(INTENT_KEY_PLAYER);
-            if(BroadcastHelper.PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equalsIgnoreCase(playerName)) {
+            if(PlayerControl.PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equalsIgnoreCase(playerName)) {
                 playerPackage = playerName;
                 playerName = null;
-            }else if(BroadcastHelper.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equalsIgnoreCase(playerName)) {
+            }else if(PlayerControl.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equalsIgnoreCase(playerName)) {
                 playerPackage = playerName;
                 playerName = null;
             }else if(PLAYER_NAME_FOOBAR2000.equalsIgnoreCase(playerName)) {
@@ -139,7 +142,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
     }
 
     protected void setPlayer(Context context, String packageName, String playerName) {
-        playerInfo = MusicPlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
+        playerInfo = PlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
         playerInfo.playerPackage = packageName;
         playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
         try {

@@ -13,6 +13,7 @@ import apincer.android.mmate.repository.MusicTag;
  *
  * @author gotev (Aleksandar Gotev)
  */
+@Deprecated
 public class BroadcastData implements Parcelable {
     public static final String BROADCAST_ACTION = "com.apincer.mmate.BROADCAST_ACTION";
     public static final String BROADCAST_DATA = "BROADCAST_DATA";

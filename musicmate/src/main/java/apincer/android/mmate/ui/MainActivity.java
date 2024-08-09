@@ -493,8 +493,8 @@ public class MainActivity extends AppCompatActivity {
                 .target(nowPlayingType)
                 .build();
         imageLoader.enqueue(request);
-        if(MusixMateApp.getPlayerInfo()!=null) {
-            nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+        if(MusixMateApp.getPlayerControl().getPlayerInfo()!=null) {
+            nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
         }
 
         MusicMateExecutors.main(() -> {
@@ -717,7 +717,7 @@ public class MainActivity extends AppCompatActivity {
     }
 	
 	private boolean doPlayNextSong() {
-        MusixMateApp.playNextSong(getApplicationContext());
+        MusixMateApp.getPlayerControl().playNextSong(getApplicationContext());
         return true;
 	}
 
@@ -805,7 +805,7 @@ public class MainActivity extends AppCompatActivity {
             mResideMenu.closeMenu();
         }
 
-        doShowNowPlayingSongFAB(MusixMateApp.getPlayingSong());
+        doShowNowPlayingSongFAB(MusixMateApp.getPlayerControl().getPlayingSong());
     }
 
     @Override
@@ -1320,7 +1320,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        doShowNowPlayingSongFAB(MusixMateApp.getPlayingSong());
+                        doShowNowPlayingSongFAB(MusixMateApp.getPlayerControl().getPlayingSong());
                     }else {
 						doHideNowPlayingSongFAB();
                     }

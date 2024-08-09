@@ -55,6 +55,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagEditEvent;
 import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
+import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.FileRepository;
@@ -164,8 +165,8 @@ public class TagsActivity extends AppCompatActivity {
             Intent myIntent = new Intent(TagsActivity.this, MainActivity.class);
             startActivity(myIntent);
         }
-        if(MusixMateApp.isPlaying() && getEditItems().size() == 1) {
-            if(MusixMateApp.getPlayingSong().equals(getEditItems().get(0))) {
+        if(MusixMateApp.getPlayerControl().isPlaying() && getEditItems().size() == 1) {
+            if(MusixMateApp.getPlayerControl().getPlayingSong().equals(getEditItems().get(0))) {
                 closePreview = false;
             }
         }
@@ -240,7 +241,7 @@ public class TagsActivity extends AppCompatActivity {
     public void onMessageEvent(AudioTagPlayingEvent event) {
         finishOnTimeout = false;
         // call from now playing listener
-        if(MusixMateApp.isPlaying()) {
+        if(MusixMateApp.getPlayerControl().isPlaying()) {
             playerBtn.setVisibility(View.VISIBLE);
             if (!closePreview) {
                 MusicTag tag = event.getPlayingSong();
@@ -330,7 +331,7 @@ public class TagsActivity extends AppCompatActivity {
             startProgressBar();
            // closePreview = false;
             playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
-            MusixMateApp.playNextSong(getApplicationContext());
+            MusixMateApp.getPlayerControl().playNextSong(getApplicationContext());
         });
         playerPanel.setOnLongClickListener(view -> {
             closePreview = !closePreview;
@@ -344,9 +345,9 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void updateTitlePanel() {
-        if(MusixMateApp.isPlaying()) {
+        if(MusixMateApp.getPlayerControl().isPlaying()) {
             playerBtn.setVisibility(View.VISIBLE);
-            playerBtn.setBackground(MusixMateApp.getPlayerInfo().getPlayerIconDrawable());
+            playerBtn.setBackground(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
             if(closePreview) {
                 playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent));
             }else {
@@ -666,7 +667,7 @@ public class TagsActivity extends AppCompatActivity {
                         setResult(RESULT_OK, resultIntent);
                     }
 
-                    if(MusixMateApp.isPlaying() || closePreview) {
+                    if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
                         finish(); // back to prev activity
                     }else {
                         // set timeout to finish, 5 seconds
@@ -723,7 +724,7 @@ public class TagsActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, resultIntent);
 
-        if(MusixMateApp.isPlaying() || closePreview) {
+        if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
             finish(); // back to prev activity
         }else {
             // set timeout to finish, 5 seconds

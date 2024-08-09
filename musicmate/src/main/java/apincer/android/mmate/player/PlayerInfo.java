@@ -1,24 +1,24 @@
-package apincer.android.mmate.broadcast;
+package apincer.android.mmate.player;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
-public class MusicPlayerInfo {
+public class PlayerInfo {
     public enum TYPE{LOCAL,DLNA}
     private final TYPE playerType;
-     String playerPackage;
-     String playerName;
+     public String playerPackage;
+     public String playerName;
     private final long time;
 
-    public static MusicPlayerInfo buildStreamPlayer(String playerName,Drawable playerIconDrawable) {
-        return new MusicPlayerInfo(TYPE.DLNA, "", playerName, playerIconDrawable);
+    public static PlayerInfo buildStreamPlayer(String playerName, Drawable playerIconDrawable) {
+        return new PlayerInfo(TYPE.DLNA, "", playerName, playerIconDrawable);
     }
 
-    public static MusicPlayerInfo buildLocalPlayer(String playerPackage, String playerName,Drawable playerIconDrawable) {
-        return new MusicPlayerInfo(TYPE.LOCAL, playerPackage, playerName, playerIconDrawable);
+    public static PlayerInfo buildLocalPlayer(String playerPackage, String playerName, Drawable playerIconDrawable) {
+        return new PlayerInfo(TYPE.LOCAL, playerPackage, playerName, playerIconDrawable);
     }
 
-    private MusicPlayerInfo(TYPE typ, String playerPackage,String playerName,Drawable playerIconDrawable) {
+    private PlayerInfo(TYPE typ, String playerPackage, String playerName, Drawable playerIconDrawable) {
         this.playerName = playerName;
         this.playerPackage = playerPackage;
         this.playerIconDrawable = playerIconDrawable;
@@ -42,11 +42,12 @@ public class MusicPlayerInfo {
         return playerIconDrawable;
     }
 
-    public boolean isValidStreamPlayer() {
+    public boolean isPlayingByStreamPlayer(PlayerInfo newPlayer) {
         // play ny dlna in last 10 mins
+        if(newPlayer.playerType == TYPE.DLNA) return false;
         return (playerType == TYPE.DLNA && time < System.currentTimeMillis() - 600000);
     }
 
-    Bitmap playerIconBitmap;
-    Drawable playerIconDrawable;
+    public Bitmap playerIconBitmap;
+    public Drawable playerIconDrawable;
 }

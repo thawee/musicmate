@@ -75,7 +75,7 @@
 
         <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
         <service
-            android:name="apincer.android.mmate.broadcast.NotificationListener"
+            android:name="apincer.android.mmate.player.NotificationListener"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="false"

@@ -19,7 +19,7 @@ import java.util.List;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
-import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -109,8 +109,8 @@ public class JLHttpStreamerServer {
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(resId));
                 if(tag != null) {
                   //  MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
-                    MusicPlayerInfo player = MusicPlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
-                    MusixMateApp.setPlaying(player, tag);
+                    PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
+                    MusixMateApp.getPlayerControl().setPlayingSong(player, tag);
                     AudioTagPlayingEvent.publishPlayingSong(tag);
                     HTTPServer.serveFileContent(new File(tag.getPath()), req, resp);
                     return;

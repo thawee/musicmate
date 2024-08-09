@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.broadcast.BroadcastHelper;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -517,7 +517,7 @@ public class FileRepository {
     public boolean importAudioFile(MusicTag item) {
         boolean status;
         try {
-            BroadcastHelper.playNextSongOnMatched(getContext(), item);
+            MusixMateApp.getPlayerControl().playNextSongOnMatched(getContext(), item);
             status = importAudioTag(item);
         }catch(Exception|OutOfMemoryError ex) {
             Log.e(TAG, "importAudioFile",ex);
@@ -530,7 +530,7 @@ public class FileRepository {
     public boolean deleteMediaItem(MusicTag item) {
         boolean status;
         try {
-            BroadcastHelper.playNextSongOnMatched(getContext(), item);
+            MusixMateApp.getPlayerControl().playNextSongOnMatched(getContext(), item);
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
                 cleanCacheCover(getContext(), item);

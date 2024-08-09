@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -24,9 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
-import apincer.android.mmate.broadcast.BroadcastHelper;
-import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
@@ -37,7 +34,7 @@ import apincer.android.mmate.work.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
 public class MusixMateApp extends Application {
-    private static final String TAG = MusixMateApp.class.getName();
+    private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
     private static MusixMateApp INSTANCE;
 
@@ -48,19 +45,14 @@ public class MusixMateApp extends Application {
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
 
-    private static final BroadcastHelper broadcastHelper = new BroadcastHelper((context, song) -> {
-        try {
-            AudioTagPlayingEvent.publishPlayingSong(song);
-        } catch (Exception ex) {
-            Log.e(TAG, "BroadcastHelper", ex);
-        }
-    });
+    private static final PlayerControl playerControl = new PlayerControl();
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
 
+/*
     public static MusicTag getPlayingSong() {
         return BroadcastHelper.getPlayingSong();
-    }
+    } */
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -86,11 +78,15 @@ public class MusixMateApp extends Application {
         }
     }
 
-    public static MusicPlayerInfo getPlayerInfo() {
+    public static PlayerControl getPlayerControl() {
+        return playerControl;
+    }
+/*
+    public static PlayerInfo getPlayerInfo() {
         return broadcastHelper.getPlayerInfo();
     }
 
-    public static void setPlaying(MusicPlayerInfo playerInfo, MusicTag listening) {
+    public static void setPlaying(PlayerInfo playerInfo, MusicTag listening) {
        broadcastHelper.setPlayerInfo(playerInfo);
        broadcastHelper.setPlayingSong(listening);
     }
@@ -101,13 +97,13 @@ public class MusixMateApp extends Application {
 
     public static boolean isPlaying() {
         return (getPlayerInfo() != null && getPlayingSong() != null);
-    }
+    } */
 
     @Override
     public void onTerminate() {
         super.onTerminate();
         MediaServerService.stopMediaServer(this);
-        broadcastHelper.onTerminate(this);
+      //  broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
     }
@@ -123,8 +119,7 @@ public class MusixMateApp extends Application {
        // LogHelper.setSLF4JOff();
         CrashReporter.initialize(this);
 
-        broadcastHelper.onCreate(this);
-
+       // broadcastHelper.onCreate(this);
 
         // initialize thread executors
         MusicMateExecutors.getInstance();

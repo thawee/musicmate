@@ -1,29 +1,30 @@
-package apincer.android.mmate.broadcast;
+package apincer.android.mmate.player;
 
-import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.media.AudioManager;
-import android.os.Build;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 
-import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import apincer.android.mmate.Settings;
+import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
+import apincer.android.mmate.broadcast.MusicBroadcastReceiver;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.utils.BitmapHelper;
+import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.StringUtils;
 
-public class BroadcastHelper {
-    private static final String TAG = BroadcastHelper.class.getName();
+
+public class PlayerControl {
+    private static final String TAG = LogHelper.getTag(PlayerControl.class);
+    public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
+
     /*
     These are the package names of the apps. for which we want to
     listen the notifications
@@ -34,6 +35,9 @@ public class BroadcastHelper {
         public static final String NEUTRON_MUSIC_PACK_NAME = "com.neutroncode.mp";
         public static final String UAPP_PACK_NAME = "com.extreamsd.usbaudioplayerpro";
         public static final String EDDICTPLAYER_PACK_NAME = "com.shanling.eddictplayer";
+        public static final String FOOBAR2000="com.foobar2000.foobar2000";
+        public static final String POWERAMP = "com.maxmpz.audioplayer";
+        public static final String SONY_MUSIC = "com.sonyericson.music";
     }
 
     /**
@@ -48,23 +52,22 @@ public class BroadcastHelper {
 
 
     private volatile static MusicTag playingSong;
-    private volatile static MusicPlayerInfo playerInfo;
-    private static final List<MusicBroadcastReceiver> receivers = new ArrayList<>();
-    private final Callback callback;
-    private FileRepository provider; // = AudioFileRepository.newInstance(context);
+    private volatile static PlayerInfo playerInfo;
+    private FileRepository provider;
 
-    public BroadcastHelper(@NonNull Callback callback) {
-        this.callback = callback;
+    public PlayerControl() {
+
     }
 
-    public static MusicTag getPlayingSong() {
+    public MusicTag getPlayingSong() {
         return playingSong;
     }
 
-    public MusicPlayerInfo getPlayerInfo() {
+    public PlayerInfo getPlayerInfo() {
         return playerInfo;
     }
 
+    /*
     private void registerReceiver(Context context, MusicBroadcastReceiver receiver) {
         if(receiver != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -87,9 +90,33 @@ public class BroadcastHelper {
             }
             receivers.clear();
         }
+    } */
+
+    protected PlayerInfo extractPlayer(Context context, String packageName, String playerName) {
+        PlayerInfo playerInfo = PlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
+        playerInfo.playerPackage = packageName;
+        playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
+        try {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
+            playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
+            playerInfo.playerIconBitmap = BitmapHelper.drawableToBitmap(playerInfo.playerIconDrawable);
+            if (playerName == null || playerName.equals(packageName)) {
+                playerInfo.playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "extractPlayer",e);
+        }
+        return playerInfo;
     }
 
-    protected void setPlayingSong(Context context, String currentTitle, String currentArtist, String currentAlbum) {
+    public void setPlayingSong(Context context, String pack, String currentTitle, String currentArtist, String currentAlbum) {
+        PlayerInfo player =  extractPlayer(context, pack, pack);
+
+        if(playerInfo!= null && playerInfo.isPlayingByStreamPlayer(player)) {
+           // skip local player if currently play from dlna streamer
+           return;
+       }
+
         currentTitle = StringUtils.trimTitle(currentTitle);
         currentArtist = StringUtils.trimTitle(currentArtist);
         currentAlbum = StringUtils.trimTitle(currentAlbum);
@@ -97,35 +124,52 @@ public class BroadcastHelper {
         if(provider ==null) {
             provider = FileRepository.newInstance(context);
         }
-
-        if(provider!=null) {
             try {
                 MusicTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
                 if(newPlayingSong!=null && !newPlayingSong.equals(playingSong)) {
                     playingSong = newPlayingSong;
-                    callback.onPlaying(context, playingSong);
+                    playerInfo = player;
+                   // callback.onPlaying(context, playingSong);
+                    AudioTagPlayingEvent.publishPlayingSong(playingSong);
                 }else {
                     playingSong = null;
                 }
             } catch (Exception ex) {
                 Log.e(TAG,"setPlayingSong", ex);
+                playingSong = null;
             }
-        }else {
-            playingSong = null;
+    }
+
+    public void setPlayingSong(PlayerInfo player, MusicTag tag) {
+        if(playerInfo!= null && playerInfo.isPlayingByStreamPlayer(player)) {
+            // skip local player if currently play from dlna streamer
+            return;
+        }
+
+        try {
+            if(tag!=null && !tag.equals(playingSong)) {
+                playerInfo = player;
+                playingSong = tag;
+                AudioTagPlayingEvent.publishPlayingSong(playingSong);
+            }else {
+                playingSong = null;
+            }
+        } catch (Exception ex) {
+            Log.e(TAG,"setPlayingSong", ex);
         }
     }
 
-    public void setPlayerInfo(MusicPlayerInfo playerInfo) {
-        BroadcastHelper.playerInfo = playerInfo;
+    public boolean isPlaying() {
+        return (playerInfo != null && playingSong != null);
     }
 
-    public static void playNextSongOnMatched(Context context, MusicTag item) {
+    public void playNextSongOnMatched(Context context, MusicTag item) {
         if(item.equals(getPlayingSong())) {
             playNextSong(context);
         }
     }
 
-    public static void playNextSong(Context context) {
+    public  void playNextSong(Context context) {
         if(Settings.isVibrateOnNextSong(context)) {
             try {
                 Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -148,19 +192,19 @@ public class BroadcastHelper {
             return;
         }
 
-        if(MusicBroadcastReceiver.PACKAGE_NEUTRON.equals(playerInfo.playerPackage)) {
+        if(PlayerPackageNames.NEUTRON_MUSIC_PACK_NAME.equals(playerInfo.playerPackage)) {
             // Neutron MP use
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);
-        }else if(MusicBroadcastReceiver.PACKAGE_POWERAMP.equals(playerInfo.playerPackage)) {
+        }else if(PlayerPackageNames.POWERAMP.equals(playerInfo.playerPackage)) {
             // call PowerAmp API
             //PowerampAPIHelper.startPAService(this, new Intent(PowerampAPI.ACTION_API_COMMAND).putExtra(PowerampAPI.COMMAND, PowerampAPI.Commands.NEXT));
             Intent intent = new Intent(PAAPI_ACTION_API_COMMAND).putExtra(PAAPI_COMMAND, PAAPI_COMMAND_NEXT);
             intent.setComponent(PAAPI_PLAYER_SERVICE_COMPONENT_NAME);
             context.startForegroundService(intent);
-        }else if(MusicBroadcastReceiver.PACKAGE_UAPP.equals(playerInfo.playerPackage) ||
-                MusicBroadcastReceiver.PACKAGE_FOOBAR2000.equals(playerInfo.playerPackage) ) {
+        }else if(PlayerPackageNames.UAPP_PACK_NAME.equals(playerInfo.playerPackage) ||
+                PlayerPackageNames.FOOBAR2000.equals(playerInfo.playerPackage) ) {
               //  MusicBroadcastReceiver.PREFIX_VLC.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
@@ -206,15 +250,16 @@ public class BroadcastHelper {
         }
     }
 
-    public void onCreate(Application musixMateApp) {
+  /*  public void onCreate(Application musixMateApp) {
         registerReceiver(musixMateApp, new MusicBroadcastReceiver(this));
     }
 
     public void onTerminate(Application musixMateApp) {
         unregisterReceivers(musixMateApp);
-    }
+    } */
 
+    /*
     public void setPlayingSong(MusicTag listening) {
         playingSong = listening;
-    }
+    } */
 }

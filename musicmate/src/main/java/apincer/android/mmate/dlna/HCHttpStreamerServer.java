@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
-import apincer.android.mmate.broadcast.MusicPlayerInfo;
+import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -83,11 +83,11 @@ public class HCHttpStreamerServer {
 
         server = H2ServerBootstrap.bootstrap()
                 .setIOReactorConfig(config)
-                .setCanonicalHostName(ipAddress)
+                .setCanonicalHostName(this.ipAddress)
                 .register("*", new RequestHandler())
                 .create();
 
-        server.listen(new InetSocketAddress(port), URIScheme.HTTP);
+        server.listen(new InetSocketAddress(this.port), URIScheme.HTTP);
     }
 
     private Context getContext() {
@@ -192,8 +192,6 @@ public class HCHttpStreamerServer {
                 contentHolder = lookupContent(contentId, userAgent);
             } else if (!albumId.isEmpty()) {
                 contentHolder = lookupAlbumArt(albumId);
-                //   } else if (!thumbId.isEmpty()) {
-                //       contentHolder = lookupThumbnail(thumbId);
             }
             if (contentHolder == null) {
                 // tricky but works
@@ -228,9 +226,9 @@ public class HCHttpStreamerServer {
             try {
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
                 if (tag != null) {
-                    MimeType mimeType = new MimeType("audio", tag.getAudioEncoding());
-                    MusicPlayerInfo player = MusicPlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
-                    MusixMateApp.setPlaying(player, tag);
+                    MimeType mimeType = MimeDetector.getMimeType(tag);
+                    PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
+                    MusixMateApp.getPlayerControl().setPlayingSong(player, tag);
                     AudioTagPlayingEvent.publishPlayingSong(tag);
                     result = new ContentHolder(mimeType, tag.getPath());
                 }
