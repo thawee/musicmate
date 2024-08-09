@@ -27,10 +27,10 @@ import apincer.android.mmate.utils.StringUtils;
 
 public class JLHttpStreamerServer {
     private final String ipAddress;
-    private int port;
-    private Context context;
+    private final int port;
+    private final Context context;
     private static final String TAG = "JLHttpStreamerServer";
-    private List<byte[]> defaultIconRAWs;
+    private final List<byte[]> defaultIconRAWs;
     private int currentIconIndex = 0;
     private HTTPServer server;
 

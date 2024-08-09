@@ -108,12 +108,8 @@ public class JLHttpUPnpStreamServer implements StreamServer<StreamServerConfigur
                 }
 
             } catch (Throwable t) {
-                // StreamRequestMessage requestMessage = readRequestMessage(message);
                 Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
-                // Log.d(TAG, "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
-                // Log.v(TAG, "returning INTERNAL SERVER ERROR to client");
-                resp.sendError(500, t.getMessage());
-
+                resp.sendError(500, "INTERNAL SERVER ERROR");
                 responseException(t);
             }
             return 0;
@@ -138,12 +134,13 @@ public class JLHttpUPnpStreamServer implements StreamServer<StreamServerConfigur
             if (contentLength > 0) {
                 Log.v(TAG, "Response message has body, writing bytes to stream...");
                  Log.d(TAG, "Response message has body, "+new String(responseBodyBytes));
-                /*ContentType ct = ContentType.APPLICATION_XML;
-                if (responseMessage.getContentTypeHeader() != null) {
-                    ct = ContentType.parse(responseMessage.getContentTypeHeader().getValue().toString());
-                } */
 
-                resp.getHeaders().add("Content-Type", "application/xml");
+                String contentType = "application/xml";
+                if (responseMessage.getContentTypeHeader() != null) {
+                    contentType = responseMessage.getContentTypeHeader().getValue().toString();
+                }
+
+                resp.getHeaders().add("Content-Type", contentType);
                 resp.sendHeaders(statusCode);
                 resp.getOutputStream().write(responseBodyBytes);
                 resp.getOutputStream().close();

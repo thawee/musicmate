@@ -8,9 +8,9 @@ import org.jupnp.transport.spi.AbstractStreamClientConfiguration;
 
 import java.util.concurrent.ExecutorService;
 
-public class StreamingClientConfigurationImpl extends AbstractStreamClientConfiguration {
+public class StreamClientConfigurationImpl extends AbstractStreamClientConfiguration {
 
-    public StreamingClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds, int logWarningSeconds) {
+    public StreamClientConfigurationImpl(ExecutorService requestExecutorService, int timeoutSeconds, int logWarningSeconds) {
         super(requestExecutorService, timeoutSeconds, logWarningSeconds);
     }
 

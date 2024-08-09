@@ -381,15 +381,6 @@ public class MediaServerService extends Service {
     }
 
     private void shutdown() {
-       /* if(httpServer != null) {
-            httpServer.initiateShutdown();
-            try {
-                httpServer.awaitShutdown(TimeValue.ofSeconds(3));
-            } catch (InterruptedException e) {
-                Log.w(TAG, "got exception on stream server stop ", e);
-            }
-            httpServer = null;
-        } */
         if(server != null) {
             server.stop();
             server = null;

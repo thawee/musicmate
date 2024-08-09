@@ -80,7 +80,6 @@ public class HCHttpStreamerServer {
                 .setTcpNoDelay(true)
                 .setSoTimeout(60, TimeUnit.SECONDS)
                 .build();
-        Log.i(TAG, "Adding http streamer connector: " + this.ipAddress + ":" + this.port);
 
         server = H2ServerBootstrap.bootstrap()
                 .setIOReactorConfig(config)

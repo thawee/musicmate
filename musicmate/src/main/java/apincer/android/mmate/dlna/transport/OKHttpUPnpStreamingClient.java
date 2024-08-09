@@ -22,25 +22,26 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import okhttp3.Headers;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamingClientConfigurationImpl, Request> {
+public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamClientConfigurationImpl, Request> {
     private static final String TAG = "OKHttpUPnpStreamingClient";
 
-    final protected StreamingClientConfigurationImpl configuration;
+    final protected StreamClientConfigurationImpl configuration;
     final private OkHttpClient client;
 
-    public OKHttpUPnpStreamingClient(StreamingClientConfigurationImpl configuration) throws InitializationException {
+    public OKHttpUPnpStreamingClient(StreamClientConfigurationImpl configuration) throws InitializationException {
         this.configuration = configuration;
         this.client = new OkHttpClient();
     }
 
 
     @Override
-    public StreamingClientConfigurationImpl getConfiguration() {
+    public StreamClientConfigurationImpl getConfiguration() {
         return configuration;
     }
 
@@ -80,7 +81,7 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamingCli
                                 : "UTF-8";
                 byte[] content = requestMessage.getBodyString().getBytes(Charset.forName(charset));
 
-                builder.method(requestMessage.getOperation().getHttpMethodName(), RequestBody.create(content));
+                builder.method(requestMessage.getOperation().getHttpMethodName(), RequestBody.create(content, MediaType.parse(contentType.toString())));
             }
 
             return builder.build();
@@ -91,14 +92,11 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamingCli
 
     @Override
     protected Callable<StreamResponseMessage> createCallable(StreamRequestMessage requestMessage, Request request) {
-        return new Callable<StreamResponseMessage>() {
-            @Override
-            public StreamResponseMessage call() throws Exception {
-                 Log.d(TAG, "Sending HTTP request: " + requestMessage);
-                 Log.v(TAG, "Body: " + requestMessage.getBodyString());
-                Response response =client.newCall(request).execute();
-                return createResponse(response);
-            }
+        return () -> {
+             Log.d(TAG, "Sending HTTP request: " + requestMessage);
+             Log.v(TAG, "Body: " + requestMessage.getBodyString());
+            Response response =client.newCall(request).execute();
+            return createResponse(response);
         };
     }
 
@@ -114,10 +112,6 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamingCli
 
     @Override
     public void stop() {
-        try {
-        } catch (Exception ex) {
-            Log.i(TAG, "Error stopping HTTP client: ", ex);
-        }
     }
 
     protected StreamResponseMessage createResponse(Response response) throws IOException {
@@ -138,7 +132,10 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamingCli
         responseFields.toMultimap().forEach((name, vals) -> headers.add(name, vals.get(0)));
         responseMessage.setHeaders(headers);
         // Body
-        byte[] bytes = response.body().bytes();
+        byte[] bytes = null;
+        if(response.body()!= null) {
+            bytes = response.body().bytes();
+        }
         if (bytes != null && bytes.length > 0 && responseMessage.isContentTypeMissingOrText()) {
             Log.d(TAG, "Response contains textual entity body, converting then setting string on message");
             responseMessage.setBodyCharacters(bytes);

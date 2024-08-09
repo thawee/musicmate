@@ -20,7 +20,7 @@ import java.net.URI;
 import apincer.android.mmate.dlna.transport.JLHttpUPnpStreamServer;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
-import apincer.android.mmate.dlna.transport.StreamingClientConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 
 class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     public static int STREAM_SERVER_PORT = 2869;
@@ -30,8 +30,6 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
-       // return super.createNetworkAddressFactory(MediaServerService.STREAM_SERVER_PORT, multicastResponsePort);
-      //  return new MusicMateNetworkAddressFactory(MediaServerService.STREAM_SERVER_PORT, multicastResponsePort);
         return new MusicMateNetworkAddressFactory(streamListenPort, multicastResponsePort);
     }
 
@@ -43,21 +41,13 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-       // return new StreamServerImpl(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
         return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }
 
     @Override
-    public StreamClient<StreamingClientConfigurationImpl> createStreamClient() {
-      /*  return new StreamingClientImpl(
-                new StreamingClientConfigurationImpl(
-                        getSyncProtocolExecutorService(),
-                        10,
-                        5
-                )
-        );*/
+    public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
         return new OKHttpUPnpStreamingClient(
-                new StreamingClientConfigurationImpl(
+                new StreamClientConfigurationImpl(
                         getSyncProtocolExecutorService(),
                         10,
                         5
