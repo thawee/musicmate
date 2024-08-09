@@ -18,9 +18,9 @@ import java.net.NetworkInterface;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.transport.JLHttpUPnpStreamServer;
+import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamingClientConfigurationImpl;
-import apincer.android.mmate.dlna.transport.StreamingClientImpl;
 
 class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     public static int STREAM_SERVER_PORT = 2869;
@@ -49,7 +49,14 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamClient<StreamingClientConfigurationImpl> createStreamClient() {
-        return new StreamingClientImpl(
+      /*  return new StreamingClientImpl(
+                new StreamingClientConfigurationImpl(
+                        getSyncProtocolExecutorService(),
+                        10,
+                        5
+                )
+        );*/
+        return new OKHttpUPnpStreamingClient(
                 new StreamingClientConfigurationImpl(
                         getSyncProtocolExecutorService(),
                         10,

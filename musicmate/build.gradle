@@ -230,11 +230,10 @@ dependencies {
 
     implementation deps.jupnp_android
     implementation deps.jupnp_support
-    implementation deps.apache.httpcore
+   // implementation deps.apache.httpcore
     implementation deps.apache.httpclient
-  //  implementation 'io.fusionauth:java-http:0.3.4'
-// https://mvnrepository.com/artifact/io.undertow/undertow-core
-    implementation 'io.undertow:undertow-core:2.3.15.Final'
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
     // Coil
     implementation deps.coil.runtime2

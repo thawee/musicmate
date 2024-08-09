@@ -16,11 +16,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.hc.core5.http.URIScheme;
-import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
-import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
-import org.apache.hc.core5.reactor.IOReactorConfig;
-import org.apache.hc.core5.util.TimeValue;
 import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.UpnpServiceImpl;
@@ -94,7 +89,7 @@ public class MediaServerService extends Service {
     private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
-    private HttpAsyncServer httpServer;
+   // private HttpAsyncServer httpServer;
     private JLHttpStreamerServer server;
 
     public static void startMediaServer(Application application) {
@@ -398,7 +393,7 @@ public class MediaServerService extends Service {
     }
 
     private void shutdown() {
-        if(httpServer != null) {
+       /* if(httpServer != null) {
             httpServer.initiateShutdown();
             try {
                 httpServer.awaitShutdown(TimeValue.ofSeconds(3));
@@ -406,7 +401,7 @@ public class MediaServerService extends Service {
                 Log.w(TAG, "got exception on stream server stop ", e);
             }
             httpServer = null;
-        }
+        } */
         if(server != null) {
             server.stop();
             server = null;
