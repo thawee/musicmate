@@ -29,7 +29,7 @@ public class LogHelper {
         setLogLevel("com.j256.ormlite.stmt", Level.INFO);
         setLogLevel("org.jupnp", Level.INFO);
         setLogLevel("org.jupnp.transport.impl.NetworkAddressFactoryImpl", Level.SEVERE);
-        setLogLevel("apincer.android.mmate.dlna.transport.AndroidRouter", Level.CONFIG);
+        setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.CONFIG);
     }
 
     public static String getTag(Class cls) {

@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.transport;
+package apincer.android.mmate.dlna.android;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

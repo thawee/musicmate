@@ -1,8 +1,5 @@
 package apincer.android.mmate.dlna;
 
-import static apincer.android.mmate.dlna.MediaServerService.IPV4_PATTERN;
-
-import org.jupnp.android.AndroidNetworkAddressFactory;
 import org.jupnp.android.AndroidUpnpServiceConfiguration;
 import org.jupnp.model.Namespace;
 import org.jupnp.model.meta.Device;
@@ -13,24 +10,24 @@ import org.jupnp.transport.spi.NetworkAddressFactory;
 import org.jupnp.transport.spi.StreamClient;
 import org.jupnp.transport.spi.StreamServer;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.URI;
 
-import apincer.android.mmate.dlna.transport.JLHttpUPnpStreamServer;
+import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
-import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
+import apincer.android.mmate.dlna.transport.UndertowStreamServer;
 
 class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     public static int STREAM_SERVER_PORT = 2869;
+
     MediaServerConfiguration() {
         super(STREAM_SERVER_PORT, 0);
     }
 
     @Override
     protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
-        return new MusicMateNetworkAddressFactory(streamListenPort, multicastResponsePort);
+        return new WifiNetworkAddressFactory(streamListenPort, multicastResponsePort);
     }
 
     @Override
@@ -41,11 +38,19 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-        return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        // Workaround for https://github.com/jupnp/jupnp/issues/225
+        // TODO remove this override once it is fixed.
+       // return new ServletStreamServerImpl(new ServletStreamServerConfigurationImpl(this.jettyAdaptor, networkAddressFactory.getStreamListenPort()));
+
+      //  return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+      // return new NIOUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        // return new JettyStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        return new UndertowStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }
 
     @Override
     public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
+
         return new OKHttpUPnpStreamingClient(
                 new StreamClientConfigurationImpl(
                         getSyncProtocolExecutorService(),
@@ -53,6 +58,18 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
                         5
                 )
         );
+
+        // Workaround for jupnp not being compatible with Jetty 10.
+        // TODO remove this and the edited classes when jupnp uses Jetty 10.
+        // values from org.jupnp.transport.spi.AbstractStreamClientConfiguration.
+        /*
+        StreamClientConfigurationImpl clientConfiguration = new StreamClientConfigurationImpl(
+                getSyncProtocolExecutorService(),
+                 10,
+                 5);
+
+        return new Jetty10StreamClientImpl(clientConfiguration); */
+
     }
 
     @Override
@@ -84,24 +101,5 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
                 return appendPathToBaseURI(getServicePath(service) + DESCRIPTOR_FILE+".xml");
             }
         };
-    }
-
-    private static class MusicMateNetworkAddressFactory extends AndroidNetworkAddressFactory {
-        public MusicMateNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
-            super(streamListenPort,multicastResponsePort);
-        }
-        @Override
-        protected boolean isUsableAddress(NetworkInterface networkInterface, InetAddress address) {
-            boolean result = false;
-            if (!networkInterface.getName().startsWith("rmnet")) {
-                if (!address.isLoopbackAddress() && address
-                        .getHostAddress() != null
-                        && IPV4_PATTERN.matcher(address
-                        .getHostAddress()).matches()) {
-                    result = true;
-                }
-            }
-            return result;
-        }
     }
 }

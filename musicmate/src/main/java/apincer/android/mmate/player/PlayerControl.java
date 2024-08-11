@@ -13,7 +13,6 @@ import android.view.KeyEvent;
 
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
-import apincer.android.mmate.broadcast.MusicBroadcastReceiver;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.BitmapHelper;
@@ -66,31 +65,6 @@ public class PlayerControl {
     public PlayerInfo getPlayerInfo() {
         return playerInfo;
     }
-
-    /*
-    private void registerReceiver(Context context, MusicBroadcastReceiver receiver) {
-        if(receiver != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                receiver.register(context);
-            }
-        }
-        receivers.add(receiver);
-    }
-
-    private void unregisterReceivers(Context context) {
-        if(!receivers.isEmpty()) {
-            for (MusicBroadcastReceiver receiver : receivers) {
-                try {
-                    if(receiver != null) {
-                        context.unregisterReceiver(receiver);
-                    }
-                } catch (Exception ex) {
-                    Log.e(TAG,"unregisterReceivers",ex);
-                }
-            }
-            receivers.clear();
-        }
-    } */
 
     protected PlayerInfo extractPlayer(Context context, String packageName, String playerName) {
         PlayerInfo playerInfo = PlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
@@ -205,7 +179,6 @@ public class PlayerControl {
             context.startForegroundService(intent);
         }else if(PlayerPackageNames.UAPP_PACK_NAME.equals(playerInfo.playerPackage) ||
                 PlayerPackageNames.FOOBAR2000.equals(playerInfo.playerPackage) ) {
-              //  MusicBroadcastReceiver.PREFIX_VLC.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);
@@ -249,17 +222,4 @@ public class PlayerControl {
             audioManager.dispatchMediaKeyEvent(event);
         }
     }
-
-  /*  public void onCreate(Application musixMateApp) {
-        registerReceiver(musixMateApp, new MusicBroadcastReceiver(this));
-    }
-
-    public void onTerminate(Application musixMateApp) {
-        unregisterReceivers(musixMateApp);
-    } */
-
-    /*
-    public void setPlayingSong(MusicTag listening) {
-        playingSong = listening;
-    } */
 }

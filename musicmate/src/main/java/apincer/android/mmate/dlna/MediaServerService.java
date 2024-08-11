@@ -57,7 +57,7 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.NotificationId;
 import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.content.ContentDirectory;
-import apincer.android.mmate.dlna.transport.AndroidRouter;
+import apincer.android.mmate.dlna.android.AndroidRouter;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -71,7 +71,7 @@ import apincer.android.mmate.utils.StringUtils;
  *  - UPnP Connection Manager Service
  *  - HTTP Streamer - for streaming digital content to client
  *  - UPnp AV Transport Server (Optional)
- *
+ *  jetty12 is fater that jetty11 12% but cannot run on android 34
  */
 public class MediaServerService extends Service {
     private static final String TAG = "MediaServerService";
@@ -88,7 +88,9 @@ public class MediaServerService extends Service {
     protected static MediaServerService INSTANCE;
     private boolean initialized;
    // private JLHttpStreamerServer server;
-   private HCHttpStreamerServer server;
+   //private HCHttpStreamerServer server;
+   //private NIOStreamerServer server;
+   private NHttpdStreamerServer server;
 
     public static void startMediaServer(Application application) {
         application.startForegroundService(new Intent(application, MediaServerService.class));
@@ -180,9 +182,12 @@ public class MediaServerService extends Service {
 
         if(server == null) {
             try {
-                server = new HCHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
-                server.start();
-            } catch (IOException e) {
+               // server = new HCHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
+               // server = new NIOStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
+               // server = new NHttpdStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
+
+               // server.start();
+            } catch (Exception e) {
                 Log.e(TAG, "createHttpStreamerServer", e);
                 throw new RuntimeException(e);
             }

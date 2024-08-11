@@ -8,7 +8,7 @@ ext.versions = [
         androidGradlePlugin: '8.5.1', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
-        minSdk             : 30, // support running on android 11 ot higher
+        minSdk             : 34, // support running on android 11 ot higher
         targetSdk          : 34, //33, // required 33 for photopicker, android 13
         compileSdk         : 35, //34, //33, // required 33 for photopicker
         buildTools         : '35.0.0', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
