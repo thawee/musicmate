@@ -7,7 +7,7 @@ Managing music collection on Android phones and Android Music Player.
 Pre-requisites
 --------------
 
-- Android 11 or Higher
+- Android 14 or Higher
 
 
 Screenshots
@@ -26,11 +26,7 @@ dumpsys media.audio_flinger
 
 App Architecture
 ----------------
-     UI
-     | 
- ViewModel
-     |
- Repository
+     UI - ViewModel - Repository
 
 
 provider -- Data provider, db/rest
