@@ -15,7 +15,6 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
-import apincer.android.mmate.dlna.transport.HttpCoreStreamServer;
 import apincer.android.mmate.dlna.transport.NettyStreamServer;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
@@ -24,7 +23,6 @@ import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     public static final int STREAM_SERVER_PORT = 2869;
     private final Context context;
-   // Jetty10ServletContainer jettyAdaptor;
 
     MediaServerConfiguration(Context context) {
         super(STREAM_SERVER_PORT, 0);
@@ -44,17 +42,8 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
-        // Workaround for https://github.com/jupnp/jupnp/issues/225
-        // TODO remove this override once it is fixed.
-      //  return new ServletStreamServerImpl(new ServletStreamServerConfigurationImpl(this.jettyAdaptor, networkAddressFactory.getStreamListenPort()));
-
       //  return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
         return new NettyStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-
-        //  return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-      // return new NIOUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-        // return new JettyStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-     //   return new UndertowStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }
 
     @Override
@@ -67,18 +56,6 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
                         5
                 )
         );
-
-        // Workaround for jupnp not being compatible with Jetty 10.
-        // TODO remove this and the edited classes when jupnp uses Jetty 10.
-        // values from org.jupnp.transport.spi.AbstractStreamClientConfiguration.
-        /*
-        StreamClientConfigurationImpl clientConfiguration = new StreamClientConfigurationImpl(
-                getSyncProtocolExecutorService(),
-                 10,
-                 5);
-
-        return new Jetty10StreamClientImpl(clientConfiguration); */
-
     }
 
     @Override

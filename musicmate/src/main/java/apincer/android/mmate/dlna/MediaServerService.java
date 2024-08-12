@@ -176,11 +176,11 @@ public class MediaServerService extends Service {
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate Server ("+getPhoneModel()+")",
-                    new ManufacturerDetails("MusicMate",
-                    "http://www.apincer.com"),
-                    new ModelDetails("MusicMate Server",
-                            "DLNA/UPnP MediaServer",
+                    "MusicMate Server ("+getDeviceModel()+")",
+                    new ManufacturerDetails("Thawee Prakaipetch",
+                    "https://github.com/thawee/musicmate"),
+                    new ModelDetails("MusicMate",
+                            "DLNA/UPnP MediaServer with "+getDeviceDetails(),
                     versionName));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
@@ -194,8 +194,12 @@ public class MediaServerService extends Service {
         }
     }
 
-    private String getPhoneModel() {
+    private String getDeviceModel() {
         return StringUtils.trimToEmpty(Build.MODEL);
+    }
+
+    private String getDeviceDetails() {
+        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+" phone.";
     }
 
     private void showNotification() {
@@ -206,7 +210,7 @@ public class MediaServerService extends Service {
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate ("+getPhoneModel()+")")
+                .setContentTitle("MusicMate ("+getDeviceModel()+")")
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.media_server_name));
         mBuilder.setContentIntent(contentIntent);
