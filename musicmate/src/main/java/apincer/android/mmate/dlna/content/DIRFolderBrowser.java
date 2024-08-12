@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna.content;
 
+import static apincer.android.mmate.dlna.MediaServerSession.forceFullContent;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 

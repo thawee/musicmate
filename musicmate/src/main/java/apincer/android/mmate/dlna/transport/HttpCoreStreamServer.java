@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.dlna.transport;
 
 import android.content.Context;
 import android.net.Uri;
@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpStatus;
@@ -29,86 +30,129 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
+import org.jupnp.model.message.StreamRequestMessage;
+import org.jupnp.model.message.StreamResponseMessage;
+import org.jupnp.model.message.UpnpHeaders;
+import org.jupnp.model.message.UpnpMessage;
+import org.jupnp.model.message.UpnpRequest;
+import org.jupnp.protocol.ProtocolFactory;
+import org.jupnp.transport.Router;
+import org.jupnp.transport.spi.InitializationException;
+import org.jupnp.transport.spi.StreamServer;
+import org.jupnp.transport.spi.UpnpStream;
 import org.jupnp.util.MimeType;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
+import apincer.android.mmate.dlna.MediaServerSession;
+import apincer.android.mmate.dlna.MimeDetector;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class HCHttpStreamerServer {
-    private final String ipAddress;
-    private final int port;
+public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurationImpl> {
     private final Context context;
-    private static final String TAG = "HCHttpStreamerServer";
-    private final List<byte[]> defaultIconRAWs;
+    private static final String TAG = "HttpCoreStreamServer";
+    private final List<byte[]> cachedIconRAWs = new ArrayList<>();
     private int currentIconIndex = 0;
     private HttpAsyncServer server;
+    final protected StreamServerConfigurationImpl configuration;
+    protected int localPort;
 
-    public HCHttpStreamerServer(Context context, String ipAddress, int port) {
-        this.context = context;
-        this.ipAddress = ipAddress;
-        this.port = port;
-
-        defaultIconRAWs = new ArrayList<>();
+    public void loadCachedIcons() {
         // defaultIconRAWs.add(readDefaultCover("no_cover1.jpg"));
         // defaultIconRAWs.add(readDefaultCover("no_cover2.jpg"));
-        defaultIconRAWs.add(readDefaultCover("no_cover3.jpg"));
-        defaultIconRAWs.add(readDefaultCover("no_cover4.jpg"));
-        defaultIconRAWs.add(readDefaultCover("no_cover5.jpg"));
-        defaultIconRAWs.add(readDefaultCover("no_cover6.jpg"));
-        defaultIconRAWs.add(readDefaultCover("no_cover7.jpg"));
+        cachedIconRAWs.add(readDefaultCover("no_cover3.jpg"));
+        cachedIconRAWs.add(readDefaultCover("no_cover4.jpg"));
+        cachedIconRAWs.add(readDefaultCover("no_cover5.jpg"));
+        cachedIconRAWs.add(readDefaultCover("no_cover6.jpg"));
+        cachedIconRAWs.add(readDefaultCover("no_cover7.jpg"));
+    }
 
-        IOReactorConfig config = IOReactorConfig.custom()
-                .setSoKeepAlive(true)
-                .setTcpNoDelay(true)
-                .setSoTimeout(60, TimeUnit.SECONDS)
-                .build();
+    public HttpCoreStreamServer(Context context, StreamServerConfigurationImpl configuration) {
+        this.context = context;
+        this.configuration = configuration;
+        this.localPort = configuration.getListenPort();
+        loadCachedIcons();
+    }
 
-        server = H2ServerBootstrap.bootstrap()
-                .setIOReactorConfig(config)
-                .setCanonicalHostName(this.ipAddress)
-                .register("*", new RequestHandler())
-                .create();
-
-        server.listen(new InetSocketAddress(this.port), URIScheme.HTTP);
+    public StreamServerConfigurationImpl getConfiguration() {
+        return configuration;
     }
 
     private Context getContext() {
         return context;
     }
-    public void start() throws IOException {
-        server.start();
+
+    synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
+
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    Log.i(TAG, "Adding stream server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
+
+                    MediaServerSession.streamServerHost = bindAddress.getHostAddress();
+                    IOReactorConfig config = IOReactorConfig.custom()
+                            .setSoTimeout(getConfiguration().getAsyncTimeoutSeconds(), TimeUnit.SECONDS)
+                            .setTcpNoDelay(true)
+                            .build();
+                    server = H2ServerBootstrap.bootstrap()
+                            .setCanonicalHostName(bindAddress.getHostAddress())
+                            .setIOReactorConfig(config)
+                            .register(router.getConfiguration().getNamespace().getBasePath().getPath() + "/*", new UPnpStreamHandler(router.getProtocolFactory()))
+                            .register("/*", new ResourceHandler())
+                            .create();
+                    server.listen(new InetSocketAddress(getConfiguration().getListenPort()), URIScheme.HTTP);
+                    server.start();
+                } catch (Exception ex) {
+                    throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
+                }
+            }
+        });
+
+        thread.start();
+
     }
 
-    public void stop() {
-        server.initiateShutdown();
-        try {
-            server.awaitShutdown(TimeValue.ofSeconds(3));
-        } catch (InterruptedException e) {
-            Log.w(TAG, "got exception on stream server stop ", e);
+    synchronized public int getPort() {
+        return this.localPort;
+    }
+
+    synchronized public void stop() {
+        if(server != null) {
+            server.initiateShutdown();
+            try {
+                server.awaitShutdown(TimeValue.ofSeconds(3));
+            } catch (InterruptedException e) {
+                Log.w(TAG, "got exception on stream server stop ", e);
+            }
         }
     }
+
     private byte[] getDefaultIcon() {
         currentIconIndex++;
-        if(currentIconIndex >= defaultIconRAWs.size()) currentIconIndex = 0;
-        return defaultIconRAWs.get(currentIconIndex);
+        if(currentIconIndex >= cachedIconRAWs.size()) currentIconIndex = 0;
+        return cachedIconRAWs.get(currentIconIndex);
     }
 
     private byte[] readDefaultCover(String file) {
@@ -120,9 +164,14 @@ public class HCHttpStreamerServer {
         }
     }
 
-    private class RequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+    @Override
+    public void run() {
 
-        public RequestHandler() {
+    }
+
+    private class ResourceHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+
+        public ResourceHandler() {
 
         }
 
@@ -383,4 +432,158 @@ public class HCHttpStreamerServer {
 
             }
         }
+
+   private class UPnpStreamHandler extends UpnpStream implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+        private static final String TAG = "StreamServerHandler";
+    protected UPnpStreamHandler(ProtocolFactory protocolFactory ) {
+            super(protocolFactory);
+        }
+
+        @Override
+        public AsyncRequestConsumer<Message<HttpRequest, byte[]>> prepare(
+        final HttpRequest request,
+        final EntityDetails entityDetails,
+        final HttpContext context) throws HttpException {
+            return new BasicRequestConsumer<>(entityDetails != null ? new BasicAsyncEntityConsumer() : null);
+        }
+
+        @Override
+        public void handle(
+        final Message<HttpRequest, byte[]> message,
+        final ResponseTrigger responseTrigger,
+        final HttpContext context) throws HttpException, IOException {
+            final AsyncResponseBuilder responseBuilder = AsyncResponseBuilder.create(HttpStatus.SC_OK);
+
+            try {
+                StreamRequestMessage requestMessage = readRequestMessage(message);
+                // Log.v(TAG, "Processing new request message: " + requestMessage);
+
+                String userAgent = getUserAgent(requestMessage);
+                if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
+                    // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
+                    Log.v(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
+                    MediaServerSession.forceFullContent = true;
+                }
+
+                StreamResponseMessage responseMessage = process(requestMessage);
+
+                if (responseMessage != null) {
+                    // Log.v(TAG, "Preparing HTTP response message: " + responseMessage);
+                    writeResponseMessage(responseMessage, responseBuilder);
+                } else {
+                    // If it's null, it's 404
+                    Log.v(TAG, "Sending HTTP response status: " + HttpStatus.SC_NOT_FOUND);
+                    responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
+                }
+                responseTrigger.submitResponse(responseBuilder.build(), context);
+
+            } catch (Throwable t) {
+                // StreamRequestMessage requestMessage = readRequestMessage(message);
+                Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
+                // Log.d(TAG, "Cause: " + Exceptions.unwrap(t), Exceptions.unwrap(t));
+                // Log.v(TAG, "returning INTERNAL SERVER ERROR to client");
+                responseBuilder.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                responseTrigger.submitResponse(responseBuilder.build(), context);
+
+                responseException(t);
+            }
+        }
+
+        private String getUserAgent(StreamRequestMessage requestMessage) {
+            try {
+                return requestMessage.getHeaders().getFirstHeader("User-agent");
+            }catch (Exception ignore) {
+            }
+            return "";
+        }
+
+        protected StreamRequestMessage readRequestMessage(Message<HttpRequest, byte[]> message) throws IOException {
+            // Extract what we need from the HTTP httpRequest
+            HttpRequest request = message.getHead();
+            String requestMethod = request.getMethod();
+            String requestURI = request.getRequestUri();
+
+            // Log.v(TAG, "Processing HTTP request: " + requestMethod + " " + requestURI);
+
+            StreamRequestMessage requestMessage;
+            try {
+                requestMessage =
+                        new StreamRequestMessage(
+                                UpnpRequest.Method.getByHttpName(requestMethod),
+                                URI.create(requestURI)
+                        );
+
+            } catch (IllegalArgumentException ex) {
+                throw new RuntimeException("Invalid request URI: " + requestURI, ex);
+            }
+
+            if (requestMessage.getOperation().getMethod().equals(UpnpRequest.Method.UNKNOWN)) {
+                throw new RuntimeException("Method not supported: " + requestMethod);
+            }
+
+            UpnpHeaders headers = new UpnpHeaders();
+            Header[] requestHeaders = request.getHeaders();
+            for (Header header : requestHeaders) {
+                headers.add(header.getName(), header.getValue());
+            }
+            requestMessage.setHeaders(headers);
+
+            // Body
+            byte[] bodyBytes = message.getBody();
+            if (bodyBytes == null) {
+                bodyBytes = new byte[]{};
+            }
+            // Log.v(TAG, "Reading request body bytes: " + bodyBytes.length);
+
+            if (bodyBytes.length > 0 && requestMessage.isContentTypeMissingOrText()) {
+
+                // Log.v(TAG, "Request contains textual entity body, converting then setting string on message");
+                requestMessage.setBodyCharacters(bodyBytes);
+
+            } else if (bodyBytes.length > 0) {
+
+                // Log.v(TAG, "Request contains binary entity body, setting bytes on message");
+                requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
+
+            } else {
+                Log.v(TAG, "Request did not contain entity body");
+            }
+            //  Log.v(TAG, "Request entity body: "+requestMessage.getBodyString());
+            return requestMessage;
+        }
+
+        protected void writeResponseMessage(StreamResponseMessage responseMessage, AsyncResponseBuilder responseBuilder) {
+            //   Log.v(TAG, "Sending HTTP response status: " + responseMessage.getOperation().getStatusCode());
+
+            responseBuilder.setStatus(responseMessage.getOperation().getStatusCode());
+
+            // Headers
+            for (Map.Entry<String, List<String>> entry : responseMessage.getHeaders().entrySet()) {
+                for (String value : entry.getValue()) {
+                    responseBuilder.addHeader(entry.getKey(), value);
+                }
+            }
+            // The Date header is recommended in UDA
+            responseBuilder.addHeader("Date", "" + System.currentTimeMillis());
+
+            // Body
+            byte[] responseBodyBytes = responseMessage.hasBody() ? responseMessage.getBodyBytes() : null;
+            int contentLength = responseBodyBytes != null ? responseBodyBytes.length : -1;
+
+            if (contentLength > 0) {
+                Log.v(TAG, "Response message has body, writing bytes to stream...");
+                // Log.d(TAG, "Response message has body, "+new String(responseBodyBytes));
+                ContentType ct = ContentType.APPLICATION_XML;
+                if (responseMessage.getContentTypeHeader() != null) {
+                    ct = ContentType.parse(responseMessage.getContentTypeHeader().getValue().toString());
+                }
+                responseBuilder.setEntity(AsyncEntityProducers.create(responseBodyBytes, ct));
+            }
+        }
+
+        @Override
+        public void run() {
+
+        }
+    }
 }

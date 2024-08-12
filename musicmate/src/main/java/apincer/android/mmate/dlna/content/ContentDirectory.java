@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import apincer.android.mmate.dlna.MediaServerConfiguration;
+
 /**
  * UPnP Content Directory Service
  * a content directory which uses the content of the MusicMate via upnp.
@@ -64,20 +66,12 @@ public class ContentDirectory {
     @UpnpStateVariable(defaultValue = "0", eventMaximumRateMilliseconds = 200)
     private final UnsignedIntegerFourBytes systemUpdateID = new UnsignedIntegerFourBytes(
             0);
-    private final String ipAddress;
 
-    public int getListenPort() {
-        return listenPort;
-    }
 
-    private final int listenPort;
-
-    public ContentDirectory(Context context, String ipAddress, int listenPort) {
+    public ContentDirectory(Context context) {
         this.context = context;
         this.searchCapabilities = new CSVString();
         this.sortCapabilities = new CSVString();
-        this.ipAddress = ipAddress;
-        this.listenPort = listenPort;
     }
 
     public Context getContext() {
@@ -281,9 +275,4 @@ public class ContentDirectory {
 
         return res;
     }
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
 }

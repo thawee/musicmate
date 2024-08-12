@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -79,7 +78,7 @@ public class MediaServerService extends Service {
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-    public static int HTTP_STREAMER_PORT = 49159; //5001;
+   // public static int HTTP_STREAMER_PORT = 49159; //5001;
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected UpnpServiceConfiguration upnpServiceCfg;
@@ -87,10 +86,6 @@ public class MediaServerService extends Service {
     private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
-   // private JLHttpStreamerServer server;
-   //private HCHttpStreamerServer server;
-   //private NIOStreamerServer server;
-   private NHttpdStreamerServer server;
 
     public static void startMediaServer(Application application) {
         application.startForegroundService(new Intent(application, MediaServerService.class));
@@ -141,7 +136,7 @@ public class MediaServerService extends Service {
         this.initialized = false;
         shutdown(); // clean up before start
 
-        upnpServiceCfg = new MediaServerConfiguration();
+        upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());
         upnpService = new UpnpServiceImpl(upnpServiceCfg) {
             @Override
             protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
@@ -158,40 +153,8 @@ public class MediaServerService extends Service {
         };
         upnpService.startup();
         createMediaServerDevice();
-        createHttpStreamerServer();
+       // createHttpStreamerServer();
         MediaServerService.this.initialized = true;
-    }
-
-    /**
-     * creates a http request thread
-     */
-    private void createHttpStreamerServer() {
-        String bindAddress = getIpAddress();
-        Log.i(TAG, "Adding http streamer connector: " + bindAddress + ":" + HTTP_STREAMER_PORT);
-        // Create a HttpService for providing content in the network.
-
-        /*
-        if (server == null) {
-            try {
-                server = new JLHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
-                server.start();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } */
-
-        if(server == null) {
-            try {
-               // server = new HCHttpStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
-               // server = new NIOStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
-               // server = new NHttpdStreamerServer(getApplicationContext(), bindAddress, HTTP_STREAMER_PORT);
-
-               // server.start();
-            } catch (Exception e) {
-                Log.e(TAG, "createHttpStreamerServer", e);
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private void createMediaServerDevice() {
@@ -213,9 +176,12 @@ public class MediaServerService extends Service {
         }
         try {
             DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate Server ("+getPhoneModel()+")", new ManufacturerDetails("MusicMate",
-                    "http://www.apincer.com"), new ModelDetails("MusicMate Server", "DLNA/UPnP MediaServer",
-                    versionName), URI.create("http://" + getIpAddress() + ":" + HTTP_STREAMER_PORT));
+                    "MusicMate Server ("+getPhoneModel()+")",
+                    new ManufacturerDetails("MusicMate",
+                    "http://www.apincer.com"),
+                    new ModelDetails("MusicMate Server",
+                            "DLNA/UPnP MediaServer",
+                    versionName));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
@@ -362,7 +328,7 @@ public class MediaServerService extends Service {
 
             @Override
             protected ContentDirectory createServiceInstance() {
-                return new ContentDirectory(getApplicationContext(), getIpAddress(), HTTP_STREAMER_PORT);
+                return new ContentDirectory(getApplicationContext());
             }
         });
         return contentDirectoryService;
@@ -387,10 +353,6 @@ public class MediaServerService extends Service {
     }
 
     private void shutdown() {
-        if(server != null) {
-            server.stop();
-            server = null;
-        }
         if(upnpService != null) {
             upnpService.shutdown();
             upnpService = null;

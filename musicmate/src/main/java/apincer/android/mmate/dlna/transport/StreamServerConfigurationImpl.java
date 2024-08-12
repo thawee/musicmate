@@ -6,13 +6,13 @@ import org.jupnp.transport.spi.StreamServerConfiguration;
 import org.jupnp.transport.spi.UpnpStream;
 
 public class StreamServerConfigurationImpl implements StreamServerConfiguration {
-
     protected int listenPort;
     protected int asyncTimeoutSeconds = 60;
 
 
     public StreamServerConfigurationImpl(int listenPort) {
-        this.listenPort = listenPort;
+
+       this.listenPort = listenPort;
     }
 
 

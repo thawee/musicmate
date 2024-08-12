@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna;
 
+import android.content.Context;
+
 import org.jupnp.android.AndroidUpnpServiceConfiguration;
 import org.jupnp.model.Namespace;
 import org.jupnp.model.meta.Device;
@@ -13,16 +15,19 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
+import apincer.android.mmate.dlna.transport.HttpCoreStreamServer;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
-import apincer.android.mmate.dlna.transport.UndertowStreamServer;
 
-class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
-    public static int STREAM_SERVER_PORT = 2869;
+public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
+    public static final int STREAM_SERVER_PORT = 2869;
+    private final Context context;
+   // Jetty10ServletContainer jettyAdaptor;
 
-    MediaServerConfiguration() {
+    MediaServerConfiguration(Context context) {
         super(STREAM_SERVER_PORT, 0);
+        this.context = context;
     }
 
     @Override
@@ -37,15 +42,17 @@ class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     }
 
     @Override
-    public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
+    public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
         // Workaround for https://github.com/jupnp/jupnp/issues/225
         // TODO remove this override once it is fixed.
-       // return new ServletStreamServerImpl(new ServletStreamServerConfigurationImpl(this.jettyAdaptor, networkAddressFactory.getStreamListenPort()));
+      //  return new ServletStreamServerImpl(new ServletStreamServerConfigurationImpl(this.jettyAdaptor, networkAddressFactory.getStreamListenPort()));
 
-      //  return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+
+        //  return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
       // return new NIOUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
         // return new JettyStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-        return new UndertowStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+     //   return new UndertowStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }
 
     @Override

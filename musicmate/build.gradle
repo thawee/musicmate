@@ -239,49 +239,41 @@ dependencies {
     implementation deps.apache.http2core
    // implementation deps.apache.httpclient
     implementation deps.okhttp3
+
+    implementation 'io.fusionauth:java-http:0.3.4'
+
     // https://mvnrepository.com/artifact/com.koushikdutta.async/androidasync
-    implementation("com.koushikdutta.async:androidasync:3.1.0")
-    implementation 'org.nanohttpd:nanohttpd:2.3.1'
-    implementation 'io.undertow:undertow-core:2.3.15.Final'
+   // implementation("com.koushikdutta.async:androidasync:3.1.0")
+   // implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+    // have issue on bytebuffer cleanup
+   // implementation 'io.undertow:undertow-core:2.3.15.Final'
     // https://mvnrepository.com/artifact/io.undertow/undertow-servlet
-    implementation 'io.undertow:undertow-servlet:2.3.15.Final'
+
+    //implementation 'io.undertow:undertow-servlet:2.3.15.Final'
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
-    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+   // implementation 'javax.servlet:javax.servlet-api:4.0.1'
 
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-client
     // implementation 'org.eclipse.jetty:jetty-client:10.0.22'
 
-    // https://mvnrepository.com/artifact/org.eclipse.jetty.http/http-server
-   // implementation 'org.eclipse.jetty.http:http-server:10.0.20'
+// https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
+   // implementation 'org.eclipse.jetty:jetty-server:9.4.55.v20240627'
 
+    // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet
+   // implementation 'org.eclipse.jetty:jetty-servlet:9.4.55.v20240627'
+
+     // call to not valid class on android 34
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-    implementation 'org.eclipse.jetty:jetty-server:12.0.12'
+   // implementation 'org.eclipse.jetty:jetty-server:12.0.12'
 
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-http
-    implementation 'org.eclipse.jetty:jetty-http:12.0.12'
-
-    // https://mvnrepository.com/artifact/org.eclipse.jetty.ee10/jetty-ee10-servlet
-   // implementation 'org.eclipse.jetty.ee10:jetty-ee10-servlet:12.0.12'
-
-    // https://mvnrepository.com/artifact/org.eclipse.jetty.ee8/jetty-ee8-servlet
-    //implementation 'org.eclipse.jetty.ee8:jetty-ee8-servlet:12.0.12'
-
-    // https://mvnrepository.com/artifact/org.eclipse.jetty.ee8/jetty-ee8-proxy
-   // implementation 'org.eclipse.jetty.ee8:jetty-ee8-proxy:12.0.12'
-
-    // https://mvnrepository.com/artifact/org.eclipse.jetty.ee9/jetty-ee9-servlet
-   // implementation 'org.eclipse.jetty.ee9:jetty-ee9-servlet:12.0.12'
-
+    //implementation 'org.eclipse.jetty:jetty-http:12.0.12'
 
     // https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet
    // implementation 'org.eclipse.jetty:jetty-servlet:11.0.22'
     // https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
   //  implementation 'javax.servlet:javax.servlet-api:4.0.1'
-
-    // https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core
-   // implementation 'org.apache.tomcat.embed:tomcat-embed-core:8.5.100'
-   // implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:8.5.100'
-   // implementation 'org.apache.tomcat.embed:tomcat-embed-logging-juli:8.5.100'
 
     // Coil
     implementation deps.coil.runtime2
