@@ -16,6 +16,7 @@ import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
 import apincer.android.mmate.dlna.transport.HttpCoreStreamServer;
+import apincer.android.mmate.dlna.transport.NettyStreamServer;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
@@ -47,7 +48,8 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
         // TODO remove this override once it is fixed.
       //  return new ServletStreamServerImpl(new ServletStreamServerConfigurationImpl(this.jettyAdaptor, networkAddressFactory.getStreamListenPort()));
 
-        return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+      //  return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        return new NettyStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
 
         //  return new JLHttpUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
       // return new NIOUPnpStreamServer(new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));

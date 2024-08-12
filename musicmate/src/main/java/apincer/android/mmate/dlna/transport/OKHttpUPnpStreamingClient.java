@@ -29,7 +29,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamClientConfigurationImpl, Request> {
-    private static final String TAG = "OKHttpUPnpStreamingClient";
+    private static final String TAG = "OKHttpStreamClient";
 
     final protected StreamClientConfigurationImpl configuration;
     final private OkHttpClient client;

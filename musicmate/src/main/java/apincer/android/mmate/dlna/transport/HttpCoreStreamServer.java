@@ -109,7 +109,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "Adding stream server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
+                    Log.i(TAG, "Adding httpcore5 stream server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
 
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     IOReactorConfig config = IOReactorConfig.custom()
@@ -433,7 +433,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             }
         }
 
-   private class UPnpStreamHandler extends UpnpStream implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
+   private static class UPnpStreamHandler extends UpnpStream implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
         private static final String TAG = "StreamServerHandler";
     protected UPnpStreamHandler(ProtocolFactory protocolFactory ) {
             super(protocolFactory);
@@ -443,7 +443,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
         public AsyncRequestConsumer<Message<HttpRequest, byte[]>> prepare(
         final HttpRequest request,
         final EntityDetails entityDetails,
-        final HttpContext context) throws HttpException {
+        final HttpContext context) {
             return new BasicRequestConsumer<>(entityDetails != null ? new BasicAsyncEntityConsumer() : null);
         }
 
@@ -497,7 +497,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             return "";
         }
 
-        protected StreamRequestMessage readRequestMessage(Message<HttpRequest, byte[]> message) throws IOException {
+        protected StreamRequestMessage readRequestMessage(Message<HttpRequest, byte[]> message) {
             // Extract what we need from the HTTP httpRequest
             HttpRequest request = message.getHead();
             String requestMethod = request.getMethod();
