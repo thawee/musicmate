@@ -15,9 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerSession;
-import apincer.android.mmate.dlna.MimeDetector;
+import apincer.android.mmate.dlna.MediaTypeDetector;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.MusicTagUtils;
 
 
 /**
@@ -70,7 +69,7 @@ public abstract class ContentBrowser {
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
         long id = tag.getId();
         String title = tag.getTitle();
-        MimeType mimeType = MimeDetector.getMimeType(tag); //new MimeType("audio", tag.getAudioEncoding());
+        MimeType mimeType = MediaTypeDetector.getMimeType(tag); //new MimeType("audio", tag.getAudioEncoding());
         String parentId = folderId;
         // album, artist, genre, grouping
         if(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().equalsIgnoreCase(folderId)) {

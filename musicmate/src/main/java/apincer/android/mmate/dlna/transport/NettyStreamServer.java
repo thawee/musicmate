@@ -1,5 +1,12 @@
 package apincer.android.mmate.dlna.transport;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_MODIFIED;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -19,22 +26,30 @@ import org.jupnp.transport.spi.UpnpStream;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
 import apincer.android.mmate.dlna.MediaServerSession;
-import apincer.android.mmate.dlna.MimeDetector;
+import apincer.android.mmate.dlna.MediaTypeDetector;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
@@ -52,6 +67,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelProgressiveFuture;
+import io.netty.channel.ChannelProgressiveFutureListener;
+import io.netty.channel.DefaultFileRegion;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -59,19 +77,22 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpChunkedInput;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.stream.ChunkedFile;
+import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AsciiString;
+import io.netty.util.CharsetUtil;
 
 public class NettyStreamServer implements StreamServer<StreamServerConfigurationImpl> {
     private final Context context;
@@ -82,6 +103,10 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
     protected int localPort;
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+    public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
+    public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
+    public static final int HTTP_CACHE_SECONDS = 60;
 
     public void loadCachedIcons() {
         // defaultIconRAWs.add(readDefaultCover("no_cover1.jpg"));
@@ -119,12 +144,18 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
 
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     ServerBootstrap b = new ServerBootstrap();
-                    b.option(ChannelOption.SO_BACKLOG, 100);  //Set the size of the backlog of TCP connections.  The default and exact meaning of this parameter is JDK specific.
+                    b.option(ChannelOption.SO_BACKLOG, 128);  //Set the size of the backlog of TCP connections.  The default and exact meaning of this parameter is JDK specific.
                     b.group(bossGroup, workerGroup)
                             .channel(NioServerSocketChannel.class)
+                            .handler(new LoggingHandler(LogLevel.DEBUG))
                             .option(ChannelOption.SO_REUSEADDR, true)
                             .option(ChannelOption.TCP_NODELAY, false) //great for latency
                             .option(ChannelOption.SO_KEEPALIVE, true)
+                            .option(ChannelOption.SO_BACKLOG, 128)
+                            .option(ChannelOption.SO_RCVBUF, 8192)
+                            .option(ChannelOption.SO_SNDBUF, 8192)
+                            .option(ChannelOption.SO_TIMEOUT, 5000)
+                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
                             .childHandler(new HttpServerInitializer(router));
 
                     Channel ch = b.bind(localPort).sync().channel();
@@ -176,11 +207,12 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
     private class HttpServerHandler extends ChannelInboundHandlerAdapter {
        final String upnpPath;
        final UpnpStream upnpStream;
-       // private static final String CONTENT = "SUCCESS";
-       // private static final ByteBuf _buf = Unpooled.wrappedBuffer(CONTENT.getBytes());
+       static final SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
 
         public HttpServerHandler(ProtocolFactory protocolFactory, String path) {
             super();
+
+            dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
             upnpPath = path;
             upnpStream = new UpnpStream(protocolFactory) {
                 @Override
@@ -201,10 +233,103 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
             Log.w(TAG, cause.getMessage());
         }
 
+        private void sendError(ChannelHandlerContext ctx, FullHttpRequest request, HttpResponseStatus status) {
+            FullHttpResponse response = new DefaultFullHttpResponse(
+                    HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
+            response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+
+            sendAndCleanupConnection(ctx, request, response);
+        }
+
+        /**
+         * When file timestamp is the same as what the browser is sending up, send a "304 Not Modified"
+         *
+         * @param ctx
+         *            Context
+         */
+        private void sendNotModified(ChannelHandlerContext ctx, FullHttpRequest request) {
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED, Unpooled.EMPTY_BUFFER);
+            setDateHeader(response);
+
+            sendAndCleanupConnection(ctx, request, response);
+        }
+
+        /**
+         * Sets the Date header for the HTTP response
+         *
+         * @param response
+         *            HTTP response
+         */
+        private static void setDateHeader(FullHttpResponse response) {
+            SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+            dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
+
+            Calendar time = new GregorianCalendar();
+            response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
+        }
+
+        /**
+         * Sets the Date and Cache headers for the HTTP Response
+         *
+         * @param response
+         *            HTTP response
+         * @param fileToCache
+         *            file to extract content type
+         */
+        private static void setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
+
+            // Date header
+            Calendar time = new GregorianCalendar();
+            response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
+
+            // Add cache headers
+            time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
+            response.headers().set(HttpHeaderNames.EXPIRES, dateFormatter.format(time.getTime()));
+            response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+            if(fileToCache != null) {
+                response.headers().set(
+                        HttpHeaderNames.LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
+            }
+        }
+
+        /**
+         * Sets the content type header for the HTTP Response
+         *
+         * @param response
+         *            HTTP response
+         * @param file
+         *            file to extract content type
+         */
+        private static void setContentTypeHeader(HttpResponse response, File file) {
+            response.headers().set(HttpHeaderNames.CONTENT_TYPE, MediaTypeDetector.getContentType(file.getPath()));
+        }
+
+        /**
+         * If Keep-Alive is disabled, attaches "Connection: close" header to the response
+         * and closes the connection after the response being sent.
+         */
+        private void sendAndCleanupConnection(ChannelHandlerContext ctx, FullHttpRequest request, FullHttpResponse response) {
+            final boolean keepAlive = HttpUtil.isKeepAlive(request);
+            HttpUtil.setContentLength(response, response.content().readableBytes());
+            if (!keepAlive) {
+                // We're going to close the connection as soon as the response is sent,
+                // so we should also make it clear for the client.
+                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+            } else if (request.protocolVersion().equals(HTTP_1_0)) {
+                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+            }
+
+            ChannelFuture flushPromise = ctx.writeAndFlush(response);
+
+            if (!keepAlive) {
+                // Close the connection as soon as the response is sent.
+                flushPromise.addListener(ChannelFutureListener.CLOSE);
+            }
+        }
+
         @Override
-        public void channelRead( final ChannelHandlerContext ctx, Object msg) throws IOException {
-            if (msg instanceof FullHttpRequest) {
-                final FullHttpRequest request = (FullHttpRequest) msg;
+        public void channelRead( final ChannelHandlerContext ctx, Object msg) throws Exception {
+            if (msg instanceof FullHttpRequest request) {
                 final ByteBuf buf = request.content();
                 byte[] data = new byte[buf.readableBytes()];
                 buf.readBytes(data);
@@ -219,13 +344,17 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 }
                 boolean keepAlive = HttpUtil.isKeepAlive(request);
                 if (contentHolder == null) {
-                    DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.FORBIDDEN);
+                    sendError(ctx, request, FORBIDDEN);
+                   /* DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.FORBIDDEN);
                     response.headers().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN);
                     response.headers().add(HttpHeaderNames.DATE, "" + System.currentTimeMillis());
                     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-                    ctx.write(response, ctx.voidPromise()).addListener(ChannelFutureListener.CLOSE);
+                    ctx.write(response, ctx.voidPromise()).addListener(ChannelFutureListener.CLOSE);*/
                    // ctx.close();
                 }else if (contentHolder.fileContent != null) {
+                    handleFile(ctx, request, contentHolder);
+
+                    /*
                     DefaultHttpResponse response = new DefaultHttpResponse(request.protocolVersion(), contentHolder.statusCode);
                     if (keepAlive) {
                         response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
@@ -244,10 +373,14 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                     final ChannelFuture f = ctx. writeAndFlush(httpChunkWriter);
                     f.addListener((ChannelFutureListener) future -> {
                         ctx.close();
-                    });
+                    }); */
                 } else {
                     DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), contentHolder.statusCode, Unpooled.wrappedBuffer(contentHolder.content));
+                    response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType); // "text/plain; charset=UTF-8");
 
+                    sendAndCleanupConnection(ctx, request, response);
+                   /*
                     if (!keepAlive) {
                         // The Date header is recommended in UDA
                         response.headers().add(HttpHeaderNames.DATE, "" + System.currentTimeMillis());
@@ -259,8 +392,79 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
                         response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
                         ctx.write(response, ctx.voidPromise());
+                    } */
+                }
+            }
+        }
+
+        private void handleFile(final ChannelHandlerContext ctx, final FullHttpRequest request, final ContentHolder contentHolder) throws Exception {
+            final boolean keepAlive = HttpUtil.isKeepAlive(request);
+
+            // Cache Validation
+            String ifModifiedSince = request.headers().get(HttpHeaderNames.IF_MODIFIED_SINCE);
+            if (ifModifiedSince != null && !ifModifiedSince.isEmpty()) {
+                SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+                Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSince);
+
+                // Only compare up to the second because the datetime format we send to the client
+                // does not have milliseconds
+                long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
+                long fileLastModifiedSeconds = contentHolder.fileContent.lastModified() / 1000;
+                if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
+                    sendNotModified(ctx, request);
+                    return;
+                }
+            }
+
+            RandomAccessFile raf;
+            try {
+                raf = new RandomAccessFile(contentHolder.fileContent, "r");
+            } catch (FileNotFoundException ignore) {
+                sendError(ctx, request, NOT_FOUND);
+                return;
+            }
+            long fileLength = raf.length();
+
+            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+            HttpUtil.setContentLength(response, fileLength);
+            setContentTypeHeader(response, contentHolder.fileContent);
+            setDateAndCacheHeaders(response, contentHolder.fileContent);
+
+            if (!keepAlive) {
+                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+            } else if (request.protocolVersion().equals(HTTP_1_0)) {
+                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+            }
+
+            // Write the initial line and the header.
+            ctx.write(response);
+
+            // Write the content.
+                ChannelFuture sendFileFuture =
+                        ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+                // Write the end marker.
+                ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+
+            sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
+                @Override
+                public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
+                    if (total < 0) { // total unknown
+                        System.err.println(future.channel() + " Transfer progress: " + progress);
+                    } else {
+                        System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
                     }
                 }
+
+                @Override
+                public void operationComplete(ChannelProgressiveFuture future) {
+                    System.err.println(future.channel() + " Transfer complete.");
+                }
+            });
+
+            // Decide whether to close the connection or not.
+            if (!keepAlive) {
+                // Close the connection when the whole content is written out.
+                lastContentFuture.addListener(ChannelFutureListener.CLOSE);
             }
         }
 
@@ -270,7 +474,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 Log.d(TAG,
                         "HTTP request isn't GET or HEAD stop! Method was: "
                                 + request.method());
-                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.FORBIDDEN, "Access Denied");
+                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, FORBIDDEN, "Access Denied");
                 return holder;
             }
 
@@ -280,7 +484,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
             }
             List<String> pathSegments = Arrays.asList(requestUri.split("/", -1));
             if (pathSegments.size() < 2 || pathSegments.size() > 3) {
-                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.FORBIDDEN, "Access Denied");
+                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, FORBIDDEN, "Access Denied");
                 return holder;
             }
             String type = pathSegments.get(0);
@@ -292,7 +496,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 return handleResSong(request, contentId);
             }else {
                 Log.d(TAG, "Access uri '"+requestUri+"' denied");
-                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.FORBIDDEN, "Access Denied");
+                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, FORBIDDEN, "Access Denied");
                 return holder;
             }
         }
@@ -305,9 +509,9 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                     MusixMateApp.getPlayerControl().setPlayingSong(player, tag);
                     AudioTagPlayingEvent.publishPlayingSong(tag);
 
-                    return new ContentHolder(new AsciiString(MimeDetector.getMimeTypeString(tag)), HttpResponseStatus.OK, new File(tag.getPath()));
+                    return new ContentHolder(new AsciiString(MediaTypeDetector.getContentType(tag.getPath())), OK, new File(tag.getPath()));
                 }else {
-                    return new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.NOT_FOUND, contentId+" Not found");
+                    return new ContentHolder(HttpHeaderValues.TEXT_PLAIN, NOT_FOUND, contentId+" Not found");
                 }
         }
 
@@ -318,10 +522,10 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 File pathFile = new File(dir, path);
                 if (pathFile.exists()) {
                     byte[] bodyBytes = IOUtils.toByteArray(new FileInputStream(pathFile));
-                    holder = new ContentHolder(new AsciiString("image/*"), HttpResponseStatus.OK, bodyBytes);
+                    holder = new ContentHolder(AsciiString.of(MediaTypeDetector.getContentType(pathFile.getName())), OK, bodyBytes);
                 } else {
                     // Log.d(TAG, "Send default albumArt for " + albumId);
-                    holder = new ContentHolder(new AsciiString("image/*"), HttpResponseStatus.OK, getDefaultIcon());
+                    holder = new ContentHolder(new AsciiString("image/*"), OK, getDefaultIcon());
                 }
                 return holder;
         }
@@ -335,7 +539,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 String userAgent = getUserAgent(requestMessage);
                 if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
                     // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
-                    Log.v(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
+                    Log.w(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
                     MediaServerSession.forceFullContent = true;
                 }
 
@@ -346,7 +550,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                     holder = buildResponseMessage(responseMessage);
                 } else {
                     // If it's null, it's 404
-                    holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.NOT_FOUND, "Not Found");
+                    holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, NOT_FOUND, "Not Found");
                     Log.v(TAG, "Sending HTTP response status: 404" );
                 }
             } catch (Throwable t) {

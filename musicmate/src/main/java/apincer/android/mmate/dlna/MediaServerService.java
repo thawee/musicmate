@@ -70,7 +70,10 @@ import apincer.android.mmate.utils.StringUtils;
  *  - UPnP Connection Manager Service
  *  - HTTP Streamer - for streaming digital content to client
  *  - UPnp AV Transport Server (Optional)
- *  jetty12 is fater that jetty11 12% but cannot run on android 34
+ *  Note:
+ *   - netty smooth, cpu < 10%, memory < 256 MB, short peak to 512 MB
+ *   - httpcore have bug to stop playing on client sometime
+ *   - jetty12 is faster than jetty11 12% but cannot run on android 34
  */
 public class MediaServerService extends Service {
     private static final String TAG = "MediaServerService";
