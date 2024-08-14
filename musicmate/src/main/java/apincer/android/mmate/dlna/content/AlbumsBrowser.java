@@ -24,8 +24,6 @@ import apincer.android.mmate.utils.StringUtils;
 
 /**
  * Browser  for the music albums folder.
- *
- * @author openbit (Tobias Schoene)
  */
 public class AlbumsBrowser extends ContentBrowser {
     //this is album (by this is artist)
@@ -45,28 +43,7 @@ public class AlbumsBrowser extends ContentBrowser {
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
         return MusixMateApp.getInstance().getOrmLite().getAlbumAndArtistWithChildrenCount().size();
-       /* String[] projection = {MediaStore.Audio.Albums._ID};
-        String selection = "";
-        String[] selectionArgs = null;
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        } */
-
     }
-/*
-
-    private Integer getMusicTrackSize(ContentDirectory contentDirectory, String parentId) {
-
-        String[] projection = {MediaStore.Audio.Albums._ID};
-        String selection = MediaStore.Audio.Media.ALBUM_ID + "=?";
-        String[] selectionArgs = new String[]{parentId};
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        }
-
-    } */
 
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
@@ -95,41 +72,6 @@ public class AlbumsBrowser extends ContentBrowser {
 
             result.add(musicAlbum);
         }
-        /*
-        String[] projection = {MediaStore.Audio.Albums._ID, MediaStore.Audio.Albums.ALBUM};
-        String selection = "";
-        String[] selectionArgs = null;
-        Map<String, MusicAlbum> folderMap = new HashMap<>();
-        try (Cursor mediaCursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, MediaStore.Audio.Albums.ALBUM + " ASC")) {
-
-            if (mediaCursor != null && mediaCursor.getCount() > 0) {
-                mediaCursor.moveToFirst();
-                int currentIndex = 0;
-                int currentCount = 0;
-                while (!mediaCursor.isAfterLast() && currentCount < maxResults) {
-                    if (firstResult <= currentIndex) {
-                        @SuppressLint("Range") String id = mediaCursor.getString(mediaCursor.getColumnIndex(MediaStore.Audio.Albums._ID));
-                        @SuppressLint("Range") String name = mediaCursor.getString(mediaCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM));
-                        MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId() + id, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), name, "", 0);
-                        folderMap.put(id, musicAlbum);
-                        Log.d(getClass().getName(), "Album Folder: " + id + " Name: " + name);
-                        currentCount++;
-                    }
-                    currentIndex++;
-                    mediaCursor.moveToNext();
-                }
-
-                //Fetch folder size
-
-                for (Map.Entry<String, MusicAlbum> entry : folderMap.entrySet()) {
-                    entry.getValue().setChildCount(getMusicTrackSize(contentDirectory, entry.getKey()));
-                    result.add(entry.getValue());
-                }
-            } else {
-                Log.d(getClass().getName(), "System media store is empty.");
-            }
-        }*/
 
         result.sort(Comparator.comparing(DIDLObject::getTitle));
 

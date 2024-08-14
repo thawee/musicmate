@@ -20,8 +20,6 @@ import apincer.android.mmate.repository.TagRepository;
 
 /**
  * Browser  for the music genres folder.
- *
- * @author openbit (Tobias Schoene)
  */
 public class DIRsBrowser extends ContentBrowser {
     public DIRsBrowser(Context context) {

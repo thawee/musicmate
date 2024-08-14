@@ -19,6 +19,7 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
 
+@Deprecated
 public class DownloadsBrowser extends ContentBrowser {
     private static final String TAG = "DownloadsBrowser";
 

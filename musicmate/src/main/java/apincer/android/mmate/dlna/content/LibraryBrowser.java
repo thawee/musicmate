@@ -15,8 +15,6 @@ import apincer.android.mmate.R;
 
 /**
  * Browser  for the music folder.
- *
- * @author openbit (Tobias Schoene)
  */
 public class LibraryBrowser extends ContentBrowser {
 
@@ -43,6 +41,7 @@ public class LibraryBrowser extends ContentBrowser {
 
         result.add((Container) new GroupingsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new DIRsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new PlaylistsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_PLAYLIST_FOLDER.getId(), firstResult, maxResults, orderby));
         return result;
     }
 

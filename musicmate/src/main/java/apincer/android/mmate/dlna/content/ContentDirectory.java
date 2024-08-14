@@ -27,14 +27,12 @@ import org.jupnp.support.model.DIDLContent;
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import apincer.android.mmate.dlna.MediaServerConfiguration;
+import apincer.android.mmate.utils.StringUtils;
 
 /**
  * UPnP Content Directory Service
@@ -60,8 +58,6 @@ public class ContentDirectory {
     final private CSV<String> sortCapabilities;
     final private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
             this);
-    // test content only
-    private final Map<String, DIDLObject> content = new HashMap<>();
     private final Context context;
     @UpnpStateVariable(defaultValue = "0", eventMaximumRateMilliseconds = 200)
     private final UnsignedIntegerFourBytes systemUpdateID = new UnsignedIntegerFourBytes(
@@ -111,16 +107,6 @@ public class ContentDirectory {
         systemUpdateID.increment(true);
         getPropertyChangeSupport().firePropertyChange("SystemUpdateID",
                 oldUpdateID, getSystemUpdateID().getValue());
-    }
-
-    /**
-     * add an object to the content of the directory
-     *
-     * @param id      of the object
-     * @param content the object
-     */
-    private void addContent(String id, DIDLObject content) {
-        this.content.put(id, content);
     }
 
     @UpnpAction(out = {
@@ -236,8 +222,8 @@ public class ContentDirectory {
        // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
            // result = new MusicArtistItemBrowser(getContext());
       //      result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId())) {
-            result = new DownloadsBrowser(getContext());
+       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId())) {
+       //     result = new DownloadsBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId())) {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId())) {
@@ -246,17 +232,20 @@ public class ContentDirectory {
             result = new GroupingFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId())) {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
-       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId())) {
-       //     result = new DIRIFolderBrowser(getContext(), ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId(), ContentDirectoryIDs.MUSIC_DIR_ITEM_PREFIX.getId());
+        }else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_PLAYLIST_FOLDER.getId())) {
+            result = new PlaylistsBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_PLAYLIST_PREFIX.getId())) {
+            result = new PlaylistFolderBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_PLAYLIST_ITEM_PREFIX.getId())) {
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
         }
 
-            return result;
+        return result;
     }
-
 
     public String formatDuration(String millisStr) {
 
-        if (millisStr == null || millisStr.equals("")) {
+        if (StringUtils.isEmpty(millisStr)) {
             return String.format(Locale.US, "%02d:%02d:%02d", 0L, 0L, 0L);
         }
         String res;

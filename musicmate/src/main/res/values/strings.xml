@@ -184,8 +184,7 @@
     <string name="label_encoding">Audio Encoding</string>
     <string name="label_file_quality">Audio File Quality</string>
     <string name="label_server">Media Server</string>
-
-
+    <string name="playlists">Playlists</string>
 
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">

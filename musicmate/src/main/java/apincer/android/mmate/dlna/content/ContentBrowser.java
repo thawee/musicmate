@@ -21,8 +21,6 @@ import apincer.android.mmate.repository.MusicTag;
 
 /**
  * Super class for all content directory browsers.
- *
- * @author openbit (Tobias Schoene)
  */
 public abstract class ContentBrowser {
     private static final String TAG = "ContentBrowser";
@@ -49,6 +47,16 @@ public abstract class ContentBrowser {
         result.addAll(browseContainer(contentDirectory, myId, firstResult, maxResults, orderby));
         result.addAll(browseItem(contentDirectory, myId, firstResult, maxResults, orderby));
         return result;
+    }
+
+    public String extractName(String id, ContentDirectoryIDs prefix) {
+        String name = id.substring(prefix.getId().length());
+        if("_EMPTY".equalsIgnoreCase(name) ||
+                "_NULL".equalsIgnoreCase(name) ) { // ||
+            //  "None".equalsIgnoreCase(name)) {
+            name = null;
+        }
+        return name;
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
@@ -79,6 +87,8 @@ public abstract class ContentBrowser {
         }else  if(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGenre();
         }else  if(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().equalsIgnoreCase(folderId)) {
+            parentId = folderId + tag.getGrouping();
+        }else  if(ContentDirectoryIDs.MUSIC_PLAYLIST_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGrouping();
         }
         // file parameter only needed for media players which decide

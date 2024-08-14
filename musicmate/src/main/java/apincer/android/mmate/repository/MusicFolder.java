@@ -17,6 +17,10 @@ public class MusicFolder {
         this.childCount = childCount;
     }
 
+    public void addChildCount(){
+        childCount++;
+    };
+
     private String name;
 
     public String getUniqueKey() {

@@ -180,10 +180,10 @@ public class MediaServerService extends Service {
         try {
             DeviceDetails msDetails = new DeviceDetails(
                     "MusicMate Server ("+getDeviceModel()+")",
-                    new ManufacturerDetails("Thawee Prakaipetch",
+                    new ManufacturerDetails("Thawee",
                     "https://github.com/thawee/musicmate"),
                     new ModelDetails("MusicMate",
-                            "DLNA/UPnP MediaServer with "+getDeviceDetails(),
+                            "DLNA/UPnP MediaServer, "+getDeviceDetails(),
                     versionName));
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
@@ -202,7 +202,7 @@ public class MediaServerService extends Service {
     }
 
     private String getDeviceDetails() {
-        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+" phone.";
+        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" device ("+  StringUtils.trimToEmpty(Build.MODEL)+").";
     }
 
     private void showNotification() {

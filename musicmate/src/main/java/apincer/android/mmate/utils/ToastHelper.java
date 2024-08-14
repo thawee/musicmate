@@ -1,7 +1,6 @@
 package apincer.android.mmate.utils;
 
 import android.app.Activity;
-import android.view.View;
 
 import com.tapadoo.alerter.Alerter;
 

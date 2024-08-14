@@ -41,7 +41,7 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     }
 
     @Override
-    public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
+    public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
       //  return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
         return new NettyStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }

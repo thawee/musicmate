@@ -17,10 +17,8 @@ public class LogHelper {
         setLogLevel("org.greenrobot.eventbus.EventBus", Level.SEVERE);
 
         setLogLevel("apincer.android.mmate.repository.FFMPegReader", Level.WARNING);
-
         setLogLevel("apincer.android.mmate.dlna.content.ContentDirectory", Level.WARNING);
         setLogLevel("apincer.android.mmate.dlna.transport.NettyStreamServer", Level.CONFIG);
-
     }
 
     public static void setLogLevel(String loggerName, Level level) {

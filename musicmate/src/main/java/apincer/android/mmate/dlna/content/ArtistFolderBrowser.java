@@ -20,9 +20,8 @@ import apincer.android.mmate.repository.MusicTag;
 
 /**
  * Browser for a music artist folder.
- *
- * @author openbit (Tobias Schoene)
  */
+@Deprecated
 public class ArtistFolderBrowser extends ContentBrowser {
     public ArtistFolderBrowser(Context context) {
         super(context);

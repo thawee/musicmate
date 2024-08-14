@@ -21,9 +21,8 @@ import apincer.android.mmate.repository.TagRepository;
 
 /**
  * Browser  for the music artists folder.
- *
- * @author openbit (Tobias Schoene)
  */
+@Deprecated
 public class ArtistsBrowser extends ContentBrowser {
     private static final String TAG = "MusicArtistsBrowser";
     public ArtistsBrowser(Context context) {
