@@ -1,4 +1,4 @@
-package apincer.android.mmate.broadcast;
+package apincer.android.mmate.notification;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -1,4 +1,4 @@
-package apincer.android.mmate.work;
+package apincer.android.mmate.worker;
 
 import android.content.Context;
 import android.util.Log;
@@ -16,7 +16,7 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
+import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 

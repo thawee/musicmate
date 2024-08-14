@@ -47,9 +47,9 @@ import java.util.TimeZone;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
+import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.dlna.MediaServerSession;
-import apincer.android.mmate.dlna.MediaTypeDetector;
+import apincer.android.mmate.utils.MediaTypeDetector;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;

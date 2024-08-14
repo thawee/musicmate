@@ -371,7 +371,8 @@ aboutLibraries {
             ~"io.netty:netty-handler",
             ~"io.netty:netty-resolver",
             ~"io.netty:netty-transport",
-            ~"io.netty:netty-transport-native-unix-common"
+            ~"io.netty:netty-transport-native-unix-common",
+            ~"org.jupnp:org.jupnp.support"
     ]
 }
 

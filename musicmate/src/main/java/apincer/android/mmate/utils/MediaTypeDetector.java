@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna;
+package apincer.android.mmate.utils;
 
 import org.jupnp.util.MimeType;
 
@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.utils.FileUtils;
 
 public class MediaTypeDetector {

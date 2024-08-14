@@ -44,7 +44,7 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.work.MusicMateExecutors;
+import apincer.android.mmate.worker.MusicMateExecutors;
 
 public class AboutActivity extends AppCompatActivity {
     public static void showAbout(Activity activity) {

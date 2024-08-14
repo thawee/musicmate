@@ -44,9 +44,8 @@ import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.broadcast.AudioTagEditResultEvent;
+import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
-import apincer.android.mmate.provider.MusicCoverArtProvider;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;

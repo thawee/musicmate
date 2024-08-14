@@ -12,7 +12,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 
 import apincer.android.mmate.Settings;
-import apincer.android.mmate.broadcast.AudioTagPlayingEvent;
+import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.utils.BitmapHelper;

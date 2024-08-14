@@ -1,4 +1,4 @@
-package apincer.android.mmate.broadcast;
+package apincer.android.mmate.notification;
 
 import apincer.android.mmate.repository.MusicTag;
 

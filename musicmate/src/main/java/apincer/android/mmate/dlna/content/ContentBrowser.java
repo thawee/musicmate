@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerSession;
-import apincer.android.mmate.dlna.MediaTypeDetector;
+import apincer.android.mmate.utils.MediaTypeDetector;
 import apincer.android.mmate.repository.MusicTag;
 
 

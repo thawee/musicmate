@@ -12,9 +12,14 @@ public class LogHelper {
         setLogLevel(LOGGER_JAUDIOTAGGER, Level.SEVERE);
         setLogLevel(LOGGER_JAUDIOTAGGER_AUDIO, Level.SEVERE);
         setLogLevel(LOGGER_JAUDIOTAGGER_FLAC, Level.SEVERE);
-        setLogLevel("android.view", Level.SEVERE);
+        setLogLevel("android.view.View", Level.SEVERE);
         setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.SEVERE);
         setLogLevel("org.greenrobot.eventbus.EventBus", Level.SEVERE);
+
+        setLogLevel("apincer.android.mmate.repository.FFMPegReader", Level.WARNING);
+
+        setLogLevel("apincer.android.mmate.dlna.content.ContentDirectory", Level.WARNING);
+        setLogLevel("apincer.android.mmate.dlna.transport.NettyStreamServer", Level.CONFIG);
 
     }
 

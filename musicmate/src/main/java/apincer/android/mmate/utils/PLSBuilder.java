@@ -1,4 +1,4 @@
-package apincer.android.mmate.share;
+package apincer.android.mmate.utils;
 
 import static apincer.android.mmate.utils.MusicTagUtils.getExtension;
 

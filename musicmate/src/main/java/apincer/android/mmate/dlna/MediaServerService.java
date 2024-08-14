@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.NotificationId;
+import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.content.ContentDirectory;
 import apincer.android.mmate.dlna.android.AndroidRouter;

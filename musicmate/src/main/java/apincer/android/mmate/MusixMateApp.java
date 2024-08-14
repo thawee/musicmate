@@ -23,14 +23,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.LogHelper;
-import apincer.android.mmate.work.MusicMateExecutors;
-import apincer.android.mmate.work.ScanAudioFileWorker;
+import apincer.android.mmate.worker.MusicMateExecutors;
+import apincer.android.mmate.worker.ScanAudioFileWorker;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
 public class MusixMateApp extends Application {
@@ -48,11 +49,6 @@ public class MusixMateApp extends Application {
     private static final PlayerControl playerControl = new PlayerControl();
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
-
-/*
-    public static MusicTag getPlayingSong() {
-        return BroadcastHelper.getPlayingSong();
-    } */
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -81,23 +77,6 @@ public class MusixMateApp extends Application {
     public static PlayerControl getPlayerControl() {
         return playerControl;
     }
-/*
-    public static PlayerInfo getPlayerInfo() {
-        return broadcastHelper.getPlayerInfo();
-    }
-
-    public static void setPlaying(PlayerInfo playerInfo, MusicTag listening) {
-       broadcastHelper.setPlayerInfo(playerInfo);
-       broadcastHelper.setPlayingSong(listening);
-    }
-
-    public static void playNextSong(Context applicationContext) {
-        BroadcastHelper.playNextSong(applicationContext);
-    }
-
-    public static boolean isPlaying() {
-        return (getPlayerInfo() != null && getPlayingSong() != null);
-    } */
 
     @Override
     public void onTerminate() {
@@ -116,10 +95,7 @@ public class MusixMateApp extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         LogHelper.initial();
         LogHelper.setSLF4JOn();
-       // LogHelper.setSLF4JOff();
         CrashReporter.initialize(this);
-
-       // broadcastHelper.onCreate(this);
 
         // initialize thread executors
         MusicMateExecutors.getInstance();

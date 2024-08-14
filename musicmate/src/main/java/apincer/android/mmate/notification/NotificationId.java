@@ -15,13 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package apincer.android.mmate;
+package apincer.android.mmate.notification;
 
-/**
- * all Yaacc-NotificationIDs.
- *
- * @author Tobias Schoene (openbit)
- */
 public enum NotificationId {
     LOCAL_BACKGROUND_MUSIC_PLAYER(1),
     AVTRANSPORT_PLAYER(2),
