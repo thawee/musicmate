@@ -190,42 +190,35 @@ public class ContentDirectory {
     private ContentBrowser findBrowserFor(String objectID) {
         ContentBrowser result = null;
         if (objectID == null || objectID.isEmpty() || ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
-        //    result = new RootFolderBrowser(getContext());
-       // } else if (ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
             result = new LibraryBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId().equals(objectID)) {
-            result = new DIRsBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId())) {
-            result = new DIRFolderBrowser(getContext());
+        } else if (ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId().equals(objectID)) {
+            result = new SourcesBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId())) {
+            result = new SourceFolderBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId().equals(objectID)) {
             result = new GenresBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId().equals(objectID)) {
             result = new AlbumsBrowser(getContext());
-       // } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
-       //     result = new ArtistsBrowser(getContext());
+        } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
+            result = new ArtistsBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId().equals(objectID)) {
             result = new AllTitlesBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId())) {
             result = new AlbumFolderBrowser(getContext());
-      //  } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
-      //      result = new ArtistFolderBrowser(getContext());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
+            result = new ArtistFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId())) {
             result = new GenreFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId())) {
-            //result = new MusicAllTitleItemBrowser(getContext());
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId())) {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(),ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId())) {
-        //   result = new MusicAlbumItemBrowser(getContext());
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
-       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
-           // result = new MusicArtistItemBrowser(getContext());
-      //      result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
-       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId())) {
-       //     result = new DownloadsBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId());
+        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
+            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
+       // } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId())) {
+      //      result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_DOWNLOADED_TITLES_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId())) {
             result = new GroupingsBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId())) {

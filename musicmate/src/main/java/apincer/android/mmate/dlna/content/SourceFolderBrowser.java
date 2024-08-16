@@ -20,11 +20,11 @@ import java.util.Map;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 
-public class DIRFolderBrowser extends ContentBrowser {
+public class SourceFolderBrowser extends ContentBrowser {
     private static final String TAG = "DIRFolderBrowser";
     public static final String ALL_SONGS = "All Songs";
 
-    public DIRFolderBrowser(Context context) {
+    public SourceFolderBrowser(Context context) {
         super(context);
     }
 
@@ -32,7 +32,7 @@ public class DIRFolderBrowser extends ContentBrowser {
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         String name = extractName(myId);
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), name, "mmate", 0, null);
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), name, "mmate", 0, null);
     }
 
     private String extractName(String myId) {
@@ -46,7 +46,7 @@ public class DIRFolderBrowser extends ContentBrowser {
     @Override
     public List<Container> browseContainer(
             ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        String id = myId.substring(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId().length());
+        String id = myId.substring(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId().length());
         List<Container> result = new ArrayList<>();
         Map<String,Integer> count = new HashMap<>();
         if(!id.endsWith(ALL_SONGS)) {
@@ -95,7 +95,7 @@ public class DIRFolderBrowser extends ContentBrowser {
     public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
-        String id = myId.substring(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId().length());
+        String id = myId.substring(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId().length());
 
         boolean allSongs = id.endsWith(ALL_SONGS);
         if(allSongs) {
@@ -111,7 +111,7 @@ public class DIRFolderBrowser extends ContentBrowser {
             if(allSongs || (idx <= idlength)) {
                 // found music on t=current directory
                 if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                    MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_DIR_ITEM_PREFIX.getId());
+                    MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_SOURCE_ITEM_PREFIX.getId());
                     result.add(musicTrack);
                 }
                 if(!forceFullContent) currentCount++;

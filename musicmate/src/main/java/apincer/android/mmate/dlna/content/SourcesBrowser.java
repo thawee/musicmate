@@ -21,8 +21,8 @@ import apincer.android.mmate.repository.TagRepository;
 /**
  * Browser  for the music genres folder.
  */
-public class DIRsBrowser extends ContentBrowser {
-    public DIRsBrowser(Context context) {
+public class SourcesBrowser extends ContentBrowser {
+    public SourcesBrowser(Context context) {
         super(context);
     }
 
@@ -31,7 +31,7 @@ public class DIRsBrowser extends ContentBrowser {
         // /English
         // /Download
         // /IMDP
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate", getSize(contentDirectory, myId),
                 null);
        // return new StorageFolder(ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate",0,null);
     }
@@ -57,7 +57,7 @@ public class DIRsBrowser extends ContentBrowser {
         }
 
         for(MusicFolder dir: rootDIRs) {
-            StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_DIR_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), dir.getName(), "", 0, null);
+            StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getName(), "", 0, null);
             musicDir.setChildCount((int)dir.getChildCount());
             result.add(musicDir);
         }

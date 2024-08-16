@@ -21,7 +21,6 @@ import apincer.android.mmate.repository.MusicTag;
 /**
  * Browser for a music artist folder.
  */
-@Deprecated
 public class ArtistFolderBrowser extends ContentBrowser {
     public ArtistFolderBrowser(Context context) {
         super(context);
