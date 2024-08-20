@@ -148,8 +148,8 @@
     <string name="albums">Albums</string>
     <string name="all">All Songs</string>
     <string name="artists">Artists</string>
-    <string name="genres">Genres</string>
-    <string name="groupings">Groupings</string>
+    <string name="label_genres">Genres</string>
+    <string name="label_groupings">Groupings</string>
     <string name="downloaded">Downloads</string>
     <string name="directory">Sources</string>
 
@@ -168,11 +168,11 @@
     <string name="upnp_server_stop_server">stop server</string>
     <string name="upnp_server_start_server">start server</string>
     <string name="musicActivityImageView">Cover</string>
-    <string name="menu_settings">MusicMate settings</string>
+    <string name="menu_settings">MusicMate Settings</string>
     <string name="about">About</string>
 
     <string name="channel_name">MusicMate</string>
-    <string name="channel_description">MusicMate notifications</string>
+    <string name="channel_description">MusicMate Notifications</string>
 
     <string name="media_server_name">DLNA/UPnP MediaServer</string>
     <string name="style">Style</string>
@@ -184,7 +184,7 @@
     <string name="label_encoding">Audio Encoding</string>
     <string name="label_file_quality">Audio File Quality</string>
     <string name="label_server">Media Server</string>
-    <string name="playlists">Playlists</string>
+    <string name="label_collections">Collections</string>
 
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">

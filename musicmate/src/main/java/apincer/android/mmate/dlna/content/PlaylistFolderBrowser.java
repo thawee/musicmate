@@ -42,6 +42,9 @@ public class PlaylistFolderBrowser extends ContentBrowser {
     }
 
     private List<MusicTag> getItems(ContentDirectory contentDirectory, String name) {
+        if(PlaylistsBrowser.MY_SONGS.equals(name)) {
+            return MusixMateApp.getInstance().getOrmLite().findMySongs();
+        }
         if(PlaylistsBrowser.DOWNLOADS_SONGS.equals(name)) {
            return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
         }
@@ -59,6 +62,15 @@ public class PlaylistFolderBrowser extends ContentBrowser {
         }
         if(PlaylistsBrowser.DUPLICATED_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
+        }
+        if(PlaylistsBrowser.I_AM_FUN_SONGS.equals(name)) {
+            return MusixMateApp.getInstance().getOrmLite().findPLSFUNSong();
+        }
+        if(PlaylistsBrowser.I_AM_HAPPY_SONGS.equals(name)) {
+            return MusixMateApp.getInstance().getOrmLite().findPLSHappySong();
+        }
+        if(PlaylistsBrowser.I_FEEL_RELAXED_SONGS.equals(name)) {
+            return MusixMateApp.getInstance().getOrmLite().findPLSRelaxedSong();
         }
         return new ArrayList<>();
     }

@@ -2320,4 +2320,20 @@ public class MusicTagUtils {
         }
         return ext;
     }
+
+    public static boolean isFunPlaylist(MusicTag tag) {
+        return ("Luk Thung".equalsIgnoreCase(tag.getGenre()) ||
+                "Mor Lum".equalsIgnoreCase(tag.getGenre()));
+    }
+
+    public static boolean isRelaxedPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
+        return (grouping.contains("LOUNGE") ||
+                grouping.contains("ACOUSTIC"));
+    }
+
+    public static boolean isHappyPlaylist(MusicTag tag) {
+        return !(isRelaxedPlaylist(tag) || isFunPlaylist(tag));
+       // return !isFunPlaylist(tag);
+    }
 }

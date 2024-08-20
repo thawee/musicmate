@@ -520,6 +520,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    /*
     public long getTotalSongCont() {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
@@ -528,7 +529,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
         }
         return 0;
-    }
+    } */
 
     public long getMaxId() {
         long id= 0;
@@ -694,5 +695,45 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Log.e(TAG,"findByAlbumUniqueKey", ex);
         }
         return null;
+    }
+
+    public List<MusicTag> findPLSFUNSong() {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            Where<MusicTag, ?> where = builder.where();
+            where.eq("genre", "Luk Thung").or().eq("genre", "Mor Lum");
+            return builder.groupBy("title").groupBy("artist").query();
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
+    }
+
+    public List<MusicTag> findPLSHappySong() {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            Where<MusicTag, ?> where = builder.where();
+            where.ne("genre", "Luk Thung").and().ne("genre", "Mor Lum");
+            where.and().ne("grouping", "Lounge").and().ne("grouping", "Acoustic");
+            where.and().ne("grouping", "Thai Lounge").and().ne("grouping", "Thai Acoustic");
+          //  where.raw("genre <> 'Luk Thung' or genre <> 'Mor Lum') and (grouping = 'Thai' or grouping = 'English')");
+            return builder.groupBy("title").groupBy("artist").query();
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
+    }
+
+    public List<MusicTag> findPLSRelaxedSong() {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            Where<MusicTag, ?> where = builder.where();
+            where.eq("grouping", "Lounge").or().eq("grouping", "Acoustic");
+            where.or().eq("grouping", "Thai Lounge").or().eq("grouping", "Thai Acoustic");
+            return builder.groupBy("title").groupBy("artist").query();
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
     }
 }

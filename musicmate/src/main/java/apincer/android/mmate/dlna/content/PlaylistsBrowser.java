@@ -25,28 +25,36 @@ import apincer.android.mmate.utils.MusicTagUtils;
  * Browser  for the music playlist folder.
  */
 public class PlaylistsBrowser extends ContentBrowser {
-    public static final String DOWNLOADS_SONGS = "Downloads Songs";
+    public static final String MY_SONGS = "All Songs";
+    public static final String DOWNLOADS_SONGS = "Download Songs";
     public static final String HI_RES_AUDIO = "Hi-Res Audio";
     public static final String LOSSLESS_AUDIO = "Lossless Audio";
     public static final String LOSSY_AUDIO = "Lossy Audio";
     public static final String MQA_AUDIO = "MQA Audio";
     public static final String DUPLICATED_SONGS = "Duplicated Songs";
+    public static final String I_AM_HAPPY_SONGS = "SmartList - I Am HAPPY";
+    public static final String I_FEEL_RELAXED_SONGS = "SmartList - I Feel RELAXED";
+    public static final String I_AM_FUN_SONGS = "SmartList - I Am FUN";
     private final List<String> playlists = new ArrayList<>();
     public PlaylistsBrowser(Context context) {
         super(context);
+        playlists.add(MY_SONGS);
         playlists.add(DOWNLOADS_SONGS);
         playlists.add(HI_RES_AUDIO);
         playlists.add(LOSSLESS_AUDIO);
         playlists.add(LOSSY_AUDIO);
         playlists.add(MQA_AUDIO);
         playlists.add(DUPLICATED_SONGS);
+        playlists.add(I_AM_HAPPY_SONGS);
+        playlists.add(I_FEEL_RELAXED_SONGS);
+        playlists.add(I_AM_FUN_SONGS);
        // playlists.add("Up Scaled Songs");
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_PLAYLIST_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.playlists), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_PLAYLIST_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_collections), "mmate", getSize(contentDirectory, myId),
                 null);
     }
 
@@ -67,6 +75,8 @@ public class PlaylistsBrowser extends ContentBrowser {
         }
         List<MusicTag> songs = TagRepository.getAllMusics();
         for(MusicTag tag: songs) {
+            mapped.get(MY_SONGS).addChildCount();
+
            if(MusicTagUtils.isOnDownloadDir(tag)) {
                mapped.get(DOWNLOADS_SONGS).addChildCount();
            }
@@ -84,6 +94,15 @@ public class PlaylistsBrowser extends ContentBrowser {
             }
             if(!MusicTagUtils.isLossless(tag) && !MusicTagUtils.isDSD(tag)) {
                 mapped.get(LOSSY_AUDIO).addChildCount();
+            }
+            if(MusicTagUtils.isFunPlaylist(tag)) {
+                mapped.get(I_AM_FUN_SONGS).addChildCount();
+            }
+            if(MusicTagUtils.isRelaxedPlaylist(tag)) {
+                mapped.get(I_FEEL_RELAXED_SONGS).addChildCount();
+            }
+            if(MusicTagUtils.isHappyPlaylist(tag)) {
+                mapped.get(I_AM_HAPPY_SONGS).addChildCount();
             }
         }
 

@@ -201,16 +201,16 @@ public class ContentDirectory {
             result = new AlbumsBrowser(getContext());
         } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
             result = new ArtistsBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId().equals(objectID)) {
-            result = new AllTitlesBrowser(getContext());
+       // } else if (ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId().equals(objectID)) {
+       //     result = new AllTitlesBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId())) {
             result = new AlbumFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
             result = new ArtistFolderBrowser(getContext());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId())) {
             result = new GenreFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
+      //  } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId())) {
+     //       result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_ALL_TITLES_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId())) {
             result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(),ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
         } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId())) {

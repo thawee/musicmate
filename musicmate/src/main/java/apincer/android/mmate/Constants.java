@@ -61,7 +61,7 @@ public final class Constants {
     public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
     public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
 
-    public static final String TITLE_LIBRARY = "Library";
+    public static final String TITLE_LIBRARY = "Collections";
     public static final String TITLE_GROUPING = "Grouping";
     public static final String TITLE_GENRE = "Genre";
     public static final String TITLE_PUBLISHER = "Publisher";

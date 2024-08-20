@@ -28,7 +28,7 @@ public class GenresBrowser extends ContentBrowser {
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new GenreContainer(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.genres), creator, getSize(contentDirectory, myId));
+        return new GenreContainer(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_genres), creator, getSize(contentDirectory, myId));
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
