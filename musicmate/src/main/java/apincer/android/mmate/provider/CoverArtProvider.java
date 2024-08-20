@@ -83,7 +83,7 @@ public final class CoverArtProvider extends ContentProvider {
             } catch (Exception e) {
                 Log.d(TAG,"openFile: ", e);
             }
-            Log.w(TAG,"no coverart for "+uri.getPath());
+//            Log.d(TAG,"no coverart for "+uri.getPath());
             return null;
         }
 

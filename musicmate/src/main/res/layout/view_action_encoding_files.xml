@@ -19,8 +19,8 @@
         android:layout_marginRight="@dimen/dimen_8_dp"
         android:paddingRight="@dimen/spacing_medium"
         android:paddingLeft="@dimen/spacing_medium"
-        android:textSize="14sp"
-        android:text="Encoding audio files"
+        android:textSize="12sp"
+        android:text="@string/about_encoding_file"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
         android:background="@drawable/bg_transparent"/>

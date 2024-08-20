@@ -40,7 +40,8 @@ public class LibraryBrowser extends ContentBrowser {
 
         result.add((Container) new GroupingsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new SourcesBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new PlaylistsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_PLAYLIST_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new CollectionsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), firstResult, maxResults, orderby));
+        result.add((Container) new ResolutionsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), firstResult, maxResults, orderby));
         return result;
     }
 

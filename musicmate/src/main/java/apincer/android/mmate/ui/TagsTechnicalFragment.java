@@ -119,7 +119,7 @@ public class TagsTechnicalFragment extends Fragment {
         LinearLayout cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
-        tv0.setText(" Field ");
+        tv0.setText(R.string.label_field);
         tv0.setTextColor(Color.WHITE);
         cell.addView(tv0);
         tbrow0.addView(cell);
@@ -128,7 +128,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv1 = new TextView(getContext());
-        tv1.setText("Current");
+        tv1.setText(R.string.label_current);
         tv1.setTextColor(Color.WHITE);
         cell.addView(tv1);
         tbrow0.addView(cell);
@@ -137,7 +137,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         TextView tv = new TextView(getContext());
-        tv.setText("Default Reader");
+        tv.setText(R.string.label_default_reader);
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);
@@ -146,7 +146,7 @@ public class TagsTechnicalFragment extends Fragment {
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
         tv = new TextView(getContext());
-        tv.setText("FFMpeg Reader");
+        tv.setText(R.string.label_ffmpeg_reader);
         tv.setTextColor(Color.WHITE);
         cell.addView(tv);
         tbrow0.addView(cell);

@@ -324,7 +324,7 @@ public class MediaServerService extends Service {
                 new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
     }
 
-    private LocalService<?> createContentDirectoryService() {
+    private LocalService<ContentDirectory> createContentDirectoryService() {
         contentDirectoryService = new AnnotationLocalServiceBinder().read(ContentDirectory.class);
         contentDirectoryService.setManager(new DefaultServiceManager<>(contentDirectoryService, null) {
 

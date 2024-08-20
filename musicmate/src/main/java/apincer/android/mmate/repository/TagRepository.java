@@ -219,16 +219,15 @@ public class TagRepository {
                 list = MusixMateApp.getInstance().getOrmLite().findByPublisher(criteria.getKeyword());
             } else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 list = MusixMateApp.getInstance().getOrmLite().findByMediaQuality(criteria.getKeyword());
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findDSDSongs();
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findMQASongs();
-
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIGH_QUALITY.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION && Constants.TITLE_HIGH_QUALITY.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findHighQuality();
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findLosslessSong();
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ && Constants.TITLE_HIRES.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION && Constants.TITLE_HIRES.equals(criteria.keyword)) {
                 list = MusixMateApp.getInstance().getOrmLite().findHiRes();
             } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 String val = criteria.getKeyword();

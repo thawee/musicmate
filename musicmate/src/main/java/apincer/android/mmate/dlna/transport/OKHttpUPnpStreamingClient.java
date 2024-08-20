@@ -58,19 +58,19 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamClient
                         requestMessage.getUdaMajorVersion(),
                         requestMessage.getUdaMinorVersion());
 
-                 Log.d(TAG, "Setting header '" + UpnpHeader.Type.USER_AGENT.getHttpName() + "': " + value);
+                // Log.d(TAG, "Setting header '" + UpnpHeader.Type.USER_AGENT.getHttpName() + "': " + value);
                 builder.addHeader(UpnpHeader.Type.USER_AGENT.getHttpName(), value);
             }
             for (Map.Entry<String, List<String>> entry : requestMessage.getHeaders().entrySet()) {
                 for (String v : entry.getValue()) {
                     String headerName = entry.getKey();
-                     Log.d(TAG, "Setting header '" + headerName + "': " + v);
+                    // Log.d(TAG, "Setting header '" + headerName + "': " + v);
                     builder.addHeader(headerName, v);
                 }
             }
 
             if (requestMessage.hasBody()) {
-                Log.d(TAG, "Writing textual request body: " + requestMessage);
+              //  Log.d(TAG, "Writing textual request body: " + requestMessage);
                 MimeType contentType =
                         requestMessage.getContentTypeHeader() != null
                                 ? requestMessage.getContentTypeHeader().getValue()
@@ -93,8 +93,8 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamClient
     @Override
     protected Callable<StreamResponseMessage> createCallable(StreamRequestMessage requestMessage, Request request) {
         return () -> {
-             Log.d(TAG, "Sending HTTP request: " + requestMessage);
-             Log.v(TAG, "Body: " + requestMessage.getBodyString());
+            // Log.d(TAG, "Sending HTTP request: " + requestMessage);
+            // Log.v(TAG, "Body: " + requestMessage.getBodyString());
             Response response =client.newCall(request).execute();
             return createResponse(response);
         };
@@ -124,7 +124,7 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamClient
                         response.code(),
                         Objects.requireNonNull(UpnpResponse.Status.getByStatusCode(response.code())).getStatusMsg()
                 );
-        Log.d(TAG, "Received response: " + responseOperation);
+      //  Log.d(TAG, "Received response: " + responseOperation);
         StreamResponseMessage responseMessage = new StreamResponseMessage(responseOperation);
         // Headers
         UpnpHeaders headers = new UpnpHeaders();
@@ -137,15 +137,15 @@ public class OKHttpUPnpStreamingClient extends AbstractStreamClient<StreamClient
             bytes = response.body().bytes();
         }
         if (bytes != null && bytes.length > 0 && responseMessage.isContentTypeMissingOrText()) {
-            Log.d(TAG, "Response contains textual entity body, converting then setting string on message");
+          //  Log.d(TAG, "Response contains textual entity body, converting then setting string on message");
             responseMessage.setBodyCharacters(bytes);
         } else if (bytes != null && bytes.length > 0) {
-            Log.d(TAG, "Response contains binary entity body, setting bytes on message");
+          //  Log.d(TAG, "Response contains binary entity body, setting bytes on message");
             responseMessage.setBody(UpnpMessage.BodyType.BYTES, bytes);
-        } else {
-            Log.d(TAG, "Response did not contain entity body");
+       // } else {
+       //     Log.d(TAG, "Response did not contain entity body");
         }
-        Log.d(TAG, "Response message complete: " + responseMessage);
+       // Log.d(TAG, "Response message complete: " + responseMessage);
         return responseMessage;
     }
 

@@ -371,12 +371,6 @@ public class TagsActivity extends AppCompatActivity {
         imageLoader.enqueue(request);
 
         drView.setText(MusicTagUtils.getTrackDR(displayTag));
-       /* if(MusicTagUtils.isDSD(displayTag)) { //] || !MusicTagUtils.isLossless(displayTag)) {
-            drView.setVisibility(View.GONE);
-        }else {    // Dynamic Range
-            drView.setVisibility(View.VISIBLE);
-        } */
-
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isPCMHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
         }else {
@@ -446,18 +440,6 @@ public class TagsActivity extends AppCompatActivity {
             newPanelView.setVisibility(View.GONE);
         }
 
-        /*
-        request = new ImageRequest.Builder(getApplicationContext())
-                //.data(MusicTagUtils.getCoverArt(getApplicationContext(), displayTag))
-                .data(CoverArtProvider.getUriForMusicTag(displayTag))
-                .size(1024,1024)
-                .transformations(new ReflectionTransformation())
-                .placeholder(R.drawable.progress)
-                //.placeholder(R.drawable.no_image0)
-                .error(ReflectionTransformation.applyReflection(getApplicationContext(), R.drawable.no_cover2, 640, 640))
-                .target(coverArtView)
-                .build();
-        imageLoader.enqueue(request); */
         request = new ImageRequest.Builder(getApplicationContext())
                 .data(CoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)

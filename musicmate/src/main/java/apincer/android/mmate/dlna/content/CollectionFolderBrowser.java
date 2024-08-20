@@ -18,21 +18,21 @@ import java.util.List;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
 
-public class PlaylistFolderBrowser extends ContentBrowser {
+public class CollectionFolderBrowser extends ContentBrowser {
     private static final String TAG = "PlaylistFolderBrowser";
-    public PlaylistFolderBrowser(Context context) {
+    public CollectionFolderBrowser(Context context) {
         super(context);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_PLAYLIST_FOLDER.getId(), myId, "mmate", getSize(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), myId, "mmate", getSize(
                 contentDirectory, myId), null);
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-        String name = myId.substring(ContentDirectoryIDs.MUSIC_PLAYLIST_PREFIX.getId().length());
+        String name = myId.substring(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId().length());
         if("_EMPTY".equalsIgnoreCase(name) ||
                 "_NULL".equalsIgnoreCase(name)) { // ||
                // "None".equalsIgnoreCase(name)) {
@@ -42,34 +42,22 @@ public class PlaylistFolderBrowser extends ContentBrowser {
     }
 
     private List<MusicTag> getItems(ContentDirectory contentDirectory, String name) {
-        if(PlaylistsBrowser.MY_SONGS.equals(name)) {
+        if(CollectionsBrowser.MY_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findMySongs();
         }
-        if(PlaylistsBrowser.DOWNLOADS_SONGS.equals(name)) {
+        if(CollectionsBrowser.DOWNLOADS_SONGS.equals(name)) {
            return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
         }
-        if(PlaylistsBrowser.MQA_AUDIO.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findMQASongs();
-        }
-        if(PlaylistsBrowser.HI_RES_AUDIO.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findHiRes();
-        }
-        if(PlaylistsBrowser.LOSSLESS_AUDIO.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findLosslessSong();
-        }
-        if(PlaylistsBrowser.LOSSY_AUDIO.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findHighQuality();
-        }
-        if(PlaylistsBrowser.DUPLICATED_SONGS.equals(name)) {
+        if(CollectionsBrowser.DUPLICATED_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
         }
-        if(PlaylistsBrowser.I_AM_FUN_SONGS.equals(name)) {
+        if(CollectionsBrowser.I_AM_FUN_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findPLSFUNSong();
         }
-        if(PlaylistsBrowser.I_AM_HAPPY_SONGS.equals(name)) {
+        if(CollectionsBrowser.I_AM_HAPPY_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findPLSHappySong();
         }
-        if(PlaylistsBrowser.I_FEEL_RELAXED_SONGS.equals(name)) {
+        if(CollectionsBrowser.I_FEEL_RELAXED_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findPLSRelaxedSong();
         }
         return new ArrayList<>();
@@ -92,12 +80,12 @@ public class PlaylistFolderBrowser extends ContentBrowser {
               //  "None".equalsIgnoreCase(name)) {
             name = null;
         } */
-        String name = extractName(myId, ContentDirectoryIDs.MUSIC_PLAYLIST_PREFIX);
+        String name = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
         List<MusicTag> tags = getItems(contentDirectory, name);
         int currentCount = 0;
         for(MusicTag tag: tags) {
             if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_PLAYLIST_ITEM_PREFIX.getId());
+                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);
             }
             if(!forceFullContent)  currentCount++;

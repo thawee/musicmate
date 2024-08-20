@@ -101,8 +101,8 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
     private int currentIconIndex = 0;
     final protected StreamServerConfigurationImpl configuration;
     protected int localPort;
-    private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private final EventLoopGroup bossGroup;
+    private final EventLoopGroup workerGroup;
 
     public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
@@ -122,6 +122,15 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
         this.context = context;
         this.configuration = configuration;
         this.localPort = configuration.getListenPort();
+        System.setProperty("io.netty.allocator.useCacheForAllThreads", "false");
+       // System.setProperty("io.netty.allocator.maxOrder", "9"); //11=16 MB, 9 = 4 MB per chunk
+        System.setProperty("io.netty.allocator.maxOrder", "8"); //7 = 1 MB, 8 = 2 MB per chunk
+       // System.setProperty("io.netty.allocator.type", "unpooled");
+        System.setProperty("io.netty.threadLocalDirectBufferSize", "32768"); // default 64kb
+       // System.setProperty("io.netty.threadLocalDirectBufferSize", "16384"); // default 64kb, 16k cause more gc
+
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
         loadCachedIcons();
     }
 
@@ -144,7 +153,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
 
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     ServerBootstrap b = new ServerBootstrap();
-                    b.option(ChannelOption.SO_BACKLOG, 128);  //Set the size of the backlog of TCP connections.  The default and exact meaning of this parameter is JDK specific.
+                    b.option(ChannelOption.SO_BACKLOG, 256);  //Set the size of the backlog of TCP connections.  The default and exact meaning of this parameter is JDK specific.
                     b.group(bossGroup, workerGroup)
                             .channel(NioServerSocketChannel.class)
                             .handler(new LoggingHandler(LogLevel.DEBUG))
@@ -164,8 +173,8 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 } catch (Exception ex) {
                     throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
                 } finally {
-                    bossGroup.shutdownGracefully();
                     workerGroup.shutdownGracefully();
+                    bossGroup.shutdownGracefully();
                 }
             }
         });
@@ -179,8 +188,8 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
     }
 
     synchronized public void stop() {
-        bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+        bossGroup.shutdownGracefully();
     }
 
     private byte[] getDefaultIcon() {
@@ -342,57 +351,18 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 } else {
                     contentHolder = handleResource(request);
                 }
-                boolean keepAlive = HttpUtil.isKeepAlive(request);
+                //boolean keepAlive = HttpUtil.isKeepAlive(request);
                 if (contentHolder == null) {
                     sendError(ctx, request, FORBIDDEN);
-                   /* DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.FORBIDDEN);
-                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN);
-                    response.headers().add(HttpHeaderNames.DATE, "" + System.currentTimeMillis());
-                    response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-                    ctx.write(response, ctx.voidPromise()).addListener(ChannelFutureListener.CLOSE);*/
-                   // ctx.close();
                 }else if (contentHolder.fileContent != null) {
                     handleFile(ctx, request, contentHolder);
 
-                    /*
-                    DefaultHttpResponse response = new DefaultHttpResponse(request.protocolVersion(), contentHolder.statusCode);
-                    if (keepAlive) {
-                        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
-                    } else {
-                        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-                    }
-                    // The Date header is recommended in UDA
-                    response.headers().add(HttpHeaderNames.DATE, "" + System.currentTimeMillis());
-
-                    response.headers().set(HttpHeaderNames.CONTENT_LENGTH, contentHolder.fileContent.length());
-                   // response. headers().set(TRANSFER_ENCODING, CHUNKED);
-                    ctx. write(response);
-
-                    HttpChunkedInput httpChunkWriter = new HttpChunkedInput(
-                            new ChunkedFile(contentHolder.fileContent));
-                    final ChannelFuture f = ctx. writeAndFlush(httpChunkWriter);
-                    f.addListener((ChannelFutureListener) future -> {
-                        ctx.close();
-                    }); */
                 } else {
                     DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), contentHolder.statusCode, Unpooled.wrappedBuffer(contentHolder.content));
                     response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
                     response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType); // "text/plain; charset=UTF-8");
 
                     sendAndCleanupConnection(ctx, request, response);
-                   /*
-                    if (!keepAlive) {
-                        // The Date header is recommended in UDA
-                        response.headers().add(HttpHeaderNames.DATE, "" + System.currentTimeMillis());
-                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-                        ctx.write(response, ctx.voidPromise()).addListener(ChannelFutureListener.CLOSE);
-                    } else {
-                        // The Date header is recommended in UDA
-                        response.headers().add(HttpHeaderNames.DATE, "" + System.currentTimeMillis());
-                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-                        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-                        ctx.write(response, ctx.voidPromise());
-                    } */
                 }
             }
         }
@@ -445,21 +415,23 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 // Write the end marker.
                 ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 
+                /*
             sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
                 @Override
                 public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
                     if (total < 0) { // total unknown
-                        System.err.println(future.channel() + " Transfer progress: " + progress);
+                        Log.d(TAG,future.channel() + " Transfer progress: " + progress);
                     } else {
-                        System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
+                        Log.d(TAG,future.channel() + " Transfer progress: " + progress + " / " + total);
                     }
                 }
 
                 @Override
                 public void operationComplete(ChannelProgressiveFuture future) {
-                    System.err.println(future.channel() + " Transfer complete.");
+                   // System.err.println(future.channel() + " Transfer complete.");
+                    Log.d(TAG, future.channel() + " Transfer complete.");
                 }
-            });
+            }); */
 
             // Decide whether to close the connection or not.
             if (!keepAlive) {
@@ -556,7 +528,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
             } catch (Throwable t) {
                 Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
                 holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR");
-                // upnpStream.responseException(t);
+               // upnpStream.responseException(t);
             }
             return  holder;
         }

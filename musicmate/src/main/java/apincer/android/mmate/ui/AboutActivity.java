@@ -103,70 +103,65 @@ public class AboutActivity extends AppCompatActivity {
                 version.setText(packageInfo.versionName);
 
             }
-            catch (PackageManager.NameNotFoundException e) {
-
-            }
-            MusicMateExecutors.db(new Runnable() {
-                @Override
-                public void run() {
-                    List<MusicTag> tags = TagRepository.getAllMusics();
-                    Map<String, Integer> encList = new HashMap<>();
-                    Map<String, Integer> grpList = new HashMap<>();
-                    Map<String, Long> estimatedSize = new HashMap<>();
-                    Map<String, Long> actualSize = new HashMap<>();
-                    FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
-                    for(MusicTag tag: tags) {
-                        String sid = repos.getStorageIdFor(tag);
-                        String asid = tag.getStorageId();
-                        if(estimatedSize.containsKey(sid)) {
-                            Long s = estimatedSize.get(sid);
-                            estimatedSize.put(sid, s+tag.getFileSize());
-                        }else {
-                            estimatedSize.put(sid, tag.getFileSize());
-                        }
-                        if(actualSize.containsKey(asid)) {
-                            Long s = actualSize.get(asid);
-                            actualSize.put(asid, s+tag.getFileSize());
-                        }else {
-                            actualSize.put(asid, tag.getFileSize());
-                        }
-
-                        String enc = MusicTagUtils.getEncodingType(tag);
-                        if(encList.containsKey(enc)) {
-                            Integer cnt = encList.get(enc);
-                            encList.put(enc, cnt + 1);
-                        }else {
-                            encList.put(enc, 1);
-                        }
-
-                        // grouping
-                        String grp = tag.getGrouping();
-                        if(StringUtils.isEmpty(grp)) grp = Constants.UNKNOWN_GROUP;
-                        if(grpList.containsKey(grp)) {
-                            Integer cnt = grpList.get(grp);
-                            grpList.put(grp, cnt + 1);
-                        }else {
-                            grpList.put(grp, 1);
-                        }
+            catch (PackageManager.NameNotFoundException ignore) {}
+            MusicMateExecutors.db(() -> {
+                List<MusicTag> tags = TagRepository.getAllMusics();
+                Map<String, Integer> encList = new HashMap<>();
+                Map<String, Integer> grpList = new HashMap<>();
+                Map<String, Long> estimatedSize = new HashMap<>();
+                Map<String, Long> actualSize = new HashMap<>();
+                FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
+                for(MusicTag tag: tags) {
+                    String sid = repos.getStorageIdFor(tag);
+                    String asid = tag.getStorageId();
+                    if(estimatedSize.containsKey(sid)) {
+                        Long s = estimatedSize.get(sid);
+                        estimatedSize.put(sid, s+tag.getFileSize());
+                    }else {
+                        estimatedSize.put(sid, tag.getFileSize());
                     }
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // storage
-                            LinearLayout panel = v.findViewById(R.id.storage_bar);
-                            UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
+                    if(actualSize.containsKey(asid)) {
+                        Long s = actualSize.get(asid);
+                        actualSize.put(asid, s+tag.getFileSize());
+                    }else {
+                        actualSize.put(asid, tag.getFileSize());
+                    }
 
-                            // file type piechart
-                            //setupEncodingChart(v, encList, "Music File Format");
-                            setupEncodingChart(v, grpList, "");
+                    String enc = MusicTagUtils.getEncodingType(tag);
+                    if(encList.containsKey(enc)) {
+                        Integer cnt = encList.get(enc);
+                        encList.put(enc, cnt + 1);
+                    }else {
+                        encList.put(enc, 1);
+                    }
 
-                            // setup digital music details
-                            String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
-                            Editor renderer = v.findViewById(R.id.editor);
-                            renderer.render(content);
-                        }
-                    });
+                    // grouping
+                    String grp = tag.getGrouping();
+                    if(StringUtils.isEmpty(grp)) grp = Constants.UNKNOWN_GROUP;
+                    if(grpList.containsKey(grp)) {
+                        Integer cnt = grpList.get(grp);
+                        grpList.put(grp, cnt + 1);
+                    }else {
+                        grpList.put(grp, 1);
+                    }
                 }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // storage
+                        LinearLayout panel = v.findViewById(R.id.storage_bar);
+                        UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
+
+                        // file type piechart
+                        //setupEncodingChart(v, encList, "Music File Format");
+                        setupEncodingChart(v, grpList, "");
+
+                        // setup digital music details
+                        String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
+                        Editor renderer = v.findViewById(R.id.editor);
+                        renderer.render(content);
+                    }
+                });
             });
 
             return v;

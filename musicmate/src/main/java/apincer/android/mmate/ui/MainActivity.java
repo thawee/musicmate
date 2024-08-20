@@ -7,6 +7,7 @@ import static apincer.android.mmate.Constants.TITLE_LIBRARY;
 import static apincer.android.mmate.Constants.TITLE_PCM;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
+import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -14,7 +15,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.transition.Slide;
 import android.util.Log;
@@ -37,15 +37,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.ViewPropertyAnimatorListenerAdapter;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -139,18 +136,21 @@ import sakout.mehdi.StateViews.StateView;
 /**
  * Created by Administrator on 11/23/17.
  */
-@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class MainActivity extends AppCompatActivity {
+    public static final String FILE_MP3 = "MP3";
     private static final String TAG = "MainActivity";
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET= 16; //start scrolling from 4 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 48; //48; // scroll item to offset+1 position on list
-    private static final int MENU_ID_QUALITY = 55555555;
-    private static final int MENU_ID_QUALITY_PCM = 55550000;
+    private static final int MENU_ID_RESOLUTION = 55555555;
+  //  private static final int MENU_ID_QUALITY_PCM = 55550000;
     private static final double MAX_PROGRESS_BLOCK = 10.00;
     private static final double MAX_PROGRESS = 100.00;
+    public static final String FLAC_OPTIMAL = "FLAC (Optimal)";
+    public static final String FLAC_LEVEL_0 = "FLAC (Level 0)";
+    public static final String FILE_FLAC = "FLAC";
+    public static final String MP_3_320_KHZ = "MPEG-3";
 
     private MusicTag nowPlaying = null;
-   // private MediaServerService mediaServerService;
 
     ActivityResultLauncher<Intent> editorLauncher;
     ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
@@ -499,34 +499,77 @@ public class MainActivity extends AppCompatActivity {
 
         MusicMateExecutors.main(() -> {
             AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device)));
-            runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
+            runOnUiThread(() -> nowPlayingView.animate()
                     .scaleX(1f).scaleY(1f)
                     .alpha(1f).setDuration(250)
                     .setStartDelay(10L)
-                    .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                    .setListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(@NonNull Animator animator) {
+                            nowPlayingView.setVisibility(View.VISIBLE);
+                            adapter.notifyMusicTagChanged(song); // .notifyModelChanged(song);
+                        }
+
+                        @Override
+                        public void onAnimationEnd(@NonNull Animator animator) {
+                            nowPlayingView.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onAnimationCancel(@NonNull Animator animator) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(@NonNull Animator animator) {
+
+                        }
+                    })
+                   /* .setListener(new ViewPropertyAnimatorListenerAdapter() {
                         @SuppressLint("NotifyDataSetChanged")
                         @Override
                         public void onAnimationStart(@NonNull View view) {
                             view.setVisibility(View.VISIBLE);
                             adapter.notifyMusicTagChanged(song); // .notifyModelChanged(song);
                         }
-                    })
+                    }) */
                     .start());
         });
     }
 	
 	private void doHideNowPlayingSongFAB() {
         nowPlaying = null;
-        runOnUiThread(() -> ViewCompat.animate(nowPlayingView)
+        runOnUiThread(() -> nowPlayingView.animate()
                 .scaleX(0f).scaleY(0f)
                 .alpha(0f).setDuration(100)
                 .setStartDelay(10L)
-                .setListener(new ViewPropertyAnimatorListenerAdapter() {
+                .setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(@NonNull Animator animator) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(@NonNull Animator animator) {
+                        nowPlayingView.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(@NonNull Animator animator) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(@NonNull Animator animator) {
+
+                    }
+                })
+               /* .setListener(new ViewPropertyAnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(@NonNull View view) {
                         view.setVisibility(View.GONE);
                     }
-                })
+                }) */
                 .start());
     }
 
@@ -609,36 +652,13 @@ public class MainActivity extends AppCompatActivity {
             refreshLayout.autoRefresh();
         });
 
-       // headerTab = findViewById(R.id.header_tab);
         headerSubtitle = findViewById(R.id.header_subtitle);
-        /*headerTab.addOnTabSelectedListener(new OnTabSelectedListener(){
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                if(!onSetup) {
-                    adapter.resetFilter();
-                    adapter.setKeyword(tab.getText().toString());
-                    refreshLayout.autoRefresh();
-                }
-                TextView tv = tab.getCustomView().findViewById(R.id.tabTitle);
-                tv.setTextColor(Color.WHITE);
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                TextView tv = tab.getCustomView().findViewById(R.id.tabTitle);
-                tv.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey400));
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-            }
-        }); */
     }
 
     private void loadDataSets(Bundle startIntent) {
         SearchCriteria criteria;
         if(startIntent != null) {
-            criteria = startIntent.getParcelable("main_screen_type");
+            criteria = startIntent.getParcelable("main_screen_type", SearchCriteria.class);
         }else {
             criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
         }
@@ -753,22 +773,10 @@ public class MainActivity extends AppCompatActivity {
         // create right menus
 
         mResideMenu.setMenuRes(R.menu.menu_music_collection, ResideMenu.DIRECTION_LEFT);
-        mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_dsd_white, Constants.AUDIO_SQ_DSD, ResideMenu.DIRECTION_LEFT);
-        mResideMenu.addMenuItem(MENU_ID_QUALITY_PCM, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_PCM, ResideMenu.DIRECTION_LEFT);
+       // mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_dsd_white, Constants.AUDIO_SQ_DSD, ResideMenu.DIRECTION_LEFT);
+       // mResideMenu.addMenuItem(MENU_ID_QUALITY_PCM, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_PCM, ResideMenu.DIRECTION_LEFT);
+        mResideMenu.addMenuItem(MENU_ID_RESOLUTION, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_RESOLUTION, ResideMenu.DIRECTION_LEFT);
     }
-
-    /*
-    private void setUpPermissions() {
-        if (!Environment.isExternalStorageManager()) {
-            //todo when permission is granted      // do not have read/write storage permission
-            Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
-            // You can do the assignment inside onAttach or onCreate, i.e, before the activity is displayed
-            ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> loadDataSets(null));
-            permissionResultLauncher.launch(myIntent);
-        }
-    } */
 
     private void scrollToListening() {
         if(nowPlaying ==null) return;
@@ -874,7 +882,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
@@ -883,15 +890,14 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-        } else if(item.getItemId() == MENU_ID_QUALITY_PCM) {
+        } else if(item.getItemId() == MENU_ID_RESOLUTION) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, Constants.TITLE_HIGH_QUALITY);
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_RESOLUTION, Constants.TITLE_HIGH_QUALITY);
             return true;
-        } else if(item.getItemId() == MENU_ID_QUALITY) {
+       /* } else if(item.getItemId() == MENU_ID_QUALITY) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, (String)item.getTitle());
-            return true;
-
+            return true; */
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GROUPING, TagRepository.getActualGroupingList(getApplicationContext()).get(0));
@@ -904,13 +910,7 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(myIntent);
             return true;
-        /*} else if(item.getItemId() == R.id.menu_sd_permission) {
-            //setUpPermissionSAF();
-            Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
-            startActivity(myIntent);
-            return true; */
         } else if(item.getItemId() == R.id.menu_notification_access) {
-
             Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             startActivity(intent);
             return true;
@@ -930,14 +930,10 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(myIntent);
             return true;
-       // }else if(item.getItemId() == R.id.menu_media_server) {
-        //    doShowMediaServerControl();
-        //    return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void doSetDirectories() {
         if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
             Intent myIntent = new Intent(MainActivity.this, PermissionActivity.class);
@@ -1040,44 +1036,6 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    /*
-    private void doShowMediaServerControl() {
-        View cview = getLayoutInflater().inflate(R.layout.view_action_media_server, null);
-      //  TextView ip = cview.findViewById(R.id.server_ip_address);
-        TextView status = cview.findViewById(R.id.server_status);
-       // ip.setText(HostInterface.getIPv4Address());
-        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(true);
-        Button startButton = cview.findViewById(R.id.manageServer);
-        if(mediaServerService!=null && mediaServerService.isInitialized()) {
-            status.setText("Status: STARTED");
-            startButton.setText("Stop Server");
-        }else {
-            status.setText("Status: STOPED");
-            startButton.setText("Start Server");
-        }
-        startButton.setOnClickListener(view -> {
-            if((mediaServerService != null && mediaServerService.isInitialized())) {
-                stopService(new Intent(getApplicationContext(), MediaServerService.class));
-                status.setText("Status: STOPED");
-                startButton.setText("Start Server");
-            }else {
-                startForegroundService(new Intent(getApplicationContext(), MediaServerService.class));
-                status.setText("Status: STARTED");
-                startButton.setText("Stop Server");
-            }
-        });
-
-        // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        alert.show();
-    } */
-
     private void doShowEditActivity(List<MusicTag> selections) {
         ArrayList<MusicTag> tagList = new ArrayList<>();
         for(MusicTag tag: selections) {
@@ -1104,127 +1062,6 @@ public class MainActivity extends AppCompatActivity {
             editorLauncher.launch(myIntent);
         }
     }
-
-/*
-    private void doSendToNASServer(List<MusicTag> selections) {
-        if(selections.isEmpty()) return;
-
-        View cview = getLayoutInflater().inflate(R.layout.view_action_transfer_files, null);
-        Map<MusicTag, String> doneList = new HashMap<>();
-        ListView itemsView = cview.findViewById(R.id.itemListView);
-        PowerSpinnerView serverView = cview.findViewById(R.id.send_to_server);
-        List<NASServer> serverList = MediaServerRepository.getAllServers();
-        List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
-
-        for(NASServer server: serverList) {
-            iconSpinnerItems.add(new IconSpinnerItem(server.getName()+"["+server.getIp()+"]", null));
-        }
-        IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(serverView);
-        serverView.setSpinnerAdapter(iconSpinnerAdapter);
-        serverView.setItems(iconSpinnerItems);
-        if(!iconSpinnerItems.isEmpty()) {
-            serverView.selectItemByIndex(0);
-        }
-        serverView.setLifecycleOwner(this);
-        itemsView.setAdapter(new BaseAdapter() {
-            @Override
-            public int getCount() {
-                return selections.size();
-            }
-
-            @Override
-            public Object getItem(int i) {
-                return null;
-            }
-
-            @Override
-            public long getItemId(int i) {
-                return 0;
-            }
-
-            @SuppressLint({"ViewHolder", "InflateParams"})
-            @Override
-            public View getView(int i, View view, ViewGroup viewGroup) {
-                view = getLayoutInflater().inflate(R.layout.view_action_listview_item, null);
-                MusicTag tag = selections.get(i);
-                TextView seq = view.findViewById(R.id.seq);
-                TextView name = view.findViewById(R.id.name);
-                TextView status = view.findViewById(R.id.status);
-                seq.setText(String.valueOf(i+1));
-                status.setText(doneList.getOrDefault(tag,"-"));
-                name.setText(FileSystem.getFilename(tag.getPath()));
-                return view;
-            }
-        });
-
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
-
-        ProgressBar progressBar = cview.findViewById(R.id.progressBar);
-
-        btnOK.setEnabled(true);
-
-        double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
-        double sizeInBlock = MAX_PROGRESS/block;
-        List<Long> valueList = new ArrayList<>();
-        for(int i=0; i< block;i++) {
-            valueList.add((long) sizeInBlock);
-        }
-        final float rate = 100/selections.size(); // pcnt per 1 song
-        int barColor = getColor(R.color.material_color_green_400);
-        progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
-        progressBar.setMax((int) MAX_PROGRESS);
-
-        AlertDialog alert = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)
-                .setTitle("")
-                .setView(cview)
-                .setCancelable(true)
-                .create();
-        alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        alert.setCanceledOnTouchOutside(false);
-        // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-        btnOK.setOnClickListener(v -> {
-            busy = true;
-            progressBar.setProgress(getInitialProgress(selections.size(), rate));
-            MusicMateExecutors.move(() -> {
-                NASServer server = serverList.get(serverView.getSelectedIndex());
-                SyncMusic streamer = new SyncMusic(server);
-                for(MusicTag tag: selections) {
-                    try {
-                        doneList.put(tag, "Sending");
-                        runOnUiThread(itemsView::invalidateViews);
-                        streamer.sync(getApplicationContext(), tag);
-                        doneList.put(tag, "Done");
-                        runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
-                            itemsView.invalidateViews();
-                            progressBar.invalidate();
-                        });
-                    } catch (Exception ex) {
-                        try {
-                            doneList.put(tag, "Fail");
-                            runOnUiThread(() -> {
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                itemsView.invalidateViews();
-                                progressBar.invalidate();
-                            });
-                        } catch (Exception ignored) {
-                        }
-                    }
-                }
-                runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Selected file are send to raspberry."));
-
-            });
-            btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
-        });
-        btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
-        alert.show();
-    }*/
 
     private void doShowAboutApp() {
         Intent myIntent = new Intent(MainActivity.this, AboutActivity.class);
@@ -1337,111 +1174,10 @@ public class MainActivity extends AppCompatActivity {
         mStateView.hideStates();
     }
 
-    /*
-    public View getTabView(String title) {
-        // Given you have a custom layout in `res/layout/custom_tab.xml` with a TextView and ImageView
-        @SuppressLint("InflateParams") View v = LayoutInflater.from(this).inflate(R.layout.view_header_tab_item, null);
-        TextView hv = v.findViewById(R.id.tabHeader);
-        hv.setText(StringUtils.getAbvByUpperCase(title));
-        TextView tv = v.findViewById(R.id.tabTitle);
-        tv.setText(title);
-        return v;
-    } */
-
-    /*
-    private List<TrapezoidPartsView.TrapezoidPart> createTrapezoidParts() {
-        List<TrapezoidPartsView.TrapezoidPart> list = new ArrayList<>();
-        List<String> titles = this.adapter.getHeaderTitles(getApplicationContext());
-        String headerTitle = this.adapter.getHeaderTitle();
-        int i=0;
-        for(String title: titles) {
-            TrapezoidPartsView.TrapezoidPart part = new TrapezoidPartsView.TrapezoidPart();
-            if(i==0) {
-                part.setBgIcon(UIUtils.getBitmap(this, R.drawable.tab_start_bg));
-            }else if(i == (titles.size()-1)){
-                part.setBgIcon(UIUtils.getBitmap(this, R.drawable.tab_end_bg));
-            }else {
-                part.setBgIcon(UIUtils.getBitmap(this, R.drawable.tab_bg));
-            }
-            if(title.equals(headerTitle)) {
-                part.setSelected(true);
-            }
-
-           // part.setIcon(getResources().getDrawable(mIconIds[i]));
-            part.setText(title);
-            part.setShortText(StringUtils.getAbvByUpperCase(title));
-            list.add(part);
-            i++;
-        }
-        return list;
-    } */
-
     private void updateHeaderPanel() {
-       // mHeaderTPV.setParts(createTrapezoidParts());
-
-        /*
-        headerTab.removeAllTabs();
-        onSetup = true;
-        List<String> titles = adapter.getHeaderTitles(getApplicationContext());
-        String headerTitle = adapter.getHeaderTitle();
-        int i=0;
-        for(String title: titles) {
-            TabLayout.Tab firstTab = headerTab.newTab(); // Create a new Tab names
-            View tabItemView = getTabView(title);
-            firstTab.setCustomView(tabItemView);
-            firstTab.setText(title); // set the Text for the first Tab
-            if(StringUtils.equals(headerTitle, title)) {
-                headerTab.addTab(firstTab, true);
-            }else {
-                headerTab.addTab(firstTab);
-            }
-            if(i==0) {
-                tabItemView.setBackgroundResource(R.drawable.tab_start_bg);
-            }else if(i == (titles.size()-1)){
-                tabItemView.setBackgroundResource(R.drawable.tab_end_bg);
-            }else {
-                tabItemView.setBackgroundResource(R.drawable.tab_bg);
-            }
-            i++;
-        }
-        onSetup = false;
-         */
 
         List<String> titles = adapter.getHeaderTitles(getApplicationContext());
         String headerTitle = adapter.getHeaderTitle();
-       /* titlePanel.setOnClickListener(v -> {
-            List<PowerMenuItem> items = new ArrayList<>();
-            titles.forEach(s -> items.add(new PowerMenuItem(s)));
-            int height = UIUtils.getScreenHeight(this)/2;
-            int width = UIUtils.getScreenWidth(this)/2;
-            PowerMenu powerMenu = new PowerMenu.Builder(this)
-                    .setWidth(width)
-                    .setHeight(height)
-                    .setLifecycleOwner(MainActivity.this)
-                    .addItemList(items) // list has "Novel", "Poetry", "Art"
-                    .setAnimation(MenuAnimation.SHOWUP_TOP_LEFT) // Animation start point (TOP | LEFT).
-                    .setMenuRadius(8f) // sets the corner radius.
-                    .setMenuShadow(8f) // sets the shadow.
-                    .setTextColor(ContextCompat.getColor(getBaseContext(), R.color.grey200))
-                    .setTextGravity(Gravity.START)
-                    .setTextSize(14)
-                   // .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
-                    .setSelectedTextColor(Color.WHITE)
-                    .setMenuColor(ContextCompat.getColor(getBaseContext(), R.color.black_transparent_80))
-                    .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
-                    .setAutoDismiss(true)
-                    .setSelectedEffect(false)
-                    .setOnMenuItemClickListener((position, item) -> {
-                        adapter.resetFilter();
-                        adapter.setKeyword(String.valueOf(item.title));
-                        refreshLayout.autoRefresh();
-                    })
-                    .build();
-           // powerMenu.setShowBackground(false); // do not showing background.
-           // int height = powerMenu.getContentViewHeight();
-           // int height = 480;
-            powerMenu.showAsDropDown(titleLabel); //,0, (-1)*height*(items.size()+1)); // view is an anchor
-        }); */
 
         String label = adapter.getHeaderLabel();
         Drawable icon = null;
@@ -1670,19 +1406,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mediaServerService = ((MediaServerService.MediaServerServiceBinder)service).getService();
-
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            mediaServerService = null;
-        }
-    }; */
-
     private void doMeasureDR(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
 
@@ -1845,10 +1568,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void doEncodeAudioFiles(List<MusicTag> selections) {
         if(selections.isEmpty()) return;
-        // convert WAVE to FLAC, ALAC
-        // convert AIFF to FLAC, ALAC
-        // convert FLAC to ALAC
+        // convert WAVE to FLAC
+        // convert AIFF to FLAC
         // convert ALAC to FLAC
+        // convert AAC to MP3
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_encoding_files, null);
 
@@ -1862,9 +1585,10 @@ public class MainActivity extends AppCompatActivity {
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
         if(MusicTagUtils.isAIFFile(selections.get(0)) ||
                 MusicTagUtils.isWavFile(selections.get(0)) ||
+                MusicTagUtils.isALACFile(selections.get(0)) ||
                 MusicTagUtils.isDSD(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Level 0)", null));
-            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
+            iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
+            iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
            // iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
           //  encodingItems.add("Apple Lossless Audio Codec (ALAC)");
            // encodingItems.add("Free Lossless Audio Codec (FLAC)");
@@ -1872,9 +1596,8 @@ public class MainActivity extends AppCompatActivity {
        // }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
         //    iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
            // encodingItems.add("Apple Lossless Audio Codec (ALAC)");
-        }else if(MusicTagUtils.isALACFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Level 0)", null));
-            iconSpinnerItems.add(new IconSpinnerItem("FLAC (Optimal)", null));
+        }else if(MusicTagUtils.isAACFile(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem(MP_3_320_KHZ, null));
          //   encodingItems.add("Free Lossless Audio Codec (FLAC)");
          //   encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
         }
@@ -1943,17 +1666,17 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             busy = true;
             int cLevel = 4; // for flac 0 un-compressed, 8 most compress
-            String targetExt = "FLAC";
+            String targetExt = FILE_FLAC;
 
             IconSpinnerItem item = iconSpinnerItems.get(encodingList.getSelectedIndex());
-            if("FLAC (Optimal)".equals(item.getText())) {
-                targetExt = "FLAC";
+            if(FLAC_OPTIMAL.equals(item.getText())) {
+                targetExt = FILE_FLAC;
                 cLevel = 4; // default is 5
-            }else if("FLAC (Level 0)".equals(item.getText())) {
-                targetExt = "FLAC";
+            }else if(FLAC_LEVEL_0.equals(item.getText())) {
+                targetExt = FILE_FLAC;
                 cLevel = -1;
-            }else if("ALAC".equals(item.getText())) {
-                targetExt = "M4A";
+            }else if(MP_3_320_KHZ.equals(item.getText())) {
+                targetExt = FILE_MP3;
             }
 
             progressBar.setProgress(getInitialProgress(selections.size(), rate));

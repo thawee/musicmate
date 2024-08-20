@@ -88,7 +88,9 @@ public abstract class ContentBrowser {
             parentId = folderId + tag.getGenre();
         }else  if(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGrouping();
-        }else  if(ContentDirectoryIDs.MUSIC_PLAYLIST_PREFIX.getId().equalsIgnoreCase(folderId)) {
+        }else  if(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId().equalsIgnoreCase(folderId)) {
+            parentId = folderId + tag.getGrouping();
+        }else  if(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGrouping();
         }
         // file parameter only needed for media players which decide

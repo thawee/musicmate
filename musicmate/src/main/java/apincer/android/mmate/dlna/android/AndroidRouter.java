@@ -50,11 +50,11 @@ public class AndroidRouter extends RouterImpl {
             public void onAvailable(@NonNull android.net.Network network) {
                 super.onAvailable(network);
                 if (!isCellular() && !network.equals(currentNetwork)) {
-                    Log.d(TAG, String.format("Network available %s", network));
+                  //  Log.d(TAG, String.format("Network available %s", network));
                     if (currentNetwork != null) {
                         try {
                             disable();
-                            Log.d(TAG, String.format("Network disabled %s", currentNetwork));
+                         //   Log.d(TAG, String.format("Network disabled %s", currentNetwork));
                         } catch (RouterException e) {
                             Log.e(TAG, String.format("RouterException network disabling %s", currentNetwork), e);
                         }
@@ -62,7 +62,7 @@ public class AndroidRouter extends RouterImpl {
                     currentNetwork = network;
                     try {
                         enable();
-                        Log.d(TAG, String.format("Network enabled %s", currentNetwork));
+                       // Log.d(TAG, String.format("Network enabled %s", currentNetwork));
                     } catch (RouterException e) {
                         Log.e(TAG, String.format("RouterException network enabling %s", currentNetwork), e);
                     }
@@ -75,10 +75,10 @@ public class AndroidRouter extends RouterImpl {
             public void onLost(@NonNull android.net.Network network) {
                 super.onLost(network);
                 if (network.equals(currentNetwork)) {
-                    Log.d(TAG, String.format("Network lost %s", network));
+                   // Log.d(TAG, String.format("Network lost %s", network));
                     try {
                         disable();
-                        Log.d(TAG, String.format("Network disabled %s", currentNetwork));
+                      //  Log.d(TAG, String.format("Network disabled %s", currentNetwork));
                     } catch (RouterException e) {
                         Log.e(TAG, String.format("RouterException network disabling %s", currentNetwork), e);
                     }
@@ -90,7 +90,7 @@ public class AndroidRouter extends RouterImpl {
 
     @Override
     public boolean enable() throws RouterException {
-        Log.v(TAG, "in android router enable");
+      //  Log.v(TAG, "in android router enable");
         lock(writeLock);
         try {
             boolean enabled = super.enable();
@@ -111,7 +111,7 @@ public class AndroidRouter extends RouterImpl {
 
     @Override
     public boolean disable() throws RouterException {
-        Log.v(TAG, "in android router disable");
+      //  Log.v(TAG, "in android router disable");
         lock(writeLock);
         try {
             // Disable multicast on WiFi network interface,

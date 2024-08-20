@@ -40,6 +40,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.TagReader;
 
 public class MusicTagUtils {
     private static final String TAG = MusicTagUtils.class.getName();
@@ -2335,5 +2336,9 @@ public class MusicTagUtils {
     public static boolean isHappyPlaylist(MusicTag tag) {
         return !(isRelaxedPlaylist(tag) || isFunPlaylist(tag));
        // return !isFunPlaylist(tag);
+    }
+
+    public static boolean isAACFile(MusicTag musicTag) {
+        return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
     }
 }

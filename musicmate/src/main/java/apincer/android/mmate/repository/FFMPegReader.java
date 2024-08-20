@@ -113,11 +113,8 @@ public class FFMPegReader extends TagReader {
     }
 
     private static final String KEY_BIT_RATE = "bit_rate";
-   // private static final String KEY_FORMAT_NAME = "format_name";
     private static final String KEY_START_TIME = "start_time";
     private static final String KEY_DURATION = "duration";
-   // private static final String KEY_SIZE = "size";
-   // private static final String KEY_MM_MQA = "MQA";
     private static final String KEY_TAG = "TAG:";
     private static final String KEY_TAG_ARTIST = "ARTIST";
     private static final String KEY_TAG_ALBUM = "ALBUM";
@@ -130,9 +127,6 @@ public class FFMPegReader extends TagReader {
     private static final String KEY_TAG_GROUPING = "GROUPING";
     private static final String KEY_TAG_TRACK = "track";
     private static final String KEY_TAG_PUBLISHER = "PUBLISHER";
-    //private static final String KEY_TAG_LANGUAGE = "LANGUAGE";
-  //  private static final String KEY_TAG_ENCODER = "ENCODER";
-   // private static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
 
     private static final String KEY_TAG_RATING = "RATING";
     private static final String KEY_TAG_TITLE = "TITLE";
@@ -149,8 +143,6 @@ public class FFMPegReader extends TagReader {
     private static final String KEY_TAG_WAVE_YEAR = "date"; //""ICRD"; //date
     private static final String KEY_TAG_WAVE_MEDIA = "IMED";
     private static final String KEY_TAG_WAVE_COMMENT = "ICMT"; // comment
-   // private static final String KEY_TAG_WAVE_PUBLISHER = "copyright"; //""ICOP"; //copy right
-   // private static final String KEY_TAG_WAVE_LANGUAGE = "ILNG"; // language
     private static final String KEY_TAG_WAVE_PUBLISHER = "ISRC"; // name of person or organization
     private static final String KEY_TAG_WAVE_DISC = "ISRF"; // original form of material
     private static final String KEY_TAG_WAVE_GROUP = "IKEY"; // list of keyword, saperated by semicolon
@@ -187,15 +179,9 @@ public class FFMPegReader extends TagReader {
     private static final String KEY_TAG_MP4_TITLE = "title"; //title
     private static final String KEY_TAG_MP4_YEAR = "year"; //date
     private static final String KEY_TAG_MP4_COMPOSER = "composer";
-    //private static final String KEY_TAG_MP4_MEDIA = "media_type";
     private static final String KEY_TAG_MP4_GROUPING = "grouping";
-    //private static final String KEY_TAG_MP4_DISC = "disc";
     private static final String KEY_TAG_MP4_COMMENT = "comment";  // comment
     private static final String KEY_TAG_MP4_PUBLISHER = "copyright"; //copy right
-   // private static final String KEY_TAG_MP4_LANGUAGE = "language"; // language
-   // private static final String KEY_TAG_MP4_RATING = "rating";
-   // private static final String KEY_TAG_MP4_QUALITY = "Song-DB_Preference";
-   // private static final String KEY_TAG_MP4_COMPILATION = "compilation";
 
     //https://gist.github.com/eyecatchup/0757b3d8b989fe433979db2ea7d95a01
     private static final String KEY_TAG_MP3_ARTIST = "artist"; //artist
@@ -205,13 +191,8 @@ public class FFMPegReader extends TagReader {
     private static final String KEY_TAG_MP3_TRACK = "track"; //track
     private static final String KEY_TAG_MP3_TITLE = "title"; //title
     private static final String KEY_TAG_MP3_YEAR = "date"; //date
-    //private static final String KEY_TAG_MP3_COMPOSER = "composer";
-    //private static final String KEY_TAG_MP3_MEDIA = "media_type";
-    //private static final String KEY_TAG_MP3_GROUPING = "grouping";
     private static final String KEY_TAG_MP3_DISC = "disc";
     private static final String KEY_TAG_MP3_COMMENT = "comment";  // comment
-    //private static final String KEY_TAG_MP3_PUBLISHER = "copyright"; //copy right
-
     private static final String METADATA_KEY = "-metadata";
 
     public static class Loudness {
@@ -284,22 +265,15 @@ public class FFMPegReader extends TagReader {
     } */
 
     public List<MusicTag> readMusicTag(Context context, String path) {
-        //return readFFprobe(path);
         Log.d(TAG, "readMusicTag: "+path);
         MusicTag tag = readTagFromFile(context, path);
-       // MusicTag tag = readFFprobe(context, path);
-       // detectMQA(tag,50000); // timeout 50 seconds
-        //analystStatFromFile(context, tag,60000); // timeout 50 seconds
         return List.of(tag);
     }
 
     public List<MusicTag> readFullMusicTag(Context context, String path) {
-        //return readFFprobe(path);
         Log.d(TAG, "readFullMusicTag: "+path);
         MusicTag tag = readTagFromFile(context, path);
-        // MusicTag tag = readFFprobe(context, path);
         detectMQA(tag,50000); // timeout 50 seconds
-        //analystStatFromFile(context, tag,60000); // timeout 50 seconds
         return List.of(tag);
     }
 
@@ -343,9 +317,7 @@ public class FFMPegReader extends TagReader {
         // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
        // String filter = " -filter:a drmeter,replaygain,volumedetect,astats -vn -sn -dn "; // -vn -sn -dn to ignore none audio to speed up the process
          String filter = " -filter:a drmeter,replaygain,astats -vn -sn -dn "; // -vn -sn -dn to ignore none audio to speed up the process
-        // if(MusicTagUtils.isDSDFile(path)) {
-       //     filter = " -filter:a drmeter ";
-       // }
+
         String targetPath = tag.getPath();
         targetPath = escapePathForFFMPEG(targetPath);
        // String filter = " -filter:a replaygain ";
@@ -724,7 +696,7 @@ public class FFMPegReader extends TagReader {
         }
     }
 
-    public static boolean writeTagQualityToFile(Context context, MusicTag tag) {
+    public static void writeTagQualityToFile(Context context, MusicTag tag) {
         //if(MusicTagUtils.isWavFile(tag)) return false; // wave file not support track gain
        // if(!MusicTagUtils.isLossless(tag)) return false; // no need for compress encoding
 
@@ -760,16 +732,13 @@ public class FFMPegReader extends TagReader {
             // moveSafe file
             if(FileSystem.safeMove(context, targetPath, srcPath)) {
                 FileRepository.newInstance(context).scanMusicFile(new File(srcPath), true);
-                return true;
             }else {
                 FileSystem.delete(context, targetPath); // delete source file to clear space
-                return false;
             }
         }else {
             Log.i(TAG, session.getOutput());
             // fail, delete tmp file;
             FileSystem.delete(context, new File(targetPath));
-            return false;
         }
     }
 
@@ -852,7 +821,7 @@ public class FFMPegReader extends TagReader {
     }
 
     private static String getMetadataTrackKeysForMp3(MusicTag tag) {
-        String tags = " -write_id3v2 1 " +
+        return " -write_id3v2 1 " +
                 getMetadataTrackKey(KEY_TAG_MP3_TITLE, tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_MP3_ALBUM, tag.getAlbum()) +
                 getMetadataTrackKey(KEY_TAG_MP3_ARTIST, tag.getArtist()) +
@@ -870,7 +839,6 @@ public class FFMPegReader extends TagReader {
                // getMetadataTrackKey(KEY_TAG_MP3_RATING, tag.getRating()) +
                 getMetadataTrackKey(KEY_TAG_MP3_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_MP3_YEAR, tag.getYear());
-        return tags;
     }
 
     private static String getMetadataTrackKey(String key, String val) {
@@ -888,7 +856,7 @@ public class FFMPegReader extends TagReader {
 
     private static String getMetadataTrackKeysForFlac(MusicTag tag) {
         // work for all fields
-        String tags = getMetadataTrackKey(KEY_TAG_TITLE, tag.getTitle()) +
+        return getMetadataTrackKey(KEY_TAG_TITLE, tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_ALBUM, tag.getAlbum()) +
                 getMetadataTrackKey(KEY_TAG_ARTIST, tag.getArtist()) +
                 getMetadataTrackKey(KEY_TAG_ALBUM_ARTIST, tag.getAlbumArtist()) +
@@ -904,7 +872,6 @@ public class FFMPegReader extends TagReader {
                 getMetadataTrackKey(KEY_TAG_RATING, tag.getRating()) +
                 getMetadataTrackKey(KEY_TAG_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_YEAR, tag.getYear());
-        return tags;
     }
 
     @SuppressLint("DefaultLocale")
@@ -963,7 +930,7 @@ public class FFMPegReader extends TagReader {
 
 
     private static String getMetadataTrackKeysForAIF(MusicTag tag) {
-        String tags = " -write_id3v2 1 " +
+        return " -write_id3v2 1 " +
                 getMetadataTrackKey(KEY_TAG_AIF_TITLE, tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_AIF_ALBUM, tag.getAlbum()) +
                 getMetadataTrackKey(KEY_TAG_AIF_ARTIST, tag.getArtist()) +
@@ -980,13 +947,12 @@ public class FFMPegReader extends TagReader {
                 getMetadataTrackKey(KEY_TAG_AIF_RATING, tag.getRating()) +
                 getMetadataTrackKey(KEY_TAG_AIF_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_AIF_YEAR, tag.getYear());
-        return tags;
     }
 
     private static String getMetadataTrackKeysForWave(MusicTag tag) {
         // need to include all metadata
         //String comment = getWaveComment(tag);
-        String tags = getMetadataTrackKey(KEY_TAG_WAVE_TITLE,tag.getTitle()) +
+        return getMetadataTrackKey(KEY_TAG_WAVE_TITLE,tag.getTitle()) +
                 getMetadataTrackKey(KEY_TAG_WAVE_ALBUM,tag.getAlbum())+
                 getMetadataTrackKey(KEY_TAG_WAVE_ALBUM_ARTIST,tag.getAlbumArtist())+
                 getMetadataTrackKey(KEY_TAG_WAVE_ARTIST,tag.getArtist())+
@@ -1001,11 +967,10 @@ public class FFMPegReader extends TagReader {
                 getMetadataTrackKey(KEY_TAG_WAVE_PUBLISHER,tag.getPublisher())+
                 getMetadataTrackKey(KEY_TAG_WAVE_QUALITY,tag.getMediaQuality()) +
                 getMetadataTrackKey(KEY_TAG_WAVE_COMMENT,prepareMMComment(tag));
-        return tags;
     }
 
     private static String prepareMMComment(MusicTag musicTag) {
-        String comment = StringUtils.trimToEmpty(musicTag.getComment()) +"\n<##>" +
+        return StringUtils.trimToEmpty(musicTag.getComment()) +"\n<##>" +
                 StringUtils.trimToEmpty(musicTag.getDisc())+
                 "#"+StringUtils.trimToEmpty(musicTag.getGrouping())+
                 "#"+StringUtils.trimToEmpty(musicTag.getMediaQuality())+
@@ -1016,7 +981,6 @@ public class FFMPegReader extends TagReader {
                 "#"+musicTag.getDynamicRange()+
                // "#"+musicTag.getMeasuredSamplingRate()+
                 "</##> ";
-        return comment;
     }
 
     private static boolean isFieldChanged(boolean compilation, boolean compilation1) {
@@ -1116,16 +1080,6 @@ public class FFMPegReader extends TagReader {
         tags = tags + METADATA_KEY+" "+KEY_REFERENCE_TRUEPEAK+"=\""+tag.getTrackTruePeek()+"\" "; */
         return tags;
     }
-
-
-    /*
-    private static void readFileInfo(Context context, MusicTag tag) {
-        File file = new File(tag.getPath());
-        tag.setFileLastModified(file.lastModified());
-        tag.setFileSize(file.length());
-        tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
-        tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
-    } */
 
     private static boolean isLossless(MusicTag tag) {
         if(Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getFileFormat())) return true;
@@ -1413,9 +1367,10 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
             }else {
                 options = options + " -y -vn -c:a flac -compression_level 0 ";
             }
-       // }else if (targetPath.toLowerCase().endsWith(".mp3")) {
+        }else if (targetPath.toLowerCase().endsWith(".mp3")) {
             // convert to 320k bitrate
-      //      options = " -ar 44100 -ab 320k ";
+            options = " -ar 44100 -q:a 0 -ab 320k ";
+           // options = " -c:v copy -q:a 6 ";
        // }else if (srcPath.toLowerCase().endsWith(".dsf")){
             // convert from dsf to 24 bits, 48 kHz
             // use lowpass filter to eliminate distortion in the upper frequencies.

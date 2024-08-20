@@ -185,6 +185,12 @@
     <string name="label_file_quality">Audio File Quality</string>
     <string name="label_server">Media Server</string>
     <string name="label_collections">Collections</string>
+    <string name="label_field">Field</string>
+    <string name="label_current">Current</string>
+    <string name="label_default_reader">Default Reader</string>
+    <string name="label_ffmpeg_reader">FFMpeg Reader</string>
+    <string name="about_encoding_file">Convert audio file, Recommended FLAC for lossless and MPEG for lossy format.</string>
+    <string name="label_resolutions">Resolutions</string>
 
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">

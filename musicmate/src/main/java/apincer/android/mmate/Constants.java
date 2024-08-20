@@ -62,6 +62,7 @@ public final class Constants {
     public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
 
     public static final String TITLE_LIBRARY = "Collections";
+    public static final String TITLE_RESOLUTION = "Resolutions";
     public static final String TITLE_GROUPING = "Grouping";
     public static final String TITLE_GENRE = "Genre";
     public static final String TITLE_PUBLISHER = "Publisher";
@@ -124,6 +125,7 @@ public final class Constants {
     public static final String AUDIO_SQ_DSD = "DSD"; // DSD
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
     public static final String AUDIO_SQ_PCM = "PCM";
+    public static final String AUDIO_SQ_RESOLUTION = "Resolutions";
 
     public static final String TITLE_DUPLICATE = "Duplicate Song";
     public static final String TITLE_BROKEN = "Bad Upscale File";
