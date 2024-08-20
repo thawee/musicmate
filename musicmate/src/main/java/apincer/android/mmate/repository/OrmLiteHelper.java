@@ -32,7 +32,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
     private static final int DATABASE_VERSION = 4;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
-    private static final List<MusicTag> EMPTY_LIST = null;
+    public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
 
     public OrmLiteHelper(Context context) {
@@ -206,7 +206,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 48000 and mqaInd not like 'MQA%'");
+            builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wave', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and mqaInd not like 'MQA%'");
             return builder.query();
         } catch (SQLException e) {
             return EMPTY_LIST;
@@ -285,9 +285,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-
-                builder.where().raw("audioEncoding in ('flac','alac','aiff','wave') and mqaInd not like 'MQA%'  order by title, artist");
-                return builder.query();
+            builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioSampleRate < 96000 and mqaInd not like 'MQA%' order by title, artist");
+            return builder.query();
         } catch (SQLException e) {
             return EMPTY_LIST;
         }

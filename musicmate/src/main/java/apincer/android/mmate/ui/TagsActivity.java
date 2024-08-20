@@ -371,7 +371,7 @@ public class TagsActivity extends AppCompatActivity {
         imageLoader.enqueue(request);
 
         drView.setText(MusicTagUtils.getTrackDR(displayTag));
-        if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isPCMHiRes(displayTag)) {
+        if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
         }else {
             hiresView.setVisibility(View.GONE);

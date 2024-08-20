@@ -27,12 +27,12 @@ public class ResolutionFolderBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), myId, "mmate", getSize(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), myId, "mmate", getSize(
                 contentDirectory, myId), null);
     }
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
-        String name = myId.substring(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId().length());
+        String name = myId.substring(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId().length());
         if("_EMPTY".equalsIgnoreCase(name) ||
                 "_NULL".equalsIgnoreCase(name)) { // ||
                // "None".equalsIgnoreCase(name)) {
@@ -77,12 +77,12 @@ public class ResolutionFolderBrowser extends ContentBrowser {
               //  "None".equalsIgnoreCase(name)) {
             name = null;
         } */
-        String name = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
+        String name = extractName(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX);
         List<MusicTag> tags = getItems(contentDirectory, name);
         int currentCount = 0;
         for(MusicTag tag: tags) {
             if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
+                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);
             }
             if(!forceFullContent)  currentCount++;

@@ -440,12 +440,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         boolean isListening = tag.equals(listeningItem);
 
         holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
-       /* if(MusicTagUtils.isDSD(tag)) {
-            holder.mDynamicRange.setVisibility(View.GONE);
-        }else {
-            // DR
-            holder.mDynamicRange.setVisibility(View.VISIBLE);
-        } */
 
         if (isListening) {
             //show music player icon

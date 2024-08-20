@@ -224,7 +224,7 @@
     -->
 
     <color name="resolution_pcm_44_48">#FFFF00</color>
-    <color name="resolution_pcm_88">#FFFFFF</color>
+    <color name="resolution_pcm_96">#FFFFFF</color>
     <color name="resolution_dsd_64_128">#00FFFF</color>
     <color name="resolution_dsd_256">#FF0000</color>
     <color name="resolution_mqa">#4CAF50</color>

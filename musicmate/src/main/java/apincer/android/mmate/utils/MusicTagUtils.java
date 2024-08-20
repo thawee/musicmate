@@ -8,7 +8,6 @@ import static apincer.android.mmate.Constants.QUALITY_BIT_CD;
 import static apincer.android.mmate.Constants.QUALITY_GOOD;
 import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_48;
-import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_88;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -40,7 +39,6 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.TagReader;
 
 public class MusicTagUtils {
     private static final String TAG = MusicTagUtils.class.getName();
@@ -1167,11 +1165,11 @@ public class MusicTagUtils {
         // High Quality - compress
         if(isDSD(tag)) {
             return context.getColor(R.color.quality_hd);
-        }else if(isPCMHiRes(tag)) {
+        }else if(isHiRes(tag)) {
             return context.getColor(R.color.quality_hd);
         }else if(isPCM24Bits(tag)) {
             return context.getColor(R.color.quality_h24bits);
-        }else if(isPCMLossless(tag)){
+        }else if(isLossless(tag)){
             return context.getColor(R.color.quality_sd);
         }else {
             return context.getColor(R.color.quality_unknown);
@@ -1192,8 +1190,8 @@ public class MusicTagUtils {
             return context.getColor(R.color.resolution_mqa_studio);
         }else if(isMQA(tag)){
             return context.getColor(R.color.resolution_mqa);
-        }else if(isPCM88(tag)) {
-            return context.getColor(R.color.resolution_pcm_88);
+        }else if(isHiRes(tag)) {
+            return context.getColor(R.color.resolution_pcm_96);
         } else if(isDSD64(tag)) {
                 return context.getColor(R.color.resolution_dsd_64_128);
         } else if(isDSD256(tag)) {
@@ -1236,11 +1234,11 @@ public class MusicTagUtils {
 
         if(isDSD(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_dsd);
-        }else if(isPCMHiRes(tag)) {
+        }else if(isHiRes(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
         }else if(isPCM24Bits(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
-        }else if(isPCMLossless(tag)){
+        }else if(isLossless(tag)){
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
         }else {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossy);
@@ -1263,12 +1261,14 @@ public class MusicTagUtils {
         return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
+    /*
+    @Deprecated
     public static boolean isPCMHiRes(MusicTag tag) {
         // > 24/88
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
         return ( isLossless(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
-    }
+    } */
 
     /*
     public static boolean isPCM48(MusicTag tag) {
@@ -1278,20 +1278,22 @@ public class MusicTagUtils {
         return ((tag.getAudioBitsDepth() > Constants.QUALITY_BIT_DEPTH_DSD) && (tag.getAudioSampleRate() <= QUALITY_SAMPLING_RATE_48));
     } */
 
-    public static boolean isPCM88(MusicTag tag) {
-        // > 24/88
+    public static boolean isHiRes(MusicTag tag) {
+        // > 24/96
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ((tag.getAudioBitsDepth() > Constants.QUALITY_BIT_DEPTH_DSD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_88));
+        return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
     }
 
+    /*
+    @Deprecated
     public static boolean isPCMLossless(MusicTag tag) {
-        // 16/*
+        // 16 / *
         // 24/48
         return ((tag.getAudioBitsDepth() == Constants.QUALITY_BIT_CD ||
                 ((tag.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() < Constants.QUALITY_SAMPLING_RATE_88)))); // ||
                 // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
-    }
+    } */
 
     public static String getFormattedTitle(Context context, MusicTag tag) {
         String title =  trimToEmpty(tag.getTitle());
@@ -1416,7 +1418,11 @@ public class MusicTagUtils {
     }*/
 
     public static boolean isLossless(MusicTag tag) {
-        return isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag);
+        return (isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag)) && !isHiRes(tag) && !isMQA(tag);
+    }
+
+    public static boolean isLossy(MusicTag tag) {
+        return isMPegFile(tag) || isAACFile(tag);
     }
 
     public static File getEncResolutionIcon( Context context, MusicTag tag) {
@@ -1649,9 +1655,9 @@ public class MusicTagUtils {
             return Constants.TITLE_MASTER_STUDIO_AUDIO;
         }else if(isMQA(tag)) {
             return Constants.TITLE_MASTER_AUDIO;
-        }else if(isPCMHiRes(tag)) {
+        }else if(isHiRes(tag)) {
             return Constants.TITLE_HIRES;
-        }else if(isPCMLossless(tag)) {
+        }else if(isLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
             return Constants.TITLE_HIGH_QUALITY;
@@ -1669,9 +1675,9 @@ public class MusicTagUtils {
             return "Enjoy the original recordings, directly from mastering engineers, producers or artists to their listeners.";
         }else if(isMQA(tag)) {
             return "Enjoy the original recordings, directly from the master recordings, in the highest quality.";
-        }else if(isPCMHiRes(tag)) {
+        }else if(isHiRes(tag)) {
             return "Enjoy rich music which reproduces fine details of musical instruments.";
-        }else if(isPCMLossless(tag)) {
+        }else if(isLossless(tag)) {
             return "Enjoy music which reproduce details of music smooth as CD quality that you can hear.";
         }else {
             return "Enjoy music which compromise between data usage and sound fidelity.";
@@ -2051,11 +2057,11 @@ public class MusicTagUtils {
             return Constants.AUDIO_SQ_DSD;
         }else if(isMQA(tag)) {
                   return Constants.AUDIO_SQ_PCM_MQA;
-        }else if(isPCMHiRes(tag)) {
+        }else if(isHiRes(tag)) {
             return Constants.TITLE_HIRES;
             //}else if(isPCMHiResLossless(tag)) {
             //    return Constants.TITLE_HR_LOSSLESS;
-        }else if(isPCMLossless(tag)) {
+        }else if(isLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
             return Constants.TITLE_HIGH_QUALITY;

@@ -79,7 +79,7 @@ public class AndroidRouter extends RouterImpl {
                     try {
                         disable();
                       //  Log.d(TAG, String.format("Network disabled %s", currentNetwork));
-                    } catch (RouterException e) {
+                    } catch (Exception e) {
                         Log.e(TAG, String.format("RouterException network disabling %s", currentNetwork), e);
                     }
                     currentNetwork = null;
@@ -105,7 +105,7 @@ public class AndroidRouter extends RouterImpl {
             return enabled;
         } finally {
             unlock(writeLock);
-            Log.v(TAG, "leave android router enable");
+            //Log.v(TAG, "leave android router enable");
         }
     }
 
@@ -123,7 +123,7 @@ public class AndroidRouter extends RouterImpl {
             return super.disable();
         } finally {
             unlock(writeLock);
-            Log.v(TAG, "leave android router disable");
+            //Log.v(TAG, "leave android router disable");
         }
     }
 

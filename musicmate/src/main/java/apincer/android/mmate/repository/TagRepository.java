@@ -192,7 +192,7 @@ public class TagRepository {
             return findMediaTagByCriteria(criteria);
         }catch (Exception e) {
             // retry one more time
-            return Collections.EMPTY_LIST;
+            return OrmLiteHelper.EMPTY_LIST;
         }
     }
 

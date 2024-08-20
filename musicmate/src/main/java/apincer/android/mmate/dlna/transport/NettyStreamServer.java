@@ -187,7 +187,9 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
         return this.localPort;
     }
 
+    @Override
     synchronized public void stop() {
+        Log.d(TAG, "stopping upnp stream server");
         workerGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();
     }

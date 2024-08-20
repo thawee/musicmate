@@ -35,7 +35,7 @@ public final class Constants {
 
    // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
-    public static final long QUALITY_SAMPLING_RATE_88 = 88200;
+   // public static final long QUALITY_SAMPLING_RATE_88 = 88200;
     public static final int QUALITY_SAMPLING_RATE_48 = 48000;
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
@@ -133,8 +133,8 @@ public final class Constants {
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
-    public static final String TITLE_HIRES = "Hi-Res";
-    public static final String TITLE_HIFI_LOSSLESS = "Hi-Fi";
+    public static final String TITLE_HIRES = "Hi-Res Lossless";
+    public static final String TITLE_HIFI_LOSSLESS = "Hi-Fi Lossless";
     public static final String TITLE_HIGH_QUALITY = "High Quality";
     public static final String TITLE_MASTER_AUDIO = "Master Recordings";
     public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";

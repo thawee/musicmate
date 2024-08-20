@@ -25,11 +25,11 @@ import apincer.android.mmate.utils.MusicTagUtils;
  * Browser  for the music playlist folder.
  */
 public class ResolutionsBrowser extends ContentBrowser {
-    public static final String HI_RES_AUDIO = "Hi-Res Audio";
-    public static final String LOSSLESS_AUDIO = "Lossless Audio";
+    public static final String HI_RES_AUDIO = "Hi-Res Lossless Audio";
+    public static final String LOSSLESS_AUDIO = "Hi-Fi Lossless Audio";
     public static final String LOSSY_AUDIO = "Hi-Quality Audio";
     public static final String MQA_AUDIO = "MQA Audio";
-    public static final String DSD_SONGS = "DSP Audio";
+    public static final String DSD_SONGS = "DSD Audio";
     private final List<String> playlists = new ArrayList<>();
     public ResolutionsBrowser(Context context) {
         super(context);
@@ -64,7 +64,7 @@ public class ResolutionsBrowser extends ContentBrowser {
         }
         List<MusicTag> songs = TagRepository.getAllMusics();
         for(MusicTag tag: songs) {
-           if(MusicTagUtils.isPCMHiRes(tag)) {
+           if(MusicTagUtils.isHiRes(tag)) {
                 mapped.get(HI_RES_AUDIO).addChildCount();
            }
            if(MusicTagUtils.isMQA(tag)) {
@@ -73,7 +73,7 @@ public class ResolutionsBrowser extends ContentBrowser {
             if(MusicTagUtils.isLossless(tag)) {
                 mapped.get(LOSSLESS_AUDIO).addChildCount();
             }
-            if(!MusicTagUtils.isLossless(tag) && !MusicTagUtils.isDSD(tag)) {
+            if(MusicTagUtils.isLossy(tag)) {
                 mapped.get(LOSSY_AUDIO).addChildCount();
             }
             if(MusicTagUtils.isDSD(tag)) {
