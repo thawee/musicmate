@@ -172,7 +172,7 @@ public class MusicTagUtils {
     }
 
     private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
-        int width = 500; //340; // 24x85, 16x56, 18x63
+        int width = 500; //340; // 24x125, 18x93 , 16x83
         int height = 96;
         int padding = 8;
         int paddingx2 = 16;

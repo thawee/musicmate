@@ -224,7 +224,7 @@
                         </LinearLayout>
                         <ImageView
                             android:id="@+id/icon_resolution"
-                            android:layout_width="@dimen/dimen_78_dp"
+                            android:layout_width="@dimen/dimen_120_dp"
                             android:layout_height="@dimen/dimen_24_dp"
                             android:layout_gravity="end|center_vertical"
                             android:contentDescription="@string/editor_musicmate_info"
