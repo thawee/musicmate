@@ -47,7 +47,6 @@ import java.util.TimeZone;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.utils.MediaTypeDetector;
 import apincer.android.mmate.player.PlayerInfo;
@@ -478,9 +477,8 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                 if (tag != null) {
                     String agent = request.headers().get(HttpHeaderNames.USER_AGENT);
                     PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
-                    MusixMateApp.getPlayerControl().setPlayingSong(player, tag);
-                    AudioTagPlayingEvent.publishPlayingSong(tag);
-
+                    MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
+                   // AudioTagPlayingEvent.publishPlayingSong(tag);
                     return new ContentHolder(new AsciiString(MediaTypeDetector.getContentType(tag.getPath())), OK, new File(tag.getPath()));
                 }else {
                     return new ContentHolder(HttpHeaderValues.TEXT_PLAIN, NOT_FOUND, contentId+" Not found");

@@ -84,7 +84,7 @@
 
             <ImageView
                 android:id="@+id/item_resolution_icon"
-                android:layout_width="@dimen/dimen_92_dp"
+                android:layout_width="@dimen/dimen_78_dp"
                 android:layout_height="@dimen/dimen_18_dp"
                 android:layout_toRightOf="@id/item_type_panel"
                 android:layout_marginLeft="@dimen/dimen_4_dp"

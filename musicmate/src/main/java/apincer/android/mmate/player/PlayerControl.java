@@ -5,9 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.media.AudioManager;
+import android.os.CombinedVibration;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
-import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -22,7 +23,7 @@ import apincer.android.mmate.utils.StringUtils;
 
 public class PlayerControl {
     private static final String TAG = LogHelper.getTag(PlayerControl.class);
-    public static String DEAFULT_PLAYER_NAME = "UNKNOWN Player";
+    public static String DEFAULT_PLAYER_NAME = "UNKNOWN Player";
 
     /*
     These are the package names of the apps. for which we want to
@@ -36,7 +37,7 @@ public class PlayerControl {
         public static final String EDDICTPLAYER_PACK_NAME = "com.shanling.eddictplayer";
         public static final String FOOBAR2000="com.foobar2000.foobar2000";
         public static final String POWERAMP = "com.maxmpz.audioplayer";
-        public static final String SONY_MUSIC = "com.sonyericson.music";
+        //public static final String SONY_MUSIC = "com.sonyericson.music";
     }
 
     /**
@@ -67,9 +68,9 @@ public class PlayerControl {
     }
 
     protected PlayerInfo extractPlayer(Context context, String packageName, String playerName) {
-        PlayerInfo playerInfo = PlayerInfo.buildLocalPlayer("unknown", DEAFULT_PLAYER_NAME,null);
+        PlayerInfo playerInfo = PlayerInfo.buildLocalPlayer("unknown", DEFAULT_PLAYER_NAME,null);
         playerInfo.playerPackage = packageName;
-        playerInfo.playerName = playerName==null?DEAFULT_PLAYER_NAME:playerName;
+        playerInfo.playerName = playerName==null?DEFAULT_PLAYER_NAME:playerName;
         try {
             ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, 0); // MusicListeningService.getInstance().getApplicationInfo(packageName);
             playerInfo.playerIconDrawable = context.getPackageManager().getApplicationIcon(ai);
@@ -86,11 +87,6 @@ public class PlayerControl {
     public void setPlayingSong(Context context, String pack, String currentTitle, String currentArtist, String currentAlbum) {
         PlayerInfo player =  extractPlayer(context, pack, pack);
 
-        if(playerInfo!= null && playerInfo.isPlayingByStreamPlayer(player)) {
-           // skip local player if currently play from dlna streamer
-           return;
-       }
-
         currentTitle = StringUtils.trimTitle(currentTitle);
         currentArtist = StringUtils.trimTitle(currentArtist);
         currentAlbum = StringUtils.trimTitle(currentAlbum);
@@ -101,21 +97,22 @@ public class PlayerControl {
             try {
                 MusicTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
                 if(newPlayingSong!=null && !newPlayingSong.equals(playingSong)) {
-                    playingSong = newPlayingSong;
-                    playerInfo = player;
+                    //playingSong = newPlayingSong;
+                    //playerInfo = player;
                    // callback.onPlaying(context, playingSong);
-                    AudioTagPlayingEvent.publishPlayingSong(playingSong);
-                }else {
-                    playingSong = null;
+                   // AudioTagPlayingEvent.publishPlayingSong(playingSong);
+                    publishPlayingSong(player, newPlayingSong);
+               // }else {
+                //    playingSong = null;
                 }
             } catch (Exception ex) {
                 Log.e(TAG,"setPlayingSong", ex);
-                playingSong = null;
+                //playingSong = null;
             }
     }
 
-    public void setPlayingSong(PlayerInfo player, MusicTag tag) {
-        if(playerInfo!= null && playerInfo.isPlayingByStreamPlayer(player)) {
+    public void publishPlayingSong(PlayerInfo player, MusicTag tag) {
+        if(player!= null && playerInfo != null && !player.isStreamPlayer() && !playerInfo.isExpired()) {
             // skip local player if currently play from dlna streamer
             return;
         }
@@ -125,9 +122,9 @@ public class PlayerControl {
                 playerInfo = player;
                 playingSong = tag;
                 AudioTagPlayingEvent.publishPlayingSong(playingSong);
-            }else {
-                playingSong = null;
-            }
+            }//else {
+            //    playingSong = null;
+            //}
         } catch (Exception ex) {
             Log.e(TAG,"setPlayingSong", ex);
         }
@@ -146,12 +143,13 @@ public class PlayerControl {
     public  void playNextSong(Context context) {
         if(Settings.isVibrateOnNextSong(context)) {
             try {
-                Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+
+                VibratorManager vibrator = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
                 long[] pattern = {10, 40, 10, 40,10 };
                 // Vibrate for 500 milliseconds
                 // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 //vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
-                vibrator.vibrate(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE));
+                vibrator.vibrate(CombinedVibration.createParallel(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE)));
                 // } else {
                 //deprecated in API 26
                 //vibrator.vibrate(100);

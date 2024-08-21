@@ -99,6 +99,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
+import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.repository.FFMPegReader;
@@ -493,48 +494,48 @@ public class MainActivity extends AppCompatActivity {
                 .target(nowPlayingType)
                 .build();
         imageLoader.enqueue(request);
-        if(MusixMateApp.getPlayerControl().getPlayerInfo()!=null) {
-            nowPlayingPlayer.setImageDrawable(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
+        PlayerInfo player = MusixMateApp.getPlayerControl().getPlayerInfo();
+        if(player!=null) {
+            nowPlayingPlayer.setImageDrawable(player.getPlayerIconDrawable());
         }
 
-        MusicMateExecutors.main(() -> {
-            AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(),device)));
-            runOnUiThread(() -> nowPlayingView.animate()
-                    .scaleX(1f).scaleY(1f)
-                    .alpha(1f).setDuration(250)
-                    .setStartDelay(10L)
-                    .setListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(@NonNull Animator animator) {
-                            nowPlayingView.setVisibility(View.VISIBLE);
-                            adapter.notifyMusicTagChanged(song); // .notifyModelChanged(song);
-                        }
+            MusicMateExecutors.main(() -> {
+                if(player != null) {
+                    if (player.isStreamPlayer()) {
+                        nowPlayingOutputDevice.setVisibility(View.GONE);
+                    } else {
+                        nowPlayingOutputDevice.setVisibility(View.VISIBLE);
+                        AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), device)));
+                    }
+                }
+                runOnUiThread(() -> nowPlayingView.animate()
+                        .scaleX(1f).scaleY(1f)
+                        .alpha(1f).setDuration(250)
+                        .setStartDelay(10L)
+                        .setListener(new Animator.AnimatorListener() {
+                            @Override
+                            public void onAnimationStart(@NonNull Animator animator) {
+                                nowPlayingView.setVisibility(View.VISIBLE);
+                                adapter.notifyMusicTagChanged(song); // .notifyModelChanged(song);
+                            }
 
-                        @Override
-                        public void onAnimationEnd(@NonNull Animator animator) {
-                            nowPlayingView.setVisibility(View.VISIBLE);
-                        }
+                            @Override
+                            public void onAnimationEnd(@NonNull Animator animator) {
+                                nowPlayingView.setVisibility(View.VISIBLE);
+                            }
 
-                        @Override
-                        public void onAnimationCancel(@NonNull Animator animator) {
+                            @Override
+                            public void onAnimationCancel(@NonNull Animator animator) {
 
-                        }
+                            }
 
-                        @Override
-                        public void onAnimationRepeat(@NonNull Animator animator) {
+                            @Override
+                            public void onAnimationRepeat(@NonNull Animator animator) {
 
-                        }
-                    })
-                   /* .setListener(new ViewPropertyAnimatorListenerAdapter() {
-                        @SuppressLint("NotifyDataSetChanged")
-                        @Override
-                        public void onAnimationStart(@NonNull View view) {
-                            view.setVisibility(View.VISIBLE);
-                            adapter.notifyMusicTagChanged(song); // .notifyModelChanged(song);
-                        }
-                    }) */
-                    .start());
-        });
+                            }
+                        })
+                        .start());
+            });
     }
 	
 	private void doHideNowPlayingSongFAB() {
@@ -633,7 +634,7 @@ public class MainActivity extends AppCompatActivity {
         editorLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             // support filter by artist, albnum, path
             if (result.getData() != null) {
-                // if retrun criteria, use it otherwise provide null
+                // if return criteria, use it otherwise provide null
                 SearchCriteria criteria = ApplicationUtils.getSearchCriteria(result.getData());
                 adapter.loadDataSets(criteria);
             }

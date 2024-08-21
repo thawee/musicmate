@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-    <LinearLayout xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/now_playing_panel_inner"
+<LinearLayout xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/now_playing_panel_inner"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="256dp"
     android:layout_height="64dp"
     android:background="@drawable/shape_now_playing_background">
@@ -44,10 +43,11 @@
 
                 <ImageView
                     android:id="@+id/now_playing_file_type"
-                    android:layout_width="@dimen/dimen_56_dp"
+                    android:layout_width="@dimen/dimen_70_dp"
                     android:layout_height="@dimen/dimen_16_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
-                    android:src="@drawable/ic_format_mqa_white" />
+                    android:src="@drawable/ic_format_mqa_white"
+                    tools:ignore="ContentDescription" />
             </LinearLayout>
 
             <TextView
@@ -73,7 +73,8 @@
                     android:layout_width="@dimen/dimen_16_dp"
                     android:layout_height="@dimen/dimen_16_dp"
                     android:padding="@dimen/dimen_2_dp"
-                    android:background="@drawable/shape_border_playing"/>
+                    android:background="@drawable/shape_border_playing"
+                    tools:ignore="ContentDescription" />
             </LinearLayout>
 
             <TextView
@@ -103,7 +104,8 @@
                     android:layout_margin="@dimen/dimen_1_dp"
                     android:scaleType="fitXY"
                     android:padding="@dimen/dimen_2_dp"
-                    android:src="@drawable/ic_baseline_volume_up_24" />
+                    android:src="@drawable/ic_baseline_volume_up_24"
+                    tools:ignore="ContentDescription" />
             </LinearLayout>
         </LinearLayout>
 
@@ -119,7 +121,8 @@
             android:layout_marginBottom="@dimen/dimen_2_dp"
             android:background="@drawable/shape_device_blackground"
             android:padding="@dimen/dimen_2_dp"
-            android:src="@drawable/ic_album_black_24dp" />
+            android:src="@drawable/ic_album_black_24dp"
+            tools:ignore="ContentDescription" />
 
         <LinearLayout
             android:id="@+id/now_playing_title_panel"

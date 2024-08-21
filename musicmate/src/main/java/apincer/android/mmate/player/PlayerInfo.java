@@ -42,11 +42,16 @@ public class PlayerInfo {
         return playerIconDrawable;
     }
 
-    public boolean isPlayingByStreamPlayer(PlayerInfo newPlayer) {
-        // play ny dlna in last 10 mins
-        if(newPlayer.playerType == TYPE.DLNA) return false;
-        return (playerType == TYPE.DLNA && time < System.currentTimeMillis() - 600000);
+    public boolean isStreamPlayer( ) {
+        // play ny dlna
+        return playerType == TYPE.DLNA;
     }
+
+    public boolean isExpired() {
+        // play ny dlna in last 10 minutes
+        return time < System.currentTimeMillis() - 600000;
+    }
+
 
     public Bitmap playerIconBitmap;
     public Drawable playerIconDrawable;
