@@ -196,7 +196,7 @@ public class FFMPegReader extends TagReader {
     private static final String METADATA_KEY = "-metadata";
 
     public static class Loudness {
-        public double getIntegratedLoudness() {
+      /*  public double getIntegratedLoudness() {
             return integratedLoudness;
         }
 
@@ -206,7 +206,7 @@ public class FFMPegReader extends TagReader {
 
         public double getTruePeak() {
             return truePeak;
-        }
+        } */
 
         double integratedLoudness;
         double loudnessRange;
@@ -983,6 +983,7 @@ public class FFMPegReader extends TagReader {
                 "</##> ";
     }
 
+    /*
     private static boolean isFieldChanged(boolean compilation, boolean compilation1) {
         return compilation !=compilation1;
     }
@@ -993,7 +994,7 @@ public class FFMPegReader extends TagReader {
 
     private static boolean isFieldChanged(String text1, String text2) {
         return !StringUtils.equals(text1, text2);
-    }
+    } */
 
     @SuppressLint("DefaultLocale")
     private static String getMetadataTrackGainKeys(MusicTag tag) {
@@ -1371,18 +1372,17 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
             // convert to 320k bitrate
             options = " -ar 44100 -q:a 0 -ab 320k ";
            // options = " -c:v copy -q:a 6 ";
-       // }else if (srcPath.toLowerCase().endsWith(".dsf")){
-            // convert from dsf to 24 bits, 48 kHz
-            // use lowpass filter to eliminate distortion in the upper frequencies.
-       //     options = " -af \"lowpass=24000, volume=6dB\" -sample_fmt s32 -ar 48000 ";
         }else if (targetPath.toLowerCase().endsWith(".m4a")) {
             if(bitDept > 16) {
-                options = " -sample_fmt s32 -y -acodec pcm_s"+bitDept+"be "; //aif
-               // options = " -sample_fmt s32 -y -acodec alac "; //alac
-                //options = " -y -vn -c:a alac "; //alac
+                options = " -sample_fmt s32 -y -acodec pcm_s"+bitDept+"be "; //alac
             }else {
-               // options = " -y -acodec alac "; //alac
                 options = " -y -vn -c:a alac "; //alac
+            }
+        }else if (targetPath.toLowerCase().endsWith(".aiff")) {
+            if(bitDept > 16) {
+                options = " -sample_fmt s32 -y -acodec pcm_s"+bitDept+"be "; //aif
+            }else {
+                options = " -sample_fmt s16 -y -acodec pcm_s"+bitDept+"be "; //aif
             }
         }
 
@@ -1421,10 +1421,11 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
        return false;
     }
 
+    /*
     private static String escapeFileName(String srcPath) {
         srcPath = srcPath.replace("'", "\\'");
         return "'"+srcPath+"'";
-    }
+    } */
 
     private static String getFFmpegOutputData(FFmpegSession session) {
         List<com.arthenica.ffmpegkit.Log> logs = session.getLogs();

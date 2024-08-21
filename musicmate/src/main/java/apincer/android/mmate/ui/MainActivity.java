@@ -149,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
     public static final String FLAC_OPTIMAL = "FLAC (Optimal)";
     public static final String FLAC_LEVEL_0 = "FLAC (Level 0)";
     public static final String FILE_FLAC = "FLAC";
-    public static final String MP_3_320_KHZ = "MPEG-3";
+    public static final String FILE_AIFF = "AIFF";
+    public static final String MP3_320_KHZ = "MPEG-3";
+    public static final String AIFF = "AIFF";
 
     private MusicTag nowPlaying = null;
 
@@ -1559,7 +1561,8 @@ public class MainActivity extends AppCompatActivity {
             }
             ToastHelper.showActionMessage(MainActivity.this, "", "Playlist '"+path+"' is created.");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "doExportAsPlaylist", e);
+            //e.printStackTrace();
         } finally {
             try {
                 out.close();
@@ -1585,22 +1588,18 @@ public class MainActivity extends AppCompatActivity {
 
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
         if(MusicTagUtils.isAIFFile(selections.get(0)) ||
-                MusicTagUtils.isWavFile(selections.get(0)) ||
                 MusicTagUtils.isALACFile(selections.get(0)) ||
                 MusicTagUtils.isDSD(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
-           // iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
-          //  encodingItems.add("Apple Lossless Audio Codec (ALAC)");
-           // encodingItems.add("Free Lossless Audio Codec (FLAC)");
-          //  encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
-       // }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
-        //    iconSpinnerItems.add(new IconSpinnerItem("ALAC", null));
-           // encodingItems.add("Apple Lossless Audio Codec (ALAC)");
         }else if(MusicTagUtils.isAACFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem(MP_3_320_KHZ, null));
-         //   encodingItems.add("Free Lossless Audio Codec (FLAC)");
-         //   encodingItems.add("Free Lossless Audio Codec Level 0 (FLAC)");
+            iconSpinnerItems.add(new IconSpinnerItem(MP3_320_KHZ, null));
+        }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
+        }else if(MusicTagUtils.isWavFile(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
+            iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
+            iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
         }
         IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(encodingList);
         encodingList.setSpinnerAdapter(iconSpinnerAdapter);
@@ -1676,8 +1675,10 @@ public class MainActivity extends AppCompatActivity {
             }else if(FLAC_LEVEL_0.equals(item.getText())) {
                 targetExt = FILE_FLAC;
                 cLevel = -1;
-            }else if(MP_3_320_KHZ.equals(item.getText())) {
+            }else if(MP3_320_KHZ.equals(item.getText())) {
                 targetExt = FILE_MP3;
+            }else if(AIFF.equals(item.getText())) {
+                targetExt = FILE_AIFF;
             }
 
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
