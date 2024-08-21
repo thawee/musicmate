@@ -5,7 +5,7 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '8.5.1', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '8.5.2', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 34, // support running on android 11 ot higher
@@ -16,7 +16,7 @@ ext.versions = [
         kotlin             : '2.0.20-RC2', //'2.0.0', //''1.9.24', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "_" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
-        objectbox          : '4.0.1', //''3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
+        objectbox          : '4.0.2', //''3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
         aboutlibraries     : '11.2.2', //''11.1.4', //''10.8.3', //''10.3.1',  11.2.1 not work
         //versionsCheck      : '0.42.
@@ -47,7 +47,7 @@ apache.http2core = "org.apache.httpcomponents.core5:httpcore5-h2:5.2.5"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.17.1"
 apache.commons_io = "commons-io:commons-io:2.16.1" //2.15.1"
-apache.commons_logging = "commons-logging:commons-logging:1.3.3"
+apache.commons_logging = "commons-logging:commons-logging:1.3.4"
 // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 apache.commons_lang3 = 'org.apache.commons:commons-lang3:3.16.0'
 deps.apache = apache

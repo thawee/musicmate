@@ -41,7 +41,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
 
 public class MusicTagUtils {
-    private static final String TAG = MusicTagUtils.class.getName();
+    private static final String TAG = "MusicTagUtils";
     public static Bitmap createBitmapFromDrawable(Context context, int width, int height, int drawableId, int borderColor, int backgroundColor) {
         Bitmap icon = BitmapHelper.getBitmapFromVectorDrawable(context, drawableId);
         return createBitmapFromDrawable(context,width,height,icon, borderColor, backgroundColor);
@@ -172,20 +172,19 @@ public class MusicTagUtils {
     }
 
     private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
-        int width = 340; // 24x85, 16x56, 18x63
+        int width = 500; //340; // 24x85, 16x56, 18x63
         int height = 96;
+        int padding = 8;
+        int paddingx2 = 16;
+        int paddingx3 = 24;
+      //  int paddingx4 = 32;
 
-       // int whiteColor = context.getColor(R.color.white);
         int greyColor = context.getColor(R.color.grey200);
         int blackColor = context.getColor(R.color.black);
         int bgBlackColor = context.getColor(R.color.grey900);
-       // int resolutionColor = getResolutionColor(context,tag);
-        int bgWhiteColor = getResolutionColor(context, tag); //context.getColor(R.color.grey100);
+        int bgWhiteColor = getResolutionColor(context, tag);
         int qualityColor = context.getColor(R.color.quality_no_rating);
         int labelColor = getEncodingColor(context, tag);
-       // if(!(isDSD(tag) || isLossless(tag))) { // QUALITY_NORMAL.equals(tag.getMediaQuality())) {
-       //     qualityColor = context.getColor(R.color.quality_bad);
-       // }else
         if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality()) ||
                 QUALITY_RECOMMENDED.equals(tag.getMediaQuality()) ||
                 QUALITY_GOOD.equals(tag.getMediaQuality())
@@ -195,18 +194,261 @@ public class MusicTagUtils {
             qualityColor = context.getColor(R.color.quality_bad);
         }
         int upscaleColor = context.getColor(R.color.quality_scale_not_test);
-       // if(!(isDSD(tag) || isLossless(tag))) {
-       //     upscaleColor = context.getColor(R.color.quality_bad);
-       // }else if (tag.getDynamicRange() > 0.0) {
+        if (tag.getDynamicRange() > 0.0) {
+                upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
+        }
+        int upsampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
+        // 16 bit should be 44.1 or 48 kHz only
+        if(tag.getAudioBitRate() == QUALITY_BIT_CD && tag.getAudioSampleRate() > QUALITY_SAMPLING_RATE_48) {
+            upsampledColor = context.getColor(R.color.quality_scale_not_matched);
+        }
+
+        String label;
+        String samplingRate = getBPSAndSampleRate(tag);
+
+        if(tag.isDSD()) {
+            // dsd use bitrate
+            label = "DSD";
+            long dsdRate = StringUtils.formatDSDRate(tag.getAudioSampleRate());
+            samplingRate = String.valueOf(dsdRate);
+            if(dsdRate < 256) {
+                labelColor = context.getColor(R.color.resolution_dsd_64_128);
+            }else {
+                labelColor = context.getColor(R.color.resolution_dsd_256);
+            }
+        }else if(isMQA(tag)) {
+            label = "MQA";
+            if(isMQAStudio(tag)) {
+                labelColor = context.getColor(R.color.resolution_mqa_studio);
+            }else {
+                labelColor = context.getColor(R.color.resolution_mqa);
+            }
+        } else if (isLossless(tag)) {
+            label = "PCM";
+        }else {
+            // any others format i.e. mpeg, aac
+            label = tag.getAudioEncoding().toUpperCase(Locale.US);
+        }
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int cornerRadius = 12;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        // Initialize a new Round Rect object
+        // draw border dark grey
+        RectF rectangle = new RectF(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(greyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        //draw back color
+        int bgPadding = 4;
+        rectangle = new RectF(
+                bgPadding, // Left
+                bgPadding, // Top
+                myCanvas.getWidth() - bgPadding, // Right
+                myCanvas.getHeight() - bgPadding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(blackColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw quality background box
+       // padding = 8;
+        int topPadding = 12;
+        rectangle = new RectF(
+                padding, // Left
+                topPadding, // Top
+                myCanvas.getWidth() - padding, // Right
+                myCanvas.getHeight() - topPadding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(bgWhiteColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw right back box
+        int wboxPadding = 12;
+        Paint paint =  new Paint();
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setColor(bgBlackColor);
+        paint.setStyle(Paint.Style.FILL);
+
+        float blackBGStartPos = (float) (bounds.width() - ((float) bounds.width() /2.8)); // 1/3
+        float blackBGShiftPos = (float) bounds.height() / 3;
+        Path path = new Path();
+        path.moveTo(blackBGStartPos, wboxPadding); //x1,y1 - top left
+        path.lineTo(bounds.width()-8, wboxPadding);   //x2,y1 - top right
+        path.lineTo(bounds.width()-8, bounds.height()-wboxPadding);   //x2,y2 - bottom right
+        path.lineTo(blackBGStartPos, bounds.height()-wboxPadding); //x1,y2 - bottom left
+        path.lineTo(blackBGStartPos+blackBGShiftPos, wboxPadding); //x1,y1 - top left
+        myCanvas.drawPath(path, paint);
+
+            // MQA, PCM, DSD. MPEG, AAC
+            Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+            int letterTextSize = 48; //28;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            //mLetterPaint.setColor(whiteColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setColor(labelColor);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+            float mLetterTop = bounds.top+paddingx3+textMathRect.height();
+            float mPositionX=  blackBGStartPos+padding+ ((bounds.right - blackBGStartPos)/2); //bounds.exactCenterY()-(bounds.exactCenterY()/6);
+          //  float mPositionY= blackBGStartPos-padding; //bounds.exactCenterY()-(bounds.exactCenterY()/6);
+          // bounds.top+paddingx3+textMathRect.height();
+            //float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
+            myCanvas.drawText(label,
+                    //bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
+                    mPositionX,
+                    mLetterTop, //top
+                    mLetterPaint);
+
+        // draw quality,up-scaled, up-sampled indicator
+        float y = (float) (myCanvas.getHeight() / 2) + 30;
+       // float startx = (float) (myCanvas.getWidth() * 0.56)+8;
+        float startx = blackBGStartPos+36;
+        int barHigh = 12;
+        int barWidth = 40;
+        int barSpace = 8;
+        //quality
+        startx = startx - paddingx2;
+        float endx = startx+barWidth;
+        paint = new Paint();
+        paint.setColor(qualityColor);
+        paint.setStrokeWidth(barHigh);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        path = new Path();
+        //path.moveTo(startx +2, y + 4);
+        path.moveTo(startx, y);
+        path.lineTo(endx, y);
+        myCanvas.drawPath(path, paint);
+
+        //upscale
+        startx = endx+barSpace;
+        endx = startx+barWidth;
+        paint = new Paint();
+        paint.setColor(upscaleColor);
+        paint.setStrokeWidth(barHigh);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        path = new Path();
+        path.moveTo(startx, y);
+        path.lineTo(endx, y);
+        myCanvas.drawPath(path, paint);
+
+        //upsampled
+        startx = endx+barSpace;
+        endx = startx+barWidth;
+        paint = new Paint();
+        paint.setColor(upsampledColor);
+        paint.setStrokeWidth(barHigh);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        path = new Path();
+        path.moveTo(startx, y);
+        path.lineTo(endx, y);
+        myCanvas.drawPath(path, paint);
+
+        // draw sampling rate, black color
+       // font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
+        font =  ResourcesCompat.getFont(context, R.font.cozette_bold);
+        letterTextSize = 72; //82;
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(blackColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        mLetterPaint.setAntiAlias(true);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(samplingRate, 0, 1, textMathRect);
+        mLetterTop = bounds.top+paddingx3+textMathRect.height();
+        mPositionX= blackBGStartPos/2; // center position to draw text
+        myCanvas.drawText(samplingRate,
+                mPositionX,
+                mLetterTop,
+                mLetterPaint);
+
+        return myBitmap;
+    }
+
+    private static String getBPSAndSampleRate(MusicTag tag) {
+        long sampleRate = tag.getAudioSampleRate();
+        if(isMQA(tag)) {
+            sampleRate = tag.getMqaSampleRate();
+        }
+        return String.format("%s/%s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
+    }
+
+    @Deprecated
+    private static Bitmap createEncodingSamplingRateIcon20241021(Context context, MusicTag tag) {
+        int width = 340; // 24x85, 16x56, 18x63
+        int height = 96;
+
+        // int whiteColor = context.getColor(R.color.white);
+        int greyColor = context.getColor(R.color.grey200);
+        int blackColor = context.getColor(R.color.black);
+        int bgBlackColor = context.getColor(R.color.grey900);
+        // int resolutionColor = getResolutionColor(context,tag);
+        int bgWhiteColor = getResolutionColor(context, tag); //context.getColor(R.color.grey100);
+        int qualityColor = context.getColor(R.color.quality_no_rating);
+        int labelColor = getEncodingColor(context, tag);
+        // if(!(isDSD(tag) || isLossless(tag))) { // QUALITY_NORMAL.equals(tag.getMediaQuality())) {
+        //     qualityColor = context.getColor(R.color.quality_bad);
+        // }else
+        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality()) ||
+                QUALITY_RECOMMENDED.equals(tag.getMediaQuality()) ||
+                QUALITY_GOOD.equals(tag.getMediaQuality())
+        ) {
+            qualityColor = context.getColor(R.color.quality_good);
+        }else if(QUALITY_BAD.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_bad);
+        }
+        int upscaleColor = context.getColor(R.color.quality_scale_not_test);
+        // if(!(isDSD(tag) || isLossless(tag))) {
+        //     upscaleColor = context.getColor(R.color.quality_bad);
+        // }else if (tag.getDynamicRange() > 0.0) {
         if (tag.getDynamicRange() > 0.0) {
             //if (isUpScaled(tag)) {
-                upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
-           // }else {
-                // not upscale, good
-               // upscaleColor = context.getColor(R.color.quality_scale_not_test);
-           // }
+            upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
+            // }else {
+            // not upscale, good
+            // upscaleColor = context.getColor(R.color.quality_scale_not_test);
+            // }
         }
-        int upsampledColor = context.getColor(R.color.quality_scale_not_test);; //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
+        int upsampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
         // 16 bit should be 44.1 or 48 kHz only
         if(tag.getAudioBitRate() == QUALITY_BIT_CD && tag.getAudioSampleRate() > QUALITY_SAMPLING_RATE_48) {
             upsampledColor = context.getColor(R.color.quality_scale_not_matched);
@@ -234,23 +476,13 @@ public class MusicTagUtils {
                 //labelColor = context.getColor(R.color.mqa_studio);
                 labelColor = context.getColor(R.color.resolution_mqa_studio);
             }else {
-               // labelColor = context.getColor(R.color.mqa_master);
+                // labelColor = context.getColor(R.color.mqa_master);
                 labelColor = context.getColor(R.color.resolution_mqa);
             }
         } else {
-            // PCM, draw bit
-            //label = tag.getAudioBitsDepth() +"B"; //"PCM";
             label = "PCM";
-           // labelColor = resolutionColor;
-            //labelBPS = String.valueOf(tag.getAudioBitsDepth());
-           // isPCM = true;
             if(!isLossless(tag)) {
-                // compress rate
-               // label = tag.getFileFormat().toUpperCase(Locale.US); ////tag.getAudioEncoding();
-               // samplingRate = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
-               // label = StringUtils.formatAudioBitRateShortUnit(tag.getAudioBitRate());
-                label = tag.getAudioEncoding().toUpperCase(Locale.US); ////tag.getAudioEncoding();
-               // labelColor = bgWhiteColor;
+                label = tag.getAudioEncoding().toUpperCase(Locale.US);
             }
         }
 
@@ -400,11 +632,11 @@ public class MusicTagUtils {
                         mLetterPaint);
             } */
 
-            // draw PCM bar
-          //  float y = (float) (myCanvas.getHeight() / 2) + 14;
-         //   float startx = (float) (myCanvas.getWidth() * 0.56);
+        // draw PCM bar
+        //  float y = (float) (myCanvas.getHeight() / 2) + 14;
+        //   float startx = (float) (myCanvas.getWidth() * 0.56);
 
-            // draw bottom bar curve
+        // draw bottom bar curve
             /*
             paint = new Paint();
             paint.setColor(qualityColor);
@@ -419,7 +651,7 @@ public class MusicTagUtils {
             path.lineTo(startx - 16, y + 12);
             path.lineTo(width - 12, y + 12);
             myCanvas.drawPath(path, paint); */
-       // } else
+        // } else
        /* if (tag.isDSD()) {
             // DSD,
             Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
@@ -441,27 +673,27 @@ public class MusicTagUtils {
                     mLetterTop + mPositionY+4,  //top
                     mLetterPaint);
         }else { */
-            // MQA, PCM, DSD
-            Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-            int letterTextSize = 48; //28;
-            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-            //mLetterPaint.setColor(whiteColor);
-            mLetterPaint.setTypeface(font);
-            mLetterPaint.setColor(labelColor);
-            mLetterPaint.setAntiAlias(true);
-            mLetterPaint.setTextSize(letterTextSize);
-            mLetterPaint.setTextAlign(Paint.Align.CENTER);
-            // Text draws from the baselineAdd some top padding to center vertically.
-            Rect textMathRect = new Rect();
-            mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
-            float mLetterTop = textMathRect.height() / 3f;
-            float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
-            myCanvas.drawText(label,
-                    bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
-                    mLetterTop + mPositionY, //top
-                    mLetterPaint);
+        // MQA, PCM, DSD
+        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+        int letterTextSize = 48; //28;
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        //mLetterPaint.setColor(whiteColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setColor(labelColor);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(label, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() / 3f;
+        float mPositionY= bounds.exactCenterY()-(bounds.exactCenterY()/6);
+        myCanvas.drawText(label,
+                bounds.exactCenterX()+(bounds.exactCenterX()/2), // left
+                mLetterTop + mPositionY, //top
+                mLetterPaint);
 
-            // draw mqa studio master indicator
+        // draw mqa studio master indicator
             /*
             int barWidth = 6;
             float y = (float) (myCanvas.getHeight()/2)+22;
@@ -477,7 +709,7 @@ public class MusicTagUtils {
             for(int i=0;i<5;i++) {
                 drawRhombus(myCanvas, paint, (int) (startx+(i*24)), (int) y, 12);
             } */
-       // }
+        // }
 
         // draw quality,upscaled, upsampled indicator
         float y = (float) (myCanvas.getHeight() / 2) + 30;
@@ -552,6 +784,7 @@ public class MusicTagUtils {
         return myBitmap;
     }
 
+    @Deprecated
     private static Bitmap createEncodingSamplingRateIconBAK(Context context, MusicTag tag) {
         int width = 340; // 24x85, 16x56, 18x63
         int height = 96;
@@ -842,7 +1075,7 @@ public class MusicTagUtils {
         return trimToEmpty(tag.getMqaInd()).contains("MQA");
     }
 
-
+@Deprecated
     public static void drawTriangle(Canvas canvas, Paint paint, int x, int y, int width) {
         int halfWidth = width / 2;
 
@@ -870,15 +1103,12 @@ public class MusicTagUtils {
         canvas.drawPath(path, paint);
     }
 
+    @Deprecated
     public static Bitmap createSourceQualityIcon(Context context, String qualityText, boolean upscaled, boolean upsampled) {
         int width = 192;
         int height = 96;
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
-       // int recordsColor = context.getColor(R.color.audiophile_label2);
         int blackColor = context.getColor(R.color.black);
-       // int qualityColor = context.getColor(R.color.audiophile_label1);
-       // String label1 = trimToEmpty(qualityText); //;"Audiophile";
-       // String label2 = "R e c o r d s";
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -1169,7 +1399,7 @@ public class MusicTagUtils {
             return context.getColor(R.color.quality_hd);
         }else if(isPCM24Bits(tag)) {
             return context.getColor(R.color.quality_h24bits);
-        }else if(isLossless(tag)){
+        }else if(isLossless(tag) || isMQA(tag)){
             return context.getColor(R.color.quality_sd);
         }else {
             return context.getColor(R.color.quality_unknown);
@@ -1202,35 +1432,7 @@ public class MusicTagUtils {
         }
     }
 
-    /*
-    public static Drawable getResolutionBackground(Context context, MusicTag tag) {
-        // DSD - DSD
-        // Hi-Res Lossless - >= 24 bits and >= 48 kHz
-        // Lossless - >= 24 bits and >= 48 kHz
-        // High Quality - compress
-        if(isDSD(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
-            // }else if(tag.isMQA()) {
-            //     return context.getColor(R.color.quality_hd);
-        }else if(isPCMHiRes(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
-        }else if(is24Bits(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
-        }else if(isLossless(tag)){
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
-        }else {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_unknown);
-        }
-    } */
-
     public static Drawable getFileFormatBackground(Context context, MusicTag tag) {
-      /*  if(isDSD(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_dsd);
-        }else if(isLossless(tag)){
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
-        }else {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossy);
-        } */
 
         if(isDSD(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_dsd);
@@ -1238,7 +1440,7 @@ public class MusicTagUtils {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
         }else if(isPCM24Bits(tag)) {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
-        }else if(isLossless(tag)){
+        }else if(isLossless(tag) || isMQA(tag)){
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
         }else {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossy);
@@ -1246,7 +1448,7 @@ public class MusicTagUtils {
     }
 
     public static boolean isPCM24Bits(MusicTag tag) {
-        return ( isLossless(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
+        return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
     }
 
     public static boolean isDSD(MusicTag tag) {
@@ -1261,39 +1463,12 @@ public class MusicTagUtils {
         return tag.getAudioBitsDepth()==Constants.QUALITY_BIT_DEPTH_DSD;
     }
 
-    /*
-    @Deprecated
-    public static boolean isPCMHiRes(MusicTag tag) {
-        // > 24/88
-        // JAS,  96kHz/24bit format or above
-        //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ( isLossless(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
-    } */
-
-    /*
-    public static boolean isPCM48(MusicTag tag) {
-        // > 24/88
-        // JAS,  96kHz/24bit format or above
-        //https://www.jas-audio.or.jp/english/hi-res-logo-en
-        return ((tag.getAudioBitsDepth() > Constants.QUALITY_BIT_DEPTH_DSD) && (tag.getAudioSampleRate() <= QUALITY_SAMPLING_RATE_48));
-    } */
-
     public static boolean isHiRes(MusicTag tag) {
         // > 24/96
         // JAS,  96kHz/24bit format or above
         //https://www.jas-audio.or.jp/english/hi-res-logo-en
         return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
     }
-
-    /*
-    @Deprecated
-    public static boolean isPCMLossless(MusicTag tag) {
-        // 16 / *
-        // 24/48
-        return ((tag.getAudioBitsDepth() == Constants.QUALITY_BIT_CD ||
-                ((tag.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && tag.getAudioSampleRate() < Constants.QUALITY_SAMPLING_RATE_88)))); // ||
-                // (tag.getAudioBitsPerSample() == Constants.QUALITY_BIT_DEPTH_SD && tag.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48)));
-    } */
 
     public static String getFormattedTitle(Context context, MusicTag tag) {
         String title =  trimToEmpty(tag.getTitle());
@@ -1312,30 +1487,6 @@ public class MusicTagUtils {
         return title;
     }
 
-    public static String escapeURI(String s) {
-        int len = s.length();
-        StringBuilder sb = new StringBuilder(len + 30);
-        int start = 0;
-        for (int i = 0; i < len; i++) {
-            String ref = null;
-            if(Character.isSpaceChar(s.charAt(i))) {
-                sb.append("_");
-            }else if(Character.isLetterOrDigit(s.charAt(i))) {
-                sb.append(s.charAt(i));
-            }else {
-                sb.append("_");
-            }
-           /* switch (s.charAt(i)) {
-                case ' ': ref = "%20"; break;
-            }
-            if (ref != null) {
-                sb.append(s.substring(start, i)).append(ref);
-                start = i + 1;
-            } */
-        }
-        return start == 0 ? s : sb.append(s.substring(start)).toString();
-    }
-
     public static String getFormattedSubtitle(MusicTag tag) {
         String album = StringUtils.trimTitle(tag.getAlbum());
         String artist = StringUtils.trimTitle(tag.getArtist());
@@ -1351,71 +1502,6 @@ public class MusicTagUtils {
         }
         return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
     }
-
-    /*
-    public static boolean isFileCouldBroken(MusicTag tag) {
-        if(tag.getFileSize()==0) return true;
-        if(!isLossless(tag)) return false;
-        return tag.getFileSizeRatio() < Constants.MIN_FILE_SIZE_RATIO; // 42 % of calculated size
-    } */
-
-    /*
-    public static int getFileSizeRatio(MusicTag tag) {
-        double calSize = calculateFileSize(tag);
-        if(calSize==0.00) return 0; // file is not valid, cannot read metatag
-        return (int) ((tag.getFileSize()/calSize)*100);
-    } */
-
-    /*
-    public static double calculateFileSize(MusicTag tag) {
-        // audio file size = bit rate * duration of audio in seconds * number of channels
-        //bit rate = bit depth * sample rate
-        double calSize = tag.getAudioBitsDepth()*tag.getAudioSampleRate();
-        calSize = calSize * tag.getAudioDuration()*getChannels(tag);
-        return calSize/8;
-    }*/
-
-    private static long getChannels(MusicTag tag) {
-        String channels = trimToEmpty(tag.getAudioChannels());
-        if("Stereo".equalsIgnoreCase(channels)) {
-            channels = "2";
-        }
-        if(StringUtils.isDigitOnly(channels)) {
-            return StringUtils.toLong(channels);
-        }else {
-            Log.i(TAG, "Channels is string: "+channels);
-        }
-        return 2; // default channels
-    }
-
-    /*@Deprecated
-    public static File getCoverArt( Context context, MusicTag tag) {
-        //PH|SD_AR|R_album|filename.png
-        //md5 digest
-        File dir = context.getExternalCacheDir();
-        File songDir = new File(tag.getPath());
-        if(tag.isMusicManaged()) {
-            songDir = songDir.getParentFile();
-       // }else  { //(isEmpty(tag.getAlbum())) {
-      //      songDir = songDir.getParentFile();
-        }
-        String path = DigestUtils.md5Hex(songDir.getAbsolutePath())+".png";
-
-        path = "/CoverArts/"+path;
-
-        File pathFile = new File(dir, path);
-        if(!pathFile.exists()) {
-            try {
-                dir = pathFile.getParentFile();
-                dir.mkdirs();
-                // extract covert to cache directory
-                FileRepository.extractCoverArt(tag, pathFile);
-            } catch (Exception e) {
-                Log.e(TAG,"getCoverArt",e);
-            }
-        }
-        return pathFile;
-    }*/
 
     public static boolean isLossless(MusicTag tag) {
         return (isFLACFile(tag) || isAIFFile(tag) || isWavFile(tag) || isALACFile(tag)) && !isHiRes(tag) && !isMQA(tag);
@@ -1512,6 +1598,7 @@ public class MusicTagUtils {
         return pathFile;
     }
 
+    @Deprecated
     public static String getAlbumArtistOrArtist(MusicTag tag) {
         String albumArtist = StringUtils.trimTitle(tag.getAlbumArtist());
         if (StringUtils.isEmpty(albumArtist)) {
@@ -1524,8 +1611,9 @@ public class MusicTagUtils {
         }
     }
 
+    @Deprecated
     public static String getTrackDRandGainString(MusicTag tag) {
-        String text = "";
+        String text;
         if(tag.getDynamicRangeMeter()==0.00) {
             text = " - ";
         }else {
@@ -1547,6 +1635,7 @@ public class MusicTagUtils {
         return text;
     }
 
+    @Deprecated
     public static String getTrackReplayGainString(MusicTag tag) {
         String text = "";
         double gain = tag.getTrackRG();
@@ -1564,7 +1653,7 @@ public class MusicTagUtils {
     }
 
     public static String getTrackDR(MusicTag tag) {
-        String text = "";
+        String text;
         if(tag.getDynamicRangeMeter()==0.00) {
             text = "-";
         }else {
@@ -1575,7 +1664,7 @@ public class MusicTagUtils {
     }
 
     public static String getDynamicRangeAsString(MusicTag tag) {
-        String text = "";
+        String text;
         if(tag.getDynamicRange()==0.00) {
             text = " - dB";
         }else {
@@ -1613,13 +1702,7 @@ public class MusicTagUtils {
     public static Bitmap getSourceIcon(Context context, MusicTag tag) {
         int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
-        //String letter = source; //item.getSource();
-        String letter = "";
-        //if(isEmpty(tag.getPublisher())) {
-            letter = tag.getMediaType();
-        //}else {
-        //    letter = tag.getPublisher();
-       // }
+        String letter = tag.getMediaType();
         if(StringUtils.isEmpty(letter)) {
             return null;
         }
@@ -1643,11 +1726,7 @@ public class MusicTagUtils {
         return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
-    /*@Deprecated
-    public static int getDSDSampleRateModulation(MusicTag tag) {
-        return (int) ((tag.getAudioBitRate()/1000.0)/(Constants.QUALITY_SAMPLING_RATE_44/1000.0));
-    } */
-
+    @Deprecated
     public static String getTrackQuality(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD_AUDIO;
@@ -1668,6 +1747,7 @@ public class MusicTagUtils {
         //DSD
     }
 
+    @Deprecated
     public static String getTrackQualityDetails(MusicTag tag) {
         if(tag.isDSD()) {
             return "Enjoy rich music which the detail and wide range of the music, its warm tone is very enjoyable.";
@@ -2080,19 +2160,6 @@ public class MusicTagUtils {
         return (path.endsWith("."+Constants.FILE_EXT_DSF));
     }
 
-    /*
-    public static Bitmap getMediaTypeIcon(Context context, String src) {
-        //int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
-        int qualityColor = Color.TRANSPARENT;
-
-        int size =24;
-        int rescId = getSourceRescId(src);
-        if(rescId!=-1) {
-            return createBitmapFromDrawable(context, size, size, rescId, qualityColor, qualityColor);
-        }
-        return null;
-    } */
-
     public static boolean isMp4File(MusicTag tag) {
         // m4a, mov, ,p4
         return (Constants.MEDIA_ENC_AAC.equalsIgnoreCase(tag.getAudioEncoding()) ||
@@ -2114,6 +2181,7 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
+    @Deprecated
     public static Object getSourceQualityIconMini(Context context, MusicTag tag) {
         File dir = context.getExternalCacheDir();
         String quality = trimToEmpty(tag.getMediaQuality());
@@ -2308,6 +2376,7 @@ public class MusicTagUtils {
         return false;
     } */
 
+    @Deprecated
     public static boolean isUpSampled(MusicTag tag) {
         return false;
     }

@@ -67,8 +67,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelProgressiveFuture;
-import io.netty.channel.ChannelProgressiveFutureListener;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -123,11 +121,11 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
         this.configuration = configuration;
         this.localPort = configuration.getListenPort();
         System.setProperty("io.netty.allocator.useCacheForAllThreads", "false");
-       // System.setProperty("io.netty.allocator.maxOrder", "9"); //11=16 MB, 9 = 4 MB per chunk
-        System.setProperty("io.netty.allocator.maxOrder", "8"); //7 = 1 MB, 8 = 2 MB per chunk
+        System.setProperty("io.netty.allocator.maxOrder", "9"); //11=16 MB, 9 = 4 MB per chunk
+       // System.setProperty("io.netty.allocator.maxOrder", "8"); //7 = 1 MB, 8 = 2 MB per chunk
        // System.setProperty("io.netty.allocator.type", "unpooled");
-        System.setProperty("io.netty.threadLocalDirectBufferSize", "32768"); // default 64kb
-       // System.setProperty("io.netty.threadLocalDirectBufferSize", "16384"); // default 64kb, 16k cause more gc
+       // System.setProperty("io.netty.threadLocalDirectBufferSize", "32768"); // default 64kb
+        System.setProperty("io.netty.threadLocalDirectBufferSize", "16384"); // default 64kb, 16k cause more gc
 
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();
