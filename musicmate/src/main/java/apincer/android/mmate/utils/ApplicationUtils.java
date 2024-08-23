@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Bundle;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;

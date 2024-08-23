@@ -163,7 +163,8 @@ public class AndroidRouter extends RouterImpl {
 
     protected void setWifiLock(boolean enable) {
         if (wifiLock == null) {
-            wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, getClass().getSimpleName());
+            //wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, getClass().getSimpleName());
+            wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, getClass().getSimpleName());
         }
 
         if (enable) {

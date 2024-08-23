@@ -82,10 +82,10 @@ public class MusixMateApp extends Application {
     public void onTerminate() {
         super.onTerminate();
         MediaServerService.stopMediaServer(this);
-      //  broadcastHelper.onTerminate(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
     }
+
 
     @Override public void onCreate() {
         super.onCreate();

@@ -1370,8 +1370,8 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
             }
         }else if (targetPath.toLowerCase().endsWith(".mp3")) {
             // convert to 320k bitrate
-            options = " -ar 44100 -q:a 0 -ab 320k ";
-           // options = " -c:v copy -q:a 6 ";
+           // options = " -ar 44100 -q:a 0 -ab 320k ";
+            options = " -c:a libmp3lame -b:a 320k ";
         }else if (targetPath.toLowerCase().endsWith(".m4a")) {
             if(bitDept > 16) {
                 options = " -sample_fmt s32 -y -acodec pcm_s"+bitDept+"be "; //alac

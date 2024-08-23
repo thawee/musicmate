@@ -135,29 +135,30 @@ public class MediaServerService extends Service {
     /**
      *
      */
-    private void initialize() {
-        this.initialized = false;
-        shutdown(); // clean up before start
+    private synchronized void initialize() {
+       // this.initialized = false;
+        if(!initialized) {
+            shutdown(); // clean up before start
 
-        upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());
-        upnpService = new UpnpServiceImpl(upnpServiceCfg) {
-            @Override
-            protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
-                return new AndroidRouter(getConfiguration(), protocolFactory, MediaServerService.this);
-            }
+            upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());
+            upnpService = new UpnpServiceImpl(upnpServiceCfg) {
+                @Override
+                protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
+                    return new AndroidRouter(getConfiguration(), protocolFactory, MediaServerService.this);
+                }
 
-            @Override
-            public synchronized void shutdown() {
-                // Now we can concurrently run the Cling shutdown code, without occupying the
-                // Android main UI thread. This will complete probably after the main UI thread
-                // is done.
-                super.shutdown(true);
-            }
-        };
-        upnpService.startup();
-        createMediaServerDevice();
-       // createHttpStreamerServer();
-        MediaServerService.this.initialized = true;
+                @Override
+                public synchronized void shutdown() {
+                    // Now we can concurrently run the Cling shutdown code, without occupying the
+                    // Android main UI thread. This will complete probably after the main UI thread
+                    // is done.
+                    super.shutdown(true);
+                }
+            };
+            upnpService.startup();
+            createMediaServerDevice();
+            MediaServerService.this.initialized = true;
+        }
     }
 
     private void createMediaServerDevice() {

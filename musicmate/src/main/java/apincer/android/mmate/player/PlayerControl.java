@@ -112,7 +112,7 @@ public class PlayerControl {
     }
 
     public void publishPlayingSong(PlayerInfo player, MusicTag tag) {
-        if(player!= null && playerInfo != null && !player.isStreamPlayer() && !playerInfo.isExpired()) {
+        if(player!= null && playerInfo != null && !player.isStreamPlayer() && !playerInfo.checkStreamPlayerExpired()) {
             // skip local player if currently play from dlna streamer
             return;
         }

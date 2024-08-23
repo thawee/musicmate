@@ -92,21 +92,6 @@
             android:exported="false"/>
 
         <!-- Main activity for music browsing on phone -->
-        <!--
-        <activity
-            android:name="apincer.android.mmate.ui.MediaBrowserActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
-            android:banner="@string/app_name"
-            android:exported="true"
-            tools:ignore="LockedOrientationActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
-        </activity>
-        -->
         <activity
             android:name="apincer.android.mmate.ui.MainActivity"
             android:screenOrientation="portrait"
@@ -128,6 +113,7 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:launchMode = "singleInstance"
+            android:noHistory="true"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
         </activity>
 
@@ -135,6 +121,7 @@
             android:name="apincer.android.mmate.ui.PermissionActivity"
             android:screenOrientation="portrait"
             android:label="@string/app_permission"
+            android:noHistory="true"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
         </activity>
 
@@ -142,6 +129,7 @@
             android:name="apincer.android.mmate.ui.SettingsActivity"
             android:theme="@style/AboutAppTheme"
             android:screenOrientation="portrait"
+            android:noHistory="true"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
         </activity>
 
@@ -149,6 +137,7 @@
             android:name="apincer.android.mmate.ui.AboutActivity"
             android:theme="@style/AboutAppTheme"
             android:screenOrientation="portrait"
+            android:noHistory="true"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
         </activity>
 
@@ -163,12 +152,6 @@
             android:authorities="apincer.android.mmate.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
-        <!--
-        <provider
-            android:name="apincer.android.mmate.provider.MusicCoverArtProvider"
-            android:authorities="apincer.android.mmate.coverart.provider"
-            android:exported="false"
-            android:grantUriPermissions="true"/> -->
         <provider
             android:name="apincer.android.mmate.provider.CoverArtProvider"
             android:authorities="apincer.mmate.coverart.provider"

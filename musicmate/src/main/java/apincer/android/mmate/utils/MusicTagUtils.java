@@ -223,8 +223,10 @@ public class MusicTagUtils {
             }else {
                 labelColor = context.getColor(R.color.resolution_mqa);
             }
-        } else if (isLossless(tag)) {
+        } else if (isLossless(tag) || isHiRes(tag)) {
             label = "PCM";
+        } else if (isMPegFile(tag)) {
+            label = "MP3";
         }else {
             // any others format i.e. mpeg, aac
             label = tag.getAudioEncoding().toUpperCase(Locale.US);

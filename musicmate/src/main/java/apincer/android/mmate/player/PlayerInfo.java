@@ -47,9 +47,9 @@ public class PlayerInfo {
         return playerType == TYPE.DLNA;
     }
 
-    public boolean isExpired() {
-        // play ny dlna in last 10 minutes
-        return time < System.currentTimeMillis() - 600000;
+    public boolean checkStreamPlayerExpired() {
+        // if stream player and played in last 5 minutes
+        return (!isStreamPlayer()) && (time < System.currentTimeMillis() - 300000);
     }
 
 

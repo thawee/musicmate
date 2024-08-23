@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MusicTag nowPlaying = null;
 
-    ActivityResultLauncher<Intent> editorLauncher;
+   // ActivityResultLauncher<Intent> editorLauncher;
     ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> ScanAudioFileWorker.startScan(getApplicationContext()));
@@ -164,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ResideMenu mResideMenu;
 
+    private SearchCriteria searchCriteria;
     private MusicTagAdapter adapter;
     private SelectionTracker<Long> mTracker;
 
@@ -202,9 +203,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ActionModeCallback actionModeCallback;
     private ActionMode actionMode;
-
-   // private boolean onSetup = true;
-    private int positionToScroll = -1;
 
     private void doDeleteMediaItems(List<MusicTag> selections) {
      if(selections.isEmpty()) return;
@@ -610,6 +608,9 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onCreate(savedInstanceState);
 
+        // setup search criteria from starting intent
+        searchCriteria = ApplicationUtils.getSearchCriteria(getIntent());
+
         // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
@@ -617,7 +618,7 @@ public class MainActivity extends AppCompatActivity {
         repos = FileRepository.newInstance(getApplicationContext());
         initActivityTransitions();
         setContentView(R.layout.activity_main);
-        setUpEditorLauncher();
+        //setUpEditorLauncher();
         //setUpPermissions();
         setUpHeaderPanel();
         setUpNowPlayingView();
@@ -632,6 +633,7 @@ public class MainActivity extends AppCompatActivity {
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
     }
 
+    /*
     private void setUpEditorLauncher() {
         editorLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             // support filter by artist, albnum, path
@@ -641,7 +643,7 @@ public class MainActivity extends AppCompatActivity {
                 adapter.loadDataSets(criteria);
             }
         });
-    }
+    } */
 
     private void setUpHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
@@ -783,7 +785,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void scrollToListening() {
         if(nowPlaying ==null) return;
-        positionToScroll = adapter.getMusicTagPosition(nowPlaying);
+        // private boolean onSetup = true;
+        int positionToScroll = adapter.getMusicTagPosition(nowPlaying);
         scrollToPosition(positionToScroll,true);
     }
 
@@ -1062,7 +1065,8 @@ public class MainActivity extends AppCompatActivity {
 
             AudioTagEditEvent message = new AudioTagEditEvent("edit", adapter.getCriteria(), tagList);
             EventBus.getDefault().postSticky(message);
-            editorLauncher.launch(myIntent);
+            startActivity(myIntent);
+            //editorLauncher.launch(myIntent);
         }
     }
 
@@ -1093,7 +1097,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpRecycleView( ) {
-        adapter = new MusicTagAdapter(new SearchCriteria(SearchCriteria.TYPE.MY_SONGS));
+        if(searchCriteria == null) {
+            searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+        }
+        adapter = new MusicTagAdapter(searchCriteria);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {
@@ -1323,8 +1330,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 mExitSnackbar.dismiss();
                 finishAndRemoveTask();
-                //System.exit(0);
-                finish();
             }
         }
     }
@@ -1361,21 +1366,6 @@ public class MainActivity extends AppCompatActivity {
                 doEncodeAudioFiles(getSelections());
                 mode.finish();
                 return true;
-           /* }else if (id == R.id.action_send_to_hibyos) {
-                doSendFilesToHibyDAP(getSelections());
-                mode.finish();
-                return true;*/
-           // }else if (id == R.id.action_send_to_media_server) {
-           //     doSendToNASServer(getSelections());
-            //    mode.finish();
-           //     return true;
-           // }else if (id == R.id.action_send_playlist_to_streaming) {
-              //  final List<MusicTag> list = getSelections();
-              //  MusicMateExecutors.move(() -> {
-              //      doSendRadioStationToStreamer(list);
-              //  });
-              //  mode.finish();
-              //  return true;
             }else if (id == R.id.action_calculate_replay_gain) {
                 doMeasureDR(getSelections());
                 mode.finish();
