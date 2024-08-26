@@ -29,21 +29,21 @@ public final class CoverArtProvider extends ContentProvider {
         }
 
        private String getPathForUri(Uri uri) {
-            if (getContext() != null) {
+            if (getContext() != null && uri != null && uri.getPath()!=null) {
                 return uri.getPath().substring(1);
             }
             throw new IllegalStateException("No Context attached");
         }
 
-        public int delete(Uri uri, String str, String[] strArr) {
+        public int delete(@NonNull Uri uri, String str, String[] strArr) {
             throw new UnsupportedOperationException("No support delete");
         }
 
-        public String getType(Uri uri) {
+        public String getType(@NonNull Uri uri) {
             return "image/*";
         }
 
-        public Uri insert(Uri uri, ContentValues contentValues) {
+        public Uri insert(@NonNull Uri uri, ContentValues contentValues) {
             throw new UnsupportedOperationException("No support inserts");
         }
 
@@ -61,7 +61,7 @@ public final class CoverArtProvider extends ContentProvider {
         return COVER_ARTS +getPathForUri(uri)+".png";
     }
 
-    public ParcelFileDescriptor openFile(Uri uri, String str) {
+    public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) {
             try {
                 File dir =  getContext().getExternalCacheDir();
                 String albumUniqueKey = getPathForUri(uri);
@@ -87,7 +87,7 @@ public final class CoverArtProvider extends ContentProvider {
             return null;
         }
 
-        public int update(Uri uri, ContentValues contentValues, String str, String[] strArr) {
+        public int update(@NonNull Uri uri, ContentValues contentValues, String str, String[] strArr) {
             throw new UnsupportedOperationException("No support updates");
         }
     }

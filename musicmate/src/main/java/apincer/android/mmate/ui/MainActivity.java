@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
+import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.TITLE_DSD;
 import static apincer.android.mmate.Constants.TITLE_GENRE;
 import static apincer.android.mmate.Constants.TITLE_GROUPING;
@@ -138,24 +140,22 @@ import sakout.mehdi.StateViews.StateView;
  * Created by Administrator on 11/23/17.
  */
 public class MainActivity extends AppCompatActivity {
-    public static final String FILE_MP3 = "MP3";
     private static final String TAG = "MainActivity";
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET= 16; //start scrolling from 4 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 48; //48; // scroll item to offset+1 position on list
     private static final int MENU_ID_RESOLUTION = 55555555;
-  //  private static final int MENU_ID_QUALITY_PCM = 55550000;
     private static final double MAX_PROGRESS_BLOCK = 10.00;
     private static final double MAX_PROGRESS = 100.00;
     public static final String FLAC_OPTIMAL = "FLAC (Optimal)";
     public static final String FLAC_LEVEL_0 = "FLAC (Level 0)";
     public static final String FILE_FLAC = "FLAC";
     public static final String FILE_AIFF = "AIFF";
+    public static final String FILE_MP3 = "MP3";
     public static final String MP3_320_KHZ = "MPEG-3";
     public static final String AIFF = "AIFF";
 
     private MusicTag nowPlaying = null;
 
-   // ActivityResultLauncher<Intent> editorLauncher;
     ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> ScanAudioFileWorker.startScan(getApplicationContext()));
@@ -164,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ResideMenu mResideMenu;
 
-    private SearchCriteria searchCriteria;
     private MusicTagAdapter adapter;
     private SelectionTracker<Long> mTracker;
 
@@ -193,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView nowPlayingOutputDevice;
 
     // header panel
-    //TabLayout headerTab;
     TextView headerSubtitle;
 
     // open tag timer
@@ -272,7 +270,9 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
     // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(alert.getWindow()!= null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
 
         btnOK.setOnClickListener(v -> {
             busy = true;
@@ -381,7 +381,9 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(alert.getWindow()!= null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
 
         btnOK.setOnClickListener(v -> {
             busy = true;
@@ -574,13 +576,14 @@ public class MainActivity extends AppCompatActivity {
                 .start());
     }
 
+    /*
     private void doStartRefresh(SearchCriteria criteria) {
         if(criteria!= null) {
             doStartRefresh(criteria.getType(), criteria.getKeyword());
         }else {
             refreshLayout.autoRefresh();
         }
-    }
+    } */
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
         adapter.setType(type);
@@ -609,7 +612,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // setup search criteria from starting intent
-        searchCriteria = ApplicationUtils.getSearchCriteria(getIntent());
+
+        SearchCriteria searchCriteria = ApplicationUtils.getSearchCriteria(getIntent());
 
         // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new BackPressedCallback(true);
@@ -619,15 +623,15 @@ public class MainActivity extends AppCompatActivity {
         initActivityTransitions();
         setContentView(R.layout.activity_main);
         //setUpEditorLauncher();
-        //setUpPermissions();
         setUpHeaderPanel();
         setUpNowPlayingView();
         setUpBottomAppBar();
-        setUpRecycleView();
+        setUpRecycleView(searchCriteria);
         setUpSwipeToRefresh();
         setUpResideMenus();
 
-        loadDataSets(savedInstanceState);
+       // loadDataSets(savedInstanceState);
+        //doStartRefresh(ApplicationUtils.getSearchCriteria(getIntent()));
         mExitSnackbar = Snackbar.make(this.mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
@@ -660,6 +664,8 @@ public class MainActivity extends AppCompatActivity {
         headerSubtitle = findViewById(R.id.header_subtitle);
     }
 
+    /*
+    @Deprecated
     private void loadDataSets(Bundle startIntent) {
         SearchCriteria criteria;
         if(startIntent != null) {
@@ -668,7 +674,7 @@ public class MainActivity extends AppCompatActivity {
             criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
         }
         doStartRefresh(criteria);
-    }
+    } */
 
     /**
      * set up Bottom Bar
@@ -868,7 +874,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putParcelable("main_screen_type", adapter.getCriteria());
+       // savedInstanceState.putParcelable("main_screen_type", adapter.getCriteria());
     }
 
     @Override
@@ -1005,7 +1011,9 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(alert.getWindow()!= null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
 
         List<String> storageIds = DocumentFileCompat.getStorageIds(getApplicationContext());
         btnAddPanel.removeAllViews();
@@ -1035,7 +1043,7 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
             //start scan after set directories
-            loadDataSets(null);
+           // loadDataSets(null);
             alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());
@@ -1094,9 +1102,10 @@ public class MainActivity extends AppCompatActivity {
     private void setUpSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
         refreshLayout.setOnRefreshListener(refreshlayout -> adapter.loadDataSets());
+        refreshLayout.autoRefresh(); // loading recycleview list on start activity
     }
 
-    private void setUpRecycleView( ) {
+    private void setUpRecycleView(SearchCriteria searchCriteria ) {
         if(searchCriteria == null) {
             searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
         }
@@ -1146,9 +1155,8 @@ public class MainActivity extends AppCompatActivity {
                     if (actionMode == null) {
                         actionMode = startSupportActionMode(actionModeCallback);
                     }
-                    actionMode.setTitle(StringUtils.formatSongSize(count));
-                    actionMode.invalidate();
-                } else if (actionMode != null) {
+                }
+                if (actionMode != null) {
                     actionMode.setTitle(StringUtils.formatSongSize(count));
                     actionMode.invalidate();
                 }
@@ -1220,7 +1228,7 @@ public class MainActivity extends AppCompatActivity {
                     .setMenuRadius(16f) // sets the corner radius.
                     .setMenuShadow(8f) // sets the shadow.
                     .setTextColor(ContextCompat.getColor(getBaseContext(), R.color.grey200))
-                    .setTextGravity(Gravity.LEFT)
+                    .setTextGravity(Gravity.START)
                     .setPadding(1)
                     .setMenuRadius(8)
                     .setShowBackground(true)
@@ -1465,7 +1473,9 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(alert.getWindow()!= null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
 
         btnOK.setOnClickListener(v -> {
             busy = true;
@@ -1537,7 +1547,7 @@ public class MainActivity extends AppCompatActivity {
             path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
             File filepath = new File(path);
             File folder = filepath.getParentFile();
-            if(!folder.exists()) {
+            if(folder !=null && !folder.exists()) {
                 folder.mkdirs();
             }
             out = new BufferedWriter(new OutputStreamWriter(
@@ -1555,7 +1565,7 @@ public class MainActivity extends AppCompatActivity {
             //e.printStackTrace();
         } finally {
             try {
-                out.close();
+                if(out != null) out.close();
             }catch (Exception ignored) {}
         }
     }
@@ -1651,23 +1661,25 @@ public class MainActivity extends AppCompatActivity {
         alert.requestWindowFeature(Window.FEATURE_NO_TITLE);
         alert.setCanceledOnTouchOutside(false);
         // make popup round corners
-        alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(alert.getWindow()!= null) {
+            alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
 
         btnOK.setOnClickListener(v -> {
             busy = true;
-            int cLevel = 4; // for flac 0 un-compressed, 8 most compress
+            int cLevel = FLAC_OPTIMAL_COMPRESS_LEVEL; // for flac 0 un-compressed, 8 most compress
             String targetExt = FILE_FLAC;
 
             IconSpinnerItem item = iconSpinnerItems.get(encodingList.getSelectedIndex());
-            if(FLAC_OPTIMAL.equals(item.getText())) {
+            if(FLAC_OPTIMAL.contentEquals(item.getText())) {
                 targetExt = FILE_FLAC;
-                cLevel = 4; // default is 5
-            }else if(FLAC_LEVEL_0.equals(item.getText())) {
+                cLevel = FLAC_OPTIMAL_COMPRESS_LEVEL; // default is 5
+            }else if(FLAC_LEVEL_0.contentEquals(item.getText())) {
                 targetExt = FILE_FLAC;
-                cLevel = -1;
-            }else if(MP3_320_KHZ.equals(item.getText())) {
+                cLevel = FLAC_NO_COMPRESS_LEVEL;
+            }else if(MP3_320_KHZ.contentEquals(item.getText())) {
                 targetExt = FILE_MP3;
-            }else if(AIFF.equals(item.getText())) {
+            }else if(AIFF.contentEquals(item.getText())) {
                 targetExt = FILE_AIFF;
             }
 

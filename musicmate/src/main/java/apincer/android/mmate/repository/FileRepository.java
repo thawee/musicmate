@@ -14,6 +14,7 @@ import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,13 +33,13 @@ import apincer.android.utils.FileUtils;
 public class FileRepository {
     private static final String TAG = "FileRepository";
     private final Context context;
-    private final String STORAGE_PRIMARY = StorageId.PRIMARY;
     private final String STORAGE_SECONDARY;
 
     public static FileRepository newInstance(Context application) {
         return new FileRepository(application);
     }
 
+    @Deprecated
     public static void extractCoverArt(String path, File targetFile) {
         try {
            // Log.d(TAG, "extractCoverArt: "+path);
@@ -245,7 +246,7 @@ public class FileRepository {
             String json = gson.toJson(item);
             File f = new File(item.getPath());
             String fileName = f.getParentFile().getAbsolutePath()+"/"+item.getTrack()+".json";
-            org.apache.commons.io.FileUtils.write(new File(fileName), json);
+            org.apache.commons.io.FileUtils.write(new File(fileName), json, StandardCharsets.UTF_8);
             TagRepository.saveTag(item);
             return true;
         }
@@ -331,15 +332,13 @@ public class FileRepository {
             // then artist
             String artist = StringUtils.trimTitle(MusicTagUtils.getFirstArtist(metadata.getArtist()));
             String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
-            boolean addArtist2title = false;
-            if("Various Artists".equals(albumArtist)) {
-                /*if(isEmpty(metadata.getPublisher())) {
+            boolean addArtist2title = "Various Artists".equals(albumArtist);
+            /*if(isEmpty(metadata.getPublisher())) {
                     filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
                 }else {
                     filename.append(StringUtils.getAbvByUpperCase(metadata.getPublisher())).append(File.separator);
                 } */
-                addArtist2title = true;
-            }//else if(!isEmpty(albumArtist)) {
+            //else if(!isEmpty(albumArtist)) {
             if(!isEmpty(albumArtist)) {
                 filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
             }else if (!isEmpty(artist)) {
@@ -389,6 +388,7 @@ public class FileRepository {
     }
 
     public String getStorageIdFor(MusicTag metadata) {
+        String STORAGE_PRIMARY = StorageId.PRIMARY;
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
@@ -467,7 +467,7 @@ public class FileRepository {
            // boolean toClean = true;
             List<File> toDelete = new ArrayList<>();
             File[] files = mediaDir.listFiles();
-            if (files != null && files.length > 0) {
+            if (files != null) {
                 for (File f : files) {
                     if(f.isDirectory()) {
                         // if contains folder quit
@@ -485,7 +485,7 @@ public class FileRepository {
             }
 
             // directory is empty or no others media files
-            if(toDelete.size()>0) {
+            if(!toDelete.isEmpty()) {
                     for (File file: toDelete) {
                         FileSystem.delete(getContext(), file);
                     }

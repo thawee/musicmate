@@ -147,20 +147,21 @@ public class FileSystem {
         return false;
     }
 
-    public static boolean safeMove(Context context, String srcPath, String targetPath, boolean sameDirectory) {
-        if(!sameDirectory) return safeMove(context, srcPath, targetPath);
+    public static void safeMove(Context context, String srcPath, String targetPath, boolean sameDirectory) {
+        if(!sameDirectory) {
+            safeMove(context, srcPath, targetPath);
+            return;
+        }
 
         String bakPath = targetPath+"_tmp_safe_backup";
         if(rename(context, targetPath, bakPath)) {
             if(rename(context, srcPath, targetPath)) {
                 delete(context, bakPath);
                 delete(context, srcPath);
-                return true;
             }else {
                 rename(context, bakPath, targetPath); // copy is fail
             }
         }
-        return false;
     }
 
     public static boolean rename(Context context, String srcPath, String targetPath) {
@@ -178,12 +179,8 @@ public class FileSystem {
             //mkdirs(newDir);
         }
 
-        if (file.renameTo(newFile)) {
-            //Log.i(TAG, "rename path "+file.getAbsolutePath());
-            return true;
-        }
-
-        return false;
+        //Log.i(TAG, "rename path "+file.getAbsolutePath());
+        return file.renameTo(newFile);
     }
 
     private static boolean isValidSize(String srcPath, String targetPath, boolean exactMatch) {
@@ -357,7 +354,7 @@ public class FileSystem {
             fos.flush();
             fos.close();
         }
-        catch ( IOException e ) {
+        catch ( IOException ignore ) {
         }
     }
 
@@ -370,11 +367,13 @@ public class FileSystem {
         }
     }
 
+    @Deprecated
     public static File getDownloadPath(Context context, String path) {
         File download = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return new File(download, path);
     }
 
+    @Deprecated
     public static String getStorageName(String storageId) {
         if(StorageId.PRIMARY.equals(storageId)) {
             return "PH";

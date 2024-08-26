@@ -1,7 +1,7 @@
 package apincer.android.mmate.utils;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -13,12 +13,7 @@ public class HashHelper {
     }
 
     private static byte[] getBytes (String s) {
-        try {
-            return s.getBytes("UTF-8");
-        }
-        catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("JVM should always know about UTF-8.", e);
-        }
+        return s.getBytes(StandardCharsets.UTF_8);
     }
 
     private static MessageDigest getSha1Digest () {

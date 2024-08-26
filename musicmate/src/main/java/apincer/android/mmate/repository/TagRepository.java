@@ -149,7 +149,7 @@ public class TagRepository {
     }
 
     public static List<String> getArtistList() {
-        List<String> list = MusixMateApp.getInstance().getOrmLite().getArtits();
+        List<String> list = MusixMateApp.getInstance().getOrmLite().getArtists();
         Collections.sort(list);
         return list;
     }
@@ -252,6 +252,7 @@ public class TagRepository {
         return list;
     }
 
+    @Deprecated
     public static MusicTag getMusicTag(long id) {
         return MusixMateApp.getInstance().getOrmLite().findById(id);
     }
@@ -317,6 +318,7 @@ public class TagRepository {
         }
     }
 
+    @Deprecated
     public static List<String> getArtistForGrouping(Context context, String grouping) {
         List<String> list = new ArrayList<>();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getArtistForGrouping(grouping);
@@ -331,6 +333,7 @@ public class TagRepository {
         return list;
     }
 
+    @Deprecated
     public static List<MusicTag> getMusicTags(Context context, String grouping, String artist) {
         return MusixMateApp.getInstance().getOrmLite().findByGroupingAndArtist(grouping, artist);
     }
@@ -343,6 +346,7 @@ public class TagRepository {
         return MusixMateApp.getInstance().getOrmLite().getMinId();
     }
 
+    @Deprecated
     public static List<MusicTag> getMusicTags(long idRange1, long idRange2) {
         return MusixMateApp.getInstance().getOrmLite().findByIdRanges(idRange1, idRange2);
     }

@@ -37,41 +37,6 @@ public class UpdateAudioFileWorker extends Worker {
         List<MusicTag> list = list();
         list.parallelStream().forEach(this::save);
 
-       // Data inputData = getInputData();
-       // String artworkPath = inputData.getString(Constants.KEY_COVER_ART_PATH);
-       /* List<MusicTag> tags = MusixMateApp.getPendingItems("Update");
-
-     //   Profiler profiler = new Profiler();
-        //Thread
-        for (MusicTag tag:tags) {
-            MusicMateExecutors.update(new UpdateRunnable(tag, artworkPath));
-        }*/
-        /* executor = (ThreadPoolExecutor) MusicMateExecutors.getInstance().update();
-        while (executor.getActiveCount() != 0 || !executor.getQueue().isEmpty()){
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-            }
-        } */
-       // profiler.measure(String.format("%,9d Threads", 8));
-       // profiler.printSummary();
-
-        // not support save coverart yet
-        //int COROUTINE_COUNT = 4;
-/*
-        Coroutine<?, ?> cIterating =
-                first(supply(this::list)).then(
-                        forEach(consume(this::save)));
-
-        launch(
-                scope ->
-                {
-                    //for (int i = 0; i < COROUTINE_COUNT; i++)
-                   // {
-                        cIterating.runAsync(scope, null);
-                  //  }
-                });
-*/
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -103,26 +68,4 @@ public class UpdateAudioFileWorker extends Worker {
             Log.e(TAG, "save",e);
         }
     }
-
-    /*
-    private final class UpdateRunnable  implements Runnable {
-        private final MusicTag tag;
-        private final String artworkPath;
-
-        private UpdateRunnable(MusicTag tag, String artworkPath) {
-            this.tag = tag;
-            this.artworkPath = artworkPath;
-        }
-        @Override
-        public void run() {
-            try {
-                boolean status = repos.setMusicTag(tag);
-               // String txt = status?getApplicationContext().getString(R.string.alert_write_tag_success, tag.getTitle()):getApplicationContext().getString(R.string.alert_write_tag_fail, tag.getTitle());
-                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-                EventBus.getDefault().postSticky(message);
-            } catch (Exception e) {
-                Timber.e(e);
-            }
-        }
-    } */
 }

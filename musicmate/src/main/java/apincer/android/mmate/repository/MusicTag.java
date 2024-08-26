@@ -52,8 +52,6 @@ public class MusicTag implements Cloneable, Parcelable {
     // file information
     @DatabaseField
     protected String path = "";
-    //@DatabaseField
-    //protected int fileSizeRatio;
    @DatabaseField
    protected String fileFormat;
     @DatabaseField
@@ -135,44 +133,20 @@ public class MusicTag implements Cloneable, Parcelable {
     protected String coverartMime = "";
 
     // loudness and gain
-    //protected boolean trackScanned;
     @DatabaseField
     protected double gainTrackTP; // unit of dB
     @DatabaseField
     protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
     @DatabaseField
     protected double dynamicRangeMeter; //gainTrackDR; // Dynamic Range
-    //@DatabaseField
-    //protected double gainAlbumTruePeak; // unit of dB
-    //@DatabaseField
-    //protected double gainAlbumRG; // replay gain V2, references LI -18.00 LUFS
-
-   // protected double ebur128TruePeak; // ebur128
-   // protected double gainTrackRange; // ebur128
    @DatabaseField
    protected double dynamicRange;
 
-    //@DatabaseField
-    //protected int measuredBitDept;
-
-    //@DatabaseField
-    //protected long measuredSamplingRate;
-
     @DatabaseField
-    protected boolean upscaled; // increasing the bitdept from original file
+    protected boolean upscaled; // increasing the bit depth from original file
 
     @DatabaseField
     protected boolean upsampled; // increasing the sampling rate from original file
-   //protected double gainTrackLoudness; // ebur128
-
-    //public int getFileSizeRatio() {
-    //    return fileSizeRatio;
-   // }
-
-    /*
-    public void setFileSizeRatio(int fileSizeRatio) {
-        this.fileSizeRatio = fileSizeRatio;
-    }*/
 
     public String getMqaInd() {
         return mqaInd;
@@ -453,11 +427,6 @@ public class MusicTag implements Cloneable, Parcelable {
         this.path = mediaPath;
     }
 
-    /*
-    public boolean isLossless() {
-        return audioLossless;
-    } */
-
     public boolean isDSD() {
         return audioBitsDepth == Constants.QUALITY_BIT_DEPTH_DSD;
     }
@@ -465,12 +434,6 @@ public class MusicTag implements Cloneable, Parcelable {
     public boolean isSACDISO() {
         return Constants.MEDIA_ENC_SACD.equalsIgnoreCase(getAudioEncoding());
     }
-
-    /*
-    public void setLossless(boolean lossless) {
-        this.audioLossless = lossless;
-    }
-     */
 
     public String getPath() {
         return path;
@@ -772,39 +735,6 @@ public class MusicTag implements Cloneable, Parcelable {
     public void setDynamicRangeMeter(double trackDR) {
         this.dynamicRangeMeter = trackDR;
     }
-/*
-    public double getAlbumTruePeak() {
-        return gainAlbumTruePeak;
-    }
-
-    public void setAlbumTruePeak(double albumTruePeek) {
-        this.gainAlbumTruePeak = albumTruePeek;
-    }
-
-    public double getAlbumRG() {
-        return gainAlbumRG;
-    }
-
-    public void setAlbumRG(double albumRG) {
-        this.gainAlbumRG = albumRG;
-    } */
-    /*
-    public double getTrackRange() {
-        return gainTrackRange;
-    }
-
-    public void setTrackRange(double ebur128Range) {
-        this.gainTrackRange = ebur128Range;
-    } */
-
-    /*
-    public double getTrackLoudness() {
-        return gainTrackLoudness;
-    }
-
-    public void setTrackLoudness(double ebur128Loudness) {
-        this.gainTrackLoudness = ebur128Loudness;
-    } */
 
     public void setReadError(boolean readError) {
         this.mmReadError = readError;
@@ -817,22 +747,6 @@ public class MusicTag implements Cloneable, Parcelable {
     public void setDynamicRange(double measuredDR) {
         this.dynamicRange = measuredDR;
     }
-/*
-    public int getMeasuredBitDept() {
-        return measuredBitDept;
-    }
-
-    public void setMeasuredBitDept(int measuredBitDept) {
-        this.measuredBitDept = measuredBitDept;
-    }
-
-    public long getMeasuredSamplingRate() {
-        return measuredSamplingRate;
-    }
-
-    public void setMeasuredSamplingRate(long measuredSamplingRate) {
-        this.measuredSamplingRate = measuredSamplingRate;
-    } */
 
     public boolean isUpscaled() {
         return upscaled;

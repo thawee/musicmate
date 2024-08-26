@@ -9,6 +9,7 @@ import android.net.Uri.Builder;
 import android.os.ParcelFileDescriptor;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.NonNull;
 import androidx.work.Configuration;
 import androidx.work.WorkManager;
 
@@ -73,11 +74,11 @@ public final class MusicFileProvider extends ContentProvider {
             throw new IllegalArgumentException(stringBuilder);
         }
 
-        public int delete(Uri uri, String str, String[] strArr) {
+        public int delete(@NonNull Uri uri, String str, String[] strArr) {
             return getFileForUri(uri).delete()?1:0;
         }
 
-        public String getType(Uri uri) {
+        public String getType(@NonNull Uri uri) {
             File a = getFileForUri(uri);
             int lastIndexOf = a.getName().lastIndexOf(46);
             if (lastIndexOf >= 0) {
@@ -89,20 +90,19 @@ public final class MusicFileProvider extends ContentProvider {
             return "application/octet-stream";
         }
 
-        public Uri insert(Uri uri, ContentValues contentValues) {
+        public Uri insert(@NonNull Uri uri, ContentValues contentValues) {
             throw new UnsupportedOperationException("No support inserts");
         }
 
-        public ParcelFileDescriptor openFile(Uri uri, String str) {
+        public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) {
             try {
                 return ParcelFileDescriptor.open(getFileForUri(uri), b(str));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            } catch (FileNotFoundException ignore) {
             }
             return null;
         }
 
-        public Cursor query(Uri uri, String[] strArr, String str, String[] strArr2, String str2) {
+        public Cursor query(@NonNull Uri uri, String[] strArr, String str, String[] strArr2, String str2) {
             File a = getFileForUri(uri);
             if(strArr ==null) {
                 throw new UnsupportedOperationException("Query operation is not supported currently.");
@@ -138,7 +138,7 @@ public final class MusicFileProvider extends ContentProvider {
             return matrixCursor;
         }
 
-        public int update(Uri uri, ContentValues contentValues, String str, String[] strArr) {
+        public int update(@NonNull Uri uri, ContentValues contentValues, String str, String[] strArr) {
             throw new UnsupportedOperationException("No support updates");
         }
     }

@@ -6,7 +6,6 @@ import androidx.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
 import java.text.BreakIterator;
-import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -682,12 +681,6 @@ public class StringUtils {
         }
         return result.toString().trim();
     }
-/*
-    private static String quoteIt(String s) {
-        if (s.indexOf(' ') < 0)
-            return s;
-        return String.format("\"%s\"", normalizeName(s));
-    }*/
 
     public static String formatTrack(String track) {
         String newTrack = "";

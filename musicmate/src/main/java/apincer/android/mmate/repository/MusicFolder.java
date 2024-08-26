@@ -19,7 +19,7 @@ public class MusicFolder {
 
     public void addChildCount(){
         childCount++;
-    };
+    }
 
     private String name;
 

@@ -96,6 +96,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         return false;
     }
 
+    @Deprecated
     public void loadDataSets(SearchCriteria finalCriteria) {
         this.criteria = finalCriteria;
         loadDataSets();

@@ -354,7 +354,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e(TAG,"getGeners: "+e.getMessage());
+            Log.e(TAG,"getGenres: "+e.getMessage());
             return EMPTY_STRING_LIST;
         }
     }
@@ -450,7 +450,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<String> getArtits() {
+    public List<String> getArtists() {
         try {
             List<String> list = new ArrayList<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
@@ -518,17 +518,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             return EMPTY_LIST;
         }
     }
-
-    /*
-    public long getTotalSongCont() {
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            return dao.countOf();
-        } catch (SQLException ignored) {
-
-        }
-        return 0;
-    } */
 
     public long getMaxId() {
         long id= 0;

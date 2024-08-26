@@ -91,7 +91,7 @@ public class FFMPegReader extends TagReader {
         }
     }
 
-    public static String removeCoverArt(Context context, MusicTag tag) {
+    public static void removeCoverArt(Context context, MusicTag tag) {
         if(!isEmpty(tag.getCoverartMime())) {
             String pathFile = tag.getPath();
             String ext = FileUtils.getExtension(pathFile);
@@ -104,12 +104,10 @@ public class FFMPegReader extends TagReader {
             if (ReturnCode.isSuccess(session.getReturnCode())) {
                 FileSystem.safeMove(context, pathFile, tag.getPath(), true);
                 //return pathFile;
-                return tag.getPath();
             }else {
                 FileSystem.delete(context, pathFile);
             }
         }
-        return null;
     }
 
     private static final String KEY_BIT_RATE = "bit_rate";
@@ -1082,13 +1080,6 @@ public class FFMPegReader extends TagReader {
         return tags;
     }
 
-    private static boolean isLossless(MusicTag tag) {
-        if(Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(tag.getFileFormat())) return true;
-        if(Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getFileFormat())) return true;
-        if(Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getFileFormat())) return true;
-        return Constants.MEDIA_ENC_WAVE.equalsIgnoreCase(tag.getFileFormat());
-    }
-
     private static void parseFormatInfo(MusicTag tag) {
         String FORMAT_START = "[FORMAT]";
         String FORMAT_END = "[/FORMAT]";
@@ -1284,9 +1275,9 @@ public class FFMPegReader extends TagReader {
 
             String [] tags = info.split(",", -1);
             tag.setAudioEncoding(extractField(tags, 0));
-            tag.setAudioSampleRate(parseSampleRate(tags, 1));
-            tag.setAudioChannels(parseChannels(tags, 2));
-            tag.setAudioBitsDepth(parseBitDepth(tags, 3));
+            tag.setAudioSampleRate(parseSampleRate(tags));
+            tag.setAudioChannels(parseChannels(tags));
+            tag.setAudioBitsDepth(parseBitDepth(tags));
         }
 
         matcher = videoPattern.matcher(output); //tag.getData());
@@ -1300,27 +1291,29 @@ public class FFMPegReader extends TagReader {
         }
     }
 
-    private static int parseBitDepth(String[] tags, int i) {
-        if(tags.length>i) {
+    private static int parseBitDepth(String[] tags) {
+        int bitDepthIndex = 3;
+        if(tags.length>bitDepthIndex) {
             if (tags[0].contains("dsd")) {
                 return 1; // dsd
-            } else if (tags[i].contains("s24")) {
+            } else if (tags[bitDepthIndex].contains("s24")) {
                 return 24;
-            } else if (tags[i].contains("s32")) {
-                if (tags[i].contains("24")) {
+            } else if (tags[bitDepthIndex].contains("s32")) {
+                if (tags[bitDepthIndex].contains("24")) {
                     return 24;
                 }
                 return 32;
-            } else if (tags[i].contains("s16")) {
+            } else if (tags[bitDepthIndex].contains("s16")) {
                 return 16;
             }
         }
         return 0;
     }
 
-    private static String parseChannels(String[] tags, int i) {
-        if(tags.length>i) {
-            String text = trimToEmpty(tags[i]);
+    private static String parseChannels(String[] tags) {
+        int chIndex = 2;
+        if(tags.length>chIndex) {
+            String text = trimToEmpty(tags[chIndex]);
             if("stereo".equalsIgnoreCase(text)) {
                 return "2";
             }
@@ -1332,9 +1325,10 @@ public class FFMPegReader extends TagReader {
         return "";
     }
 
-    private static long parseSampleRate(String[] tags, int i) {
-        if(tags.length>i && tags[i].endsWith("Hz")) {
-            String txt = trimToEmpty(tags[i].replace("Hz", ""));
+    private static long parseSampleRate(String[] tags) {
+        int smIndex = 1;
+        if(tags.length>smIndex && tags[smIndex].endsWith("Hz")) {
+            String txt = trimToEmpty(tags[smIndex].replace("Hz", ""));
             return toLong(txt);
         }
         return 0L;
@@ -1445,26 +1439,6 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
                 foundTag = false;
             } */
             if ((!foundTag)) continue;
-            buff.append(msg);
-        }
-
-        return buff.toString();
-    }
-
-    private static String getFFmpegOutputData2(FFmpegSession session) {
-        List<com.arthenica.ffmpegkit.Log> logs = session.getLogs();
-        StringBuilder buff = new StringBuilder();
-        String keyword = "Integrated loudness:";
-        String keyword2 = "-70.0 LUFS";
-        boolean foundTag = false;
-        for (com.arthenica.ffmpegkit.Log log : logs) {
-            String msg = trimToEmpty(log.getMessage());
-            if (!foundTag) { // finding start keyword
-                if (msg.contains(keyword) && !msg.contains(keyword2)) {
-                    foundTag = true;
-                }
-            }
-            if (!foundTag) continue;
             buff.append(msg);
         }
 

@@ -147,7 +147,7 @@ public class JAudioTaggerReader extends TagReader{
                 if (!StringUtils.isEmpty(title)) {
                     metadata.setTitle(title);
                 }else {
-                    // file name as totle
+                    // file name as title
                     metadata.setTitle(audioFile.getFile().getName());
                 }
                 metadata.setAlbum(getId3TagValue(tag, FieldKey.ALBUM));
@@ -196,10 +196,6 @@ public class JAudioTaggerReader extends TagReader{
                 }
 
                 // MQA, detect by mqa identifier
-
-               // if (tags.containsKey(KEY_TAG_MQA_ORIGINAL_SAMPLERATE)) {
-               //     metadata.setMqaSampleRate(toLong(getTagFieldCustom(tag, KEY_TAG_MQA_ORIGINAL_SAMPLERATE)));
-               // }
 
                 //  if ("wav".equalsIgnoreCase(metadata.getFileExtension()) || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
                 if (MusicTagUtils.isWavFile(metadata)) {
@@ -373,50 +369,4 @@ public class JAudioTaggerReader extends TagReader{
         }
         return 0L;
     }
-
-    /**
-     * This will read a custom ID3 tag (TXXX). This works only with MP3 files
-     * (Flac with ID3-Tag not tested).
-     *
-     * @param description The description of the custom tag i.e. "catalognr"
-     * There can only be one custom TXXX tag with that description in one MP3
-     * file
-     * @return text The actual text to be written into the new tag field
-     */
-    /*
-    private static String getTagFieldCustom(Tag tag, String description)  {
-
-        // Get the tag from the audio file
-        if (tag instanceof AbstractID3Tag) {
-
-        } else if (tag instanceof FlacTag) {
-           // tag.get
-            try {
-                return ((FlacTag) tag).getFirst(description);
-            } catch (KeyNotFoundException ex) {
-                return null;
-            }
-        } else if (tag instanceof AiffTag) {
-            try {
-
-                return ((AiffTag) tag).getFirst(description);
-            } catch (KeyNotFoundException ex) {
-                return null;
-            }
-        } else if (tag instanceof Mp4Tag) {
-            try {
-                return ((Mp4Tag) tag).getFirst(description);
-            } catch (KeyNotFoundException ex) {
-                return null;
-            }
-        } else if (tag instanceof VorbisCommentTag) {
-            try {
-                return ((VorbisCommentTag) tag).getFirst(description);
-            } catch (KeyNotFoundException ex) {
-                return null;
-            }
-        }
-
-        return null;
-    } */
 }

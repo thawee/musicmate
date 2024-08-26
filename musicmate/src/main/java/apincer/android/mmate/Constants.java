@@ -25,7 +25,10 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-    public static final double SPL_8BIT_IN_DB = 49.8;
+    public static final int FLAC_OPTIMAL_COMPRESS_LEVEL = 4;
+    public static final int FLAC_NO_COMPRESS_LEVEL = 0;
+
+  //  public static final double SPL_8BIT_IN_DB = 49.8;
     public static final double SPL_16BIT_IN_DB = 96.33;
     public static final double SPL_24BIT_IN_DB = 144.49;
 
@@ -124,7 +127,7 @@ public final class Constants {
 
     public static final String AUDIO_SQ_DSD = "DSD"; // DSD
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
-    public static final String AUDIO_SQ_PCM = "PCM";
+  //  public static final String AUDIO_SQ_PCM = "PCM";
     public static final String AUDIO_SQ_RESOLUTION = "Resolutions";
 
     public static final String TITLE_DUPLICATE = "Duplicate Song";

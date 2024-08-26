@@ -175,11 +175,6 @@ public class AudioOutputHelper {
         return devicetype == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
                 devicetype == AudioDeviceInfo.TYPE_WIRED_HEADSET;
     }
-/*
-    private static boolean isBuiltInDevice(int devicetype) {
-        return devicetype == AudioDeviceInfo.TYPE_BUILTIN_EARPIECE ||
-                devicetype == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;
-    }*/
 
     private static boolean isBluetoothDevice(int devicetype, String name, String deviceName) {
         return (devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
@@ -289,13 +284,12 @@ public class AudioOutputHelper {
                     bps = 16;
                     break;
                 case AudioFormat.ENCODING_PCM_FLOAT:
-                    bps = 24;
-                    break;
                 case AudioFormat.ENCODING_PCM_24BIT_PACKED:
                     bps = 24;
                     break;
                 case AudioFormat.ENCODING_PCM_32BIT:
                     bps = 32;
+                    break;
             default:
                 bps = 16;
         }
@@ -317,6 +311,7 @@ public class AudioOutputHelper {
         if(codec !=null && codec.length()>6) {
             codec = codec.substring(0,6);
         }
+        codec = StringUtils.trimToEmpty(codec);
         String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -500,35 +495,4 @@ public class AudioOutputHelper {
             Log.e(TAG,"getA2DPCodec",ex);
         }
     }
-
-    /*
-    protected static String getBPSString(int audioFormat) {
-        switch (audioFormat) {
-            case AudioFormat.ENCODING_PCM_8BIT:
-                return "8";
-            case AudioFormat.ENCODING_PCM_16BIT:
-                return "16";
-            case AudioFormat.ENCODING_PCM_FLOAT:
-                return "24";
-            default:
-                return Integer.toString(audioFormat);
-        }
-    } */
-
-    /*
-    private static String getDescription(String bitsPerSample, String sampleRate) {
-        String bitString = StringUtils.getFormatedBitsPerSample(Integer.parseInt(bitsPerSample));
-        if(sampleRate.startsWith("[")) {
-            sampleRate = sampleRate.substring(1);
-            if(sampleRate.contains(",")) {
-                sampleRate = sampleRate.substring(sampleRate.lastIndexOf(",")+1);
-            }
-        }
-        if(sampleRate.endsWith("]")) {
-            sampleRate = sampleRate.substring(0, sampleRate.length()-1);
-        }
-
-        String samString = StringUtils.getFormatedAudioSampleRate(StringUtils.toLong(StringUtils.trimToEmpty(sampleRate)), true);
-        return bitString+"/"+samString;
-    }*/
 }

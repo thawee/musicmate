@@ -11,10 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import apincer.android.mmate.repository.MusicTag;
-//import fm.last.musicbrainz.coverart.CoverArt;
-//import fm.last.musicbrainz.coverart.CoverArtArchiveClient;
-//import fm.last.musicbrainz.coverart.CoverArtImage;
-//import fm.last.musicbrainz.coverart.impl.DefaultCoverArtArchiveClient;
 
 public final class MusicbrainzCoverArtProvider extends ContentProvider {
     private static final String TAG = MusicbrainzCoverArtProvider.class.getName();
@@ -22,15 +18,15 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
             return new Builder().scheme("content").authority("apincer.android.mmate.musicbrainz.coverart.provider").path(item.getAlbum()).build();
         }
 
-        public int delete(Uri uri, String str, String[] strArr) {
+        public int delete(@NonNull Uri uri, String str, String[] strArr) {
             throw new UnsupportedOperationException("No support delete");
         }
 
-        public String getType(Uri uri) {
+        public String getType(@NonNull Uri uri) {
             return "image/*";
         }
 
-        public Uri insert(Uri uri, ContentValues contentValues) {
+        public Uri insert(@NonNull Uri uri, ContentValues contentValues) {
             throw new UnsupportedOperationException("No support inserts");
         }
 
@@ -44,7 +40,7 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
         throw new UnsupportedOperationException("No support query");
     }
 
-    public ParcelFileDescriptor openFile(Uri uri, String str) {
+    public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) {
          /*   try {
                 CoverArtArchiveClient client = new DefaultCoverArtArchiveClient(true);
                 String path = uri.getPath();
@@ -69,7 +65,7 @@ public final class MusicbrainzCoverArtProvider extends ContentProvider {
             return null;
         }
 
-        public int update(Uri uri, ContentValues contentValues, String str, String[] strArr) {
+        public int update(@NonNull Uri uri, ContentValues contentValues, String str, String[] strArr) {
             throw new UnsupportedOperationException("No support updates");
         }
     }

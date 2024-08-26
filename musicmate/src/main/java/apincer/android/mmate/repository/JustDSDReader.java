@@ -167,7 +167,7 @@ public class JustDSDReader extends TagReader{
         /**
          * File Suffix
          */
-        private String filesuffix;
+        private final String filesuffix;
 
         /**
          * User Friendly Name

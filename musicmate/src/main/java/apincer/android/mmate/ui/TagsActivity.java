@@ -677,7 +677,9 @@ public class TagsActivity extends AppCompatActivity {
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog alertDialog = builder.create();
-        alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+        if(alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+        }
        // alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alertDialog.show();
     }
@@ -853,7 +855,9 @@ public class TagsActivity extends AppCompatActivity {
                 dialogBuilder.setCancelable(true);
                 progressDialog = dialogBuilder.create();
                 progressDialog.setCanceledOnTouchOutside(true);
-                progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                if(progressDialog.getWindow() != null) {
+                    progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                }
                 progressDialog.show();
             }catch (Exception ex) {
                 Log.e(TAG, "startProgressBar",ex);

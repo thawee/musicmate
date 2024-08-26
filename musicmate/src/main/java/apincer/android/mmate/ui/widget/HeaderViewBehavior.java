@@ -9,6 +9,7 @@ import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
 
+import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.view.ViewCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
@@ -74,7 +75,7 @@ public class HeaderViewBehavior extends CoordinatorLayout.Behavior<View> {
     }
 
     @Override
-    public boolean onNestedFling(CoordinatorLayout coordinatorLayout, View child, View target, float velocityX, float velocityY, boolean consumed) {
+    public boolean onNestedFling(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target, float velocityX, float velocityY, boolean consumed) {
         tension = createTensionFromFlingVelocity(velocityY);
         if (tension > DEFAULT_TENSION) {
             OverShootInterpolator = new OvershootInterpolator(tension);
@@ -84,12 +85,12 @@ public class HeaderViewBehavior extends CoordinatorLayout.Behavior<View> {
     }
 
     @Override
-    public boolean onStartNestedScroll(CoordinatorLayout coordinatorLayout, View child, View directTargetChild, View target, int nestedScrollAxes, int type) {
+    public boolean onStartNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View directTargetChild, @NonNull View target, int nestedScrollAxes, int type) {
         return ((nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0);
     }
 
     @Override
-    public void onNestedPreScroll(CoordinatorLayout coordinatorLayout, View child, View target, int dx, int dy, int[] consumed,int type) {
+    public void onNestedPreScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target, int dx, int dy, @NonNull int[] consumed, int type) {
 
         if (tension != DEFAULT_TENSION) {
             tension = DEFAULT_TENSION;
@@ -120,7 +121,7 @@ public class HeaderViewBehavior extends CoordinatorLayout.Behavior<View> {
     }
 
     @Override
-    public void onStopNestedScroll(CoordinatorLayout coordinatorLayout, View child, View target,int type) {
+    public void onStopNestedScroll(@NonNull CoordinatorLayout coordinatorLayout, @NonNull View child, @NonNull View target, int type) {
 
         if (autoUp || autoDown) {
             return;

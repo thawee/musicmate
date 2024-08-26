@@ -38,7 +38,7 @@ public class MusicMateExecutors {
         this.mMaintainThread = maintainThread;
         this.mScanThread = scanThread;
         this.mImportThread = importThread;
-        this.mDbThread = new ThreadPoolExecutor(2, 2,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {};
+        this.mDbThread = new ThreadPoolExecutor(2, 2,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {};
         this.mMainThread = new MainThreadExecutor();
         this.mScheduleThread = Executors.newSingleThreadScheduledExecutor();
     }
@@ -53,7 +53,7 @@ public class MusicMateExecutors {
     }
 
     private MusicMateExecutors() {
-        this(new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+        this(new ThreadPoolExecutor(1, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                  protected void afterExecute(Runnable r, Throwable t) {
                      try {
                          Thread.sleep(30); // wait 0.1 second
@@ -61,8 +61,8 @@ public class MusicMateExecutors {
                          Log.e(TAG, "MusicMateExecutors",e);
                      }
                  }},
-                new ThreadPoolExecutor(2, NUMBER_OF_CORES,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {},
-                new ThreadPoolExecutor(1, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()) {
+                new ThreadPoolExecutor(2, NUMBER_OF_CORES,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {},
+                new ThreadPoolExecutor(1, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                     protected void afterExecute(Runnable r, Throwable t) {
                         try {
                             Thread.sleep(200); // wait 0.2 second

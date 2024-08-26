@@ -49,7 +49,9 @@ public class PlayerInfo {
 
     public boolean checkStreamPlayerExpired() {
         // if stream player and played in last 5 minutes
-        return (!isStreamPlayer()) && (time < System.currentTimeMillis() - 300000);
+        // if not stream, return true
+        if(!isStreamPlayer()) return true;
+        return (time < System.currentTimeMillis() - 300000);
     }
 
 

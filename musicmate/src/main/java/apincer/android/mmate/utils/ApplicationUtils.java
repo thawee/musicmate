@@ -9,14 +9,13 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
-import android.os.Bundle;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -44,6 +43,7 @@ public class ApplicationUtils {
         }
     }
 
+    @Deprecated
     public static boolean isAppRunning(final Context context, final String packageName) {
         // can see nly activity on self-app
         final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -89,6 +89,7 @@ public class ApplicationUtils {
         return null;
     }
 
+    @Deprecated
     public static String getAssetsText(Context context, String inFile) {
         String tContents = "";
 
@@ -109,40 +110,38 @@ public class ApplicationUtils {
     }
 
     public static void webSearch(Activity activity, MusicTag item) {
-        try {
-            String text = "";
-            // title and artist
-            if(!StringUtils.isEmpty(item.getTitle())) {
-                text = text+" "+item.getTitle();
-            }
-            if(!StringUtils.isEmpty(item.getAlbum())) {
-                text = text+" "+item.getAlbum();
-            }
-            if(!StringUtils.isEmpty(item.getArtist())) {
-                text = text+" "+item.getArtist();
-            }
-            String search= URLEncoder.encode(text, "UTF-8");
-            //Uri uri = Uri.parse("http://www.google.com/#q=" + search);
-            Uri uri = Uri.parse("http://www.google.com/search?q=" + search);
-            Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
-            activity.startActivity(gSearchIntent);
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        String text = "";
+        // title and artist
+        if(!StringUtils.isEmpty(item.getTitle())) {
+            text = text+" "+item.getTitle();
         }
+        if(!StringUtils.isEmpty(item.getAlbum())) {
+            text = text+" "+item.getAlbum();
+        }
+        if(!StringUtils.isEmpty(item.getArtist())) {
+            text = text+" "+item.getArtist();
+        }
+        String search= URLEncoder.encode(text, StandardCharsets.UTF_8);
+        //Uri uri = Uri.parse("http://www.google.com/#q=" + search);
+        Uri uri = Uri.parse("http://www.google.com/search?q=" + search);
+        Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
+        activity.startActivity(gSearchIntent);
+
     }
 
+    @Deprecated
     public static boolean isIntentAvailable(Context context, Intent intent)
     {
         final PackageManager packageManager = context.getPackageManager();
         List<ResolveInfo> list =
                 packageManager.queryIntentActivities(intent,
                         PackageManager.MATCH_DEFAULT_ONLY);
-        return list.size() > 0;
+        return !list.isEmpty();
     }
 
+    @Deprecated
     public static boolean isPlugged(Context context) {
-        boolean isPlugged= false;
+        boolean isPlugged;
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         isPlugged = plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
@@ -155,6 +154,7 @@ public class ApplicationUtils {
     public static void startFileExplorer(TagsActivity activity, MusicTag displayTag) {
         File filePath = new File(displayTag.getPath());
         Intent intent = activity.getPackageManager().getLaunchIntentForPackage("pl.solidexplorer2");
+        if(filePath.getParentFile() == null) return;
         if (intent != null) {
                 intent.setAction(Intent.ACTION_VIEW);
                 MimeTypeMap mime = MimeTypeMap.getSingleton();

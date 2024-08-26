@@ -1,6 +1,7 @@
 package apincer.android.mmate.worker;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
@@ -24,8 +25,10 @@ import apincer.android.mmate.Settings;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.TagReader;
+import apincer.android.mmate.utils.LogHelper;
 
 public class ScanAudioFileWorker extends Worker {
+    private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
     FileRepository repos;
     private static final long SCAN_SCHEDULE_TIME = 5;
     private ScanAudioFileWorker(
@@ -58,7 +61,7 @@ public class ScanAudioFileWorker extends Worker {
                     .filter(this::filter)
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "search", e);
         }
 
         return new ArrayList<>();
@@ -69,7 +72,7 @@ public class ScanAudioFileWorker extends Worker {
             String pathString = path.toString();
            return TagReader.isSupportedFileFormat(pathString);
         } catch(Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "filter", e);
         }
 
         return false;
@@ -81,22 +84,6 @@ public class ScanAudioFileWorker extends Worker {
         for(String dir: dirs) {
             files.add(new File(dir));
         }
-       /* List<String> storageIds = DocumentFileCompat.getStorageIds(context);
-        List<File> files = new ArrayList<>();
-        for (String sid : storageIds) {
-            File file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Music"));
-            if (file.exists()) {
-                files.add(file);
-            }
-            file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Download"));
-            if (file.exists()) {
-                files.add(file);
-            }
-            file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "IDMP"));
-            if (file.exists()) {
-                files.add(file);
-            }
-        } */
         return files;
     }
 
