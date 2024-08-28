@@ -180,7 +180,7 @@ public class TagRepository {
 
     public static List<MusicTag> findMediaTag(SearchCriteria criteria) {
         List<MusicTag> results = findMediaTagOrEmpty(criteria);
-        if(results.isEmpty()) {
+        if(results == null || results.isEmpty()) {
             // try again
             results =  findMediaTagOrEmpty(criteria);
         }

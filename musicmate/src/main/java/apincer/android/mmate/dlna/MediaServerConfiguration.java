@@ -15,13 +15,14 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
+import apincer.android.mmate.dlna.transport.HttpCoreStreamServer;
 import apincer.android.mmate.dlna.transport.NettyStreamServer;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 
 public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
-    public static final int STREAM_SERVER_PORT = 2869;
+    public static final int STREAM_SERVER_PORT = 8089; //2869;
     private final Context context;
 
     MediaServerConfiguration(Context context) {
@@ -41,7 +42,8 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-        return new NettyStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+    //    return new NettyStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
     }
 
     @Override

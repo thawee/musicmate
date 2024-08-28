@@ -824,7 +824,9 @@ public class MainActivity extends AppCompatActivity {
         if(mResideMenu.isOpened()) {
             mResideMenu.closeMenu();
         }
-
+        // load music items
+        // loading recycleview list on start activity
+        refreshLayout.autoRefresh();
         doShowNowPlayingSongFAB(MusixMateApp.getPlayerControl().getPlayingSong());
     }
 
@@ -1102,7 +1104,7 @@ public class MainActivity extends AppCompatActivity {
     private void setUpSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
         refreshLayout.setOnRefreshListener(refreshlayout -> adapter.loadDataSets());
-        refreshLayout.autoRefresh(); // loading recycleview list on start activity
+       // refreshLayout.autoRefresh(); // loading recycleview list on start activity
     }
 
     private void setUpRecycleView(SearchCriteria searchCriteria ) {

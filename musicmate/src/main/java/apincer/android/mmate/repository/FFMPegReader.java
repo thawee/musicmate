@@ -78,7 +78,7 @@ public class FFMPegReader extends TagReader {
     public static void extractCoverArt(String path, File pathFile) {
         //if(!isEmpty(tag.getEmbedCoverArt())) {
         try {
-            Log.d(TAG, "extractCoverArt: "+path);
+           // Log.d(TAG, "extractCoverArt: "+path);
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";

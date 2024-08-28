@@ -72,7 +72,9 @@ import apincer.android.mmate.utils.StringUtils;
  *  - UPnp AV Transport Server (Optional)
  *  Note:
  *   - netty smooth, cpu < 10%, memory < 256 MB, short peak to 512 MB
- *   - httpcore have bug to stop playing on client sometime
+ *     have issue jupnp auto stopping/starting on wifi loss
+ *   - httpcore smooth, better SQ than netty, cpu <10, memory < 256 mb, peak 380mb
+ *     have bug to stop playing on client sometime
  *   - jetty12 is faster than jetty11 12% but cannot run on android 34
  */
 public class MediaServerService extends Service {
@@ -81,7 +83,6 @@ public class MediaServerService extends Service {
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-   // public static int HTTP_STREAMER_PORT = 49159; //5001;
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected UpnpServiceConfiguration upnpServiceCfg;

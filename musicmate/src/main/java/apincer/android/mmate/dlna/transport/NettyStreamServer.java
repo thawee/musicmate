@@ -155,7 +155,7 @@ public class NettyStreamServer implements StreamServer<StreamServerConfiguration
                             .channel(NioServerSocketChannel.class)
                             .handler(new LoggingHandler(LogLevel.DEBUG))
                             .option(ChannelOption.SO_REUSEADDR, true)
-                            .option(ChannelOption.TCP_NODELAY, false) //great for latency
+                            .option(ChannelOption.TCP_NODELAY, false) //off - great for latency
                             .option(ChannelOption.SO_KEEPALIVE, true)
                             .option(ChannelOption.SO_BACKLOG, 128)
                             .option(ChannelOption.SO_RCVBUF, 8192)

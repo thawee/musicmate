@@ -172,6 +172,7 @@ dependencies {
     implementation deps.ui.stateViews
     implementation deps.ui.androidribbon
     implementation deps.ui.mpandroidchart
+    implementation "com.androidplot:androidplot-core:1.5.11"
     //implementation deps.ui.datatables
     //https://github.com/DmitryMalkovich/circular-with-floating-action-button
     //implementation 'com.dmitrymalkovich.android:progress-fab:1.6'
@@ -236,8 +237,8 @@ dependencies {
     implementation deps.jupnp_android
     implementation deps.jupnp_support
     implementation deps.netty_codec_http
-    //implementation deps.apache.httpcore
-   // implementation deps.apache.http2core
+    implementation deps.apache.httpcore
+    implementation deps.apache.http2core
    // implementation deps.apache.httpclient
     implementation deps.okhttp3
 
@@ -309,8 +310,10 @@ dependencies {
 
 configurations.implementation {
     exclude group: 'com.hazelcast', module: 'hazelcast'
-   // exclude group: 'com.mikepenz', module: 'fastadapter'
-   // exclude group: 'com.hazelcast', module: 'jna-platform'
+   // exclude group: 'org.slf4j', module: 'slf4j-api'
+   // exclude group: 'com.github.bumptech.glide', module: 'glide'
+   // exclude group: 'io.coil-kt', module: 'coil-base'
+   // exclude group: 'com.google.code.gson', module: 'gson'
 }
 
 aboutLibraries {
