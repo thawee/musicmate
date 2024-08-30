@@ -1153,15 +1153,14 @@ public class MusicTagUtils {
     }
 
     public static Drawable getFileFormatBackground(Context context, MusicTag tag) {
-
-        if(isDSD(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_dsd);
-        }else if(isHiRes(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_hd);
-        }else if(isPCM24Bits(tag)) {
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_24bits);
-        }else if(isLossless(tag) || isMQA(tag)){
-            return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossless);
+        if(isDSD(tag) ||
+                isWavFile(tag) ||
+                isAIFFile(tag)) {
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_uncompress);
+        }else if(
+           isALACFile(tag) ||
+        isFLACFile(tag)) {
+            return AppCompatResources.getDrawable( context, R.drawable.shape_background_compress_lossless);
         }else {
             return AppCompatResources.getDrawable( context, R.drawable.shape_background_lossy);
         }

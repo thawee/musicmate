@@ -173,6 +173,9 @@ dependencies {
     implementation deps.ui.androidribbon
     implementation deps.ui.mpandroidchart
     implementation "com.androidplot:androidplot-core:1.5.11"
+    //implementation 'com.github.giangpham96.expandable-text:expandable_textview:2.0.1'
+    //implementation "com.github.skydoves:doublelift:1.0.4"
+    implementation 'com.vanniktech:textbuilder:0.4.0'
     //implementation deps.ui.datatables
     //https://github.com/DmitryMalkovich/circular-with-floating-action-button
     //implementation 'com.dmitrymalkovich.android:progress-fab:1.6'
@@ -193,7 +196,7 @@ dependencies {
     implementation deps.ui.shapeofview
     implementation deps.ui.photoview
     implementation deps.ui.alerter
-    implementation deps.ui.htmleditor
+    //implementation deps.ui.htmleditor
 
     //others
     implementation deps.eventbus

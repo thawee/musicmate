@@ -35,12 +35,12 @@ public class MediaTypeDetector {
             return "x-aiff";
         }else  if(MusicTagUtils.isMPegFile(tag)) {
             return "mpeg";
-        }else  if(MusicTagUtils.isFLACFile(tag)) {
+        }else if(MusicTagUtils.isFLACFile(tag)) {
             return "flac";
-        }else  if(MusicTagUtils.isALACFile(tag)) {
+        }else if(MusicTagUtils.isALACFile(tag)) {
             return "mp4";
-            //  }else  if(MusicTagUtils.isMp4File(tag)) {
-            //      return new MimeType("audio", "aac");
+        }else if(MusicTagUtils.isMp4File(tag)) {
+            return "mp4";
         }else  if(MusicTagUtils.isWavFile(tag)) {
             return "wave";
         }else {

@@ -171,7 +171,7 @@
 							android:paddingStart="@dimen/dimen_16_dp"
 						    android:drawablePadding="@dimen/dimen_4_dp"
 						   android:text=""
-						   app:drawableRightCompat="@drawable/ic_arrow_drop_down_white_18dp"
+						   app:drawableRightCompat="@drawable/rounded_arrow_drop_down_24"
 						   tools:ignore="RtlSymmetry" />
 				   </RelativeLayout>
 <!--

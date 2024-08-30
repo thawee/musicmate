@@ -376,5 +376,8 @@
     <color name="md_theme_dark_surfaceTint">#D0BCFF</color>
     <color name="md_theme_dark_outlineVariant">#49454F</color>
     <color name="md_theme_dark_scrim">#000000</color>
+    <color name="encoding_desc">@color/grey600</color>
+    <color name="encoding_label">#000000</color>
+    <color name="encoding_detail">#3F51B5</color>
 
 </resources>

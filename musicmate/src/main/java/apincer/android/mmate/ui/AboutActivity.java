@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.github.irshulx.Editor;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
@@ -28,6 +27,7 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.vanniktech.textbuilder.TextBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,14 +73,11 @@ public class AboutActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                //do whatever
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == android.R.id.home) {//do whatever
+            finish();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     public static class AboutFragment extends Fragment {
@@ -104,6 +101,39 @@ public class AboutActivity extends AppCompatActivity {
 
             }
             catch (PackageManager.NameNotFoundException ignore) {}
+
+            TextView encodingHeader = v.findViewById(R.id.encoding_header);
+            TextView encodingDetail = v.findViewById(R.id.encoding_details);
+            v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings("HQ", encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings("Lossless", encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_hires).setOnClickListener(view -> updateEncodings("Hi-Res", encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings("DSD", encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings("MQA", encodingHeader, encodingDetail));
+            updateEncodings("HQ", encodingHeader, encodingDetail);
+
+            TextView qualityDetail = v.findViewById(R.id.quality_details);
+            String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.txt");
+            new TextBuilder(getContext())
+                    .addFormableText(content)
+                    .format("Dynamic Range")
+                        .bold()
+                        .textColor(Color.BLACK)
+                    .done()
+                    .format("DR Meter")
+                        .bold()
+                        .textColor(Color.BLACK)
+                    .done()
+                    .format("Up-Scaling Meter")
+                    .bold()
+                    .textColor(Color.BLACK)
+                    .done()
+                    .format("Up-Sampling Meter")
+                    .bold()
+                    .textColor(Color.BLACK)
+                    .done()
+                    .into(qualityDetail);
+
+
             MusicMateExecutors.db(() -> {
                 List<MusicTag> tags = TagRepository.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
@@ -145,26 +175,138 @@ public class AboutActivity extends AppCompatActivity {
                         grpList.put(grp, 1);
                     }
                 }
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // storage
-                        LinearLayout panel = v.findViewById(R.id.storage_bar);
-                        UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
+                getActivity().runOnUiThread(() -> {
+                    // storage
+                    LinearLayout panel = v.findViewById(R.id.storage_bar);
+                    UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
 
-                        // file type piechart
-                        //setupEncodingChart(v, encList, "Music File Format");
-                        setupEncodingChart(v, grpList, "");
+                    // file type piechart
+                    //setupEncodingChart(v, encList, "Music File Format");
+                    setupEncodingChart(v, grpList, "");
 
-                        // setup digital music details
-                        String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
-                        Editor renderer = v.findViewById(R.id.editor);
-                        renderer.render(content);
-                    }
+                    // setup digital music details
+                   // String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
+                   // Editor renderer = v.findViewById(R.id.editor);
+                  //  renderer.render(content);
                 });
             });
 
             return v;
+        }
+
+        private void updateEncodings(String btn, TextView encodingHeader, TextView encodingDetail) {
+            encodingHeader.setText(getEncodingHeader(btn));
+            TextBuilder detailBuilder = getEncodingDetailBuilder(btn);
+            if(detailBuilder!=null) {
+                detailBuilder.into(encodingDetail);
+            }else {
+                encodingDetail.setText("");
+            }
+        }
+
+        private String getEncodingHeader(String btn) {
+            if("HQ".equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
+            if("Lossless".equalsIgnoreCase(btn)) return getString(R.string.encoding_lossless_header);
+            if("Hi-Res".equalsIgnoreCase(btn)) return getString(R.string.encoding_hires_header);
+            if("DSD".equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
+            if("MQA".equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
+            return btn;
+        }
+
+        private TextBuilder getEncodingDetailBuilder(String btn) {
+            if("HQ".equalsIgnoreCase(btn)) {
+                return new TextBuilder(getContext())
+                        .addColoredTextRes(R.string.encoding_hq_desc, R.color.encoding_desc)
+                        .addNewLine()
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_hq_format, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_hq_resolution, R.color.encoding_detail);
+                       // .addNewLine()
+                       // .addColoredTextRes(R.string.label_file_recommended, R.color.black)
+                       // .addWhiteSpace()
+                      //  .addColoredTextRes(R.string.encoding_hq_recommended, R.color.encoding_desc);
+            }
+            if("Lossless".equalsIgnoreCase(btn)) {
+                return new TextBuilder(getContext())
+                        .addColoredTextRes(R.string.encoding_lossless_desc, R.color.encoding_desc)
+                        .addNewLine()
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_lossless_format, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_lossless_resolution, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_recommended, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_lossless_recommended, R.color.encoding_detail);
+            }
+            if("Hi-Res".equalsIgnoreCase(btn)) {
+                return new TextBuilder(getContext())
+                        .addColoredTextRes(R.string.encoding_hires_desc, R.color.encoding_desc)
+                        .addNewLine()
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_hires_format, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_hires_resolution, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_recommended, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_hires_recommended, R.color.encoding_detail);
+            }
+            if("DSD".equalsIgnoreCase(btn)) {
+                return new TextBuilder(getContext())
+                        .addColoredTextRes(R.string.encoding_dsd_desc, R.color.encoding_desc)
+                        .addNewLine()
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_dsd_format, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_dsd_resolution, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_recommended, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_dsd_recommended, R.color.encoding_detail);
+            }
+            if("MQA".equalsIgnoreCase(btn)) {
+                return new TextBuilder(getContext())
+                        .addColoredTextRes(R.string.encoding_mqa_desc, R.color.encoding_desc)
+                        .addNewLine()
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_format, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_mqa_format, R.color.encoding_detail)
+                        .addNewLine()
+                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_mqa_resolution, R.color.encoding_detail)
+                        .addNewLine()
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_mqa_green_header, R.color.mqa_master)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_mqa_green_detail, R.color.mqa_master)
+                        .addNewLine()
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_mqa_blue_header, R.color.mqa_studio)
+                        .addWhiteSpace()
+                        .addColoredTextRes(R.string.encoding_mqa_blue_detail, R.color.mqa_studio);
+            }
+
+            return null;
         }
 
         private void setupEncodingChart(View v, Map<String, Integer> encList, String title) {

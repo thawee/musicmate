@@ -16,7 +16,6 @@ import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
 import apincer.android.mmate.dlna.transport.HttpCoreStreamServer;
-import apincer.android.mmate.dlna.transport.NettyStreamServer;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;

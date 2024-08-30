@@ -174,7 +174,7 @@
     <string name="channel_name">MusicMate</string>
     <string name="channel_description">MusicMate Notifications</string>
 
-    <string name="media_server_name">DLNA/UPnP MediaServer</string>
+    <string name="media_server_name">DLNA/UPnP AV MediaServer</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
@@ -191,7 +191,51 @@
     <string name="label_ffmpeg_reader">FFMpeg Reader</string>
     <string name="about_encoding_file">Convert audio file, Recommended FLAC for lossless and MPEG for lossy format.</string>
     <string name="label_resolutions">Resolutions</string>
+    <string name="label_lossy">HQ</string>
+    <string name="label_Lossless">Lossless</string>
+    <string name="label_hi_res">Hi-Res</string>
+    <string name="label_dsd">DSD</string>
+    <string name="label_mqa">MQA</string>
+    <string name="label_audio_encoding_format">Music File Format</string>
+    <string name="label_file_format">File Format:</string>
+    <string name="label_file_resolution">Resolution:</string>
+    <string name="label_file_recommended">Recommended Genre:</string>
 
+    <string name="encoding_hq_header">High Quality</string>
+    <string name="encoding_hq_desc">Best compromise of data usage and sound fidelity.</string>
+    <string name="encoding_hq_format">MP3, AAC(M4A)</string>
+    <string name="encoding_hq_resolution">16bit/44.1kHz, bitrate 256kbps or higher</string>
+    <string name="encoding_hq_recommended">-</string>
+
+    <string name="encoding_lossless_header">Hi-Fi Lossless</string>
+    <string name="encoding_lossless_desc">Reproduce details of music smooth as CD quality.</string>
+    <string name="encoding_lossless_format">FLAC, ALAC, WAVE, AIFF</string>
+    <string name="encoding_lossless_resolution">16bit/44.1kHz, 24bit/48kHz</string>
+    <string name="encoding_lossless_recommended">Pop, Rock</string>
+
+    <string name="encoding_hires_header">Hi-Res Lossless</string>
+    <string name="encoding_hires_desc">Enjoy and Listening the rich music which reproduces fine details of musical instruments.</string>
+    <string name="encoding_hires_format">FLAC, ALAC, WAVE, AIFF</string>
+    <string name="encoding_hires_resolution">24bit/96kHz or Higher</string>
+    <string name="encoding_hires_recommended">Classic, Jazz, Vocal, Soundtrack, Ballad</string>
+
+    <string name="encoding_dsd_header">Direct Stream Digital</string>
+    <string name="encoding_dsd_desc">Hear the detail and wide range of the music, its warm tone is very enjoyable.</string>
+    <string name="encoding_dsd_format">DSF, DFF</string>
+    <string name="encoding_dsd_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
+    <string name="encoding_dsd_recommended">Classic, Jazz, Vocal</string>
+
+    <string name="encoding_mqa_header">MQA Authentication</string>
+    <string name="encoding_mqa_desc">Technology for high-quality recordings to bring listeners
+    the sound of the studio and older recordings from the archive.</string>
+    <string name="encoding_mqa_format">FLAC</string>
+    <string name="encoding_mqa_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
+    <string name="encoding_mqa_recommended">-</string>
+    <string name="encoding_mqa_green_header">MQA (green):</string>
+    <string name="encoding_mqa_green_detail">genuine, but not yet the final release</string>
+    <string name="encoding_mqa_blue_header">MQA Studio (blue):</string>
+    <string name="encoding_mqa_blue_detail">directly from mastering engineers</string>
+    <string name="label_audio_quality">Music File Quality</string>
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>

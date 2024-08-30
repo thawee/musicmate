@@ -29,6 +29,8 @@ import org.jupnp.model.meta.LocalDevice;
 import org.jupnp.model.meta.LocalService;
 import org.jupnp.model.meta.ManufacturerDetails;
 import org.jupnp.model.meta.ModelDetails;
+import org.jupnp.model.types.DLNACaps;
+import org.jupnp.model.types.DLNADoc;
 import org.jupnp.model.types.UDADeviceType;
 import org.jupnp.model.types.UDN;
 import org.jupnp.protocol.ProtocolFactory;
@@ -39,12 +41,14 @@ import org.jupnp.support.model.ProtocolInfo;
 import org.jupnp.support.model.ProtocolInfos;
 import org.jupnp.support.xmicrosoft.AbstractMediaReceiverRegistrarService;
 import org.jupnp.transport.Router;
+import org.jupnp.util.MimeType;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -83,6 +87,9 @@ public class MediaServerService extends Service {
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
+    private	static final DLNADoc[] DLNA_DOCS = new DLNADoc[] {new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
+    private	static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {});
+    private static final DLNACaps SEC_CAP = new DLNACaps(new String[] {"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected UpnpServiceConfiguration upnpServiceCfg;
@@ -180,13 +187,35 @@ public class MediaServerService extends Service {
             versionName = "??";
         }
         try {
-            DeviceDetails msDetails = new DeviceDetails(
+            String friendlyName = "MusicMate Server ("+getDeviceModel()+")";
+            ManufacturerDetails manufacturerDetails = new ManufacturerDetails("Thawee",
+                    "https://github.com/thawee/musicmate");
+            ModelDetails modelDetails = new ModelDetails("MusicMate",
+                    "DLNA/UPnP AV 1.0 Compliant Media Server, "+getDeviceDetails(),
+                    versionName);
+            URI presentationURI = null;
+            if (MediaServerSession.streamServerHost != null) {
+                String webInterfaceUrl = "http://" + MediaServerSession.streamServerHost + ":" + MediaServerSession.streamServerPort;
+                presentationURI = URI.create(webInterfaceUrl);
+            }
+           /* DeviceDetails msDetails = new DeviceDetails(
                     "MusicMate Server ("+getDeviceModel()+")",
                     new ManufacturerDetails("Thawee",
                     "https://github.com/thawee/musicmate"),
                     new ModelDetails("MusicMate",
-                            "DLNA/UPnP MediaServer, "+getDeviceDetails(),
-                    versionName));
+                            "DLNA/UPnP AV MediaServer, "+getDeviceDetails(),
+                    versionName)); */
+            DeviceDetails msDetails = new DeviceDetails(
+                    null,
+                    friendlyName,
+                    manufacturerDetails,
+                    modelDetails,
+                    null,
+                    null,
+                    presentationURI,
+                    DLNA_DOCS,
+                    DLNA_CAPS,
+                    SEC_CAP);
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
@@ -204,7 +233,7 @@ public class MediaServerService extends Service {
     }
 
     private String getDeviceDetails() {
-        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" device ("+  StringUtils.trimToEmpty(Build.MODEL)+").";
+        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" ("+  StringUtils.trimToEmpty(Build.MODEL)+") device.";
     }
 
     private void showNotification() {
@@ -291,39 +320,72 @@ public class MediaServerService extends Service {
 
     private ProtocolInfos getSourceProtocolInfos() {
         return new ProtocolInfos(
-                new ProtocolInfo("http-get:*:audio:*"),
-                new ProtocolInfo("http-get:*:audio/aac:*"), // added by thawee
-                new ProtocolInfo("http-get:*:audio/mpeg:*"),
-                new ProtocolInfo("http-get:*:audio/x-mpegurl:*"),
-                new ProtocolInfo("http-get:*:audio/x-wav:*"),
-                new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"),
-                new ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"),
-                new ProtocolInfo("http-get:*:audio/x-flac:*"),
-                new ProtocolInfo("http-get:*:audio/x-aiff:*"),
-                new ProtocolInfo("http-get:*:audio/x-ogg:*"),
-                new ProtocolInfo("http-get:*:audio/wav:*"),
-                new ProtocolInfo("http-get:*:audio/wave:*"),
-                new ProtocolInfo("http-get:*:audio/x-ape:*"),
-                new ProtocolInfo("http-get:*:audio/x-m4a:*"),
-                new ProtocolInfo("http-get:*:audio/x-mp4:*"), // added by thawee
-                new ProtocolInfo("http-get:*:audio/x-m4b:*"),
-                new ProtocolInfo("http-get:*:audio/basic:*"),
+                //this one overlap all ???
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, MimeType.WILDCARD, ProtocolInfo.WILDCARD),
+                //this one overlap all images ???
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio", ProtocolInfo.WILDCARD),
+                //this one overlap all audio ???
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD),
+
+                //IMAGE
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_TN"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_SM"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_MED"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_LRG"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_RES_H_V"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_TN"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_LRG"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_LRG"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_LRG"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/gif", "DLNA.ORG_PN=GIF_LRG"),
+
+                //AUDIO
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wav", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wave", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-wav", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/flac", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-flac", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-mp4", ProtocolInfo.WILDCARD), // alac
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-m4a", ProtocolInfo.WILDCARD), // aac
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO") // aac
+               // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16", "DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/aac:*"), // added by thawee
+               // new ProtocolInfo("http-get:*:audio/mpeg:*"),
+              //  new ProtocolInfo("http-get:*:audio/x-mpegurl:*"),
+              //  new ProtocolInfo("http-get:*:audio/x-wav:*"),
+               // new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"),
+              //  new ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"),
+               // new ProtocolInfo("http-get:*:audio/x-flac:*"),
+             //   new ProtocolInfo("http-get:*:audio/x-aiff:*"),
+               // new ProtocolInfo("http-get:*:audio/x-ogg:*"),
+               // new ProtocolInfo("http-get:*:audio/wav:*"),
+              //  new ProtocolInfo("http-get:*:audio/wave:*"),
+               // new ProtocolInfo("http-get:*:audio/x-ape:*"),
+              //  new ProtocolInfo("http-get:*:audio/x-m4a:*"),
+               // new ProtocolInfo("http-get:*:audio/x-mp4:*"), // added by thawee
+               // new ProtocolInfo("http-get:*:audio/x-m4b:*"),
+              //  new ProtocolInfo("http-get:*:audio/basic:*"),
               //  new ProtocolInfo("http-get:*:audio/L16;rate=11025;channels=2:DLNA.ORG_PN=LPCM"),
               //  new ProtocolInfo("http-get:*:audio/L16;rate=22050;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=88200;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=96000;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo("http-get:*:audio/L16;rate=192000;channels=2:DLNA.ORG_PN=LPCM"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01"),
-                new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"),
-                new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3X"),
-                new ProtocolInfo("http-get:*:image/jpeg:*"),
-                new ProtocolInfo("http-get:*:image/png:*"),
-                new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_LRG"),
-                new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED"),
-                new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM"),
-                new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
+               // new ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/L16;rate=88200;channels=2:DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/L16;rate=96000;channels=2:DLNA.ORG_PN=LPCM"),
+              //  new ProtocolInfo("http-get:*:audio/L16;rate=192000;channels=2:DLNA.ORG_PN=LPCM"));
+               // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01"),
+               // new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"),
+               // new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3X"),
+               // new ProtocolInfo("http-get:*:image/jpeg:*"),
+               // new ProtocolInfo("http-get:*:image/png:*"),
+               // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_LRG"),
+               // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED"),
+              //  new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM"),
+               // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
+        );
     }
 
     private LocalService<ContentDirectory> createContentDirectoryService() {

@@ -39,7 +39,9 @@ import apincer.android.mmate.utils.StringUtils;
  * a content directory which uses the content of the MusicMate via upnp.
  *
  */
-@UpnpService(serviceId = @UpnpServiceId("ContentDirectory"), serviceType = @UpnpServiceType(value = "ContentDirectory"))
+@UpnpService(
+        serviceId = @UpnpServiceId("ContentDirectory"),
+        serviceType = @UpnpServiceType(value = "ContentDirectory"))
 @UpnpStateVariables({
         @UpnpStateVariable(name = "A_ARG_TYPE_ObjectID", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_Result", sendEvents = false, datatype = "string"),
@@ -53,16 +55,15 @@ import apincer.android.mmate.utils.StringUtils;
 public class ContentDirectory {
     private static final String TAG = "ContentDirectory";
     @UpnpStateVariable(sendEvents = false)
-    final private CSV<String> searchCapabilities;
+    final CSV<String> searchCapabilities;
     @UpnpStateVariable(sendEvents = false)
-    final private CSV<String> sortCapabilities;
+    final CSV<String> sortCapabilities;
     final private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
             this);
     private final Context context;
     @UpnpStateVariable(defaultValue = "0", eventMaximumRateMilliseconds = 200)
     private final UnsignedIntegerFourBytes systemUpdateID = new UnsignedIntegerFourBytes(
             0);
-
 
     public ContentDirectory(Context context) {
         this.context = context;

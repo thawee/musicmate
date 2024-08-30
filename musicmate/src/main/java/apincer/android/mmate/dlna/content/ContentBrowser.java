@@ -3,6 +3,8 @@ import android.content.Context;
 
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.PersonWithRole;
+import org.jupnp.support.model.Protocol;
+import org.jupnp.support.model.ProtocolInfo;
 import org.jupnp.support.model.Res;
 import org.jupnp.support.model.SortCriterion;
 import org.jupnp.support.model.container.Container;
@@ -15,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerSession;
-import apincer.android.mmate.utils.MediaTypeDetector;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.MusicTagUtils;
 
 
 /**
@@ -77,7 +79,7 @@ public abstract class ContentBrowser {
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
         long id = tag.getId();
         String title = tag.getTitle();
-        MimeType mimeType = MediaTypeDetector.getMimeType(tag); //new MimeType("audio", tag.getAudioEncoding());
+        ProtocolInfo protocolInfo = getProtocolInfo(tag); //new MimeType("audio", tag.getAudioEncoding());
         String parentId = folderId;
         // album, artist, genre, grouping
         if(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().equalsIgnoreCase(folderId)) {
@@ -97,7 +99,7 @@ public abstract class ContentBrowser {
         // the ability of playing a file by the file extension
         String uri = getUriString(contentDirectory, tag);
         URI albumArtUri = getAlbumArtUri(contentDirectory, tag);
-        Res resource = new Res(mimeType, tag.getFileSize(), uri);
+        Res resource = new Res(protocolInfo, tag.getFileSize(), uri);
         resource.setDuration(tag.getAudioDurationAsString());
         MusicTrack musicTrack = new MusicTrack(itemPrefix + id, parentId,
                 title, creator, tag.getAlbum(), tag.getArtist(), resource);
@@ -111,5 +113,23 @@ public abstract class ContentBrowser {
        // Log.d(TAG, "MusicTrack: " + id + " Title: "
        //         + title + " Uri: " + uri);
         return musicTrack;
+    }
+
+    private ProtocolInfo getProtocolInfo(MusicTag tag) {
+        if(MusicTagUtils.isAIFFile(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", ProtocolInfo.WILDCARD);
+        }else  if(MusicTagUtils.isMPegFile(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3");
+        }else if(MusicTagUtils.isFLACFile(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-flac", ProtocolInfo.WILDCARD);
+        }else if(MusicTagUtils.isALACFile(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-mp4", ProtocolInfo.WILDCARD);
+        }else if(MusicTagUtils.isMp4File(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO");
+        }else  if(MusicTagUtils.isWavFile(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-wav", ProtocolInfo.WILDCARD);
+        }else {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD);
+        }
     }
 }

@@ -62,21 +62,7 @@ public class FFMPegReader extends TagReader {
         }
     }
 
-    /*
-    public static void writeCoverArt(MusicTag tag, File pathFile) {
-        if(!isEmpty(tag.getCoverartMime())) {
-            String targetPath = pathFile.getAbsolutePath();
-            targetPath = escapePathForFFMPEG(targetPath);
-            String options = " -c:v copy ";
-
-            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + targetPath + "\"";
-
-            FFmpegKit.execute(cmd); // do not clear the result
-        }
-    } */
-
     public static void extractCoverArt(String path, File pathFile) {
-        //if(!isEmpty(tag.getEmbedCoverArt())) {
         try {
            // Log.d(TAG, "extractCoverArt: "+path);
             String targetPath = pathFile.getAbsolutePath();
@@ -194,18 +180,6 @@ public class FFMPegReader extends TagReader {
     private static final String METADATA_KEY = "-metadata";
 
     public static class Loudness {
-      /*  public double getIntegratedLoudness() {
-            return integratedLoudness;
-        }
-
-        public double getLoudnessRange() {
-            return loudnessRange;
-        }
-
-        public double getTruePeak() {
-            return truePeak;
-        } */
-
         double integratedLoudness;
         double loudnessRange;
         double truePeak;

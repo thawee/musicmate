@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna.transport;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -10,18 +12,21 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpConnection;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.Message;
 import org.apache.hc.core5.http.MethodNotSupportedException;
 import org.apache.hc.core5.http.URIScheme;
+import org.apache.hc.core5.http.impl.Http1StreamListener;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
+import org.apache.hc.core5.http.message.RequestLine;
+import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.http.nio.AsyncEntityProducer;
 import org.apache.hc.core5.http.nio.AsyncRequestConsumer;
 import org.apache.hc.core5.http.nio.AsyncServerRequestHandler;
-import org.apache.hc.core5.http.nio.StreamChannel;
-import org.apache.hc.core5.http.nio.entity.AbstractBinAsyncEntityProducer;
 import org.apache.hc.core5.http.nio.entity.AsyncEntityProducers;
 import org.apache.hc.core5.http.nio.entity.BasicAsyncEntityConsumer;
 import org.apache.hc.core5.http.nio.support.AsyncResponseBuilder;
@@ -40,7 +45,6 @@ import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
 import org.jupnp.transport.spi.StreamServer;
 import org.jupnp.transport.spi.UpnpStream;
-import org.jupnp.util.MimeType;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +52,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -64,7 +65,7 @@ import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.MediaTypeDetector;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurationImpl> {
@@ -113,10 +114,33 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                             .setSoTimeout(getConfiguration().getAsyncTimeoutSeconds(), TimeUnit.SECONDS)
                             .setTcpNoDelay(true)
                             .setSoReuseAddress(true)
-                            .setSoKeepAlive(true)
-                            .setSoLinger(60, TimeUnit.SECONDS) // auto close connection after
+                            .setSoKeepAlive(false)
+                            .setSoLinger(60, TimeUnit.SECONDS) // auto close connection after send response 1 mins
                             .build();
                     server = H2ServerBootstrap.bootstrap()
+                            .setExceptionCallback(e -> Log.w(TAG, "Exception: "+e.getMessage())) //e.printStackTrace())
+                            .setStreamListener(new Http1StreamListener() {
+
+                                @Override
+                                public void onRequestHead(final HttpConnection connection, final HttpRequest request) {
+                                    System.out.println(connection.getRemoteAddress() + " " + new RequestLine(request) +" "+ request.getLastHeader("User-Agent"));
+                                }
+
+                                @Override
+                                public void onResponseHead(final HttpConnection connection, final HttpResponse response) {
+                                    System.out.println(connection.getRemoteAddress() + " " + new StatusLine(response) +" Content-Type: "+ response.getLastHeader("Content-Type").getValue());
+                                }
+
+                                @Override
+                                public void onExchangeComplete(final HttpConnection connection, final boolean keepAlive) {
+                                    if (keepAlive) {
+                                        System.out.println(connection.getRemoteAddress() + " exchange completed (connection kept alive)");
+                                    } else {
+                                        System.out.println(connection.getRemoteAddress() + " exchange completed (connection closed)");
+                                    }
+                                }
+
+                            })
                             .setCanonicalHostName(bindAddress.getHostAddress())
                             .setIOReactorConfig(config)
                             //.register(router.getConfiguration().getNamespace().getBasePath().getPath() + "/*", new UPnpStreamHandler(router.getProtocolFactory()))
@@ -172,9 +196,9 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
     }
 
     private class ResourceHandler implements AsyncServerRequestHandler<Message<HttpRequest, byte[]>> {
-
+        private final File coverartDir;
         public ResourceHandler() {
-
+            coverartDir = getContext().getExternalCacheDir();
         }
 
         @Override
@@ -189,9 +213,9 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             String requestMethod = request.getHead().getMethod()
                     .toUpperCase(Locale.ENGLISH);
             String userAgent = request.getHead().getLastHeader("User-Agent").getValue();
-            Log.d(TAG, "HTTP Request: "
-                    + request.getHead().getRequestUri()+" - "
-                    + userAgent);
+           // Log.d(TAG, "HTTP Request: "
+            //        + request.getHead().getRequestUri()+" - "
+            //        + userAgent);
             // Only accept HTTP-GET
             if (!requestMethod.equals("GET") && !requestMethod.equals("HEAD")) {
                 Log.d(TAG,
@@ -214,7 +238,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             String contentId = "";
             if ("album".equals(type)) {
                 albumId = pathSegments.get(1);
-                if (StringUtils.isEmpty(albumId)) {
+                if (isEmpty(albumId)) {
                     responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
                     responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
                     responseTrigger.submitResponse(responseBuilder.build(), context);
@@ -228,14 +252,14 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             } else if ("res".equals(type)) {
                 contentId = pathSegments.get(1);
                 try {
-                    Long.parseLong(contentId);
+                   // Long.parseLong(contentId);
                     ContentHolder contentHolder = lookupContent(contentId, userAgent);
                     responseBuilder.setStatus(HttpStatus.SC_OK);
                     responseBuilder.setEntity(contentHolder.getEntityProducer());
                     responseTrigger.submitResponse(responseBuilder.build(), context);
                 } catch (Exception nex) {
-                    responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
-                    responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
+                    responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
+                    responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>File not found</h1></body></html>", ContentType.TEXT_HTML));
                     responseTrigger.submitResponse(responseBuilder.build(), context);
                 }
             }else {
@@ -244,7 +268,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                         + albumId  + pathSegments.get(1) + " not found");
                 responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
                 String response =
-                        "<html><body><h1>Resource with id " + contentId + albumId
+                        "<html><body><h1>File with id " + contentId + albumId
                                  + pathSegments.get(1) + " not found</h1></body></html>";
                 responseBuilder.setEntity(AsyncEntityProducers.create(response, ContentType.TEXT_HTML));
                 responseTrigger.submitResponse(responseBuilder.build(), context);
@@ -267,10 +291,10 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             try {
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
                 if (tag != null) {
-                    MimeType mimeType = MediaTypeDetector.getMimeType(tag);
+                    ContentType contentType = getContentType(tag);
                     PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
                     MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
-                    result = new ContentHolder(mimeType, tag.getPath());
+                    result = new ContentHolder(contentType, tag.getPath());
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "lookupContent: - " + contentId, ex);
@@ -287,10 +311,9 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
         private ContentHolder lookupAlbumArt(String albumId) {
             try {
                 String path = CoverArtProvider.COVER_ARTS + albumId;
-                File dir = getContext().getExternalCacheDir();
-                File pathFile = new File(dir, path);
+                File pathFile = new File(coverartDir, path);
                 if (pathFile.exists()) {
-                    return new ContentHolder(MimeType.valueOf("image/png"),
+                    return new ContentHolder(ContentType.IMAGE_PNG,
                             pathFile.getAbsolutePath());
                 }
             } catch (Exception e) {
@@ -298,8 +321,26 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             }
 
             // Log.d(TAG, "Send default albumArt for " + albumId);
-            return new ContentHolder(MimeType.valueOf("image/jpg"),
+            return new ContentHolder(ContentType.IMAGE_JPEG,
                     getDefaultIcon());
+        }
+    }
+
+    private ContentType getContentType(MusicTag tag) {
+        if(MusicTagUtils.isAIFFile(tag)) {
+            return ContentType.parse( "audio/x-aiff");
+        }else  if(MusicTagUtils.isMPegFile(tag)) {
+            return ContentType.parse( "audio/mpeg");
+        }else if(MusicTagUtils.isFLACFile(tag)) {
+            return ContentType.parse( "audio/x-flac");
+        }else if(MusicTagUtils.isALACFile(tag)) {
+            return ContentType.parse( "audio/x-mp4");
+        }else if(MusicTagUtils.isMp4File(tag)) {
+            return ContentType.parse( "audio/x-m4a");
+        }else  if(MusicTagUtils.isWavFile(tag)) {
+            return ContentType.parse( "audio/x-wav");
+        }else {
+            return ContentType.parse( "audio/*");
         }
     }
 
@@ -307,45 +348,37 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
      * ValueHolder for media content.
      */
     static class ContentHolder {
-        private final MimeType mimeType;
-        private String uri;
+        private final ContentType contentType;
+        private String filePath;
         private byte[] content;
 
-        public ContentHolder(MimeType mimeType, String uri) {
-            this.uri = uri;
-            this.mimeType = mimeType;
-
+        public ContentHolder(ContentType contentType, String filePath) {
+            this.filePath = filePath;
+            this.contentType = contentType;
         }
 
-        public ContentHolder(MimeType mimeType, byte[] content) {
+        public ContentHolder(ContentType contentType, byte[] content) {
             this.content = content;
-            this.mimeType = mimeType;
-
+            this.contentType = contentType;
         }
 
         /**
          * @return the uri
          */
-        public String getUri() {
-            return uri;
-        }
-
-        /**
-         * @return the mimeType
-         */
-        public MimeType getMimeType() {
-            return mimeType;
+        public String getFilePath() {
+            return filePath;
         }
 
         public AsyncEntityProducer getEntityProducer() {
             AsyncEntityProducer result = null;
-            if (getUri() != null && !getUri().isEmpty()) {
-                if (new File(getUri()).exists()) {
-
-                    File file = new File(getUri());
-                    result = AsyncEntityProducers.create(file, ContentType.parse(getMimeType().toString()));
+            if (!isEmpty(getFilePath())) {
+                if (new File(getFilePath()).exists()) {
+                    // if not found return null
+                    File file = new File(getFilePath());
+                    result = AsyncEntityProducers.create(file, contentType);
+                }
                    //  Log.d(TAG, "HTTP Response: Mimetype: "+ getMimeType()+" - " + getUri());
-                } else {
+                /*} else {
                     //file not found maybe external url
                     result = new AbstractBinAsyncEntityProducer(0, ContentType.parse(getMimeType().toString())) {
                         private InputStream input;
@@ -406,13 +439,12 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                         public void failed(final Exception cause) {
                         }
 
-                    }.init();
-                }
+                    }.init(); */
+                //}
             } else if (content != null) {
-                result = AsyncEntityProducers.create(content, ContentType.parse(getMimeType().toString()));
+                result = AsyncEntityProducers.create(content, contentType);
             }
             return result;
-
         }
     }
 
@@ -458,7 +490,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                 responseTrigger.submitResponse(responseBuilder.build(), context);
 
             } catch (Throwable t) {
-                Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
+                Log.w(TAG, "Exception on UPnP stream processing: "+ t.getMessage());
                 responseBuilder.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
                 responseTrigger.submitResponse(responseBuilder.build(), context);
 

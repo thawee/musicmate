@@ -1,5 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -186,7 +187,157 @@
         android:textStyle="bold"
         android:text="Digital Music"/>
 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dimen_4_dp"
+            android:layout_marginTop="@dimen/dimen_12_dp"
+            android:layout_margin="@dimen/dimen_4_dp"
+            android:background="@drawable/shape_border_message_box">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="@string/label_audio_encoding_format"
+                android:padding="@dimen/dimen_4_dp"
+                android:layout_margin="@dimen/dimen_4_dp"
+                android:textColor="@color/black"
+                />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="@dimen/dimen_4_dp"
+            android:layout_marginRight="@dimen/dimen_4_dp">
+            <TextView
+                android:id="@+id/encoding_btn_hq"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_lossy"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_background_lossy"
+                tools:ignore="RtlSymmetry"
+                />
+            <TextView
+                android:id="@+id/encoding_btn_lossless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_Lossless"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_background_lossless"
+                tools:ignore="RtlSymmetry" />
+            <TextView
+                android:id="@+id/encoding_btn_hires"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_hi_res"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_background_hires"
+                tools:ignore="RtlSymmetry"
+                />
+            <TextView
+                android:id="@+id/encoding_btn_dsd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_dsd"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_background_dsd"
+                tools:ignore="RtlSymmetry"
+                />
+            <TextView
+                android:id="@+id/encoding_btn_mqa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_mqa"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_background_mqa"
+                tools:ignore="RtlSymmetry"
+                />
+        </LinearLayout>
+            <TextView
+                android:id="@+id/encoding_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:padding="@dimen/dimen_4_dp"
+                android:layout_marginTop="@dimen/dimen_16_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:textColor="@color/black"
+                />
+            <TextView
+                android:id="@+id/encoding_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:layout_marginBottom="@dimen/dimen_8_dp"
+                android:textSize="14sp"
+                tools:ignore="RtlSymmetry"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dimen_4_dp"
+            android:layout_marginTop="@dimen/dimen_12_dp"
+            android:layout_margin="@dimen/dimen_4_dp"
+            android:background="@drawable/shape_border_message_box">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="@string/label_audio_quality"
+                android:padding="@dimen/dimen_4_dp"
+                android:layout_margin="@dimen/dimen_4_dp"
+                android:textColor="@color/black"
+                />
+            <TextView
+                android:id="@+id/quality_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:textColor="@color/grey600"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:layout_marginBottom="@dimen/dimen_8_dp"
+                android:textSize="14sp"
+                tools:ignore="RtlSymmetry"
+                />
+        </LinearLayout>
 
+    <!--
             <com.github.irshulx.Editor
                 android:layout_width="match_parent"
                 android:id="@+id/editor"
@@ -202,7 +353,7 @@
                 android:layout_marginBottom="@dimen/dimen_8_dp"
                 android:scrollbars="vertical"
                 android:background="@drawable/shape_border_message_box"
-                />
+                /> -->
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

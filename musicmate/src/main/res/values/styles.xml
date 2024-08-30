@@ -92,7 +92,7 @@
         <!--
         <item name="windowActionModeOverlay">true</item>
         -->
-        <item name="actionModeCloseDrawable">@drawable/ic_close_white_18dp</item>
+        <item name="actionModeCloseDrawable">@drawable/round_close_24</item>
         <item name="actionMenuTextColor">@color/white</item>
     </style>
 

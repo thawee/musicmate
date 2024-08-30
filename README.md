@@ -88,6 +88,8 @@ https://github.com/tobexyz/yaacc-code
 https://github.com/jupnp
 https://github.com/UniversalMediaServer/
 
+https://upnp.org/resources/documents/UPnP_AV_tutorial_July2014.pdf
+https://upnp.org/resources/documents/UPnP_UDA_tutorial_July2014.pdf
 
 DLNA servers use specific ports for communication. Here are the relevant ports:
 

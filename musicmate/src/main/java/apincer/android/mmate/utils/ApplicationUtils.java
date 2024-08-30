@@ -1,5 +1,7 @@
 package apincer.android.mmate.utils;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -10,6 +12,8 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.webkit.MimeTypeMap;
+
+import androidx.fragment.app.FragmentActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -199,5 +203,10 @@ public class ApplicationUtils {
             intent.putExtra(Constants.KEY_FILTER_TYPE,StringUtils.trimToEmpty(criteria.getFilterType()));
             intent.putExtra(Constants.KEY_FILTER_KEYWORD,StringUtils.trimToEmpty(criteria.getFilterText()));
         }
+    }
+
+    public static void openBrowser(Context context, String url) {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        context.startActivity(browserIntent);
     }
 }
