@@ -32,8 +32,10 @@ import com.arthenica.ffmpegkit.ReturnCode;
 import com.arthenica.ffmpegkit.Session;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -1387,6 +1389,31 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
            FileSystem.delete(context, tmpPath);
        }
        return false;
+    }
+
+    public static byte[] transcodeFile(Context context, String srcPath) {
+       // String options=" -vn -f s16be -ar 44100 -ac 2 "; // lpcm
+        String options=" -vn -f mp3 -ab 320000 "; // mp3
+
+        String tmpTarget = srcPath+".pcm";
+        //String cmd = " -hide_banner -nostats -i \""+srcPath+"\" "+options+" \""+tmpTarget+"\"";
+        String cmd = " -i \""+srcPath+"\" "+options+" \""+tmpTarget+"\"";
+        Log.i(TAG, "Converting with cmd: "+ cmd);
+
+        try {
+            FFmpegSession session = FFmpegKit.execute(cmd);
+            if (!ReturnCode.isCancel(session.getReturnCode())) {
+                FileInputStream in = new FileInputStream(tmpTarget);
+                byte[] data = IOUtils.toByteArray(in);
+                in.close();
+                return data;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            FileSystem.delete(context, tmpTarget);
+        }
+        return null;
     }
 
     /*

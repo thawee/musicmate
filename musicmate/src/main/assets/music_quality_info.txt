@@ -5,9 +5,3 @@ The maximum dynamic range of a 16 bit file is 96 dB and that of 24 bit is 144 dB
 DR Meter
 Lower DR value is an indicator for a more dynamic compression, resulting in a squashed sound that can be fatiguing on listening.
 Higher value imply a higher audio quality and details being more perceivable.
-
-Up-Scaling Meter
-File has been manipulated to increase the resolution or bit depth.
-
-Up-Sampling Meter
-File has been manipulated to increase the sampling rate or even transcode from a lossy to a lossless format.

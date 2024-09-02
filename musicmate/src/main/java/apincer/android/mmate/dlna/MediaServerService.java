@@ -194,17 +194,10 @@ public class MediaServerService extends Service {
                     "DLNA/UPnP AV 1.0 Compliant Media Server, "+getDeviceDetails(),
                     versionName);
             URI presentationURI = null;
-            if (MediaServerSession.streamServerHost != null) {
+            if (!StringUtils.isEmpty(MediaServerSession.streamServerHost)) {
                 String webInterfaceUrl = "http://" + MediaServerSession.streamServerHost + ":" + MediaServerSession.streamServerPort;
                 presentationURI = URI.create(webInterfaceUrl);
             }
-           /* DeviceDetails msDetails = new DeviceDetails(
-                    "MusicMate Server ("+getDeviceModel()+")",
-                    new ManufacturerDetails("Thawee",
-                    "https://github.com/thawee/musicmate"),
-                    new ModelDetails("MusicMate",
-                            "DLNA/UPnP AV MediaServer, "+getDeviceDetails(),
-                    versionName)); */
             DeviceDetails msDetails = new DeviceDetails(
                     null,
                     friendlyName,
@@ -351,7 +344,8 @@ public class MediaServerService extends Service {
                 new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", ProtocolInfo.WILDCARD),
                 new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-mp4", ProtocolInfo.WILDCARD), // alac
                 new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-m4a", ProtocolInfo.WILDCARD), // aac
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO") // aac
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO"), // aac
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=44100;channels=2", "DLNA.ORG_PN=LPCM")
                // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16", "DLNA.ORG_PN=LPCM"),
               //  new ProtocolInfo("http-get:*:audio/aac:*"), // added by thawee
                // new ProtocolInfo("http-get:*:audio/mpeg:*"),

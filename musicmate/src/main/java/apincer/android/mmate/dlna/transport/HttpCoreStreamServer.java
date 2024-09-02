@@ -5,6 +5,7 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.util.LruCache;
 
 import androidx.core.content.ContextCompat;
 
@@ -52,6 +53,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -63,6 +65,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -76,6 +79,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
     private HttpAsyncServer server;
     final protected StreamServerConfigurationImpl configuration;
     protected int localPort;
+    private static LruCache<String, ByteBuffer> transCodeCached;
 
     public void loadCachedIcons() {
         cachedIconRAWs.add(readDefaultCover("no_cover3.jpg"));
@@ -88,6 +92,14 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
     public HttpCoreStreamServer(Context context, StreamServerConfigurationImpl configuration) {
         this.context = context;
         this.configuration = configuration;
+        int cacheSize = 1024 * 1024 * 10 * 3; // 2-3 file 15 MB each file
+        transCodeCached = new LruCache<>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, ByteBuffer data) {
+                // The cache size will be measured in bytes
+                return data.capacity();
+            }
+        };
         this.localPort = configuration.getListenPort();
         loadCachedIcons();
     }
@@ -246,7 +258,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                 }else {
                     ContentHolder contentHolder = lookupAlbumArt(albumId);
                     responseBuilder.setStatus(HttpStatus.SC_OK);
-                    responseBuilder.setEntity(contentHolder.getEntityProducer());
+                    responseBuilder.setEntity(contentHolder.getEntityProducer(getContext()));
                     responseTrigger.submitResponse(responseBuilder.build(), context);
                 }
             } else if ("res".equals(type)) {
@@ -255,7 +267,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                    // Long.parseLong(contentId);
                     ContentHolder contentHolder = lookupContent(contentId, userAgent);
                     responseBuilder.setStatus(HttpStatus.SC_OK);
-                    responseBuilder.setEntity(contentHolder.getEntityProducer());
+                    responseBuilder.setEntity(contentHolder.getEntityProducer(getContext()));
                     responseTrigger.submitResponse(responseBuilder.build(), context);
                 } catch (Exception nex) {
                     responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
@@ -294,7 +306,8 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                     ContentType contentType = getContentType(tag);
                     PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
                     MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
-                    result = new ContentHolder(contentType, tag.getPath());
+                    result = new ContentHolder(contentType, String.valueOf(tag.getId()), tag.getPath());
+                    result.transcode = MediaServerSession.isTransCoded(tag);
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "lookupContent: - " + contentId, ex);
@@ -313,7 +326,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                 String path = CoverArtProvider.COVER_ARTS + albumId;
                 File pathFile = new File(coverartDir, path);
                 if (pathFile.exists()) {
-                    return new ContentHolder(ContentType.IMAGE_PNG,
+                    return new ContentHolder(ContentType.IMAGE_PNG, albumId,
                             pathFile.getAbsolutePath());
                 }
             } catch (Exception e) {
@@ -321,16 +334,21 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             }
 
             // Log.d(TAG, "Send default albumArt for " + albumId);
-            return new ContentHolder(ContentType.IMAGE_JPEG,
+            return new ContentHolder(ContentType.IMAGE_JPEG, albumId,
                     getDefaultIcon());
         }
     }
 
     private ContentType getContentType(MusicTag tag) {
-        if(MusicTagUtils.isAIFFile(tag)) {
-            return ContentType.parse( "audio/x-aiff");
-        }else  if(MusicTagUtils.isMPegFile(tag)) {
+        if(MediaServerSession.isTransCoded(tag)) {
             return ContentType.parse( "audio/mpeg");
+        }else if(MusicTagUtils.isAIFFile(tag)) {
+            return ContentType.parse( "audio/x-aiff");
+       // }else  if(MusicTagUtils.isMPegFile(tag)) {
+        }else if(MusicTagUtils.isMPegFile(tag) || MusicTagUtils.isAACFile(tag)) {
+            return ContentType.parse( "audio/mpeg");
+           // return ContentType.parse( "audio/L16;rate=44100;channels=2");
+           // return ContentType.parse( "audio/x-wav");
         }else if(MusicTagUtils.isFLACFile(tag)) {
             return ContentType.parse( "audio/x-flac");
         }else if(MusicTagUtils.isALACFile(tag)) {
@@ -349,15 +367,19 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
      */
     static class ContentHolder {
         private final ContentType contentType;
+        private final String resId;
         private String filePath;
         private byte[] content;
+        private boolean transcode;
 
-        public ContentHolder(ContentType contentType, String filePath) {
+        public ContentHolder(ContentType contentType, String resId, String filePath) {
+            this.resId = resId;
             this.filePath = filePath;
             this.contentType = contentType;
         }
 
-        public ContentHolder(ContentType contentType, byte[] content) {
+        public ContentHolder(ContentType contentType, String resId, byte[] content) {
+            this.resId = resId;
             this.content = content;
             this.contentType = contentType;
         }
@@ -369,13 +391,25 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             return filePath;
         }
 
-        public AsyncEntityProducer getEntityProducer() {
+        public AsyncEntityProducer getEntityProducer(Context context) {
             AsyncEntityProducer result = null;
             if (!isEmpty(getFilePath())) {
                 if (new File(getFilePath()).exists()) {
-                    // if not found return null
-                    File file = new File(getFilePath());
-                    result = AsyncEntityProducers.create(file, contentType);
+                    if(transcode) {
+                        // transcode to lpcm before send to
+                        ByteBuffer buff = transCodeCached.get(resId);
+                        if(buff == null) {
+                            byte[] data = FFMPegReader.transcodeFile(context, getFilePath());
+                            transCodeCached.put(resId, ByteBuffer.wrap(data));
+                            result = AsyncEntityProducers.create(data, contentType);
+                        }else {
+                            result = AsyncEntityProducers.create(buff.array(), contentType);
+                        }
+                    }else {
+                        // if not found return null
+                        File file = new File(getFilePath());
+                        result = AsyncEntityProducers.create(file, contentType);
+                    }
                 }
                    //  Log.d(TAG, "HTTP Response: Mimetype: "+ getMimeType()+" - " + getUri());
                 /*} else {

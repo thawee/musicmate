@@ -62,6 +62,9 @@ public abstract class ContentBrowser {
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
+        if(MediaServerSession.isTransCoded(tag)) {
+            return "http://" + MediaServerSession.getIpAddress() + ":" +MediaServerSession.getListenPort() + "/res/" + tag.getId() + "/file.raw";
+        }
         return "http://" + MediaServerSession.getIpAddress() + ":" +MediaServerSession.getListenPort() + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
 
@@ -116,16 +119,23 @@ public abstract class ContentBrowser {
     }
 
     private ProtocolInfo getProtocolInfo(MusicTag tag) {
-        if(MusicTagUtils.isAIFFile(tag)) {
+        if(MediaServerSession.isTransCoded(tag)) {
+            return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=44100;channels=2", "DLNA.ORG_PN=LPCM");
+        }else if(MusicTagUtils.isAIFFile(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", ProtocolInfo.WILDCARD);
         }else  if(MusicTagUtils.isMPegFile(tag)) {
+     //   }else  if(MusicTagUtils.isMPegFile(tag) || MusicTagUtils.isAACFile(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3");
+           // return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=44100;channels=2", "DLNA.ORG_PN=LPCM");
+           // return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-wav", ProtocolInfo.WILDCARD);
         }else if(MusicTagUtils.isFLACFile(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-flac", ProtocolInfo.WILDCARD);
         }else if(MusicTagUtils.isALACFile(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-mp4", ProtocolInfo.WILDCARD);
         }else if(MusicTagUtils.isMp4File(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO");
+        }else if(MusicTagUtils.isMp4File(tag)) {
+          return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO");
         }else  if(MusicTagUtils.isWavFile(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-wav", ProtocolInfo.WILDCARD);
         }else {

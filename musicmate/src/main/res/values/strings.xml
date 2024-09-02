@@ -174,7 +174,7 @@
     <string name="channel_name">MusicMate</string>
     <string name="channel_description">MusicMate Notifications</string>
 
-    <string name="media_server_name">DLNA/UPnP AV MediaServer</string>
+    <string name="media_server_name">DLNA/UPnP AV 1.0 Media Server</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
