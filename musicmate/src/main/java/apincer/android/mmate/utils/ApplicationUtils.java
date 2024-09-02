@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -208,5 +209,21 @@ public class ApplicationUtils {
     public static void openBrowser(Context context, String url) {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         context.startActivity(browserIntent);
+    }
+
+    public static ByteBuffer getAssetsAsBytes(Context context, String inFile) {
+        try {
+            InputStream stream =  context.getAssets().open(inFile);
+
+            int size = stream.available();
+            byte[] buffer = new byte[size];
+            stream.read(buffer);
+            stream.close();
+            return ByteBuffer.wrap(buffer);
+        } catch (IOException e) {
+            // Handle exceptions here
+        }
+
+        return null;
     }
 }

@@ -2,10 +2,15 @@ package apincer.android.mmate;
 
 import android.content.Context;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import apincer.android.mmate.utils.ApplicationUtils;
 
 /**
  * Created by e1022387 on 3/12/2018.
@@ -79,7 +84,7 @@ public final class Constants {
     public static final double MIN_ARTIST = 0.70;
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
-
+    public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
     static {
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");
@@ -87,10 +92,7 @@ public final class Constants {
         IMAGE_COVERS.add("front.jpg"); // support by neplayer
         IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
-    }
 
-    public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
-    static {
         RELATED_FILE_TYPES.add("png");
         RELATED_FILE_TYPES.add("jpg");
         RELATED_FILE_TYPES.add("lrc");
@@ -98,6 +100,7 @@ public final class Constants {
         RELATED_FILE_TYPES.add("md5");
         RELATED_FILE_TYPES.add("txt");
         RELATED_FILE_TYPES.add("json"); // tags, override to embed iso
+
     }
 
     public static final String STATUS_SUCCESS="success";

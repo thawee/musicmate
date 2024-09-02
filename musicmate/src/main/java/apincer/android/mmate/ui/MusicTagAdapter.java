@@ -6,7 +6,9 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -34,6 +36,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import coil.Coil;
@@ -479,7 +482,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .target(holder.mCoverArtView)
                //.placeholder(R.drawable.no_image0)
                .placeholder(R.drawable.progress)
-               .error(R.drawable.no_cover2)
+               .error(getDefaultNoCover(tag))
+               //.error(R.drawable.no_cover2)
                 .transformations(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request);
@@ -511,6 +515,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }else {
             holder.mFileSourceView.setVisibility(View.GONE);
         }
+    }
+
+    private Drawable getDefaultNoCover(MusicTag tag) {
+        byte[] b = MusixMateApp.getInstance().getDefaultNoCoverart(tag);
+        return new BitmapDrawable(MusixMateApp.getInstance().getResources(), BitmapFactory.decodeByteArray(b, 0, b.length));
     }
 
     // Return the size of your dataset (invoked by the layout manager)

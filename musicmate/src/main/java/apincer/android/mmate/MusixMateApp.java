@@ -18,6 +18,7 @@ import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,7 @@ import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.ui.MainActivity;
+import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
@@ -49,6 +51,9 @@ public class MusixMateApp extends Application {
     private static final PlayerControl playerControl = new PlayerControl();
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
+
+    //private static final Map<String, ByteBuffer> NO_IMAGE_COVERS = new HashMap<>();
+    private static final List<ByteBuffer> NO_IMAGE_COVERS = new ArrayList<>();
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -96,6 +101,7 @@ public class MusixMateApp extends Application {
         LogHelper.initial();
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(this);
+        initNoImageCovers();
 
         // initialize thread executors
         MusicMateExecutors.getInstance();
@@ -217,6 +223,30 @@ public class MusixMateApp extends Application {
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
             ScanAudioFileWorker.startScan(getApplicationContext());
+        }
+    }
+
+    private void initNoImageCovers() {
+        // init by genre
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_01.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_02.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_03.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_04.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_05.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_06.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_07.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_08.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_09.jpg"));
+        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_10.jpg"));
+    }
+
+    public byte[] getDefaultNoCoverart(MusicTag tag) {
+        // 0 - 9
+        if(tag != null) {
+            int index = (int) tag.getId() % 9;
+            return NO_IMAGE_COVERS.get(index).array();
+        }else {
+            return NO_IMAGE_COVERS.get(0).array();
         }
     }
 

@@ -9,7 +9,6 @@ import android.util.LruCache;
 
 import androidx.core.content.ContextCompat;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.Header;
@@ -49,12 +48,10 @@ import org.jupnp.transport.spi.UpnpStream;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -67,27 +64,16 @@ import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.FFMPegReader;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurationImpl> {
     private final Context context;
     private static final String TAG = "HttpCoreStreamServer";
-    private final List<byte[]> cachedIconRAWs = new ArrayList<>();
-    private int currentIconIndex = 0;
     private HttpAsyncServer server;
     final protected StreamServerConfigurationImpl configuration;
     protected int localPort;
     private static LruCache<String, ByteBuffer> transCodeCached;
-
-    public void loadCachedIcons() {
-        cachedIconRAWs.add(readDefaultCover("no_cover3.jpg"));
-        cachedIconRAWs.add(readDefaultCover("no_cover4.jpg"));
-        cachedIconRAWs.add(readDefaultCover("no_cover5.jpg"));
-        cachedIconRAWs.add(readDefaultCover("no_cover6.jpg"));
-        cachedIconRAWs.add(readDefaultCover("no_cover7.jpg"));
-    }
 
     public HttpCoreStreamServer(Context context, StreamServerConfigurationImpl configuration) {
         this.context = context;
@@ -101,7 +87,6 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
             }
         };
         this.localPort = configuration.getListenPort();
-        loadCachedIcons();
     }
 
     public StreamServerConfigurationImpl getConfiguration() {
@@ -187,19 +172,12 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
         }
     }
 
-    private byte[] getDefaultIcon() {
-        currentIconIndex++;
-        if(currentIconIndex >= cachedIconRAWs.size()) currentIconIndex = 0;
-        return cachedIconRAWs.get(currentIconIndex);
-    }
-
-    private byte[] readDefaultCover(String file) {
-        InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), file);
-        try {
-            return IOUtils.toByteArray(in);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    private byte[] getDefaultIcon(String albumId) {
+        if(albumId.contains(".")) {
+            albumId = albumId.substring(0, albumId.indexOf("."));
         }
+        MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumId);
+        return MusixMateApp.getInstance().getDefaultNoCoverart(tag);
     }
 
     @Override
@@ -335,7 +313,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
 
             // Log.d(TAG, "Send default albumArt for " + albumId);
             return new ContentHolder(ContentType.IMAGE_JPEG, albumId,
-                    getDefaultIcon());
+                    getDefaultIcon(albumId));
         }
     }
 
@@ -347,8 +325,6 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
        // }else  if(MusicTagUtils.isMPegFile(tag)) {
         }else if(MusicTagUtils.isMPegFile(tag) || MusicTagUtils.isAACFile(tag)) {
             return ContentType.parse( "audio/mpeg");
-           // return ContentType.parse( "audio/L16;rate=44100;channels=2");
-           // return ContentType.parse( "audio/x-wav");
         }else if(MusicTagUtils.isFLACFile(tag)) {
             return ContentType.parse( "audio/x-flac");
         }else if(MusicTagUtils.isALACFile(tag)) {
@@ -411,70 +387,6 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                         result = AsyncEntityProducers.create(file, contentType);
                     }
                 }
-                   //  Log.d(TAG, "HTTP Response: Mimetype: "+ getMimeType()+" - " + getUri());
-                /*} else {
-                    //file not found maybe external url
-                    result = new AbstractBinAsyncEntityProducer(0, ContentType.parse(getMimeType().toString())) {
-                        private InputStream input;
-                        private long length = -1;
-
-                        AbstractBinAsyncEntityProducer init() {
-                            try {
-                                if (input == null) {
-                                    URLConnection con = new URL(getUri()).openConnection();
-                                    input = con.getInputStream();
-                                    length = con.getContentLength();
-                                }
-                            } catch (IOException e) {
-                                Log.e(TAG, "Error opening external content", e);
-                            }
-                            return this;
-                        }
-
-                        @Override
-                        public long getContentLength() {
-                            return length;
-                        }
-
-                        @Override
-                        protected int availableData() {
-                            return Integer.MAX_VALUE;
-                        }
-
-                        @Override
-                        protected void produceData(final StreamChannel<ByteBuffer> channel) throws IOException {
-                            try {
-                                if (input == null) {
-                                    //retry opening external content if it hasn't been opened yet
-                                    URLConnection con = new URL(getUri()).openConnection();
-                                    input = con.getInputStream();
-                                    length = con.getContentLength();
-                                }
-                                byte[] tempBuffer = new byte[1024];
-                                int bytesRead;
-                                if (-1 != (bytesRead = input.read(tempBuffer))) {
-                                    channel.write(ByteBuffer.wrap(tempBuffer, 0, bytesRead));
-                                }
-                                if (bytesRead == -1) {
-                                    channel.endStream();
-                                }
-                            } catch (IOException e) {
-                                Log.e(TAG, "Error reading external content", e);
-                                throw e;
-                            }
-                        }
-
-                        @Override
-                        public boolean isRepeatable() {
-                            return false;
-                        }
-
-                        @Override
-                        public void failed(final Exception cause) {
-                        }
-
-                    }.init(); */
-                //}
             } else if (content != null) {
                 result = AsyncEntityProducers.create(content, contentType);
             }
