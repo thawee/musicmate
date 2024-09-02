@@ -123,14 +123,14 @@ public class AboutActivity extends AppCompatActivity {
                         .bold()
                         .textColor(Color.BLACK)
                     .done()
-                    .format("Up-Scaling Meter")
+                   /* .format("Up-Scaling Meter")
                     .bold()
                     .textColor(Color.BLACK)
                     .done()
                     .format("Up-Sampling Meter")
                     .bold()
                     .textColor(Color.BLACK)
-                    .done()
+                    .done() */
                     .into(qualityDetail);
 
 

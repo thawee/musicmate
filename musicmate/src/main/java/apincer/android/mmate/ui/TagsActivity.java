@@ -8,8 +8,10 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -444,7 +446,8 @@ public class TagsActivity extends AppCompatActivity {
                 .data(CoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
                 .placeholder(R.drawable.progress)
-                .error(R.drawable.no_cover2)
+                .error(getDefaultNoCover(displayTag))
+               // .error(R.drawable.no_cover2)
                 .target(coverArtView)
                 .build();
         imageLoader.enqueue(request);
@@ -452,8 +455,9 @@ public class TagsActivity extends AppCompatActivity {
                 .data(CoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
                 .transformations(new BlurTransformation(getApplicationContext()))
+                .error(getDefaultNoCover(displayTag))
               //  .placeholder(R.drawable.progress)
-                .error(R.drawable.no_cover2)
+              //  .error(R.drawable.no_cover2)
                 .target(reflectionView)
                 .build();
         imageLoader.enqueue(request);
@@ -552,6 +556,11 @@ public class TagsActivity extends AppCompatActivity {
         }catch (Exception ex) {
             Log.e(TAG, "updateTitlePanel", ex);
         }
+    }
+
+    private Drawable getDefaultNoCover(MusicTag tag) {
+        byte[] b = MusixMateApp.getInstance().getDefaultNoCoverart(tag);
+        return new BitmapDrawable(MusixMateApp.getInstance().getResources(), BitmapFactory.decodeByteArray(b, 0, b.length));
     }
 
     private void doOpenMainActivity(SearchCriteria criteria) {
@@ -654,23 +663,23 @@ public class TagsActivity extends AppCompatActivity {
                     }else {
                         DeleteAudioFileWorker.startWorker(getApplicationContext(), editItems);
                         dialogInterface.dismiss();
-                       // Intent resultIntent = new Intent();
-                       // if (criteria != null) {
-                       //     ApplicationUtils.setSearchCriteria(resultIntent, criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-                       // }
-                       // setResult(RESULT_OK, resultIntent);
+                        Intent resultIntent = new Intent();
+                        if (criteria != null) {
+                            ApplicationUtils.setSearchCriteria(resultIntent, criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
+                        }
+                        setResult(RESULT_OK, resultIntent);
                     }
 
                     if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
-                        //finish(); // back to prev activity
-                        doOpenMainActivity(criteria);
+                        finish(); // back to prev activity
+                       // doOpenMainActivity(criteria);
                     }else {
                         // set timeout to finish, 5 seconds
                         finishOnTimeout = true;
                         MusicMateExecutors.schedule(() -> {
                             if(finishOnTimeout) {
-                                //finish(); // back to prev activity
-                                doOpenMainActivity(criteria);
+                                finish(); // back to prev activity
+                               // doOpenMainActivity(criteria);
                             }
                         }, 3);
                     }
@@ -687,22 +696,22 @@ public class TagsActivity extends AppCompatActivity {
     public void doMoveMediaItem() {
         startProgressBar();
         ImportAudioFileWorker.startWorker(getApplicationContext(), editItems);
-        //Intent resultIntent = new Intent();
-       // if(criteria!=null) {
-        //    ApplicationUtils.setSearchCriteria(resultIntent,criteria);
-       // }
-       // setResult(RESULT_OK, resultIntent);
+        Intent resultIntent = new Intent();
+        if(criteria!=null) {
+            ApplicationUtils.setSearchCriteria(resultIntent,criteria);
+        }
+        setResult(RESULT_OK, resultIntent);
 
         if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
-            //finish(); // back to prev activity
-            doOpenMainActivity(criteria);
+            finish(); // back to prev activity
+            //doOpenMainActivity(criteria);
         }else {
             // set timeout to finish, 5 seconds
             finishOnTimeout = true;
             MusicMateExecutors.schedule(() -> {
                 if(finishOnTimeout) {
-                    //finish(); // back to prev activity
-                    doOpenMainActivity(criteria);
+                    finish(); // back to prev activity
+                    //doOpenMainActivity(criteria);
                 }
             }, 3);
         }
@@ -731,13 +740,13 @@ public class TagsActivity extends AppCompatActivity {
         @Override
         public void handleOnBackPressed() {
             if(previewState) {
-                /*if (criteria != null) {
+                if (criteria != null) {
                     Intent resultIntent = new Intent();
                     ApplicationUtils.setSearchCriteria(resultIntent, criteria);
                     setResult(RESULT_OK, resultIntent);
                 }
-                finish(); */
-                doOpenMainActivity(criteria);
+                finish();
+                //doOpenMainActivity(criteria);
             }else {
                 startProgressBar();
                 // should reload tag from db or file again

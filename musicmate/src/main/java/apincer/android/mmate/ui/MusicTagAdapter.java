@@ -58,6 +58,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         totalSize =0;
         totalDuration =0;
         List<MusicTag> list = TagRepository.findMediaTag(criteria);
+        if(list == null) return; // NPE
+
         boolean noFilters = !hasFilter();
         if(noFilters) {
             for (MusicTag tag : list) {
