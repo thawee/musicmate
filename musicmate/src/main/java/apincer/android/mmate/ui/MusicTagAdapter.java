@@ -36,7 +36,6 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
-import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import coil.Coil;

@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
     private static final double MAX_PROGRESS_BLOCK = 10.00;
     private static final double MAX_PROGRESS = 100.00;
     public static final String FLAC_OPTIMAL = "FLAC (Optimal)";
-    public static final String FLAC_LEVEL_0 = "FLAC (Level 0)";
+    public static final String FLAC_LEVEL_0 = "FLAC (No Compression)";
     public static final String FILE_FLAC = "FLAC";
     public static final String FILE_AIFF = "AIFF";
     public static final String FILE_MP3 = "MP3";
@@ -630,8 +630,6 @@ public class MainActivity extends AppCompatActivity {
         setUpSwipeToRefresh();
         setUpResideMenus();
 
-       // loadDataSets(savedInstanceState);
-        //doStartRefresh(ApplicationUtils.getSearchCriteria(getIntent()));
         mExitSnackbar = Snackbar.make(this.mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
@@ -663,18 +661,6 @@ public class MainActivity extends AppCompatActivity {
 
         headerSubtitle = findViewById(R.id.header_subtitle);
     }
-
-    /*
-    @Deprecated
-    private void loadDataSets(Bundle startIntent) {
-        SearchCriteria criteria;
-        if(startIntent != null) {
-            criteria = startIntent.getParcelable("main_screen_type", SearchCriteria.class);
-        }else {
-            criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
-        }
-        doStartRefresh(criteria);
-    } */
 
     /**
      * set up Bottom Bar
