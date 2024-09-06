@@ -340,45 +340,12 @@ public class FileSystem {
         return DocumentFileUtils.forceDelete(docFile,context);
     }
 
-    @Deprecated
-    public static void saveImage(Bitmap resource, File coverartFile) {
-        try {
-            //Convert bitmap to byte array
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            resource.compress(Bitmap.CompressFormat.PNG, 0 /*ignored for PNG*/, bos);
-            byte[] bitmapdata = bos.toByteArray();
-
-//write the bytes in file
-            FileOutputStream fos = new FileOutputStream(coverartFile);
-            fos.write(bitmapdata);
-            fos.flush();
-            fos.close();
-        }
-        catch ( IOException ignore ) {
-        }
-    }
-
     public static void closeSilently(Closeable c) {
         if (c == null) return;
         try {
             c.close();
         } catch (IOException t) {
             Log.w(TAG,"closeSilently");
-        }
-    }
-
-    @Deprecated
-    public static File getDownloadPath(Context context, String path) {
-        File download = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-        return new File(download, path);
-    }
-
-    @Deprecated
-    public static String getStorageName(String storageId) {
-        if(StorageId.PRIMARY.equals(storageId)) {
-            return "PH";
-        }else {
-            return "SD";
         }
     }
 }

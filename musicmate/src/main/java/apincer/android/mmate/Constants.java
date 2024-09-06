@@ -135,7 +135,7 @@ public final class Constants {
 
     public static final String TITLE_DUPLICATE = "Duplicate Song";
     public static final String TITLE_BROKEN = "Bad Upscale File";
-    public static final String TITLE_NOT_DR_METER = "No DR Meter";
+    public static final String TITLE_NO_DR_METER = "No DR Meter";
     public static final String TITLE_INCOMING_SONGS = "My Download";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";

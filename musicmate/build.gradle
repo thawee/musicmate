@@ -239,7 +239,7 @@ dependencies {
 
     implementation deps.jupnp_android
     implementation deps.jupnp_support
-    implementation deps.netty_codec_http
+   // implementation deps.netty_codec_http
     implementation deps.apache.httpcore
     implementation deps.apache.http2core
    // implementation deps.apache.httpclient

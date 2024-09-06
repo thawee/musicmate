@@ -208,7 +208,7 @@ public class TagRepository {
                     list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
-                } else if (Constants.TITLE_NOT_DR_METER.equals(criteria.getKeyword())) {
+                } else if (Constants.TITLE_NO_DR_METER.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
@@ -316,21 +316,6 @@ public class TagRepository {
         if(newTag !=null) {
             tag.cloneFrom(newTag);
         }
-    }
-
-    @Deprecated
-    public static List<String> getArtistForGrouping(Context context, String grouping) {
-        List<String> list = new ArrayList<>();
-        List<String> names = MusixMateApp.getInstance().getOrmLite().getArtistForGrouping(grouping);
-        for (String group:names) {
-            if(StringUtils.isEmpty(group)) {
-                list.add(StringUtils.EMPTY);
-            }else {
-                list.add(group);
-            }
-        }
-        Collections.sort(list);
-        return list;
     }
 
     @Deprecated
