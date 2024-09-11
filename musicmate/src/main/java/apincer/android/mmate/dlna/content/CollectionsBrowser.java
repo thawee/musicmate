@@ -14,7 +14,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.repository.MusicTag;
@@ -27,10 +29,6 @@ import apincer.android.mmate.utils.MusicTagUtils;
 public class CollectionsBrowser extends ContentBrowser {
     public static final String MY_SONGS = "All Songs";
     public static final String DOWNLOADS_SONGS = "Download Songs";
-   // public static final String HI_RES_AUDIO = "Hi-Res Audio";
-   // public static final String LOSSLESS_AUDIO = "Lossless Audio";
-   // public static final String LOSSY_AUDIO = "Lossy Audio";
-   // public static final String MQA_AUDIO = "MQA Audio";
     public static final String DUPLICATED_SONGS = "Duplicated Songs";
     public static final String I_AM_HAPPY_SONGS = "SmartList - I Am HAPPY";
     public static final String I_FEEL_RELAXED_SONGS = "SmartList - I Feel RELAXED";
@@ -71,21 +69,23 @@ public class CollectionsBrowser extends ContentBrowser {
         }
         List<MusicTag> songs = TagRepository.getAllMusics();
         for(MusicTag tag: songs) {
-            mapped.get(MY_SONGS).addChildCount();
+            Objects.requireNonNull(mapped.get(MY_SONGS)).addChildCount();
 
            if(MusicTagUtils.isOnDownloadDir(tag)) {
-               mapped.get(DOWNLOADS_SONGS).addChildCount();
+               Objects.requireNonNull(mapped.get(DOWNLOADS_SONGS)).addChildCount();
            }
             if(MusicTagUtils.isFunPlaylist(tag)) {
-                mapped.get(I_AM_FUN_SONGS).addChildCount();
+                Objects.requireNonNull(mapped.get(I_AM_FUN_SONGS)).addChildCount();
             }
             if(MusicTagUtils.isRelaxedPlaylist(tag)) {
-                mapped.get(I_FEEL_RELAXED_SONGS).addChildCount();
+                Objects.requireNonNull(mapped.get(I_FEEL_RELAXED_SONGS)).addChildCount();
             }
             if(MusicTagUtils.isHappyPlaylist(tag)) {
-                mapped.get(I_AM_HAPPY_SONGS).addChildCount();
+                Objects.requireNonNull(mapped.get(I_AM_HAPPY_SONGS)).addChildCount();
             }
         }
+        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
+        Objects.requireNonNull(mapped.get(DUPLICATED_SONGS)).setChildCount(tags.size());
 
         for(MusicFolder group: mapped.values()) {
             MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), group.getName(), "", 0);

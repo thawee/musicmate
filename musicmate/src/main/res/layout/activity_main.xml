@@ -158,7 +158,7 @@
 							   android:paddingBottom="@dimen/dimen_8_dp"
 							   android:drawablePadding="@dimen/dimen_4_dp"
 							   android:text="MusicMate"
-							   tools:ignore="RtlSymmetry" />
+							   tools:ignore="HardcodedText,RtlSymmetry" />
 					   </LinearLayout>
 					   <TextView
 							android:id="@+id/title_text"
@@ -229,8 +229,7 @@
 
 			   <RelativeLayout
 				   android:layout_width="match_parent"
-				   android:layout_below="@+id/searchView"
-				   android:layout_height="match_parent">
+                   android:layout_height="match_parent">
 
 					   <com.scwang.smart.refresh.layout.SmartRefreshLayout
 						   android:id="@+id/refreshLayout"

@@ -4,9 +4,7 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.Nullable;
 
-import java.io.UnsupportedEncodingException;
 import java.text.BreakIterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,13 +37,13 @@ public class StringUtils {
     public static final String SEP_TITLE = "\u1931 "; //""\u1690 "; //""\u2E1F "; //""\u00b7 "; //""\u266A "; //""\u00b7 ";
     public static final String SEP_LEFT = "\u27E3 "; //""\u22A2 "; //""\u263E "; //""\u00b7\u255E "; //"" \u00ab ";
     public static final String SEP_RIGHT = " \u27E2"; //"" \u22A3"; //"" \u263D"; //"" \u2561\u00b7"; //"" \u00bb ";
-    public static final String SYMBOL_ATTENTION = " \u2249"; //"" \u266F\u266F"; // path diff
+   // public static final String SYMBOL_ATTENTION = " \u2249"; //"" \u266F\u266F"; // path diff
     //public static final String SYMBOL_ENC_SEP = " \u25C8 ";
     public static final String SYMBOL_ENC_SEP = " | ";
     public static final String SYMBOL_SEP = " \u25C8 "; //"" \u2051 "; //"" \u17C7 ";
     public static final String SYMBOL_HEADER_SEP = " \u25C8 ";
-    public static final String SYMBOL_GENRE = " \u24BC ";
-    public static final String SYMBOL_MUSIC_NOTE = " \u266A ";
+  //  public static final String SYMBOL_GENRE = " \u24BC ";
+  //  public static final String SYMBOL_MUSIC_NOTE = " \u266A ";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";
@@ -53,82 +51,10 @@ public class StringUtils {
     public static final String UNTITLED_CAP = "<Untitled>";
     public static final String MULTI_VALUES = "<*>";
     public static final String CHARSET_ISO8859_1 = "ISO-8859-1";
-    public static final String SYMBOL_RES_SEP = " \u25C8 ";
+  //  public static final String SYMBOL_RES_SEP = " \u25C8 ";
     public static final String EMPTY = " - "; // must left as empty for dropdown list
 
     private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
-
-    public static String encodeText(String text, String encode) {
-        if(StringUtils.isEmpty(encode)) {
-            return text;
-        }
-        if(StringUtils.isEmpty(text)) {
-            return "";
-        }
-        try {
-            return newString(getBytesUnchecked(text,CHARSET_ISO8859_1),encode);
-        } catch (Exception e) {
-            return text;
-        }
-    }
-
-
-    /**
-     * Returns an HTML-escaped version of the given string for safe display
-     * within a web page. The characters '&amp;', '&gt;' and '&lt;' must always
-     * be escaped, and single and double quotes must be escaped within
-     * attribute values; this method escapes them always. This method can
-     * be used for generating both HTML and XHTML valid content.
-     *
-     * @param s the string to escape
-     * @return the escaped string
-     * @see <a href="http://www.w3.org/International/questions/qa-escapes">The W3C FAQ</a>
-     */
-    public static String escapeHTML(String s) {
-        int len = s.length();
-        StringBuilder sb = new StringBuilder(len + 30);
-        int start = 0;
-        for (int i = 0; i < len; i++) {
-            String ref = null;
-            switch (s.charAt(i)) {
-                case '&': ref = "&amp;"; break;
-                case '>': ref = "&gt;"; break;
-                case '<': ref = "&lt;"; break;
-                case '"': ref = "&quot;"; break;
-                case '\'': ref = "&#39;"; break;
-            }
-            if (ref != null) {
-                sb.append(s.substring(start, i)).append(ref);
-                start = i + 1;
-            }
-        }
-        return start == 0 ? s : sb.append(s.substring(start)).toString();
-    }
-
-
-    public static byte[]getBytesUnchecked(String string, String charsetName) {
-
-        if (string == null) {
-            return null;
-        }
-        try {
-            return string.getBytes(charsetName);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
-    }
-
-    public static String newString(byte[] bytes, String charsetName) {
-        if (bytes == null) {
-            return "";
-        }
-
-        try {
-            return new String(bytes, charsetName);
-        } catch (UnsupportedEncodingException e) {
-            return new String(bytes);
-        }
-    }
 
     public static boolean equals(String album, String album1) {
         return trimTitle(album).equals(trimTitle(album1));
@@ -159,7 +85,7 @@ public class StringUtils {
     public static boolean isEmpty(String input) {
         if(input == null) {
             return true;
-        }else return input.trim().length() == 0;
+        }else return input.trim().isEmpty();
     }
 
     public static String convertToStartCase(String value) {
@@ -371,17 +297,6 @@ public class StringUtils {
         return null;
     }
 
-    public static String merge(List<String> list, String s) {
-        StringBuilder builder = new StringBuilder();
-        for(String str:list) {
-            if(builder.length()>0) {
-                builder.append(s);
-            }
-            builder.append(str);
-        }
-        return builder.toString();
-    }
-
     public static String remove(String txt, String toRemove) {
         if(isEmpty(txt)) return "";
         if(isEmpty(toRemove)) return txt;
@@ -425,7 +340,7 @@ public class StringUtils {
         }else if(bytes<= StorageVolume.GB_IN_BYTES){
             s = s/StorageVolume.MB_IN_BYTES;
             unit = "MB";
-        }else if(bytes> StorageVolume.GB_IN_BYTES) {
+        }else { //if(bytes> StorageVolume.GB_IN_BYTES) {
            s = s/StorageVolume.GB_IN_BYTES;
            unit = "GB";
         }
@@ -506,15 +421,14 @@ public class StringUtils {
         }
     }
     public static String formatAudioBitRateShortUnit(long audioBitRate) {
-        if(audioBitRate>1000000) {
+        if(audioBitRate>10000000) { // > 1000 K
             double dBitrate = audioBitRate/1000000.00;
-            return String.format(Locale.getDefault(), "%.1fM", dBitrate);
+            return String.format(Locale.getDefault(), "%.3f M", dBitrate);
         }else {
             double dBitrate = audioBitRate/1000.00;
-            return String.format(Locale.getDefault(), "%.0fK", dBitrate);
+            return String.format(Locale.getDefault(), "%.0f K", dBitrate);
         }
     }
-
 
     public static String formatAudioBitsDepth(int bit) {
             return String.format(Locale.getDefault(), "%d Bit", bit);

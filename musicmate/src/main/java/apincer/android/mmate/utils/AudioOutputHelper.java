@@ -29,9 +29,20 @@ import java.util.HashMap;
 import java.util.List;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.repository.MusicTag;
 
 public class AudioOutputHelper {
     private static final String TAG = AudioOutputHelper.class.getName();
+
+    public static Device getDLNADevice(MusicTag tag) {
+        Device device = new Device();
+        device.setCodec("DLNA");
+        device.setBitPerSampling(tag.getAudioBitsDepth());
+        device.setSamplingRate(tag.getAudioSampleRate());
+        device.bitRate = tag.getAudioBitRate();
+        return device;
+    }
+
     public static class Device {
         public String getName() {
             return name;
@@ -56,6 +67,7 @@ public class AudioOutputHelper {
         String name;
         int bitPerSampling;
         long samplingRate;
+        long bitRate;
         String description;
 
         public int getBitPerSampling() {
@@ -117,14 +129,15 @@ public class AudioOutputHelper {
         //  text = text+"\nAudio Devices:";
         for (AudioDeviceInfo a : adi) {
             boolean foundDevice = false;
-            if (isUSBDevice(devicetype, deviceName)) {
+            if (isUSBDevice(devicetype, deviceName) || isHDMIDevice(devicetype, deviceName)) {
                 // USB
                 setResolutions(outputDevice, a, desc);
                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
                 outputDevice.setAddress(a.getAddress());
                 UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
                 HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
-                outputDevice.setCodec("DAC");
+                outputDevice.setCodec("Direct");
+               // outputDevice.setCodec("DAC");
                 for (UsbDevice device : deviceList.values()) {
                     outputDevice.setName(device.getProductName());
                     foundDevice = true;
@@ -134,14 +147,15 @@ public class AudioOutputHelper {
                 outputDevice.setAddress(a.getAddress());
                 outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
                 getA2DP(context, outputDevice, callback, desc);
-                foundDevice = false;
-            }else if (isHDMIDevice(devicetype, deviceName)) {
+                foundDevice = true;
+        /*    }else if (isHDMIDevice(devicetype, deviceName)) {
                  outputDevice.setName(String.valueOf(ri.getName()));
-                 outputDevice.setCodec("HDMI");
+                // outputDevice.setCodec("HDMI");
                  setResolutions(outputDevice, a, desc);
                  outputDevice.setResId(R.drawable.ic_baseline_usb_24);
-                 foundDevice = true;
+                 foundDevice = true; */
              }
+
             if(!foundDevice) {
                 // built-in and others
                 //AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
@@ -226,75 +240,41 @@ public class AudioOutputHelper {
      * @return string which describes the type of audio device
      */
     static String typeToString(int type){
-        switch (type) {
-            case AudioDeviceInfo.TYPE_AUX_LINE:
-                return "aux line-level connectors";
-            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-                return "Bluetooth device w/ A2DP profile";
-            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
-                return "Bluetooth device w/ telephony";
-            case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE:
-                return "built-in earphone speaker";
-            case AudioDeviceInfo.TYPE_BUILTIN_MIC:
-                return "built-in microphone";
-            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER:
-                return "built-in speaker";
-            case AudioDeviceInfo.TYPE_BUS:
-                return "BUS";
-            case AudioDeviceInfo.TYPE_DOCK:
-                return "DOCK";
-            case AudioDeviceInfo.TYPE_FM:
-                return "FM";
-            case AudioDeviceInfo.TYPE_FM_TUNER:
-                return "FM tuner";
-            case AudioDeviceInfo.TYPE_HDMI:
-                return "HDMI";
-            case AudioDeviceInfo.TYPE_HDMI_ARC:
-                return "HDMI audio return channel";
-            case AudioDeviceInfo.TYPE_IP:
-                return "IP";
-            case AudioDeviceInfo.TYPE_LINE_DIGITAL:
-                return "line digital";
-            case AudioDeviceInfo.TYPE_TELEPHONY:
-                return "telephony";
-            case AudioDeviceInfo.TYPE_TV_TUNER:
-                return "TV tuner";
-            case AudioDeviceInfo.TYPE_USB_ACCESSORY:
-                return "USB accessory";
-            case AudioDeviceInfo.TYPE_USB_DEVICE:
-                return "USB device";
-            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
-                return "wired headphones";
-            case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-                return "wired headset";
-            default:
-            case AudioDeviceInfo.TYPE_UNKNOWN:
-                return "";
-        }
+        return switch (type) {
+            case AudioDeviceInfo.TYPE_AUX_LINE -> "aux line-level connectors";
+            case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "Bluetooth device w/ A2DP profile";
+            case AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth device w/ telephony";
+            case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "built-in earphone speaker";
+            case AudioDeviceInfo.TYPE_BUILTIN_MIC -> "built-in microphone";
+            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "built-in speaker";
+            case AudioDeviceInfo.TYPE_BUS -> "BUS";
+            case AudioDeviceInfo.TYPE_DOCK -> "DOCK";
+            case AudioDeviceInfo.TYPE_FM -> "FM";
+            case AudioDeviceInfo.TYPE_FM_TUNER -> "FM tuner";
+            case AudioDeviceInfo.TYPE_HDMI -> "HDMI";
+            case AudioDeviceInfo.TYPE_HDMI_ARC -> "HDMI audio return channel";
+            case AudioDeviceInfo.TYPE_IP -> "IP";
+            case AudioDeviceInfo.TYPE_LINE_DIGITAL -> "line digital";
+            case AudioDeviceInfo.TYPE_TELEPHONY -> "telephony";
+            case AudioDeviceInfo.TYPE_TV_TUNER -> "TV tuner";
+            case AudioDeviceInfo.TYPE_USB_ACCESSORY -> "USB accessory";
+            case AudioDeviceInfo.TYPE_USB_DEVICE -> "USB device";
+            case AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "wired headphones";
+            case AudioDeviceInfo.TYPE_WIRED_HEADSET -> "wired headset";
+            default -> "";
+        };
     }
 
     private static void setResolutions(Device outputDevice, AudioDeviceInfo device, String desc) {
         int encoding = intArrayLastIndex(device.getEncodings());
-        int bps = 16;
-        switch (encoding) {
-                case AudioFormat.ENCODING_PCM_8BIT:
-                    bps = 8;
-                    break;
-                case AudioFormat.ENCODING_PCM_16BIT:
-                    bps = 16;
-                    break;
-                case AudioFormat.ENCODING_PCM_FLOAT:
-                case AudioFormat.ENCODING_PCM_24BIT_PACKED:
-                    bps = 24;
-                    break;
-                case AudioFormat.ENCODING_PCM_32BIT:
-                    bps = 32;
-                    break;
-            default:
-                bps = 16;
-        }
+        int bps = switch (encoding) {
+            case AudioFormat.ENCODING_PCM_8BIT -> 8;
+            case AudioFormat.ENCODING_PCM_FLOAT, AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24;
+            case AudioFormat.ENCODING_PCM_32BIT -> 32;
+            default -> 16;
+        };
         outputDevice.setBitPerSampling(bps);
-
+        device.getChannelCounts();
         int rate = intArrayLastIndex(device.getSampleRates());
         outputDevice.setSamplingRate(rate);
         outputDevice.setDescription(desc);
@@ -312,7 +292,9 @@ public class AudioOutputHelper {
             codec = codec.substring(0,6);
         }
         codec = StringUtils.trimToEmpty(codec);
-        String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
+        //String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
+        long bitRate  = dev.bitRate>0?dev.bitRate:dev.getBitPerSampling()*dev.getSamplingRate();
+        String rate  = StringUtils.formatAudioBitRateShortUnit(bitRate);
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 2;
@@ -458,7 +440,7 @@ public class AudioOutputHelper {
         device1.setDescription("N/A");
         if (bA2dp == null || device == null) return ;
         try {
-            Class cls = Class.forName("android.bluetooth.BluetoothA2dp");
+            Class<?> cls = Class.forName("android.bluetooth.BluetoothA2dp");
             Class[] attrs = new Class[]{BluetoothDevice.class};
             Object object = cls.getMethod("getCodecStatus", attrs).invoke(bA2dp, device);
             if (object == null) return ;

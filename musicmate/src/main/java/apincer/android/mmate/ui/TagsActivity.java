@@ -25,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -76,6 +77,7 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
+import coil.target.Target;
 import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
@@ -458,7 +460,15 @@ public class TagsActivity extends AppCompatActivity {
                 .error(getDefaultNoCover(displayTag))
               //  .placeholder(R.drawable.progress)
               //  .error(R.drawable.no_cover2)
-                .target(reflectionView)
+              //  .target(reflectionView)
+                .target(new Target() {
+                    @Override
+                    public void onSuccess(@NonNull Drawable result) {
+                        Target.super.onSuccess(result);
+                        reflectionView.setImageDrawable(result);
+                        reflectionView.setColorFilter(R.color.material_color_blue_grey_400);
+                    }
+                })
                 .build();
         imageLoader.enqueue(request);
 

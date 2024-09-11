@@ -433,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 	
-	private void doShowNowPlayingSongFAB(final MusicTag song) {
+	private void doShowNowPlayingPanel(final MusicTag song) {
         if (song == null) {
             doHideNowPlayingSongFAB();
             return;
@@ -504,7 +504,8 @@ public class MainActivity extends AppCompatActivity {
             MusicMateExecutors.main(() -> {
                 if(player != null) {
                     if (player.isStreamPlayer()) {
-                        nowPlayingOutputDevice.setVisibility(View.GONE);
+                        nowPlayingOutputDevice.setVisibility(View.VISIBLE);
+                        nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), AudioOutputHelper.getDLNADevice(nowPlaying)));
                     } else {
                         nowPlayingOutputDevice.setVisibility(View.VISIBLE);
                         AudioOutputHelper.getOutputDevice(getApplicationContext(), device -> nowPlayingOutputDevice.setImageBitmap(AudioOutputHelper.getOutputDeviceIcon(getApplicationContext(), device)));
@@ -576,15 +577,6 @@ public class MainActivity extends AppCompatActivity {
                 .start());
     }
 
-    /*
-    private void doStartRefresh(SearchCriteria criteria) {
-        if(criteria!= null) {
-            doStartRefresh(criteria.getType(), criteria.getKeyword());
-        }else {
-            refreshLayout.autoRefresh();
-        }
-    } */
-
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
         adapter.setType(type);
         adapter.setKeyword(keyword);
@@ -634,18 +626,6 @@ public class MainActivity extends AppCompatActivity {
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
     }
-
-    /*
-    private void setUpEditorLauncher() {
-        editorLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            // support filter by artist, albnum, path
-            if (result.getData() != null) {
-                // if return criteria, use it otherwise provide null
-                SearchCriteria criteria = ApplicationUtils.getSearchCriteria(result.getData());
-                adapter.loadDataSets(criteria);
-            }
-        });
-    } */
 
     private void setUpHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
@@ -813,7 +793,7 @@ public class MainActivity extends AppCompatActivity {
         // load music items
         // loading recycleview list on start activity
         refreshLayout.autoRefresh();
-        doShowNowPlayingSongFAB(MusixMateApp.getPlayerControl().getPlayingSong());
+        doShowNowPlayingPanel(MusixMateApp.getPlayerControl().getPlayingSong());
     }
 
     @Override
@@ -1163,7 +1143,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
                     if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        doShowNowPlayingSongFAB(MusixMateApp.getPlayerControl().getPlayingSong());
+                        doShowNowPlayingPanel(MusixMateApp.getPlayerControl().getPlayingSong());
                     }else {
 						doHideNowPlayingSongFAB();
                     }
@@ -1233,9 +1213,6 @@ public class MainActivity extends AppCompatActivity {
                         refreshLayout.autoRefresh();
                     })
                     .build();
-           // powerMenu.setShowBackground(false); // do not showing background.
-           // int height = powerMenu.getContentViewHeight();
-           // int height = 480;
             powerMenu.showAsDropDown(titleText, -96, 0); //,0, (-1)*height*(items.size()+1)); // view is an anchor
         });
 
@@ -1267,7 +1244,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onPlaying(MusicTag song) {
         if(song!=null) {
-            runOnUiThread(() -> doShowNowPlayingSongFAB(song));
+            runOnUiThread(() -> doShowNowPlayingPanel(song));
             if(Settings.isListFollowNowPlaying(getBaseContext())) {
                     if(timer!=null) {
                             timer.cancel();
