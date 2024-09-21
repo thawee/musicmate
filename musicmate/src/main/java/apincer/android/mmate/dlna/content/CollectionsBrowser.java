@@ -28,21 +28,24 @@ import apincer.android.mmate.utils.MusicTagUtils;
  */
 public class CollectionsBrowser extends ContentBrowser {
     public static final String MY_SONGS = "All Songs";
-    public static final String DOWNLOADS_SONGS = "Download Songs";
+    public static final String DOWNLOADS_SONGS = "Downloaded Songs";
     public static final String DUPLICATED_SONGS = "Duplicated Songs";
-    public static final String I_AM_HAPPY_SONGS = "SmartList - I Am HAPPY";
-    public static final String I_FEEL_RELAXED_SONGS = "SmartList - I Feel RELAXED";
-    public static final String I_AM_FUN_SONGS = "SmartList - I Am FUN";
+    public static final String SMART_LIST_FINFIN_SONGS = "เพลงฟินๆ รินเบียร์เย็นๆ";
+    public static final String SMART_LIST_RELAXED_SONGS = "ยานอนหลับ ฉบับสากล";
+    public static final String SMART_LIST_ISAAN_SONGS = "สะออนเสียงลำ จ๊วดๆ ม่วนๆ";
+    public static final String SMART_LIST_BAANTHUNG_SONGS = "คิดถึง บ้านทุ่งท้องนา";
+    public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
     private final List<String> playlists = new ArrayList<>();
     public CollectionsBrowser(Context context) {
         super(context);
         playlists.add(MY_SONGS);
         playlists.add(DOWNLOADS_SONGS);
         playlists.add(DUPLICATED_SONGS);
-        playlists.add(I_AM_HAPPY_SONGS);
-        playlists.add(I_FEEL_RELAXED_SONGS);
-        playlists.add(I_AM_FUN_SONGS);
-       // playlists.add("Up Scaled Songs");
+        playlists.add(SMART_LIST_FINFIN_SONGS);
+        playlists.add(SMART_LIST_RELAXED_SONGS);
+        playlists.add(SMART_LIST_BAANTHUNG_SONGS);
+        playlists.add(SMART_LIST_ISAAN_SONGS);
+        playlists.add(SMART_LIST_CLASSIC_SONGS);
     }
 
     @Override
@@ -70,18 +73,23 @@ public class CollectionsBrowser extends ContentBrowser {
         List<MusicTag> songs = TagRepository.getAllMusics();
         for(MusicTag tag: songs) {
             Objects.requireNonNull(mapped.get(MY_SONGS)).addChildCount();
-
            if(MusicTagUtils.isOnDownloadDir(tag)) {
                Objects.requireNonNull(mapped.get(DOWNLOADS_SONGS)).addChildCount();
            }
-            if(MusicTagUtils.isFunPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(I_AM_FUN_SONGS)).addChildCount();
+            if(MusicTagUtils.isISaanPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_ISAAN_SONGS)).addChildCount();
             }
             if(MusicTagUtils.isRelaxedPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(I_FEEL_RELAXED_SONGS)).addChildCount();
+                Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_SONGS)).addChildCount();
             }
-            if(MusicTagUtils.isHappyPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(I_AM_HAPPY_SONGS)).addChildCount();
+            if(MusicTagUtils.isFinFinPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_SONGS)).addChildCount();
+            }
+            if(MusicTagUtils.isBaanThungPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_BAANTHUNG_SONGS)).addChildCount();
+            }
+            if(MusicTagUtils.isClassicPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_CLASSIC_SONGS)).addChildCount();
             }
         }
         List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();

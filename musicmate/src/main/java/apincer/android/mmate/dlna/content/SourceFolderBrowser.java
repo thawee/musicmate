@@ -102,6 +102,7 @@ public class SourceFolderBrowser extends ContentBrowser {
             id = id.substring(0, id.length()-ALL_SONGS.length()-1);
         }
 
+        maxResults = forceFullContent?0:maxResults;
         List<MusicTag> list = TagRepository.findInPath(id);
         int idlength = id.length();
         int currentCount = 0;
@@ -110,11 +111,12 @@ public class SourceFolderBrowser extends ContentBrowser {
             int idx = path.indexOf("/", idlength+1); // for
             if(allSongs || (idx <= idlength)) {
                 // found music on t=current directory
-                if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                if (maxResults==0 || ((currentCount >= firstResult) && currentCount < (firstResult+maxResults))){
                     MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_SOURCE_ITEM_PREFIX.getId());
                     result.add(musicTrack);
                 }
-                if(!forceFullContent) currentCount++;
+                currentCount++;
+                //if(!forceFullContent) currentCount++;
             }
         }
 

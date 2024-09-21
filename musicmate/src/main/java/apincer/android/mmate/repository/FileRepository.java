@@ -392,9 +392,11 @@ public class FileRepository {
         if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
             return STORAGE_PRIMARY;
-        }else if (!MusicTagUtils.isLossless(metadata)) {
+        }else if (MusicTagUtils.isHiRes(metadata)) {
+            return STORAGE_PRIMARY;
+       // }else if (!MusicTagUtils.isLossless(metadata)) {
             // compress id keep on
-            return STORAGE_SECONDARY;
+       //     return STORAGE_SECONDARY;
         //}else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getMediaQuality())) {
             // Audiophile
         //    return STORAGE_PRIMARY;

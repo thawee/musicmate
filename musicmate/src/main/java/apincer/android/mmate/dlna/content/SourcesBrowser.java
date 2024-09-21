@@ -57,9 +57,11 @@ public class SourcesBrowser extends ContentBrowser {
         }
 
         for(MusicFolder dir: rootDIRs) {
-            StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getName(), "", 0, null);
-            musicDir.setChildCount((int)dir.getChildCount());
-            result.add(musicDir);
+            if(dir.getChildCount() > 0) {
+                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getName(), "", 0, null);
+                musicDir.setChildCount((int) dir.getChildCount());
+                result.add(musicDir);
+            }
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
 

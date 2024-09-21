@@ -27,5 +27,5 @@ include ':library:esoco-monads'
 
 include ':library:mqaidentifier'
 //include ':library:musicmeterlib'
-include ':library:jaudiotagger'
+//include ':library:jaudiotagger'
 include ':library:jaudiotagger-android'

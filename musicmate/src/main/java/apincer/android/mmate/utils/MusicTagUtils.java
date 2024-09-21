@@ -411,7 +411,7 @@ public class MusicTagUtils {
         if(isMQA(tag)) {
             sampleRate = tag.getMqaSampleRate();
         }
-        return String.format("%s/%s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
+        return String.format("%s / %s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
     }
 
     @Deprecated
@@ -1442,7 +1442,8 @@ public class MusicTagUtils {
         }
     }
     public static boolean isOnDownloadDir(MusicTag tag) {
-        return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
+        return !tag.isMusicManaged();
+       // return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
     @Deprecated
@@ -1853,13 +1854,11 @@ public class MusicTagUtils {
 
     public static String getEncodingType(MusicTag tag) {
         if(tag.isDSD()) {
-            return Constants.AUDIO_SQ_DSD;
+            return Constants.TITLE_DSD;
         }else if(isMQA(tag)) {
-                  return Constants.AUDIO_SQ_PCM_MQA;
+                  return Constants.TITLE_MQA;
         }else if(isHiRes(tag)) {
             return Constants.TITLE_HIRES;
-            //}else if(isPCMHiResLossless(tag)) {
-            //    return Constants.TITLE_HR_LOSSLESS;
         }else if(isLossless(tag)) {
             return Constants.TITLE_HIFI_LOSSLESS;
         }else {
@@ -2116,9 +2115,19 @@ public class MusicTagUtils {
         return ext;
     }
 
-    public static boolean isFunPlaylist(MusicTag tag) {
-        return ("Luk Thung".equalsIgnoreCase(tag.getGenre()) ||
-                "Mor Lum".equalsIgnoreCase(tag.getGenre()));
+    public static boolean isISaanPlaylist(MusicTag tag) {
+       // return ("Luk Thung".equalsIgnoreCase(tag.getGenre()) ||
+       //         "Mor Lum".equalsIgnoreCase(tag.getGenre()));
+      //  return ("Mor Lum".equalsIgnoreCase(tag.getGenre()));
+
+         return (trimToEmpty(tag.getGenre()).toUpperCase().contains("ISAAN") ||
+                 "Mor Lum".equalsIgnoreCase(tag.getGenre()));
+    }
+
+    public static boolean isBaanThungPlaylist(MusicTag tag) {
+       // return ("Luk Thung".equalsIgnoreCase(tag.getGenre()));
+        return ("Thai Indie".equalsIgnoreCase(tag.getGenre()) ||
+                "Luk Thung".equalsIgnoreCase(tag.getGenre()));
     }
 
     public static boolean isRelaxedPlaylist(MusicTag tag) {
@@ -2127,9 +2136,19 @@ public class MusicTagUtils {
                 grouping.contains("ACOUSTIC"));
     }
 
-    public static boolean isHappyPlaylist(MusicTag tag) {
-        return !(isRelaxedPlaylist(tag) || isFunPlaylist(tag));
-       // return !isFunPlaylist(tag);
+    public static boolean isClassicPlaylist(MusicTag tag) {
+        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (genre.contains("CLASSIC"));
+    }
+
+    public static boolean isFinFinPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
+        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return ((grouping.equalsIgnoreCase("English") ||
+                grouping.equalsIgnoreCase("Thai")) &&
+                !(genre.contains("JAZZ") || genre.contains("LUK THUNG") || genre.contains("MOR LUM"))
+        );
+       // return !(isRelaxedPlaylist(tag) || isISaanPlaylist(tag));
     }
 
     public static boolean isAACFile(MusicTag musicTag) {

@@ -1,5 +1,9 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.Constants.TITLE_DSD;
+import static apincer.android.mmate.Constants.TITLE_HQ;
+import static apincer.android.mmate.Constants.TITLE_MQA;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -104,12 +108,12 @@ public class AboutActivity extends AppCompatActivity {
 
             TextView encodingHeader = v.findViewById(R.id.encoding_header);
             TextView encodingDetail = v.findViewById(R.id.encoding_details);
-            v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings("HQ", encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings("Lossless", encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings(TITLE_HQ, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings("Hi-FI", encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_hires).setOnClickListener(view -> updateEncodings("Hi-Res", encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings("DSD", encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings("MQA", encodingHeader, encodingDetail));
-            updateEncodings("HQ", encodingHeader, encodingDetail);
+            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(TITLE_DSD, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(TITLE_MQA, encodingHeader, encodingDetail));
+            updateEncodings(TITLE_HQ, encodingHeader, encodingDetail);
 
             TextView qualityDetail = v.findViewById(R.id.quality_details);
             String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.txt");
@@ -123,14 +127,6 @@ public class AboutActivity extends AppCompatActivity {
                         .bold()
                         .textColor(Color.BLACK)
                     .done()
-                   /* .format("Up-Scaling Meter")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("Up-Sampling Meter")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done() */
                     .into(qualityDetail);
 
 
@@ -182,7 +178,8 @@ public class AboutActivity extends AppCompatActivity {
 
                     // file type piechart
                     //setupEncodingChart(v, encList, "Music File Format");
-                    setupEncodingChart(v, grpList, "");
+                   // setupEncodingChart(v, grpList, "");
+                    setupEncodingChart(v, encList, "");
 
                     // setup digital music details
                    // String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
@@ -205,16 +202,16 @@ public class AboutActivity extends AppCompatActivity {
         }
 
         private String getEncodingHeader(String btn) {
-            if("HQ".equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
-            if("Lossless".equalsIgnoreCase(btn)) return getString(R.string.encoding_lossless_header);
+            if(TITLE_HQ.equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
+            if("Hi-FI".equalsIgnoreCase(btn)) return getString(R.string.encoding_lossless_header);
             if("Hi-Res".equalsIgnoreCase(btn)) return getString(R.string.encoding_hires_header);
-            if("DSD".equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
-            if("MQA".equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
+            if(TITLE_DSD.equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
+            if(TITLE_MQA.equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
             return btn;
         }
 
         private TextBuilder getEncodingDetailBuilder(String btn) {
-            if("HQ".equalsIgnoreCase(btn)) {
+            if(TITLE_HQ.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_hq_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -231,7 +228,7 @@ public class AboutActivity extends AppCompatActivity {
                        // .addWhiteSpace()
                       //  .addColoredTextRes(R.string.encoding_hq_recommended, R.color.encoding_desc);
             }
-            if("Lossless".equalsIgnoreCase(btn)) {
+            if("Hi-FI".equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_lossless_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -265,7 +262,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_hires_recommended, R.color.encoding_detail);
             }
-            if("DSD".equalsIgnoreCase(btn)) {
+            if(TITLE_DSD.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_dsd_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -282,7 +279,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_dsd_recommended, R.color.encoding_detail);
             }
-            if("MQA".equalsIgnoreCase(btn)) {
+            if(TITLE_MQA.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_mqa_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -291,10 +288,10 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_mqa_format, R.color.encoding_detail)
                         .addNewLine()
-                        .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
-                        .addWhiteSpace()
-                        .addColoredTextRes(R.string.encoding_mqa_resolution, R.color.encoding_detail)
-                        .addNewLine()
+                       // .addColoredTextRes(R.string.label_file_resolution, R.color.encoding_label)
+                       // .addWhiteSpace()
+                       // .addColoredTextRes(R.string.encoding_mqa_resolution, R.color.encoding_detail)
+                       // .addNewLine()
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_mqa_green_header, R.color.mqa_master)
                         .addWhiteSpace()
@@ -354,10 +351,10 @@ public class AboutActivity extends AppCompatActivity {
             chart.setDrawEntryLabels(false);
             //  chart.setEntryLabelTypeface(tfRegular);
             chart.setEntryLabelTextSize(10f);
-            setData(chart, encList, title);
+            setDataForEncodings(chart, encList, title);
         }
 
-        private void setData(PieChart chart, Map<String, Integer> encList, String title) {
+        private void setDataForGroupings(PieChart chart, Map<String, Integer> encList, String title) {
             ArrayList<PieEntry> entries = new ArrayList<>();
 
             // NOTE: The order of the entries when being added to the entries array determines their position around the center of
@@ -366,28 +363,70 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
-            /*mappedColors.put("DSD", ColorTemplate.rgb("#003f5c"));
-            mappedColors.put("MQA", ColorTemplate.rgb("#58508d"));
-            mappedColors.put("Hi-Res Lossless", ColorTemplate.rgb("#ff1600"));
-            mappedColors.put("Lossless", ColorTemplate.rgb("#bc5090"));
-            mappedColors.put("High Quality", ColorTemplate.rgb("#ff6361")); */
-
-          //  mappedColors.put("DSD", ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
             mappedColors.put("Lounge", ContextCompat.getColor(getContext(), R.color.material_color_green_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
             mappedColors.put("Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_400));//ColorTemplate.rgb("#a8aa41"));
-          //  mappedColors.put("MQA", ColorTemplate.rgb("#a8aa41"));
             mappedColors.put("Live", ContextCompat.getColor(getContext(), R.color.material_color_yellow_100)); //ColorTemplate.rgb("#a8aa41"));
-          //  mappedColors.put("Hi-Res", ColorTemplate.rgb("#488f31"));
             mappedColors.put("English", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_600)); //ColorTemplate.rgb("#488f31"));
-           // mappedColors.put("Lossless", ColorTemplate.rgb("#dcb85a"));
             mappedColors.put(Constants.UNKNOWN_GROUP, ContextCompat.getColor(getContext(), R.color.red_light)); //ColorTemplate.rgb("#de425b"));
-           // mappedColors.put("High Quality", ColorTemplate.rgb("#de425b"));
             mappedColors.put("Thai", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_200)); //ColorTemplate.rgb("#de425b"));
             mappedColors.put("Thai Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_800)); //ColorTemplate.rgb("#488f31"));
             mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
             mappedColors.put("Thai Lounge", ContextCompat.getColor(getContext(), R.color.material_color_green_800)); //ColorTemplate.rgb("#dcb85a"));
             mappedColors.put("World", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_900)); //ColorTemplate.rgb("#f48558"));
             for(String enc: encList.keySet()) {
+                entries.add(new PieEntry(encList.get(enc), enc));
+                if(mappedColors.containsKey(enc)) {
+                    colors.add(mappedColors.get(enc));
+                }else {
+                    colors.add(ColorTemplate.COLORFUL_COLORS[0]);
+                }
+            }
+
+            PieDataSet dataSet = new PieDataSet(entries, title);
+            //setting size of the value
+            dataSet.setValueLinePart1OffsetPercentage(0.0f);
+            dataSet.setValueLinePart1Length(1f);
+            dataSet.setValueLinePart2Length(0.4f);
+
+            dataSet.setDrawIcons(false);
+            dataSet.setSliceSpace(2f); //space between each slice
+            dataSet.setValueLineColor(Color.WHITE);
+            dataSet.setSelectionShift(2f);
+            //setting position of the value
+            dataSet.setYValuePosition(PieDataSet.ValuePosition.INSIDE_SLICE); // display value outside with pointing line
+            dataSet.setUsingSliceColorAsValueLineColor(true);
+            dataSet.setAutomaticallyDisableSliceSpacing(true);
+
+            dataSet.setColors(colors);
+
+            PieData data = new PieData(dataSet);
+            data.setValueFormatter(new PercentFormatter());
+            data.setValueTextSize(10f);
+            data.setValueTextColor(Color.BLACK);
+            chart.setData(data);
+
+            // undo all highlights
+            chart.highlightValues(null);
+
+            chart.invalidate();
+        }
+
+        private void setDataForEncodings(PieChart chart, Map<String, Integer> encList, String title) {
+            ArrayList<PieEntry> entries = new ArrayList<>();
+
+            // NOTE: The order of the entries when being added to the entries array determines their position around the center of
+            // the chart.
+            // add a lot of colors
+            ArrayList<Integer> colors = new ArrayList<>();
+            Map<String, Integer> mappedColors = new HashMap<>();
+
+            mappedColors.put(Constants.TITLE_DSD, ContextCompat.getColor(getContext(), R.color.resolution_dsd_64_128));
+            mappedColors.put(Constants.TITLE_MQA, ContextCompat.getColor(getContext(), R.color.resolution_mqa));
+            mappedColors.put(Constants.TITLE_HIRES, ContextCompat.getColor(getContext(), R.color.resolution_pcm_96));
+            mappedColors.put(Constants.TITLE_HIFI_LOSSLESS, ContextCompat.getColor(getContext(), R.color.resolution_pcm_44_48));
+            mappedColors.put(Constants.TITLE_HIGH_QUALITY, ContextCompat.getColor(getContext(), R.color.file_format_lossy));
+
+             for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));
                 if(mappedColors.containsKey(enc)) {
                     colors.add(mappedColors.get(enc));

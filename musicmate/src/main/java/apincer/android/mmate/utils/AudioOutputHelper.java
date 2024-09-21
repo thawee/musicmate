@@ -1,5 +1,7 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
@@ -37,9 +39,11 @@ public class AudioOutputHelper {
     public static Device getDLNADevice(MusicTag tag) {
         Device device = new Device();
         device.setCodec("DLNA");
-        device.setBitPerSampling(tag.getAudioBitsDepth());
-        device.setSamplingRate(tag.getAudioSampleRate());
-        device.bitRate = tag.getAudioBitRate();
+        if(tag != null) {
+            device.setBitPerSampling(tag.getAudioBitsDepth());
+            device.setSamplingRate(tag.getAudioSampleRate());
+            device.bitRate = tag.getAudioBitRate();
+        }
         return device;
     }
 
@@ -292,6 +296,9 @@ public class AudioOutputHelper {
             codec = codec.substring(0,6);
         }
         codec = StringUtils.trimToEmpty(codec);
+        if(isEmpty(codec)) {
+            codec = "-";
+        }
         //String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
         long bitRate  = dev.bitRate>0?dev.bitRate:dev.getBitPerSampling()*dev.getSamplingRate();
         String rate  = StringUtils.formatAudioBitRateShortUnit(bitRate);

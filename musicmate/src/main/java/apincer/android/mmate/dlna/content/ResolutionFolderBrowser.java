@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
 
@@ -42,19 +43,19 @@ public class ResolutionFolderBrowser extends ContentBrowser {
     }
 
     private List<MusicTag> getItems(ContentDirectory contentDirectory, String name) {
-        if(ResolutionsBrowser.MQA_AUDIO.equals(name)) {
+        if(Constants.TITLE_MASTER_AUDIO.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findMQASongs();
         }
-        if(ResolutionsBrowser.HI_RES_AUDIO.equals(name)) {
+        if(Constants.TITLE_HIRES.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findHiRes();
         }
-        if(ResolutionsBrowser.LOSSLESS_AUDIO.equals(name)) {
+        if(Constants.TITLE_HIFI_LOSSLESS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findLosslessSong();
         }
-        if(ResolutionsBrowser.LOSSY_AUDIO.equals(name)) {
+        if(Constants.TITLE_HIGH_QUALITY.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findHighQuality();
         }
-        if(ResolutionsBrowser.DSD_SONGS.equals(name)) {
+        if(Constants.TITLE_DSD_AUDIO.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDSDSongs();
         }
         return new ArrayList<>();

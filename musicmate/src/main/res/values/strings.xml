@@ -151,7 +151,7 @@
     <string name="label_genres">Genres</string>
     <string name="label_groupings">Groupings</string>
     <string name="downloaded">Downloads</string>
-    <string name="directory">Sources</string>
+    <string name="directory">Sources Directory</string>
 
     <string name="music">Music</string>
     <string name="playerNameAvTransport">remote</string>
@@ -192,11 +192,11 @@
     <string name="about_encoding_file">Convert audio file, Recommended FLAC for lossless and MPEG for lossy format.</string>
     <string name="label_resolutions">Resolutions</string>
     <string name="label_lossy">HQ</string>
-    <string name="label_Lossless">Lossless</string>
+    <string name="label_Lossless">Hi-FI</string>
     <string name="label_hi_res">Hi-Res</string>
     <string name="label_dsd">DSD</string>
     <string name="label_mqa">MQA</string>
-    <string name="label_audio_encoding_format">Music File Format</string>
+    <string name="label_audio_encoding_format">File Format</string>
     <string name="label_file_format">File Format:</string>
     <string name="label_file_resolution">Resolution:</string>
     <string name="label_file_recommended">Recommended Genre:</string>
@@ -235,7 +235,7 @@
     <string name="encoding_mqa_green_detail">genuine, but not yet the final release</string>
     <string name="encoding_mqa_blue_header">MQA Studio (blue):</string>
     <string name="encoding_mqa_blue_detail">directly from mastering engineers</string>
-    <string name="label_audio_quality">Music File Quality</string>
+    <string name="label_audio_quality">Music Quality</string>
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>

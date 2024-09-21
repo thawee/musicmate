@@ -17,6 +17,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.MusicTagUtils;
 
 public class CollectionFolderBrowser extends ContentBrowser {
     private static final String TAG = "PlaylistFolderBrowser";
@@ -45,22 +46,30 @@ public class CollectionFolderBrowser extends ContentBrowser {
         if(CollectionsBrowser.MY_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findMySongs();
         }
-        if(CollectionsBrowser.DOWNLOADS_SONGS.equals(name)) {
-           return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
-        }
+       // if(CollectionsBrowser.DOWNLOADS_SONGS.equals(name)) {
+       //    return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
+       // }
         if(CollectionsBrowser.DUPLICATED_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
         }
-        if(CollectionsBrowser.I_AM_FUN_SONGS.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findPLSFUNSong();
+        List<MusicTag> results = new ArrayList<>();;
+        List<MusicTag> list = MusixMateApp.getInstance().getOrmLite().findMySongs();
+        for(MusicTag tag: list) {
+            if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_ISAAN_SONGS.equals(name) && MusicTagUtils.isISaanPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS.equals(name) && MusicTagUtils.isBaanThungPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_RELAXED_SONGS.equals(name) && MusicTagUtils.isRelaxedPlaylist(tag)) {
+                results.add(tag);
+            }
         }
-        if(CollectionsBrowser.I_AM_HAPPY_SONGS.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findPLSHappySong();
-        }
-        if(CollectionsBrowser.I_FEEL_RELAXED_SONGS.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findPLSRelaxedSong();
-        }
-        return new ArrayList<>();
+        return results;
     }
 
     @Override

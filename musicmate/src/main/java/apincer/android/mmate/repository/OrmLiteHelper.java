@@ -712,6 +712,21 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    public List<MusicTag> findPLSChilloutSong() {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            Where<MusicTag, ?> where = builder.where();
+            where.ne("genre", "Luk Thung").and().ne("genre", "Mor Lum");
+            where.and().ne("grouping", "Lounge").and().ne("grouping", "Acoustic");
+            where.and().ne("grouping", "Thai Lounge").and().ne("grouping", "Thai Acoustic");
+            //  where.raw("genre <> 'Luk Thung' or genre <> 'Mor Lum') and (grouping = 'Thai' or grouping = 'English')");
+            return builder.groupBy("title").groupBy("artist").query();
+        } catch (SQLException e) {
+            return EMPTY_LIST;
+        }
+    }
+
     public List<MusicTag> findPLSRelaxedSong() {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);

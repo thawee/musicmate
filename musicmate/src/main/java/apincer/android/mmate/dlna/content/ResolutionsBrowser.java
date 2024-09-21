@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.repository.MusicTag;
@@ -25,25 +26,25 @@ import apincer.android.mmate.utils.MusicTagUtils;
  * Browser  for the music playlist folder.
  */
 public class ResolutionsBrowser extends ContentBrowser {
-    public static final String HI_RES_AUDIO = "Hi-Res Lossless Audio";
-    public static final String LOSSLESS_AUDIO = "Hi-Fi Lossless Audio";
-    public static final String LOSSY_AUDIO = "Hi-Quality Audio";
-    public static final String MQA_AUDIO = "MQA Audio";
-    public static final String DSD_SONGS = "DSD Audio";
+    //public static final String HI_RES_AUDIO = "Hi-Res Lossless Audio";
+    //public static final String LOSSLESS_AUDIO = "Hi-Fi Lossless Audio";
+    //public static final String LOSSY_AUDIO = "HiQuality Audio";
+    //public static final String MQA_AUDIO = "MQA Audio";
+    //public static final String DSD_SONGS = "DSD Audio";
     private final List<String> playlists = new ArrayList<>();
     public ResolutionsBrowser(Context context) {
         super(context);
-        playlists.add(HI_RES_AUDIO);
-        playlists.add(LOSSLESS_AUDIO);
-        playlists.add(LOSSY_AUDIO);
-        playlists.add(MQA_AUDIO);
-        playlists.add(DSD_SONGS);
+        playlists.add(Constants.TITLE_HIRES);
+        playlists.add(Constants.TITLE_HIFI_LOSSLESS);
+        playlists.add(Constants.TITLE_HIGH_QUALITY);
+        playlists.add(Constants.TITLE_MASTER_AUDIO);
+        playlists.add(Constants.TITLE_DSD_AUDIO);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_resolutions), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_audio_encoding_format), "mmate", getSize(contentDirectory, myId),
                 null);
     }
 
@@ -65,26 +66,28 @@ public class ResolutionsBrowser extends ContentBrowser {
         List<MusicTag> songs = TagRepository.getAllMusics();
         for(MusicTag tag: songs) {
            if(MusicTagUtils.isHiRes(tag)) {
-                mapped.get(HI_RES_AUDIO).addChildCount();
+                mapped.get(Constants.TITLE_HIRES).addChildCount();
            }
            if(MusicTagUtils.isMQA(tag)) {
-                mapped.get(MQA_AUDIO).addChildCount();
+                mapped.get(Constants.TITLE_MASTER_AUDIO).addChildCount();
            }
             if(MusicTagUtils.isLossless(tag)) {
-                mapped.get(LOSSLESS_AUDIO).addChildCount();
+                mapped.get(Constants.TITLE_HIFI_LOSSLESS).addChildCount();
             }
             if(MusicTagUtils.isLossy(tag)) {
-                mapped.get(LOSSY_AUDIO).addChildCount();
+                mapped.get(Constants.TITLE_HIGH_QUALITY).addChildCount();
             }
             if(MusicTagUtils.isDSD(tag)) {
-                mapped.get(DSD_SONGS).addChildCount();
+                mapped.get(Constants.TITLE_DSD_AUDIO).addChildCount();
             }
         }
 
         for(MusicFolder group: mapped.values()) {
-            MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), group.getName(), "", 0);
-            musicAlbum.setChildCount((int)group.getChildCount());
-            result.add(musicAlbum);
+            if(group.getChildCount() > 0) {
+                MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), group.getName(), "", 0);
+                musicAlbum.setChildCount((int)group.getChildCount());
+                result.add(musicAlbum);
+            }
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
