@@ -31,10 +31,12 @@ public class CollectionsBrowser extends ContentBrowser {
     public static final String DOWNLOADS_SONGS = "Downloaded Songs";
     public static final String DUPLICATED_SONGS = "Duplicated Songs";
     public static final String SMART_LIST_FINFIN_SONGS = "เพลงฟินๆ รินเบียร์เย็นๆ";
-    public static final String SMART_LIST_RELAXED_SONGS = "ยานอนหลับ ฉบับสากล";
-    public static final String SMART_LIST_ISAAN_SONGS = "สะออนเสียงลำ จ๊วดๆ ม่วนๆ";
+    public static final String SMART_LIST_RELAXED_TH_SONGS = "ยานอนหลับ ฉบับไทยๆ";
+    public static final String SMART_LIST_RELAXED_SONGS = "ยานอนหลับ ฉบับรวมมิตร";
+    public static final String SMART_LIST_ISAAN_SONGS = "สะออนแฮง สำเนียงเสียงลำ";
     public static final String SMART_LIST_BAANTHUNG_SONGS = "คิดถึง บ้านทุ่งท้องนา";
     public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+    public static final String SMART_LIST_INDIE_SONGS = "นอกกระแส แค่ฟังก็ฟิน";
     private final List<String> playlists = new ArrayList<>();
     public CollectionsBrowser(Context context) {
         super(context);
@@ -42,10 +44,12 @@ public class CollectionsBrowser extends ContentBrowser {
         playlists.add(DOWNLOADS_SONGS);
         playlists.add(DUPLICATED_SONGS);
         playlists.add(SMART_LIST_FINFIN_SONGS);
+        playlists.add(SMART_LIST_RELAXED_TH_SONGS);
         playlists.add(SMART_LIST_RELAXED_SONGS);
         playlists.add(SMART_LIST_BAANTHUNG_SONGS);
         playlists.add(SMART_LIST_ISAAN_SONGS);
         playlists.add(SMART_LIST_CLASSIC_SONGS);
+        playlists.add(SMART_LIST_INDIE_SONGS);
     }
 
     @Override
@@ -79,6 +83,9 @@ public class CollectionsBrowser extends ContentBrowser {
             if(MusicTagUtils.isISaanPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_ISAAN_SONGS)).addChildCount();
             }
+            if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).addChildCount();
+            }
             if(MusicTagUtils.isRelaxedPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_SONGS)).addChildCount();
             }
@@ -91,6 +98,10 @@ public class CollectionsBrowser extends ContentBrowser {
             if(MusicTagUtils.isClassicPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_CLASSIC_SONGS)).addChildCount();
             }
+            if(MusicTagUtils.isIndiePlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_INDIE_SONGS)).addChildCount();
+            }
+
         }
         List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
         Objects.requireNonNull(mapped.get(DUPLICATED_SONGS)).setChildCount(tags.size());

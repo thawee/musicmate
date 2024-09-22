@@ -20,7 +20,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 
 public class CollectionFolderBrowser extends ContentBrowser {
-    private static final String TAG = "PlaylistFolderBrowser";
+    private static final String TAG = "CollectionFolderBrowser";
     public CollectionFolderBrowser(Context context) {
         super(context);
     }
@@ -52,7 +52,7 @@ public class CollectionFolderBrowser extends ContentBrowser {
         if(CollectionsBrowser.DUPLICATED_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
         }
-        List<MusicTag> results = new ArrayList<>();;
+        List<MusicTag> results = new ArrayList<>();
         List<MusicTag> list = MusixMateApp.getInstance().getOrmLite().findMySongs();
         for(MusicTag tag: list) {
             if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
@@ -66,6 +66,10 @@ public class CollectionFolderBrowser extends ContentBrowser {
             }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_RELAXED_SONGS.equals(name) && MusicTagUtils.isRelaxedPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS.equals(name) && MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_INDIE_SONGS.equals(name) && MusicTagUtils.isIndiePlaylist(tag)) {
                 results.add(tag);
             }
         }

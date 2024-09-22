@@ -121,6 +121,7 @@
     </string-array>
 
     <string-array name="default_genres">
+        <item>Alternative</item>
         <item>Acoustic</item>
         <item>Classical</item>
         <item>Instrument</item>
@@ -139,17 +140,18 @@
         <item>Pop</item>
         <item>Pop, Dance</item>
         <item>Pop, Rock</item>
-        <item>Pop, Indie</item>
         <item>Pop, Vocal</item>
         <item>Rock</item>
         <item>Rock, Hard Rock</item>
         <item>Rock, Metal</item>
         <item>Rock, Soft Rock</item>
-        <item>Reggae, Ska</item>
+        <item>Reggae &amp; Ska</item>
         <item>Latin</item>
         <item>Hip Hop</item>
         <item>EDM</item>
         <item>Rap</item>
+        <item>Indie</item>
+        <item>Indie, ISaan</item>
         <!--
         <item>Thai Classical</item>
         <item>Thai Pop</item>
@@ -158,10 +160,11 @@
         <item>Thai Rock</item>
         <item>Thai Folk</item>
         <item>Thai Jazz</item>
+        <item>Kantrum</item>
         -->
+
         <item>Luk Thung</item>
         <item>Mor Lum</item>
-        <item>Kantrum</item>
     </string-array>
     <string-array name="default_groupings">
         <item>English</item>

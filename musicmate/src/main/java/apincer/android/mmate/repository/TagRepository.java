@@ -106,14 +106,14 @@ public class TagRepository {
 
     public static List<String> getDefaultGenreList(Context context) {
         List<String> list = new ArrayList<>();
-        List<String> names = MusixMateApp.getInstance().getOrmLite().getGenres();
+       /* List<String> names = MusixMateApp.getInstance().getOrmLite().getGenres();
             for (String group:names) {
                 if(StringUtils.isEmpty(group)) {
                     list.add(StringUtils.EMPTY);
                 }else {
                     list.add(group);
                 }
-            }
+            } */
         String[] genres =  context.getResources().getStringArray(R.array.default_genres);
         for(String genre: genres) {
             if(!list.contains(genre)) {

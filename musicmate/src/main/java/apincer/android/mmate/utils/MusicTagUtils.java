@@ -2125,9 +2125,9 @@ public class MusicTagUtils {
     }
 
     public static boolean isBaanThungPlaylist(MusicTag tag) {
-       // return ("Luk Thung".equalsIgnoreCase(tag.getGenre()));
-        return ("Thai Indie".equalsIgnoreCase(tag.getGenre()) ||
-                "Luk Thung".equalsIgnoreCase(tag.getGenre()));
+        return ("Luk Thung".equalsIgnoreCase(tag.getGenre()));
+       // return ("Thai Indie".equalsIgnoreCase(tag.getGenre()) ||
+       //         "Luk Thung".equalsIgnoreCase(tag.getGenre()));
     }
 
     public static boolean isRelaxedPlaylist(MusicTag tag) {
@@ -2136,9 +2136,22 @@ public class MusicTagUtils {
                 grouping.contains("ACOUSTIC"));
     }
 
+    public static boolean isRelaxedThaiPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
+        return (grouping.contains("THAI LOUNGE") ||
+                grouping.contains("THAI ACOUSTIC"));
+    }
+
     public static boolean isClassicPlaylist(MusicTag tag) {
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (genre.contains("CLASSIC"));
+        return (genre.contains("CLASSIC") ||
+                genre.contains("INSTRUMENT") ||
+                genre.contains("CONCERTOS"));
+    }
+
+    public static boolean isIndiePlaylist(MusicTag tag) {
+        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (genre.contains("INDIE"));
     }
 
     public static boolean isFinFinPlaylist(MusicTag tag) {
@@ -2146,7 +2159,10 @@ public class MusicTagUtils {
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return ((grouping.equalsIgnoreCase("English") ||
                 grouping.equalsIgnoreCase("Thai")) &&
-                !(genre.contains("JAZZ") || genre.contains("LUK THUNG") || genre.contains("MOR LUM"))
+                !(genre.contains("JAZZ") ||
+                        genre.contains("LUK THUNG") ||
+                        genre.contains("ISSAN") ||
+                        genre.contains("MOR LUM"))
         );
        // return !(isRelaxedPlaylist(tag) || isISaanPlaylist(tag));
     }
