@@ -47,6 +47,11 @@
 		android:icon="@drawable/round_snippet_folder_24"
 		android:title="Directories"
 		app:showAsAction="always" />
+	<item
+		android:id="@+id/menu_export_playlists"
+		android:icon="@drawable/ic_baseline_playlist_play_24"
+		android:title="Export Playlists"
+		app:showAsAction="always" />
 <!--
 	<item
 		android:id="@+id/menu_sd_permission"

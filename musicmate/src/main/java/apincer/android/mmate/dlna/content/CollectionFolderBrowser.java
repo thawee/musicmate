@@ -69,6 +69,8 @@ public class CollectionFolderBrowser extends ContentBrowser {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS.equals(name) && MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
                 results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_RELAXED_EN_SONGS.equals(name) && MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
+                results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_INDIE_SONGS.equals(name) && MusicTagUtils.isIndiePlaylist(tag)) {
                 results.add(tag);
             }

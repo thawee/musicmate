@@ -59,14 +59,14 @@
 
     <string name="alert_organize_inprogress_many">Importing %1$d songs to Music Directory</string>
 
-    <string name="alert_scan_title">Start running media scan...</string>
+    <string name="alert_scan_title">Start running media scan…</string>
     <string name="alert_scan_success">Media scan run completed</string>
 
     <string name="alert_back_to_exit">Press BACK again to exit</string>
     <string name="alert_invalid_media_file">Media file for \"%1$s\" is not valid!</string>
 
-    <string name="alert_btn_cancel">CANCEL</string>
-    <string name="alert_btn_set">UPDATE</string>
+    <string name="alert_btn_cancel">Cancel</string>
+    <string name="alert_btn_set">Update</string>
 
     <string name="title_many">%1$d songs</string>
 
@@ -151,7 +151,7 @@
     <string name="label_genres">Genres</string>
     <string name="label_groupings">Groupings</string>
     <string name="downloaded">Downloads</string>
-    <string name="directory">Sources Directory</string>
+    <string name="directory">Source Directories</string>
 
     <string name="music">Music</string>
     <string name="playerNameAvTransport">remote</string>
@@ -174,7 +174,7 @@
     <string name="channel_name">MusicMate</string>
     <string name="channel_description">MusicMate Notifications</string>
 
-    <string name="media_server_name">DLNA/UPnP AV 1.0 Media Server</string>
+    <string name="media_server_name">DLNA (UPnP/AV) Media Server</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
@@ -185,6 +185,7 @@
     <string name="label_file_quality">Audio File Quality</string>
     <string name="label_server">Media Server</string>
     <string name="label_collections">Collections</string>
+    <string name="label_dlna_collections">Music Collections</string>
     <string name="label_field">Field</string>
     <string name="label_current">Current</string>
     <string name="label_default_reader">Default Reader</string>
@@ -196,7 +197,7 @@
     <string name="label_hi_res">Hi-Res</string>
     <string name="label_dsd">DSD</string>
     <string name="label_mqa">MQA</string>
-    <string name="label_audio_encoding_format">File Format</string>
+    <string name="label_audio_encoding_format">Audio Encodings</string>
     <string name="label_file_format">File Format:</string>
     <string name="label_file_resolution">Resolution:</string>
     <string name="label_file_recommended">Recommended Genre:</string>
@@ -235,7 +236,7 @@
     <string name="encoding_mqa_green_detail">genuine, but not yet the final release</string>
     <string name="encoding_mqa_blue_header">MQA Studio (blue):</string>
     <string name="encoding_mqa_blue_detail">directly from mastering engineers</string>
-    <string name="label_audio_quality">Music Quality</string>
+    <string name="label_audio_quality">Sound Quality</string>
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>

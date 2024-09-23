@@ -160,7 +160,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             //titles.add(Constants.TITLE_BROKEN);
             titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_NO_DR_METER);
-            titles.add(Constants.TITLE_NO_COVERART);
+           // titles.add(Constants.TITLE_NO_COVERART);
        // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
        //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
         //    titles.add(Constants.TITLE_DSD_AUDIO);
@@ -169,7 +169,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.QUALITY_RECOMMENDED);
             titles.add(Constants.QUALITY_GOOD);
             titles.add(Constants.QUALITY_BAD);
-        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION) {
+        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
             titles.add(Constants.TITLE_HIGH_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
@@ -222,7 +222,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 }else {
                     return criteria.getKeyword();
                 }
-            } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION) {
+            } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
               //  if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
               //      return Constants.TITLE_DSD_AUDIO;
               //  }else {
@@ -283,7 +283,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
            //     return Constants.TITLE_DSD;
             }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 return Constants.TITLE_QUALITY;
-            }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_RESOLUTION) {
+            }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
                 return Constants.TITLE_RESOLUTION;
             }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 return Constants.TITLE_GROUPING;

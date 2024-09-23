@@ -26,11 +26,6 @@ import apincer.android.mmate.utils.MusicTagUtils;
  * Browser  for the music playlist folder.
  */
 public class ResolutionsBrowser extends ContentBrowser {
-    //public static final String HI_RES_AUDIO = "Hi-Res Lossless Audio";
-    //public static final String LOSSLESS_AUDIO = "Hi-Fi Lossless Audio";
-    //public static final String LOSSY_AUDIO = "HiQuality Audio";
-    //public static final String MQA_AUDIO = "MQA Audio";
-    //public static final String DSD_SONGS = "DSD Audio";
     private final List<String> playlists = new ArrayList<>();
     public ResolutionsBrowser(Context context) {
         super(context);

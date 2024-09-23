@@ -2,15 +2,10 @@ package apincer.android.mmate;
 
 import android.content.Context;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import apincer.android.mmate.utils.ApplicationUtils;
 
 /**
  * Created by e1022387 on 3/12/2018.
@@ -79,8 +74,8 @@ public final class Constants {
 
     public static final String TITLE_DUPLICATE = "Duplicate Song";
     public static final String TITLE_BROKEN = "Bad Upscale File";
-    public static final String TITLE_NO_DR_METER = "No DR Meter";
-    public static final String TITLE_INCOMING_SONGS = "Downloaded Songs";
+    public static final String TITLE_NO_DR_METER = "No DRMeter";
+    public static final String TITLE_INCOMING_SONGS = "Download Songs";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
     public static final String TITLE_HIRES = "Hi-Res Lossless";
@@ -146,7 +141,8 @@ public final class Constants {
     public static final String AUDIO_SQ_DSD = "DSD"; // DSD
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
   //  public static final String AUDIO_SQ_PCM = "PCM";
-    public static final String AUDIO_SQ_RESOLUTION = "Resolutions";
+   // public static final String AUDIO_SQ_RESOLUTION = "Resolutions";
+    public static final String AUDIO_SQ_ENCODINGS = "Encodings";
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";

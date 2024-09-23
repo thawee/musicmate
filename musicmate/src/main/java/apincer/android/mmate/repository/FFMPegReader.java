@@ -305,7 +305,7 @@ public class FFMPegReader extends TagReader {
         String data = session.getOutput();
         //    String data = getFFmpegOutputData(session);
         parseReplayGain(tag, data);
-        parseDynamicRangeMeter(tag, data);
+        parseOverallDRMeter(tag, data);
        // parseVolume(tag, data);
         parseASTATS(tag, data);
         session.cancel();
@@ -617,7 +617,7 @@ public class FFMPegReader extends TagReader {
         }
     }
 
-    private static void parseDynamicRangeMeter(MusicTag tag, String data) {
+    private static void parseOverallDRMeter(MusicTag tag, String data) {
         try {
             // Overall DR: 14.0357
             Pattern pattern = Pattern.compile("\\s*Overall DR:\\s*(\\S*)");
@@ -627,7 +627,7 @@ public class FFMPegReader extends TagReader {
                 tag.setDynamicRangeMeter(toDouble(info));
             }
         }catch (Exception ex) {
-            Log.e(TAG, "parseDynamicRangeMeter", ex);
+            Log.e(TAG, "parseOverallDRMeter", ex);
         }
     }
 
@@ -652,7 +652,7 @@ public class FFMPegReader extends TagReader {
             parseDurationInfo(tag, session.getOutput());
             parseTagsInfo(tag);
             // parseReplayGain(tag);
-            parseDynamicRangeMeter(tag, data);
+            parseOverallDRMeter(tag, data);
             detectFileFormat(tag);
             // tag.setLossless(isLossless(tag));
            // tag.setFileSizeRatio(getFileSizeRatio(tag));

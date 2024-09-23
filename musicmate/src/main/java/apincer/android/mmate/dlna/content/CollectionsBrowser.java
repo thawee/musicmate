@@ -28,10 +28,11 @@ import apincer.android.mmate.utils.MusicTagUtils;
  */
 public class CollectionsBrowser extends ContentBrowser {
     public static final String MY_SONGS = "All Songs";
-    public static final String DOWNLOADS_SONGS = "Downloaded Songs";
-    public static final String DUPLICATED_SONGS = "Duplicated Songs";
+    public static final String DOWNLOADS_SONGS = "Download Songs";
+    public static final String DUPLICATED_SONGS = "Duplicate Songs";
     public static final String SMART_LIST_FINFIN_SONGS = "เพลงฟินๆ รินเบียร์เย็นๆ";
     public static final String SMART_LIST_RELAXED_TH_SONGS = "ยานอนหลับ ฉบับไทยๆ";
+    public static final String SMART_LIST_RELAXED_EN_SONGS = "ยานอนหลับ ฉบับสากล";
     public static final String SMART_LIST_RELAXED_SONGS = "ยานอนหลับ ฉบับรวมมิตร";
     public static final String SMART_LIST_ISAAN_SONGS = "สะออนแฮง สำเนียงเสียงลำ";
     public static final String SMART_LIST_BAANTHUNG_SONGS = "คิดถึง บ้านทุ่งท้องนา";
@@ -45,6 +46,7 @@ public class CollectionsBrowser extends ContentBrowser {
         playlists.add(DUPLICATED_SONGS);
         playlists.add(SMART_LIST_FINFIN_SONGS);
         playlists.add(SMART_LIST_RELAXED_TH_SONGS);
+        playlists.add(SMART_LIST_RELAXED_EN_SONGS);
         playlists.add(SMART_LIST_RELAXED_SONGS);
         playlists.add(SMART_LIST_BAANTHUNG_SONGS);
         playlists.add(SMART_LIST_ISAAN_SONGS);
@@ -55,7 +57,7 @@ public class CollectionsBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_collections), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_dlna_collections), "mmate", getSize(contentDirectory, myId),
                 null);
     }
 
@@ -85,6 +87,9 @@ public class CollectionsBrowser extends ContentBrowser {
             }
             if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).addChildCount();
+            }
+            if(MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_EN_SONGS)).addChildCount();
             }
             if(MusicTagUtils.isRelaxedPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_SONGS)).addChildCount();

@@ -88,7 +88,7 @@ public class AboutActivity extends AppCompatActivity {
         protected Context context;
 
         @Override
-        public void onAttach(Context context) {
+        public void onAttach(@NonNull Context context) {
             super.onAttach(context);
             this.context = context;
         }
@@ -123,7 +123,7 @@ public class AboutActivity extends AppCompatActivity {
                         .bold()
                         .textColor(Color.BLACK)
                     .done()
-                    .format("DR Meter")
+                    .format("DRMeter")
                         .bold()
                         .textColor(Color.BLACK)
                     .done()

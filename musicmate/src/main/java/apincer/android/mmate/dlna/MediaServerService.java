@@ -187,11 +187,11 @@ public class MediaServerService extends Service {
             versionName = "??";
         }
         try {
-            String friendlyName = "MusicMate Server ("+getDeviceModel()+")";
+            String friendlyName = "MusicMate Server ["+getDeviceModel()+"]";
             ManufacturerDetails manufacturerDetails = new ManufacturerDetails("Thawee",
                     "https://github.com/thawee/musicmate");
             ModelDetails modelDetails = new ModelDetails("MusicMate",
-                    "DLNA/UPnP AV 1.0 Compliant Media Server, "+getDeviceDetails(),
+                    "DLNA (UPnP/AV) Media Server, "+getDeviceDetails(),
                     versionName);
             URI presentationURI = null;
             if (!StringUtils.isEmpty(MediaServerSession.streamServerHost)) {
@@ -237,7 +237,7 @@ public class MediaServerService extends Service {
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate ("+getDeviceModel()+")")
+                .setContentTitle("MusicMate ["+getDeviceModel()+"]")
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.media_server_name));
         mBuilder.setContentIntent(contentIntent);
@@ -274,8 +274,8 @@ public class MediaServerService extends Service {
     }
 
     private LocalService<AbstractMediaReceiverRegistrarService> createMediaReceiverRegistrarService() {
-        LocalService<AbstractMediaReceiverRegistrarService> service = new AnnotationLocalServiceBinder()
-                .read(AbstractMediaReceiverRegistrarService.class);
+        AnnotationLocalServiceBinder binder = new AnnotationLocalServiceBinder();
+        LocalService<AbstractMediaReceiverRegistrarService> service = binder.read(AbstractMediaReceiverRegistrarService.class);
         service.setManager(new DefaultServiceManager<>(service, null) {
 
             @Override

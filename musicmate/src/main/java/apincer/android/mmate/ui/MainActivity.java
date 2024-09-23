@@ -53,7 +53,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
-import com.anggrayudi.storage.file.StorageId;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
@@ -74,20 +73,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -116,6 +107,7 @@ import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.PLSBuilder;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.ToastHelper;
@@ -752,7 +744,7 @@ public class MainActivity extends AppCompatActivity {
         mResideMenu.setMenuRes(R.menu.menu_music_collection, ResideMenu.DIRECTION_LEFT);
        // mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_dsd_white, Constants.AUDIO_SQ_DSD, ResideMenu.DIRECTION_LEFT);
        // mResideMenu.addMenuItem(MENU_ID_QUALITY_PCM, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_PCM, ResideMenu.DIRECTION_LEFT);
-        mResideMenu.addMenuItem(MENU_ID_RESOLUTION, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_RESOLUTION, ResideMenu.DIRECTION_LEFT);
+        mResideMenu.addMenuItem(MENU_ID_RESOLUTION, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_ENCODINGS, ResideMenu.DIRECTION_LEFT);
     }
 
     private void scrollToListening() {
@@ -872,7 +864,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if(item.getItemId() == MENU_ID_RESOLUTION) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIO_RESOLUTION, Constants.TITLE_HIGH_QUALITY);
+            doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
             return true;
        /* } else if(item.getItemId() == MENU_ID_QUALITY) {
             doHideSearch();
@@ -905,6 +897,9 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }else if(item.getItemId() == R.id.menu_directories) {
             doSetDirectories();
+            return true;
+        }else if(item.getItemId() == R.id.menu_export_playlists) {
+            doExportPlaylists();
             return true;
         }else if(item.getItemId() == R.id.menu_about_crash) {
             Intent myIntent = new Intent(MainActivity.this, CrashReporterActivity.class);
@@ -1343,10 +1338,10 @@ public class MainActivity extends AppCompatActivity {
                 doMeasureDR(getSelections());
                 mode.finish();
                 return true;
-            }else if (id == R.id.action_export_playlist) {
+           /* }else if (id == R.id.action_export_playlist) {
                 doExportAsPlaylist(getSelections());
                 mode.finish();
-                return true;
+                return true; */
             }else if (id == R.id.action_select_all) {
                 if(mTracker.getSelection().size() == adapter.getItemCount()) {
                     // selected all, reset selection
@@ -1493,46 +1488,9 @@ public class MainActivity extends AppCompatActivity {
         return (int) ((ratePerItem/10.0) + (100-(ratePerItem*total)));
     }
 
-    private void doExportAsPlaylist(List<MusicTag> currentSelections) {
-        /*
-        #EXTM3U
-        #PLAYLIST: The title of the playlist
-
-        #EXTINF:111, Sample artist name - Sample track title
-        C:\Music\SampleMusic.mp3
-
-        #EXTINF:222,Example Artist name - Example track title
-        C:\Music\ExampleMusic.mp3
-         */
-        Writer out = null;
-        try {
-
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.US);
-            String path = "/Playlist/"+adapter.getCriteria().getKeyword()+"_"+currentSelections.size()+"_"+simpleDateFormat.format(new Date())+".m3u";
-            path =DocumentFileCompat.buildAbsolutePath(getApplicationContext(), StorageId.PRIMARY, path);
-            File filepath = new File(path);
-            File folder = filepath.getParentFile();
-            if(folder !=null && !folder.exists()) {
-                folder.mkdirs();
-            }
-            out = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(filepath,true), StandardCharsets.UTF_8));
-            out.write("#EXRM3U\n");
-            out.write("#PLAYLIST: MusicMate Playlist\n\n");
-
-            for (MusicTag tag:currentSelections) {
-                out.write("#EXTINF:"+tag.getAudioDuration()+","+tag.getArtist()+","+tag.getTitle()+"\n");
-                out.write(tag.getPath()+"\n\n");
-            }
-            ToastHelper.showActionMessage(MainActivity.this, "", "Playlist '"+path+"' is created.");
-        } catch (Exception e) {
-            Log.e(TAG, "doExportAsPlaylist", e);
-            //e.printStackTrace();
-        } finally {
-            try {
-                if(out != null) out.close();
-            }catch (Exception ignored) {}
-        }
+    private void doExportPlaylists() {
+        PLSBuilder.exportPlaylists(getApplicationContext());
+        ToastHelper.showActionMessage(MainActivity.this, "", "Playlists are created successfully.");
     }
 
     private void doEncodeAudioFiles(List<MusicTag> selections) {

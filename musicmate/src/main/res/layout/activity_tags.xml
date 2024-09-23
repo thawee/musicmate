@@ -49,24 +49,34 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constrainedHeight="true"
                     app:layout_constraintDimensionRatio="2:4">
+                    <!--
                     <apincer.android.mmate.ui.view.AspectRatioPhotoView
                         android:id="@+id/panel_cover_art"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:heightRatio="1"
                         app:widthRatio="1"/>
-<!--
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dimen_1_dp"
-                        android:background="@color/black_transparent_10"/>
-                        -->
                     <ImageView
                         android:id="@+id/panel_cover_reflection"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/dimen_256_dp"
+                        android:layout_height="match_parent"
                         android:rotationX="180"
-                        android:scaleType="fitXY"/>
+                        android:scaleType="fitCenter"
+                        tools:ignore="ContentDescription" />
+                        -->
+                    <com.jackandphantom.carouselrecyclerview.view.ReflectionViewContainer
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:reflect_gap="0dp"
+                        >
+                        <apincer.android.mmate.ui.view.AspectRatioPhotoView
+                            android:id="@+id/panel_cover_art"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:heightRatio="1"
+                            app:widthRatio="1"/>
+                    </com.jackandphantom.carouselrecyclerview.view.ReflectionViewContainer>
+
                 </LinearLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -129,19 +139,25 @@
                         android:id="@+id/music_player_panel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/shape_play_next_background"
-                        android:layout_alignParentTop="true"
                         android:layout_alignParentStart="true"
-                        android:layout_gravity="start">
-                    <ImageView
-                        android:id="@+id/music_player"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="@dimen/dimen_32_dp"
-                        android:contentDescription="TODO"
-                        android:visibility="visible"
-                        android:layout_margin="@dimen/dimen_6_dp"
-                        android:src="@drawable/bg_transparent"
-                        />
+                        android:layout_alignParentTop="true"
+                        android:layout_gravity="start"
+                        android:layout_marginStart="@dimen/dimen_4_dp"
+                        android:layout_marginTop="@dimen/dimen_4_dp"
+                        android:background="@drawable/shape_play_next_background"
+                        android:minWidth="@dimen/dimen_32_dp"
+                        android:minHeight="@dimen/dimen_32_dp"
+                        tools:ignore="TouchTargetSizeCheck">
+
+                        <ImageView
+                            android:id="@+id/music_player"
+                            android:layout_width="@dimen/dimen_32_dp"
+                            android:layout_height="@dimen/dimen_32_dp"
+                            android:layout_margin="@dimen/dimen_2_dp"
+                            android:contentDescription="TODO"
+                            android:src="@drawable/bg_transparent"
+                            android:visibility="visible"
+                            tools:ignore="ContentDescription,HardcodedText" />
                     </com.skydoves.elasticviews.ElasticLayout>
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -215,6 +231,7 @@
                             android:background="@drawable/shape_background_dr"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:padding="@dimen/dimen_2_dp">
+
                             <TextView
                                 android:id="@+id/icon_file_type"
                                 android:layout_width="@dimen/dimen_36_dp"
@@ -226,7 +243,8 @@
                                 android:text="@string/sample_file_type"
                                 android:textColor="@color/black"
                                 android:textSize="12sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                tools:ignore="TextSizeCheck" />
                         </LinearLayout>
                         <ImageView
                             android:id="@+id/icon_resolution"
@@ -283,7 +301,8 @@
                                 android:text="@string/sample_dr"
                                 android:textColor="@color/black"
                                 android:textSize="14sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                tools:ignore="TextSizeCheck" />
                         </LinearLayout>
 
                         <ImageView
@@ -292,12 +311,13 @@
                             android:layout_height="@dimen/dimen_24_dp"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:background="@drawable/shape_background_dr"
                             android:contentDescription="@string/editor_musicmate_info"
                             android:gravity="end|center_vertical"
                             android:padding="@dimen/dimen_2_dp"
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_audiophile"
-                            android:background="@drawable/shape_background_dr"/>
+                            tools:ignore="ImageContrastCheck" />
 
                         <ImageView
                             android:id="@+id/icon_hires"

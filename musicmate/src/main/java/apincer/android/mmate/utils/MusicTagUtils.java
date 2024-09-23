@@ -2132,14 +2132,20 @@ public class MusicTagUtils {
 
     public static boolean isRelaxedPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        return (grouping.contains("LOUNGE") ||
+        return (!isClassicPlaylist(tag)) && (grouping.contains("LOUNGE") ||
                 grouping.contains("ACOUSTIC"));
     }
 
     public static boolean isRelaxedThaiPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        return (grouping.contains("THAI LOUNGE") ||
-                grouping.contains("THAI ACOUSTIC"));
+        return (!isClassicPlaylist(tag)) && (grouping.equalsIgnoreCase("THAI LOUNGE") ||
+                grouping.equalsIgnoreCase("THAI ACOUSTIC"));
+    }
+
+    public static boolean isRelaxedEnglishPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
+        return (!isClassicPlaylist(tag)) && (grouping.equalsIgnoreCase("LOUNGE") ||
+                grouping.equalsIgnoreCase("ACOUSTIC"));
     }
 
     public static boolean isClassicPlaylist(MusicTag tag) {
@@ -2156,15 +2162,14 @@ public class MusicTagUtils {
 
     public static boolean isFinFinPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        //String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return ((grouping.equalsIgnoreCase("English") ||
                 grouping.equalsIgnoreCase("Thai")) &&
-                !(genre.contains("JAZZ") ||
-                        genre.contains("LUK THUNG") ||
-                        genre.contains("ISSAN") ||
-                        genre.contains("MOR LUM"))
+                !(isClassicPlaylist(tag) ||
+                  isISaanPlaylist(tag) ||
+                  isBaanThungPlaylist(tag) ||
+                  isRelaxedPlaylist(tag))
         );
-       // return !(isRelaxedPlaylist(tag) || isISaanPlaylist(tag));
     }
 
     public static boolean isAACFile(MusicTag musicTag) {

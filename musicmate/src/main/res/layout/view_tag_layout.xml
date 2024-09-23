@@ -6,20 +6,21 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/dimen_56_dp"
-    android:background="#504F4F"
+    android:background="@drawable/shadow"
     android:layout_gravity="bottom"
     app:shape_diagonal_angle="-10"
     app:shape_diagonal_position="right"
     app:barrierDirection="right"
     tools:showIn="@layout/activity_tags">
+    <!--
     <io.github.florent37.shapeofview.shapes.DiagonalView
         android:id="@+id/panel_labels"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#504F4F"
-        app:shape_diagonal_angle="10"
+        app:shape_diagonal_angle="20"
         app:shape_diagonal_position="left"
-        app:barrierDirection="right"/>
+        app:barrierDirection="right"/> -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -70,7 +71,8 @@
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="14sp"
-                    android:background="@drawable/selectable_link"/>
+                    android:background="@drawable/selectable_link"
+                    tools:ignore="HardcodedText" />
 
             </LinearLayout>
 
@@ -114,7 +116,8 @@
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="14sp"
-                    android:background="@drawable/selectable_link"/>
+                    android:background="@drawable/selectable_link"
+                    tools:ignore="HardcodedText" />
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
@@ -150,7 +153,8 @@
                 android:textStyle="bold"
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
-                android:background="@drawable/selectable_link"/>
+                android:background="@drawable/selectable_link"
+                tools:ignore="HardcodedText" />
             <!--
             <TextView
                 android:layout_width="wrap_content"
@@ -280,7 +284,13 @@
                     android:gravity="center|bottom"
                     android:singleLine="true"
                     android:textColor="@android:color/white"
-                    android:layout_gravity="center_horizontal"/>
+                    android:layout_gravity="center_horizontal"
+                    android:padding="@dimen/dimen_8_dp"
+                    android:paddingStart="@dimen/dimen_12_dp"
+                    android:paddingEnd="@dimen/dimen_12_dp"
+                    android:background="@drawable/textview_dent_background"
+                    android:elevation="8dp"
+                    tools:ignore="HardcodedText" />
 
                 <TextView
                     android:id="@+id/panel_path"
@@ -296,8 +306,10 @@
                     android:ellipsize="start"
                     android:gravity="center"
                     android:layout_gravity="center"
-                    android:singleLine="true" />
+                    android:singleLine="true"
+                    tools:ignore="HardcodedText" />
             </LinearLayout>
+        <!--
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -308,7 +320,7 @@
             android:layout_marginBottom="@dimen/dimen_2_dp"
             android:layout_marginStart="@dimen/dimen_24_dp"
             android:layout_marginEnd="@dimen/dimen_24_dp">
-
+-->
             <!--
              android:background="@drawable/selectable_link"
              android:drawablePadding="@dimen/dimen_4_dp"
@@ -350,8 +362,9 @@
                 android:gravity="center"
                 android:layout_gravity="center"
                 android:singleLine="true" /> -->
-
+<!--
         </LinearLayout>
+        -->
         <!--
         <TextView
             android:id="@+id/panel_filename"
@@ -387,7 +400,9 @@
             android:layout_marginTop="@dimen/dimen_8_dp"
             android:layout_gravity="center"
             android:padding="@dimen/dimen_4_dp"
-            android:background="@drawable/shape_btn_background">
+            android:background="@drawable/btn_dent_background">
+            <!--
+            android:background="@drawable/shape_btn_background"> -->
 
             <com.skydoves.elasticviews.ElasticLayout
                 android:id="@+id/btnDelete"
@@ -786,6 +801,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
+        android:background="@drawable/bg_transparent"/>
+    <!--
         android:background="@drawable/bg_gradient"/>
+        -->
 
 </FrameLayout>

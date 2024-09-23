@@ -199,7 +199,7 @@ public class TagsActivity extends AppCompatActivity {
         repos = FileRepository.newInstance(getApplicationContext());
 
         coverArtView = findViewById(R.id.panel_cover_art);
-        reflectionView = findViewById(R.id.panel_cover_reflection);
+       // reflectionView = findViewById(R.id.panel_cover_reflection);
         CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
         int statusBarHeight = getStatusBarHeight();
         int height = UIUtils.getScreenHeight(this); // getWindow().getWindowManager().getDefaultDisplay().getHeight();
@@ -453,7 +453,7 @@ public class TagsActivity extends AppCompatActivity {
                 .target(coverArtView)
                 .build();
         imageLoader.enqueue(request);
-        request = new ImageRequest.Builder(getApplicationContext())
+       /* request = new ImageRequest.Builder(getApplicationContext())
                 .data(CoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
                 .transformations(new BlurTransformation(getApplicationContext()))
@@ -467,10 +467,11 @@ public class TagsActivity extends AppCompatActivity {
                         Target.super.onSuccess(result);
                         reflectionView.setImageDrawable(result);
                         reflectionView.setColorFilter(R.color.material_color_blue_grey_400);
+                        reflectionView.invalidate();
                     }
                 })
                 .build();
-        imageLoader.enqueue(request);
+        imageLoader.enqueue(request); */
 
         // Tag
        // int labelColor = ContextCompat.getColor(getApplicationContext(), R.color.grey400);
@@ -540,9 +541,9 @@ public class TagsActivity extends AppCompatActivity {
         // ENC info
         try {
             int metaInfoTextSize = 12; //10
-            int encColor = ContextCompat.getColor(getApplicationContext(), R.color.grey100);
+            int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
             SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
+           // spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
 
             // bps
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
@@ -560,8 +561,8 @@ public class TagsActivity extends AppCompatActivity {
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor));
+                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
+                   // .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor));
             encInfo.setText(spannableEnc.build());
         }catch (Exception ex) {
             Log.e(TAG, "updateTitlePanel", ex);
