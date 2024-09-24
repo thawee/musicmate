@@ -15,8 +15,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -25,7 +23,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -34,7 +31,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.commit451.coiltransformations.BlurTransformation;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -77,7 +73,6 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
-import coil.target.Target;
 import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
@@ -85,7 +80,7 @@ public class TagsActivity extends AppCompatActivity {
     private static final ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
-    private ImageView reflectionView;
+   // private ImageView reflectionView;
     private TabLayout tabLayout;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
@@ -96,12 +91,9 @@ public class TagsActivity extends AppCompatActivity {
     private TextView genreView;
     private TextView encInfo;
     private TextView pathInfo;
+    private View pathInfoLine;
     private TextView drView;
-    //private TextView drDBView;
     private TextView fileTypeView;
-   // private TextView rgView;
-   private TextView newView;
-    private View newPanelView;
     private View hiresView;
     private ImageView audiophileView;
     private ImageView resolutionView;
@@ -318,14 +310,13 @@ public class TagsActivity extends AppCompatActivity {
         genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
         pathInfo = findViewById(R.id.panel_path);
+        pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
         hiresView = findViewById(R.id.icon_hires);
         audiophileView = findViewById(R.id.icon_audiophile);
         resolutionView = findViewById(R.id.icon_resolution);
         drView = findViewById(R.id.icon_dr);
         fileTypeView = findViewById(R.id.icon_file_type);
-        newView = findViewById(R.id.icon_new);
-        newPanelView = findViewById(R.id.icon_new_panel);
         playerBtn = findViewById(R.id.music_player);
         playerPanel = findViewById(R.id.music_player_panel);
         playerPanel.setOnClickListener(view -> {
@@ -398,15 +389,11 @@ public class TagsActivity extends AppCompatActivity {
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
-            //Intent resultIntent = new Intent();
             if(criteria!=null) {
                 criteria.setFilterType(Constants.FILTER_TYPE_ARTIST);
                 criteria.setFilterText(displayTag.getArtist());
-               // ApplicationUtils.setSearchCriteria(resultIntent,criteria);
             }
             doOpenMainActivity(criteria);
-           // setResult(RESULT_OK, resultIntent);
-           // finish();
         });
         if(isEmpty(displayTag.getAlbum())) {
             albumView.setText(String.format("[%s]", MusicTagUtils.getDefaultAlbum(displayTag)));
@@ -415,15 +402,11 @@ public class TagsActivity extends AppCompatActivity {
             albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             albumView.setOnClickListener(view -> {
                 // filter by album
-               // Intent resultIntent = new Intent();
                 if (criteria != null) {
                     criteria.setFilterType(Constants.FILTER_TYPE_ALBUM);
                     criteria.setFilterText(displayTag.getAlbum());
-                   // ApplicationUtils.setSearchCriteria(resultIntent, criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
                 }
                 doOpenMainActivity(criteria);
-               // setResult(RESULT_OK, resultIntent);
-               // finish();
             });
         }
         String mediaTypeAndPublisher;
@@ -435,15 +418,6 @@ public class TagsActivity extends AppCompatActivity {
 
         genreView.setText(mediaTypeAndPublisher);
 
-        String matePath = repos.buildCollectionPath(displayTag, true);
-        if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            newView.setTextColor(getColor(R.color.grey200));
-            newView.setBackgroundColor(getColor(R.color.material_color_red_900));
-            newPanelView.setVisibility(View.VISIBLE);
-        }else {
-            newPanelView.setVisibility(View.GONE);
-        }
-
         request = new ImageRequest.Builder(getApplicationContext())
                 .data(CoverArtProvider.getUriForMusicTag(displayTag))
                 .size(1024,1024)
@@ -453,28 +427,8 @@ public class TagsActivity extends AppCompatActivity {
                 .target(coverArtView)
                 .build();
         imageLoader.enqueue(request);
-       /* request = new ImageRequest.Builder(getApplicationContext())
-                .data(CoverArtProvider.getUriForMusicTag(displayTag))
-                .size(1024,1024)
-                .transformations(new BlurTransformation(getApplicationContext()))
-                .error(getDefaultNoCover(displayTag))
-              //  .placeholder(R.drawable.progress)
-              //  .error(R.drawable.no_cover2)
-              //  .target(reflectionView)
-                .target(new Target() {
-                    @Override
-                    public void onSuccess(@NonNull Drawable result) {
-                        Target.super.onSuccess(result);
-                        reflectionView.setImageDrawable(result);
-                        reflectionView.setColorFilter(R.color.material_color_blue_grey_400);
-                        reflectionView.invalidate();
-                    }
-                })
-                .build();
-        imageLoader.enqueue(request); */
 
         // Tag
-       // int labelColor = ContextCompat.getColor(getApplicationContext(), R.color.grey400);
         int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
         int linkPressBgColor = ContextCompat.getColor(getApplicationContext(), R.color.grey200);
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
@@ -482,30 +436,22 @@ public class TagsActivity extends AppCompatActivity {
 
         tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
                     if(!isEmpty(displayTag.getGenre())) {
-                      //  Intent resultIntent = new Intent();
                         if (criteria != null) {
                             criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
                             criteria.setFilterText(trimToEmpty(displayTag.getGenre()));
-                          //  ApplicationUtils.setSearchCriteria(resultIntent, criteria);
                         }
                         doOpenMainActivity(criteria);
-                        //setResult(RESULT_OK, resultIntent);
-                       // finish();
                     }
                 }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                 new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN_GENRE:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                  //  Intent resultIntent = new Intent();
                     if(criteria!=null) {
                         criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
                         criteria.setFilterText(trimToEmpty(displayTag.getGrouping()));
-                      //  ApplicationUtils.setSearchCriteria(resultIntent,criteria);
                     }
                     doOpenMainActivity(criteria);
-                   // setResult(RESULT_OK, resultIntent);
-                   // finish();
                 }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                 new SpecialTextUnit(isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
 
@@ -517,13 +463,19 @@ public class TagsActivity extends AppCompatActivity {
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
-        SpannableString content = new SpannableString(simplePath);// + mateInd);
-        content.setSpan(new UnderlineSpan(), 0, simplePath.length(), 0);
-        pathInfo.setText(content);
+        String matePath = repos.buildCollectionPath(displayTag, true);
+        if(!StringUtils.equals(matePath, displayTag.getPath())) {
+            pathInfoLine.setBackgroundColor(getColor(R.color.md_theme_light_error));
+        }else {
+            pathInfoLine.setBackgroundColor(getColor(R.color.grey400));
+        }
+        pathInfo.setText(simplePath);
+       // SpannableString content = new SpannableString(simplePath);// + mateInd);
+       // content.setSpan(new UnderlineSpan(), 0, simplePath.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+       // pathInfo.setText(content);
 
         pathInfo.setOnClickListener(view -> {
             if (criteria != null && displayTag.getPath() != null) {
-              //  Intent resultIntent = new Intent();
                 criteria.setFilterType(Constants.FILTER_TYPE_PATH);
                 File file = new File(displayTag.getPath());
                 if (!file.isDirectory()) {
@@ -532,9 +484,6 @@ public class TagsActivity extends AppCompatActivity {
                 String filterPath = file.getAbsolutePath() + File.separator;
                 criteria.setFilterText(filterPath);
                 doOpenMainActivity(criteria);
-               // ApplicationUtils.setSearchCriteria(resultIntent, criteria);
-               // setResult(RESULT_OK, resultIntent);
-               // finish();
             }
         });
 
@@ -577,11 +526,11 @@ public class TagsActivity extends AppCompatActivity {
     private void doOpenMainActivity(SearchCriteria criteria) {
         Intent myIntent = new Intent(this, MainActivity.class);
         if(criteria!=null) {
-            ApplicationUtils.setSearchCriteria(myIntent, criteria);
+            MusixMateApp.getInstance().setSearchCriteria(criteria);
+           // ApplicationUtils.setSearchCriteria(myIntent, criteria);
         }
-        startActivity(myIntent);
-       // setResult(RESULT_OK, resultIntent);
-       // finish();
+        //startActivity(myIntent);
+        finish();
     }
 
     protected MusicTag buildDisplayTag() {

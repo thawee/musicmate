@@ -29,6 +29,7 @@ import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
@@ -40,6 +41,7 @@ public class MusixMateApp extends Application {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
     private static MusixMateApp INSTANCE;
+    private SearchCriteria criteria;
 
     public static MusixMateApp getInstance() {
         return INSTANCE;
@@ -52,7 +54,6 @@ public class MusixMateApp extends Application {
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
 
-    //private static final Map<String, ByteBuffer> NO_IMAGE_COVERS = new HashMap<>();
     private static final List<ByteBuffer> NO_IMAGE_COVERS = new ArrayList<>();
 
     public static List<MusicTag> getPendingItems(String name) {
@@ -292,5 +293,13 @@ Provides the SQLite Helper Object among the application
         if (mNotificationManager.getActiveNotifications().length == 1) {
             mNotificationManager.cancel(NotificationId.MAIN.getId());
         }
+    }
+
+    public void setSearchCriteria(SearchCriteria criteria) {
+        this.criteria = criteria;
+    }
+
+    public SearchCriteria getCriteria() {
+        return criteria;
     }
 }

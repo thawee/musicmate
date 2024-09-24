@@ -238,7 +238,7 @@
 
     <color name="file_format_dsd">#ffb300</color>
     <color name="file_format_lossless">#ffecb3</color>
-    <color name="file_format_lossy">@color/grey300</color>
+    <color name="file_format_lossy">@color/grey400</color>
 
     <!--
     <color name="quality_bad">#EF2350</color>

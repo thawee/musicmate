@@ -46,9 +46,6 @@ public class CollectionFolderBrowser extends ContentBrowser {
         if(CollectionsBrowser.MY_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findMySongs();
         }
-       // if(CollectionsBrowser.DOWNLOADS_SONGS.equals(name)) {
-       //    return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
-       // }
         if(CollectionsBrowser.DUPLICATED_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
         }
@@ -63,6 +60,10 @@ public class CollectionFolderBrowser extends ContentBrowser {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
                 results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_FINFIN_TH_SONGS.equals(name) && MusicTagUtils.isFinFinThaiPlaylist(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.SMART_LIST_FINFIN_EN_SONGS.equals(name) && MusicTagUtils.isFinFinEnglishPlaylist(tag)) {
+                results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_RELAXED_SONGS.equals(name) && MusicTagUtils.isRelaxedPlaylist(tag)) {
@@ -70,8 +71,6 @@ public class CollectionFolderBrowser extends ContentBrowser {
             }else if (CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS.equals(name) && MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_RELAXED_EN_SONGS.equals(name) && MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_INDIE_SONGS.equals(name) && MusicTagUtils.isIndiePlaylist(tag)) {
                 results.add(tag);
             }
         }
@@ -89,12 +88,6 @@ public class CollectionFolderBrowser extends ContentBrowser {
     public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
-       /* String name = myId.substring(ContentDirectoryIDs.MUSIC_PLAYLIST_PREFIX.getId().length());
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ) { // ||
-              //  "None".equalsIgnoreCase(name)) {
-            name = null;
-        } */
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
         List<MusicTag> tags = getItems(contentDirectory, name);
         int currentCount = 0;

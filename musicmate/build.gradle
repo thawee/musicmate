@@ -194,7 +194,7 @@ dependencies {
 
     implementation deps.ui.aboutlibraries
     //implementation deps.ui.toasty
-    implementation deps.ui.shapeofview
+  //  implementation deps.ui.shapeofview
     implementation deps.ui.photoview
     implementation deps.ui.alerter
 
@@ -231,7 +231,7 @@ dependencies {
 
     // Coil
     implementation deps.coil.runtime2
-    implementation deps.coil.transformations
+   // implementation deps.coil.transformations
 
     // Local Library
     //https://bitbucket.org/ijabz/jaudiotagger/src/master/

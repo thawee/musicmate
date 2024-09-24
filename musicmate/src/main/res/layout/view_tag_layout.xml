@@ -8,8 +8,6 @@
     android:layout_marginBottom="@dimen/dimen_56_dp"
     android:background="@drawable/shadow"
     android:layout_gravity="bottom"
-    app:shape_diagonal_angle="-10"
-    app:shape_diagonal_position="right"
     app:barrierDirection="right"
     tools:showIn="@layout/activity_tags">
     <!--
@@ -154,7 +152,7 @@
                 android:layout_gravity="center_horizontal"
                 android:textColor="@android:color/white"
                 android:background="@drawable/selectable_link"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText,SmallSp" />
             <!--
             <TextView
                 android:layout_width="wrap_content"
@@ -290,14 +288,21 @@
                     android:paddingEnd="@dimen/dimen_12_dp"
                     android:background="@drawable/textview_dent_background"
                     android:elevation="8dp"
-                    tools:ignore="HardcodedText" />
+                    tools:ignore="HardcodedText,SmallSp" />
 
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginStart="@dimen/dimen_4_dp"
+                    android:layout_marginEnd="@dimen/dimen_4_dp"
+                    android:layout_gravity="center"
+                    android:orientation="vertical">
                 <TextView
                     android:id="@+id/panel_path"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"
-                    android:layout_marginStart="@dimen/dimen_4_dp"
+                    android:textColor="@color/grey100"
                     android:drawablePadding="@dimen/dimen_4_dp"
                     android:paddingTop="@dimen/dimen_1_dp"
                     android:fontFamily="@font/sfthonburi_regular"
@@ -307,7 +312,17 @@
                     android:gravity="center"
                     android:layout_gravity="center"
                     android:singleLine="true"
-                    tools:ignore="HardcodedText" />
+                    tools:ignore="HardcodedText,SmallSp" />
+                    <View
+                        android:id="@+id/panel_path_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dimen_1_dp"
+                        android:layout_marginStart="@dimen/dimen_2_dp"
+                        android:layout_marginEnd="@dimen/dimen_2_dp"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:background="@color/grey100"/>
+                </LinearLayout>
             </LinearLayout>
         <!--
         <LinearLayout
@@ -408,14 +423,15 @@
                 android:id="@+id/btnDelete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_8_dp"
                 android:layout_marginTop="@dimen/dimen_24_dp"
                 android:background="@drawable/shape_border_function"
-                android:layout_marginStart="@dimen/dimen_8_dp"
                 android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
                 android:paddingRight="@dimen/dimen_8_dp"
-                android:paddingBottom="@dimen/dimen_4_dp">
-<!--
+                android:paddingBottom="@dimen/dimen_4_dp"
+                tools:ignore="TouchTargetSizeCheck">
+                <!--
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -520,15 +536,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_marginTop="@dimen/dimen_24_dp"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                android:background="@drawable/shape_border_function"
+                android:layout_marginTop="@dimen/dimen_24_dp"
                 android:layout_marginEnd="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_border_function"
                 android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingTop="@dimen/dimen_4_dp"
                 android:paddingRight="@dimen/dimen_8_dp"
                 android:paddingBottom="@dimen/dimen_4_dp"
-                tools:ignore="RelativeOverlap">
+                tools:ignore="RelativeOverlap,TouchTargetSizeCheck">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -539,7 +555,7 @@
                     android:text="@string/import_songs_label"
                     android:textColor="@android:color/white"
                     android:textStyle="bold" />
-<!--
+                <!--
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -582,29 +598,33 @@
                     android:id="@+id/btnWebSearch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/shape_border_others_app"
+                    android:layout_marginEnd="@dimen/dimen_12_dp"
                     android:layout_marginBottom="@dimen/dimen_12_dp"
-                    android:layout_marginEnd="@dimen/dimen_12_dp">
+                    android:background="@drawable/shape_border_others_app"
+                    tools:ignore="TouchTargetSizeCheck">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingBottom="@dimen/dimen_4_dp"
-                        android:paddingLeft="@dimen/dimen_12_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
                         android:layout_gravity="center"
                         android:gravity="center"
+                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingTop="@dimen/dimen_4_dp"
+                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingBottom="@dimen/dimen_4_dp"
+                        android:text="@string/websearch_label"
                         android:textColor="@android:color/white"
-                        android:textStyle="bold"
-                        android:text="@string/websearch_label"/>
+                        android:textStyle="bold" />
                 </com.skydoves.elasticviews.ElasticLayout>
+
                 <com.skydoves.elasticviews.ElasticLayout
                     android:id="@+id/btnAspect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/shape_border_others_app"
                     android:layout_marginEnd="@dimen/dimen_12_dp"
-                    android:layout_marginBottom="@dimen/dimen_4_dp">
+                    android:layout_marginBottom="@dimen/dimen_4_dp"
+                    android:background="@drawable/shape_border_others_app"
+                    tools:ignore="TouchTargetSizeCheck">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -619,26 +639,29 @@
                         android:textColor="@android:color/white"
                         android:textStyle="bold" />
                 </com.skydoves.elasticviews.ElasticLayout>
+
                 <com.skydoves.elasticviews.ElasticLayout
-                android:id="@+id/btnExplorer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/shape_border_others_app"
-                android:layout_marginBottom="@dimen/dimen_4_dp"
-                android:layout_marginEnd="@dimen/dimen_12_dp">
-                <TextView
+                    android:id="@+id/btnExplorer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="@dimen/dimen_4_dp"
-                    android:paddingBottom="@dimen/dimen_4_dp"
-                    android:paddingLeft="@dimen/dimen_12_dp"
-                    android:paddingRight="@dimen/dimen_12_dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
-                    android:text="@string/file_explorer_label"/>
-            </com.skydoves.elasticviews.ElasticLayout>
+                    android:layout_marginEnd="@dimen/dimen_12_dp"
+                    android:layout_marginBottom="@dimen/dimen_4_dp"
+                    android:background="@drawable/shape_border_others_app"
+                    tools:ignore="TouchTargetSizeCheck">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingTop="@dimen/dimen_4_dp"
+                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingBottom="@dimen/dimen_4_dp"
+                        android:text="@string/file_explorer_label"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold" />
+                </com.skydoves.elasticviews.ElasticLayout>
             </LinearLayout>
         </RelativeLayout>
 <!--

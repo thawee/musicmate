@@ -5,7 +5,6 @@ import static apincer.android.mmate.dlna.content.CollectionsBrowser.DUPLICATED_S
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_CLASSIC_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_FINFIN_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_INDIE_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_ISAAN_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_RELAXED_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS;
@@ -85,7 +84,7 @@ public class PLSBuilder {
         mapped.put(SMART_LIST_FINFIN_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_BAANTHUNG_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_CLASSIC_SONGS, new ArrayList<>());
-        mapped.put(SMART_LIST_INDIE_SONGS, new ArrayList<>());
+      //  mapped.put(SMART_LIST_INDIE_SONGS, new ArrayList<>());
 
         for(MusicTag tag: songs) {
             if(MusicTagUtils.isOnDownloadDir(tag)) {
@@ -108,9 +107,6 @@ public class PLSBuilder {
             }
             if(MusicTagUtils.isClassicPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_CLASSIC_SONGS)).add(tag);
-            }
-            if(MusicTagUtils.isIndiePlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_INDIE_SONGS)).add(tag);
             }
         }
 

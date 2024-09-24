@@ -784,7 +784,12 @@ public class MainActivity extends AppCompatActivity {
         }
         // load music items
         // loading recycleview list on start activity
-        refreshLayout.autoRefresh();
+        if(MusixMateApp.getInstance().getCriteria() !=null) {
+            this.adapter.loadDataSets(MusixMateApp.getInstance().getCriteria());
+        }else {
+            refreshLayout.autoRefresh();
+        }
+
         doShowNowPlayingPanel(MusixMateApp.getPlayerControl().getPlayingSong());
     }
 
@@ -1489,8 +1494,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doExportPlaylists() {
-        PLSBuilder.exportPlaylists(getApplicationContext());
-        ToastHelper.showActionMessage(MainActivity.this, "", "Playlists are created successfully.");
+        MusicMateExecutors.db(() -> {
+            PLSBuilder.exportPlaylists(getApplicationContext());
+            runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Playlists are created successfully."));
+        });
     }
 
     private void doEncodeAudioFiles(List<MusicTag> selections) {

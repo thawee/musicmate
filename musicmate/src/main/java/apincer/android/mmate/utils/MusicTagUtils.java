@@ -2132,20 +2132,27 @@ public class MusicTagUtils {
 
     public static boolean isRelaxedPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
+        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) && (grouping.contains("LOUNGE") ||
-                grouping.contains("ACOUSTIC"));
+                genre.contains("ACOUSTIC"));
     }
 
     public static boolean isRelaxedThaiPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        return (!isClassicPlaylist(tag)) && (grouping.equalsIgnoreCase("THAI LOUNGE") ||
-                grouping.equalsIgnoreCase("THAI ACOUSTIC"));
+        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (!isClassicPlaylist(tag)) &&
+                (grouping.equalsIgnoreCase("THAI LOUNGE") ||
+                        (genre.equalsIgnoreCase("ACOUSTIC") &&
+                                grouping.equalsIgnoreCase("THAI")));
     }
 
     public static boolean isRelaxedEnglishPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        return (!isClassicPlaylist(tag)) && (grouping.equalsIgnoreCase("LOUNGE") ||
-                grouping.equalsIgnoreCase("ACOUSTIC"));
+        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (!isClassicPlaylist(tag)) &&
+                (grouping.equalsIgnoreCase("LOUNGE") ||
+                        (genre.equalsIgnoreCase("ACOUSTIC") &&
+                                grouping.equalsIgnoreCase("ENGLISH")));
     }
 
     public static boolean isClassicPlaylist(MusicTag tag) {
@@ -2169,6 +2176,28 @@ public class MusicTagUtils {
                   isISaanPlaylist(tag) ||
                   isBaanThungPlaylist(tag) ||
                   isRelaxedPlaylist(tag))
+        );
+    }
+
+    public static boolean isFinFinThaiPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
+        //String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (grouping.equalsIgnoreCase("Thai") &&
+                !(isClassicPlaylist(tag) ||
+                        isISaanPlaylist(tag) ||
+                        isBaanThungPlaylist(tag) ||
+                        isRelaxedPlaylist(tag))
+        );
+    }
+
+    public static boolean isFinFinEnglishPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
+        //String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (grouping.equalsIgnoreCase("English") &&
+                !(isClassicPlaylist(tag) ||
+                        isISaanPlaylist(tag) ||
+                        isBaanThungPlaylist(tag) ||
+                        isRelaxedPlaylist(tag))
         );
     }
 

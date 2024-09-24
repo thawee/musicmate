@@ -56,6 +56,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         localDataSet.clear();
         totalSize =0;
         totalDuration =0;
+        if(criteria==null) {
+            criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+        }
         List<MusicTag> list = TagRepository.findMediaTag(criteria);
         if(list == null) return; // NPE
 
@@ -100,7 +103,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         return false;
     }
 
-    @Deprecated
     public void loadDataSets(SearchCriteria finalCriteria) {
         this.criteria = finalCriteria;
         loadDataSets();
