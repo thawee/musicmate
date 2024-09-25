@@ -465,7 +465,7 @@ public class TagsActivity extends AppCompatActivity {
         }
         String matePath = repos.buildCollectionPath(displayTag, true);
         if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            pathInfoLine.setBackgroundColor(getColor(R.color.md_theme_light_error));
+            pathInfoLine.setBackgroundColor(getColor(R.color.warn_not_in_managed_dir));
         }else {
             pathInfoLine.setBackgroundColor(getColor(R.color.grey400));
         }

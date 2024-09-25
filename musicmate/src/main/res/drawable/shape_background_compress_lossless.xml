@@ -4,7 +4,7 @@
 
     <!-- View background color -->
     <solid
-        android:color="@color/quality_sd" >
+        android:color="#8BC34A" >
     </solid>
 
     <!-- View border color and width -->
@@ -17,5 +17,4 @@
     <corners
         android:radius="2dp"   >
     </corners>
-
 </shape>

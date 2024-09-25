@@ -316,7 +316,10 @@ aboutLibraries {
             ~"io.netty:netty-resolver",
             ~"io.netty:netty-transport",
             ~"io.netty:netty-transport-native-unix-common",
-            ~"org.jupnp:org.jupnp.support"
+            ~"org.jupnp:org.jupnp.support",
+            ~"com.halfhp.fig:*",
+            ~"com.facebook.shimmer:*",
+            ~"org.jupnp:org.jupnp"
     ]
 }
 

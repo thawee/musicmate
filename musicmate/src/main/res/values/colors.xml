@@ -379,5 +379,6 @@
     <color name="encoding_desc">@color/grey600</color>
     <color name="encoding_label">#000000</color>
     <color name="encoding_detail">#3F51B5</color>
+    <color name="warn_not_in_managed_dir">#FF5722</color>
 
 </resources>
