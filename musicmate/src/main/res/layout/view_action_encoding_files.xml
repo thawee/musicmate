@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -38,13 +37,14 @@
             android:layout_height="0dp"
             android:orientation="horizontal"
             android:layout_weight="1">
+
             <com.skydoves.powerspinner.PowerSpinnerView
                 android:id="@+id/audioEncoding"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/black_transparent_64"
                 android:gravity="center"
-                android:hint="@string/label_encoding"
+                android:hint="@string/label_encodings"
                 android:padding="10dp"
                 android:textColor="@color/white"
                 android:textColorHint="@color/white"
@@ -57,7 +57,8 @@
                 app:spinner_item_height="46dp"
                 app:spinner_popup_animation="dropdown"
                 app:spinner_popup_background="@color/black_transparent_64"
-                app:spinner_popup_elevation="14dp" />
+                app:spinner_popup_elevation="14dp"
+                tools:ignore="TouchTargetSizeCheck" />
             <!--
             <RadioGroup
                 android:id="@+id/mediaEncoding"
@@ -182,52 +183,57 @@
         android:layout_marginRight="@dimen/dimen_32_dp"
         android:layout_marginBottom="@dimen/dimen_16_dp"
         android:layout_marginTop="@dimen/dimen_4_dp">
+
         <com.skydoves.elasticviews.ElasticLayout
             android:id="@+id/btn_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginLeft="@dimen/spacing_medium"
             android:layout_gravity="center"
-            android:background="@drawable/shape_border_back">
+            android:layout_marginStart="@dimen/spacing_medium"
+            android:background="@drawable/shape_border_back"
+            tools:ignore="TouchTargetSizeCheck">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="24dp"
-                android:text="Dismiss"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:layout_weight="1"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_weight="1"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:layout_marginLeft="@dimen/spacing_small"
+                android:text="Dismiss"
                 android:textColor="@color/white"
-                android:layout_gravity="center_horizontal|center_vertical"
-                />
+                tools:ignore="HardcodedText" />
         </com.skydoves.elasticviews.ElasticLayout>
 
         <com.skydoves.elasticviews.ElasticLayout
             android:id="@+id/btn_ok"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginLeft="@dimen/spacing_medium"
             android:layout_gravity="center"
-            android:background="@drawable/shape_border_back">
+            android:layout_marginStart="@dimen/spacing_medium"
+            android:background="@drawable/shape_border_back"
+            tools:ignore="TouchTargetSizeCheck">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="24dp"
-                android:text="Encoding"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_marginRight="@dimen/spacing_small"
+                android:layout_weight="1"
                 android:gravity="center"
                 android:paddingLeft="@dimen/dimen_8_dp"
                 android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_weight="1"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:layout_marginLeft="@dimen/spacing_small"
+                android:text="Encoding"
                 android:textColor="@color/white"
-                android:layout_gravity="center_horizontal|center_vertical"
-                />
+                tools:ignore="HardcodedText" />
         </com.skydoves.elasticviews.ElasticLayout>
     </RelativeLayout>
 </LinearLayout>

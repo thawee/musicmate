@@ -185,16 +185,19 @@ public class MusicTagUtils {
         int bgWhiteColor = getResolutionColor(context, tag);
         int qualityColor = context.getColor(R.color.quality_no_rating);
         int labelColor = getEncodingColor(context, tag);
-        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality()) ||
-                QUALITY_RECOMMENDED.equals(tag.getMediaQuality()) ||
-                QUALITY_GOOD.equals(tag.getMediaQuality())
-        ) {
+        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_audiophile);
+        }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
+            qualityColor = context.getColor(R.color.quality_recommended);
+        }else if (QUALITY_GOOD.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_good);
-        }else if(QUALITY_BAD.equals(tag.getMediaQuality())) {
+        }else if(Constants.QUALITY_BAD.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_bad);
+        }else {
+            qualityColor = context.getColor(R.color.quality_no_rating); //recordsColor;
         }
         int upscaleColor = context.getColor(R.color.quality_scale_not_test);
-        if (tag.getDynamicRange() > 0.0) {
+        if (!isLossy(tag) && tag.getDynamicRange() > 0.0) {
                 upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
         }
         int upsampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
@@ -335,7 +338,7 @@ public class MusicTagUtils {
        // float startx = (float) (myCanvas.getWidth() * 0.56)+8;
         float startx = blackBGStartPos+36;
         int barHigh = 12;
-        int barWidth = 40;
+        int barWidth = 32; //40;
         int barSpace = 8;
         //quality
         startx = startx - paddingx2;
@@ -964,7 +967,7 @@ public class MusicTagUtils {
         // int greyColor = context.getColor(R.color.grey200);
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
        // int recordsColor = context.getColor(R.color.audiophile_label2);
-        int recordsColor = context.getColor(R.color.quality_good);
+        int recordsColor = context.getColor(R.color.quality_label);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.quality_good);
        // int qualityColor = context.getColor(R.color.audiophile_label1);
@@ -1076,8 +1079,10 @@ public class MusicTagUtils {
             // Audiophile
             letterTextSize = 40; //82;
             qualityColor = context.getColor(R.color.quality_audiophile);
-        }else if(QUALITY_RECOMMENDED.equals(label1) ||
-                (QUALITY_GOOD.equals(label1))) {
+        }else if(QUALITY_RECOMMENDED.equals(label1)) {
+            letterTextSize = 30; //82;
+            qualityColor = context.getColor(R.color.quality_recommended);
+        }else if (QUALITY_GOOD.equals(label1)) {
             letterTextSize = 30; //82;
             qualityColor = context.getColor(R.color.quality_good);
         }else if(Constants.QUALITY_BAD.equals(label1)) {

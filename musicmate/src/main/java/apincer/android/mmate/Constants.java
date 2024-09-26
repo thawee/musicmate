@@ -14,8 +14,8 @@ import java.util.List;
 public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
-    public static final String QUALITY_BAD = "Bad";
-    public static final String QUALITY_GOOD = "Good";
+    public static final String QUALITY_BAD = "Unsatisfactory";
+    public static final String QUALITY_GOOD = "Adequate";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
@@ -32,7 +32,7 @@ public final class Constants {
     public static final double SPL_16BIT_IN_DB = 96.33;
     public static final double SPL_24BIT_IN_DB = 144.49;
 
-    public static final double MIN_SPL_RATIO = 0.9; //0.72; //just magic number, it's should be 1.0 for actual results
+    public static final double MIN_SPL_RATIO = 0.8; //0.72; //just magic number, it's should be 1.0 for actual results
     public static final double MIN_SPL_16BIT_IN_DB = SPL_16BIT_IN_DB*MIN_SPL_RATIO;
     public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;
 
@@ -73,7 +73,7 @@ public final class Constants {
     public static final String TITLE_NO_COVERART = "No Embed Coverart";
 
     public static final String TITLE_DUPLICATE = "Duplicate Song";
-    public static final String TITLE_BROKEN = "Bad Upscale File";
+    public static final String TITLE_BROKEN = "Unsatisfactory";
     public static final String TITLE_NO_DR_METER = "No DRMeter";
     public static final String TITLE_INCOMING_SONGS = "Download Songs";
     public static final String TITLE_ALL_SONGS = "My Songs";

@@ -87,9 +87,9 @@ public class MediaServerService extends Service {
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-    private	static final DLNADoc[] DLNA_DOCS = new DLNADoc[] {new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
-    private	static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {});
-    private static final DLNACaps SEC_CAP = new DLNACaps(new String[] {"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
+    private	static final DLNADoc[] DLNA_DOCS = new DLNADoc[] {new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
+    private	static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {"audio"}); // for audio only
+   // private static final DLNACaps SEC_CAP = new DLNACaps(new String[] {"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
     public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
     protected UpnpServiceConfiguration upnpServiceCfg;
@@ -207,8 +207,8 @@ public class MediaServerService extends Service {
                     null,
                     presentationURI,
                     DLNA_DOCS,
-                    DLNA_CAPS,
-                    SEC_CAP);
+                    DLNA_CAPS); //,
+                    //SEC_CAP);
 
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
@@ -246,10 +246,12 @@ public class MediaServerService extends Service {
 
     private Icon[] createDeviceIcons() {
         ArrayList<Icon> icons = new ArrayList<>();
-        icons.add(new Icon("image/png", 32, 32, 24, "musicmate32.png", getIconAsByteArray("iconpng32.png")));
-        icons.add(new Icon("image/png", 48, 48, 24, "musicmate48.png", getIconAsByteArray("iconpng48.png")));
-        icons.add(new Icon("image/png", 120, 120, 24, "musicmate120.png", getIconAsByteArray("iconpng120.png")));
-        icons.add(new Icon("image/png", 192, 192, 24, "musicmate192.png", getIconAsByteArray("iconpng192.png")));
+       // icons.add(new Icon("image/png", 32, 32, 24, "musicmate32.png", getIconAsByteArray("iconpng32.png")));
+       // icons.add(new Icon("image/png", 48, 48, 24, "musicmate48.png", getIconAsByteArray("iconpng48.png")));
+       // icons.add(new Icon("image/png", 120, 120, 24, "musicmate120.png", getIconAsByteArray("iconpng120.png")));
+       // icons.add(new Icon("image/png", 192, 192, 24, "musicmate192.png", getIconAsByteArray("iconpng192.png")));
+         icons.add(new Icon("image/png", 64, 64, 24, "musicmate.png", getIconAsByteArray("iconpng64.png")));
+         icons.add(new Icon("image/png", 128, 128, 24, "musicmate128.png", getIconAsByteArray("iconpng128.png")));
         return icons.toArray(new Icon[]{});
     }
 
@@ -267,9 +269,9 @@ public class MediaServerService extends Service {
 
     private LocalService<?>[] createMediaServerServices() {
         List<LocalService<?>> services = new ArrayList<>();
-        services.add(createContentDirectoryService());
         services.add(createServerConnectionManagerService());
-        services.add(createMediaReceiverRegistrarService());
+        services.add(createContentDirectoryService());
+      //  services.add(createMediaReceiverRegistrarService());
         return services.toArray(new LocalService[]{});
     }
 

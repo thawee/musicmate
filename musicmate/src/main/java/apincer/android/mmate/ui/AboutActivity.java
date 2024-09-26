@@ -4,6 +4,7 @@ import static apincer.android.mmate.Constants.TITLE_DSD;
 import static apincer.android.mmate.Constants.TITLE_HQ;
 import static apincer.android.mmate.Constants.TITLE_MQA;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -30,9 +31,11 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.vanniktech.textbuilder.TextBuilder;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -420,11 +423,11 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
-            mappedColors.put(Constants.TITLE_DSD, ContextCompat.getColor(getContext(), R.color.resolution_dsd_64_128));
-            mappedColors.put(Constants.TITLE_MQA, ContextCompat.getColor(getContext(), R.color.resolution_mqa));
-            mappedColors.put(Constants.TITLE_HIRES, ContextCompat.getColor(getContext(), R.color.resolution_pcm_96));
-            mappedColors.put(Constants.TITLE_HIFI_LOSSLESS, ContextCompat.getColor(getContext(), R.color.resolution_pcm_44_48));
-            mappedColors.put(Constants.TITLE_HIGH_QUALITY, ContextCompat.getColor(getContext(), R.color.file_format_lossy));
+            mappedColors.put(Constants.TITLE_DSD, ContextCompat.getColor(getContext(), R.color.resolution_dsd));
+            mappedColors.put(Constants.TITLE_MQA, ContextCompat.getColor(getContext(), R.color.resolution_mqa_studio));
+            mappedColors.put(Constants.TITLE_HIRES, ContextCompat.getColor(getContext(), R.color.resolution_hires));
+            mappedColors.put(Constants.TITLE_HIFI_LOSSLESS, ContextCompat.getColor(getContext(), R.color.resolution_lossless));
+            mappedColors.put(Constants.TITLE_HIGH_QUALITY, ContextCompat.getColor(getContext(), R.color.resolution_lossy));
 
              for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));
@@ -441,6 +444,16 @@ public class AboutActivity extends AppCompatActivity {
             dataSet.setValueLinePart1Length(1f);
             dataSet.setValueLinePart2Length(0.4f);
 
+            dataSet.setValueFormatter(new ValueFormatter() {
+                private final DecimalFormat mFormat = new DecimalFormat("#,###");
+                @SuppressLint("DefaultLocale")
+                @Override
+                public String getFormattedValue(float value) {
+                   // return String.format("%.1f", value); // Format to one decimal place
+                    return mFormat.format(value);
+                }
+            });
+
             dataSet.setDrawIcons(false);
             dataSet.setSliceSpace(2f); //space between each slice
             dataSet.setValueLineColor(Color.WHITE);
@@ -453,7 +466,7 @@ public class AboutActivity extends AppCompatActivity {
             dataSet.setColors(colors);
 
             PieData data = new PieData(dataSet);
-            data.setValueFormatter(new PercentFormatter());
+         //   data.setValueFormatter(new PercentFormatter());
             data.setValueTextSize(10f);
             data.setValueTextColor(Color.BLACK);
             chart.setData(data);

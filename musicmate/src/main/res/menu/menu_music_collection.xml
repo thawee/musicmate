@@ -24,6 +24,12 @@
         app:showAsAction="always" />
 
     <item
+        android:icon="@drawable/round_file_present_24"
+        android:id="@+id/menu_encodings"
+        android:title="@string/label_encodings"
+        app:showAsAction="always" />
+
+    <item
         android:icon="@drawable/ic_round_local_play_24"
         android:id="@+id/menu_groupings"
         android:title="@string/label_groupings"

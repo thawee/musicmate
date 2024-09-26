@@ -744,7 +744,7 @@ public class MainActivity extends AppCompatActivity {
         mResideMenu.setMenuRes(R.menu.menu_music_collection, ResideMenu.DIRECTION_LEFT);
        // mResideMenu.addMenuItem(MENU_ID_QUALITY, R.drawable.ic_format_dsd_white, Constants.AUDIO_SQ_DSD, ResideMenu.DIRECTION_LEFT);
        // mResideMenu.addMenuItem(MENU_ID_QUALITY_PCM, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_PCM, ResideMenu.DIRECTION_LEFT);
-        mResideMenu.addMenuItem(MENU_ID_RESOLUTION, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_ENCODINGS, ResideMenu.DIRECTION_LEFT);
+       // mResideMenu.addMenuItem(MENU_ID_RESOLUTION, UIUtils.getTintedDrawable(getApplicationContext(), R.drawable.ic_sound_wave, Color.WHITE), Constants.AUDIO_SQ_ENCODINGS, ResideMenu.DIRECTION_LEFT);
     }
 
     private void scrollToListening() {
@@ -867,7 +867,8 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-        } else if(item.getItemId() == MENU_ID_RESOLUTION) {
+       // } else if(item.getItemId() == MENU_ID_RESOLUTION) {
+        } else if(item.getItemId() == R.id.menu_encodings) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
             return true;

@@ -339,6 +339,7 @@ public class TagsActivity extends AppCompatActivity {
     public void updateTitlePanel() {
         if(MusixMateApp.getPlayerControl().isPlaying()) {
             playerBtn.setVisibility(View.VISIBLE);
+            playerPanel.setVisibility(View.VISIBLE);
             playerBtn.setBackground(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
             if(closePreview) {
                 playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent));
@@ -347,6 +348,7 @@ public class TagsActivity extends AppCompatActivity {
             }
         }else {
             playerBtn.setVisibility(View.GONE);
+            playerPanel.setVisibility(View.GONE);
         }
         if(getEditItems().size()>1) {
             String title = getString(R.string.title_many, getEditItems().size());
@@ -501,7 +503,8 @@ public class TagsActivity extends AppCompatActivity {
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
 
             // DR
-            if(MusicTagUtils.isLossless(displayTag)) {
+           // if(MusicTagUtils.isMQA(displayTag) || MusicTagUtils.isHiRes(displayTag) || MusicTagUtils.isLossless(displayTag)) {
+            if(!MusicTagUtils.isDSD(displayTag) && !MusicTagUtils.isLossy(displayTag)) {
                 spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
                 spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
             }

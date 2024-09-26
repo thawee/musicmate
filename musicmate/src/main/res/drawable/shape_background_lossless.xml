@@ -4,7 +4,7 @@
 
     <!-- View background color -->
     <solid
-        android:color="@color/resolution_pcm_44_48" >
+        android:color="@color/resolution_lossless" >
     </solid>
 
     <!-- View border color and width -->

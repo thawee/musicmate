@@ -1,7 +1,10 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.Constants.QUALITY_GOOD;
+import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.utils.StringUtils.toLowwerCase;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -133,23 +136,25 @@ public class TagsEditorFragment extends Fragment {
         return v;
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private void setupFileQualityList(PowerSpinnerView fileQuality) {
-       // fileQuality.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener<Object>() {
-       // });
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Audiophile"));
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Recommended"));
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Good"));
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),"Bad"));
-        fileQuality.setItems(iconSpinnerItems);
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),Constants.QUALITY_AUDIOPHILE));
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),QUALITY_RECOMMENDED));
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),QUALITY_GOOD));
+        iconSpinnerItems.add(createIconSpinnerItem(getContext(),Constants.QUALITY_BAD));
         IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(fileQuality);
         fileQuality.setSpinnerAdapter(iconSpinnerAdapter);
+        fileQuality.setArrowAnimate(true);
+        fileQuality.setDividerSize(1);
+        fileQuality.setSpinnerPopupBackground(context.getDrawable(R.drawable.shape_border_back));
         fileQuality.setItems(iconSpinnerItems);
         fileQuality.setLifecycleOwner(this);
     }
 
     private IconSpinnerItem createIconSpinnerItem(Context context, String title) {
-        return new IconSpinnerItem(title, UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
+        return new IconSpinnerItem("", UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
+       // return new IconSpinnerItem(title, UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
     }
 
     private void setupListValuePopup(TextInputEditText textInput, @NonNull List<String> defaultList, int minChar, boolean autoSelect) {

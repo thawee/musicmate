@@ -222,6 +222,10 @@
         green  - MQA
         blue   - MQA Studio
     -->
+    <color name="resolution_dsd">#009688</color>
+    <color name="resolution_lossless">#FFC107</color>
+    <color name="resolution_lossy">#FF5722</color>
+    <color name="resolution_hires">#FF9800</color>
 
     <color name="resolution_pcm_44_48">#FFFF00</color>
     <color name="resolution_pcm_96">#FFFFFF</color>
@@ -244,15 +248,21 @@
     <color name="quality_bad">#EF2350</color>
     <color name="quality_good">#ef7350</color>
     -->
-
+    <color name="quality_label">@color/white</color>
+    <color name="quality_audiophile">#FF9800</color>
+    <color name="quality_recommended">#FFCC80</color>
+    <color name="quality_good">#FFCC80</color>
+    <color name="quality_bad">#B71C1C</color>
+    <color name="quality_no_rating">#E0E0E0</color>
+<!--
     <color name="quality_audiophile">#ffb300</color>
     <color name="quality_good">@color/white</color>
     <color name="quality_bad">@color/grey600</color>
-    <color name="quality_no_rating">@color/grey200_transparent</color>
+    -->
 
-    <color name="quality_scale_not_test">@color/grey200_transparent</color>
-    <color name="quality_scale_matched">@color/white</color>
-    <color name="quality_scale_not_matched">@color/grey600</color>
+    <color name="quality_scale_not_test">#E0E0E0</color>
+    <color name="quality_scale_matched">#FF9800</color>
+    <color name="quality_scale_not_matched">#B71C1C</color>
     <!--
     <color name="resolution_mqa">#FF00FF</color>
     <color name="resolution_hd">#FF0000</color>

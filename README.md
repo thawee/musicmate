@@ -1,8 +1,12 @@
 Music Mate
 =====================================
 
-Managing music collection on Android phones and Android Music Player.
-
+Managing music collection on Android phones and Android Music Player with following features:
+ * Scan for music files on mobile phone, use jaudiotaagger
+ * identify MQA songs with MQA sample rate, use MQA identifier
+ * Read Dynamic range and DRMeter from files, use ffmpeg
+ * BAD music file detector from dynamic range and bit depth. 
+ * DLNA Media Server (UPnP/AV 1.0) for stream music on mobile phone to any DLNA Controller or Renderer i.e. MConnect, JPlay etc.
 
 Pre-requisites
 --------------

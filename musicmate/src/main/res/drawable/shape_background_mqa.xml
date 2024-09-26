@@ -4,7 +4,7 @@
 
     <!-- View background color -->
     <solid
-        android:color="@color/resolution_mqa" >
+        android:color="@color/resolution_mqa_studio" >
     </solid>
 
     <!-- View border color and width -->
