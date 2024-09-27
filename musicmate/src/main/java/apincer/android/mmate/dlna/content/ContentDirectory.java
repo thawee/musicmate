@@ -150,10 +150,10 @@ public class ContentDirectory {
                                String filter, long firstResult, long maxResults,
                                SortCriterion[] orderby) throws ContentDirectoryException {
 
-        Log.d(TAG, "Browse: objectId: " + objectID
+     /*   Log.d(TAG, "Browse: objectId: " + objectID
                 + " browseFlag: " + browseFlag + " filter: " + filter
                 + " firstResult: " + firstResult + " maxResults: " + maxResults
-                + " orderby: " + stream(orderby).map(SortCriterion::toString).collect(Collectors.joining(",")));
+                + " orderby: " + stream(orderby).map(SortCriterion::toString).collect(Collectors.joining(","))); */
         int childCount;
         DIDLObject didlObject;
         DIDLContent didl = new DIDLContent();
@@ -177,7 +177,7 @@ public class ContentDirectory {
         try {
             // Generate output with nested items
             String didlXml = new DIDLParser().generate(didl, false);
-            Log.d(TAG, "CDResponse: " + didlXml);
+           // Log.d(TAG, "CDResponse: " + didlXml);
             result = new BrowseResult(didlXml, childCount, childCount);
         } catch (Exception e) {
             throw new ContentDirectoryException(

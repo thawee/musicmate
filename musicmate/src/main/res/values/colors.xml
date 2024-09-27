@@ -391,4 +391,44 @@
     <color name="encoding_detail">#3F51B5</color>
     <color name="warn_not_in_managed_dir">#FF5722</color>
 
+    <!-- Reds -->
+    <color name="reds_crimson">#DC143C</color>
+    <color name="reds_maroon">#800000</color>
+    <color name="reds_scarlet">#FF2400</color>
+
+    <!-- Oranges -->
+    <color name="oranges_amber">#FFBF00</color>
+    <color name="oranges_rust">#B7410E</color>
+    <color name="oranges_salmon">#FA8072</color>
+
+    <!-- Yellows -->
+    <color name="yellows_gold">#FFD700</color>
+    <color name="yellows_lemon">#FFF700</color>
+    <color name="yellows_mustard">#FFDB58</color>
+
+    <!-- Greens -->
+    <color name="greens_emerald">#50C878</color>
+    <color name="greens_lime">#00FF00</color>
+    <color name="greens_olive">#808000</color>
+
+    <!-- Blues -->
+    <color name="blues_azure">#007FFF</color>
+    <color name="blues_indigo">#4B0082</color>
+    <color name="blues_teal">#008080</color>
+
+    <!-- Purples -->
+    <color name="purples_lavender">#E6E6FA</color>
+    <color name="purples_magenta">#FF00FF</color>
+    <color name="purples_violet">#8A2BE2</color>
+
+    <!-- Browns -->
+    <color name="browns_beige">#F5F5DC</color>
+    <color name="browns_chocolate">#D2691E</color>
+    <color name="browns_sienna">#A0522D</color>
+
+    <!-- Grays -->
+    <color name="grays_charcoal">#36454F</color>
+    <color name="grays_silver">#C0C0C0</color>
+    <color name="grays_slate">#708090</color>
+
 </resources>

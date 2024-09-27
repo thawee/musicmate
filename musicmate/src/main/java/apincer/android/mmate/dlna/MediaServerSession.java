@@ -10,11 +10,10 @@ import apincer.android.mmate.utils.StringUtils;
 public class MediaServerSession {
     private static final List<String> transCodeList = new ArrayList<>();
     public static boolean forceFullContent = false;
-    public static final int streamServerPort = MediaServerConfiguration.STREAM_SERVER_PORT;
     public static String streamServerHost = "";
 
     static {
-        //transCodeList.add("MPEG");
+       // transCodeList.add("MPEG");
         transCodeList.add("AAC");
     }
 
@@ -29,9 +28,5 @@ public class MediaServerSession {
 
     public static String getIpAddress() {
         return streamServerHost;
-    }
-
-    public static int getListenPort() {
-        return streamServerPort;
     }
 }

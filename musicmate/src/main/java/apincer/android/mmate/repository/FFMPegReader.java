@@ -1393,9 +1393,10 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
 
     public static byte[] transcodeFile(Context context, String srcPath) {
        // String options=" -vn -f s16be -ar 44100 -ac 2 "; // lpcm
+       // String options=" -c:a pcm_s16le -ar 44100 -ac 2 ";
         String options=" -vn -f mp3 -ab 320000 "; // mp3
 
-        String tmpTarget = srcPath+".pcm";
+        String tmpTarget = srcPath+"_tmp.mp3";
         //String cmd = " -hide_banner -nostats -i \""+srcPath+"\" "+options+" \""+tmpTarget+"\"";
         String cmd = " -i \""+srcPath+"\" "+options+" \""+tmpTarget+"\"";
         Log.i(TAG, "Converting with cmd: "+ cmd);

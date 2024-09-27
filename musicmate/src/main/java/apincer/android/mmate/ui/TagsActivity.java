@@ -633,19 +633,17 @@ public class TagsActivity extends AppCompatActivity {
                         setResult(RESULT_OK, resultIntent);
                     }
 
-                    if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
-                        finish(); // back to prev activity
-                       // doOpenMainActivity(criteria);
-                    }else {
-                        // set timeout to finish, 5 seconds
+                   // if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
+                   //     finish(); // back to prev activity
+                  //  }else {
+                        // set timeout to finish, 3 seconds
                         finishOnTimeout = true;
                         MusicMateExecutors.schedule(() -> {
                             if(finishOnTimeout) {
                                 finish(); // back to prev activity
-                               // doOpenMainActivity(criteria);
                             }
                         }, 3);
-                    }
+                   // }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog alertDialog = builder.create();
@@ -665,19 +663,17 @@ public class TagsActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, resultIntent);
 
-        if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
-            finish(); // back to prev activity
-            //doOpenMainActivity(criteria);
-        }else {
+       // if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
+       //     finish(); // back to prev activity
+       // }else {
             // set timeout to finish, 5 seconds
             finishOnTimeout = true;
             MusicMateExecutors.schedule(() -> {
                 if(finishOnTimeout) {
                     finish(); // back to prev activity
-                    //doOpenMainActivity(criteria);
                 }
-            }, 3);
-        }
+            }, 5);
+       // }
     }
 
     public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {
