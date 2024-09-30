@@ -1,5 +1,9 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
 import static apincer.android.mmate.Constants.QUALITY_AUDIOPHILE;
@@ -197,14 +201,24 @@ public class MusicTagUtils {
             qualityColor = context.getColor(R.color.quality_no_rating); //recordsColor;
         }
         int upscaleColor = context.getColor(R.color.quality_scale_not_test);
-        if (!isLossy(tag) && tag.getDynamicRange() > 0.0) {
+        if(IND_UPSCALED_GOOD == tag.getUpscaledInd()) {
+            upscaleColor = context.getColor(R.color.quality_scale_matched);
+        }else if(IND_UPSCALED_BAD == tag.getUpscaledInd()) {
+            upscaleColor = context.getColor(R.color.quality_scale_not_matched);
+        }
+      /*  if (!isLossy(tag) && tag.getDynamicRange() > 0.0) {
                 upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
+        } */
+        int resampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
+        if(IND_RESAMPLED_GOOD == tag.getResampledInd()) {
+            resampledColor = context.getColor(R.color.quality_scale_matched);
+        }else if(IND_RESAMPLED_BAD == tag.getResampledInd()) {
+            resampledColor = context.getColor(R.color.quality_scale_not_matched);
         }
-        int upsampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
         // 16 bit should be 44.1 or 48 kHz only
-        if(tag.getAudioBitRate() == QUALITY_BIT_CD && tag.getAudioSampleRate() > QUALITY_SAMPLING_RATE_48) {
+       /* if(tag.getAudioBitRate() == QUALITY_BIT_CD && tag.getAudioSampleRate() > QUALITY_SAMPLING_RATE_48) {
             upsampledColor = context.getColor(R.color.quality_scale_not_matched);
-        }
+        } */
 
         String label;
         String samplingRate = getBPSAndSampleRate(tag);
@@ -375,7 +389,7 @@ public class MusicTagUtils {
         startx = endx+barSpace;
         endx = startx+barWidth;
         paint = new Paint();
-        paint.setColor(upsampledColor);
+        paint.setColor(resampledColor);
         paint.setStrokeWidth(barHigh);
         paint.setAntiAlias(true);
         paint.setDither(true);
@@ -964,14 +978,11 @@ public class MusicTagUtils {
     public static Bitmap createSourceQualityIcon(Context context, String qualityText) {
         int width = 280; // 16x46, 24x70
         int height = 96;
-        // int greyColor = context.getColor(R.color.grey200);
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
-       // int recordsColor = context.getColor(R.color.audiophile_label2);
         int recordsColor = context.getColor(R.color.quality_label);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.quality_good);
-       // int qualityColor = context.getColor(R.color.audiophile_label1);
-        String label1 = trimToEmpty(qualityText); //;"Audiophile";
+        String label1 = trimToEmpty(qualityText);
         String label2 = "R e c o r d s";
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -1338,10 +1349,10 @@ public class MusicTagUtils {
     @Deprecated
     public static String getTrackDRandGainString(MusicTag tag) {
         String text;
-        if(tag.getDynamicRangeMeter()==0.00) {
+        if(tag.getDynamicRangeScore()==0.00) {
             text = " - ";
         }else {
-            text = String.format(Locale.US, "DR%.0f", tag.getDynamicRangeMeter());
+            text = String.format(Locale.US, "DR%.0f", tag.getDynamicRangeScore());
         }
         text = text + "/";
 
@@ -1378,10 +1389,10 @@ public class MusicTagUtils {
 
     public static String getTrackDR(MusicTag tag) {
         String text;
-        if(tag.getDynamicRangeMeter()==0.00) {
+        if(tag.getDynamicRangeScore()==0.00) {
             text = "-";
         }else {
-            text = String.format(Locale.US, "%.0f", tag.getDynamicRangeMeter());
+            text = String.format(Locale.US, "%.0f", tag.getDynamicRangeScore());
         }
 
         return text;

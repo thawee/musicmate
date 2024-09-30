@@ -45,7 +45,18 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     @Override
+    public void onListenerConnected() {
+        Log.i(TAG, "Notification Listener connected");
+        // Handle the connection
+    }
 
+    @Override
+    public void onListenerDisconnected() {
+        Log.i(TAG, "Notification Listener disconnected");
+        // Handle the disconnection
+    }
+
+    @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         String pack = sbn.getPackageName();
         Bundle extras = sbn.getNotification().extras;

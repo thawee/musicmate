@@ -33,8 +33,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 87
-        versionName  "3.8.7"+ versions.buildDate
+        versionCode 88
+        versionName  "3.8.8"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -172,11 +172,11 @@ dependencies {
     implementation deps.ui.stateViews
     implementation deps.ui.androidribbon
     implementation deps.ui.mpandroidchart
-    implementation "com.androidplot:androidplot-core:1.5.11"
+   // implementation "com.androidplot:androidplot-core:1.5.11"
     //implementation 'com.github.giangpham96.expandable-text:expandable_textview:2.0.1'
     //implementation "com.github.skydoves:doublelift:1.0.4"
-    implementation 'com.vanniktech:textbuilder:0.4.0'
-    implementation 'com.github.sparrow007:carouselrecyclerview:1.2.6'
+    implementation deps.ui.textbuilder
+    implementation deps.ui.carouselrecyclerview
     //implementation deps.ui.datatables
     //https://github.com/DmitryMalkovich/circular-with-floating-action-button
     //implementation 'com.dmitrymalkovich.android:progress-fab:1.6'
@@ -229,6 +229,7 @@ dependencies {
     implementation deps.netty_codec_http
    // implementation deps.apache.httpclient
     implementation deps.okhttp3
+    implementation deps.jtransforms
 
     // Coil
     implementation deps.coil.runtime2

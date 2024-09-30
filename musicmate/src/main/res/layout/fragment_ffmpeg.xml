@@ -92,7 +92,7 @@
         android:layout_marginTop="@dimen/dimen_12_dp"
         android:layout_marginLeft="@dimen/dimen_4_dp"
         android:textSize="16sp"
-        android:text="RAW data:"
+        android:text="FFMPEG RAW data:"
         android:textColor="?android:attr/textColorPrimary"/>
     <TextView
         android:id="@+id/ffmpeg_info"

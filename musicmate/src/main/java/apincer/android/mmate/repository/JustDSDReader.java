@@ -139,7 +139,7 @@ public class JustDSDReader extends TagReader{
                 metadata.setGenre(tag.getGenre());
                 metadata.setGrouping(tag.getGrouping());
                 metadata.setMediaType(tag.getMediaType());
-                metadata.setRating(tag.getRating());
+             //   metadata.setRating(tag.getRating());
                 metadata.setComposer(tag.getComposer());
                 metadata.setYear(tag.getYear());
                 metadata.setComment(tag.getComment());

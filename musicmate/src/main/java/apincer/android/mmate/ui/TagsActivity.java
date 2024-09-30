@@ -1,5 +1,9 @@
 package apincer.android.mmate.ui;
 
+import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -55,8 +59,9 @@ import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
-import apincer.android.mmate.repository.FFMPegReader;
+import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -131,11 +136,23 @@ public class TagsActivity extends AppCompatActivity {
                     startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
                         //calculate track RG
-                        FFMPegReader.measureDRandStat(tag);
-                        //write RG to file
-                        FFMPegReader.writeTagQualityToFile(this, tag);
-                        // update MusicMate Library
-                        TagRepository.saveTag(tag);
+                        //FFMPegReader.measureDRandStat(tag);
+                        MusicAnalyser analyser = new MusicAnalyser();
+                        try {
+                            if (analyser.analyst(tag)) {
+                                tag.setDynamicRange(analyser.getDynamicRange());
+                                tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
+                                tag.setUpscaledInd(analyser.isUpscaled()?IND_UPSCALED_BAD:IND_UPSCALED_GOOD);
+                                tag.setResampledInd(analyser.isResampled()?IND_RESAMPLED_BAD:IND_RESAMPLED_GOOD);
+
+                                //write quality to file
+                                FFMpegHelper.writeTagQualityToFile(this, tag);
+                                // update MusicMate Library
+                                TagRepository.saveTag(tag);
+                            }
+                        }catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
 
                     // may need go reload from db

@@ -1,5 +1,8 @@
 package apincer.android.mmate.utils;
 
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.FFmpegKitConfig;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +42,14 @@ public class LogHelper {
         setLogLevel("org.jupnp", Level.INFO);
         setLogLevel("org.jupnp.transport.impl.NetworkAddressFactoryImpl", Level.SEVERE);
         setLogLevel("apincer.android.mmate.dlna.android.AndroidRouter", Level.CONFIG);
+    }
+
+    public static void setFFMpegOn() {
+        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_INFO);
+    }
+
+    public static void setFFMpegOff() {
+        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_QUIET);
     }
 
     public static String getTag(Class cls) {

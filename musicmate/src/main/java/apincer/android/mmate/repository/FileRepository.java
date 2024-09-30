@@ -1,6 +1,6 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.FFMPegReader.writeTagToFile;
+import static apincer.android.mmate.repository.FFMpegHelper.writeTagToFile;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -63,7 +63,7 @@ public class FileRepository {
                         }
                     }
                 }
-                FFMPegReader.extractCoverArt(path, targetFile);
+                FFMpegHelper.extractCoverArt(path, targetFile);
             }
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);
@@ -97,7 +97,7 @@ public class FileRepository {
                 // check directory images
                 FileSystem.copy(coverArtFile, targetFile);
             }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
-                FFMPegReader.extractCoverArt(path, targetFile);
+                FFMpegHelper.extractCoverArt(path, targetFile);
             }
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);

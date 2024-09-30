@@ -2,6 +2,10 @@ package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.Constants.TITLE_DSD;
 import static apincer.android.mmate.Constants.TITLE_GENRE;
 import static apincer.android.mmate.Constants.TITLE_GROUPING;
@@ -11,13 +15,16 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.Gravity;
@@ -95,8 +102,9 @@ import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
-import apincer.android.mmate.repository.FFMPegReader;
+import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -135,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET= 16; //start scrolling from 4 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 48; //48; // scroll item to offset+1 position on list
-    private static final int MENU_ID_RESOLUTION = 55555555;
+   // private static final int MENU_ID_RESOLUTION = 55555555;
     private static final double MAX_PROGRESS_BLOCK = 10.00;
     private static final double MAX_PROGRESS = 100.00;
     public static final String FLAC_OPTIMAL = "FLAC (Optimal)";
@@ -146,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String MP3_320_KHZ = "MPEG-3";
     public static final String AIFF = "AIFF";
 
+    private ServiceConnection notificationListenerConnection;
     private MusicTag nowPlaying = null;
 
     ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
@@ -594,6 +603,18 @@ public class MainActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
         }
         super.onCreate(savedInstanceState);
+
+        notificationListenerConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+
+            }
+        };
 
         // setup search criteria from starting intent
 
@@ -1452,11 +1473,19 @@ public class MainActivity extends AppCompatActivity {
                         statusList.put(tag, "Analysing");
                         runOnUiThread(itemsView::invalidateViews);
                         //calculate track RG
-                        FFMPegReader.measureDRandStat(tag);
-                        //write RG to file
-                        FFMPegReader.writeTagQualityToFile(MainActivity.this, tag);
-                        // update MusicMate Library
-                        TagRepository.saveTag(tag);
+                        //FFMPegReader.measureDRandStat(tag);
+                        MusicAnalyser analyser = new MusicAnalyser();
+                        if(analyser.analyst(tag)) {
+                            tag.setDynamicRange(analyser.getDynamicRange());
+                            tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
+                            tag.setUpscaledInd(analyser.isUpscaled()?IND_UPSCALED_BAD:IND_UPSCALED_GOOD);
+                            tag.setResampledInd(analyser.isResampled()?IND_RESAMPLED_BAD:IND_RESAMPLED_GOOD);
+
+                            //write quality to file
+                            FFMpegHelper.writeTagQualityToFile(MainActivity.this, tag);
+                            // update MusicMate Library
+                            TagRepository.saveTag(tag);
+                        }
 
                         AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
                         EventBus.getDefault().postSticky(message);
@@ -1633,7 +1662,7 @@ public class MainActivity extends AppCompatActivity {
                             itemsView.invalidateViews();
                         });
 
-                        if(FFMPegReader.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
+                        if(FFMpegHelper.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
                             statusList.put(tag, "Done");
                             repos.scanMusicFile(new File(targetPath),true); // re scan file
                             runOnUiThread(() -> {

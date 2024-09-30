@@ -208,7 +208,7 @@ public class TagRepository {
                     list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
-                } else if (Constants.TITLE_NO_DR_METER.equals(criteria.getKeyword())) {
+                } else if (Constants.TITLE_TO_ANALYST_DR.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();

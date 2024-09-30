@@ -160,7 +160,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
-            titles.add(Constants.TITLE_NO_DR_METER);
+            titles.add(Constants.TITLE_TO_ANALYST_DR);
             titles.add(Constants.TITLE_BROKEN);
            // titles.add(Constants.TITLE_NO_COVERART);
        // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
@@ -313,6 +313,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         View rootView;
         View mCoverArtFrame;
         View mTitleLayout;
+        View mDynamicRangePanel;
         TextView mTitle;
         TextView mSubtitle;
         TextView mDurationView;
@@ -338,6 +339,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
             this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
+            this.mDynamicRangePanel = view.findViewById(R.id.item_dr_icon_panel);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
@@ -432,11 +434,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public void onBindViewHolder(ViewHolder holder, @SuppressLint("RecyclerView") final int position) {
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
         MusicTag tag = localDataSet.get(position);
-        holder.id = (long)position;
+        holder.id = position;
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
@@ -445,8 +447,12 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
-
-        holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
+        if(MusicTagUtils.isFLACFile(tag)) {
+            holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
+            holder.mDynamicRangePanel.setVisibility(View.VISIBLE);
+        }else {
+            holder.mDynamicRangePanel.setVisibility(View.GONE);
+        }
 
         if (isListening) {
             //show music player icon

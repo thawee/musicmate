@@ -12,6 +12,8 @@ import apincer.android.mqaidentifier.NativeLib;
 
 public class MQADetector {
     private static final String TAG = MQADetector.class.getName();
+    public static final String NOT_FOUND = "NF";
+    public static final String NOT_SCAN = "NS";
 
     public static void detectMQA(MusicTag tag, long millis) {
         final Object lock = new Object();
@@ -38,7 +40,7 @@ public class MQADetector {
 
     public static void detectMQA(MusicTag tag) {
         if(!MusicTagUtils.isFLACFile(tag)) return; // scan only flac
-        if(tag.isMqaScanned()) return; //prevent re scan
+        if(!NOT_SCAN.equals(tag.getMqaInd())) return; //prevent re scan
         try {
             NativeLib lib = new NativeLib();
             String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(tag.getPath()));
@@ -48,16 +50,15 @@ public class MQADetector {
                 String[] tags = mqaInfo.split("\\|", -1);
                 tag.setMqaInd(trimToEmpty(tags[0]));
                 tag.setMqaSampleRate(toLong(tags[1]));
-                tag.setMqaScanned(true);
+              //  tag.setMqaScanned(true);
             }else {
-                tag.setMqaInd("None");
-                tag.setMqaScanned(true);
+                tag.setMqaInd(NOT_FOUND);
+             //   tag.setMqaScanned(true);
             }
         }catch (Exception ex) {
-            tag.setMqaInd("None");
-            tag.setMqaScanned(true);
+            tag.setMqaInd(NOT_FOUND);
+           // tag.setMqaScanned(true);
             Log.e(TAG, "detectMQA", ex);
         }
     }
-
 }

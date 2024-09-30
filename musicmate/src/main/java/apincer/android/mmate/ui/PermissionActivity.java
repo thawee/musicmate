@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +12,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
@@ -49,7 +47,6 @@ public class PermissionActivity extends AppCompatActivity {
         setUpPermissions();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String []permissions, @NonNull int[] grantResults) {
@@ -76,12 +73,10 @@ public class PermissionActivity extends AppCompatActivity {
 
         txtTitle.setText("Permissions for Music Mate");
         txtConfirm.setText("OK");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            //todo when permission is granted
-            txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
-                    PermissionUtils.PERMISSIONS_ALL,
-                    REQUEST_CODE_STORAGE_PERMISSION));
-        }
+        //todo when permission is granted
+        txtConfirm.setOnClickListener(v -> ActivityCompat.requestPermissions(PermissionActivity.this,
+                PermissionUtils.PERMISSIONS_ALL,
+                REQUEST_CODE_STORAGE_PERMISSION));
 
         // Internet
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());

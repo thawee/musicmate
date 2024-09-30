@@ -157,7 +157,7 @@ public class JAudioTaggerReader extends TagReader{
                 metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
-                metadata.setRating(toInt(getId3TagValue(tag, FieldKey.RATING)));
+            //    metadata.setRating(toInt(getId3TagValue(tag, FieldKey.RATING)));
                // metadata.setPublisher(getId3TagValue(tag, FieldKey.COPYRIGHT));
                 //metadata.setBpm(toInt(getId3TagValue(tag, FieldKey.BPM)));
                 //  metadata.setEncoder(getId3TagValue(tag, FieldKey.ENCODER));
@@ -170,23 +170,24 @@ public class JAudioTaggerReader extends TagReader{
                 Map<String, String> tags = parseCustomTagFields(tag);
                 if (tags.containsKey(KEY_TAG_TRACK_GAIN)) {
                     metadata.setTrackRG(extractDouble(tags.get(KEY_TAG_TRACK_GAIN), " dB"));
-                    //metadata.setTrackRG(extractDouble(getTagFieldCustom(tag, KEY_MM_TRACK_GAIN), " dB"));
                 }
                 if (tags.containsKey(KEY_TAG_TRACK_PEAK)) {
                     metadata.setTrackTP(toDouble(tags.get(KEY_TAG_TRACK_PEAK)));
-                   // metadata.setTrackTP(toDouble(getTagFieldCustom(tag, KEY_MM_TRACK_PEAK)));
                 }
-                if (tags.containsKey(KEY_MM_TRACK_DYNAMIC_RANGE)) {
-                    metadata.setDynamicRangeMeter(toDouble(tags.get(KEY_MM_TRACK_DYNAMIC_RANGE)));
-                   // metadata.setDynamicRangeMeter(toDouble(getTagFieldCustom(tag, KEY_MM_TRACK_DYNAMIC_RANGE)));
+                if (tags.containsKey(KEY_MM_TRACK_DR_SCORE)) {
+                    metadata.setDynamicRangeScore(toDouble(tags.get(KEY_MM_TRACK_DR_SCORE)));
                 }
-                if (tags.containsKey(KEY_MM_MEASURED_DR)) {
-                    metadata.setDynamicRange(toDouble(tags.get(KEY_MM_MEASURED_DR)));
-                    //metadata.setDynamicRange(toDouble(getTagFieldCustom(tag, KEY_MM_MEASURED_DR)));
+                if (tags.containsKey(KEY_MM_TRACK_DR)) {
+                    metadata.setDynamicRange(toDouble(tags.get(KEY_MM_TRACK_DR)));
+                }
+                if (tags.containsKey(KEY_MM_TRACK_UPSCALED)) {
+                    metadata.setUpscaledInd(toInt(tags.get(KEY_MM_TRACK_UPSCALED)));
+                }
+                if (tags.containsKey(KEY_MM_TRACK_RESAMPLED)) {
+                    metadata.setResampledInd(toInt(tags.get(KEY_MM_TRACK_RESAMPLED)));
                 }
                 if (tags.containsKey(KEY_TAG_PUBLISHER)) {
                     metadata.setPublisher(tags.get(KEY_TAG_PUBLISHER));
-                   // metadata.setPublisher(getTagFieldCustom(tag, KEY_TAG_PUBLISHER));
                 }
                 if (tags.containsKey(KEY_TAG_QUALITY)) {
                     metadata.setMediaQuality(tags.get(KEY_TAG_QUALITY));
@@ -223,10 +224,10 @@ public class JAudioTaggerReader extends TagReader{
                         metadata.setDisc(extractField(text, 0));
                         metadata.setGrouping(extractField(text, 1));
                         metadata.setMediaQuality(extractField(text, 2));
-                        metadata.setRating(toInt(extractField(text, 3)));
+                      //  metadata.setRating(toInt(extractField(text, 3)));
                         metadata.setAlbumArtist(extractField(text, 4));
                         metadata.setComposer(extractField(text, 5));
-                        metadata.setDynamicRangeMeter(toDouble(extractField(text, 6)));
+                        metadata.setDynamicRangeScore(toDouble(extractField(text, 6)));
                         metadata.setDynamicRange(toDouble(extractField(text, 7)));
                     }
                     metadata.setComment(comment);
@@ -249,10 +250,10 @@ public class JAudioTaggerReader extends TagReader{
                             metadata.setDisc(extractField(text, 0));
                             metadata.setGrouping(extractField(text, 1));
                             metadata.setMediaQuality(extractField(text, 2));
-                            metadata.setRating(toInt(extractField(text, 3)));
+                         //   metadata.setRating(toInt(extractField(text, 3)));
                             metadata.setAlbumArtist(extractField(text, 4));
                             metadata.setComposer(extractField(text, 5));
-                            metadata.setDynamicRangeMeter(toDouble(extractField(text, 6)));
+                            metadata.setDynamicRangeScore(toDouble(extractField(text, 6)));
                             metadata.setDynamicRange(toDouble(extractField(text, 7)));
                         }
                         metadata.setComment(comment);
@@ -347,14 +348,19 @@ public class JAudioTaggerReader extends TagReader{
         for (TagField field: list) {
             tags.put(field.getId(), StringUtils.trimToEmpty(tag.getFirst(field.getId())));
         }
-      /*  if (tag.hasField(KEY_MM_TRACK_GAIN)) {
-            tags.put(KEY_MM_TRACK_GAIN, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_GAIN)));
-        } */
-        if (tag.hasField(KEY_MM_TRACK_DYNAMIC_RANGE)) {
-            tags.put(KEY_MM_TRACK_DYNAMIC_RANGE, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DYNAMIC_RANGE)));
+
+        //
+        if (tag.hasField(KEY_MM_TRACK_DR)) {
+            tags.put(KEY_MM_TRACK_DR, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DR)));
         }
-        if (tag.hasField(KEY_MM_MEASURED_DR)) {
-            tags.put(KEY_MM_MEASURED_DR, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_MEASURED_DR)));
+        if (tag.hasField(KEY_MM_TRACK_DR_SCORE)) {
+            tags.put(KEY_MM_TRACK_DR_SCORE, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DR_SCORE)));
+        }
+        if (tag.hasField(KEY_MM_TRACK_UPSCALED)) {
+            tags.put(KEY_MM_TRACK_UPSCALED, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_UPSCALED)));
+        }
+        if (tag.hasField(KEY_MM_TRACK_RESAMPLED)) {
+            tags.put(KEY_MM_TRACK_RESAMPLED, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_RESAMPLED)));
         }
 
         return tags;

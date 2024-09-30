@@ -62,7 +62,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
-import apincer.android.mmate.repository.FFMPegReader;
+import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -375,7 +375,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                         // transcode to lpcm before send to
                         ByteBuffer buff = transCodeCached.get(resId);
                         if(buff == null) {
-                            byte[] data = FFMPegReader.transcodeFile(context, getFilePath());
+                            byte[] data = FFMpegHelper.transcodeFile(context, getFilePath());
                             transCodeCached.put(resId, ByteBuffer.wrap(data));
                             result = AsyncEntityProducers.create(data, contentType);
                         }else {

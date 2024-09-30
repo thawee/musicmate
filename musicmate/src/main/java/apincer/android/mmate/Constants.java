@@ -28,6 +28,13 @@ public final class Constants {
     public static final int FLAC_OPTIMAL_COMPRESS_LEVEL = 4;
     public static final int FLAC_NO_COMPRESS_LEVEL = 0;
 
+    public static final int IND_UPSCALED_BAD = -1;
+    public static final int IND_UPSCALED_GOOD = 1;
+    public static final int IND_UPSCALED_NONE = 0;
+    public static final int IND_RESAMPLED_BAD = -1;
+    public static final int IND_RESAMPLED_GOOD = 1;
+    public static final int IND_RESAMPLED_NONE = 0;
+
   //  public static final double SPL_8BIT_IN_DB = 49.8;
     public static final double SPL_16BIT_IN_DB = 96.33;
     public static final double SPL_24BIT_IN_DB = 144.49;
@@ -75,6 +82,7 @@ public final class Constants {
     public static final String TITLE_DUPLICATE = "Duplicate Song";
     public static final String TITLE_BROKEN = "Unsatisfactory";
     public static final String TITLE_NO_DR_METER = "No DRMeter";
+    public static final String TITLE_TO_ANALYST_DR = "To Analyst DR";
     public static final String TITLE_INCOMING_SONGS = "Download Songs";
     public static final String TITLE_ALL_SONGS = "My Songs";
     public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";

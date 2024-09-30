@@ -1,0 +1,8 @@
+{
+  "uniqueId": "nayuki.flac",
+  "name": "FLAC library (Java)",
+  "artifactVersion": "13 Sep 2022",
+  "developers":[{"name":"nayuki"}],
+  "description": "FLAC decoder library in Java.",
+  "website": "https://www.nayuki.io/page/flac-library-java"
+}

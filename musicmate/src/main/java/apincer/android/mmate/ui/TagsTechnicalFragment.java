@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.FFMPegReader;
+import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagReader;
@@ -110,7 +111,7 @@ public class TagsTechnicalFragment extends Fragment {
         MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getContext(), tag.getPath()).get(0);
 
         MusicTag ffmpegTag = FFMPegReader.readTagFromFile(getContext(), tag.getPath());
-        metada.setText(String.format("FFmpeg:\n%s", ffmpegTag.getData()));
+        metada.setText(ffmpegTag.getData());
 
         TableRow tbrow0 = new TableRow(getContext());
         TextView tv0 = new TextView(getContext());
@@ -158,11 +159,11 @@ public class TagsTechnicalFragment extends Fragment {
             if (field.getName().equals("path")
                     || field.getName().equals("simpleName")
                     || field.getName().equals("mmManaged")
-                    //|| field.getName().equals("fileSizeRatio")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
+                    || field.getName().equals("albumUniqueKey")
                     || field.getName().equals("data")
-                    //|| field.getName().equals("storageId")
+                    || field.getName().equals("storageId")
                     || field.getName().equals("CREATOR")
                     || field.getName().equals("originTag")
                     || field.getName().startsWith("shadow"))  {
@@ -232,7 +233,7 @@ public class TagsTechnicalFragment extends Fragment {
                 () -> {
                     FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        FFMPegReader.removeCoverArt(getContext(), tag);
+                        FFMpegHelper.removeCoverArt(getContext(), tag);
                         repos.scanMusicFile(new File(tag.getPath()), false);
                     }
                 }
@@ -256,7 +257,7 @@ public class TagsTechnicalFragment extends Fragment {
                             coverArtPath = coverArtPath.replace("/", ".");
                             String path = tag.getPath();
                             coverArtPath = path.substring(0, path.lastIndexOf("."))+"."+coverArtPath;
-                            FFMPegReader.extractCoverArt(tag, new File(coverArtPath));
+                            FFMpegHelper.extractCoverArt(tag, new File(coverArtPath));
                         }
                     }
                 }
