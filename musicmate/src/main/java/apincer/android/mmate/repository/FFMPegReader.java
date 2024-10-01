@@ -383,8 +383,8 @@ public class FFMPegReader extends TagReader {
         // tag.setAlbumTruePeak(toDouble(getValueForKey(tags, KEY_ALBUM_PEAK)));
         tag.setDynamicRange(toDouble(getValueForKey(tags, KEY_MM_TRACK_DR)));
         tag.setDynamicRangeScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_DR_SCORE)));
-        tag.setUpscaledInd(toInt(getValueForKey(tags, KEY_MM_TRACK_UPSCALED)));
-        tag.setResampledInd(toInt(getValueForKey(tags, KEY_MM_TRACK_RESAMPLED)));
+        tag.setUpscaledInd(getValueForKey(tags, KEY_MM_TRACK_UPSCALED));
+        tag.setResampledInd(getValueForKey(tags, KEY_MM_TRACK_RESAMPLED));
 
         // read Quick time Specific tags
         if(isMp4File(tag)) {

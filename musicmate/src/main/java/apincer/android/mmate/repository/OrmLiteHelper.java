@@ -1,7 +1,9 @@
 package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_NONE;
 import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_NONE;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
@@ -30,7 +32,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 7;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -152,8 +154,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("drScore",0).or()
-                    .eq("upscaledInd", 0).or()
-                    .eq("resampledInd", 0);
+                    .eq("upscaledInd", IND_UPSCALED_NONE).or()
+                    .eq("resampledInd", IND_RESAMPLED_NONE);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
@@ -167,13 +169,12 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
                     .eq("upscaledInd", IND_UPSCALED_BAD).or()
+                    .eq("upscaledInd", "1").or()
+                    .eq("resampledInd", "1").or()
                     .eq("resampledInd", IND_RESAMPLED_BAD);
-            builder.orderBy("title", true);
           //  String bad = "mediaQuality = '"+Constants.QUALITY_BAD+"' ";
          //   builder.where().raw(bad+" OR (fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24))) order by title");
-
-            //  builder.where().raw(bad+" OR (fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24))) order by title");
-            return builder.query();
+           return builder.orderBy("title", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
@@ -485,6 +486,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    /*
     public List<String> getArtistForGrouping(String grouping) {
         try {
             List<String> list = new ArrayList<>();
@@ -505,7 +507,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Log.e(TAG,"getArtistForGrouping: "+e.getMessage());
             return EMPTY_STRING_LIST;
         }
-    }
+    } */
 
     public List<MusicTag> findByGroupingAndArtist(String grouping, String artist)  {
         try {
@@ -694,6 +696,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         return null;
     }
 
+    /*
     public List<MusicTag> findPLSFUNSong() {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
@@ -747,5 +750,5 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
-    }
+    } */
 }

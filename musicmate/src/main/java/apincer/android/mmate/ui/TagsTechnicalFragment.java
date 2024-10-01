@@ -112,6 +112,7 @@ public class TagsTechnicalFragment extends Fragment {
 
         MusicTag ffmpegTag = FFMPegReader.readTagFromFile(getContext(), tag.getPath());
         metada.setText(ffmpegTag.getData());
+       // metada.setText(ffmpegTag.getData() +"\r\n"+ MusicTagUtils.getEncResolutionIcon(context, tag));
 
         TableRow tbrow0 = new TableRow(getContext());
         TextView tv0 = new TextView(getContext());

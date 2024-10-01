@@ -145,10 +145,10 @@ public class MusicTag implements Cloneable, Parcelable {
    protected double dynamicRange;
 
     @DatabaseField
-    protected int upscaledInd; // -1 = upscaled, 0 - not analyst, 1 - not upscaled, increasing the bit depth from original file
+    protected String upscaledInd; // -1 = upscaled, 0 - not analyst, 1 - not upscaled, increasing the bit depth from original file
 
     @DatabaseField
-    protected int resampledInd; // -1 = re sampling, 0 - not analyst, 1 - not re sampling, resampling the sampling rate from original file
+    protected String resampledInd; // -1 = re sampling, 0 - not analyst, 1 - not re sampling, resampling the sampling rate from original file
 
     public String getMqaInd() {
         return mqaInd;
@@ -237,8 +237,8 @@ public class MusicTag implements Cloneable, Parcelable {
         audioStartTime = in.readDouble();
         //mmReadError = in.readByte() != 0;
         drScore = in.readDouble();
-        upscaledInd = in.readInt();
-        resampledInd = in.readInt();
+        upscaledInd = in.readString();
+        resampledInd = in.readString();
         dynamicRange = in.readDouble();
     }
 
@@ -628,8 +628,8 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeDouble(audioStartTime);
        // parcel.writeByte((byte) (mmReadError ? 1 : 0));
         parcel.writeDouble(drScore);
-        parcel.writeInt(upscaledInd);
-        parcel.writeInt(resampledInd);
+        parcel.writeString(upscaledInd);
+        parcel.writeString(resampledInd);
         parcel.writeDouble(dynamicRange);
       //  parcel.writeInt(measuredBitDept);
        // parcel.writeLong(measuredSamplingRate);
@@ -752,19 +752,19 @@ public class MusicTag implements Cloneable, Parcelable {
         this.dynamicRange = measuredDR;
     }
 
-    public int getUpscaledInd() {
+    public String getUpscaledInd() {
         return upscaledInd;
     }
 
-    public void setUpscaledInd(int upscaled) {
+    public void setUpscaledInd(String upscaled) {
         this.upscaledInd = upscaled;
     }
 
-    public int getResampledInd() {
+    public String getResampledInd() {
         return resampledInd;
     }
 
-    public void setResampledInd(int upsampled) {
+    public void setResampledInd(String upsampled) {
         this.resampledInd = upsampled;
     }
 }

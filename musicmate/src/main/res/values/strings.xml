@@ -93,7 +93,7 @@
     <!-- Extras -->
 
     <!-- internal defaults -->
-    <string name="welcome_text">Manage music files your way, enjoy listening to your music :D</string>
+    <string name="welcome_text">Manage Your Music Files Your Way and Enjoy Listening! :D</string>
     <string name="changelog_text">2.0.1 - update to androidx</string>
 
     <string name="app_permission">Storage Access</string>
@@ -174,8 +174,8 @@
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
-    <string name="title_dynamic_range_and_replay_gain">Analyst Quality of music files</string>
-    <string name="title_import_to_music_directory">Import to Music directory</string>
+    <string name="title_dynamic_range_and_replay_gain">Music Analysis: Dynamic Range, Upscale, Resample</string>
+    <string name="title_import_to_music_directory">Add to Music Directory</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>
     <string name="label_quality_indicator">Quality Indicator</string>
@@ -186,7 +186,7 @@
     <string name="label_current">Current</string>
     <string name="label_default_reader">Default Reader</string>
     <string name="label_ffmpeg_reader">FFMpeg Reader</string>
-    <string name="about_encoding_file">Convert audio file, Recommended FLAC for lossless and MPEG for lossy format.</string>
+    <string name="about_encoding_file">Encode Audio: FLAC (Lossless), MPEG (Lossy)</string>
     <string name="label_resolutions">Resolutions</string>
     <string name="label_lossy">HQ</string>
     <string name="label_Lossless">Hi-FI</string>
@@ -199,39 +199,38 @@
     <string name="label_file_recommended">Recommended Genre:</string>
 
     <string name="encoding_hq_header">High Quality</string>
-    <string name="encoding_hq_desc">Best compromise of data usage and sound fidelity.</string>
+    <string name="encoding_hq_desc">Optimal Balance of Data Usage and Sound Fidelity.</string>
     <string name="encoding_hq_format">MP3, AAC(M4A)</string>
     <string name="encoding_hq_resolution">16bit/44.1kHz, bitrate 256kbps or higher</string>
     <string name="encoding_hq_recommended">-</string>
 
     <string name="encoding_lossless_header">Hi-Fi Lossless</string>
-    <string name="encoding_lossless_desc">Reproduce details of music smooth as CD quality.</string>
+    <string name="encoding_lossless_desc">Reproduce Music with Smooth CD Quality.</string>
     <string name="encoding_lossless_format">FLAC, ALAC, WAVE, AIFF</string>
     <string name="encoding_lossless_resolution">16bit/44.1kHz, 24bit/48kHz</string>
     <string name="encoding_lossless_recommended">Pop, Rock</string>
 
     <string name="encoding_hires_header">Hi-Res Lossless</string>
-    <string name="encoding_hires_desc">Enjoy and Listening the rich music which reproduces fine details of musical instruments.</string>
+    <string name="encoding_hires_desc">Enjoy Rich Music with Fine Instrument Details.</string>
     <string name="encoding_hires_format">FLAC, ALAC, WAVE, AIFF</string>
     <string name="encoding_hires_resolution">24bit/96kHz or Higher</string>
     <string name="encoding_hires_recommended">Classic, Jazz, Vocal, Soundtrack, Ballad</string>
 
     <string name="encoding_dsd_header">Direct Stream Digital</string>
-    <string name="encoding_dsd_desc">Hear the detail and wide range of the music, its warm tone is very enjoyable.</string>
+    <string name="encoding_dsd_desc">Enjoy Detailed, Wide-Range Music with a Warm Tone.</string>
     <string name="encoding_dsd_format">DSF, DFF</string>
     <string name="encoding_dsd_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
     <string name="encoding_dsd_recommended">Classic, Jazz, Vocal</string>
 
     <string name="encoding_mqa_header">MQA Authentication</string>
-    <string name="encoding_mqa_desc">Technology for high-quality recordings to bring listeners
-    the sound of the studio and older recordings from the archive.</string>
+    <string name="encoding_mqa_desc">High-Quality Recordings with Studio Sound and Archival Classics.</string>
     <string name="encoding_mqa_format">FLAC</string>
     <string name="encoding_mqa_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
     <string name="encoding_mqa_recommended">-</string>
-    <string name="encoding_mqa_green_header">MQA (green):</string>
-    <string name="encoding_mqa_green_detail">genuine, but not yet the final release</string>
-    <string name="encoding_mqa_blue_header">MQA Studio (blue):</string>
-    <string name="encoding_mqa_blue_detail">directly from mastering engineers</string>
+    <string name="encoding_mqa_green_header">MQA (Green):</string>
+    <string name="encoding_mqa_green_detail">Genuine, but Not the Final Release</string>
+    <string name="encoding_mqa_blue_header">MQA Studio (Blue):</string>
+    <string name="encoding_mqa_blue_detail">Directly from Mastering Engineers</string>
     <string name="label_audio_quality">Sound Quality</string>
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">

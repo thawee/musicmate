@@ -15,11 +15,11 @@ public class LogHelper {
     public static void initial() {
         setLogLevel(LOGGER_JAUDIOTAGGER, Level.SEVERE);
         setLogLevel(LOGGER_JAUDIOTAGGER_AUDIO, Level.SEVERE);
-        setLogLevel(LOGGER_JAUDIOTAGGER_FLAC, Level.OFF);
-        setLogLevel(LOGGER_JAUDIOTAGGER_WAV, Level.OFF);
-        setLogLevel("android.view.View", Level.OFF);
-        setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.OFF);
-        setLogLevel("org.greenrobot.eventbus.EventBus", Level.OFF);
+        setLogLevel(LOGGER_JAUDIOTAGGER_FLAC, Level.SEVERE);
+        setLogLevel(LOGGER_JAUDIOTAGGER_WAV, Level.SEVERE);
+        setLogLevel("android.view.View", Level.SEVERE);
+        setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.SEVERE);
+        setLogLevel("org.greenrobot.eventbus.EventBus", Level.SEVERE);
        // setLogLevel(" io.netty", Level.FINE);
 
         setLogLevel("apincer.android.mmate.repository.FFMPegReader", Level.SEVERE);

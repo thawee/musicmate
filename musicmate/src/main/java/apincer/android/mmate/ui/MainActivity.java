@@ -2,10 +2,6 @@ package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.Constants.TITLE_DSD;
 import static apincer.android.mmate.Constants.TITLE_GENRE;
 import static apincer.android.mmate.Constants.TITLE_GROUPING;
@@ -171,14 +167,10 @@ public class MainActivity extends AppCompatActivity {
     List<MusicTag> selections = new ArrayList<>();
 
     private Snackbar mExitSnackbar;
-    //private View mSearchBar;
     private View mHeaderPanel;
-    //private View titlePanel;
     private TextView titleLabel;
     private TextView titleText;
-    //private TrapezoidPartsView mHeaderTPV;
     private SearchView mSearchView;
-    //private ImageView mSearchViewSwitch;
 
     private RefreshLayout refreshLayout;
     private StateView mStateView;
@@ -359,8 +351,6 @@ public class MainActivity extends AppCompatActivity {
 
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
-       // btnOK.setEnabled(false);
-
         btnOK.setEnabled(true);
 
         double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
@@ -392,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
             for(MusicTag tag: selections) {
                 MusicMateExecutors.move(() -> {
                     try {
-                        statusList.put(tag, "Moving");
+                        statusList.put(tag, "Adding");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
@@ -888,15 +878,10 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
             return true;
-       // } else if(item.getItemId() == MENU_ID_RESOLUTION) {
         } else if(item.getItemId() == R.id.menu_encodings) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
             return true;
-       /* } else if(item.getItemId() == MENU_ID_QUALITY) {
-            doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIO_SQ, (String)item.getTitle());
-            return true; */
         }else if(item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GROUPING, TagRepository.getActualGroupingList(getApplicationContext()).get(0));
@@ -1033,7 +1018,6 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
             //start scan after set directories
-           // loadDataSets(null);
             alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());
@@ -1064,7 +1048,6 @@ public class MainActivity extends AppCompatActivity {
             AudioTagEditEvent message = new AudioTagEditEvent("edit", adapter.getCriteria(), tagList);
             EventBus.getDefault().postSticky(message);
             startActivity(myIntent);
-            //editorLauncher.launch(myIntent);
         }
     }
 
@@ -1092,7 +1075,6 @@ public class MainActivity extends AppCompatActivity {
     private void setUpSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
         refreshLayout.setOnRefreshListener(refreshlayout -> adapter.loadDataSets());
-       // refreshLayout.autoRefresh(); // loading recycleview list on start activity
     }
 
     private void setUpRecycleView(SearchCriteria searchCriteria ) {
@@ -1200,7 +1182,7 @@ public class MainActivity extends AppCompatActivity {
         } else if(TITLE_DSD.equals(label)) {
             icon = ContextCompat.getDrawable(getBaseContext(),R.drawable.ic_format_dsd_white);
         }
-        //titleLabel.setCompoundDrawablePadding(2);
+
         titleLabel.setCompoundDrawablesWithIntrinsicBounds(icon,null,null,null);
         titleLabel.setText(label);
         titleText.setText(headerTitle);
@@ -1468,7 +1450,7 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
-                MusicMateExecutors.move(() -> {
+                MusicMateExecutors.db(() -> {
                     try {
                         statusList.put(tag, "Analysing");
                         runOnUiThread(itemsView::invalidateViews);
@@ -1478,8 +1460,8 @@ public class MainActivity extends AppCompatActivity {
                         if(analyser.analyst(tag)) {
                             tag.setDynamicRange(analyser.getDynamicRange());
                             tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
-                            tag.setUpscaledInd(analyser.isUpscaled()?IND_UPSCALED_BAD:IND_UPSCALED_GOOD);
-                            tag.setResampledInd(analyser.isResampled()?IND_RESAMPLED_BAD:IND_RESAMPLED_GOOD);
+                            tag.setUpscaledInd(analyser.getUpscaled());
+                            tag.setResampledInd(analyser.getResampled());
 
                             //write quality to file
                             FFMpegHelper.writeTagQualityToFile(MainActivity.this, tag);
@@ -1497,7 +1479,7 @@ public class MainActivity extends AppCompatActivity {
                             itemsView.invalidateViews();
                         });
                     } catch (Exception e) {
-                        Log.e(TAG,"calculateRG",e);
+                        Log.e(TAG,"doMeasureDR",e);
                         try {
                             statusList.put(tag, "Fail");
                             runOnUiThread(() -> {

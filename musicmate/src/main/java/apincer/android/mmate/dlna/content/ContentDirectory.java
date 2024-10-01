@@ -1,7 +1,5 @@
 package apincer.android.mmate.dlna.content;
 
-import static java.util.Arrays.stream;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -30,7 +28,6 @@ import org.jupnp.support.model.SortCriterion;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import apincer.android.mmate.utils.StringUtils;
 

@@ -1,9 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -142,8 +138,8 @@ public class TagsActivity extends AppCompatActivity {
                             if (analyser.analyst(tag)) {
                                 tag.setDynamicRange(analyser.getDynamicRange());
                                 tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
-                                tag.setUpscaledInd(analyser.isUpscaled()?IND_UPSCALED_BAD:IND_UPSCALED_GOOD);
-                                tag.setResampledInd(analyser.isResampled()?IND_RESAMPLED_BAD:IND_RESAMPLED_GOOD);
+                                tag.setUpscaledInd(analyser.getUpscaled());
+                                tag.setResampledInd(analyser.getResampled());
 
                                 //write quality to file
                                 FFMpegHelper.writeTagQualityToFile(this, tag);
@@ -151,7 +147,7 @@ public class TagsActivity extends AppCompatActivity {
                                 TagRepository.saveTag(tag);
                             }
                         }catch (Exception ex) {
-                            ex.printStackTrace();
+                            Log.e(TAG, "doMeasureDR", ex);
                         }
                     }
 

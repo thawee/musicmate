@@ -1,36 +1,52 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_INVALID;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_NONE;
+import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_INVALID;
+import static apincer.android.mmate.Constants.IND_UPSCALED_NONE;
+
+import android.util.Log;
+
 import org.jtransforms.fft.DoubleFFT_1D;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
+import apincer.android.mmate.utils.MusicTagUtils;
 import io.nayuki.flac.common.StreamInfo;
+import io.nayuki.flac.decode.DataFormatException;
 import io.nayuki.flac.decode.FlacDecoder;
 
 public class MusicAnalyser {
+    private static final String TAG = "MusicAnalyser";
     private static final int BLOCKSIZE_SECONDS = 4; //3;
     private static final double UPMOST_BLOCKS_RATIO = 0.2; //0.2;
+
 
     public double getDynamicRange() {
         return dynamicRange;
     }
 
-    public boolean isUpscaled() {
+    public String getUpscaled() {
         return upscaled;
     }
 
-    public boolean isResampled() {
+    public String getResampled() {
         return resampled;
     }
 
     private double dynamicRange = 0.0;
     private double dynamicRangeScore = 0.0;
-    private boolean upscaled;
-    private boolean resampled;
+    private String upscaled = IND_UPSCALED_NONE;
+    private String resampled = IND_RESAMPLED_NONE;
 
-    public boolean analyst(MusicTag tag) throws IOException {
+    public boolean analyst(MusicTag tag) {
+        if(!MusicTagUtils.isFLACFile(tag)) return  false;
+
         // Decode input FLAC file
         File file = new File(tag.getPath());
         StreamInfo streamInfo;
@@ -53,15 +69,23 @@ public class MusicAnalyser {
 
             calculateDR(samples);
             calculateDRScore(samples, tag);
-            upscaled = isUpscaled(samples);
-           // System.out.println("Is the audio upscaled? " + upscaled);
+            upscaled = isUpscaled(samples)?IND_UPSCALED_BAD:IND_UPSCALED_GOOD;
+            // System.out.println("Is the audio upscaled? " + upscaled);
 
-            resampled = isResampled(samples, tag.getAudioSampleRate());
-           // System.out.println("Is the audio resampled? " + resampled);
+            resampled = isResampled(samples, tag.getAudioSampleRate())?IND_RESAMPLED_BAD:IND_RESAMPLED_GOOD;
+            // System.out.println("Is the audio resampled? " + resampled);
 
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+        }catch (DataFormatException e) {
+            Log.e(TAG, "analyst", e);
+            upscaled = IND_UPSCALED_INVALID;
+            resampled = IND_RESAMPLED_INVALID;
+            dynamicRangeScore = -1;
+            dynamicRange = -1;
+            return true;
+        } catch (Exception e) {
+          //  e.printStackTrace();
+            Log.e(TAG, "analyst", e);
             return false;
         }
     }
@@ -156,13 +180,12 @@ public class MusicAnalyser {
 
         analyzeBlockLevels(samples, totalBlocks, blockSize, channels, blockRms, blockPeak, sampleRate);
 
-        double[] rmsPressure = new double[channels];
+       // double[] rmsPressure = new double[channels];
         double[] peakPressure = new double[channels];
         for (int i = 0; i < channels; i++) {
             int finalI = i;
-            rmsPressure[i] = Math.sqrt(Arrays.stream(blockRms).mapToDouble(b -> b[finalI] * b[finalI]).average().orElse(0));
-            int finalI1 = i;
-            peakPressure[i] = Arrays.stream(blockPeak).mapToDouble(b -> b[finalI1]).max().orElse(0);
+           // rmsPressure[i] = Math.sqrt(Arrays.stream(blockRms).mapToDouble(b -> b[finalI] * b[finalI]).average().orElse(0));
+            peakPressure[i] = Arrays.stream(blockPeak).mapToDouble(b -> b[finalI]).max().orElse(0);
         }
 
         int upmostBlocks = (int) (totalBlocks * UPMOST_BLOCKS_RATIO);
@@ -205,7 +228,6 @@ public class MusicAnalyser {
                for (int j = 0; j < channels; j++) {
                    double[] channelData = new double[blocksize];
                    for (int k = 0; k < blocksize; k++) {
-                       //channelData[k] = samples[j][k];
                        channelData[k] = getSample(samples[j][k], sampleRate);
                    }
                    blockRms[i][j] = Math.sqrt(Arrays.stream(channelData).map(d -> d * d).average().orElse(0));
@@ -213,7 +235,7 @@ public class MusicAnalyser {
                }
            }
        }catch (Exception ex) {
-           ex.printStackTrace();
+           Log.e(TAG, "analyzeBlockLevels", ex);
        }
     }
 

@@ -2,11 +2,12 @@ package apincer.android.mmate.utils;
 
 import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_INVALID;
 import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
 import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_INVALID;
 import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
 import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
-import static apincer.android.mmate.Constants.QUALITY_AUDIOPHILE;
 import static apincer.android.mmate.Constants.QUALITY_BAD;
 import static apincer.android.mmate.Constants.QUALITY_BIT_CD;
 import static apincer.android.mmate.Constants.QUALITY_GOOD;
@@ -14,6 +15,7 @@ import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_48;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -201,24 +203,17 @@ public class MusicTagUtils {
             qualityColor = context.getColor(R.color.quality_no_rating); //recordsColor;
         }
         int upscaleColor = context.getColor(R.color.quality_scale_not_test);
-        if(IND_UPSCALED_GOOD == tag.getUpscaledInd()) {
+        if(IND_UPSCALED_GOOD.equals(tag.getUpscaledInd())) {
             upscaleColor = context.getColor(R.color.quality_scale_matched);
-        }else if(IND_UPSCALED_BAD == tag.getUpscaledInd()) {
+        }else if(IND_UPSCALED_BAD.equals(tag.getUpscaledInd()) || IND_UPSCALED_INVALID.equals(tag.getUpscaledInd())) {
             upscaleColor = context.getColor(R.color.quality_scale_not_matched);
         }
-      /*  if (!isLossy(tag) && tag.getDynamicRange() > 0.0) {
-                upscaleColor = (isUpScaled(tag) ? context.getColor(R.color.quality_scale_not_matched) : context.getColor(R.color.quality_scale_matched));
-        } */
         int resampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
-        if(IND_RESAMPLED_GOOD == tag.getResampledInd()) {
+        if(IND_RESAMPLED_GOOD.equals(tag.getResampledInd())) {
             resampledColor = context.getColor(R.color.quality_scale_matched);
-        }else if(IND_RESAMPLED_BAD == tag.getResampledInd()) {
+        }else if(IND_RESAMPLED_BAD.equals(tag.getResampledInd()) || IND_RESAMPLED_INVALID.equals(tag.getResampledInd())) {
             resampledColor = context.getColor(R.color.quality_scale_not_matched);
         }
-        // 16 bit should be 44.1 or 48 kHz only
-       /* if(tag.getAudioBitRate() == QUALITY_BIT_CD && tag.getAudioSampleRate() > QUALITY_SAMPLING_RATE_48) {
-            upsampledColor = context.getColor(R.color.quality_scale_not_matched);
-        } */
 
         String label;
         String samplingRate = getBPSAndSampleRate(tag);
@@ -1253,43 +1248,29 @@ public class MusicTagUtils {
 
         if(tag.isDSD()) {
             // dsd use bitrate
-            path = path+"DSD_" + tag.getAudioBitRate();
+            path = path+"DSD" + tag.getAudioBitRate();
         }else if(isMQA(tag)) {
-            path = path + "MQA_" + tag.getAudioSampleRate();
-            //if(tag.getAudioBitRate() == QUALITY_BIT_CD && (tag.getAudioSampleRate() == tag.getMqaSampleRate())) {
-            //    path = path + "_Cd";
-            //}else
+            path = path + "MQA" +tag.getAudioBitsDepth()+"_"+ tag.getAudioSampleRate()+"_"+ tag.getMqaSampleRate();
             if(isMQAStudio(tag)) {
                 path = path + "_Studio";
-            }else {
-                path = path + "_Master";
             }
         }else if(isLossless(tag)){
             path = path + "PCM"+tag.getAudioBitsDepth()+"_" + tag.getAudioSampleRate();
         }else {
-            path = path + tag.getFileFormat()+"_" + tag.getAudioBitRate();
+            path = path + tag.getFileFormat()+tag.getAudioBitsDepth()+"_"+ tag.getAudioBitRate();
         }
 
         // file quality
-        if(QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
-            path = path + "_A";
-        } else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
-            path = path +"_R";
-        } else if(QUALITY_BAD.equals(tag.getMediaQuality())) {
-            path = path +"_B";
-        //}else {
-            // normal
-        //    path = path +"_N";
+        String quality = tag.getMediaQuality();
+        if(!isEmpty(quality)) {
+            path = path+"_"+quality.substring(0, 2);
         }
 
-        // upscale
-        path = path+tag.getDynamicRange();
-        // upsampled
-        //path = path+(tag.isUpsampled()?"1":"0");
+        // upscaled/resampled
+        path = path+"_"+tag.getUpscaledInd()+"_"+tag.getResampledInd();
 
         File pathFile = new File(dir, path+".png");
         if(!pathFile.exists()) {
-        //if(true) {
             // create file
             try {
                 dir = pathFile.getParentFile();
@@ -1297,9 +1278,7 @@ public class MusicTagUtils {
 
                 Bitmap bitmap = createEncodingSamplingRateIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
-                //if(is!=null) {
-                IOUtils.write(is, Files.newOutputStream(pathFile.toPath())); //new FileOutputStream(pathFile));
-                //}
+                IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
             } catch (Exception e) {
                 Log.e(TAG,"getEncResolutionIcon",e);
             }

@@ -5,7 +5,6 @@ import static apincer.android.mmate.repository.MQADetector.detectMQA;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
-import static apincer.android.mmate.utils.StringUtils.toInt;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -181,10 +180,10 @@ public class JAudioTaggerReader extends TagReader{
                     metadata.setDynamicRange(toDouble(tags.get(KEY_MM_TRACK_DR)));
                 }
                 if (tags.containsKey(KEY_MM_TRACK_UPSCALED)) {
-                    metadata.setUpscaledInd(toInt(tags.get(KEY_MM_TRACK_UPSCALED)));
+                    metadata.setUpscaledInd(tags.get(KEY_MM_TRACK_UPSCALED));
                 }
                 if (tags.containsKey(KEY_MM_TRACK_RESAMPLED)) {
-                    metadata.setResampledInd(toInt(tags.get(KEY_MM_TRACK_RESAMPLED)));
+                    metadata.setResampledInd(tags.get(KEY_MM_TRACK_RESAMPLED));
                 }
                 if (tags.containsKey(KEY_TAG_PUBLISHER)) {
                     metadata.setPublisher(tags.get(KEY_TAG_PUBLISHER));

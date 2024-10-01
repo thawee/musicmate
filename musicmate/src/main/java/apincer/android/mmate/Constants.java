@@ -28,12 +28,14 @@ public final class Constants {
     public static final int FLAC_OPTIMAL_COMPRESS_LEVEL = 4;
     public static final int FLAC_NO_COMPRESS_LEVEL = 0;
 
-    public static final int IND_UPSCALED_BAD = -1;
-    public static final int IND_UPSCALED_GOOD = 1;
-    public static final int IND_UPSCALED_NONE = 0;
-    public static final int IND_RESAMPLED_BAD = -1;
-    public static final int IND_RESAMPLED_GOOD = 1;
-    public static final int IND_RESAMPLED_NONE = 0;
+    public static final String IND_UPSCALED_BAD = "B";
+    public static final String IND_UPSCALED_GOOD = "G";
+    public static final String IND_UPSCALED_NONE = "";
+    public static final String IND_UPSCALED_INVALID = "F";
+    public static final String IND_RESAMPLED_BAD = "B";
+    public static final String IND_RESAMPLED_GOOD = "G";
+    public static final String IND_RESAMPLED_NONE = "";
+    public static final String IND_RESAMPLED_INVALID = "F";
 
   //  public static final double SPL_8BIT_IN_DB = 49.8;
     public static final double SPL_16BIT_IN_DB = 96.33;
