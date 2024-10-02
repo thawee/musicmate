@@ -54,6 +54,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpUtil;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 
@@ -362,7 +363,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         public void initChannel(SocketChannel ch) {
             ChannelPipeline p = ch.pipeline();
             p.addLast(new HttpServerCodec());
-            p.addLast("aggregator", new HttpObjectAggregator(2 * 1024 * 1024)); // 2 MB max  //Integer.MAX_VALUE));
+            p.addLast(new HttpObjectAggregator(2 * 1024 * 1024)); // 2 MB max  //Integer.MAX_VALUE));
+          //  p.addLast(new ChunkedWriteHandler());
             p.addLast(new HttpServerHandler(router.getProtocolFactory(), router.getConfiguration().getNamespace().getBasePath().getPath()));
         }
     }

@@ -482,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
 
         imageLoader = Coil.imageLoader(getApplicationContext());
         request = new ImageRequest.Builder(getApplicationContext())
-                .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), song))
+                .data(MusicTagUtils.getResolutionIcon(getApplicationContext(), song))
                 .crossfade(false)
                 .target(nowPlayingType)
                 .build();

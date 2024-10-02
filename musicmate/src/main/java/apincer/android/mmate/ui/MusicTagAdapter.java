@@ -313,7 +313,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         View rootView;
         View mCoverArtFrame;
         View mTitleLayout;
-        View mDynamicRangePanel;
+       // View mDynamicRangePanel;
         TextView mTitle;
         TextView mSubtitle;
         TextView mDurationView;
@@ -321,12 +321,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         ImageView mCoverArtView;
         ImageView mFileSourceView;
         TextView mFileTypeView;
-        TextView mDynamicRange;
+       // TextView mDynamicRange;
         Context mContext;
         ImageView mPlayerView;
         ImageView mAudioResolutionView;
         TriangleLabelView mNewLabelView;
         // TextView mTrackReplayGainView;
+        ImageView mAudioQuality;
 
         public ViewHolder(View view) {
             super(view);
@@ -338,8 +339,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
-            this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
-            this.mDynamicRangePanel = view.findViewById(R.id.item_dr_icon_panel);
+          //  this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
+           // this.mDynamicRangePanel = view.findViewById(R.id.item_dr_icon_panel);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
@@ -348,6 +349,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
+            this.mAudioQuality = view.findViewById(R.id.item_audio_quality_icon);
         }
 
         public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
@@ -448,10 +450,18 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
         if(MusicTagUtils.isFLACFile(tag)) {
-            holder.mDynamicRange.setText(MusicTagUtils.getTrackDR(tag));
-            holder.mDynamicRangePanel.setVisibility(View.VISIBLE);
+           // holder.mDynamicRange.setText(MusicTagUtils.getTrackDRScore(tag));
+           // holder.mDynamicRangePanel.setVisibility(View.VISIBLE);
+            holder.mAudioQuality.setVisibility(View.VISIBLE);
+            ImageRequest request = new ImageRequest.Builder(holder.mContext)
+                    .data(MusicTagUtils.getTrackQualityIcon(holder.mContext, tag))
+                    .crossfade(false)
+                    .target(holder.mAudioQuality)
+                    .build();
+            imageLoader.enqueue(request);
         }else {
-            holder.mDynamicRangePanel.setVisibility(View.GONE);
+           // holder.mDynamicRangePanel.setVisibility(View.GONE);
+            holder.mAudioQuality.setVisibility(View.GONE);
         }
 
         if (isListening) {
@@ -499,7 +509,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         // show enc i.e. PCM, MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
-                .data(MusicTagUtils.getEncResolutionIcon(holder.mContext, tag))
+                .data(MusicTagUtils.getResolutionIcon(holder.mContext, tag))
                 .crossfade(false)
                 .target(holder.mAudioResolutionView)
                 .build();

@@ -93,11 +93,12 @@ public class TagsActivity extends AppCompatActivity {
     private TextView encInfo;
     private TextView pathInfo;
     private View pathInfoLine;
-    private TextView drView;
+   // private TextView drView;
     private TextView fileTypeView;
-    private View hiresView;
+    private ImageView hiresView;
     private ImageView audiophileView;
     private ImageView resolutionView;
+    private ImageView qualityView;
 
     private int toolbar_from_color;
     private int toolbar_to_color;
@@ -328,7 +329,9 @@ public class TagsActivity extends AppCompatActivity {
         hiresView = findViewById(R.id.icon_hires);
         audiophileView = findViewById(R.id.icon_audiophile);
         resolutionView = findViewById(R.id.icon_resolution);
-        drView = findViewById(R.id.icon_dr);
+       // drView = findViewById(R.id.icon_dr);
+        qualityView = findViewById(R.id.icon_quality);
+
         fileTypeView = findViewById(R.id.icon_file_type);
         playerBtn = findViewById(R.id.music_player);
         playerPanel = findViewById(R.id.music_player_panel);
@@ -372,13 +375,26 @@ public class TagsActivity extends AppCompatActivity {
         artistView.setText(trim(displayTag.getArtist(), " - "));
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(MusicTagUtils.getEncResolutionIcon(getApplicationContext(), displayTag))
+                .data(MusicTagUtils.getResolutionIcon(getApplicationContext(), displayTag))
                 .crossfade(false)
                 .target(resolutionView)
                 .build();
         imageLoader.enqueue(request);
 
-        drView.setText(MusicTagUtils.getTrackDR(displayTag));
+       // drView.setText(MusicTagUtils.getTrackDRScore(displayTag));
+
+        if(MusicTagUtils.isFLACFile(displayTag)) {
+            qualityView.setVisibility(View.VISIBLE);
+             request = new ImageRequest.Builder(getApplicationContext())
+                    .data(MusicTagUtils.getTrackQualityIcon(getApplicationContext(), displayTag))
+                    .crossfade(false)
+                    .target(qualityView)
+                    .build();
+            imageLoader.enqueue(request);
+        }else {
+            qualityView.setVisibility(View.GONE);
+        }
+
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
         }else {
@@ -517,10 +533,10 @@ public class TagsActivity extends AppCompatActivity {
 
             // DR
            // if(MusicTagUtils.isMQA(displayTag) || MusicTagUtils.isHiRes(displayTag) || MusicTagUtils.isLossless(displayTag)) {
-            if(!MusicTagUtils.isDSD(displayTag) && !MusicTagUtils.isLossy(displayTag)) {
+          /*  if(!MusicTagUtils.isDSD(displayTag) && !MusicTagUtils.isLossy(displayTag)) {
                 spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
                 spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
-            }
+            } */
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))

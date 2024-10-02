@@ -85,7 +85,7 @@
 
             <ImageView
                 android:id="@+id/item_resolution_icon"
-                android:layout_width="@dimen/dimen_78_dp"
+                android:layout_width="@dimen/dimen_72_dp"
                 android:layout_height="@dimen/dimen_18_dp"
                 android:layout_toEndOf="@id/item_type_panel"
                 android:layout_marginStart="@dimen/dimen_4_dp"
@@ -94,6 +94,19 @@
                 android:src="@drawable/ic_format_mqa_white"
                 tools:ignore="ContentDescription" />
 
+            <ImageView
+                android:id="@+id/item_audio_quality_icon"
+                android:layout_width="@dimen/dimen_32_dp"
+                android:layout_height="@dimen/dimen_18_dp"
+                android:layout_toEndOf="@id/item_resolution_icon"
+                android:layout_marginStart="@dimen/dimen_4_dp"
+                android:layout_marginTop="@dimen/dimen_1_dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_format_mqa_white"
+                android:background="@drawable/shape_background_dr"
+                tools:ignore="ContentDescription" />
+
+            <!--
             <LinearLayout
                 android:id="@+id/item_dr_icon_panel"
                 android:layout_width="wrap_content"
@@ -127,14 +140,14 @@
                     android:textSize="10sp"
                     android:textStyle="bold"
                     tools:ignore="HardcodedText,SmallSp" />
-            </LinearLayout>
+            </LinearLayout> -->
 
             <ImageView
                 android:id="@+id/item_src_icon"
                 android:layout_width="@dimen/dimen_32_dp"
                 android:layout_height="@dimen/dimen_20_dp"
                 android:layout_gravity="center"
-                android:layout_toEndOf="@id/item_dr_icon_panel"
+                android:layout_toEndOf="@id/item_audio_quality_icon"
                 android:padding="2dp"
                 android:layout_marginStart="@dimen/dimen_4_dp"
                 android:src="@drawable/icon_cd"

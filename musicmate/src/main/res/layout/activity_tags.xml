@@ -210,7 +210,7 @@
                         -->
                         <LinearLayout
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/dimen_32_dp"
                             android:gravity="center"
                             android:background="@drawable/shape_background_dr"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
@@ -219,7 +219,7 @@
                             <TextView
                                 android:id="@+id/icon_file_type"
                                 android:layout_width="@dimen/dimen_36_dp"
-                                android:layout_height="@dimen/dimen_20_dp"
+                                android:layout_height="match_parent"
                                 android:layout_gravity="center"
                                 android:background="@drawable/shape_background_unknown"
                                 android:fontFamily="@font/oswald_bold"
@@ -232,15 +232,15 @@
                         </LinearLayout>
                         <ImageView
                             android:id="@+id/icon_resolution"
-                            android:layout_width="@dimen/dimen_105_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_width="@dimen/dimen_132_dp"
+                            android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:contentDescription="@string/editor_musicmate_info"
                             android:gravity="center"
                             android:scaleType="fitXY"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:padding="@dimen/dimen_1_dp"
-                            android:src="@drawable/ic_format_hires" />
+                            android:src="@drawable/ic_audiophile" />
 <!--
                         <ImageView
                             android:id="@+id/icon_audiophile"
@@ -255,6 +255,7 @@
                             android:src="@drawable/ic_audiophile"
                             android:background="@drawable/shape_background_dr"/>
 -->
+                        <!--
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -287,12 +288,24 @@
                                 android:textSize="14sp"
                                 android:textStyle="bold"
                                 tools:ignore="TextSizeCheck" />
-                        </LinearLayout>
+                        </LinearLayout> -->
+
+                        <ImageView
+                            android:id="@+id/icon_quality"
+                            android:layout_width="@dimen/dimen_48_dp"
+                            android:layout_height="@dimen/dimen_32_dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:contentDescription="@string/editor_musicmate_info"
+                            android:gravity="center"
+                            android:scaleType="fitXY"
+                            android:padding="@dimen/dimen_2_dp"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:src="@drawable/ic_audiophile"/>
 
                         <ImageView
                             android:id="@+id/icon_audiophile"
                             android:layout_width="@dimen/dimen_72_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:background="@drawable/shape_background_dr"
@@ -305,7 +318,7 @@
 
                         <ImageView
                             android:id="@+id/icon_hires"
-                            android:layout_width="@dimen/dimen_32_dp"
+                            android:layout_width="@dimen/dimen_48_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:contentDescription="@string/editor_musicmate_info"

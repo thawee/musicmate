@@ -178,8 +178,8 @@ public class MusicTagUtils {
     }
 
     private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
-        int width = 420; //340; // 24x105, 18x78 , 16x70
-        int height = 96;
+        int width = 400; //340; // 24x105, 18x78 , 16x70
+        int height = 96; //4.2
         int padding = 8;
         int paddingx2 = 16;
         int paddingx3 = 24;
@@ -189,9 +189,9 @@ public class MusicTagUtils {
         int blackColor = context.getColor(R.color.black);
         int bgBlackColor = context.getColor(R.color.grey900);
         int bgWhiteColor = getResolutionColor(context, tag);
-        int qualityColor = context.getColor(R.color.quality_no_rating);
+     //   int qualityColor = context.getColor(R.color.quality_no_rating);
         int labelColor = getEncodingColor(context, tag);
-        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
+     /*   if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_audiophile);
         }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
             qualityColor = context.getColor(R.color.quality_recommended);
@@ -213,7 +213,7 @@ public class MusicTagUtils {
             resampledColor = context.getColor(R.color.quality_scale_matched);
         }else if(IND_RESAMPLED_BAD.equals(tag.getResampledInd()) || IND_RESAMPLED_INVALID.equals(tag.getResampledInd())) {
             resampledColor = context.getColor(R.color.quality_scale_not_matched);
-        }
+        } */
 
         String label;
         String samplingRate = getBPSAndSampleRate(tag);
@@ -353,7 +353,8 @@ public class MusicTagUtils {
         startx = startx - paddingx2;
         float endx = startx+barWidth;
         paint = new Paint();
-        paint.setColor(qualityColor);
+       // paint.setColor(qualityColor);
+        paint.setColor(labelColor);
         paint.setStrokeWidth(barHigh);
         paint.setAntiAlias(true);
         paint.setDither(true);
@@ -369,7 +370,8 @@ public class MusicTagUtils {
         startx = endx+barSpace;
         endx = startx+barWidth;
         paint = new Paint();
-        paint.setColor(upscaleColor);
+        //paint.setColor(upscaleColor);
+        paint.setColor(labelColor);
         paint.setStrokeWidth(barHigh);
         paint.setAntiAlias(true);
         paint.setDither(true);
@@ -384,7 +386,8 @@ public class MusicTagUtils {
         startx = endx+barSpace;
         endx = startx+barWidth;
         paint = new Paint();
-        paint.setColor(resampledColor);
+       // paint.setColor(resampledColor);
+        paint.setColor(labelColor);
         paint.setStrokeWidth(barHigh);
         paint.setAntiAlias(true);
         paint.setDither(true);
@@ -1241,7 +1244,7 @@ public class MusicTagUtils {
         return isMPegFile(tag) || isAACFile(tag);
     }
 
-    public static File getEncResolutionIcon( Context context, MusicTag tag) {
+    public static File getResolutionIcon( Context context, MusicTag tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
         String path = "/Icons/";
@@ -1259,7 +1262,7 @@ public class MusicTagUtils {
         }else {
             path = path + tag.getFileFormat()+tag.getAudioBitsDepth()+"_"+ tag.getAudioBitRate();
         }
-
+/*
         // file quality
         String quality = tag.getMediaQuality();
         if(!isEmpty(quality)) {
@@ -1268,7 +1271,7 @@ public class MusicTagUtils {
 
         // upscaled/resampled
         path = path+"_"+tag.getUpscaledInd()+"_"+tag.getResampledInd();
-
+*/
         File pathFile = new File(dir, path+".png");
         if(!pathFile.exists()) {
             // create file
@@ -1285,6 +1288,8 @@ public class MusicTagUtils {
         }
         return pathFile;
     }
+
+
 
     public static File getSourceQualityIcon(Context context, MusicTag tag) {
         //AudiophileRecords.png
@@ -1307,6 +1312,28 @@ public class MusicTagUtils {
                 //}
             } catch (Exception e) {
                 Log.e(TAG,"getSourceQualityIcon",e);
+            }
+        }
+        return pathFile;
+    }
+
+    public static File getTrackQualityIcon(Context context, MusicTag tag) {
+        //TrackQuality_DR_DRS_UP_RE.png
+        File dir = context.getExternalCacheDir();
+        String quality = String.format("TrackQuality_%s_%s_%s_%s.png",getDynamicRangeAsString(tag),getTrackDRScore(tag),tag.getUpscaledInd(),tag.getResampledInd());
+        String path = "/Icons/"+quality;
+
+        File pathFile = new File(dir, path);
+        if(!pathFile.exists()) {
+            try {
+                dir = pathFile.getParentFile();
+                dir.mkdirs();
+
+                Bitmap bitmap = createTrackQualityIcon(context, tag);
+                byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
+                IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
+            } catch (Exception e) {
+                Log.e(TAG,"getTrackQualityIcon",e);
             }
         }
         return pathFile;
@@ -1366,7 +1393,7 @@ public class MusicTagUtils {
         return text;
     }
 
-    public static String getTrackDR(MusicTag tag) {
+    private static String getTrackDRScore(MusicTag tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {
             text = "-";
@@ -2054,6 +2081,243 @@ public class MusicTagUtils {
                 bounds.exactCenterX() +20, //left
                 mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
                 mLetterPaint);
+
+        return myBitmap;
+    }
+
+    private static Bitmap createTrackQualityIcon(Context context, MusicTag tag) {
+        int width =  144; //280; // 16x46, 24x70
+        int height = 96; //1.5
+
+        int greyColor = context.getColor(R.color.grey200);
+        int darkBackground = Color.BLACK; // context.getColor(R.color.material_color_blue_grey_900);
+        int lightBackground = context.getColor(R.color.material_color_blue_grey_900); //context.getColor(R.color.material_color_blue_grey_400);
+        int circleBackground = context.getColor(R.color.black_transparent_80); //context.getColor(R.color.material_color_blue_grey_700);
+        int drScoreColor = context.getColor(R.color.white);
+
+        int upscaleColor = context.getColor(R.color.quality_scale_not_test);
+        if(IND_UPSCALED_GOOD.equals(tag.getUpscaledInd())) {
+            upscaleColor = context.getColor(R.color.quality_scale_matched);
+        }else if(IND_UPSCALED_BAD.equals(tag.getUpscaledInd()) || IND_UPSCALED_INVALID.equals(tag.getUpscaledInd())) {
+            upscaleColor = context.getColor(R.color.quality_scale_not_matched);
+        }
+        int resampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
+        if(IND_RESAMPLED_GOOD.equals(tag.getResampledInd())) {
+            resampledColor = context.getColor(R.color.quality_scale_matched);
+        }else if(IND_RESAMPLED_BAD.equals(tag.getResampledInd()) || IND_RESAMPLED_INVALID.equals(tag.getResampledInd())) {
+            resampledColor = context.getColor(R.color.quality_scale_not_matched);
+        }
+
+        String drScore = getTrackDRScore(tag);
+        String dr = getDynamicRangeAsString(tag);
+        if(dr.equals("-1 dB")) dr = "---";
+        if(drScore.equals("-1")) drScore = "--";
+
+        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas myCanvas = new Canvas(myBitmap);
+        int padding;
+        int cornerRadius = 12;
+        Rect bounds = new Rect(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+
+        // draw border grey color
+        // draw border dark grey
+        RectF rectangle = new RectF(
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
+        );
+        Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(greyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        //draw dark bg color
+        padding = 0;
+        int bgPadding = 4;
+        rectangle = new RectF(
+                bgPadding, // Left
+                cornerRadius*2, // Top
+                myCanvas.getWidth() - bgPadding, // Right
+                myCanvas.getHeight() - bgPadding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(darkBackground);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        // draw top light bg color
+        int separatorY = bounds.bottom - ((bounds.bottom - bounds.top)/2);
+        rectangle = new RectF(
+                bgPadding, // Left
+                bgPadding, // Top
+                myCanvas.getWidth() - bgPadding, // Right
+                separatorY //myCanvas.getHeight() - padding // Bottom
+        );
+
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(lightBackground);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+        rectangle = new RectF(
+                bgPadding, // Left
+                bgPadding+cornerRadius, // Top
+                myCanvas.getWidth() - bgPadding, // Right
+                separatorY+cornerRadius //myCanvas.getHeight() - padding // Bottom
+        );
+        myCanvas.drawRoundRect(rectangle, 0,0, bgPaint);
+
+        // draw circle @ center
+        int centerX = (bounds.left + bounds.right) / 2;
+        int centerY = ((bounds.top + bounds.bottom) / 2 ) - 12;
+        int radius = (bounds.bottom - bounds.top)/3;
+        bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(circleBackground);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawCircle(centerX,centerY, radius, bgPaint);
+
+        // draw dynamic range score
+        Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+        int letterTextSize = 40;
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(drScoreColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setDither(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect textMathRect = new Rect();
+        mLetterPaint.getTextBounds(drScore, 0, 1, textMathRect);
+        float mLetterTop = textMathRect.height() ;
+        float mLetterRight = textMathRect.width() ;
+        myCanvas.drawText(drScore,
+                (centerX-(mLetterRight/2)+4), // left
+                centerY + (mLetterTop/2), //top
+                mLetterPaint);
+
+        // draw dynamic range value
+        font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+        letterTextSize = 32;
+        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        mLetterPaint.setColor(drScoreColor);
+        mLetterPaint.setTypeface(font);
+        mLetterPaint.setAntiAlias(true);
+        mLetterPaint.setDither(true);
+        mLetterPaint.setTextSize(letterTextSize);
+        mLetterPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        textMathRect = new Rect();
+        mLetterPaint.getTextBounds(dr, 0, 1, textMathRect);
+        mLetterTop = textMathRect.height() ;
+        mLetterRight = textMathRect.width() ;
+        myCanvas.drawText(dr,
+                (centerX-(mLetterRight/2)+4), // left
+                separatorY + (separatorY/2) + (mLetterTop/2)+2, //top
+                mLetterPaint);
+
+        // draw left arc for upscaled indicator
+        int []colors = new int[5];
+        colors[0] = upscaleColor;
+        for(int i=1;i<colors.length;i++) {
+            colors[i] = ColorUtils.TranslateLight(colors[i-1], 12);
+        }
+        int barWidth = 6;
+        int rndNo =0;
+        int positionX = (int) (centerX - (radius*2.2));
+        int topY = 12+(colors.length*barWidth);
+        int bottomY = separatorY+14;
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            int offset = rndNo*barWidth+12;
+            Path path = new Path();
+            path.moveTo(positionX+offset, topY-offset);
+            path.lineTo((positionX+offset)-(radius/2), centerY);
+            path.lineTo( positionX+offset, bottomY);
+
+            CornerPathEffect cornerPathEffect =
+                    new CornerPathEffect(radius);
+
+            paint.setPathEffect(cornerPathEffect);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
+        // draw right arc for resampled indicator
+       // barWidth = 8;
+       // colors[0] = context.getColor(R.color.material_color_blue_grey_400);
+       // colors[1] = resampledColor; //context.getColor(R.color.material_color_blue_grey_900);
+        colors[colors.length-1] = resampledColor;
+        for(int i=(colors.length-2);i>=0;i--) {
+            colors[i] = ColorUtils.TranslateLight(colors[i+1], 12);
+        }
+        rndNo =0;
+        topY = 8;
+        positionX = (int) (centerX + (radius));
+       // for(int i=0;i<2;i++) {
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            int offset = rndNo*barWidth;
+            Path path = new Path();
+            path.moveTo(positionX+offset, topY+offset);
+            path.lineTo(positionX+offset+(radius/2), centerY);
+            path.lineTo( positionX+offset, bottomY);
+
+            CornerPathEffect cornerPathEffect =
+                    new CornerPathEffect(radius);
+
+            paint.setPathEffect(cornerPathEffect);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
+        // fix border that replaced
+        Paint paint = new Paint();
+        paint.setColor(greyColor);
+        paint.setStrokeWidth(bgPadding);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+
+        // left border
+        Path path = new Path();
+        path.moveTo(0, cornerRadius);
+        path.lineTo(0, bounds.bottom-cornerRadius);
+        myCanvas.drawPath(path, paint);
+
+        // right border
+        path = new Path();
+        path.moveTo(bounds.right, cornerRadius);
+        path.lineTo(bounds.right, bounds.bottom-cornerRadius);
+        myCanvas.drawPath(path, paint);
+
+        // top border
+        path = new Path();
+        path.moveTo(cornerRadius, 0);
+        path.lineTo(bounds.right-cornerRadius, 0);
+        myCanvas.drawPath(path, paint);
 
         return myBitmap;
     }
