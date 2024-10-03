@@ -80,8 +80,8 @@ public class MusicAnalyser {
             Log.e(TAG, "analyst", e);
             upscaled = IND_UPSCALED_INVALID;
             resampled = IND_RESAMPLED_INVALID;
-            dynamicRangeScore = -1;
-            dynamicRange = -1;
+            dynamicRangeScore = 0.00;
+            dynamicRange = 0.00;
             return true;
         } catch (Exception e) {
           //  e.printStackTrace();

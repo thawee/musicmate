@@ -31,34 +31,7 @@ public class ArtistFolderBrowser extends ContentBrowser {
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), myId, "mmate", getSize(
                 contentDirectory, myId), null);
-        /*
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), getName(
-                contentDirectory, myId), "yaacc", getSize(
-                contentDirectory, myId), null);
-*/
     }
-
-    /*
-    private String getName(ContentDirectory contentDirectory, String myId) {
-        String result = "";
-        String[] projection = {MediaStore.Audio.Artists.ARTIST};
-        String selection = MediaStore.Audio.Artists._ID + "=?";
-        String[] selectionArgs = new String[]{myId.substring(myId
-                .indexOf(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId()))};
-        try (Cursor cursor = contentDirectory
-                .getContext()
-                .getContentResolver()
-                .query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
-                        projection, selection, selectionArgs, null)) {
-
-            if (cursor != null && cursor.getCount() > 0) {
-                cursor.moveToFirst();
-                result = cursor.getString(0);
-                cursor.close();
-            }
-        }
-        return result;
-    } */
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
         String name = myId.substring(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId().length());
@@ -68,31 +41,11 @@ public class ArtistFolderBrowser extends ContentBrowser {
             name = "";
         }
         return MusixMateApp.getInstance().getOrmLite().findByGenre(name).size();
-
-        /*
-        String[] projection = {MediaStore.Audio.Media.ARTIST_ID};
-        String selection = MediaStore.Audio.Media.ARTIST_ID + "=?";
-        String[] selectionArgs = new String[]{myId
-                .substring(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId()
-                .length())};
-        try (Cursor cursor = contentDirectory
-                .getContext()
-                .getContentResolver()
-                .query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection,
-                        selection, selectionArgs, null)) {
-            return cursor.getCount();
-        }*/
-
     }
 
     @Override
     public List<Container> browseContainer(
             ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-
-        /*List<Container> result = new ArrayList<>();
-        result.add((Container) browseMeta(contentDirectory,
-                myId, firstResult, maxResults, orderby));
-        return result;*/
         return new ArrayList<>();
     }
 

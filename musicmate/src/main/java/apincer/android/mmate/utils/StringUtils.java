@@ -1,5 +1,7 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.Constants.ARTIST_SEP_SPACE;
+
 import android.annotation.SuppressLint;
 
 import androidx.annotation.Nullable;
@@ -43,7 +45,7 @@ public class StringUtils {
     public static final String SYMBOL_SEP = " \u25C8 "; //"" \u2051 "; //"" \u17C7 ";
     public static final String SYMBOL_HEADER_SEP = " \u25C8 ";
   //  public static final String SYMBOL_GENRE = " \u24BC ";
-  //  public static final String SYMBOL_MUSIC_NOTE = " \u266A ";
+    public static final String SYMBOL_MUSIC_NOTE = "\u266A";
     public static final String UNKNOWN = "<unknown>";
     public static final String UNKNOWN_CAP = "<Unknown>";
     public static final String UNKNOWN_ARTIST = "Unknown Artist";
@@ -86,6 +88,46 @@ public class StringUtils {
         if(input == null) {
             return true;
         }else return input.trim().isEmpty();
+    }
+
+    private static String capitalizeWords(String str) {
+        String[] words = str.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                if (word.matches(".*[^a-zA-Z'].*")) {
+                    sb.append(convertNonLetterToUpper(word));  // Converts "p.o.p" to "P.O.P", "M2m" to "M2M", etc.
+                } else {
+                    sb.append(capitalizeFirstLetter(word));  // Converts "pop" to "Pop", "this is text" to "This is text"
+                }
+                sb.append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    private static String convertNonLetterToUpper(String str) {
+        StringBuilder sb = new StringBuilder();
+        boolean foundNonLetter = false;
+        for (char c : str.toCharArray()) {
+            if (!Character.isLetter(c)) {
+                sb.append(Character.toUpperCase(c));
+                foundNonLetter = true;
+            } else if (foundNonLetter) {
+                sb.append(Character.toUpperCase(c));
+                foundNonLetter = false;
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String capitalizeFirstLetter(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
     }
 
     public static String convertToStartCase(String value) {
@@ -364,21 +406,22 @@ public class StringUtils {
     public static String formatTitle(CharSequence text) {
         // trim space
         // format as word, first letter of word is capital
-        if(text==null) {
+        if(isEmpty((String) text)) {
             return "";
         }
 
         String str = text.toString().trim();
-        if(str.contains("/")) {
-            str = str.replace("/","_");
-        }
+       // if(str.contains("/")) {
+       //     str = str.replace("/","_");
+       // }
         if(str.startsWith("\"") && str.endsWith("\"")) {
             str = str.substring(1, str.length()-1);
         }
         if(str.startsWith("\\\"") && str.endsWith("\\\"")) {
             str = str.substring(2, str.length()-2);
         }
-        return convertToStartCase(trimToEmpty(str));
+       // return convertToStartCase(trimToEmpty(str));
+        return capitalizeWords(str);
     }
 
     public static String formatDuration(double milliseconds, boolean withUnit) {
@@ -692,5 +735,19 @@ public class StringUtils {
         }
         m.appendTail(buf);
         return buf.toString();
+    }
+
+    public static String formatArtists(String artist) {
+        String []oldSeps = {";","&", ",", "-", "/"};
+
+        artist = trimToEmpty(artist);
+        for(String sep: oldSeps) {
+            String [] artistList = artist.split(sep, -1);
+            for(int i=0; i<artistList.length;i++) {
+                artistList[i] = formatTitle(artistList[i]);
+            }
+            artist = String.join(ARTIST_SEP_SPACE, artistList);
+        }
+        return artist;
     }
 }

@@ -132,8 +132,7 @@ public class AboutActivity extends AppCompatActivity {
                     .done()
                     .into(qualityDetail);
 
-
-            MusicMateExecutors.db(() -> {
+            MusicMateExecutors.ui(() -> {
                 List<MusicTag> tags = TagRepository.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
                 Map<String, Integer> grpList = new HashMap<>();

@@ -1,11 +1,15 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.Constants.ARTIST_SEP;
+import static apincer.android.mmate.Constants.ARTIST_SEP_SPACE;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_NONE;
 import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
 import static apincer.android.mmate.Constants.IND_UPSCALED_NONE;
+import static apincer.android.mmate.Constants.NONE;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -21,7 +25,9 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.utils.LogHelper;
@@ -36,6 +42,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
+    private static final String LIKE_LITERAL = "%";
 
     public OrmLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION) ;//,
@@ -80,7 +87,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
 
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            String keyword = "%"+title.replace("'","''")+"%";
+            String keyword = LIKE_LITERAL+title.replace("'","''")+LIKE_LITERAL;
             builder.where().like("title",keyword).or().like("path", keyword);
             return builder.query();
         } catch (SQLException e) {
@@ -105,7 +112,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
 
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().like("path",escapeString(path)+"%");
+            builder.where().like("path",escapeString(path)+LIKE_LITERAL);
             return builder.query();
         } catch (Exception e) {
             return EMPTY_LIST;
@@ -305,7 +312,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<MusicTag> findByKeyword(String keyword) {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            keyword = "'%"+keyword.replace("'","''")+"%'";
+            keyword = "'"+LIKE_LITERAL+keyword.replace("'","''")+LIKE_LITERAL+"'";
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("title like "+keyword+" or artist like "+keyword +" or album like "+keyword);
             return builder.query();
@@ -398,8 +405,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
             //return Arrays.asList(result);
             for(String[] vals : results.getResults()) {
-                MusicFolder group = new MusicFolder();
-                group.setName(vals[0]);
+                MusicFolder group = new MusicFolder(vals[0]);
+               // group.setName(vals[0]);
                 group.setChildCount(StringUtils.toLong(vals[1]));
                 if(vals[0] == null) {
                     group.setName("_NULL");
@@ -426,8 +433,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
             //return Arrays.asList(result);
             for(String[] vals : results.getResults()) {
-                MusicFolder group = new MusicFolder();
-                group.setName(vals[0]);
+                MusicFolder group = new MusicFolder(vals[0]);
+              //  group.setName(vals[0]);
                 group.setChildCount(StringUtils.toLong(vals[1]));
                 if(vals[0] == null) {
                     group.setName("_NULL");
@@ -472,7 +479,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             }
             return list;
         } catch (SQLException e) {
-            Log.e(TAG,"getArtits: "+e.getMessage());
+            Log.e(TAG,"getArtists: "+e.getMessage());
             return EMPTY_STRING_LIST;
         }
     }
@@ -588,25 +595,31 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<MusicFolder> getArtistWithChildrenCount() {
         try {
             //select grouping, count(id) from musictag group by grouping
-            List<MusicFolder> list = new ArrayList<>();
+            Map<String, MusicFolder> list = new HashMap<>();
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("artist, count(id)");
             builder.groupBy("artist");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            //return Arrays.asList(result);
             for(String[] vals : results.getResults()) {
-                MusicFolder group = new MusicFolder();
-                group.setName(vals[0]);
-                group.setChildCount(StringUtils.toLong(vals[1]));
-                if(vals[0] == null) {
-                    group.setName("_NULL");
-                }else if(StringUtils.isEmpty(vals[0])) {
-                    group.setName("_EMPTY");
+                String artists = trimToEmpty(vals[0]);
+                String []artistArray = artists.split(ARTIST_SEP, -1);
+                for (String artist: artistArray) {
+                    artist = trimToEmpty(artist);
+                    artist = isEmpty(artist)?NONE:artist;
+                    MusicFolder group;
+                    if (list.containsKey(artist)) {
+                        group = list.get(artist);
+                    } else {
+                        group = new MusicFolder(artist);
+                    }
+                    if(group != null) {
+                        group.setChildCount(group.getChildCount() + StringUtils.toLong(vals[1]));
+                        list.put(artist, group);
+                    }
                 }
-                list.add(group);
             }
-            return list;
+            return new ArrayList<>(list.values());
         } catch (SQLException e) {
             Log.e(TAG,"artist: "+e.getMessage());
             return EMPTY_FOLDER_LIST;
@@ -624,23 +637,24 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
             //return Arrays.asList(result);
             for(String[] vals : results.getResults()) {
-                MusicFolder group = new MusicFolder();
                 String albumArtist = vals[1];
                 String album = vals[0];
                 String count = vals[3];
-                group.setUniqueKey(vals[2]);
-                group.setChildCount(StringUtils.toLong(count));
+                String name = album;
                 if(StringUtils.isEmpty(album)) {
                     album = Constants.UNKNOWN;
                 }
                 if(StringUtils.isEmpty(albumArtist)) {
-                    group.setName(album);
+                    name = album;
                 }else if ("Various Artists".equalsIgnoreCase(albumArtist) ||
                          "Soundtrack".equalsIgnoreCase(albumArtist)) {
-                    group.setName(album);
+                    name = album;
                 }else {
-                    group.setName(album +" (by "+albumArtist+")");
+                    name = album +" (by "+albumArtist+")";
                 }
+                MusicFolder group = new MusicFolder(name);
+                group.setUniqueKey(vals[2]);
+                group.setChildCount(StringUtils.toLong(count));
                 list.add(group);
             }
             return list;
@@ -657,7 +671,12 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             if(StringUtils.isEmpty(name)) {
                 builder.where().isNull("artist").or().eq("artist", "");
             }else {
-                builder.where().eq("artist", name.replace("'", "''"));
+                name = name.replace("'", "''");
+                builder.where().eq("artist", name).or()
+                        .like("artist",name+ARTIST_SEP+LIKE_LITERAL).or()
+                        .like("artist",name+ARTIST_SEP_SPACE+LIKE_LITERAL).or()
+                        .like("artist", LIKE_LITERAL+ARTIST_SEP+name).or()
+                        .like("artist", LIKE_LITERAL+ARTIST_SEP_SPACE+name);
             }
             return builder.groupBy("title").groupBy("artist").query();
         } catch (SQLException e) {

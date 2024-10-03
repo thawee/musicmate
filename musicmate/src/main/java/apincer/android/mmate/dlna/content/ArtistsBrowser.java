@@ -38,27 +38,7 @@ public class ArtistsBrowser extends ContentBrowser {
 
     private Integer getSize(ContentDirectory contentDirectory, String myId) {
         return TagRepository.getArtistList().size();
-        /*
-        String[] projection = {MediaStore.Audio.Artists._ID};
-        String selection = "";
-        String[] selectionArgs = null;
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        }*/
-
     }
-/*
-
-    private Integer getMusicTrackSize(ContentDirectory contentDirectory, String parentId) {
-        String[] projection = {MediaStore.Audio.Media.ARTIST_ID};
-        String selection = MediaStore.Audio.Media.ARTIST_ID + "=?";
-        String[] selectionArgs = new String[]{parentId};
-        try (Cursor cursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, null)) {
-            return cursor.getCount();
-        }
-    } */
 
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
@@ -69,39 +49,6 @@ public class ArtistsBrowser extends ContentBrowser {
             musicAlbum.setChildCount((int)group.getChildCount());
             result.add(musicAlbum);
         }
-        /*
-        String[] projection = {MediaStore.Audio.Artists._ID, MediaStore.Audio.Artists.ARTIST};
-        String selection = "";
-        String[] selectionArgs = null;
-        Map<String, MusicAlbum> folderMap = new HashMap<>();
-        try (Cursor mediaCursor = contentDirectory.getContext().getContentResolver().query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, projection, selection,
-                selectionArgs, MediaStore.Audio.Artists.ARTIST + " ASC")) {
-
-            if (mediaCursor != null && mediaCursor.getCount() > 0) {
-                mediaCursor.moveToFirst();
-                int currentIndex = 0;
-                int currentCount = 0;
-                while (!mediaCursor.isAfterLast() && currentCount < maxResults) {
-                    if (firstResult <= currentIndex) {
-                        @SuppressLint("Range") String id = mediaCursor.getString(mediaCursor.getColumnIndex(MediaStore.Audio.Albums._ID));
-                        @SuppressLint("Range") String name = mediaCursor.getString(mediaCursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST));
-                        MusicAlbum musicAlbum = new MusicAlbum(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId() + id, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), name, "", 0);
-                        folderMap.put(id, musicAlbum);
-                        Log.d(getClass().getName(), "Artists Folder: " + id + " Name: " + name);
-                        currentCount++;
-                    }
-                    currentIndex++;
-                    mediaCursor.moveToNext();
-                }
-
-                for (Map.Entry<String, MusicAlbum> entry : folderMap.entrySet()) {
-                    entry.getValue().setChildCount(getMusicTrackSize(contentDirectory, entry.getKey()));
-                    result.add(entry.getValue());
-                }
-            } else {
-                Log.d(getClass().getName(), "System media store is empty.");
-            }
-        } */
         result.sort(Comparator.comparing(DIDLObject::getTitle));
         Log.d(TAG, "Returning " + result.size() + " MusicAlbum Containers");
         return result;
@@ -111,5 +58,4 @@ public class ArtistsBrowser extends ContentBrowser {
     public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new ArrayList<>();
     }
-
 }

@@ -461,11 +461,7 @@ public class TagsEditorFragment extends Fragment {
                         MusicTag mItem = tag.clone();
                         tag.setOriginTag(mItem);
                         tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
-                        if(!StringUtils.isEmpty(tag.getArtist()) && tag.getArtist().contains(",")) {
-                            // split reformat to ;
-                            tag.setArtist(StringUtils.formatTitle(tag.getArtist().replaceAll(",",";")));
-                        }
-                        tag.setArtist(StringUtils.formatTitle(tag.getArtist()));
+                        tag.setArtist(StringUtils.formatArtists(tag.getArtist()));
                         tag.setAlbum(StringUtils.formatTitle(tag.getAlbum()));
                         tag.setAlbumArtist(StringUtils.formatTitle(tag.getAlbumArtist()));
                         tag.setGenre(StringUtils.formatTitle(tag.getGenre()));

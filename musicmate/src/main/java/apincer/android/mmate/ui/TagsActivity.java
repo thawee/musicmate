@@ -385,6 +385,7 @@ public class TagsActivity extends AppCompatActivity {
 
         if(MusicTagUtils.isFLACFile(displayTag)) {
             qualityView.setVisibility(View.VISIBLE);
+           // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), MusicTagUtils.createTrackQualityIcon(getApplicationContext(), displayTag)));
              request = new ImageRequest.Builder(getApplicationContext())
                     .data(MusicTagUtils.getTrackQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
@@ -643,7 +644,7 @@ public class TagsActivity extends AppCompatActivity {
                 .setPositiveButton("DELETE", (dialogInterface, i) -> {
                     startProgressBar();
                     if(getEditItems().size()==1) {
-                        MusicMateExecutors.update(() -> {
+                        MusicMateExecutors.fast(() -> {
                             try {
                                 boolean status = repos.deleteMediaItem(getEditItems().get(0));
                                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, getEditItems().get(0));

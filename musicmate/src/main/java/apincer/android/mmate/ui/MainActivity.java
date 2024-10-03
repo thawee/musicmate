@@ -271,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
-            MusicMateExecutors.move(() -> {
+            MusicMateExecutors.fast(() -> {
                 try {
                     boolean status = repos.deleteMediaItem(tag);
                     if(status) {
@@ -380,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
-                MusicMateExecutors.move(() -> {
+                MusicMateExecutors.fast(() -> {
                     try {
                         statusList.put(tag, "Adding");
                         runOnUiThread(() -> {
@@ -458,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(@NonNull Drawable drawable) {
                         try {
                             nowPlayingCoverArt.setImageDrawable(drawable);
-                            MusicMateExecutors.main(() -> {
+                            MusicMateExecutors.ui(() -> {
                                 Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
                                 Palette palette = Palette.from(bmp).generate();
                                 int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
@@ -492,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
             nowPlayingPlayer.setImageDrawable(player.getPlayerIconDrawable());
         }
 
-            MusicMateExecutors.main(() -> {
+            MusicMateExecutors.ui(() -> {
                 if(player != null) {
                     if (player.isStreamPlayer()) {
                         nowPlayingOutputDevice.setVisibility(View.VISIBLE);
@@ -811,7 +811,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagPlayingEvent event) {
-        MusicMateExecutors.main(() -> {
+        MusicMateExecutors.ui(() -> {
             MusicTag tag = event.getPlayingSong();
             onPlaying(tag);
         });
@@ -821,7 +821,7 @@ public class MainActivity extends AppCompatActivity {
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
-            MusicMateExecutors.main(() -> {
+            MusicMateExecutors.ui(() -> {
                 if(event.getItem()!=null) {
                     int position = adapter.getMusicTagPosition(event.getItem());
                     if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
@@ -1450,7 +1450,7 @@ public class MainActivity extends AppCompatActivity {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
-                MusicMateExecutors.db(() -> {
+                MusicMateExecutors.execute(() -> {
                     try {
                         statusList.put(tag, "Analysing");
                         runOnUiThread(itemsView::invalidateViews);
@@ -1506,7 +1506,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doExportPlaylists() {
-        MusicMateExecutors.db(() -> {
+        MusicMateExecutors.execute(() -> {
             PLSBuilder.exportPlaylists(getApplicationContext());
             runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Playlists are created successfully."));
         });
@@ -1629,7 +1629,7 @@ public class MainActivity extends AppCompatActivity {
 
             String finalTargetExt = targetExt.toLowerCase();
             int finalCLevel = cLevel;
-            MusicMateExecutors.move(() -> {
+            MusicMateExecutors.execute(() -> {
                 for(MusicTag tag: selections) {
                     if(!StringUtils.trimToEmpty(finalTargetExt).equalsIgnoreCase(tag.getFileFormat()))  {
                         String srcPath = tag.getPath();

@@ -1,6 +1,10 @@
 package apincer.android.mmate.repository;
 
 public class MusicFolder {
+    public MusicFolder(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
     }

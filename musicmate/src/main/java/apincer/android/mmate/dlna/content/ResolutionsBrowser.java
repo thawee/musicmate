@@ -53,9 +53,8 @@ public class ResolutionsBrowser extends ContentBrowser {
 
         Map<String, MusicFolder> mapped = new HashMap<>();
         for(String pls: playlists) {
-            MusicFolder dir = new MusicFolder();
+            MusicFolder dir = new MusicFolder(pls);
             dir.setUniqueKey(pls);
-            dir.setName(pls);
             mapped.put(pls, dir);
         }
         List<MusicTag> songs = TagRepository.getAllMusics();

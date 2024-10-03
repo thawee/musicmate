@@ -260,7 +260,7 @@
     <color name="quality_bad">@color/grey600</color>
     -->
 
-    <color name="quality_scale_not_test">#E0E0E0</color>
+    <color name="quality_scale_not_test">@color/material_color_blue_grey_600</color>
     <color name="quality_scale_matched">#FF9800</color>
     <color name="quality_scale_not_matched">#B71C1C</color>
     <!--

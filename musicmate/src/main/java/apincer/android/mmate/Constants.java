@@ -67,6 +67,8 @@ public final class Constants {
     public static final String UNKNOWN = "Unknown";
     public static final String NONE = "None";
     public static final String EMPTY = "";
+    public static final String ARTIST_SEP = ",";
+    public static final String ARTIST_SEP_SPACE = ", ";
 
     public static final String GROUPING_LOUNGE = "Lounge";
     public static final String GROUPING_ACOUSTIC = "Acoustic";

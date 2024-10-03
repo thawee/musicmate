@@ -15,7 +15,6 @@ import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_48;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -2085,7 +2084,7 @@ public class MusicTagUtils {
         return myBitmap;
     }
 
-    private static Bitmap createTrackQualityIcon(Context context, MusicTag tag) {
+    public static Bitmap createTrackQualityIcon(Context context, MusicTag tag) {
         int width =  144; //280; // 16x46, 24x70
         int height = 96; //1.5
 
@@ -2108,11 +2107,6 @@ public class MusicTagUtils {
             resampledColor = context.getColor(R.color.quality_scale_not_matched);
         }
 
-        String drScore = getTrackDRScore(tag);
-        String dr = getDynamicRangeAsString(tag);
-        if(dr.equals("-1 dB")) dr = "---";
-        if(drScore.equals("-1")) drScore = "--";
-
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding;
@@ -2123,6 +2117,9 @@ public class MusicTagUtils {
                 myCanvas.getWidth(), // Right
                 myCanvas.getHeight() // Bottom
         );
+
+        int centerX = (bounds.left + bounds.right) / 2;
+        int centerY = ((bounds.top + bounds.bottom) / 2 ) - 12;
 
         // draw border grey color
         // draw border dark grey
@@ -2176,9 +2173,56 @@ public class MusicTagUtils {
         );
         myCanvas.drawRoundRect(rectangle, 0,0, bgPaint);
 
+        // draw left arc for upscaled indicator
+        int []colors = new int[12];
+        colors[colors.length-1] = upscaleColor;
+        for(int i=(colors.length-2);i>=0;i--) {
+            colors[i] = ColorUtils.TranslateLight(colors[i+1], 8);
+        }
+        int barWidth = 4;
+        int rndNo =0;
+        int positionX = centerX; //(int) (centerX - (radius*2.2));
+        int topY = cornerRadius-4; //(colors.length*barWidth);
+        int bottomY = separatorY+8;
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            int offset = rndNo*barWidth+12;
+            Path path = new Path();
+            path.moveTo(positionX-offset, topY);
+            path.lineTo( positionX-offset, bottomY);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
+        // resampled
+        colors[colors.length-1] = resampledColor;
+        for(int i=(colors.length-2);i>=0;i--) {
+            colors[i] = ColorUtils.TranslateLight(colors[i+1], 8);
+        }
+        rndNo =0;
+        for(int color: colors) {
+            Paint paint = new Paint();
+            paint.setColor(color);
+            paint.setStrokeWidth(barWidth+2);
+            paint.setAntiAlias(true);
+            paint.setDither(true);
+            paint.setStyle(Paint.Style.STROKE);
+
+            int offset = rndNo*barWidth+12;
+            Path path = new Path();
+            path.moveTo(positionX+offset, topY);
+            path.lineTo( positionX+offset, bottomY);
+            myCanvas.drawPath(path, paint);
+            rndNo++;
+        }
+
         // draw circle @ center
-        int centerX = (bounds.left + bounds.right) / 2;
-        int centerY = ((bounds.top + bounds.bottom) / 2 ) - 12;
         int radius = (bounds.bottom - bounds.top)/3;
         bgPaint =  new Paint();
         bgPaint.setAntiAlias(true);
@@ -2187,46 +2231,54 @@ public class MusicTagUtils {
         myCanvas.drawCircle(centerX,centerY, radius, bgPaint);
 
         // draw dynamic range score
-        Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
-        int letterTextSize = 40;
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(drScoreColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setAntiAlias(true);
-        mLetterPaint.setDither(true);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(drScore, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() ;
-        float mLetterRight = textMathRect.width() ;
-        myCanvas.drawText(drScore,
-                (centerX-(mLetterRight/2)+4), // left
-                centerY + (mLetterTop/2), //top
-                mLetterPaint);
-
+       // if(tag.getDynamicRangeScore()!=0.00) {
+            String drScore = getTrackDRScore(tag);
+            if(tag.getDynamicRangeScore()==-1 || tag.getDynamicRangeScore()==0.00) {
+                drScore = StringUtils.SYMBOL_MUSIC_NOTE;
+            }
+            Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+            int letterTextSize = 40;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            mLetterPaint.setColor(drScoreColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setDither(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(drScore, 0, 1, textMathRect);
+            float mLetterTop = textMathRect.height();
+            float mLetterRight = textMathRect.width();
+            myCanvas.drawText(drScore,
+                    (centerX - (mLetterRight / 2) + 4), // left
+                    centerY + (mLetterTop / 2), //top
+                    mLetterPaint);
+       // }
         // draw dynamic range value
-        font = ResourcesCompat.getFont(context, R.font.k2d_bold);
-        letterTextSize = 32;
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(drScoreColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setAntiAlias(true);
-        mLetterPaint.setDither(true);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(dr, 0, 1, textMathRect);
-        mLetterTop = textMathRect.height() ;
-        mLetterRight = textMathRect.width() ;
-        myCanvas.drawText(dr,
-                (centerX-(mLetterRight/2)+4), // left
-                separatorY + (separatorY/2) + (mLetterTop/2)+2, //top
-                mLetterPaint);
+        if(tag.getDynamicRange()!=0.00) {
+            String dr = getDynamicRangeAsString(tag);
+            font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+            letterTextSize = 32;
+            mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            mLetterPaint.setColor(drScoreColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setDither(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            textMathRect = new Rect();
+            mLetterPaint.getTextBounds(dr, 0, 1, textMathRect);
+            mLetterTop = textMathRect.height();
+            mLetterRight = textMathRect.width();
+            myCanvas.drawText(dr,
+                    (centerX - (mLetterRight / 2) + 4), // left
+                    separatorY + (separatorY / 2) + (mLetterTop / 2) + 2, //top
+                    mLetterPaint);
+        }
 
-        // draw left arc for upscaled indicator
+        /*
         int []colors = new int[5];
         colors[0] = upscaleColor;
         for(int i=1;i<colors.length;i++) {
@@ -2257,12 +2309,13 @@ public class MusicTagUtils {
             paint.setPathEffect(cornerPathEffect);
             myCanvas.drawPath(path, paint);
             rndNo++;
-        }
+        } */
 
         // draw right arc for resampled indicator
        // barWidth = 8;
        // colors[0] = context.getColor(R.color.material_color_blue_grey_400);
        // colors[1] = resampledColor; //context.getColor(R.color.material_color_blue_grey_900);
+        /*
         colors[colors.length-1] = resampledColor;
         for(int i=(colors.length-2);i>=0;i--) {
             colors[i] = ColorUtils.TranslateLight(colors[i+1], 12);
@@ -2291,7 +2344,7 @@ public class MusicTagUtils {
             paint.setPathEffect(cornerPathEffect);
             myCanvas.drawPath(path, paint);
             rndNo++;
-        }
+        } */
 
         // fix border that replaced
         Paint paint = new Paint();

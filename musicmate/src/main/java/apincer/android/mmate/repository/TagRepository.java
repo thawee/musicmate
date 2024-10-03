@@ -1,6 +1,8 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.Constants.ARTIST_SEP;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.util.Log;
@@ -150,8 +152,19 @@ public class TagRepository {
 
     public static List<String> getArtistList() {
         List<String> list = MusixMateApp.getInstance().getOrmLite().getArtists();
-        Collections.sort(list);
-        return list;
+        List<String> artistList = new ArrayList<>();
+        for(String artist:list) {
+            String[] arr = artist.split(ARTIST_SEP,-1);
+            for(String a:arr) {
+                a = trimToEmpty(a);
+                if(!artistList.contains(a)) {
+                    artistList.add(a);
+                }
+            }
+        }
+
+        Collections.sort(artistList);
+        return artistList;
     }
 
     public static List<String> getDefaultAlbumArtistList(Context context) {
@@ -344,18 +357,18 @@ public class TagRepository {
         List<MusicFolder> list = new ArrayList<>();
         List<String> musicDirs  = Settings.getDirectories(context);
             for(String musicDir: musicDirs) {
-                    MusicFolder dir = new MusicFolder();
-                    dir.setUniqueKey(musicDir);
                     int indx = musicDir.lastIndexOf("/");
                     String name = musicDir;
                     if(indx >0 && !musicDir.endsWith("/")) {
                         name = musicDir.substring(indx+1);
                     }
-                    if(dir.getUniqueKey().contains("/emulated/")) {
+                    if(musicDir.contains("/emulated/")) {
                         name = name +" (Memory)";
                     }else {
                         name = name +" (SD Card)";
                     }
+                    MusicFolder dir = new MusicFolder(name);
+                    dir.setUniqueKey(musicDir);
                     dir.setName(name);
                     dir.setChildCount(0);
                     list.add(dir);

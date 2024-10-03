@@ -202,8 +202,8 @@
                         android:layout_gravity="center"
                         android:paddingTop="@dimen/dimen_12_dp"
                         android:paddingBottom="@dimen/dimen_8_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
-                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingRight="@dimen/dimen_8_dp"
+                        android:paddingLeft="@dimen/dimen_8_dp"
                         android:layout_marginBottom="@dimen/dimen_4_dp" >
                         <!--
                         android:background="@drawable/shape_btn_background">
@@ -230,17 +230,19 @@
                                 android:textStyle="bold"
                                 tools:ignore="TextSizeCheck" />
                         </LinearLayout>
+
                         <ImageView
                             android:id="@+id/icon_resolution"
-                            android:layout_width="@dimen/dimen_132_dp"
+                            android:layout_width="@dimen/dimen_120_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:contentDescription="@string/editor_musicmate_info"
                             android:gravity="center"
-                            android:scaleType="fitXY"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:padding="@dimen/dimen_1_dp"
-                            android:src="@drawable/ic_audiophile" />
+                            android:scaleType="fitXY"
+                            android:src="@drawable/ic_audiophile"
+                            tools:ignore="ImageContrastCheck" />
 <!--
                         <ImageView
                             android:id="@+id/icon_audiophile"
@@ -295,16 +297,17 @@
                             android:layout_width="@dimen/dimen_48_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:contentDescription="@string/editor_musicmate_info"
                             android:gravity="center"
-                            android:scaleType="fitXY"
                             android:padding="@dimen/dimen_2_dp"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:src="@drawable/ic_audiophile"/>
+                            android:scaleType="fitXY"
+                            android:src="@drawable/ic_audiophile"
+                            tools:ignore="ImageContrastCheck" />
 
                         <ImageView
                             android:id="@+id/icon_audiophile"
-                            android:layout_width="@dimen/dimen_72_dp"
+                            android:layout_width="@dimen/dimen_68_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
@@ -325,7 +328,6 @@
                             android:gravity="center"
                             android:scaleType="fitXY"
                             android:padding="@dimen/dimen_2_dp"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:src="@drawable/ic_format_hires"
                             android:background="@drawable/shape_background_dr"/>
 <!--
