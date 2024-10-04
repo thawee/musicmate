@@ -3,6 +3,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import android.content.Context;
 import android.util.Log;
+import android.util.LruCache;
 
 import org.jupnp.model.message.StreamRequestMessage;
 import org.jupnp.model.message.StreamResponseMessage;
@@ -15,6 +16,7 @@ import org.jupnp.transport.spi.InitializationException;
 import org.jupnp.transport.spi.StreamServer;
 import org.jupnp.transport.spi.UpnpStream;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -27,9 +29,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.dlna.MediaServerSession;
+import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.repository.MusicTag;
+import apincer.android.utils.FileUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -57,9 +64,12 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
+import okio.Buffer;
+import okio.FileSystem;
+import okio.Okio;
 
-public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
-    private static final String TAG = "StreamServerImpl";
+public class NettyStreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
+    private static final String TAG = "NettyStreamServerImpl";
     protected int localPort;
     public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
@@ -67,14 +77,19 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     final protected StreamServerConfigurationImpl configuration;
     private final HCContentServer contentServer;
    // private final NettyContentServer contentServer;
-    private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-    public StreamServerImpl(Context context, StreamServerConfigurationImpl configuration) {
+    // for 100 tps
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup(2);
+
+    private static File coverartDir;
+
+    public NettyStreamServerImpl(Context context, StreamServerConfigurationImpl configuration) {
         this.configuration = configuration;
         this.localPort = configuration.getListenPort();
         this.contentServer = new HCContentServer(context);
        // this.contentServer = new NettyContentServer(context);
+        coverartDir = context.getExternalCacheDir();
     }
 
     public StreamServerConfigurationImpl getConfiguration() {
@@ -82,25 +97,45 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
+        initServer(bindAddress, router);
+        contentServer.init(bindAddress);
+    }
+
+    private void initServer(InetAddress bindAddress, final Router router) throws InitializationException {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "Adding netty4 stream server: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
+                    Log.v(TAG, "Running Netty4 Stream Server: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
+
+                    // Pooled buffers help reduce memory fragmentation and improve performance.
+                    PooledByteBufAllocator allocator = new PooledByteBufAllocator(
+                            true, // preferDirect
+                            2, // nHeapArena
+                            2, // nDirectArena
+                            8192, // pageSize
+                            11, // maxOrder
+                            64, // smallCacheSize
+                            32, // normalCacheSize
+                            true // useCacheForAllThreads
+                    );
 
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     ServerBootstrap b = new ServerBootstrap();
                     b.option(ChannelOption.SO_BACKLOG, 128);  //Set the size of the backlog of TCP connections.  The default and exact meaning of this parameter is JDK specific.
                     b.group(bossGroup, workerGroup)
-                            .channel(NioServerSocketChannel.class)
+                            .channel(NioServerSocketChannel.class)  // use nio
                             .option(ChannelOption.SO_REUSEADDR, true)
                             .option(ChannelOption.TCP_NODELAY, true) // true - great for low latency
                             .option(ChannelOption.SO_KEEPALIVE, true)
-                            .option(ChannelOption.SO_BACKLOG, 128)
-                            .option(ChannelOption.SO_RCVBUF, 8192) // 8 KB receive buffer, 8192 is default
-                            .option(ChannelOption.SO_SNDBUF, 16384) // 16 KB receive buffer
-                            .option(ChannelOption.SO_TIMEOUT, 3000) // 3 sec
-                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) // 3 sec
+
+                            // for minimized memory usage
+                            .childOption(ChannelOption.ALLOCATOR, allocator) //PooledByteBufAllocator.DEFAULT)
+                            .childOption(ChannelOption.SO_RCVBUF, 1024) // 1kB receive buffer
+                            .childOption(ChannelOption.SO_SNDBUF, 2048) // 2KB send buffer
+
+                            .option(ChannelOption.SO_TIMEOUT, 30000) // 30 sec
+                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000) // 30 sec
                             .childHandler(new HttpServerInitializer(router));
                     Channel ch = b.bind(localPort).sync().channel();
                     ch.closeFuture().sync();
@@ -113,9 +148,6 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             }
         });
         thread.start();
-
-        contentServer.init(bindAddress);
-
     }
 
     synchronized public int getPort() {
@@ -123,7 +155,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void stop() {
-        Log.d(TAG, "Shutting down netty4 stream server");
+        Log.v(TAG, "Shutting down Netty4 Stream Server");
         try {
             bossGroup.shutdownGracefully().sync();
         } catch (InterruptedException e) {
@@ -144,6 +176,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
     @Sharable
     private static class HttpServerHandler extends ChannelInboundHandlerAdapter {
+        public static final String TYPE_IMAGE_PNG = "image/png";
+        public static final String TYPE_IMAGE_JPEG = "image/jpeg";
         final String upnpPath;
         final UpnpStream upnpStream;
         static final SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
@@ -193,6 +227,14 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
         }
 
+        private byte[] getDefaultIcon(String albumId) {
+            if(albumId.contains(".")) {
+                albumId = albumId.substring(0, albumId.indexOf("."));
+            }
+            MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumId);
+            return MusixMateApp.getInstance().getDefaultNoCoverart(tag);
+        }
+
         /**
          * If Keep-Alive is disabled, attaches "Connection: close" header to the response
          * and closes the connection after the response being sent.
@@ -223,15 +265,40 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
                     ContentHolder contentHolder = handleUPnpStream(request, data);
                     DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), contentHolder.statusCode, Unpooled.wrappedBuffer(contentHolder.content));
                     response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType);
-                    for(String key: contentHolder.headers.keySet()) {
+                    for (String key : contentHolder.headers.keySet()) {
                         response.headers().set(AsciiString.of(key), contentHolder.headers.get(key));
                     }
                     sendAndCleanupConnection(ctx, request, response);
+                }else if (uri.startsWith("/album/")) {
+                        ContentHolder contentHolder = handleAlbumart(request, uri);
+                        DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), contentHolder.statusCode, Unpooled.wrappedBuffer(contentHolder.content));
+                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType);
+                        for(String key: contentHolder.headers.keySet()) {
+                            response.headers().set(AsciiString.of(key), contentHolder.headers.get(key));
+                        }
+                        sendAndCleanupConnection(ctx, request, response);
                 }else {
                     // if not upnp stream
                     sendForbidden(ctx, request);
                 }
             }
+        }
+
+        private ContentHolder handleAlbumart(FullHttpRequest request, String uri) {
+            String albumId = uri.substring("/album/".length());
+            try {
+
+                String path = CoverArtProvider.COVER_ARTS + albumId;
+                File pathFile = new File(coverartDir, path);
+                if (pathFile.exists()) {
+                    Buffer buffer = FileUtils.getBytes(pathFile);
+                    return new ContentHolder(AsciiString.of(TYPE_IMAGE_PNG), HttpResponseStatus.OK , buffer.readByteArray());
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "lookupAlbumArt: - not found " + uri, e);
+            }
+
+            return new ContentHolder(AsciiString.of(TYPE_IMAGE_JPEG), HttpResponseStatus.OK, getDefaultIcon(albumId));
         }
 
         private  ContentHolder handleUPnpStream(FullHttpRequest request, byte[] bodyBytes) {

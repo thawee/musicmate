@@ -7,14 +7,10 @@ import org.jupnp.model.Namespace;
 import org.jupnp.model.message.UpnpHeaders;
 import org.jupnp.model.message.header.UpnpHeader;
 import org.jupnp.model.meta.Device;
-import org.jupnp.model.meta.RemoteDevice;
 import org.jupnp.model.meta.RemoteDeviceIdentity;
 import org.jupnp.model.meta.Service;
 import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDAServiceType;
-import org.jupnp.registry.DefaultRegistryListener;
-import org.jupnp.registry.Registry;
-import org.jupnp.registry.RegistryListener;
 import org.jupnp.transport.spi.NetworkAddressFactory;
 import org.jupnp.transport.spi.StreamClient;
 import org.jupnp.transport.spi.StreamServer;
@@ -23,10 +19,10 @@ import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
 import apincer.android.mmate.dlna.transport.JLHStreamServerImpl;
+import apincer.android.mmate.dlna.transport.NettyStreamServerImpl;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
-import apincer.android.mmate.dlna.transport.StreamServerImpl;
 
 public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     public static final int STREAM_SERVER_PORT = 49152; //2869;
@@ -50,8 +46,8 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
        // return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-      //  return new StreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-          return new JLHStreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+        return new NettyStreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+     //     return new JLHStreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
 
     }
 

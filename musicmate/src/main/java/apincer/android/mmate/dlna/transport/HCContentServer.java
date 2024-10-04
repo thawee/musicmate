@@ -81,18 +81,17 @@ public class HCContentServer  {
             @Override
             public void run() {
                 try {
-                    Log.d(TAG, "Starting HttpCore5 content server: " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
+                    Log.v(TAG, "Running HttpCore5 Content Server: " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
 
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     IOReactorConfig config = IOReactorConfig.custom()
-                            //.setIoThreadCount(Runtime.getRuntime().availableProcessors())
+                            .setIoThreadCount(2) // for small memory and 10 tps
                             .setSoTimeout(Timeout.ofSeconds(30))
                             .setTcpNoDelay(true) //to reduce latency
                             .setSoKeepAlive(true)
-                            .setSelectInterval(TimeValue.ofMilliseconds(1000))
-                           // .setSndBufSize(8388608) // 8388608; // 8 MB for file 10 - 100 MB
-                            .setSndBufSize(16384) // 16 KB receive buffer
-                            .setRcvBufSize(8192)
+                            .setSelectInterval(TimeValue.ofSeconds(1))
+                            .setSndBufSize(65536) // 64 KB receive buffer, for 100 MB file
+                            .setRcvBufSize(65536)
                             .setSoReuseAddress(true)
                             .build();
 
@@ -138,7 +137,7 @@ public class HCContentServer  {
 
     synchronized public void stop() {
         if(server != null) {
-            Log.d(TAG, "Shutting down httpcore5 content server");
+            Log.v(TAG, "Shutting down HttpCore5 Content Server");
             server.initiateShutdown();
             try {
                 server.awaitShutdown(TimeValue.ofSeconds(3));

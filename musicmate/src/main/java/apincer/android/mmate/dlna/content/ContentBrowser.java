@@ -16,8 +16,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import apincer.android.mmate.dlna.MediaServerConfiguration;
 import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.dlna.transport.HCContentServer;
+import apincer.android.mmate.dlna.transport.NettyStreamServerImpl;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 
@@ -77,7 +79,8 @@ public abstract class ContentBrowser {
         String uri = key+".png";
         return URI.create("http://"
                 + MediaServerSession.getIpAddress() + ":"
-                + HCContentServer.SERVER_PORT + "/album/" + uri);
+               // + HCContentServer.SERVER_PORT + "/album/" + uri);
+                + MediaServerConfiguration.STREAM_SERVER_PORT + "/album/" + uri);
     }
 
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
