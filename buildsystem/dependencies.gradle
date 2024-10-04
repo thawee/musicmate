@@ -365,6 +365,7 @@ deps.netty_codec_http = 'io.netty:netty-codec-http:4.1.114.Final'
 deps.filepicker = 'io.github.tutorialsandroid:filepicker:9.2.5'
 // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 deps.okhttp3 = 'com.squareup.okhttp3:okhttp:4.12.0'
+deps.okio = 'com.squareup.okio:okio:3.9.1'
 deps.jtransforms='com.github.wendykierp:JTransforms:3.1'
 ext.deps = deps
 

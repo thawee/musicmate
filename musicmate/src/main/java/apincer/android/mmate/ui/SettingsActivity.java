@@ -61,6 +61,8 @@ public class SettingsActivity extends AppCompatActivity {
                 } else {
                     MediaServerService.stopMediaServer(MusixMateApp.getInstance());
                 }
+            }else if(Constants.PREF_CLEAR_CACHED.equals(s)) {
+                MusixMateApp.getInstance().clearCaches();
             }
         }
 

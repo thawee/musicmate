@@ -11,11 +11,16 @@ import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
 
 import androidx.documentfile.provider.DocumentFile;
 import apincer.android.library.R;
+import okio.Buffer;
+import okio.Okio;
+import okio.Source;
 
 import static android.provider.DocumentsContract.buildDocumentUri;
 import static android.provider.DocumentsContract.getTreeDocumentId;
@@ -272,5 +277,40 @@ public class FileUtils {
             }
         }
         return "";
+    }
+
+    /**
+     * Delete the directory and all sub content.
+     *
+     * @param directory The absolute directory path. For example:
+     *             <i>mnt/sdcard/NewFolder/</i>.
+     */
+    public static void deleteDirectory(File directory) {
+
+        // If the directory exists then delete
+        if (directory.exists()) {
+            File[] files = directory.listFiles();
+            if (files == null) {
+                return;
+            }
+            // Run on all sub files and folders and delete them
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].isDirectory()) {
+                    deleteDirectory(files[i]);
+                } else {
+                    files[i].delete();
+                }
+            }
+        }
+        directory.delete();
+    }
+
+    public static Buffer getBytes(File file) {
+        try (Source source = Okio.source(file); Buffer buffer = new Buffer()) {
+            buffer.writeAll(source);
+            return buffer;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

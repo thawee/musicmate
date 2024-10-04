@@ -186,7 +186,7 @@
     <string name="label_current">Current</string>
     <string name="label_default_reader">Default Reader</string>
     <string name="label_ffmpeg_reader">FFMpeg Reader</string>
-    <string name="about_encoding_file">Encode Audio: FLAC (Lossless), MPEG (Lossy)</string>
+    <string name="about_encoding_file">Encode Audio: Recommended FLAC (Lossless)</string>
     <string name="label_resolutions">Resolutions</string>
     <string name="label_lossy">HQ</string>
     <string name="label_Lossless">Hi-FI</string>

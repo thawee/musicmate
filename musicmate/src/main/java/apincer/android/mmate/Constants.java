@@ -107,6 +107,8 @@ public final class Constants {
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
+    public static final String PREF_CLEAR_CACHED = "preference_clear_cached";
+
     static {
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");

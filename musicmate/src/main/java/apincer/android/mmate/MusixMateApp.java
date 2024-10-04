@@ -18,6 +18,7 @@ import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import java.util.Map;
 import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.dlna.MediaServerService;
+import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -35,6 +37,7 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
+import apincer.android.utils.FileUtils;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
 public class MusixMateApp extends Application {
@@ -301,5 +304,16 @@ Provides the SQLite Helper Object among the application
 
     public SearchCriteria getCriteria() {
         return criteria;
+    }
+
+    public void clearCaches() {
+        File dir = getApplicationContext().getExternalCacheDir();
+        // /tmp/
+       // CoverArtProvider.COVER_ARTS
+        // /Icons/
+        FileUtils.deleteDirectory(new File(dir, "/tmp/"));
+        FileUtils.deleteDirectory(new File(dir, "/Icons/"));
+        FileUtils.deleteDirectory(new File(dir, CoverArtProvider.COVER_ARTS));
+       // ToastHelper.showActionMessage(getApplicationContext(), "", "");
     }
 }

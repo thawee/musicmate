@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,13 +48,14 @@ import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import okio.Buffer;
 
 public class HCContentServer  {
     private final Context context;
     private static final String TAG = "HCContentServer";
 
     private HttpAsyncServer server;
-    private static LruCache<String, ByteBuffer> transCodeCached;
+    private static LruCache<String, Buffer> transCodeCached;
     public static final int SERVER_PORT = 8089;
 
     public HCContentServer(Context context) {
@@ -63,9 +63,9 @@ public class HCContentServer  {
         int cacheSize = 1024 * 1024 * 64; // 64 MB cache
         transCodeCached = new LruCache<>(cacheSize) {
             @Override
-            protected int sizeOf(String key, ByteBuffer data) {
+            protected int sizeOf(String key, Buffer data) {
                 // The cache size will be measured in bytes
-                return data.capacity();
+                return (int) data.size();
             }
         };
     }
@@ -85,15 +85,17 @@ public class HCContentServer  {
 
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     IOReactorConfig config = IOReactorConfig.custom()
-                            .setSelectInterval(TimeValue.ofMilliseconds(100))
+                            //.setIoThreadCount(Runtime.getRuntime().availableProcessors())
                             .setSoTimeout(Timeout.ofSeconds(30))
                             .setTcpNoDelay(true) //to reduce latency
-                            .setSndBufSize(8388608) // 8388608; // 8 MB for file 10 - 100 MB
+                            .setSoKeepAlive(true)
+                            .setSelectInterval(TimeValue.ofMilliseconds(1000))
+                           // .setSndBufSize(8388608) // 8388608; // 8 MB for file 10 - 100 MB
+                            .setSndBufSize(16384) // 16 KB receive buffer
                             .setRcvBufSize(8192)
                             .setSoReuseAddress(true)
-                            .setSoKeepAlive(true)
-                           // .setSoLinger(TimeValue.ofSeconds(60)) // auto close connection after send response 1 min
                             .build();
+
                     server = H2ServerBootstrap.bootstrap()
                            /* .setExceptionCallback(e -> Log.w(TAG, "Exception: "+e.getMessage()))
                             .setStreamListener(new Http1StreamListener() {
@@ -342,18 +344,22 @@ public class HCContentServer  {
                 if (new File(getFilePath()).exists()) {
                     if(transcode) {
                         // transcode to lpcm before send to
-                        ByteBuffer buff = transCodeCached.get(resId);
+                        Buffer buff = transCodeCached.get(resId);
                         if(buff == null) {
-                            byte[] data = FFMpegHelper.transcodeFile(context, getFilePath());
-                            transCodeCached.put(resId, ByteBuffer.wrap(data));
-                            result = AsyncEntityProducers.create(data, contentType);
+                            Buffer data = FFMpegHelper.transcodeFile(context, getFilePath());
+                            if(data != null) {
+                                transCodeCached.put(resId, data);
+                                result = AsyncEntityProducers.create(data.readByteArray(), contentType);
+                            }
                         }else {
-                            result = AsyncEntityProducers.create(buff.array(), contentType);
+                            result = AsyncEntityProducers.create(buff.readByteArray(), contentType);
                         }
                     }else {
                         // if not found return null
                         File file = new File(getFilePath());
                         result = AsyncEntityProducers.create(file, contentType);
+                      //  Buffer buff = FileUtils.getBytes(new File(getFilePath()));
+                       // result = AsyncEntityProducers.create(buff.readByteArray(), contentType);
                     }
                 }
             } else if (content != null) {

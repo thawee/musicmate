@@ -3,9 +3,11 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.Constants.ARTIST_SEP;
 import static apincer.android.mmate.Constants.ARTIST_SEP_SPACE;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_NONE;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
+import static apincer.android.mmate.Constants.IND_RESAMPLED_INVALID;
 import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_NONE;
+import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
+import static apincer.android.mmate.Constants.IND_UPSCALED_INVALID;
 import static apincer.android.mmate.Constants.NONE;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
@@ -160,9 +162,12 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("drScore",0).or()
-                    .eq("upscaledInd", IND_UPSCALED_NONE).or()
-                    .eq("resampledInd", IND_RESAMPLED_NONE);
+           // builder.where().eq("drScore",0).or()
+            builder.where().notIn("upscaledInd", IND_UPSCALED_GOOD,IND_UPSCALED_BAD,IND_UPSCALED_INVALID).or()
+                    .isNull("upscaledInd").or()
+                    .notIn("resampledInd", IND_RESAMPLED_GOOD,IND_RESAMPLED_BAD,IND_RESAMPLED_INVALID).or()
+                    .isNull("resampledInd").and()
+                    .notIn("audioEncoding", "aac", "mpeg");
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
@@ -170,15 +175,16 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     }
 
     //@Query("Select * from tag where fileSizeRatioaudioBitRate/(audioBitsDepth*audioSampleRate*audioChannels) <= 0.36")
-    public List<MusicTag> findMyBrokenSongs()   {
+    public List<MusicTag> findMyUnsatisfiedSongs()   {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
                     .eq("upscaledInd", IND_UPSCALED_BAD).or()
-                    .eq("upscaledInd", "1").or()
-                    .eq("resampledInd", "1").or()
-                    .eq("resampledInd", IND_RESAMPLED_BAD);
+                    .eq("upscaledInd", IND_UPSCALED_INVALID).or()
+                    .eq("resampledInd", IND_RESAMPLED_INVALID).or()
+                    .eq("resampledInd", IND_RESAMPLED_BAD).or()
+                    .in("audioEncoding", "aac", "mpeg");
           //  String bad = "mediaQuality = '"+Constants.QUALITY_BAD+"' ";
          //   builder.where().raw(bad+" OR (fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24))) order by title");
            return builder.orderBy("title", true).query();
@@ -493,29 +499,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    /*
-    public List<String> getArtistForGrouping(String grouping) {
-        try {
-            List<String> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.selectRaw("distinct artist");
-            if(EMPTY.equalsIgnoreCase(grouping)) {
-                builder.where().isNull("grouping");
-            }else {
-                builder.where().eq("grouping", grouping);
-            }
-            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            for(String[] vals : results.getResults()) {
-                list.add(vals[0]);
-            }
-            return list;
-        } catch (SQLException e) {
-            Log.e(TAG,"getArtistForGrouping: "+e.getMessage());
-            return EMPTY_STRING_LIST;
-        }
-    } */
-
     public List<MusicTag> findByGroupingAndArtist(String grouping, String artist)  {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
@@ -714,60 +697,4 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
         return null;
     }
-
-    /*
-    public List<MusicTag> findPLSFUNSong() {
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            Where<MusicTag, ?> where = builder.where();
-            where.eq("genre", "Luk Thung").or().eq("genre", "Mor Lum");
-            return builder.groupBy("title").groupBy("artist").query();
-        } catch (SQLException e) {
-            return EMPTY_LIST;
-        }
-    }
-
-    public List<MusicTag> findPLSHappySong() {
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            Where<MusicTag, ?> where = builder.where();
-            where.ne("genre", "Luk Thung").and().ne("genre", "Mor Lum");
-            where.and().ne("grouping", "Lounge").and().ne("grouping", "Acoustic");
-            where.and().ne("grouping", "Thai Lounge").and().ne("grouping", "Thai Acoustic");
-          //  where.raw("genre <> 'Luk Thung' or genre <> 'Mor Lum') and (grouping = 'Thai' or grouping = 'English')");
-            return builder.groupBy("title").groupBy("artist").query();
-        } catch (SQLException e) {
-            return EMPTY_LIST;
-        }
-    }
-
-    public List<MusicTag> findPLSChilloutSong() {
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            Where<MusicTag, ?> where = builder.where();
-            where.ne("genre", "Luk Thung").and().ne("genre", "Mor Lum");
-            where.and().ne("grouping", "Lounge").and().ne("grouping", "Acoustic");
-            where.and().ne("grouping", "Thai Lounge").and().ne("grouping", "Thai Acoustic");
-            //  where.raw("genre <> 'Luk Thung' or genre <> 'Mor Lum') and (grouping = 'Thai' or grouping = 'English')");
-            return builder.groupBy("title").groupBy("artist").query();
-        } catch (SQLException e) {
-            return EMPTY_LIST;
-        }
-    }
-
-    public List<MusicTag> findPLSRelaxedSong() {
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            Where<MusicTag, ?> where = builder.where();
-            where.eq("grouping", "Lounge").or().eq("grouping", "Acoustic");
-            where.or().eq("grouping", "Thai Lounge").or().eq("grouping", "Thai Acoustic");
-            return builder.groupBy("title").groupBy("artist").query();
-        } catch (SQLException e) {
-            return EMPTY_LIST;
-        }
-    } */
 }

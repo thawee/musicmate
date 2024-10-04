@@ -738,7 +738,7 @@ public class StringUtils {
     }
 
     public static String formatArtists(String artist) {
-        String []oldSeps = {";","&", ",", "-", "/"};
+        String []oldSeps = {";","&", ","}; //, "-", "/"};
 
         artist = trimToEmpty(artist);
         for(String sep: oldSeps) {

@@ -63,7 +63,7 @@ public class MusicMateExecutors {
                      }
                  }},
                 new ThreadPoolExecutor(2, 4,600L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {},
-                new ThreadPoolExecutor(2, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+                new ThreadPoolExecutor(1, 1,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                     protected void afterExecute(Runnable r, Throwable t) {
                         try {
                             Thread.sleep(20); // wait 0.2 second

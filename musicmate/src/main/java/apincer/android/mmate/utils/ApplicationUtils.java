@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.webkit.MimeTypeMap;
 
 import androidx.fragment.app.FragmentActivity;
@@ -28,6 +29,7 @@ import apincer.android.mmate.provider.MusicFileProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.TagsActivity;
+import de.vdheide.mp3.ID3v2;
 
 public class ApplicationUtils {
 
@@ -225,5 +227,24 @@ public class ApplicationUtils {
         }
 
         return null;
+    }
+
+    public static String getDeviceDetails() {
+        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+".";
+    }
+
+    public static String getVersionNumber(Context context) {
+        try {
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException ignored) {
+
+        }
+        return "1";
+    }
+
+
+
+    public static String getDeviceModel() {
+        return StringUtils.trimToEmpty(Build.MODEL);
     }
 }

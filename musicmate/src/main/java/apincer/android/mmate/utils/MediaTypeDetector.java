@@ -1,58 +1,28 @@
 package apincer.android.mmate.utils;
 
-import org.jupnp.util.MimeType;
-
-import java.util.HashMap;
-import java.util.Map;
-
+import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.utils.FileUtils;
 
 public class MediaTypeDetector {
     private static final String defaultType = "application/octet-stream";
-    private static final Map<String, String> contentTypes = new HashMap<>();
-    static  {
-        contentTypes.put("aif", "audio/x-aiff");
-        contentTypes.put("aifc", "audio/x-aiff");
-        contentTypes.put("aiff", "audio/x-aiff");
-        contentTypes.put("aac", "audio/aac");
-        contentTypes.put("flac", "audio/x-flac");
-        contentTypes.put("mp3", "audio/x-mpeg");
-        contentTypes.put("wav", "audio/x-wav");
-        contentTypes.put("wma", "audio/x-ms-wma");
-        contentTypes.put("m4a", "audio/x-mp4");
-        contentTypes.put("wave", "audio/x-wav");
-        contentTypes.put("jpg", "image/jpeg");
-        contentTypes.put("jpeg", "image/jpeg");
-        contentTypes.put("png", "image/png");
-    }
-    public static MimeType getMimeType(MusicTag tag) {
-            return new MimeType("audio", getContentType(tag));
-    }
 
     public static String getContentType(MusicTag tag) {
-        if(MusicTagUtils.isAIFFile(tag)) {
-            return "x-aiff";
+        if(MediaServerSession.isTransCoded(tag)) {
+            return "audio/mpeg";
+        }else if(MusicTagUtils.isAIFFile(tag)) {
+            return "audio/x-aiff";
         }else  if(MusicTagUtils.isMPegFile(tag)) {
-            return "mpeg";
+            return "audio/mpeg";
         }else if(MusicTagUtils.isFLACFile(tag)) {
-            return "flac";
+            return "audio/x-flac";
         }else if(MusicTagUtils.isALACFile(tag)) {
-            return "mp4";
+            return "audio/x-mp4";
         }else if(MusicTagUtils.isMp4File(tag)) {
-            return "mp4";
+            return "audio/x-mp4";
         }else  if(MusicTagUtils.isWavFile(tag)) {
-            return "wave";
+            return "audio/x-wav";
         }else {
-            return tag.getAudioEncoding();
+            return "audio/*"; //tag.getAudioEncoding();
         }
-    }
-
-    public static String getContentType(String filename) {
-        String ext = FileUtils.getExtension(filename);
-        if(contentTypes.containsKey(ext)) {
-            return contentTypes.get(ext);
-        }
-        return defaultType;
     }
 }

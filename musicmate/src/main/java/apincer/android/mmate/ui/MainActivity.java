@@ -1153,10 +1153,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-				//showPlayingSongFAB();
-            }
+                @Override
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                    //showPlayingSongFAB();
+                }
             });
 
         actionModeCallback = new ActionModeCallback();
@@ -1452,26 +1452,30 @@ public class MainActivity extends AppCompatActivity {
             for(MusicTag tag: selections) {
                 MusicMateExecutors.execute(() -> {
                     try {
-                        statusList.put(tag, "Analysing");
+                        statusList.put(tag, "Evaluating");
                         runOnUiThread(itemsView::invalidateViews);
                         //calculate track RG
                         //FFMPegReader.measureDRandStat(tag);
                         MusicAnalyser analyser = new MusicAnalyser();
-                        if(analyser.analyst(tag)) {
-                            tag.setDynamicRange(analyser.getDynamicRange());
-                            tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
-                            tag.setUpscaledInd(analyser.getUpscaled());
-                            tag.setResampledInd(analyser.getResampled());
+                        if(analyser.isSupported(tag)) {
+                            if (analyser.analyst(tag)) {
+                                tag.setDynamicRange(analyser.getDynamicRange());
+                                tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
+                                tag.setUpscaledInd(analyser.getUpscaled());
+                                tag.setResampledInd(analyser.getResampled());
 
-                            //write quality to file
-                            FFMpegHelper.writeTagQualityToFile(MainActivity.this, tag);
-                            // update MusicMate Library
-                            TagRepository.saveTag(tag);
+                                //write quality to file
+                                FFMpegHelper.writeTagQualityToFile(MainActivity.this, tag);
+                                // update MusicMate Library
+                                TagRepository.saveTag(tag);
+                            }
+
+                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
+                            EventBus.getDefault().postSticky(message);
+                            statusList.put(tag, "Done");
+                        }else {
+                            statusList.put(tag, "Skip");
                         }
-
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
-                        EventBus.getDefault().postSticky(message);
-                        statusList.put(tag, "Done");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));

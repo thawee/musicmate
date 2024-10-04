@@ -8,7 +8,6 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
 import static apincer.android.mmate.utils.StringUtils.toDurationSeconds;
-import static apincer.android.mmate.utils.StringUtils.toInt;
 import static apincer.android.mmate.utils.StringUtils.toLong;
 import static apincer.android.mmate.utils.StringUtils.toUpperCase;
 import static apincer.android.mmate.utils.StringUtils.trim;

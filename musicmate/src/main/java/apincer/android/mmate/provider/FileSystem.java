@@ -3,17 +3,13 @@ package apincer.android.mmate.provider;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Environment;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.DocumentFileUtils;
-import com.anggrayudi.storage.file.StorageId;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;

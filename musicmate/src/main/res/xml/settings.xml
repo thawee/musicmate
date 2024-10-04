@@ -61,10 +61,15 @@
     android:defaultValue="true"/> -->
     </PreferenceCategory>
 
-    <!--
     <PreferenceCategory
         android:title="@string/preferences_sub_others"
-        android:summary="Others Settings.">
+        android:summary="Misc. Settings">
+        <SwitchPreferenceCompat
+            android:key="preference_clear_cached"
+            android:summary="Clear cache and temp files."
+            android:title="Clear Cache"
+            android:defaultValue="false"/>
+        <!--
     <MultiSelectListPreference
         android:entries="@array/MetaDataEncodingNames"
         android:title="@string/MetaDataEncoding"
@@ -72,6 +77,6 @@
         android:summary="@string/MetaDataEncodingSummary"
         android:dialogTitle="@string/MetaDataEncoding"
         android:entryValues="@array/MetaDataEncodingValues"
-        android:defaultValue="@array/MetaDataEncodingValues"/>
-    </PreferenceCategory> -->
+        android:defaultValue="@array/MetaDataEncodingValues"/> -->
+    </PreferenceCategory>
 </PreferenceScreen>

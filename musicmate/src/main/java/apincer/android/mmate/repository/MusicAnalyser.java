@@ -13,6 +13,7 @@ import android.util.Log;
 
 import org.jtransforms.fft.DoubleFFT_1D;
 
+import java.io.EOFException;
 import java.io.File;
 import java.util.Arrays;
 
@@ -44,8 +45,12 @@ public class MusicAnalyser {
     private String upscaled = IND_UPSCALED_NONE;
     private String resampled = IND_RESAMPLED_NONE;
 
+    public boolean isSupported(MusicTag tag) {
+        return MusicTagUtils.isFLACFile(tag);
+    }
+
     public boolean analyst(MusicTag tag) {
-        if(!MusicTagUtils.isFLACFile(tag)) return  false;
+        if(!isSupported(tag)) return false;
 
         // Decode input FLAC file
         File file = new File(tag.getPath());
@@ -76,8 +81,8 @@ public class MusicAnalyser {
             // System.out.println("Is the audio resampled? " + resampled);
 
             return true;
-        }catch (DataFormatException e) {
-            Log.e(TAG, "analyst", e);
+        }catch (IllegalArgumentException | EOFException | DataFormatException e) {
+            Log.w(TAG, "analyst: "+ e.getMessage());
             upscaled = IND_UPSCALED_INVALID;
             resampled = IND_RESAMPLED_INVALID;
             dynamicRangeScore = 0.00;
@@ -155,15 +160,8 @@ public class MusicAnalyser {
                 }
             }
 
-            // Print min and max sample values
-           // System.out.println("Min Sample: " + minSample);
-           // System.out.println("Max Sample: " + maxSample);
-
             if (samplesProcessed) {
                 dynamicRange = 20 * Math.log10((double) maxSample / minSample);
-           //     System.out.println("Dynamic Range: " + dynamicRange + " dB");
-           // } else {
-            //    System.out.println("Error: No valid samples processed or minSample is zero.");
             }
     }
 
@@ -205,11 +203,6 @@ public class MusicAnalyser {
                 dynamicRangeScore = drScore[i];
             }
         }
-
-        //System.out.println("Dynamic Range Score: " + Arrays.toString(drScore));
-       // System.out.println("Peak Pressure: " + Arrays.toString(peakPressure));
-       // System.out.println("RMS Pressure: " + Arrays.toString(rmsPressure));
-
     }
 
     private static double getSample(int sample, int sampleFormat) {

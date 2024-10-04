@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -42,6 +43,7 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
+import okhttp3.OkHttpClient;
 
 public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHolder> {
     private SearchCriteria criteria;
@@ -444,7 +446,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
-        ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
+       // ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
+        ImageLoader imageLoader = new ImageLoader.Builder(holder.mContext)
+                .crossfade(true)
+                .okHttpClient(
+                        new OkHttpClient.Builder()
+                                .connectTimeout(10, TimeUnit.SECONDS)
+                                .readTimeout(10, TimeUnit.SECONDS)
+                                .build()
+                )
+            .build();
 
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();

@@ -220,7 +220,7 @@ public class TagRepository {
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-                    list = MusixMateApp.getInstance().getOrmLite().findMyBrokenSongs();
+                    list = MusixMateApp.getInstance().getOrmLite().findMyUnsatisfiedSongs();
                 } else if (Constants.TITLE_TO_ANALYST_DR.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {

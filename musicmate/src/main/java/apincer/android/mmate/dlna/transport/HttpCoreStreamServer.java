@@ -66,6 +66,8 @@ import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.utils.FileUtils;
+import okio.Buffer;
 
 public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurationImpl> {
     private final Context context;
@@ -73,7 +75,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
     private HttpAsyncServer server;
     final protected StreamServerConfigurationImpl configuration;
     protected int localPort;
-    private static LruCache<String, ByteBuffer> transCodeCached;
+    private static LruCache<String, Buffer> transCodeCached;
 
     public HttpCoreStreamServer(Context context, StreamServerConfigurationImpl configuration) {
         this.context = context;
@@ -81,9 +83,9 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
         int cacheSize = 1024 * 1024 * 10 * 3; // 2-3 file 15 MB each file
         transCodeCached = new LruCache<>(cacheSize) {
             @Override
-            protected int sizeOf(String key, ByteBuffer data) {
+            protected int sizeOf(String key, Buffer data) {
                 // The cache size will be measured in bytes
-                return data.capacity();
+                return (int) data.size();
             }
         };
         this.localPort = configuration.getListenPort();
@@ -373,18 +375,21 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                 if (new File(getFilePath()).exists()) {
                     if(transcode) {
                         // transcode to lpcm before send to
-                        ByteBuffer buff = transCodeCached.get(resId);
+                        Buffer buff = transCodeCached.get(resId);
                         if(buff == null) {
-                            byte[] data = FFMpegHelper.transcodeFile(context, getFilePath());
-                            transCodeCached.put(resId, ByteBuffer.wrap(data));
-                            result = AsyncEntityProducers.create(data, contentType);
+                            Buffer data = FFMpegHelper.transcodeFile(context, getFilePath());
+                            if(data != null) {
+                                transCodeCached.put(resId, data);
+                                result = AsyncEntityProducers.create(data.readByteArray(), contentType);
+                            }
                         }else {
-                            result = AsyncEntityProducers.create(buff.array(), contentType);
+                            result = AsyncEntityProducers.create(buff.readByteArray(), contentType);
                         }
                     }else {
                         // if not found return null
-                        File file = new File(getFilePath());
-                        result = AsyncEntityProducers.create(file, contentType);
+                        Buffer buffer = FileUtils.getBytes(new File(getFilePath()));
+                       // File file = new File(getFilePath());
+                        result = AsyncEntityProducers.create(buffer.readByteArray(), contentType);
                     }
                 }
             } else if (content != null) {

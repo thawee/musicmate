@@ -96,6 +96,7 @@ public class FileRepository {
             if(coverArtFile!=null) {
                 // check directory images
                 FileSystem.copy(coverArtFile, targetFile);
+               // okio.FileSystem.SYSTEM.copy(coverArtFile, targetFile.toPath());
             }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
                 FFMpegHelper.extractCoverArt(path, targetFile);
             }

@@ -54,7 +54,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 
@@ -66,6 +66,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
     final protected StreamServerConfigurationImpl configuration;
     private final HCContentServer contentServer;
+   // private final NettyContentServer contentServer;
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -73,6 +74,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         this.configuration = configuration;
         this.localPort = configuration.getListenPort();
         this.contentServer = new HCContentServer(context);
+       // this.contentServer = new NettyContentServer(context);
     }
 
     public StreamServerConfigurationImpl getConfiguration() {
@@ -95,10 +97,10 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
                             .option(ChannelOption.TCP_NODELAY, true) // true - great for low latency
                             .option(ChannelOption.SO_KEEPALIVE, true)
                             .option(ChannelOption.SO_BACKLOG, 128)
-                            .option(ChannelOption.SO_RCVBUF, 8192) // 8 kb
-                            .option(ChannelOption.SO_SNDBUF, 8192)  // 8 kb
-                            .option(ChannelOption.SO_TIMEOUT, 3000)
-                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                            .option(ChannelOption.SO_RCVBUF, 8192) // 8 KB receive buffer, 8192 is default
+                            .option(ChannelOption.SO_SNDBUF, 16384) // 16 KB receive buffer
+                            .option(ChannelOption.SO_TIMEOUT, 3000) // 3 sec
+                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) // 3 sec
                             .childHandler(new HttpServerInitializer(router));
                     Channel ch = b.bind(localPort).sync().channel();
                     ch.closeFuture().sync();
@@ -363,8 +365,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         public void initChannel(SocketChannel ch) {
             ChannelPipeline p = ch.pipeline();
             p.addLast(new HttpServerCodec());
-            p.addLast(new HttpObjectAggregator(2 * 1024 * 1024)); // 2 MB max  //Integer.MAX_VALUE));
-          //  p.addLast(new ChunkedWriteHandler());
+            p.addLast(new HttpObjectAggregator(5 * 1024 * 1024)); // 5 MB max  //Integer.MAX_VALUE));
+            p.addLast(new IdleStateHandler(60, 30, 0));
             p.addLast(new HttpServerHandler(router.getProtocolFactory(), router.getConfiguration().getNamespace().getBasePath().getPath()));
         }
     }

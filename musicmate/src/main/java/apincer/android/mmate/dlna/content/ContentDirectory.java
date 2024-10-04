@@ -28,6 +28,7 @@ import org.jupnp.support.model.SortCriterion;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.TimerTask;
 
 import apincer.android.mmate.utils.StringUtils;
 
@@ -38,34 +39,90 @@ import apincer.android.mmate.utils.StringUtils;
  */
 @UpnpService(
         serviceId = @UpnpServiceId("ContentDirectory"),
-        serviceType = @UpnpServiceType(value = "ContentDirectory"))
+        serviceType = @UpnpServiceType(value = "ContentDirectory", version = 1))
 @UpnpStateVariables({
         @UpnpStateVariable(name = "A_ARG_TYPE_ObjectID", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_Result", sendEvents = false, datatype = "string"),
+      //  @UpnpStateVariable(name = "A_ARG_TYPE_SearchCriteria",sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_BrowseFlag", sendEvents = false, datatype = "string", allowedValuesEnum = BrowseFlag.class),
         @UpnpStateVariable(name = "A_ARG_TYPE_Filter", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_SortCriteria", sendEvents = false, datatype = "string"),
         @UpnpStateVariable(name = "A_ARG_TYPE_Index", sendEvents = false, datatype = "ui4"),
         @UpnpStateVariable(name = "A_ARG_TYPE_Count", sendEvents = false, datatype = "ui4"),
         @UpnpStateVariable(name = "A_ARG_TYPE_UpdateID", sendEvents = false, datatype = "ui4"),
-        @UpnpStateVariable(name = "A_ARG_TYPE_URI", sendEvents = false, datatype = "uri")})
+        @UpnpStateVariable(
+                name = "A_ARG_Type_TransferID",
+                sendEvents = false,
+                datatype = "uri"),
+        @UpnpStateVariable(
+                name = "A_ARG_Type_TransferStatus",
+                sendEvents = false,
+                datatype = "string",
+                allowedValuesEnum = TransferStatus.class),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_TransferLength",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_TransferTotal",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_TagValueList",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_URI",
+                sendEvents = false,
+                datatype = "uri"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_PosSecond",
+                sendEvents = false,
+                datatype = "ui4"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_CategoryType",
+                sendEvents = false,
+                datatype = "string"),
+        @UpnpStateVariable(
+                name = "A_ARG_TYPE_RID",
+                sendEvents = false,
+                datatype = "string")
+})
 public class ContentDirectory {
     private static final String TAG = "ContentDirectory";
+    private static final List<String> CAPS_SEARCH = List.of();
+    private static final List<String> CAPS_SORT = List.of("upnp:class", "dc:title", "dc:creator", "upnp:artist", "upnp:album", "upnp:genre");
+    private static final String CRLF = "\r\n";
+
+    private final Context context;
+
     @UpnpStateVariable(sendEvents = false)
     final CSV<String> searchCapabilities;
     @UpnpStateVariable(sendEvents = false)
     final CSV<String> sortCapabilities;
     final private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
             this);
-    private final Context context;
-    @UpnpStateVariable(defaultValue = "0", eventMaximumRateMilliseconds = 200)
+    @UpnpStateVariable(
+            sendEvents = true,
+            defaultValue = "0",
+            datatype = "ui4",
+            eventMaximumRateMilliseconds = 200)
     private final UnsignedIntegerFourBytes systemUpdateID = new UnsignedIntegerFourBytes(
             0);
 
     public ContentDirectory(Context context) {
+        TimerTask systemUpdateIdTask = new TimerTask() {
+            @Override
+            public void run() {
+                changeSystemUpdateID();
+            }
+        };
+        systemUpdateIdTask.run();
         this.context = context;
         this.searchCapabilities = new CSVString();
         this.sortCapabilities = new CSVString();
+        this.searchCapabilities.addAll(CAPS_SEARCH);
+        this.sortCapabilities.addAll(CAPS_SORT);
     }
 
     public Context getContext() {

@@ -6,60 +6,30 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
-import androidx.preference.PreferenceManager;
 
-import org.apache.commons.io.IOUtils;
 import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.UpnpServiceImpl;
-import org.jupnp.binding.annotations.AnnotationLocalServiceBinder;
-import org.jupnp.model.DefaultServiceManager;
-import org.jupnp.model.ValidationException;
-import org.jupnp.model.meta.DeviceDetails;
-import org.jupnp.model.meta.DeviceIdentity;
-import org.jupnp.model.meta.Icon;
 import org.jupnp.model.meta.LocalDevice;
-import org.jupnp.model.meta.LocalService;
-import org.jupnp.model.meta.ManufacturerDetails;
-import org.jupnp.model.meta.ModelDetails;
-import org.jupnp.model.types.DLNACaps;
-import org.jupnp.model.types.DLNADoc;
-import org.jupnp.model.types.UDADeviceType;
-import org.jupnp.model.types.UDN;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.registry.Registry;
-import org.jupnp.support.connectionmanager.ConnectionManagerService;
-import org.jupnp.support.model.Protocol;
-import org.jupnp.support.model.ProtocolInfo;
-import org.jupnp.support.model.ProtocolInfos;
 import org.jupnp.transport.Router;
-import org.jupnp.util.MimeType;
+import org.jupnp.transport.RouterException;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.dlna.transport.HCContentServer;
 import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.content.ContentDirectory;
 import apincer.android.mmate.dlna.android.AndroidRouter;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -83,18 +53,14 @@ import apincer.android.mmate.utils.StringUtils;
  */
 public class MediaServerService extends Service {
     private static final String TAG = "MediaServerService";
-    private static final int MIN_ADVERTISEMENT_AGE_SECONDS = 300;
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
-    private	static final DLNADoc[] DLNA_DOCS = new DLNADoc[] {new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
-    private	static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {"audio"}); // for audio only
-   // private static final DLNACaps SEC_CAP = new DLNACaps(new String[] {"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
-    public static final int LOCK_TIMEOUT = 5000;
     protected UpnpService upnpService;
+    protected LocalDevice mediaServerDevice;
     protected UpnpServiceConfiguration upnpServiceCfg;
     protected IBinder binder = new MediaServerServiceBinder();
-    private LocalService<ContentDirectory> contentDirectoryService;
+  //  private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
 
@@ -104,6 +70,10 @@ public class MediaServerService extends Service {
 
     public static void stopMediaServer(Application application) {
         application.stopService(new Intent(application, MediaServerService.class));
+    }
+
+    public boolean isMediaServerStarted() throws RouterException {
+        return upnpService != null && upnpService.getRouter().isEnabled();
     }
 
     /**
@@ -140,6 +110,7 @@ public class MediaServerService extends Service {
         return START_STICKY;
     }
 
+
     /**
      *
      */
@@ -164,15 +135,16 @@ public class MediaServerService extends Service {
                     super.shutdown(true);
                 }
             };
-
             upnpService.startup();
-
-            createMediaServerDevice();
+            mediaServerDevice = MediaServerDevice.createMediaServerDevice(getApplicationContext()); // createMediaServerDevice();
+            upnpService.getRegistry().addDevice(mediaServerDevice);
+            // send live notification
+            upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
             MediaServerService.this.initialized = true;
         }
     }
-
-    private void createMediaServerDevice() {
+/*
+    private LocalDevice createMediaServerDevice() {
         String versionName;
         String mediaServerUuid;
         // when the service starts, the preferences are initialized
@@ -216,21 +188,25 @@ public class MediaServerService extends Service {
             DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
 
             LocalDevice localServer = new LocalDevice(identity, new UDADeviceType("MediaServer"), msDetails, createDeviceIcons(), createMediaServerServices());
-            upnpService.getRegistry().addDevice(localServer);
+         //   upnpService.getRegistry().addDevice(localServer);
+            // send live notification
+           // upnpService.getProtocolFactory().createSendingNotificationAlive(localServer).run();
+            return localServer;
         } catch (ValidationException e) {
             Log.e(TAG, "Exception during device creation", e);
            // Log.e(TAG, "Exception during device creation Errors:" + e.getErrors());
             throw new IllegalStateException("Exception during device creation", e);
         }
-    }
+    } */
 
     private String getDeviceModel() {
         return StringUtils.trimToEmpty(Build.MODEL);
     }
 
+    /*
     private String getDeviceDetails() {
         return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+".";
-    }
+    } */
 
     private void showNotification() {
         ((MusixMateApp) getApplicationContext()).createGroupNotification();
@@ -240,13 +216,14 @@ public class MediaServerService extends Service {
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle("MusicMate ["+getDeviceModel()+"]")
+                .setContentTitle("MusicMate ["+ ApplicationUtils.getDeviceModel()+"]")
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setContentText(getApplicationContext().getString(R.string.media_server_name));
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
     }
 
+    /*
     private Icon[] createDeviceIcons() {
         ArrayList<Icon> icons = new ArrayList<>();
          icons.add(new Icon("image/png", 64, 64, 24, "musicmate.png", getIconAsByteArray("iconpng64.png")));
@@ -264,15 +241,16 @@ public class MediaServerService extends Service {
             Log.e("getIconAsByteArray", "cannot get icon file - "+iconFile, ex);
         }
         return null;
-    }
+    } */
 
+    /*
     private LocalService<?>[] createMediaServerServices() {
         List<LocalService<?>> services = new ArrayList<>();
         services.add(createServerConnectionManagerService());
         services.add(createContentDirectoryService());
       //  services.add(createMediaReceiverRegistrarService());
         return services.toArray(new LocalService[]{});
-    }
+    } */
 
     /*
     private LocalService<AbstractMediaReceiverRegistrarService> createMediaReceiverRegistrarService() {
@@ -292,7 +270,8 @@ public class MediaServerService extends Service {
         });
         return service;
     } */
-    
+
+    /*
     private LocalService<ConnectionManagerService>  createServerConnectionManagerService() {
         LocalService<ConnectionManagerService> service = new AnnotationLocalServiceBinder().read(ConnectionManagerService.class);
         final ProtocolInfos sourceProtocols = getSourceProtocolInfos();
@@ -312,7 +291,9 @@ public class MediaServerService extends Service {
 
         return service;
     }
+ */
 
+    /*
     private ProtocolInfos getSourceProtocolInfos() {
         return new ProtocolInfos(
                 //this one overlap all ???
@@ -380,8 +361,9 @@ public class MediaServerService extends Service {
               //  new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM"),
                // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
         );
-    }
+    } */
 
+    /*
     private LocalService<ContentDirectory> createContentDirectoryService() {
         contentDirectoryService = new AnnotationLocalServiceBinder().read(ContentDirectory.class);
         contentDirectoryService.setManager(new DefaultServiceManager<>(contentDirectoryService, null) {
@@ -397,7 +379,7 @@ public class MediaServerService extends Service {
             }
         });
         return contentDirectoryService;
-    }
+    } */
 
 
     @Override

@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
+import okio.Buffer;
 
 public class FFMpegHelper {
     private static final String TAG = "FFMpegHelper";
@@ -718,6 +719,10 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
            FFmpegSession session = FFmpegKit.execute(cmd);
 
            if (!ReturnCode.isCancel(session.getReturnCode())) {
+               File targetFile = new File(targetPath);
+               if(targetFile.exists()) {
+                   targetPath = targetPath.replace(".", "_001.");
+               }
                FileSystem.move(context, tmpTarget, targetPath);
                return true;
            }
@@ -727,7 +732,7 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
        return false;
     }
 
-    public static byte[] transcodeFile(Context context, String srcPath) {
+    public static Buffer transcodeFile(Context context, String srcPath) {
        // String options=" -vn -f s16be -ar 44100 -ac 2 "; // lpcm
        // String options=" -c:a pcm_s16le -ar 44100 -ac 2 ";
         String options=" -vn -f mp3 -ab 320000 "; // mp3
@@ -740,10 +745,12 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
         try {
             FFmpegSession session = FFmpegKit.execute(cmd);
             if (!ReturnCode.isCancel(session.getReturnCode())) {
-                FileInputStream in = new FileInputStream(tmpTarget);
+                return FileUtils.getBytes(new File(tmpTarget));
+              /*  FileInputStream in = new FileInputStream(tmpTarget);
+
                 byte[] data = IOUtils.toByteArray(in);
-                in.close();
-                return data;
+                in.close(); */
+              //  return data;
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

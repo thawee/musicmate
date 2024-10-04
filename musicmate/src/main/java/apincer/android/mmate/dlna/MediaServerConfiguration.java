@@ -22,6 +22,7 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
+import apincer.android.mmate.dlna.transport.JLHStreamServerImpl;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
@@ -49,7 +50,9 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
        // return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-        return new StreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+      //  return new StreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+          return new JLHStreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
+
     }
 
     @Override
