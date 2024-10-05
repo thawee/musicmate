@@ -455,7 +455,8 @@ public class StringUtils {
     }
 
     public static String formatAudioBitRate(long audioBitRate) {
-        if(audioBitRate>1000000) {
+        // show 1 MB as 1024 KB
+        if(audioBitRate>10000000) {
             double dBitrate = audioBitRate/1000000.00;
             return String.format(Locale.getDefault(), "%.1f Mbps", dBitrate);
         }else {

@@ -55,7 +55,7 @@ public class MusicAnalyser {
         // Decode input FLAC file
         File file = new File(tag.getPath());
         StreamInfo streamInfo;
-        int[][] samples;
+      //  int[][] samples;
         try (FlacDecoder dec = new FlacDecoder(file)) {
             // Handle metadata header blocks
             while (dec.readAndHandleMetadataBlock() != null) ;
@@ -63,6 +63,12 @@ public class MusicAnalyser {
             if (streamInfo.sampleDepth % 8 != 0)
                 throw new UnsupportedOperationException("Only whole-byte sample depth supported");
 
+            // Assuming streamInfo.sampleRate is the sample rate in Hz
+            int sampleRate = streamInfo.sampleRate;
+            int startSample = 30 * sampleRate; // Start at 10 seconds
+            int numSamples = 30 * sampleRate;  // 30 seconds duration
+
+            /*
             // Decode every block
             samples = new int[streamInfo.numChannels][(int) streamInfo.numSamples];
             for (int off = 0; ; ) {
@@ -70,7 +76,33 @@ public class MusicAnalyser {
                 if (len == 0)
                     break;
                 off += len;
+            } */
+
+            // Ensure the start and end indices are within the bounds of the samples array
+            if (startSample + numSamples > streamInfo.numSamples) {
+                throw new IllegalArgumentException("Requested sample range exceeds available samples");
             }
+
+            // Initialize the sample segment array
+            int[][] samples = new int[streamInfo.numChannels][numSamples];
+
+            // Seek to the start position and read the required samples
+            int segmentOffset = 0;
+            int len = dec.seekAndReadAudioBlock(startSample, samples, segmentOffset);
+            segmentOffset += len;
+
+            // Continue reading until the desired number of samples is filled
+            try {
+                while (segmentOffset < numSamples) {
+                    len = dec.readAudioBlock(samples, segmentOffset);
+                    if (len == 0)
+                        break;
+                    segmentOffset += len;
+                }
+            }catch (IndexOutOfBoundsException e) {
+                Log.w(TAG, "analyst: get pcm samples - IndexOutOfBoundsException.");
+            }
+            // sampleSegment now contains the 30-second sample starting from 30 seconds
 
             calculateDR(samples);
             calculateDRScore(samples, tag);
@@ -88,6 +120,11 @@ public class MusicAnalyser {
             dynamicRangeScore = 0.00;
             dynamicRange = 0.00;
             return true;
+        } catch (OutOfMemoryError e) {
+            // Attempt to run garbage collection
+            System.gc();
+            Log.w(TAG, "analyst: OutOfMemoryError - "+e.getMessage());
+            return false;
         } catch (Exception e) {
           //  e.printStackTrace();
             Log.e(TAG, "analyst", e);

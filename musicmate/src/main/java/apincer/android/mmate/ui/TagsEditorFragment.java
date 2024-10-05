@@ -49,6 +49,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
@@ -153,7 +154,7 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private IconSpinnerItem createIconSpinnerItem(Context context, String title) {
-        return new IconSpinnerItem("", UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
+        return new IconSpinnerItem("", UIUtils.toDrawable(context, IconProviders.createSourceQualityIcon(context, title)));
        // return new IconSpinnerItem(title, UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
     }
 

@@ -55,6 +55,7 @@ import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
@@ -352,7 +353,7 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
-    public void updateTitlePanel() {
+    protected void updateTitlePanel() {
         if(MusixMateApp.getPlayerControl().isPlaying()) {
             playerBtn.setVisibility(View.VISIBLE);
             playerPanel.setVisibility(View.VISIBLE);
@@ -375,7 +376,7 @@ public class TagsActivity extends AppCompatActivity {
         artistView.setText(trim(displayTag.getArtist(), " - "));
         ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(MusicTagUtils.getResolutionIcon(getApplicationContext(), displayTag))
+                .data(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
                 .crossfade(false)
                 .target(resolutionView)
                 .build();
@@ -387,7 +388,7 @@ public class TagsActivity extends AppCompatActivity {
             qualityView.setVisibility(View.VISIBLE);
            // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), MusicTagUtils.createTrackQualityIcon(getApplicationContext(), displayTag)));
              request = new ImageRequest.Builder(getApplicationContext())
-                    .data(MusicTagUtils.getTrackQualityIcon(getApplicationContext(), displayTag))
+                    .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
                     .target(qualityView)
                     .build();
@@ -402,13 +403,13 @@ public class TagsActivity extends AppCompatActivity {
             hiresView.setVisibility(View.GONE);
         }
 
-        Drawable resolutionBackground = MusicTagUtils.getFileFormatBackground(getApplicationContext(), displayTag);
+        Drawable resolutionBackground = IconProviders.getFileFormatBackground(getApplicationContext(), displayTag);
         fileTypeView.setBackground(resolutionBackground);
         fileTypeView.setText(trimToEmpty(displayTag.getAudioEncoding()).toUpperCase(Locale.US));
 
         if (!isEmpty(displayTag.getMediaQuality())) {
             request = new ImageRequest.Builder(getApplicationContext())
-                    .data(MusicTagUtils.getSourceQualityIcon(getApplicationContext(), displayTag))
+                    .data(IconProviders.getSourceQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
                     .target(audiophileView)
                     .build();

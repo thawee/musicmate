@@ -21,7 +21,6 @@ public class MusicMateExecutors {
     private final ExecutorService mScanThread; // for file scanning
     private final ExecutorService mMainThread; // for main page
     private final Executor mUIThread; // for ui
-  //  private final ExecutorService mDbThread; // for background db thread
     /**
      * Gets the number of available cores
      * (not always the same as the maximum number of cores)
@@ -38,7 +37,6 @@ public class MusicMateExecutors {
         this.mFastThread = mFastThread;
         this.mScanThread = scanThread;
         this.mMainThread = mMainThread;
-      //  this.mDbThread = new ThreadPoolExecutor(2, 4,300L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {};
         this.mUIThread = new UIThreadExecutor();
         this.mScheduleThread = Executors.newSingleThreadScheduledExecutor();
     }
@@ -63,7 +61,7 @@ public class MusicMateExecutors {
                      }
                  }},
                 new ThreadPoolExecutor(2, 4,600L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {},
-                new ThreadPoolExecutor(1, 1,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+                new ThreadPoolExecutor(2, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                     protected void afterExecute(Runnable r, Throwable t) {
                         try {
                             Thread.sleep(20); // wait 0.2 second

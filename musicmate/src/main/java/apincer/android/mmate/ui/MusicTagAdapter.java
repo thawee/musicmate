@@ -33,6 +33,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -465,7 +466,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
            // holder.mDynamicRangePanel.setVisibility(View.VISIBLE);
             holder.mAudioQuality.setVisibility(View.VISIBLE);
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                    .data(MusicTagUtils.getTrackQualityIcon(holder.mContext, tag))
+                    .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
                     .crossfade(false)
                     .target(holder.mAudioQuality)
                     .build();
@@ -520,7 +521,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         // show enc i.e. PCM, MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
-                .data(MusicTagUtils.getResolutionIcon(holder.mContext, tag))
+                .data(IconProviders.getResolutionIcon(holder.mContext, tag))
                 .crossfade(false)
                 .target(holder.mAudioResolutionView)
                 .build();
@@ -530,7 +531,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
         // file encoding format
-        Drawable resolutionBackground = MusicTagUtils.getFileFormatBackground(holder.mContext, tag); //MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        Drawable resolutionBackground = IconProviders.getFileFormatBackground(holder.mContext, tag); //MusicTagUtils.getResolutionBackground(holder.mContext, tag);
         holder.mFileTypeView.setText(trimToEmpty(tag.getAudioEncoding()).toUpperCase(Locale.US));
         holder.mFileTypeView.setBackground(resolutionBackground);
         // duration
@@ -538,7 +539,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-        Bitmap srcBmp = MusicTagUtils.getSourceIcon(holder.mContext, tag);
+        Bitmap srcBmp = IconProviders.getSourceIcon(holder.mContext, tag);
         if(srcBmp!=null) {
             holder.mFileSourceView.setImageBitmap(srcBmp);
             holder.mFileSourceView.setVisibility(View.VISIBLE);

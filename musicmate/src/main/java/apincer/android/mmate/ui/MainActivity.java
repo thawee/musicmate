@@ -98,6 +98,7 @@ import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
+import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
@@ -482,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
 
         imageLoader = Coil.imageLoader(getApplicationContext());
         request = new ImageRequest.Builder(getApplicationContext())
-                .data(MusicTagUtils.getResolutionIcon(getApplicationContext(), song))
+                .data(IconProviders.getResolutionIcon(getApplicationContext(), song))
                 .crossfade(false)
                 .target(nowPlayingType)
                 .build();
@@ -1468,11 +1469,14 @@ public class MainActivity extends AppCompatActivity {
                                 FFMpegHelper.writeTagQualityToFile(MainActivity.this, tag);
                                 // update MusicMate Library
                                 TagRepository.saveTag(tag);
+                                statusList.put(tag, "Success");
+                            }else {
+                                statusList.put(tag, "Fail");
                             }
 
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
                             EventBus.getDefault().postSticky(message);
-                            statusList.put(tag, "Done");
+                          //  statusList.put(tag, "Done");
                         }else {
                             statusList.put(tag, "Skip");
                         }
