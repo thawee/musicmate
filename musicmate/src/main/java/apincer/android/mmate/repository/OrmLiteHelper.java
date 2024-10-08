@@ -3,10 +3,8 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.Constants.ARTIST_SEP;
 import static apincer.android.mmate.Constants.ARTIST_SEP_SPACE;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_INVALID;
 import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.Constants.IND_UPSCALED_INVALID;
 import static apincer.android.mmate.Constants.NONE;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
@@ -163,9 +161,9 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
            // builder.where().eq("drScore",0).or()
-            builder.where().notIn("upscaledInd", IND_UPSCALED_GOOD,IND_UPSCALED_BAD,IND_UPSCALED_INVALID).or()
+            builder.where().eq("upscaledInd", IND_UPSCALED_INVALID).or()
                     .isNull("upscaledInd").or()
-                    .notIn("resampledInd", IND_RESAMPLED_GOOD,IND_RESAMPLED_BAD,IND_RESAMPLED_INVALID).or()
+                    .eq("resampledInd", IND_RESAMPLED_INVALID).or()
                     .isNull("resampledInd").and()
                     .notIn("audioEncoding", "aac", "mpeg");
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
@@ -181,8 +179,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
                     .eq("upscaledInd", IND_UPSCALED_BAD).or()
-                    .eq("upscaledInd", IND_UPSCALED_INVALID).or()
-                    .eq("resampledInd", IND_RESAMPLED_INVALID).or()
                     .eq("resampledInd", IND_RESAMPLED_BAD).or()
                     .in("audioEncoding", "aac", "mpeg");
           //  String bad = "mediaQuality = '"+Constants.QUALITY_BAD+"' ";

@@ -753,10 +753,10 @@ public class MusicTagUtils {
     public static boolean isISaanPlaylist(MusicTag tag) {
        // return ("Luk Thung".equalsIgnoreCase(tag.getGenre()) ||
        //         "Mor Lum".equalsIgnoreCase(tag.getGenre()));
-      //  return ("Mor Lum".equalsIgnoreCase(tag.getGenre()));
+        return ("Mor Lum".equalsIgnoreCase(tag.getGenre()));
 
-         return (trimToEmpty(tag.getGenre()).toUpperCase().contains("ISAAN") ||
-                 "Mor Lum".equalsIgnoreCase(tag.getGenre()));
+       //  return (trimToEmpty(tag.getGenre()).toUpperCase().contains("ISAAN") ||
+       //          "Mor Lum".equalsIgnoreCase(tag.getGenre()));
     }
 
     public static boolean isBaanThungPlaylist(MusicTag tag) {

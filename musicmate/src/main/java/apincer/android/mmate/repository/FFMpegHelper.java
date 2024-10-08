@@ -21,10 +21,9 @@ import com.arthenica.ffmpegkit.ReturnCode;
 import com.arthenica.ffmpegkit.Session;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.nio.ByteBuffer;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -724,6 +723,7 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
                    targetPath = targetPath.replace(".", "_001.");
                }
                FileSystem.move(context, tmpTarget, targetPath);
+               FileRepository.newInstance(context).scanMusicFile(new File(targetPath),true); // re scan file
                return true;
            }
        }finally {
@@ -732,7 +732,7 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
        return false;
     }
 
-    public static Buffer transcodeFile(Context context, String srcPath) {
+    public static ByteBuffer transcodeFile(Context context, String srcPath) {
        // String options=" -vn -f s16be -ar 44100 -ac 2 "; // lpcm
        // String options=" -c:a pcm_s16le -ar 44100 -ac 2 ";
         String options=" -vn -f mp3 -ab 320000 "; // mp3

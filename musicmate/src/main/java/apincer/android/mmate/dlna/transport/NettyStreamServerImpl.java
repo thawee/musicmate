@@ -19,6 +19,7 @@ import org.jupnp.transport.spi.UpnpStream;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -291,8 +292,8 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
                 String path = CoverArtProvider.COVER_ARTS + albumId;
                 File pathFile = new File(coverartDir, path);
                 if (pathFile.exists()) {
-                    Buffer buffer = FileUtils.getBytes(pathFile);
-                    return new ContentHolder(AsciiString.of(TYPE_IMAGE_PNG), HttpResponseStatus.OK , buffer.readByteArray());
+                    ByteBuffer buffer = FileUtils.getBytes(pathFile);
+                    return new ContentHolder(AsciiString.of(TYPE_IMAGE_PNG), HttpResponseStatus.OK , buffer.array());
                 }
             } catch (Exception e) {
                 Log.e(TAG, "lookupAlbumArt: - not found " + uri, e);

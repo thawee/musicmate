@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,14 +49,13 @@ import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import okio.Buffer;
 
 public class HCContentServer  {
     private final Context context;
     private static final String TAG = "HCContentServer";
 
     private HttpAsyncServer server;
-    private static LruCache<String, Buffer> transCodeCached;
+    private static LruCache<String, ByteBuffer> transCodeCached;
     public static final int SERVER_PORT = 8089;
 
     public HCContentServer(Context context) {
@@ -63,9 +63,9 @@ public class HCContentServer  {
         int cacheSize = 1024 * 1024 * 64; // 64 MB cache
         transCodeCached = new LruCache<>(cacheSize) {
             @Override
-            protected int sizeOf(String key, Buffer data) {
+            protected int sizeOf(String key, ByteBuffer data) {
                 // The cache size will be measured in bytes
-                return (int) data.size();
+                return data.capacity();
             }
         };
     }
@@ -343,15 +343,15 @@ public class HCContentServer  {
                 if (new File(getFilePath()).exists()) {
                     if(transcode) {
                         // transcode to lpcm before send to
-                        Buffer buff = transCodeCached.get(resId);
+                        ByteBuffer buff = transCodeCached.get(resId);
                         if(buff == null) {
-                            Buffer data = FFMpegHelper.transcodeFile(context, getFilePath());
+                            ByteBuffer data = FFMpegHelper.transcodeFile(context, getFilePath());
                             if(data != null) {
                                 transCodeCached.put(resId, data);
-                                result = AsyncEntityProducers.create(data.readByteArray(), contentType);
+                                result = AsyncEntityProducers.create(data.array(), contentType);
                             }
                         }else {
-                            result = AsyncEntityProducers.create(buff.readByteArray(), contentType);
+                            result = AsyncEntityProducers.create(buff.array(), contentType);
                         }
                     }else {
                         // if not found return null

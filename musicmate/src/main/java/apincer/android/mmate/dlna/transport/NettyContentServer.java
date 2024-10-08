@@ -67,7 +67,7 @@ import okio.Buffer;
 public class NettyContentServer {
     private final Context context;
     private static final String TAG = "NettyContentServer";
-    private static LruCache<String, Buffer> transCodeCached;
+    private static LruCache<String, ByteBuffer> transCodeCached;
     public static final int SERVER_PORT = 8089;
     public static final String TYPE_IMAGE_PNG = "image/png";
     public static final String TYPE_IMAGE_JPEG = "image/jpeg";
@@ -82,9 +82,9 @@ public class NettyContentServer {
         int cacheSize = 1024 * 1024 * 64; // 64 MB cache
         transCodeCached = new LruCache<>(cacheSize) {
             @Override
-            protected int sizeOf(String key, Buffer data) {
+            protected int sizeOf(String key, ByteBuffer data) {
                 // The cache size will be measured in bytes
-                return (int) data.size();
+                return (int) data.capacity();
             }
         };
     }
@@ -283,13 +283,13 @@ public class NettyContentServer {
                 MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
                 if(MediaServerSession.isTransCoded(tag)) {
                     // transcode to lpcm before send to
-                    Buffer buff = transCodeCached.get(contentId);
+                    ByteBuffer buff = transCodeCached.get(contentId);
                     if(buff == null) {
-                        Buffer data = FFMpegHelper.transcodeFile(context, tag.getPath());
+                        ByteBuffer data = FFMpegHelper.transcodeFile(context, tag.getPath());
                         transCodeCached.put(contentId, data);
-                        return new ContentHolder(MediaTypeDetector.getContentType(tag), data.readByteArray());
+                        return new ContentHolder(MediaTypeDetector.getContentType(tag), data.array());
                     }else {
-                        return new ContentHolder(MediaTypeDetector.getContentType(tag), buff.readByteArray());
+                        return new ContentHolder(MediaTypeDetector.getContentType(tag), buff.array());
                     }
                 }else {
                     return new ContentHolder(MediaTypeDetector.getContentType(tag), tag.getPath());

@@ -1545,6 +1545,8 @@ public class MainActivity extends AppCompatActivity {
         }else if(MusicTagUtils.isAACFile(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(MP3_320_KHZ, null));
         }else if(MusicTagUtils.isFLACFile(selections.get(0))) {
+            iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
+            iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
             iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
         }else if(MusicTagUtils.isWavFile(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
@@ -1639,7 +1641,7 @@ public class MainActivity extends AppCompatActivity {
             int finalCLevel = cLevel;
             MusicMateExecutors.execute(() -> {
                 for(MusicTag tag: selections) {
-                    if(!StringUtils.trimToEmpty(finalTargetExt).equalsIgnoreCase(tag.getFileFormat()))  {
+                   // if(!StringUtils.trimToEmpty(finalTargetExt).equalsIgnoreCase(tag.getFileFormat()))  {
                         String srcPath = tag.getPath();
                         String filePath = FileUtils.removeExtension(tag.getPath());
                         String targetPath = filePath+"."+ finalTargetExt;
@@ -1654,7 +1656,7 @@ public class MainActivity extends AppCompatActivity {
 
                         if(FFMpegHelper.convert(getApplicationContext(),srcPath, targetPath, finalCLevel, bitDepth)) {
                             statusList.put(tag, "Done");
-                            repos.scanMusicFile(new File(targetPath),true); // re scan file
+                            //repos.scanMusicFile(new File(targetPath),true); // re scan file
                             runOnUiThread(() -> {
                                     int pct = progressBar.getProgress();
                                     progressBar.setProgress((int) (pct+rate));
@@ -1670,7 +1672,7 @@ public class MainActivity extends AppCompatActivity {
                                 itemsView.invalidateViews();
                             });
                         }
-                    }else {
+                  /*  }else {
                         statusList.put(tag, "Skip");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
@@ -1678,7 +1680,7 @@ public class MainActivity extends AppCompatActivity {
                             progressBar.invalidate();
                             itemsView.invalidateViews();
                         });
-                    }
+                    }  */
                 }
 
             });

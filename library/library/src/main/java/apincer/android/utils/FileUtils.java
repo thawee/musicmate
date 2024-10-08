@@ -11,8 +11,14 @@ import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.NumberFormat;
 import java.util.List;
 
@@ -305,12 +311,35 @@ public class FileUtils {
         directory.delete();
     }
 
-    public static Buffer getBytes(File file) {
+    public static ByteBuffer getBytes(File file) throws IOException {
+        // nio
+        Path filePath = Paths.get(file.getAbsolutePath());
+        // Open the file for reading
+        ByteBuffer buffer;
+        try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ)) {
+
+            // Get the size of the file
+            long fileSize = fileChannel.size();
+
+            // Allocate a ByteBuffer to hold the file's contents
+            buffer = ByteBuffer.allocate((int) fileSize);
+
+            // Read the file into the ByteBuffer
+            fileChannel.read(buffer);
+
+            // Flip the buffer to prepare it for reading
+            buffer.flip();
+        } 
+
+        return buffer;
+
+        //okio
+        /*
         try (Source source = Okio.source(file); Buffer buffer = new Buffer()) {
             buffer.writeAll(source);
             return buffer;
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
+        } */
     }
 }

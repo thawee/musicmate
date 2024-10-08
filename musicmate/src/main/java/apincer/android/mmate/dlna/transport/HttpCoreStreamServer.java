@@ -75,7 +75,7 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
     private HttpAsyncServer server;
     final protected StreamServerConfigurationImpl configuration;
     protected int localPort;
-    private static LruCache<String, Buffer> transCodeCached;
+    private static LruCache<String, ByteBuffer> transCodeCached;
 
     public HttpCoreStreamServer(Context context, StreamServerConfigurationImpl configuration) {
         this.context = context;
@@ -83,9 +83,9 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
         int cacheSize = 1024 * 1024 * 10 * 3; // 2-3 file 15 MB each file
         transCodeCached = new LruCache<>(cacheSize) {
             @Override
-            protected int sizeOf(String key, Buffer data) {
+            protected int sizeOf(String key, ByteBuffer data) {
                 // The cache size will be measured in bytes
-                return (int) data.size();
+                return (int) data.capacity();
             }
         };
         this.localPort = configuration.getListenPort();
@@ -375,21 +375,25 @@ public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurat
                 if (new File(getFilePath()).exists()) {
                     if(transcode) {
                         // transcode to lpcm before send to
-                        Buffer buff = transCodeCached.get(resId);
+                        ByteBuffer buff = transCodeCached.get(resId);
                         if(buff == null) {
-                            Buffer data = FFMpegHelper.transcodeFile(context, getFilePath());
+                            ByteBuffer data = FFMpegHelper.transcodeFile(context, getFilePath());
                             if(data != null) {
                                 transCodeCached.put(resId, data);
-                                result = AsyncEntityProducers.create(data.readByteArray(), contentType);
+                                result = AsyncEntityProducers.create(data.array(), contentType);
                             }
                         }else {
-                            result = AsyncEntityProducers.create(buff.readByteArray(), contentType);
+                            result = AsyncEntityProducers.create(buff.array(), contentType);
                         }
                     }else {
-                        // if not found return null
-                        Buffer buffer = FileUtils.getBytes(new File(getFilePath()));
-                       // File file = new File(getFilePath());
-                        result = AsyncEntityProducers.create(buffer.readByteArray(), contentType);
+                        try {
+                            // if not found return null
+                            ByteBuffer buffer = FileUtils.getBytes(new File(getFilePath()));
+                            // File file = new File(getFilePath());
+                            result = AsyncEntityProducers.create(buffer.array(), contentType);
+                        }catch (Exception ex) {
+                            Log.e(TAG, "", ex);
+                        }
                     }
                 }
             } else if (content != null) {

@@ -558,7 +558,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void doOpenMainActivity(SearchCriteria criteria) {
-        Intent myIntent = new Intent(this, MainActivity.class);
+      //  Intent myIntent = new Intent(this, MainActivity.class);
         if(criteria!=null) {
             MusixMateApp.getInstance().setSearchCriteria(criteria);
            // ApplicationUtils.setSearchCriteria(myIntent, criteria);
