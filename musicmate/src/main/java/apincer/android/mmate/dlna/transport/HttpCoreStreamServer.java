@@ -67,7 +67,6 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
-import okio.Buffer;
 
 public class HttpCoreStreamServer implements StreamServer<StreamServerConfigurationImpl> {
     private final Context context;

@@ -18,7 +18,6 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
-import apincer.android.mmate.dlna.transport.JLHStreamServerImpl;
 import apincer.android.mmate.dlna.transport.NettyStreamServerImpl;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
@@ -98,11 +97,7 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
                 if (device.getIdentity().getUdn() == null) {
                     throw new IllegalStateException("Can't generate local URI prefix without UDN");
                 }
-                //StringBuilder s = new StringBuilder();
-               // s.append(DEVICE); //.append("/");
-
-               // s.append(URIUtil.encodePathSegment(device.getIdentity().getUdn().getIdentifierString()));
-               // return s.toString();
+                // return empty string
                 return "";
             }
         };

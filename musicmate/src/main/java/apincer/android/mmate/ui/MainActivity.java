@@ -97,7 +97,6 @@ import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
-import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
@@ -231,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
             TextView status = view.findViewById(R.id.status);
             seq.setText(String.valueOf(i+1));
             status.setText(statusList.getOrDefault(tag, "-"));
-            name.setText(FileSystem.getFilename(tag.getPath()));
+            name.setText(FileUtils.getFileName(tag.getPath()));
             return view;
         }
     });
@@ -342,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileSystem.getFilename(tag.getPath()));
+                name.setText(FileUtils.getFileName(tag.getPath()));
                 return view;
             }
         });
@@ -439,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(this, song))
                 //.data(MusicCoverArtProvider.getUriForMusicTag(song))
-                .data(CoverArtProvider.getUriForMusicTag(song))
+                .data(CoverArtProvider.getUriForMusicTag(getApplicationContext(), song))
                 .allowHardware(false)
                 //.placeholder(R.drawable.progress)
               //  .error(R.drawable.ic_broken_image_black_24dp)
@@ -1412,7 +1411,7 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileSystem.getFilename(tag.getPath()));
+                name.setText(FileUtils.getFileName(tag.getPath()));
                 return view;
             }
         });
@@ -1589,7 +1588,7 @@ public class MainActivity extends AppCompatActivity {
                 TextView status = view.findViewById(R.id.status);
                 seq.setText(String.valueOf(i+1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileSystem.getFilename(tag.getPath()));
+                name.setText(FileUtils.getFileName(tag.getPath()));
                 return view;
             }
         });

@@ -111,6 +111,7 @@ public class FileSystem {
         }
     }
 
+    @Deprecated
     public static String getFilename(String path) {
         if(isEmpty(path)) {
             return "";

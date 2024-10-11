@@ -452,7 +452,7 @@ public class TagsActivity extends AppCompatActivity {
         genreView.setText(mediaTypeAndPublisher);
 
         request = new ImageRequest.Builder(getApplicationContext())
-                .data(CoverArtProvider.getUriForMusicTag(displayTag))
+                .data(CoverArtProvider.getUriForMusicTag(getApplicationContext(), displayTag))
                 .size(1024,1024)
                 .placeholder(R.drawable.progress)
                 .error(getDefaultNoCover(displayTag))

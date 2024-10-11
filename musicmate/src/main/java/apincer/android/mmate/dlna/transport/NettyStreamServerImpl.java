@@ -3,7 +3,6 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import android.content.Context;
 import android.util.Log;
-import android.util.LruCache;
 
 import org.jupnp.model.message.StreamRequestMessage;
 import org.jupnp.model.message.StreamResponseMessage;
@@ -65,9 +64,6 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
-import okio.Buffer;
-import okio.FileSystem;
-import okio.Okio;
 
 public class NettyStreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
     private static final String TAG = "NettyStreamServerImpl";

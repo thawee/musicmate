@@ -40,7 +40,6 @@ import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
@@ -507,7 +506,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
        request = new ImageRequest.Builder(holder.mContext)
                // .data(MusicTagUtils.getCoverArt(holder.mContext, tag))
                //.data(MusicCoverArtProvider.getUriForMusicTag(tag))
-               .data(CoverArtProvider.getUriForMusicTag(tag))
+               .data(CoverArtProvider.getUriForMusicTag(holder.mContext, tag))
                 // .size(800, 800)
                 .crossfade(false)
                 .target(holder.mCoverArtView)

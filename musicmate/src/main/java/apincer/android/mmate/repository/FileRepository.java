@@ -43,8 +43,7 @@ public class FileRepository {
     public static void extractCoverArt(String path, File targetFile) {
         try {
            // Log.d(TAG, "extractCoverArt: "+path);
-            File dir = targetFile.getParentFile();
-            dir.mkdirs();
+            FileUtils.createParentDirs(targetFile);
             File coverArtFile = getFolderCoverArt(path);
             if(coverArtFile!=null) {
                 // check directory images
@@ -56,10 +55,12 @@ public class FileRepository {
                 if(pathFile.isDirectory()) {
                     // find first music file in path
                     File[] files = pathFile.listFiles();
-                    for(File file: files) {
-                        if(FFMPegReader.isSupportedFileFormat(file.getAbsolutePath())) {
-                            path = file.getAbsolutePath();
-                            break;
+                    if(files!=null) {
+                        for (File file : files) {
+                            if (FFMPegReader.isSupportedFileFormat(file.getAbsolutePath())) {
+                                path = file.getAbsolutePath();
+                                break;
+                            }
                         }
                     }
                 }
@@ -76,8 +77,7 @@ public class FileRepository {
             File dir =  getContext().getExternalCacheDir();
             File pathFile = new File(dir, coverFile);
             if(!pathFile.exists()) {
-                dir = pathFile.getParentFile();
-                dir.mkdirs();
+                FileUtils.createParentDirs(pathFile);
                 extractCoverArt(tag, pathFile);
             }
         } catch (Exception e) {
@@ -90,13 +90,11 @@ public class FileRepository {
         try {
             // Log.d(TAG, "extractCoverArt: "+path);
             String path = tag.getPath();
-            File dir = targetFile.getParentFile();
-            dir.mkdirs();
+            FileUtils.createParentDirs(targetFile);
             File coverArtFile = getFolderCoverArt(path);
             if(coverArtFile!=null) {
                 // check directory images
                 FileSystem.copy(coverArtFile, targetFile);
-               // okio.FileSystem.SYSTEM.copy(coverArtFile, targetFile.toPath());
             }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
                 FFMpegHelper.extractCoverArt(path, targetFile);
             }
@@ -310,7 +308,7 @@ public class FileRepository {
             StringBuilder filename = new StringBuilder(musicPath);
 
             if(!StringUtils.isEmpty(metadata.getGrouping())) {
-                filename.append(StringUtils.formatTitle(metadata.getGrouping())).append(File.separator);
+                filename.append(StringUtils.formatFilePath(metadata.getGrouping())).append(File.separator);
             }
 
             if (metadata.isSACDISO()) {
@@ -331,26 +329,20 @@ public class FileRepository {
             // publisher if albumArtist is various artist
             // albumArtist
             // then artist
-            String artist = StringUtils.trimTitle(MusicTagUtils.getFirstArtist(metadata.getArtist()));
-            String albumArtist = StringUtils.trimTitle(metadata.getAlbumArtist());
+            String artist = StringUtils.formatFilePath(MusicTagUtils.getFirstArtist(metadata.getArtist()));
+            String albumArtist = StringUtils.formatFilePath(metadata.getAlbumArtist());
             boolean addArtist2title = "Various Artists".equals(albumArtist);
-            /*if(isEmpty(metadata.getPublisher())) {
-                    filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
-                }else {
-                    filename.append(StringUtils.getAbvByUpperCase(metadata.getPublisher())).append(File.separator);
-                } */
-            //else if(!isEmpty(albumArtist)) {
             if(!isEmpty(albumArtist)) {
-                filename.append(StringUtils.formatTitle(albumArtist)).append(File.separator);
+                filename.append(StringUtils.formatFilePath(albumArtist)).append(File.separator);
             }else if (!isEmpty(artist)) {
-                filename.append(StringUtils.formatTitle(artist)).append(File.separator);
+                filename.append(StringUtils.formatFilePath(artist)).append(File.separator);
             }
 
             // album
             String album = StringUtils.trimTitle(metadata.getAlbum());
             if(!StringUtils.isEmpty(album)) {
                 if(!album.equalsIgnoreCase(albumArtist)) {
-                    filename.append(StringUtils.formatTitle(album)).append(File.separator);
+                    filename.append(StringUtils.formatFilePath(album)).append(File.separator);
                 }
             }
 
@@ -364,9 +356,9 @@ public class FileRepository {
             // title
             String title = StringUtils.trimTitle(metadata.getTitle());
                 if (!StringUtils.isEmpty(title)) {
-                    filename.append(StringUtils.formatTitle(title));
+                    filename.append(StringUtils.formatFilePath(title));
                 } else {
-                    filename.append(StringUtils.formatTitle(FileUtils.removeExtension(metadata.getPath())));
+                    filename.append(StringUtils.formatFilePath(FileUtils.removeExtension(metadata.getPath())));
                 }
 
             String newPath =  filename.toString();
@@ -443,6 +435,8 @@ public class FileRepository {
     private boolean importAudioTag(MusicTag tag) {
             String newPath = buildCollectionPath(tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
+                tag.setMusicManaged(true);
+                TagRepository.saveTag(tag);
                 return true;
             }
             if (FileSystem.move(getContext(), tag.getPath(), newPath)) {

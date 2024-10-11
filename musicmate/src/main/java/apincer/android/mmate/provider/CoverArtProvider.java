@@ -2,6 +2,7 @@ package apincer.android.mmate.provider;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.Uri.Builder;
@@ -18,17 +19,42 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
+import apincer.android.mmate.worker.MusicMateExecutors;
 
 public final class CoverArtProvider extends ContentProvider {
     private static final String TAG = "CoverArtProvider";
     public static final String COVER_ARTS = "/CoverArts/";
 
-    public static Uri getUriForMusicTag(MusicTag item) {
+    public static Uri getUriForMusicTag(Context context, MusicTag item) {
             // use music file
+        MusicMateExecutors.fast(() -> {
+            try {
+                // extract cover art during build uri in background
+                File dir = context.getExternalCacheDir();
+                String albumUniqueKey = item.getAlbumUniqueKey(); // getPathForUri(uri);
+                String path = getCacheCover(albumUniqueKey);
+
+                File pathFile = new File(dir, path);
+                if (!pathFile.exists()) {
+                    dir = pathFile.getParentFile();
+                    dir.mkdirs();
+                    // extract covert to cache directory
+                    MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
+                    FileRepository.extractCoverArt(tag, pathFile);
+                }
+            } catch (Exception e) {
+                Log.d(TAG,"getUriForMusicTag: ", e);
+            }
+        });
+
             return new Builder().scheme("content").authority("apincer.mmate.coverart.provider").path(item.getAlbumUniqueKey()).build();
         }
 
-       private String getPathForUri(Uri uri) {
+    private static String getCacheCover(String albumUnique) {
+        return COVER_ARTS +albumUnique+".png";
+    }
+
+    private String getPathForUri(Uri uri) {
             if (getContext() != null && uri != null && uri.getPath()!=null) {
                 return uri.getPath().substring(1);
             }
@@ -64,18 +90,18 @@ public final class CoverArtProvider extends ContentProvider {
     public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) {
             try {
                 File dir =  getContext().getExternalCacheDir();
-                String albumUniqueKey = getPathForUri(uri);
+               // String albumUniqueKey = getPathForUri(uri);
                 String path = getCacheCover(uri);
 
                 File pathFile = new File(dir, path);
-                if(!pathFile.exists()) {
+               /* if(!pathFile.exists()) {
                         dir = pathFile.getParentFile();
                         dir.mkdirs();
                         // extract covert to cache directory
                         MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
                         FileRepository.extractCoverArt(tag, pathFile);
                         pathFile = new File(dir, path);
-                }
+                } */
                 if(pathFile.exists()) {
                     //Log.d(TAG,"found "+pathFile.toPath());
                     return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));

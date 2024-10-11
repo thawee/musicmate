@@ -2,7 +2,7 @@ package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.Constants.QUALITY_GOOD;
 import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
-import static apincer.android.mmate.utils.StringUtils.toLowwerCase;
+import static apincer.android.mmate.utils.StringUtils.toLowerCase;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -169,7 +169,7 @@ public class TagsEditorFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if(bypassChange) return;
-                String txt = toLowwerCase(charSequence.toString());
+                String txt = toLowerCase(charSequence.toString());
                 if(powerMenu!=null) {
                     powerMenu.dismiss();
                 }
@@ -177,7 +177,7 @@ public class TagsEditorFragment extends Fragment {
                     // popup list
                     List<PowerMenuItem> items = new ArrayList<>();
                     defaultList.stream()
-                            .filter(rValue -> toLowwerCase(rValue).contains(txt))
+                            .filter(rValue -> toLowerCase(rValue).contains(txt))
                             .limit(10)
                             .forEach(s -> items.add(new PowerMenuItem(s)));
                     if((!autoSelect) || items.size()>=1) {
@@ -534,7 +534,7 @@ public class TagsEditorFragment extends Fragment {
         ImageLoader imageLoader = Coil.imageLoader(tagsActivity.getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(tagsActivity.getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(tagsActivity.getApplicationContext(), tag))
-                .data(CoverArtProvider.getUriForMusicTag(tag))
+                .data(CoverArtProvider.getUriForMusicTag(getContext(), tag))
                 .transformations(new RoundedCornersTransformation())
                 .crossfade(false)
                 .target(previewCoverart)

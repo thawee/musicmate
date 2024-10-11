@@ -1,41 +1,19 @@
 package apincer.android.utils;
 
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.UriPermission;
-import android.net.Uri;
-import android.os.ParcelFileDescriptor;
-import android.provider.DocumentsContract; 
-import android.text.TextUtils;
-import android.webkit.MimeTypeMap;
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.text.NumberFormat;
-import java.util.List;
-
-import androidx.documentfile.provider.DocumentFile;
-import apincer.android.library.R;
-import okio.Buffer;
-import okio.Okio;
-import okio.Source;
-
-import static android.provider.DocumentsContract.buildDocumentUri;
-import static android.provider.DocumentsContract.getTreeDocumentId;
 
 public class FileUtils {
-    private static final String PATH_TREE = "tree";
-    private static final String PATH_DOCUMENT = "document";
-    public static final String BASIC_MIME_TYPE = "application/octet-stream";
+  //  private static final String PATH_TREE = "tree";
+  //  private static final String PATH_DOCUMENT = "document";
+  //  public static final String BASIC_MIME_TYPE = "application/octet-stream";
 
+    /*
     @Deprecated
     public static String getTypeForFile(File file) {
         if (file.isDirectory()) {
@@ -43,7 +21,7 @@ public class FileUtils {
         } else {
             return getTypeForName(file.getName());
         }
-    }
+    } */
 
     /**
      * Returns the extension of the given file.
@@ -103,21 +81,24 @@ public class FileUtils {
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
+    /*
     private static String getTypeForFile(DocumentFile file) {
         if (file.isDirectory()) {
             return DocumentsContract.Document.MIME_TYPE_DIR;
         } else {
             return getTypeForName(file.getName());
         }
-    }
+    } */
 
+    /*
     public static String formatFileCount(Context context, int count) {
         String value = NumberFormat.getInstance().format(count);
         String fileIndex = context.getString(R.string.index_file);
         String empty = context.getString(R.string.index_empty);
         return count == 0 ? empty : value + " " + fileIndex;
-    }
+    } */
 
+    /*
     public static String getTypeForName(String name) {
         final int lastDot = name.lastIndexOf('.');
         if (lastDot >= 0) {
@@ -129,8 +110,9 @@ public class FileUtils {
         }
 
         return BASIC_MIME_TYPE;
-    }
+    } */
 
+    /*
     private static Uri buildDocumentUriUsingTree(Uri treeUri, String documentId) {
         return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
                 .authority(treeUri.getAuthority()).appendPath(PATH_TREE)
@@ -141,16 +123,18 @@ public class FileUtils {
     private static boolean isTreeUri(Uri uri) {
         final List<String> paths = uri.getPathSegments();
         return (paths.size() >= 2 && PATH_TREE.equals(paths.get(0)));
-    }
+    } */
 
+    /*
     public static Uri buildDocumentUriMaybeUsingTree(Uri baseUri, String documentId) {
         if (isTreeUri(baseUri)) {
             return buildDocumentUriUsingTree(baseUri, documentId);
         } else {
             return buildDocumentUri(baseUri.getAuthority(), documentId);
         }
-    }
+    } */
 
+    /*
     public static Uri getRootUriForStorage(Context context, String storageId){
         Uri treeUri = null;
 
@@ -166,14 +150,15 @@ public class FileUtils {
             }
         }
         return treeUri;
-    }
+    } */
 
+    /*
     private static String getRootUri(Uri uri) {
         if (isTreeUri(uri)) {
             return DocumentsContract.getTreeDocumentId(uri);
         }
         return DocumentsContract.getDocumentId(uri);
-    }
+    } */
 
     /**
      * Test if a file lives under the given directory, either as a direct child
@@ -196,6 +181,7 @@ public class FileUtils {
         return filePath.startsWith(dirPath);
     }
 
+    /*
     public static void updateMediaStore(Context context, String path) {
         try {
             Uri contentUri = Uri.fromFile(new File(path).getParentFile());
@@ -205,15 +191,17 @@ public class FileUtils {
         catch (Exception e){
             e.printStackTrace();
         }
-    }
+    } */
 
+    /*
     public static String makeFilePath(File parentFile, String name){
         if(null == parentFile || TextUtils.isEmpty(name)){
             return "";
         }
         return new File(parentFile, name).getPath();
-    }
+    } */
 
+    /*
     public static int parseMode(String mode) {
         final int modeBits;
         if ("r".equals(mode)) {
@@ -237,7 +225,7 @@ public class FileUtils {
             throw new IllegalArgumentException("Bad mode '" + mode + "'");
         }
         return modeBits;
-    }
+    } */
 
     @Deprecated
     public static boolean isExisted(String s) {
@@ -329,7 +317,7 @@ public class FileUtils {
 
             // Flip the buffer to prepare it for reading
             buffer.flip();
-        } 
+        }
 
         return buffer;
 
@@ -341,5 +329,12 @@ public class FileUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } */
+    }
+
+    public static void createParentDirs(File dir) {
+        if(dir == null) return;
+        if(!dir.getParentFile().exists()) {
+            dir.getParentFile().mkdirs();
+        }
     }
 }

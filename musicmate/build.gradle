@@ -212,6 +212,7 @@ dependencies {
     implementation deps.apache.commons_io
     implementation deps.apache.commons_logging
     implementation deps.apache.commons_lang3
+    implementation deps.apache.commons_text
 
     implementation deps.fasterxml.jackson_core
     implementation deps.fasterxml.jackson_databind

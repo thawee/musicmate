@@ -6,6 +6,8 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.Nullable;
 
+import org.apache.commons.text.WordUtils;
+
 import java.text.BreakIterator;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -52,8 +54,6 @@ public class StringUtils {
     public static final String UNKNOWN_ALL_CAP = "<UNKNOWN>";
     public static final String UNTITLED_CAP = "<Untitled>";
     public static final String MULTI_VALUES = "<*>";
-    public static final String CHARSET_ISO8859_1 = "ISO-8859-1";
-  //  public static final String SYMBOL_RES_SEP = " \u25C8 ";
     public static final String EMPTY = " - "; // must left as empty for dropdown list
 
     private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
@@ -90,126 +90,6 @@ public class StringUtils {
         }else return input.trim().isEmpty();
     }
 
-    private static String capitalizeWords(String str) {
-        String[] words = str.split(" ");
-        StringBuilder sb = new StringBuilder();
-        for (String word : words) {
-            if (!word.isEmpty()) {
-                if (word.matches(".*[^a-zA-Z'].*")) {
-                    sb.append(convertNonLetterToUpper(word));  // Converts "p.o.p" to "P.O.P", "M2m" to "M2M", etc.
-                } else {
-                    sb.append(capitalizeFirstLetter(word));  // Converts "pop" to "Pop", "this is text" to "This is text"
-                }
-                sb.append(" ");
-            }
-        }
-        return sb.toString().trim();
-    }
-
-    private static String convertNonLetterToUpper(String str) {
-        StringBuilder sb = new StringBuilder();
-        boolean foundNonLetter = false;
-        for (char c : str.toCharArray()) {
-            if (!Character.isLetter(c)) {
-                sb.append(Character.toUpperCase(c));
-                foundNonLetter = true;
-            } else if (foundNonLetter) {
-                sb.append(Character.toUpperCase(c));
-                foundNonLetter = false;
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String capitalizeFirstLetter(String str) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
-    }
-
-    public static String convertToStartCase(String value) {
-        StringBuilder returnValue = new StringBuilder();
-        value = value.toLowerCase();
-        boolean makeNextUppercase = true;
-        for (char c : value.toCharArray()) {
-            if (Character.isSpaceChar(c) || Character.isWhitespace(c) || "()[]{}\\/".indexOf(c) != -1) {
-                makeNextUppercase = true;
-            } else if (makeNextUppercase) {
-                c = Character.toTitleCase(c);
-                makeNextUppercase = false;
-            }
-
-            returnValue.append(c);
-        }
-        return returnValue.toString();
-    }
-
-    @Deprecated
-    public static String capitalize(final String str, final char... delimiters) {
-        final int delimLen = delimiters == null ? -1 : delimiters.length;
-        if (StringUtils.isEmpty(str) || delimLen == 0) {
-            return str;
-        }
-        if(str.equals("VA")) return str;
-        if(str.startsWith("VA ")) return str;
-
-        final char[] buffer = str.toCharArray();
-        boolean capitalizeNext = true;
-        for (int i = 0; i < buffer.length; i++) {
-            final char ch = buffer[i];
-            if (isDelimiter(ch, delimiters)) {
-                capitalizeNext = true;
-            } else if (capitalizeNext) {
-                buffer[i] = Character.toTitleCase(ch);
-                capitalizeNext = false;
-            }else {
-                buffer[i] = Character.toLowerCase(ch);
-            }
-        }
-        return new String(buffer);
-    }
-
-    @Deprecated
-    public static String uncapitalize(final String str, final char... delimiters) {
-        final int delimLen = delimiters == null ? -1 : delimiters.length;
-        if (StringUtils.isEmpty(str) || delimLen == 0) {
-            return str;
-        }
-        final char[] buffer = str.toCharArray();
-        boolean uncapitalizeNext = true;
-        for (int i = 0; i < buffer.length; i++) {
-            final char ch = buffer[i];
-            if (isDelimiter(ch, delimiters)) {
-                uncapitalizeNext = true;
-            } else if (uncapitalizeNext) {
-                buffer[i] = Character.toLowerCase(ch);
-                uncapitalizeNext = false;
-            }
-        }
-        return new String(buffer);
-    }
-
-    /**
-     * Is the character a delimiter.
-     *
-     * @param ch  the character to check
-     * @param delimiters  the delimiters
-     * @return true if it is a delimiter
-     */
-    private static boolean isDelimiter(final char ch, final char[] delimiters) {
-        if (delimiters == null) {
-            return Character.isWhitespace(ch);
-        }
-        for (final char delimiter : delimiters) {
-            if (ch == delimiter) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public static String truncate(String input, int maxLength) {
         if(input == null) {
@@ -311,16 +191,6 @@ public class StringUtils {
         return costs[s2.length()];
     }
 
-    public static String getFirstWord(String text) {
-       // String firstWord = text.split("\\W")[0];
-        Locale thaiLocale = new Locale("th");
-        BreakIterator boundary = BreakIterator.getWordInstance(thaiLocale);
-        boundary.setText(text);
-        int start = boundary.first();
-        int end = boundary.next();
-        return text.substring(start, end);
-    }
-
     public static String trimToEmpty(String substring) {
         if(substring==null) return "";
         return substring.trim();
@@ -331,14 +201,6 @@ public class StringUtils {
         return substring.trim();
     }
 
-    public static String[] splitArtists(String artist) {
-        if(!StringUtils.isEmpty(artist)) {
-            return artist.split(Constants.FIELD_SEP);
-        }
-
-        return null;
-    }
-
     public static String remove(String txt, String toRemove) {
         if(isEmpty(txt)) return "";
         if(isEmpty(toRemove)) return txt;
@@ -346,16 +208,6 @@ public class StringUtils {
             txt = txt.replace(toRemove, "");
         }
         return txt;
-    }
-
-    public static String getChars(String text, int num) {
-        if(StringUtils.isEmpty(text)) {
-            return "*";
-         }
-         if(text.length()<=num) {
-            return StringUtils.trimToEmpty(text);
-         }
-         return  StringUtils.trimToEmpty(text.substring(0, num));
     }
 
     public static boolean isDigitOnly(String text) {
@@ -411,17 +263,33 @@ public class StringUtils {
         }
 
         String str = text.toString().trim();
-       // if(str.contains("/")) {
-       //     str = str.replace("/","_");
-       // }
         if(str.startsWith("\"") && str.endsWith("\"")) {
             str = str.substring(1, str.length()-1);
         }
         if(str.startsWith("\\\"") && str.endsWith("\\\"")) {
             str = str.substring(2, str.length()-2);
         }
-       // return convertToStartCase(trimToEmpty(str));
-        return capitalizeWords(str);
+        return WordUtils.capitalize(str);
+    }
+
+    public static String formatFilePath(CharSequence text) {
+        // trim space
+        // format as word, first letter of word is capital
+        if(isEmpty((String) text)) {
+            return "";
+        }
+
+        String str = text.toString().trim();
+         if(str.contains("/")) {
+             str = str.replace("/","_");
+         }
+        if(str.startsWith("\"") && str.endsWith("\"")) {
+            str = str.substring(1, str.length()-1);
+        }
+        if(str.startsWith("\\\"") && str.endsWith("\\\"")) {
+            str = str.substring(2, str.length()-2);
+        }
+        return WordUtils.capitalize(str);
     }
 
     public static String formatDuration(double milliseconds, boolean withUnit) {
@@ -692,13 +560,8 @@ public class StringUtils {
         return trimToEmpty(val).toUpperCase(Locale.US);
     }
 
-    public static String toLowwerCase(String val) {
+    public static String toLowerCase(String val) {
         return trimToEmpty(val).toLowerCase(Locale.US);
-    }
-
-    public static String getM3UArtist(String artist) {
-        if(isEmpty(artist)) return "";
-        return artist.replaceAll("-", ".");
     }
 
     public static String removeTrackNo(@Nullable String title) {

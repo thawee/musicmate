@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
-import okio.Buffer;
 
 public class FFMpegHelper {
     private static final String TAG = "FFMpegHelper";
@@ -316,7 +315,7 @@ public class FFMpegHelper {
        // if(!MusicTagUtils.isLossless(tag)) return false; // no need for compress encoding
 
         Log.d(TAG, "writeTagQualityToFile: "+tag.getPath());
-        /// check free space on storage
+        // check free space on storage
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff
         // ffmpeg -hide_banner -i aiff.aiff -map 0 -y -codec copy -metadata "artist-sort=emon feat sort" aiffout.aiff
@@ -324,9 +323,7 @@ public class FFMpegHelper {
         File dir = context.getExternalCacheDir();
         String targetPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+tag.getFileFormat();
         dir = new File(dir, targetPath);
-        if(!dir.getParentFile().exists()) {
-            dir.getParentFile().mkdirs();
-        }
+        FileUtils.createParentDirs(dir);
         targetPath = dir.getAbsolutePath();
         //targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackGainKeys(tag);
@@ -358,7 +355,7 @@ public class FFMpegHelper {
     }
 
     public static boolean writeTagToFile(Context context, MusicTag tag) {
-        /// check free space on storage
+        // check free space on storage
         // ffmpeg write to new tmp file
         // ffmpeg -i aiff.aiff -map 0 -y -codec copy -write_id3v2 1 -metadata "artist-sort=emon feat sort" aiffout.aiff
         // ffmpeg -hide_banner -i aiff.aiff -map 0 -y -codec copy -metadata "artist-sort=emon feat sort" aiffout.aiff
@@ -369,9 +366,7 @@ public class FFMpegHelper {
         String ext = FileUtils.getExtension(srcPath);
         String targetPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, targetPath);
-        if(!dir.getParentFile().exists()) {
-            dir.getParentFile().mkdirs();
-        }
+        FileUtils.createParentDirs(dir);
         targetPath = dir.getAbsolutePath();
         targetPath = escapePathForFFMPEG(targetPath);
         String metadataKeys = getMetadataTrackKeys(tag.getOriginTag(), tag);
@@ -699,9 +694,7 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
         File dir = context.getExternalCacheDir();
         String tmpPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, tmpPath);
-        if(!dir.getParentFile().exists()) {
-            dir.getParentFile().mkdirs();
-        }
+        FileUtils.createParentDirs(dir);
         tmpPath = dir.getAbsolutePath();
         FileSystem.copy(context, srcPath, tmpPath);
 
