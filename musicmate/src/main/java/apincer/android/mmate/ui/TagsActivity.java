@@ -496,11 +496,12 @@ public class TagsActivity extends AppCompatActivity {
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
-        String matePath = repos.buildCollectionPath(displayTag, true);
-        if(!StringUtils.equals(matePath, displayTag.getPath())) {
-            pathInfoLine.setBackgroundColor(getColor(R.color.warn_not_in_managed_dir));
-        }else {
+        boolean inLibrary = MusicTagUtils.isManagedInLibrary(getApplicationContext(), displayTag);
+       // String matePath = repos.buildCollectionPath(displayTag, true);
+        if(inLibrary) {
             pathInfoLine.setBackgroundColor(getColor(R.color.grey400));
+        }else {
+            pathInfoLine.setBackgroundColor(getColor(R.color.warn_not_in_managed_dir));
         }
         pathInfo.setText(simplePath);
        // SpannableString content = new SpannableString(simplePath);// + mateInd);
@@ -542,7 +543,9 @@ public class TagsActivity extends AppCompatActivity {
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
+                   // .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
+                    .append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(displayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize))
+
                     .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
                    // .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor));

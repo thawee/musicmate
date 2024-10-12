@@ -32,6 +32,7 @@ import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagReader;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.StringUtils;
 import de.esoco.lib.reflect.ReflectUtil;
 
@@ -55,7 +56,9 @@ public class TagsTechnicalFragment extends Fragment {
     public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
         return item -> {
             if(item.getItemId() == R.id.menu_editor_tech_refresh) {
-                doReloadTagFromFile();
+               // doReloadTagFromFile();
+                doResetTagFromFile();
+                getActivity().finish();
             }else if(item.getItemId() == R.id.menu_editor_tech_extract_coverart) {
                 doExtractEmbedCoverart();
             }if(item.getItemId() == R.id.menu_editor_tech_remove_coverart) {
@@ -280,6 +283,27 @@ public class TagsTechnicalFragment extends Fragment {
                     FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
                         repos.cleanCacheCover(getContext(), tag);
+                        repos.scanMusicFile(new File(tag.getPath()), true);
+                    }
+                }
+        ).thenAccept(
+                unused -> stopProgressBar()
+        ).exceptionally(
+                throwable -> {
+                    stopProgressBar();
+                    return null;
+                }
+        );
+    }
+
+    private void doResetTagFromFile() {
+        startProgressBar();
+        CompletableFuture.runAsync(
+                () -> {
+                    FileRepository repos = FileRepository.newInstance(getContext());
+                    for(MusicTag tag:tagsActivity.getEditItems()) {
+                        repos.cleanCacheCover(getContext(), tag);
+                        TagRepository.removeTag(tag);
                         repos.scanMusicFile(new File(tag.getPath()), true);
                     }
                 }

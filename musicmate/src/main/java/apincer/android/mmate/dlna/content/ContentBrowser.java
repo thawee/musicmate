@@ -22,6 +22,7 @@ import apincer.android.mmate.dlna.transport.HCContentServer;
 import apincer.android.mmate.dlna.transport.NettyStreamServerImpl;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.StringUtils;
 
 
 /**
@@ -107,7 +108,7 @@ public abstract class ContentBrowser {
         String uri = getUriString(contentDirectory, tag);
         URI albumArtUri = getAlbumArtUri(contentDirectory, tag);
         Res resource = new Res(protocolInfo, tag.getFileSize(), uri);
-        resource.setDuration(tag.getAudioDurationAsString());
+        resource.setDuration(StringUtils.formatDuration(tag.getAudioDuration(), false));
         MusicTrack musicTrack = new MusicTrack(itemPrefix + id, parentId,
                 title, creator, tag.getAlbum(), tag.getArtist(), resource);
         musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(

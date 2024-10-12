@@ -40,6 +40,7 @@ import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
@@ -446,8 +447,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
-       // ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
-        ImageLoader imageLoader = new ImageLoader.Builder(holder.mContext)
+        ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
+      /*  ImageLoader imageLoader = new ImageLoader.Builder(holder.mContext)
                 .crossfade(true)
                 .okHttpClient(
                         new OkHttpClient.Builder()
@@ -455,7 +456,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                                 .readTimeout(10, TimeUnit.SECONDS)
                                 .build()
                 )
-            .build();
+            .build(); */
 
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
@@ -534,7 +535,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mFileTypeView.setText(trimToEmpty(tag.getAudioEncoding()).toUpperCase(Locale.US));
         holder.mFileTypeView.setBackground(resolutionBackground);
         // duration
-        holder.mDurationView.setText(tag.getAudioDurationAsString());
+        holder.mDurationView.setText(StringUtils.formatDuration(tag.getAudioDuration(), false));
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));

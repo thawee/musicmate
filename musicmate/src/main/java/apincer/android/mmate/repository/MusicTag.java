@@ -14,7 +14,7 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.util.Objects;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.utils.StringUtils;
+
 @DatabaseTable(tableName = "musictag")
 public class MusicTag implements Cloneable, Parcelable {
     @Override
@@ -437,10 +437,6 @@ public class MusicTag implements Cloneable, Parcelable {
         return path;
     }
 
-    public String getAudioDurationAsString() {
-        return StringUtils.formatDuration(audioDuration, false);
-    }
-
     public double getAudioDuration() {
         return audioDuration;
     }
@@ -724,4 +720,5 @@ public class MusicTag implements Cloneable, Parcelable {
     public void setResampledInd(String upsampled) {
         this.resampledInd = upsampled;
     }
+
 }

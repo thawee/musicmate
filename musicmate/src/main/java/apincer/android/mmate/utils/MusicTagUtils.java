@@ -12,6 +12,7 @@ import java.util.Locale;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
+import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 
 public class MusicTagUtils {
@@ -703,6 +704,7 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
+    /*
     public static boolean isUpScaled(MusicTag tag) {
         if(tag.getDynamicRange()==0) return false;
         if(tag.getAudioBitsDepth() <=16) {
@@ -716,7 +718,7 @@ public class MusicTagUtils {
         //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
         }
         return false;
-    }
+    } */
 
     /*
     public static boolean isBadUpScaled(MusicTag tag) {
@@ -770,6 +772,11 @@ public class MusicTagUtils {
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) && (grouping.contains("LOUNGE") ||
                 genre.contains("ACOUSTIC"));
+    }
+
+    public static boolean isManagedInLibrary(Context context, MusicTag tag) {
+        String path = FileRepository.newInstance(context).buildCollectionPath(tag, true);
+        return StringUtils.compare(path, tag.getPath());
     }
 
     public static boolean isRelaxedThaiPlaylist(MusicTag tag) {

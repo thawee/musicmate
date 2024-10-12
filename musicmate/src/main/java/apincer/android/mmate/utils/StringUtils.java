@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.text.WordUtils;
 
-import java.text.BreakIterator;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -292,11 +292,11 @@ public class StringUtils {
         return WordUtils.capitalize(str);
     }
 
-    public static String formatDuration(double milliseconds, boolean withUnit) {
+    public static String formatDuration(double totalseconds, boolean withUnit) {
         int unitms = 1; //1000;
-        long s = (long) (milliseconds / unitms % 60);
-        long m = (long) (milliseconds / unitms / 60 % 60);
-        long h = (long) (milliseconds / unitms / 60 / 60);
+        long s = (long) (totalseconds / unitms % 60);
+        long m = (long) (totalseconds / unitms / 60 % 60);
+        long h = (long) (totalseconds / unitms / 60 / 60);
         String format = "%02d:%02d:%02d";
         String formatHrsUnit = "%2d Hrs";
         String formatMinuteUnit = "%2d Min";
@@ -613,5 +613,13 @@ public class StringUtils {
             artist = String.join(ARTIST_SEP_SPACE, artistList);
         }
         return artist;
+    }
+
+    public static String formatDurationAsMinute(double totalseconds) {
+        Duration duration = Duration.ofSeconds((long) totalseconds);
+        long minutes = duration.toMinutes();
+        long seconds = duration.minusMinutes(minutes).getSeconds();
+
+        return String.format("%02d:%02d Min", minutes, seconds);
     }
 }

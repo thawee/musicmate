@@ -230,7 +230,8 @@ public class FileRepository {
             return false;
         }
 
-        item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
+       // item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
+        item.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), item));
 
         if(FFMPegReader.isSupportedFileFormat(item.getPath())) {
             writeTagToFile(getContext(), item);
@@ -273,8 +274,7 @@ public class FileRepository {
                 List<MusicTag> tags = reader.readFullMusicTag(getContext(), mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
-                        String matePath = buildCollectionPath(tag);
-                        tag.setMusicManaged(StringUtils.equals(matePath, tag.getPath()));
+                        tag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), tag));
                         TagRepository.saveTag(tag);
 
                         // extract cover art
@@ -333,9 +333,9 @@ public class FileRepository {
             String albumArtist = StringUtils.formatFilePath(metadata.getAlbumArtist());
             boolean addArtist2title = "Various Artists".equals(albumArtist);
             if(!isEmpty(albumArtist)) {
-                filename.append(StringUtils.formatFilePath(albumArtist)).append(File.separator);
+                filename.append(albumArtist).append(File.separator);
             }else if (!isEmpty(artist)) {
-                filename.append(StringUtils.formatFilePath(artist)).append(File.separator);
+                filename.append(artist).append(File.separator);
             }
 
             // album
@@ -350,7 +350,7 @@ public class FileRepository {
             if(!isEmpty(metadata.getTrack())) {
                 filename.append(StringUtils.getWord(metadata.getTrack(),"/",0)).append(" - ");
             } else if(addArtist2title) {
-                filename.append(artist).append(" - ");
+                filename.append(StringUtils.formatFilePath(artist)).append(" - ");
             }
 
             // title
@@ -431,8 +431,7 @@ public class FileRepository {
         return file.exists();
     }
 
-
-    private boolean importAudioTag(MusicTag tag) {
+    private boolean moveMusicFiles(MusicTag tag) {
             String newPath = buildCollectionPath(tag);
             if(newPath.equalsIgnoreCase(tag.getPath())) {
                 tag.setMusicManaged(true);
@@ -515,7 +514,7 @@ public class FileRepository {
         boolean status;
         try {
             MusixMateApp.getPlayerControl().playNextSongOnMatched(getContext(), item);
-            status = importAudioTag(item);
+            status = moveMusicFiles(item);
         }catch(Exception|OutOfMemoryError ex) {
             Log.e(TAG, "importAudioFile",ex);
             status = false;
