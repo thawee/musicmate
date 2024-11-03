@@ -23,8 +23,15 @@ import apincer.android.utils.FileUtils;
 
 public class JustDSDReader extends TagReader{
     private static final String TAG = "JustDSDReader";
+    private final Context context;
+
+
+    public JustDSDReader(Context context) {
+        this.context = context;
+    }
+
     @Override
-    public List<MusicTag> readMusicTag(Context context, String path) {
+    protected List<MusicTag> readTagsFromFile(String path) {
         Log.d(TAG, "JustDSD -> "+path);
         try {
             String fileExtension = FileUtils.getExtension(path).toUpperCase();
@@ -117,8 +124,8 @@ public class JustDSDReader extends TagReader{
     }
 
     @Override
-    public List<MusicTag> readFullMusicTag(Context context, String path) {
-        return readMusicTag(context,path);
+    protected List<MusicTag> readFullTagsFromFile(String path) {
+        return readTagsFromFile(path);
     }
 
     private void readJSON(MusicTag metadata) {

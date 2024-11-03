@@ -38,20 +38,20 @@ public final class Constants {
     public static final String IND_RESAMPLED_INVALID = "F";
 
   //  public static final double SPL_8BIT_IN_DB = 49.8;
-    public static final double SPL_16BIT_IN_DB = 96.33;
-    public static final double SPL_24BIT_IN_DB = 144.49;
+   // public static final double SPL_16BIT_IN_DB = 96.33;
+   // public static final double SPL_24BIT_IN_DB = 144.49;
 
-    public static final double MIN_SPL_RATIO = 0.8; //0.72; //just magic number, it's should be 1.0 for actual results
-    public static final double MIN_SPL_16BIT_IN_DB = SPL_16BIT_IN_DB*MIN_SPL_RATIO;
-    public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;
+  //  public static final double MIN_SPL_RATIO = 0.8; //0.72; //just magic number, it's should be 1.0 for actual results
+   // public static final double MIN_SPL_16BIT_IN_DB = SPL_16BIT_IN_DB*MIN_SPL_RATIO;
+   // public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;
 
    // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
    // public static final long QUALITY_SAMPLING_RATE_88 = 88200;
-    public static final int QUALITY_SAMPLING_RATE_48 = 48000;
+  //  public static final int QUALITY_SAMPLING_RATE_48 = 48000;
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
-    public static final int QUALITY_BIT_CD = 16;
+  //  public static final int QUALITY_BIT_CD = 16;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
 
     public static final String FILE_EXT_WAVE = "wav";
@@ -70,10 +70,13 @@ public final class Constants {
     public static final String ARTIST_SEP = ",";
     public static final String ARTIST_SEP_SPACE = ", ";
 
-    public static final String GROUPING_LOUNGE = "Lounge";
-    public static final String GROUPING_ACOUSTIC = "Acoustic";
-    public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
-    public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
+    public static final String GROUPING_CLASSICAL = "Classical";
+    public static final String GROUPING_TRADITIONAL = "Traditional";
+
+  //  public static final String GROUPING_LOUNGE = "Lounge";
+ //   public static final String GROUPING_ACOUSTIC = "Acoustic";
+  //  public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
+  //  public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
 
     public static final String TITLE_LIBRARY = "Collections";
     public static final String TITLE_RESOLUTION = "Resolutions";
@@ -85,7 +88,7 @@ public final class Constants {
 
     public static final String TITLE_DUPLICATE = "Duplicate Song";
     public static final String TITLE_BROKEN = "Unsatisfactory";
-    public static final String TITLE_NO_DR_METER = "No DRMeter";
+ //   public static final String TITLE_NO_DR_METER = "No DRMeter";
     public static final String TITLE_TO_ANALYST_DR = "To Analyst DR";
     public static final String TITLE_INCOMING_SONGS = "Download Songs";
     public static final String TITLE_ALL_SONGS = "My Songs";
@@ -101,7 +104,7 @@ public final class Constants {
     public static final String TITLE_MQA = "MQA";
     public static final String TITLE_HQ = "HQ";
 
-    public static final String FIELD_SEP = ";";
+ //   public static final String FIELD_SEP = ";";
     public static final double MIN_TITLE = 0.80;
     public static final double MIN_ARTIST = 0.70;
 
@@ -156,7 +159,7 @@ public final class Constants {
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
   //  public static final String AUDIO_SQ_PCM = "PCM";
    // public static final String AUDIO_SQ_RESOLUTION = "Resolutions";
-    public static final String AUDIO_SQ_ENCODINGS = "Encodings";
+  //  public static final String AUDIO_SQ_ENCODINGS = "Encodings";
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";

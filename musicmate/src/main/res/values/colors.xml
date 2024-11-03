@@ -224,7 +224,10 @@
     -->
     <color name="resolution_dsd">#009688</color>
     <color name="resolution_lossless">#FFC107</color>
+    <!--
     <color name="resolution_lossy">#FF5722</color>
+    -->
+    <color name="resolution_lossy">@color/grey400</color>
     <color name="resolution_hires">#FF9800</color>
 
     <color name="resolution_pcm_44_48">#FFFF00</color>

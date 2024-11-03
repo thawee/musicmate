@@ -4,3 +4,28 @@ The human ear can hear a range of sounds from very soft to very loud, covering a
 
 Dynamic Range Score
 Dynamic Range (DR) measures how much the volume changes in a piece of music or an album. Low DR values, like DR3, mean the music is heavily compressed, with only a small difference (three decibels) between the quietest and loudest parts. Natural recordings, with less compression, have higher DR values, like DR12 or more. The DR system helps to understand the dynamic quality of music without making it a black-and-white issue. For example, DR7 is considered low for rock or jazz music but is acceptable for electronic club music, which often has DR values below DR4. Generally, music with DR values above DR12 has high dynamic quality.
+
+Music Groupings
+
+Classical Music - formal and complex
+ Indian Classical: Hindustani, Carnatic
+ Chinese Classical: Guqin, Guzheng, Pipa
+ Japanese Classical: Gagaku, Shakuhachi, Koto
+ Thai Classical: Piphat, Khrueang Sai, Mahori
+
+Traditional Music - cultural and evolving
+ African: Djembe drumming, Mbira music
+ Asian: Indian Raga, Chinese Guzheng
+ European: Celtic music, Flamenco
+ Latin American: Mariachi, Samba
+ Thai: Mor Lum, Luk Thung
+
+Popular Music - modern and accessible
+ Rock: The Beatles, Led Zeppelin
+ Pop: Michael Jackson, Madonna
+ Hip-Hop: Tupac, Jay-Z
+ Electronic: Daft Punk, Avicii
+
+Jazz - dynamic and influential
+Styles: Dixieland, Swing, Bebop, Cool Jazz, Free Jazz
+Artists: Louis Armstrong, Duke Ellington, Miles Davis, John Coltrane

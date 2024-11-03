@@ -30,9 +30,9 @@ public class CollectionsBrowser extends ContentBrowser {
     public static final String MY_SONGS = "All Songs";
     public static final String DOWNLOADS_SONGS = "Download Songs";
     public static final String DUPLICATED_SONGS = "Duplicate Songs";
-    public static final String SMART_LIST_FINFIN_SONGS = "เพลงฟินๆ รินเบียร์เย็นๆ";
-    public static final String SMART_LIST_FINFIN_EN_SONGS = "เพลงสากลฟินๆ รินเบียร์เย็นๆ";
-    public static final String SMART_LIST_FINFIN_TH_SONGS = "เพลงไทยฟินๆ รินเบียร์เย็นๆ";
+    public static final String SMART_LIST_FINFIN_SONGS = "ฟังเพลงฟินๆ รินเบียร์เย็นๆ";
+    public static final String SMART_LIST_FINFIN_EN_SONGS = "ฟังเพลงสากลฟินๆ รินเบียร์เย็นๆ";
+    public static final String SMART_LIST_FINFIN_TH_SONGS = "ฟังเพลงไทยฟินๆ รินเบียร์เย็นๆ";
     public static final String SMART_LIST_RELAXED_TH_SONGS = "ยานอนหลับ ฉบับไทยๆ";
     public static final String SMART_LIST_RELAXED_EN_SONGS = "ยานอนหลับ ฉบับสากล";
     public static final String SMART_LIST_RELAXED_SONGS = "ยานอนหลับ ฉบับรวมมิตร";

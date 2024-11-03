@@ -195,6 +195,16 @@ public class FileSystem {
         }
     }
 
+    public static File getCacheDirForFile(Context context, String pathId) {
+        File files[] =context.getExternalCacheDirs();
+        for(File file: files) {
+            if(file.getAbsolutePath().contains(pathId)) {
+                return file;
+            }
+        }
+        return context.getExternalCacheDir();
+    }
+
     /*
     public boolean copy(final DocumentFile source, final File target) {
         InputStream inStream = null;

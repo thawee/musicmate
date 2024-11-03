@@ -86,7 +86,7 @@ public abstract class TagReader {
     protected static final String KEY_TAG_QUALITY = "QUALITY";
     protected static final String KEY_TAG_MEDIA = "MEDIA";
 
-    public static TagReader getReader(String path) {
+    protected static TagReader getReader(Context context, String path) {
        /* try {
             String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
             if("flac".equalsIgnoreCase(ext)) {
@@ -97,7 +97,7 @@ public abstract class TagReader {
         }catch(Exception ex) {
             return null;
         } */
-        return new JAudioTaggerReader();
+        return new JAudioTaggerReader(context);
     }
 
     public static boolean isSupportedFileFormat(String path) {
@@ -155,7 +155,15 @@ public abstract class TagReader {
         return "";
     }
 
-    public abstract List<MusicTag> readMusicTag(Context context, String mediaPath);
+    public static List<MusicTag> readTag(Context context, String mediaPath) {
+        return getReader(context, mediaPath).readTagsFromFile(mediaPath);
+    }
 
-    public abstract List<MusicTag> readFullMusicTag(Context context, String mediaPath);
+    public static List<MusicTag> readTagFull(Context context, String mediaPath) {
+        return getReader(context, mediaPath).readFullTagsFromFile(mediaPath);
+    }
+
+    protected abstract List<MusicTag> readTagsFromFile(String mediaPath);
+
+    protected abstract List<MusicTag> readFullTagsFromFile(String mediaPath);
 }

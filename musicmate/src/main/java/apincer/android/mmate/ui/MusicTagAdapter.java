@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,7 +28,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -44,7 +44,6 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
-import okhttp3.OkHttpClient;
 
 public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHolder> {
     private SearchCriteria criteria;
@@ -448,22 +447,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
         ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
-      /*  ImageLoader imageLoader = new ImageLoader.Builder(holder.mContext)
-                .crossfade(true)
-                .okHttpClient(
-                        new OkHttpClient.Builder()
-                                .connectTimeout(10, TimeUnit.SECONDS)
-                                .readTimeout(10, TimeUnit.SECONDS)
-                                .build()
-                )
-            .build(); */
 
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
         if(MusicTagUtils.isFLACFile(tag)) {
-           // holder.mDynamicRange.setText(MusicTagUtils.getTrackDRScore(tag));
-           // holder.mDynamicRangePanel.setVisibility(View.VISIBLE);
             holder.mAudioQuality.setVisibility(View.VISIBLE);
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
                     .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
@@ -472,7 +460,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     .build();
             imageLoader.enqueue(request);
         }else {
-           // holder.mDynamicRangePanel.setVisibility(View.GONE);
             holder.mAudioQuality.setVisibility(View.GONE);
         }
 
@@ -504,10 +491,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         ImageRequest request;
         // Show AlbumArt
+       Uri coverArtUri = CoverArtProvider.getUriForMusicTag(holder.mContext, tag);
        request = new ImageRequest.Builder(holder.mContext)
-               // .data(MusicTagUtils.getCoverArt(holder.mContext, tag))
-               //.data(MusicCoverArtProvider.getUriForMusicTag(tag))
-               .data(CoverArtProvider.getUriForMusicTag(holder.mContext, tag))
+               .data(coverArtUri)
                 // .size(800, 800)
                 .crossfade(false)
                 .target(holder.mCoverArtView)

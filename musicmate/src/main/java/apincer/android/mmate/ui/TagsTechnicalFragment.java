@@ -1,7 +1,6 @@
 package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.utils.StringUtils.format;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -111,9 +110,9 @@ public class TagsTechnicalFragment extends Fragment {
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag, true);
         filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
-        MusicTag tt = TagReader.getReader(tag.getPath()).readMusicTag(getContext(), tag.getPath()).get(0);
+        MusicTag tt = TagReader.readTag(context, tag.getPath()).get(0); // .readMusicTag(getContext(), tag.getPath()).get(0);
 
-        MusicTag ffmpegTag = FFMPegReader.readTagFromFile(getContext(), tag.getPath());
+        MusicTag ffmpegTag = (new FFMPegReader(getContext())).extractTagFromFile(tag.getPath());
         metada.setText(ffmpegTag.getData());
        // metada.setText(ffmpegTag.getData() +"\r\n"+ MusicTagUtils.getEncResolutionIcon(context, tag));
 

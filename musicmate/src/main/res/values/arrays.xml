@@ -123,13 +123,13 @@
     <string-array name="default_genres">
         <item>Alternative</item>
         <item>Acoustic</item>
+        <item>Bossa Nova</item>
         <item>Classical</item>
         <item>Instrument</item>
         <item>Concertos</item>
         <item>Jazz</item>
         <item>Jazz, Contemporary</item>
         <item>Jazz, Ballads</item>
-        <item>Jazz, Bossa Nova</item>
         <item>Jazz, Vocal</item>
         <item>Blues</item>
         <item>Country</item>
@@ -142,6 +142,7 @@
         <item>Pop, Rock</item>
         <item>Pop, Vocal</item>
         <item>Rock</item>
+        <item>Rock, Alternative</item>
         <item>Rock, Hard Rock</item>
         <item>Rock, Metal</item>
         <item>Rock, Soft Rock</item>
@@ -151,7 +152,6 @@
         <item>EDM</item>
         <item>Rap</item>
         <item>Indie</item>
-        <item>Indie, ISaan</item>
         <!--
         <item>Thai Classical</item>
         <item>Thai Pop</item>
@@ -167,11 +167,21 @@
         <item>Mor Lum</item>
     </string-array>
     <string-array name="default_groupings">
+        <item>Classical</item>
+        <item>Jazz</item>
+        <item>Traditional</item>
+        <item>Popular</item>
+        <item>Thai Classical</item>
+        <item>Thai Popular</item>
+        <item>Thai Jazz</item>
+        <!--
+        <item>Classical</item>
         <item>English</item>
         <item>Lounge</item>
+        <item>Thai Classical</item>
         <item>Thai Lounge</item>
         <item>Thai</item>
-        <item>World</item>
+        <item>World</item> -->
     </string-array>
     <string-array name="file_qualities">
         <item>Audiophile</item>

@@ -44,6 +44,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
@@ -57,18 +58,21 @@ import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
+import apincer.android.mmate.worker.MusicMateExecutors;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
 import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
+import de.esoco.lib.expression.Action;
 
 public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
-    AlertDialog progressDialog;
+    private AlertDialog progressDialog;
+    private TextView progressLabel;
     private TextView previewTitle;
     private TextView previewArtist;
     private TextView previewAlbum;
@@ -85,10 +89,7 @@ public class TagsEditorFragment extends Fragment {
     private TextInputEditText txtGrouping;
     private TextInputEditText txtMediaType;
     private TextInputEditText txtPublisher;
-   // private MaterialRadioButton rdAudiophile;
-   // private MaterialRadioButton rdRecommended;
-   // private MaterialRadioButton rdRegular;
-    private PowerSpinnerView fileQuality;
+   private PowerSpinnerView fileQuality;
     private PowerMenu powerMenu;
     private volatile boolean bypassChange = false;
 
@@ -119,10 +120,6 @@ public class TagsEditorFragment extends Fragment {
         txtGrouping = v.findViewById(R.id.input_grouping);
         txtMediaType = v.findViewById(R.id.input_media_type);
         txtPublisher = v.findViewById(R.id.input_publisher);
-        // quality
-        //rdAudiophile = v.findViewById(R.id.mediaQualityAudioPhile);
-        //rdRecommended = v.findViewById(R.id.mediaQualityRecommended);
-        //rdRegular = v.findViewById(R.id.mediaQualityRegular);
         fileQuality = v.findViewById(R.id.mediaFileQuality);
         setupFileQualityList(fileQuality);
 
@@ -376,15 +373,21 @@ public class TagsEditorFragment extends Fragment {
                             buildPendingTags(item);
                     }
                     FileRepository repos = FileRepository.newInstance(tagsActivity.getApplicationContext());
-                    for(MusicTag tag: tagsActivity.getEditItems()) {
+
+                    List<MusicTag> list = tagsActivity.getEditItems();
+                    final int len = list.size();
+                    AtomicInteger count = new AtomicInteger(0);
+                    MusicMateExecutors.executeParallels(list, 2, (Action<MusicTag>) tag -> {
                         try {
+                            int currentCount = count.incrementAndGet();
                             boolean status = repos.setMusicTag(tag);
-                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
+                            updateProgressBar(currentCount + "/" + len);
+                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, (MusicTag) tag);
                             EventBus.getDefault().postSticky(message);
                         } catch (Exception e) {
-                            Log.e(TAG, "doSaveMediaItem",e);
+                            Log.e(TAG, "doSaveMediaItem", e);
                         }
-                    }
+                    });
                 }
         ).thenAccept(
                 unused -> {
@@ -427,11 +430,6 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private String buildQualityTag() {
-       /* if (rdAudiophile.isChecked()) {
-            return Constants.QUALITY_AUDIOPHILE;
-        } else if (rdRecommended.isChecked()) {
-            return Constants.QUALITY_RECOMMENDED;
-        }*/
         int indx = fileQuality.getSelectedIndex();
         if(indx ==0) {
             return Constants.QUALITY_AUDIOPHILE;
@@ -516,9 +514,6 @@ public class TagsEditorFragment extends Fragment {
         txtAlbumArtist.invalidate();
 
         // quality
-        //rdAudiophile.setChecked(Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality()));
-        //rdRecommended.setChecked(Constants.QUALITY_RECOMMENDED.equalsIgnoreCase(tag.getMediaQuality()));
-        //rdRegular.setChecked(isEmpty(tag.getMediaQuality()));
         if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
             fileQuality.selectItemByIndex(0);
         }else if(Constants.QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
@@ -552,7 +547,10 @@ public class TagsEditorFragment extends Fragment {
         tagsActivity.runOnUiThread(() -> {
             try {
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(tagsActivity, R.style.AlertDialogTheme);
-                dialogBuilder.setView(R.layout.progress_dialog_layout);
+                View v = getLayoutInflater().inflate(R.layout.progress_dialog_layout, null);
+                progressLabel = v.findViewById(R.id.process_label);
+                dialogBuilder.setView(v);
+               // dialogBuilder.setView(R.layout.progress_dialog_layout);
                 dialogBuilder.setCancelable(false);
                 progressDialog = dialogBuilder.create();
                 progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -566,8 +564,19 @@ public class TagsEditorFragment extends Fragment {
     private void stopProgressBar() {
         tagsActivity.runOnUiThread(() -> {
             if(progressDialog!=null) {
-                progressDialog.dismiss();
-                progressDialog = null;
+                try {
+                    progressDialog.dismiss();
+                    progressDialog = null;
+                } catch (Exception ignored) {  }
+            }
+        });
+    }
+    private void updateProgressBar(final String label) {
+        tagsActivity.runOnUiThread(() -> {
+            if(progressDialog!=null && progressLabel!= null) {
+                progressLabel.setText(label);
+              //  progressDialog.
+             //   progressDialog = null;
             }
         });
     }

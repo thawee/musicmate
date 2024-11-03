@@ -6,11 +6,8 @@ import static apincer.android.mmate.Constants.IND_RESAMPLED_INVALID;
 import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
 import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.Constants.IND_UPSCALED_INVALID;
-import static apincer.android.mmate.Constants.QUALITY_BAD;
-import static apincer.android.mmate.Constants.QUALITY_BIT_CD;
 import static apincer.android.mmate.Constants.QUALITY_GOOD;
 import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
-import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_48;
 import static apincer.android.mmate.utils.MusicTagUtils.getBPSAndSampleRate;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeAsString;
 import static apincer.android.mmate.utils.MusicTagUtils.getEncodingColor;
@@ -59,6 +56,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.utils.FileUtils;
 
 public class IconProviders {
     private static final String TAG = "IconProviders";
@@ -111,10 +109,12 @@ public class IconProviders {
         File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
             try {
-                dir = pathFile.getParentFile();
-                dir.mkdirs();
+                FileUtils.createParentDirs(pathFile);
+               // dir = pathFile.getParentFile();
+               // dir.mkdirs();
 
                 Bitmap bitmap = createTrackQualityIcon(context, tag);
+               // Bitmap bitmap = BitmapHelper.createHexagonBitmap(400, 400); // createTrackQualityIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
                 IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
             } catch (Exception e) {
@@ -156,8 +156,9 @@ public class IconProviders {
         if(!pathFile.exists()) {
             // create file
             try {
-                dir = pathFile.getParentFile();
-                dir.mkdirs();
+                FileUtils.createParentDirs(pathFile);
+               // dir = pathFile.getParentFile();
+               // dir.mkdirs();
 
                 Bitmap bitmap = createEncodingSamplingRateIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
@@ -182,8 +183,9 @@ public class IconProviders {
             //if(true) {
             // create file
             try {
-                dir = pathFile.getParentFile();
-                dir.mkdirs();
+                FileUtils.createParentDirs(pathFile);
+                //dir = pathFile.getParentFile();
+                //dir.mkdirs();
 
                 Bitmap bitmap = createSourceQualityIcon(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
@@ -209,8 +211,9 @@ public class IconProviders {
             // if(true) {
             // create file
             try {
-                dir = pathFile.getParentFile();
-                dir.mkdirs();
+                FileUtils.createParentDirs(pathFile);
+                //dir = pathFile.getParentFile();
+                //dir.mkdirs();
 
                 Bitmap bitmap = createSourceQualityIconMini(context, quality);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
@@ -485,8 +488,8 @@ public class IconProviders {
         paint.setColor(bgBlackColor);
         paint.setStyle(Paint.Style.FILL);
 
-        float blackBGStartPos = (float) (bounds.width() - ((float) bounds.width() /2.8)); // 1/3
-        float blackBGShiftPos = (float) bounds.height() / 3;
+        float blackBGStartPos = (float) (bounds.width() - ((float) bounds.width() /2.6)); // 2.8
+        float blackBGShiftPos = (float) ((float) bounds.height() / 4.2); //3;
         Path path = new Path();
         path.moveTo(blackBGStartPos, wboxPadding); //x1,y1 - top left
         path.lineTo(bounds.width()-8, wboxPadding);   //x2,y1 - top right
@@ -749,7 +752,7 @@ public class IconProviders {
 
 
     @Deprecated
-    public static Bitmap createSourceQualityIcon(Context context, String qualityText, boolean upscaled, boolean upsampled) {
+    public static Bitmap createSourceQualityIcon(Context context) {
         int width = 192;
         int height = 96;
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);

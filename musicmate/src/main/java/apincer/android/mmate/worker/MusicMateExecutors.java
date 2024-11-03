@@ -6,6 +6,10 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import org.greenrobot.eventbus.EventBus;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +17,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import apincer.android.mmate.Constants;
+import apincer.android.mmate.notification.AudioTagEditResultEvent;
+import apincer.android.mmate.repository.MusicTag;
 
 public class MusicMateExecutors {
     private static final String TAG = MusicMateExecutors.class.getName();
@@ -87,6 +96,17 @@ public class MusicMateExecutors {
 
     public static void schedule(@NonNull Runnable command, long seconds) {
         getInstance().mScheduleThread.schedule(command, seconds, TimeUnit.SECONDS);
+    }
+
+    public static void executeParallels(List<MusicTag> items, int threadNo, Consumer<MusicTag> task) {
+        ExecutorService executor = Executors.newFixedThreadPool(threadNo);
+        List<CompletableFuture<Void>> futures = items.stream()
+                .map(item -> CompletableFuture.runAsync(() -> task.accept(item), executor))
+                .toList();
+
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        allOf.join(); // Wait for all tasks to complete
+        executor.shutdown();
     }
 
     public void shutdown() {

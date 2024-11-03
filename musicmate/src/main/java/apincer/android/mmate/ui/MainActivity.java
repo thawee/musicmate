@@ -99,6 +99,7 @@ import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
+import apincer.android.mmate.repository.FFMpegWriter;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
@@ -1465,7 +1466,7 @@ public class MainActivity extends AppCompatActivity {
                                 tag.setResampledInd(analyser.getResampled());
 
                                 //write quality to file
-                                FFMpegHelper.writeTagQualityToFile(MainActivity.this, tag);
+                                FFMpegWriter.writeTagQualityToFile(MainActivity.this, tag);
                                 // update MusicMate Library
                                 TagRepository.saveTag(tag);
                                 statusList.put(tag, "Success");

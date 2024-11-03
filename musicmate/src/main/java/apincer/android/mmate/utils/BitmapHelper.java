@@ -7,7 +7,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -35,8 +37,112 @@ public class BitmapHelper {
     private static final float BITMAP_SCALE = 1f;
     private static final float BLUR_RADIUS = 15f;
 
-    public static Bitmap fastblur(View v) {
-        return blur(v.getContext(), getScreenshot(v));
+    public static Bitmap createHexagon(int width, int height) {
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setStyle(Paint.Style.FILL);
+
+        // Create a gradient shader
+        LinearGradient gradient = new LinearGradient(0, 0, width, height,
+                0xFF0000FF, 0xFF00FFFF, Shader.TileMode.CLAMP);
+        paint.setShader(gradient);
+
+        Path path = new Path();
+        float radius = Math.min(width, height) / 2;
+        float centerX = width / 2;
+        float centerY = height / 2;
+
+        for (int i = 0; i < 6; i++) {
+            float angle = (float) (Math.PI / 3 * i);
+            float x = (float) (centerX + radius * Math.cos(angle));
+            float y = (float) (centerY + radius * Math.sin(angle));
+            if (i == 0) {
+                path.moveTo(x, y);
+            } else {
+                path.lineTo(x, y);
+            }
+        }
+        path.close();
+
+        // Draw the hexagon with gradient fill
+        canvas.drawPath(path, paint);
+
+        // Draw the white border
+        paint.setShader(null);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(0xFFFFFFFF); // White color
+        paint.setStrokeWidth(5);
+        canvas.drawPath(path, paint);
+
+        return bitmap;
+    }
+
+    public static Bitmap createHexagonBitmap(int width, int height) {
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        Paint paint = new Paint();
+        paint.setStyle(Paint.Style.FILL);
+
+        // Create a gradient shader
+        LinearGradient gradient = new LinearGradient(0, 0, width, height,
+                0xFF0000FF, 0xFF00FFFF, Shader.TileMode.CLAMP);
+        paint.setShader(gradient);
+
+        float radius = Math.min(width, height) / 4; // Adjust radius for multiple hexagons
+        float centerX = width / 2f;
+        float centerY = height / 1.8f;
+
+        float marginY = height/10;
+        centerY = centerY + marginY;
+
+        float marginX = width/8;
+        centerX = centerX + marginX;
+
+        // Draw 2 hexagons on top
+        drawHexagon(canvas, paint, centerX - 0.8f* radius, centerY - radius, radius);
+       // drawHexagon(canvas, paint, centerX + radius, centerY - radius * 1.5f, radius);
+
+        // Draw 3 hexagons on bottom
+        centerY = centerY + 1.6f *marginY;
+        drawHexagon(canvas, paint, centerX - 1.5f * radius, centerY, radius);
+        drawHexagon(canvas, paint, centerX, centerY, radius);
+       // drawHexagon(canvas, paint, centerX + 2 * radius, centerY, radius);
+
+        return bitmap;
+    }
+
+    private static void drawHexagon(Canvas canvas, Paint paint, float centerX, float centerY, float radius) {
+        Path path = new Path();
+        for (int i = 0; i < 6; i++) {
+            float angle = (float) (Math.PI / 3 * i);
+            float x = (float) (centerX + radius * Math.cos(angle));
+            float y = (float) (centerY + radius * Math.sin(angle));
+            if (i == 0) {
+                path.moveTo(x, y);
+            } else {
+                path.lineTo(x, y);
+            }
+        }
+        path.close();
+
+        // Draw the hexagon with gradient fill
+        canvas.drawPath(path, paint);
+
+        // Draw the white border
+        paint.setShader(null);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(0xFFFFFFFF); // White color
+        paint.setStrokeWidth(2);
+        canvas.drawPath(path, paint);
+
+        // Reset the paint shader for the next hexagon
+        paint.setStyle(Paint.Style.FILL);
+        LinearGradient gradient = new LinearGradient(0, 0, canvas.getWidth(), canvas.getHeight(),
+                0xFF0000FF, 0xFF00FFFF, Shader.TileMode.CLAMP);
+        paint.setShader(gradient);
     }
 
     public static Bitmap loadBitmapFromView(View v) {

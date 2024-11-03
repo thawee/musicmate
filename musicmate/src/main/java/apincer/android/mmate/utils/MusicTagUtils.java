@@ -1,7 +1,5 @@
 package apincer.android.mmate.utils;
 
-import static apincer.android.mmate.Constants.MIN_SPL_16BIT_IN_DB;
-import static apincer.android.mmate.Constants.MIN_SPL_24BIT_IN_DB;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -23,7 +21,7 @@ public class MusicTagUtils {
         if(isMQA(tag)) {
             sampleRate = tag.getMqaSampleRate();
         }
-        return String.format("%s / %s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
+        return String.format("%s/%s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
     }
 
     public static boolean isMQAStudio(MusicTag tag) {
@@ -141,8 +139,6 @@ public class MusicTagUtils {
     public static boolean isLossy(MusicTag tag) {
         return isMPegFile(tag) || isAACFile(tag);
     }
-
-
 
     @Deprecated
     public static String getAlbumArtistOrArtist(MusicTag tag) {
@@ -313,350 +309,6 @@ public class MusicTagUtils {
         return artist;
     }
 
-    /*
-    public static Bitmap createLoudnessIcon(Context context,  MusicTag tag) {
-        int width = 356; //340; // for 56x16,  89x24
-        int height = 96; // 16
-        int greyColor = context.getColor(R.color.grey200);
-       // int darkGreyColor = context.getColor(R.color.grey900);
-        int blackColor = context.getColor(R.color.black);
-        int qualityColor = context.getColor(R.color.material_color_blue_grey_100);
-        String lra = String.format(Locale.getDefault(),"%.1f", tag.getTrackRange());
-        String il= String.format(Locale.getDefault(),"%.1f", tag.getTrackLoudness());
-
-        String rg =   String.format(Locale.getDefault(),"%.1f", tag.getTrackRG());
-
-        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas myCanvas = new Canvas(myBitmap);
-        int padding = 0;
-        //int cornerRadius = 8;
-        int overflowRadius = 12;
-        //int bottomMargin = 18;
-        Rect bounds = new Rect(
-                0, // Left
-                0, // Top
-                myCanvas.getWidth(), // Right
-                myCanvas.getHeight() // Bottom
-        );
-
-        Paint paint;
-        RectF rectangle;
-
-        // draw border grey box, black color block inside
-        rectangle = new RectF(
-                0, // Left
-                0, // Top
-                myCanvas.getWidth(), // Right
-                (myCanvas.getHeight()) // Bottom
-        );
-        // int borderWidth = 2;
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(greyColor);
-        paint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
-
-        padding = 4;
-        rectangle = new RectF(
-                padding-2, // Left
-                padding, // Top
-                myCanvas.getWidth()-padding-2, // Right
-                (myCanvas.getHeight()-padding) // Bottom
-        );
-
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(blackColor);
-        paint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
-
-        // draw grey box
-        padding = 8;
-        int topPadding = 16;
-        rectangle = new RectF(
-                padding,  // Left
-                topPadding, // Top
-                myCanvas.getWidth() - padding, // Right
-                (float) (myCanvas.getHeight() - topPadding) // Bottom
-        );
-
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(greyColor);
-        paint.setStyle(Paint.Style.FILL_AND_STROKE);
-        myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
-
-        // draw LRA (DR) box - border
-        padding =8;
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(blackColor);
-        paint.setStyle(Paint.Style.FILL);
-
-        int x1 = (bounds.width()/3)+4;
-        int x2=((bounds.width()/3) * 2)+12;
-        int y1 = padding;
-        int y2 =bounds.height()-padding;
-
-        Path path = new Path();
-        path.moveTo(x1, y1); //x1,y1 - top left
-        path.lineTo(x2, y1);   //x2,y1 - top right
-        path.lineTo(x2-4, y2);   //x2,y2 - bottom right
-        path.lineTo(x1-4, y2); //x1,y2 - bottom left
-        path.lineTo(x1, y1); //x1,y1 - top left
-        myCanvas.drawPath(path, paint);
-
-        //  //draw LRA (DR) - background
-        padding =4;
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(qualityColor);
-        paint.setStyle(Paint.Style.FILL);
-        x1 = x1+padding;
-        x2 = x2-padding;
-        y1 = y1+padding;
-        y2 = y2-padding;
-
-        path = new Path();
-        path.moveTo(x1, y1); //x1,y1 - top left
-        path.lineTo(x2, y1);   //x2,y1 - top right
-        path.lineTo(x2-4, y2);   //x2,y2 - bottom right
-        path.lineTo(x1-4, y2); //x1,y2 - bottom left
-        path.lineTo(x1, y1); //x1,y1 - top left
-        myCanvas.drawPath(path, paint);
-
-        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
-        int letterTextSize = 50; //28;
-
-        // draw integrated loudness text, black color
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(il, 0, 1, textMathRect);
-        float mLetterTop = (textMathRect.height()); // / 2.5f);
-       // float mPositionY= (float) (bounds.exactCenterY() *0.3);
-        float mPositionY = bounds.exactCenterY();
-        myCanvas.drawText(il,
-                bounds.left + (bounds.exactCenterX() / 3) + 2, //left
-               // (float) (bounds.bottom-textMathRect.height())-20, // top
-                bounds.top + mPositionY + 16, // top
-                mLetterPaint);
-
-        // draw true peak text, black color
-        letterTextSize = 50; //28;
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        textMathRect = new Rect();
-        //mLetterPaint.getTextBounds(tp, 0, 1, textMathRect);
-        mLetterPaint.getTextBounds(rg, 0, 1, textMathRect);
-        mPositionY = bounds.exactCenterY();
-        //myCanvas.drawText(tp,
-        myCanvas.drawText(rg,
-                (float) (bounds.exactCenterX()+(bounds.exactCenterX()*0.66)), //left
-                bounds.top + mPositionY + 16, // top
-                mLetterPaint);
-
-        // draw LRA (DR) text, black color
-        letterTextSize = 56;
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(lra, 0, 1, textMathRect);
-        mLetterTop = textMathRect.height();
-        myCanvas.drawText(lra,
-                bounds.exactCenterX() +2, //left
-                bounds.top + mLetterTop + 19, // top
-                mLetterPaint);
-
-        return myBitmap;
-    } */
-/*
-    public static Bitmap createLoudnessIcon1(Context context,  MusicTag tag) {
-        int width = 340; // for xx
-        int height = 96; // 16
-        int greyColor = context.getColor(R.color.grey200);
-        int darkGreyColor = context.getColor(R.color.grey900);
-        int blackColor = context.getColor(R.color.black);
-        int qualityColor = context.getColor(R.color.grey200);
-        String lra = StringUtils.trim(tag.getTrackRange(),"--");
-        String il= StringUtils.trim(tag.getTrackLoudness(),"--");
-        String tp= StringUtils.trim(tag.getTrackTruePeek(),"--");
-        if(!"--".equalsIgnoreCase(il)) {
-            try {
-                double intg =NumberFormat.getInstance().parse(il).doubleValue();
-                if(intg < -23.0) {
-                    // for studio -23 or less
-                    qualityColor = context.getColor(R.color.grey300);
-                }else if (intg <= -11.0) {
-                    // for streaming -11 to -23
-                    // spotify, -14 lufs
-                    // apple music, -16 lufs
-                    qualityColor = context.getColor(R.color.grey400);
-                }else {
-                    qualityColor = context.getColor(R.color.warningColor);
-                }
-            }catch (Exception ex) {
-                Timber.e(ex);
-            }
-        }
-
-        Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas myCanvas = new Canvas(myBitmap);
-        int padding;
-        int cornerRadius = 8;
-        int overflowRadius = 12;
-        //int bottomMargin = 18;
-        Rect bounds = new Rect(
-                0, // Left
-                0, // Top
-                myCanvas.getWidth(), // Right
-                myCanvas.getHeight() // Bottom
-        );
-
-        Paint paint;
-        RectF rectangle;
-
-        // draw border grey box, black color block inside
-        rectangle = new RectF(
-                0, // Left
-                0, // Top
-                myCanvas.getWidth(), // Right
-                (myCanvas.getHeight()) // Bottom
-        );
-        // int borderWidth = 2;
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(greyColor);
-        paint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
-
-        padding = 4;
-        rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth()-padding, // Right
-                (myCanvas.getHeight()-padding) // Bottom
-        );
-        // int borderWidth = 2;
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(blackColor);
-        paint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
-
-        // draw grey box
-        int jointCornerRadius = 14;
-        padding = 12;
-        int topPadding = 16;
-        rectangle = new RectF(
-                padding,  // Left
-                topPadding, // Top
-                myCanvas.getWidth() - padding, // Right
-                (float) (myCanvas.getHeight() - topPadding) // Bottom
-        );
-
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(greyColor);
-        paint.setStyle(Paint.Style.FILL_AND_STROKE);
-        myCanvas.drawRoundRect(rectangle, overflowRadius,overflowRadius, paint);
-
-        // draw Integrated grey box
-        padding =8;
-        rectangle = new RectF(
-                (myCanvas.getWidth()/3)-12, // Left
-                padding, // Top
-                (float) ((myCanvas.getWidth()/3) * 2)+12, // Right
-                (float) (myCanvas.getHeight() - padding) // Bottom
-        );
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setColor(darkGreyColor);
-        paint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,jointCornerRadius, paint);
-
-        padding =12;
-        rectangle = new RectF(
-                (myCanvas.getWidth()/3)-8, // Left
-                padding, // Top
-                (float) ((myCanvas.getWidth()/3) * 2)+8, // Right
-                (float) (myCanvas.getHeight() - padding) // Bottom
-        );
-        paint =  new Paint();
-        paint.setAntiAlias(true);
-        paint.setColor(qualityColor);
-        paint.setStyle(Paint.Style.FILL);
-        myCanvas.drawRoundRect(rectangle, cornerRadius,jointCornerRadius, paint);
-
-        Typeface font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
-        int letterTextSize = 50; //28;
-
-        // draw LRA text, black color
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(lra, 0, 1, textMathRect);
-        float mLetterTop = (textMathRect.height()); // / 2.5f);
-        float mPositionY= (float) (bounds.exactCenterY() *0.3);
-        myCanvas.drawText(lra,
-                bounds.left+ (bounds.exactCenterX()/3), //left
-                bounds.top+mPositionY +mLetterTop+8, //top
-                mLetterPaint);
-
-        // draw true peak text, black color
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(tp, 0, 1, textMathRect);
-        // mLetterTop = textMathRect.height(); // /1.5f;
-        mPositionY = bounds.exactCenterY();
-        myCanvas.drawText(tp,
-                (float) (bounds.exactCenterX()+(bounds.exactCenterX()*0.66)), //left
-                bounds.top + mPositionY + 16, // top
-                mLetterPaint);
-
-        // draw integrated loudness text, black color
-        letterTextSize = 56;
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(blackColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        textMathRect = new Rect();
-        mLetterPaint.getTextBounds(il, 0, 1, textMathRect);
-        mLetterTop = textMathRect.height(); // /1.5f;
-        mPositionY= bounds.exactCenterY();
-        myCanvas.drawText(il,
-                bounds.exactCenterX() -4, //left
-                bounds.top + mPositionY + mLetterTop + 16, // top
-                mLetterPaint);
-
-        return myBitmap;
-    } */
-
     public static String getEncodingType(MusicTag tag) {
         if(tag.isDSD()) {
             return Constants.TITLE_DSD;
@@ -704,38 +356,6 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
-    /*
-    public static boolean isUpScaled(MusicTag tag) {
-        if(tag.getDynamicRange()==0) return false;
-        if(tag.getAudioBitsDepth() <=16) {
-            // less than 90 is upscaled
-            return tag.getDynamicRange() <= MIN_SPL_16BIT_IN_DB; // SNR 96.33 db
-        }else  if(tag.getAudioBitsDepth() >=24) {
-            // less than 120 is upscaled
-            return tag.getDynamicRange() <= MIN_SPL_24BIT_IN_DB; // SNR 144.49 db
-       // }else  if(tag.getAudioBitsDepth() ==32) {
-            // less than 190 is upscaled
-        //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
-        }
-        return false;
-    } */
-
-    /*
-    public static boolean isBadUpScaled(MusicTag tag) {
-        if(tag.getDynamicRange()==0) return false;
-        if(tag.getAudioBitsDepth() <=16) {
-            // less than 90 is upscaled
-            return tag.getDynamicRange() <= SPL_8BIT_IN_DB; // SNR 96.33 db
-        }else  if(tag.getAudioBitsDepth() >=24) {
-            // less than 120 is upscaled
-            return tag.getDynamicRange() <= SPL_16BIT_IN_DB; // SNR 144.49 db
-            // }else  if(tag.getAudioBitsDepth() ==32) {
-            // less than 190 is upscaled
-            //    return tag.getMeasuredDR() <= 190; // SNR 192.66 db
-        }
-        return false;
-    } */
-
     public static String getExtension(MusicTag tag) {
         String ext = tag.getFileFormat();
         if("wave".equals(ext)) {
@@ -753,25 +373,20 @@ public class MusicTagUtils {
     }
 
     public static boolean isISaanPlaylist(MusicTag tag) {
-       // return ("Luk Thung".equalsIgnoreCase(tag.getGenre()) ||
-       //         "Mor Lum".equalsIgnoreCase(tag.getGenre()));
         return ("Mor Lum".equalsIgnoreCase(tag.getGenre()));
-
-       //  return (trimToEmpty(tag.getGenre()).toUpperCase().contains("ISAAN") ||
-       //          "Mor Lum".equalsIgnoreCase(tag.getGenre()));
     }
 
     public static boolean isBaanThungPlaylist(MusicTag tag) {
         return ("Luk Thung".equalsIgnoreCase(tag.getGenre()));
-       // return ("Thai Indie".equalsIgnoreCase(tag.getGenre()) ||
-       //         "Luk Thung".equalsIgnoreCase(tag.getGenre()));
     }
 
     public static boolean isRelaxedPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (!isClassicPlaylist(tag)) && (grouping.contains("LOUNGE") ||
-                genre.contains("ACOUSTIC"));
+        return (!isClassicPlaylist(tag)) &&
+                (genre.contains("ACOUSTIC") ||
+                grouping.equalsIgnoreCase("Jazz") ||
+                grouping.equalsIgnoreCase("Thai Jazz"));
     }
 
     public static boolean isManagedInLibrary(Context context, MusicTag tag) {
@@ -783,39 +398,32 @@ public class MusicTagUtils {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) &&
-                (grouping.equalsIgnoreCase("THAI LOUNGE") ||
+                ( grouping.equalsIgnoreCase("Thai Jazz") ||
                         (genre.equalsIgnoreCase("ACOUSTIC") &&
-                                grouping.equalsIgnoreCase("THAI")));
+                                grouping.equalsIgnoreCase("Thai Popular")));
     }
 
     public static boolean isRelaxedEnglishPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) &&
-                (grouping.equalsIgnoreCase("LOUNGE") ||
+                (grouping.equalsIgnoreCase("Jazz") ||
+                        grouping.equalsIgnoreCase("Thai Jazz") ||
                         (genre.equalsIgnoreCase("ACOUSTIC") &&
-                                grouping.equalsIgnoreCase("ENGLISH")));
+                                grouping.equalsIgnoreCase("Popular")));
     }
 
     public static boolean isClassicPlaylist(MusicTag tag) {
-        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (genre.contains("CLASSIC") ||
-                genre.contains("INSTRUMENT") ||
-                genre.contains("CONCERTOS"));
-    }
-
-    public static boolean isIndiePlaylist(MusicTag tag) {
-        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (genre.contains("INDIE"));
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
+        return (grouping.equalsIgnoreCase("Classical") ||
+                grouping.equalsIgnoreCase("Thai Classical"));
     }
 
     public static boolean isFinFinPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        //String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return ((grouping.equalsIgnoreCase("English") ||
-                grouping.equalsIgnoreCase("Thai")) &&
-                !(isClassicPlaylist(tag) ||
-                  isISaanPlaylist(tag) ||
+        return ((grouping.equalsIgnoreCase("Popular") ||
+                grouping.equalsIgnoreCase("Thai Popular")) &&
+                !(isISaanPlaylist(tag) ||
                   isBaanThungPlaylist(tag) ||
                   isRelaxedPlaylist(tag))
         );
@@ -823,10 +431,8 @@ public class MusicTagUtils {
 
     public static boolean isFinFinThaiPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        //String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (grouping.equalsIgnoreCase("Thai") &&
-                !(isClassicPlaylist(tag) ||
-                        isISaanPlaylist(tag) ||
+        return (grouping.equalsIgnoreCase("Thai Popular") &&
+                !(isISaanPlaylist(tag) ||
                         isBaanThungPlaylist(tag) ||
                         isRelaxedPlaylist(tag))
         );
@@ -834,10 +440,9 @@ public class MusicTagUtils {
 
     public static boolean isFinFinEnglishPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        //String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (grouping.equalsIgnoreCase("English") &&
-                !(isClassicPlaylist(tag) ||
-                        isISaanPlaylist(tag) ||
+        return ((grouping.equalsIgnoreCase("Popular") ||
+                grouping.equalsIgnoreCase("English")) &&
+                !(isISaanPlaylist(tag) ||
                         isBaanThungPlaylist(tag) ||
                         isRelaxedPlaylist(tag))
         );

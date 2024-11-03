@@ -1,6 +1,5 @@
 package apincer.android.mmate.utils;
 
-import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegKitConfig;
 
 import java.util.logging.Level;
@@ -13,13 +12,14 @@ public class LogHelper {
     public static final String LOGGER_JAUDIOTAGGER_WAV = "org.jaudiotagger.audio.wav";
     public static final String LOGGER_SLF4J_ANDROID = "apincer.android.slf4j";
     public static void initial() {
-        setLogLevel(LOGGER_JAUDIOTAGGER, Level.SEVERE);
-        setLogLevel(LOGGER_JAUDIOTAGGER_AUDIO, Level.SEVERE);
-        setLogLevel(LOGGER_JAUDIOTAGGER_FLAC, Level.SEVERE);
-        setLogLevel(LOGGER_JAUDIOTAGGER_WAV, Level.SEVERE);
-        setLogLevel("android.view.View", Level.SEVERE);
-        setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.SEVERE);
-        setLogLevel("org.greenrobot.eventbus.EventBus", Level.SEVERE);
+        Logger.getLogger("org.jaudiotagger").setLevel(Level.OFF);
+        setLogLevel(LOGGER_JAUDIOTAGGER, Level.OFF);
+        setLogLevel(LOGGER_JAUDIOTAGGER_AUDIO, Level.OFF);
+        setLogLevel(LOGGER_JAUDIOTAGGER_FLAC, Level.OFF);
+        setLogLevel(LOGGER_JAUDIOTAGGER_WAV, Level.OFF);
+        setLogLevel("android.view.View", Level.OFF);
+        setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.OFF);
+        setLogLevel("org.greenrobot.eventbus.EventBus", Level.OFF);
        // setLogLevel(" io.netty", Level.FINE);
 
         setLogLevel("apincer.android.mmate.repository.FFMPegReader", Level.SEVERE);

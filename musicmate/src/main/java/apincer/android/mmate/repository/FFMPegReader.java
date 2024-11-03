@@ -1,5 +1,34 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_BIT_RATE;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_DURATION;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_START_TIME;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_ALBUM;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_ALBUM_ARTIST;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_ARTIST;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_COMMENT;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_COMPILATION;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_COMPOSER;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_DISC;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_GENRE;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_GROUPING;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_ALBUM_ARTIST;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_COMPOSER;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_PUBLISHER;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_TITLE;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_YEAR;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_TITLE;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_TRACK;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_ALBUM_ARTIST;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_COMPOSER;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_DISC;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_GROUP;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_MEDIA;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_PUBLISHER;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_YEAR;
+import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_YEAR;
 import static apincer.android.mmate.repository.MQADetector.detectMQA;
 import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
 import static apincer.android.mmate.utils.StringUtils.gainToDouble;
@@ -37,7 +66,14 @@ import apincer.android.utils.FileUtils;
 
 public class FFMPegReader extends TagReader {
     private static final String TAG = "FFMPegReader";
+    private final Context context;
 
+    public FFMPegReader(Context context) {
+        this.context = context;
+    }
+
+
+/*
     private static final String KEY_BIT_RATE = "bit_rate";
     private static final String KEY_START_TIME = "start_time";
     private static final String KEY_DURATION = "duration";
@@ -120,7 +156,7 @@ public class FFMPegReader extends TagReader {
  //   private static final String KEY_TAG_MP3_DISC = "disc";
   //  private static final String KEY_TAG_MP3_COMMENT = "comment";  // comment
   //  private static final String METADATA_KEY = "-metadata";
-
+*/
     public static class Loudness {
         double integratedLoudness;
         double loudnessRange;
@@ -178,20 +214,20 @@ public class FFMPegReader extends TagReader {
         return null;
     } */
 
-    public List<MusicTag> readMusicTag(Context context, String path) {
-        Log.d(TAG, "readMusicTag: "+path);
-        MusicTag tag = readTagFromFile(context, path);
+    protected List<MusicTag> readTagsFromFile(String path) {
+        Log.d(TAG, "readTagsFromFile: "+path);
+        MusicTag tag = extractTagFromFile(path);
         return List.of(tag);
     }
 
-    public List<MusicTag> readFullMusicTag(Context context, String path) {
-        Log.d(TAG, "readFullMusicTag: "+path);
-        MusicTag tag = readTagFromFile(context, path);
+    protected List<MusicTag> readFullTagsFromFile(String path) {
+        Log.d(TAG, "readFullTagsFromFile: "+path);
+        MusicTag tag = extractTagFromFile(path);
         detectMQA(tag,50000); // timeout 50 seconds
         return List.of(tag);
     }
 
-    public static MusicTag readTagFromFile(Context context, String path) {
+    public MusicTag extractTagFromFile(String path) {
         // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
         // String filter = " -filter:a drmeter,replaygain ";
         // if(MusicTagUtils.isDSDFile(path)) {

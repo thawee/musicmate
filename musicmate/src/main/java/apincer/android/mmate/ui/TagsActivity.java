@@ -57,12 +57,14 @@ import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
+import apincer.android.mmate.repository.FFMpegWriter;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.utils.ApplicationUtils;
+import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -113,6 +115,7 @@ public class TagsActivity extends AppCompatActivity {
     private boolean previewState = true;
 
     private AlertDialog progressDialog;
+    private TextView progressLabel;
     private boolean finishOnTimeout = false;
 
     @Override
@@ -144,7 +147,7 @@ public class TagsActivity extends AppCompatActivity {
                                 tag.setResampledInd(analyser.getResampled());
 
                                 //write quality to file
-                                FFMpegHelper.writeTagQualityToFile(this, tag);
+                                FFMpegWriter.writeTagQualityToFile(this, tag);
                                 // update MusicMate Library
                                 TagRepository.saveTag(tag);
                             }
@@ -392,7 +395,8 @@ public class TagsActivity extends AppCompatActivity {
                     .crossfade(false)
                     .target(qualityView)
                     .build();
-            imageLoader.enqueue(request);
+           // imageLoader.enqueue(request);
+            qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), BitmapHelper.createHexagonBitmap(400, 400)));
         }else {
             qualityView.setVisibility(View.GONE);
         }
@@ -853,7 +857,10 @@ public class TagsActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             try {
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
-                dialogBuilder.setView(R.layout.progress_dialog_layout);
+                View v = getLayoutInflater().inflate(R.layout.progress_dialog_layout, null);
+                progressLabel = v.findViewById(R.id.process_label);
+                dialogBuilder.setView(v);
+                // dialogBuilder.setView(R.layout.progress_dialog_layout);
                 dialogBuilder.setCancelable(true);
                 progressDialog = dialogBuilder.create();
                 progressDialog.setCanceledOnTouchOutside(true);
@@ -867,12 +874,24 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
+
+    private void updateProgressBar(final String label) {
+        runOnUiThread(() -> {
+            if(progressDialog!=null && progressLabel!= null) {
+                progressLabel.setText(label);
+                //  progressDialog.
+                //   progressDialog = null;
+            }
+        });
+    }
+
     public void stopProgressBar() {
         if(progressDialog!=null) {
             runOnUiThread(() -> {
-
-                progressDialog.dismiss();
-                progressDialog = null;
+                try {
+                    progressDialog.dismiss();
+                    progressDialog = null;
+                } catch (Exception ignored) {}
             });
         }
     }

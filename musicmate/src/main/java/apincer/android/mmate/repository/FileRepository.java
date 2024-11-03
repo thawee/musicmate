@@ -1,6 +1,5 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.FFMpegHelper.writeTagToFile;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -233,8 +232,8 @@ public class FileRepository {
        // item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
         item.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), item));
 
-        if(FFMPegReader.isSupportedFileFormat(item.getPath())) {
-            writeTagToFile(getContext(), item);
+        if(TagWriter.isSupportedFileFormat(item.getPath())) {
+            TagWriter.writeTagToFile(getContext(), item);
             item.setOriginTag(null); // reset pending tag
             TagRepository.saveTag(item);
             return true;
@@ -267,11 +266,11 @@ public class FileRepository {
                // lastModified = System.currentTimeMillis()+2000;
                 lastModified = -1;
             }
-            TagReader reader = TagReader.getReader(mediaPath);
+           // TagReader reader = TagReader.readTagFull(context, mediaPath);
             // if timestamp is outdated
             if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
               //  Log.i(TAG, "scanMusicFile: file - "+mediaPath);
-                List<MusicTag> tags = reader.readFullMusicTag(getContext(), mediaPath);
+                List<MusicTag> tags = TagReader.readTagFull(context, mediaPath); //reader.readFullTagsFromFile(mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
                         tag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), tag));
@@ -387,28 +386,16 @@ public class FileRepository {
             return STORAGE_PRIMARY;
         }else if (MusicTagUtils.isHiRes(metadata)) {
             return STORAGE_PRIMARY;
-       // }else if (!MusicTagUtils.isLossless(metadata)) {
-            // compress id keep on
-       //     return STORAGE_SECONDARY;
-        //}else if(Constants.QUALITY_AUDIOPHILE.equals(metadata.getMediaQuality())) {
-            // Audiophile
-        //    return STORAGE_PRIMARY;
-       // }else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
-        //}else if(metadata.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48 && metadata.getAudioBitsDepth() > 16) {
-            // Lossless Hi-Res
-        //    return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
-                 Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
-            // lounge
+        }else if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
-       // }else if(Constants.GROUPING_LIVE.equalsIgnoreCase(metadata.getGrouping()) ||
-      //           Constants.GROUPING_THAI_LIVE.equalsIgnoreCase(metadata.getGrouping())) {
-            // lounge
-          //  return STORAGE_PRIMARY;
+        }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_PRIMARY;
+      /*  }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
+                 Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_PRIMARY;
         }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping()) ||
                 Constants.GROUPING_THAI_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
-                // Acoustic
-                return STORAGE_PRIMARY;
+                return STORAGE_PRIMARY; */
         }
         return STORAGE_SECONDARY;
     }
