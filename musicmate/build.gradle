@@ -205,6 +205,8 @@ dependencies {
     implementation deps.guava
     implementation deps.ffmpeg
     //implementation deps.coverartarchive
+   // implementation 'com.tomgibara.bits:bits:2.1.0'
+
 
     //retrofit and json Librariess
     implementation deps.google.gson

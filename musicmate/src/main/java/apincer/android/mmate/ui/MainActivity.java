@@ -11,16 +11,13 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.Gravity;
@@ -87,6 +84,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -130,6 +128,7 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
+import de.esoco.lib.expression.Action;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -138,6 +137,7 @@ import sakout.mehdi.StateViews.StateView;
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+
     private static final int RECYCLEVIEW_ITEM_SCROLLING_OFFSET= 16; //start scrolling from 4 items
     private static final int RECYCLEVIEW_ITEM_OFFSET= 48; //48; // scroll item to offset+1 position on list
    // private static final int MENU_ID_RESOLUTION = 55555555;
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String MP3_320_KHZ = "MPEG-3";
     public static final String AIFF = "AIFF";
 
-    private ServiceConnection notificationListenerConnection;
+   // private ServiceConnection notificationListenerConnection;
     private MusicTag nowPlaying = null;
 
     ActivityResultLauncher<Intent> permissionResultLauncher = registerForActivityResult(
@@ -312,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
 
         View cview = getLayoutInflater().inflate(R.layout.view_action_files, null);
 
-        Map<MusicTag, String> statusList = new HashMap<>();
+        Map<MusicTag, String> statusList = new ConcurrentHashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         titleText.setText(R.string.title_import_to_music_directory);
@@ -380,10 +380,38 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             busy = true;
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
+
+            btnOK.setEnabled(false);
+            btnOK.setVisibility(View.GONE);
+
+          //  final int len = selections.size();
+          //  AtomicInteger count = new AtomicInteger(0);
+            MusicMateExecutors.executeParallels(selections, 2, (Action<MusicTag>) tag -> {
+                try {
+                   // int currentCount = count.incrementAndGet();
+                    statusList.put(tag, "Moving");
+                    MusicMateExecutors.ui(itemsView::invalidateViews);
+                   // runOnUiThread(itemsView::invalidateViews);
+                    boolean status = repos.importAudioFile(tag);
+                    if(status) {
+                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, tag);
+                        EventBus.getDefault().postSticky(message);
+                        statusList.put(tag, "Done");
+                    }else {
+                        statusList.put(tag, "Fail");
+                    }
+                } catch (Exception e) {
+                    statusList.put(tag, "Fail");
+                    Log.e(TAG, "doSaveMediaItem", e);
+                }
+                updateProgressBar(progressBar, itemsView, rate);
+            });
+            busy = false;
+            /*
             for(MusicTag tag: selections) {
                 MusicMateExecutors.fast(() -> {
                     try {
-                        statusList.put(tag, "Adding");
+                        statusList.put(tag, "Moving");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
@@ -417,15 +445,23 @@ public class MainActivity extends AppCompatActivity {
                         }catch (Exception ignored) {}
                     }
                 });
-            }
-            btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
+            } */
+
         });
         btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
     }
-	
-	private void doShowNowPlayingPanel(final MusicTag song) {
+
+    private void updateProgressBar(ProgressBar progressBar, ListView itemsView, double rate) {
+        MusicMateExecutors.ui(() -> {
+            int pct = progressBar.getProgress();
+            progressBar.setProgress((int) (pct + rate));
+            progressBar.invalidate();
+            itemsView.invalidateViews();
+        });
+    }
+
+    private void doShowNowPlayingPanel(final MusicTag song) {
         if (song == null) {
             doHideNowPlayingSongFAB();
             return;
@@ -595,7 +631,7 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onCreate(savedInstanceState);
 
-        notificationListenerConnection = new ServiceConnection() {
+       /* notificationListenerConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
 
@@ -605,7 +641,7 @@ public class MainActivity extends AppCompatActivity {
             public void onServiceDisconnected(ComponentName componentName) {
 
             }
-        };
+        }; */
 
         // setup search criteria from starting intent
 

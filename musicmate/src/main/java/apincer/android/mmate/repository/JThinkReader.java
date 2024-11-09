@@ -42,12 +42,12 @@ import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class JAudioTaggerReader extends TagReader{
-    private static final String TAG = "JAudioTaggerReader";
+public class JThinkReader extends TagReader{
+    private static final String TAG = "JThinkReader";
     private static final List<MusicTag> EMPTY_LIST = null;
-    private Context context;
+    private final Context context;
 
-    public JAudioTaggerReader(Context context) {
+    public JThinkReader(Context context) {
         LogHelper.initial();
         this.context = context;
     }
@@ -60,7 +60,8 @@ public class JAudioTaggerReader extends TagReader{
     public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
     @Override
-    protected List<MusicTag> readTagsFromFile(String mediaPath) {
+    protected List<MusicTag> readFromFile(String mediaPath) {
+        Log.i(TAG, "readFromFile: path - "+mediaPath);
         AudioFile read = getAudioFile(mediaPath);
         if(read != null) {
             MusicTag tag = new MusicTag();
@@ -77,8 +78,8 @@ public class JAudioTaggerReader extends TagReader{
     }
 
     @Override
-    protected List<MusicTag> readFullTagsFromFile(String mediaPath) {
-        Log.i(TAG, "readFullMusicTag: path - "+mediaPath);
+    protected List<MusicTag> readFullyFromFile(String mediaPath) {
+        Log.i(TAG, "readFullyFromFile: path - "+mediaPath);
         AudioFile read = getAudioFile(mediaPath);
         if(read != null) {
             MusicTag tag = new MusicTag();
@@ -88,7 +89,6 @@ public class JAudioTaggerReader extends TagReader{
             readTags(read, tag);
             detectMQA(tag);
             tag.setAudioStartTime(0);
-            // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         }
         return EMPTY_LIST;
@@ -124,7 +124,7 @@ public class JAudioTaggerReader extends TagReader{
     private AudioFile getAudioFile(String path) {
         try {
             if(isMediaFileExist(path)) {
-                setupTagOptionsForReading();
+                setupTagOptions();
                 return AudioFileIO.read(new File(path));
             }
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
@@ -135,7 +135,7 @@ public class JAudioTaggerReader extends TagReader{
         return null;
     }
 
-    private static void setupTagOptionsForReading() {
+    private static void setupTagOptions() {
         TagOptionSingleton.getInstance().setAndroid(true);
         TagOptionSingleton.getInstance().setId3v23DefaultTextEncoding(TextEncoding.ISO_8859_1); // default = ISO_8859_1
         TagOptionSingleton.getInstance().setId3v24DefaultTextEncoding(TextEncoding.UTF_8); // default = ISO_8859_1

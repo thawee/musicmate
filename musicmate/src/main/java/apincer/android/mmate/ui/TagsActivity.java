@@ -63,6 +63,7 @@ import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.repository.TagWriter;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -136,8 +137,6 @@ public class TagsActivity extends AppCompatActivity {
                 () -> {
                     startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
-                        //calculate track RG
-                        //FFMPegReader.measureDRandStat(tag);
                         MusicAnalyser analyser = new MusicAnalyser();
                         try {
                             if (analyser.analyst(tag)) {
@@ -147,7 +146,8 @@ public class TagsActivity extends AppCompatActivity {
                                 tag.setResampledInd(analyser.getResampled());
 
                                 //write quality to file
-                                FFMpegWriter.writeTagQualityToFile(this, tag);
+                               // FFMpegWriter.writeTagQualityToFile(this, tag);
+                                TagWriter.writeTagToFile(getApplicationContext(), tag);
                                 // update MusicMate Library
                                 TagRepository.saveTag(tag);
                             }
@@ -395,8 +395,8 @@ public class TagsActivity extends AppCompatActivity {
                     .crossfade(false)
                     .target(qualityView)
                     .build();
-           // imageLoader.enqueue(request);
-            qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), BitmapHelper.createHexagonBitmap(400, 400)));
+            imageLoader.enqueue(request);
+           // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), BitmapHelper.createHexagonBitmap(400, 400)));
         }else {
             qualityView.setVisibility(View.GONE);
         }

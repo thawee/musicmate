@@ -98,8 +98,19 @@ public class MusicMateExecutors {
         getInstance().mScheduleThread.schedule(command, seconds, TimeUnit.SECONDS);
     }
 
+    private static ExecutorService newExecutorService(int num) {
+        return new ThreadPoolExecutor(num, num,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+            protected void afterExecute(Runnable r, Throwable t) {
+                try {
+                    Thread.sleep(20); // wait 0.1 second
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "newExecutorService",e);
+                }
+            }};
+    }
+
     public static void executeParallels(List<MusicTag> items, int threadNo, Consumer<MusicTag> task) {
-        ExecutorService executor = Executors.newFixedThreadPool(threadNo);
+        ExecutorService executor = newExecutorService(threadNo); //Executors.newFixedThreadPool(threadNo);
         List<CompletableFuture<Void>> futures = items.stream()
                 .map(item -> CompletableFuture.runAsync(() -> task.accept(item), executor))
                 .toList();
@@ -107,6 +118,7 @@ public class MusicMateExecutors {
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         allOf.join(); // Wait for all tasks to complete
         executor.shutdown();
+
     }
 
     public void shutdown() {

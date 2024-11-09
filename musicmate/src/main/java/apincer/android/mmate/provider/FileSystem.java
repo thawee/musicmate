@@ -5,11 +5,6 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.documentfile.provider.DocumentFile;
-
-import com.anggrayudi.storage.file.DocumentFileCompat;
-import com.anggrayudi.storage.file.DocumentFileUtils;
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class FileSystem {
     private static final String TAG = "FileSystem";
@@ -48,21 +45,21 @@ public class FileSystem {
      */
     public static boolean copy(Context context, final File source, final File target) {
         FileInputStream inStream = null;
-        OutputStream outStream = null;
+        FileOutputStream outStream = null;
         FileChannel inChannel = null;
         FileChannel outChannel = null;
         try {
             inStream = new FileInputStream(source);
 
             // First try the normal way
-            try {
+          //  try {
            // if(target.canWrite()) {
                 // standard way
                 outStream = new FileOutputStream(target);
                 inChannel = inStream.getChannel();
-                outChannel = ((FileOutputStream) outStream).getChannel();
+                outChannel = outStream.getChannel();
                 inChannel.transferTo(0, inChannel.size(), outChannel);
-            }catch(Exception ex) {
+          /*  }catch(Exception ex) {
                 Log.d(TAG, "Trying copy by document file");
            // } else {
                 // Storage Access Framework
@@ -77,8 +74,8 @@ public class FileSystem {
                     }
                 }else {
                     return false;
-                }
-            }
+                } */
+          //  }
         } catch (Exception e) {
             Log.e(TAG,"Error when copying file from " + source.getAbsolutePath() + " to " + target.getAbsolutePath());
             return false;
@@ -305,18 +302,30 @@ public class FileSystem {
         File newDir  = newFile.getParentFile();
         assert newDir != null;
         if(!newDir.exists()) {
+            newDir.mkdirs();
             // create new directory
-            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
+            //Files.createDirectories(newDir);
+           // com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
             //mkdirs(newDir);
         }
 
+        try {
+            Files.move(file.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Moved file: " + file.getName());
+            success = true;
+        } catch (IOException e) {
+            System.err.println("Failed to move file: " + file.getName());
+            e.printStackTrace();
+        }
+        return success;
+/*
         if(copy(context, file, newFile)) {
             success = delete(context,file);
         }else {
             // remove new file
             delete(context,newFile);
         }
-        return success;
+        return success; */
     }
 
     public static boolean delete(Context context, final String file) {
@@ -335,16 +344,24 @@ public class FileSystem {
             return false;
         }
 
-        // First try the normal deletion.
-        if (file.delete()) {
-           // Log.i(TAG,"delete path "+ file.getAbsolutePath());
+        try {
+            Files.deleteIfExists(file.toPath());
             return true;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
+        // First try the normal deletion.
+       // if (file.delete()) {
+           // Log.i(TAG,"delete path "+ file.getAbsolutePath());
+       //     return true;
+       // }
+        return false;
+
         // Try with Storage Access Framework.
-        Log.i(TAG, "start deleting DocumentFile");
-        DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
-        return DocumentFileUtils.forceDelete(docFile,context);
+       // Log.i(TAG, "start deleting DocumentFile");
+       // DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
+       // return DocumentFileUtils.forceDelete(docFile,context);
     }
 
     public static void closeSilently(Closeable c) {

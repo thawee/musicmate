@@ -1,10 +1,7 @@
 package apincer.android.mmate.player;
 
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
@@ -23,24 +20,24 @@ public class NotificationListener extends NotificationListenerService {
         super();
     }
 
-    Context context;
+  //  Context context;
 
-    @Override
+  /*  @Override
     public IBinder onBind(Intent intent) {
         return super.onBind(intent);
-    }
+    } */
 
-    @Override
+   /* @Override
     public void onDestroy() {
         super.onDestroy();
        // Log.d(TAG, "onDestroy MusicMate Notification");
-    }
+    } */
 
+    /*
     @Override
-
     public void onCreate() {
         super.onCreate();
-        context = getApplicationContext();
+        //context = getApplicationContext();
        // Log.d(TAG, "onCreate MusicMate Notification");
     }
 
@@ -54,10 +51,11 @@ public class NotificationListener extends NotificationListenerService {
     public void onListenerDisconnected() {
         Log.i(TAG, "Notification Listener disconnected");
         // Handle the disconnection
-    }
+    } */
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
+        Log.i(TAG, "Notification posted: " + sbn.getPackageName());
         String pack = sbn.getPackageName();
         Bundle extras = sbn.getNotification().extras;
         if (PlayerControl.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equals(pack)) {
@@ -88,6 +86,12 @@ public class NotificationListener extends NotificationListenerService {
         }
     }
 
+    @Override
+    public void onNotificationRemoved(StatusBarNotification sbn) {
+        // Handle the notification removed event
+        Log.i(TAG, "Notification removed: " + sbn.getPackageName());
+    }
+
     public void publishNowPlaying(String pack, String title, String artist) {
         if(!(StringUtils.compare(prvPack, pack) && StringUtils.compare(prvTitle, title) && StringUtils.compare(prvArtist, artist))) {
             prvPack = pack;
@@ -101,7 +105,7 @@ public class NotificationListener extends NotificationListenerService {
 
             sendBroadcast(intent); */
             try {
-                MusixMateApp.getPlayerControl().setPlayingSong(context, pack, title, artist, null);
+                MusixMateApp.getPlayerControl().setPlayingSong(getApplicationContext(), pack, title, artist, null);
             } catch (Exception ex) {
                 Log.e(TAG, "sendBroadcast", ex);
             }

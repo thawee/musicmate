@@ -270,7 +270,7 @@ public class FileRepository {
             // if timestamp is outdated
             if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
               //  Log.i(TAG, "scanMusicFile: file - "+mediaPath);
-                List<MusicTag> tags = TagReader.readTagFull(context, mediaPath); //reader.readFullTagsFromFile(mediaPath);
+                List<MusicTag> tags = TagReader.readTagFully(context, mediaPath); //reader.readFullTagsFromFile(mediaPath);
                 if (tags != null ) {
                     for (MusicTag tag : tags) {
                         tag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), tag));

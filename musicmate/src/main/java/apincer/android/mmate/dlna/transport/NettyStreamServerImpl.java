@@ -38,7 +38,6 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -78,6 +77,7 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
     // for 100 tps
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup(2);
+    private ChannelFuture channelFuture;
 
     private static File coverartDir;
 
@@ -134,8 +134,10 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
                             .option(ChannelOption.SO_TIMEOUT, 30000) // 30 sec
                             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000) // 30 sec
                             .childHandler(new HttpServerInitializer(router));
-                    Channel ch = b.bind(localPort).sync().channel();
-                    ch.closeFuture().sync();
+                   // Channel ch = b.bind(localPort).sync().channel();
+                   // ch.closeFuture().sync();
+                    channelFuture = b.bind(localPort).sync();
+                    channelFuture.channel().closeFuture().sync();
                 } catch (Exception ex) {
                     throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
                 } finally {
@@ -153,7 +155,10 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
 
     synchronized public void stop() {
         Log.v(TAG, "Shutting down Netty4 Stream Server");
-        try {
+        if (channelFuture != null) {
+            channelFuture.channel().close();
+        }
+       /* try {
             bossGroup.shutdownGracefully().sync();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -162,7 +167,7 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
             workerGroup.shutdownGracefully().sync();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        }
+        } */
         contentServer.stop();
     } 
 

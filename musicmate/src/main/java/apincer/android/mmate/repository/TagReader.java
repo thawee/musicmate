@@ -97,7 +97,7 @@ public abstract class TagReader {
         }catch(Exception ex) {
             return null;
         } */
-        return new JAudioTaggerReader(context);
+        return new JThinkReader(context);
     }
 
     public static boolean isSupportedFileFormat(String path) {
@@ -156,14 +156,14 @@ public abstract class TagReader {
     }
 
     public static List<MusicTag> readTag(Context context, String mediaPath) {
-        return getReader(context, mediaPath).readTagsFromFile(mediaPath);
+        return getReader(context, mediaPath).readFromFile(mediaPath);
     }
 
-    public static List<MusicTag> readTagFull(Context context, String mediaPath) {
-        return getReader(context, mediaPath).readFullTagsFromFile(mediaPath);
+    public static List<MusicTag> readTagFully(Context context, String mediaPath) {
+        return getReader(context, mediaPath).readFullyFromFile(mediaPath);
     }
 
-    protected abstract List<MusicTag> readTagsFromFile(String mediaPath);
+    protected abstract List<MusicTag> readFromFile(String mediaPath);
 
-    protected abstract List<MusicTag> readFullTagsFromFile(String mediaPath);
+    protected abstract List<MusicTag> readFullyFromFile(String mediaPath);
 }

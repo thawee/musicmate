@@ -37,10 +37,6 @@ public final class Constants {
     public static final String IND_RESAMPLED_NONE = "";
     public static final String IND_RESAMPLED_INVALID = "F";
 
-  //  public static final double SPL_8BIT_IN_DB = 49.8;
-   // public static final double SPL_16BIT_IN_DB = 96.33;
-   // public static final double SPL_24BIT_IN_DB = 144.49;
-
   //  public static final double MIN_SPL_RATIO = 0.8; //0.72; //just magic number, it's should be 1.0 for actual results
    // public static final double MIN_SPL_16BIT_IN_DB = SPL_16BIT_IN_DB*MIN_SPL_RATIO;
    // public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;

@@ -78,6 +78,7 @@ public abstract class TagWriter {
     protected abstract boolean writeTag(MusicTag tag);
 
     private static TagWriter getTagWriter(Context context, MusicTag tag) {
-        return new FFMpegWriter(context);
+       // return new FFMpegWriter(context);
+        return new JThinkWriter(context);
     }
 }
