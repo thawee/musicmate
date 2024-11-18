@@ -6,10 +6,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import org.greenrobot.eventbus.EventBus;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,11 +13,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
-import apincer.android.mmate.Constants;
-import apincer.android.mmate.notification.AudioTagEditResultEvent;
-import apincer.android.mmate.repository.MusicTag;
 
 public class MusicMateExecutors {
     private static final String TAG = MusicMateExecutors.class.getName();
@@ -61,10 +52,11 @@ public class MusicMateExecutors {
 
     private MusicMateExecutors() {
         this(
-                new ThreadPoolExecutor(2, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+               // new ThreadPoolExecutor(2, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+                new ThreadPoolExecutor(2, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                  protected void afterExecute(Runnable r, Throwable t) {
                      try {
-                         Thread.sleep(20); // wait 0.1 second
+                         Thread.sleep(10); // wait 0.1 second
                      } catch (InterruptedException e) {
                          Log.e(TAG, "MusicMateExecutors",e);
                      }
@@ -84,7 +76,7 @@ public class MusicMateExecutors {
     public static void ui(@NonNull Runnable command) {
         getInstance().mUIThread.execute(command);
     }
-    public static void fast(@NonNull Runnable command) {
+    public static void parallels(@NonNull Runnable command) {
         getInstance().mFastThread.execute(command);
     }
     public static void execute(@NonNull Runnable command) {
@@ -96,29 +88,6 @@ public class MusicMateExecutors {
 
     public static void schedule(@NonNull Runnable command, long seconds) {
         getInstance().mScheduleThread.schedule(command, seconds, TimeUnit.SECONDS);
-    }
-
-    private static ExecutorService newExecutorService(int num) {
-        return new ThreadPoolExecutor(num, num,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
-            protected void afterExecute(Runnable r, Throwable t) {
-                try {
-                    Thread.sleep(20); // wait 0.1 second
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "newExecutorService",e);
-                }
-            }};
-    }
-
-    public static void executeParallels(List<MusicTag> items, int threadNo, Consumer<MusicTag> task) {
-        ExecutorService executor = newExecutorService(threadNo); //Executors.newFixedThreadPool(threadNo);
-        List<CompletableFuture<Void>> futures = items.stream()
-                .map(item -> CompletableFuture.runAsync(() -> task.accept(item), executor))
-                .toList();
-
-        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        allOf.join(); // Wait for all tasks to complete
-        executor.shutdown();
-
     }
 
     public void shutdown() {

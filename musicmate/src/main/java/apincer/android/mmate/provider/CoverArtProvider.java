@@ -27,7 +27,7 @@ public final class CoverArtProvider extends ContentProvider {
 
     public static Uri getUriForMusicTag(Context context, MusicTag item) {
             // use music file
-        MusicMateExecutors.fast(() -> {
+        MusicMateExecutors.parallels(() -> {
             try {
                 // extract cover art during build uri in background
                 File dir = context.getExternalCacheDir();

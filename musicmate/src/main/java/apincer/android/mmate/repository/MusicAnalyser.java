@@ -85,7 +85,7 @@ public class MusicAnalyser {
         // Decode input FLAC file
         File file = new File(tag.getPath());
         try (FlacDecoder dec = new FlacDecoder(file)) {
-            int duration = 10; // 20 seconds
+            int duration = 16; // seconds
             int[][] samples = getSamples(dec, duration);
 
             double a = calculateDynamicRange(samples, (int)tag.getAudioSampleRate());
@@ -150,7 +150,7 @@ public class MusicAnalyser {
             if (samplesRead == 0) break; // End of stream
             totalSamples += samplesRead;
         }
- 
+
         decoder.close();
 
         return samples;

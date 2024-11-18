@@ -193,7 +193,7 @@ public class FileSystem {
     }
 
     public static File getCacheDirForFile(Context context, String pathId) {
-        File files[] =context.getExternalCacheDirs();
+        File[] files =context.getExternalCacheDirs();
         for(File file: files) {
             if(file.getAbsolutePath().contains(pathId)) {
                 return file;
@@ -201,55 +201,6 @@ public class FileSystem {
         }
         return context.getExternalCacheDir();
     }
-
-    /*
-    public boolean copy(final DocumentFile source, final File target) {
-        InputStream inStream = null;
-        OutputStream outStream = null;
-        FileChannel inChannel = null;
-        FileChannel outChannel = null;
-        try {
-            inStream = DocumentFileUtils.getInputStream(getContext(), source); //new FileInputStream(source);
-
-            // First try the normal way
-            //if (isWritable(target)) {
-            if (target.canWrite()) {
-                // standard way
-                outStream = new FileOutputStream(target);
-                inChannel = DocumentFileUtils.getFileChannel(getContext(), source);  //inStream.getChannel();
-                outChannel = ((FileOutputStream) outStream).getChannel();
-                inChannel.transferTo(0, inChannel.size(), outChannel);
-            } else {
-                // Storage Access Framework
-                DocumentFile documentFile = DocumentFileUtils.getDocumentFile(target,false,getContext());
-                Uri documentUri = documentFile.getUri();
-
-                // open stream
-                ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(documentUri, "w");
-                if (pfd != null) {
-                    outStream = new FileOutputStream(pfd.getFileDescriptor());
-                    if (outStream != null) {
-                        // Both for SAF and for Kitkat, write to output stream.
-                        byte[] buffer = new byte[16384]; // MAGIC_NUMBER
-                        int bytesRead;
-                        while ((bytesRead = inStream.read(buffer)) != -1) {
-                            outStream.write(buffer, 0, bytesRead);
-                        }
-                    }
-                    pfd.close();
-                }
-            }
-        } catch (Exception e) {
-            Timber.e(e,"Error when copying file from " + source.getName() + " to " + target.getAbsolutePath());
-            return false;
-        } finally {
-            closeSilently(inStream);
-            closeSilently(outStream);
-            closeSilently(inChannel);
-            closeSilently(outChannel);
-        }
-        return true;
-    } */
 
     // Copy an InputStream to a File.
     public void copy(InputStream in, File file) {
@@ -273,24 +224,6 @@ public class FileSystem {
         }
     }
 
-    /*
-    public boolean copyFile(String path, String newPath) {
-        boolean success = false;
-        File newFile = new File(newPath);
-        File file = new File(path);
-
-        if(!file.exists()) return false;
-
-        // create new directory if not existed
-        File newDir  = newFile.getParentFile();
-        if(!newDir.exists()) {
-            // create new directory
-            mkdirs(newDir);
-        }
-
-        return copyFile(file, newFile);
-    } */
-
     public static boolean move(Context context, final String path, final String newPath) {
         boolean success = false;
         File newFile = new File(newPath);
@@ -304,28 +237,16 @@ public class FileSystem {
         if(!newDir.exists()) {
             newDir.mkdirs();
             // create new directory
-            //Files.createDirectories(newDir);
-           // com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
-            //mkdirs(newDir);
         }
 
         try {
             Files.move(file.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("Moved file: " + file.getName());
+          //  System.out.println("Moved file: " + file.getName());
             success = true;
         } catch (IOException e) {
-            System.err.println("Failed to move file: " + file.getName());
-            e.printStackTrace();
+            Log.e(TAG, "move", e);
         }
         return success;
-/*
-        if(copy(context, file, newFile)) {
-            success = delete(context,file);
-        }else {
-            // remove new file
-            delete(context,newFile);
-        }
-        return success; */
     }
 
     public static boolean delete(Context context, final String file) {
@@ -348,20 +269,10 @@ public class FileSystem {
             Files.deleteIfExists(file.toPath());
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "delete", e);
         }
 
-        // First try the normal deletion.
-       // if (file.delete()) {
-           // Log.i(TAG,"delete path "+ file.getAbsolutePath());
-       //     return true;
-       // }
         return false;
-
-        // Try with Storage Access Framework.
-       // Log.i(TAG, "start deleting DocumentFile");
-       // DocumentFile docFile = DocumentFileCompat.fromFile(context, file);
-       // return DocumentFileUtils.forceDelete(docFile,context);
     }
 
     public static void closeSilently(Closeable c) {

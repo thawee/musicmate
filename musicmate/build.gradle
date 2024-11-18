@@ -139,6 +139,7 @@ dependencies {
     implementation deps.androidx.loader
     implementation deps.androidx.localbroadcastmanager
     implementation deps.androidx.drawerlayout
+    implementation deps.androidx.viewpager2
 
     implementation deps.jetbrains.annotations
     // room
@@ -239,6 +240,8 @@ dependencies {
     // Coil
     implementation deps.coil.runtime2
    // implementation deps.coil.transformations
+
+ //   implementation 'net.sourceforge.jaadec:jaad:0.8.6'
 
     // Local Library
     //https://bitbucket.org/ijabz/jaudiotagger/src/master/

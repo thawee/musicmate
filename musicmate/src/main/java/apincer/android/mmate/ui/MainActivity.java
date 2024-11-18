@@ -85,6 +85,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -128,7 +129,6 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.target.Target;
-import de.esoco.lib.expression.Action;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -270,33 +270,41 @@ public class MainActivity extends AppCompatActivity {
 
         btnOK.setOnClickListener(v -> {
             busy = true;
+            AtomicInteger count = new AtomicInteger(0);
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
-            MusicMateExecutors.fast(() -> {
+            MusicMateExecutors.parallels(() -> {
+                int cnt = count.incrementAndGet();
                 try {
                     boolean status = repos.deleteMediaItem(tag);
                     if(status) {
                         AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, Constants.STATUS_SUCCESS, tag);
                         EventBus.getDefault().postSticky(message);
-                        statusList.put(tag, "Deleted");
+                        updateStatus(itemsView, statusList, tag, "Deleted");
+                       // statusList.put(tag, "Deleted");
                     }else {
-                        statusList.put(tag, "Fail");
+                      //  statusList.put(tag, "Fail");
+                        updateStatus(itemsView, statusList, tag, "Fail");
                     }
-                    runOnUiThread(() -> {
+                   /* runOnUiThread(() -> {
                         int pct = progressBar.getProgress();
                         progressBar.setProgress((int) (pct + rate));
                         progressBar.invalidate();
                         itemsView.invalidateViews();
-                    });
+                    }); */
                 } catch (Exception e) {
                     Log.e(TAG,"deleteFile",e);
-                    statusList.put(tag, "Fail");
-                    runOnUiThread(() -> {
+                   // statusList.put(tag, "Fail");
+                    updateStatus(itemsView, statusList, tag, "Fail");
+                   /* runOnUiThread(() -> {
                         int pct = progressBar.getProgress();
                         progressBar.setProgress((int) (pct + rate));
                         progressBar.invalidate();
                         itemsView.invalidateViews();
-                    });
+                    });*/
+                }
+                finally {
+                    updateProgressBar(progressBar, cnt*rate);
                 }
             });
         }
@@ -386,9 +394,10 @@ public class MainActivity extends AppCompatActivity {
 
           //  final int len = selections.size();
           //  AtomicInteger count = new AtomicInteger(0);
-            MusicMateExecutors.executeParallels(selections, 2, (Action<MusicTag>) tag -> {
+         /*   MusicMateExecutors.executeParallels(selections, 2, (Action<MusicTag>) tag -> {
                 try {
                    // int currentCount = count.incrementAndGet();
+                    Log.d(TAG, "doSaveMediaItem: "+tag.getPath());
                     statusList.put(tag, "Moving");
                     MusicMateExecutors.ui(itemsView::invalidateViews);
                    // runOnUiThread(itemsView::invalidateViews);
@@ -405,36 +414,42 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "doSaveMediaItem", e);
                 }
                 updateProgressBar(progressBar, itemsView, rate);
-            });
+            }); */
             busy = false;
-            /*
+            //busy = true;
+            AtomicInteger count = new AtomicInteger(0);
             for(MusicTag tag: selections) {
-                MusicMateExecutors.fast(() -> {
+                MusicMateExecutors.parallels(() -> {
+                    int cnt = count.incrementAndGet();
                     try {
-                        statusList.put(tag, "Moving");
-                        runOnUiThread(() -> {
+                        //statusList.put(tag, "Moving");
+                        updateStatus(itemsView, statusList, tag, "Moving");
+                       /* runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
                             progressBar.invalidate();
                             itemsView.invalidateViews();
-                        });
+                        }); */
                         boolean status = repos.importAudioFile(tag);
                         if(status) {
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, tag);
                             EventBus.getDefault().postSticky(message);
-                            statusList.put(tag, "Done");
+                           // statusList.put(tag, "Done");
+                            updateStatus(itemsView, statusList, tag, "Done");
                         }else {
-                            statusList.put(tag, "Fail");
+                           // statusList.put(tag, "Fail");
+                            updateStatus(itemsView, statusList, tag, "Fail");
                         }
-                        runOnUiThread(() -> {
+                       /* runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));
                             progressBar.invalidate();
                             itemsView.invalidateViews();
-                        });
+                        }); */
                     } catch (Exception e) {
                         Log.e(TAG,"importFile",e);
-                        try {
+                        updateStatus(itemsView, statusList, tag, "Fail");
+                       /* try {
                             runOnUiThread(() -> {
                                 statusList.put(tag, "Fail");
                                 int pct = progressBar.getProgress();
@@ -442,21 +457,36 @@ public class MainActivity extends AppCompatActivity {
                                 progressBar.invalidate();
                                 itemsView.invalidateViews();
                             });
-                        }catch (Exception ignored) {}
+                        }catch (Exception ignored) {} */
+                    }finally {
+                        updateProgressBar(progressBar, cnt*rate);
                     }
                 });
-            } */
+            }
 
         });
         btnCancel.setOnClickListener(v -> {alert.dismiss();busy=false;});
         alert.show();
     }
 
-    private void updateProgressBar(ProgressBar progressBar, ListView itemsView, double rate) {
-        MusicMateExecutors.ui(() -> {
+    private void updateProgressBar(ProgressBar progressBar, double rate) {
+       /* MusicMateExecutors.ui(() -> {
             int pct = progressBar.getProgress();
             progressBar.setProgress((int) (pct + rate));
             progressBar.invalidate();
+            itemsView.invalidateViews();
+        }); */
+        runOnUiThread(() -> {
+            //int pct = progressBar.getProgress();
+           // System.out.println("updateProgressBar: "+rate);
+            progressBar.setProgress((int) (rate));
+            progressBar.invalidate();
+        });
+    }
+
+    private void updateStatus(ListView itemsView, Map<MusicTag, String> statusList,MusicTag tag, String status) {
+        runOnUiThread(() -> {
+            statusList.put(tag, status);
             itemsView.invalidateViews();
         });
     }
@@ -630,18 +660,6 @@ public class MainActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
         }
         super.onCreate(savedInstanceState);
-
-       /* notificationListenerConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName componentName) {
-
-            }
-        }; */
 
         // setup search criteria from starting intent
 

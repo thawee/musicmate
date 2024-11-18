@@ -56,8 +56,6 @@ import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.IconProviders;
-import apincer.android.mmate.repository.FFMpegHelper;
-import apincer.android.mmate.repository.FFMpegWriter;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
@@ -389,7 +387,11 @@ public class TagsActivity extends AppCompatActivity {
 
         if(MusicTagUtils.isFLACFile(displayTag)) {
             qualityView.setVisibility(View.VISIBLE);
-           // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), MusicTagUtils.createTrackQualityIcon(getApplicationContext(), displayTag)));
+            try {
+                audiophileView.setVisibility(View.VISIBLE);
+                audiophileView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
+            }catch(Exception ex){}
+            // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
              request = new ImageRequest.Builder(getApplicationContext())
                     .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
@@ -411,7 +413,7 @@ public class TagsActivity extends AppCompatActivity {
         fileTypeView.setBackground(resolutionBackground);
         fileTypeView.setText(trimToEmpty(displayTag.getAudioEncoding()).toUpperCase(Locale.US));
 
-        if (!isEmpty(displayTag.getMediaQuality())) {
+      /*  if (!isEmpty(displayTag.getMediaQuality())) {
             request = new ImageRequest.Builder(getApplicationContext())
                     .data(IconProviders.getSourceQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
@@ -421,7 +423,7 @@ public class TagsActivity extends AppCompatActivity {
             audiophileView.setVisibility(View.VISIBLE);
         } else {
             audiophileView.setVisibility(View.GONE);
-        }
+        } */
 
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
@@ -652,7 +654,7 @@ public class TagsActivity extends AppCompatActivity {
                 .setPositiveButton("DELETE", (dialogInterface, i) -> {
                     startProgressBar();
                     if(getEditItems().size()==1) {
-                        MusicMateExecutors.fast(() -> {
+                        MusicMateExecutors.parallels(() -> {
                             try {
                                 boolean status = repos.deleteMediaItem(getEditItems().get(0));
                                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, getEditItems().get(0));
@@ -879,8 +881,6 @@ public class TagsActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             if(progressDialog!=null && progressLabel!= null) {
                 progressLabel.setText(label);
-                //  progressDialog.
-                //   progressDialog = null;
             }
         });
     }

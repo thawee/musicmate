@@ -65,7 +65,6 @@ import coil.Coil;
 import coil.ImageLoader;
 import coil.request.ImageRequest;
 import coil.transform.RoundedCornersTransformation;
-import de.esoco.lib.expression.Action;
 
 public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
@@ -377,7 +376,20 @@ public class TagsEditorFragment extends Fragment {
                     List<MusicTag> list = tagsActivity.getEditItems();
                     final int len = list.size();
                     AtomicInteger count = new AtomicInteger(0);
-                    MusicMateExecutors.executeParallels(list, 2, (Action<MusicTag>) tag -> {
+                    for (MusicTag tag: list) {
+                        MusicMateExecutors.parallels(() -> {
+                            try {
+                                int currentCount = count.incrementAndGet();
+                                boolean status = repos.setMusicTag(tag);
+                                updateProgressBar(currentCount + "/" + len);
+                                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, tag);
+                                EventBus.getDefault().postSticky(message);
+                            } catch (Exception e) {
+                                Log.e(TAG, "doSaveMediaItem", e);
+                            }
+                        });
+                    }
+                    /*MusicMateExecutors.arallels(list, 2, (Action<MusicTag>) tag -> {
                         try {
                             int currentCount = count.incrementAndGet();
                             boolean status = repos.setMusicTag(tag);
@@ -387,7 +399,7 @@ public class TagsEditorFragment extends Fragment {
                         } catch (Exception e) {
                             Log.e(TAG, "doSaveMediaItem", e);
                         }
-                    });
+                    }); */
                 }
         ).thenAccept(
                 unused -> {
@@ -575,8 +587,6 @@ public class TagsEditorFragment extends Fragment {
         tagsActivity.runOnUiThread(() -> {
             if(progressDialog!=null && progressLabel!= null) {
                 progressLabel.setText(label);
-              //  progressDialog.
-             //   progressDialog = null;
             }
         });
     }
