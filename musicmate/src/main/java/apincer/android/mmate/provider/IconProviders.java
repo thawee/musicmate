@@ -25,6 +25,8 @@ import static apincer.android.mmate.utils.MusicTagUtils.isMQA;
 import static apincer.android.mmate.utils.MusicTagUtils.isMQAStudio;
 import static apincer.android.mmate.utils.MusicTagUtils.isWavFile;
 import static apincer.android.mmate.utils.StringUtils.getAbvByUpperCase;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -75,7 +77,7 @@ public class IconProviders {
         }
     }
 
-
+    @Deprecated
     public static Bitmap getSourceIcon(Context context, MusicTag tag) {
         int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
@@ -103,17 +105,17 @@ public class IconProviders {
     public static File getTrackQualityIcon(Context context, MusicTag tag) {
         //TrackQuality_DR_DRS_UP_RE.png
         File dir = context.getExternalCacheDir();
-        String quality = String.format("TrackQuality_%s_%s_%s_%s.png", getDynamicRangeAsString(tag), getTrackDRScore(tag),tag.getUpscaledInd(),tag.getResampledInd());
+        String quality = String.format("Quality_%s_%s_%s_%s_%s.png", getTrackQuality(tag), getDynamicRangeAsString(tag), getTrackDRScore(tag),tag.getUpscaledInd(),tag.getResampledInd());
         String path = "/Icons/"+quality;
 
         File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
             try {
                 FileUtils.createParentDirs(pathFile);
-               // dir = pathFile.getParentFile();
-               // dir.mkdirs();
 
-                Bitmap bitmap = createTrackQualityIcon(context, tag);
+               // Bitmap bitmap = createTrackQualityIcon(context, tag);
+                Bitmap bitmap = createQualityIcon(context, tag);
+
                // Bitmap bitmap = BitmapHelper.createHexagonBitmap(400, 400); // createTrackQualityIcon(context, tag);
                 byte []is = BitmapHelper.convertBitmapToByteArray(bitmap);
                 IOUtils.write(is, Files.newOutputStream(pathFile.toPath()));
@@ -122,6 +124,10 @@ public class IconProviders {
             }
         }
         return pathFile;
+    }
+
+    private static Object getTrackQuality(MusicTag tag) {
+        return trim(tag.getMediaQuality(), "None");
     }
 
     public static File getResolutionIcon( Context context, MusicTag tag) {
@@ -170,8 +176,7 @@ public class IconProviders {
         return pathFile;
     }
 
-
-
+    @Deprecated
     public static File getSourceQualityIcon(Context context, MusicTag tag) {
         //AudiophileRecords.png
         File dir = context.getExternalCacheDir();
@@ -369,31 +374,7 @@ public class IconProviders {
         int blackColor = context.getColor(R.color.black);
         int bgBlackColor = context.getColor(R.color.grey900);
         int bgWhiteColor = getResolutionColor(context, tag);
-        //   int qualityColor = context.getColor(R.color.quality_no_rating);
         int labelColor = getEncodingColor(context, tag);
-     /*   if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_audiophile);
-        }else if(QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_recommended);
-        }else if (QUALITY_GOOD.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_good);
-        }else if(Constants.QUALITY_BAD.equals(tag.getMediaQuality())) {
-            qualityColor = context.getColor(R.color.quality_bad);
-        }else {
-            qualityColor = context.getColor(R.color.quality_no_rating); //recordsColor;
-        }
-        int upscaleColor = context.getColor(R.color.quality_scale_not_test);
-        if(IND_UPSCALED_GOOD.equals(tag.getUpscaledInd())) {
-            upscaleColor = context.getColor(R.color.quality_scale_matched);
-        }else if(IND_UPSCALED_BAD.equals(tag.getUpscaledInd()) || IND_UPSCALED_INVALID.equals(tag.getUpscaledInd())) {
-            upscaleColor = context.getColor(R.color.quality_scale_not_matched);
-        }
-        int resampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
-        if(IND_RESAMPLED_GOOD.equals(tag.getResampledInd())) {
-            resampledColor = context.getColor(R.color.quality_scale_matched);
-        }else if(IND_RESAMPLED_BAD.equals(tag.getResampledInd()) || IND_RESAMPLED_INVALID.equals(tag.getResampledInd())) {
-            resampledColor = context.getColor(R.color.quality_scale_not_matched);
-        } */
 
         String label;
         String samplingRate = getBPSAndSampleRate(tag);
@@ -755,11 +736,16 @@ public class IconProviders {
         int height = 96;
         String qualityText = trimToEmpty(tag.getMediaQuality());
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
-        int recordsColor = context.getColor(R.color.quality_label);
+        int drColor = context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
+        int drsColor = context.getColor(R.color.white);
+        int drsHexagonColor = context.getColor(R.color.blue_accent200);
+        int drsHexagonBroaderColor = context.getColor(R.color.material_color_green_400);
         int blackColor = context.getColor(R.color.black);
         int qualityColor = context.getColor(R.color.quality_good);
-        String label1 = trimToEmpty(qualityText);
-        String label2 = String.format("DR%s %s", getTrackDRScore(tag), getDynamicRangeAsString(tag));  //"R e c o r d s";
+        int greyColor = context.getColor(R.color.grey200);
+        String label1 =  isEmpty(qualityText)?"No Rated":qualityText;
+        String drLabel = getDynamicRangeAsString(tag); //String.format("DR %s | %s", getTrackDRScore(tag), getDynamicRangeAsString(tag));
+        String drsLabel = getTrackDRScore(tag);
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -772,16 +758,31 @@ public class IconProviders {
                 myCanvas.getHeight() // Bottom
         );
 
-        //draw back color
-        padding = 0;
+        // draw border dark grey
         RectF rectangle = new RectF(
-                padding, // Left
-                padding, // Top
-                myCanvas.getWidth() - padding, // Right
-                myCanvas.getHeight() - padding // Bottom
+                0, // Left
+                0, // Top
+                myCanvas.getWidth(), // Right
+                myCanvas.getHeight() // Bottom
         );
 
         Paint bgPaint =  new Paint();
+        bgPaint.setAntiAlias(true);
+        bgPaint.setColor(greyColor);
+        bgPaint.setStyle(Paint.Style.FILL);
+        myCanvas.drawRoundRect(rectangle, cornerRadius,cornerRadius, bgPaint);
+
+        //draw back color
+       // padding = 0;
+        int bgPadding = 4;
+        rectangle = new RectF(
+                bgPadding, // Left
+                bgPadding, // Top
+                myCanvas.getWidth() - bgPadding, // Right
+                myCanvas.getHeight() - bgPadding // Bottom
+        );
+
+        bgPaint =  new Paint();
         bgPaint.setAntiAlias(true);
         bgPaint.setColor(blackColor);
         bgPaint.setStyle(Paint.Style.FILL);
@@ -816,7 +817,8 @@ public class IconProviders {
         int barWidth = 6;
         int rndNo =0;
         padding=8;
-        int bottomPos = height-padding-4;
+        int bottomPos = height-12;
+        int marginLeft = 42; //24; //12;
         for(int color: colors) {
             Paint paint = new Paint();
             paint.setColor(color);
@@ -826,11 +828,12 @@ public class IconProviders {
             paint.setStyle(Paint.Style.STROKE);
 
             Path path = new Path();
-            path.moveTo(12+(rndNo*barWidth), padding);
-            path.lineTo(12+(rndNo*barWidth), bottomPos-(rndNo*barWidth));
+            path.moveTo(marginLeft+(rndNo*barWidth), padding);
+            path.lineTo(marginLeft+(rndNo*barWidth), bottomPos-(rndNo*barWidth));
             path.lineTo( width-padding, bottomPos-(rndNo*barWidth));
+           // path.close();
 
-            float radius = 36.0f;
+            float radius = 32.0f;
 
             CornerPathEffect cornerPathEffect =
                     new CornerPathEffect(radius);
@@ -840,11 +843,90 @@ public class IconProviders {
             rndNo++;
         }
 
-        // draw label "Records", grey color
+        // draw hexagon icon for DRS
+        Path path = new Path();
+        float radius = 42;
+        float positionX = 46;
+        float positionY = (float) bounds.height() /2;
+        for (int i = 0; i < 6; i++) {
+            double angle = Math.toRadians(60 * i);
+            float x = (float) (positionX + radius * Math.cos(angle));
+            float y = (float) (positionY + radius * Math.sin(angle));
+            if (i == 0) {
+                path.moveTo(x, y);
+            } else {
+                path.lineTo(x, y);
+            }
+        }
+        Paint paint = new Paint();
+        paint.setColor(drsHexagonColor);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        myCanvas.drawPath(path, paint);
+
+        // add hex border
+        path = new Path();
+        for (int i = 0; i < 6; i++) {
+            double angle = Math.toRadians(60 * i);
+            float x = (float) (positionX + radius * Math.cos(angle));
+            float y = (float) (positionY + radius * Math.sin(angle));
+            if (i == 0) {
+                path.moveTo(x, y);
+            } else {
+                path.lineTo(x, y);
+            }
+        }
+        paint = new Paint();
+        paint.setColor(drsHexagonBroaderColor);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStrokeWidth(4);
+        paint.setStyle(Paint.Style.STROKE);
+        myCanvas.drawPath(path, paint);
+
+        // draw label Dynamic Range Scored, grey color
+        Typeface drsFont = ResourcesCompat.getFont(context, R.font.k2d_bold);
+        int drsTextSize = 48;
+        int drsMargin = 32;
+        Paint drsPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        drsPaint.setColor(drsColor);
+        drsPaint.setTypeface(drsFont);
+        drsPaint.setAntiAlias(true);
+        drsPaint.setDither(true);
+        drsPaint.setTextSize(drsTextSize);
+        drsPaint.setTextAlign(Paint.Align.CENTER);
+        // Text draws from the baselineAdd some top padding to center vertically.
+        Rect drsMathRect = new Rect();
+        drsPaint.getTextBounds(drsLabel, 0, 1, drsMathRect);
+        float drsPositionTop = drsMathRect.height() + drsMargin;
+       // float drsPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+        myCanvas.drawText(drsLabel,
+                drsMargin+padding, // left
+                drsPositionTop, //top
+                drsPaint);
+
+        // draw dr shape
+        float barBottomY = bounds.height() - padding;
+        float barTopY = bounds.height()/2 + padding;
+        float barX1 = 68;
+        float barX2 = barX1*2;
+        float barX3 = barX1*3;
+        positionX = 46;
+        positionY = (float) bounds.height() /2;
+        path = new Path();
+        path.moveTo(barBottomY, barX1);
+        path.quadTo(bounds.width() / 4, bounds.height() / 2, bounds.width() / 2, bounds.height());
+        path.quadTo(3 * bounds.width() / 4, bounds.height() / 2, bounds.width() / 2, bounds.height() / 4);
+
+        // Draw the water drop
+        myCanvas.drawPath(path, paint);
+
+        // draw label Dynamic Range (dB), grey color
         Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
         int letterTextSize = 32; //24; //28;
         Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(recordsColor);
+        mLetterPaint.setColor(drColor);
         mLetterPaint.setTypeface(font);
         mLetterPaint.setAntiAlias(true);
         mLetterPaint.setDither(true);
@@ -852,12 +934,13 @@ public class IconProviders {
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
         Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(label2, 0, 1, textMathRect);
+        mLetterPaint.getTextBounds(drLabel, 0, 1, textMathRect);
         float mLetterTop = textMathRect.height() ;
         float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
-        myCanvas.drawText(label2,
-                (float) (bounds.width()-(textMathRect.width()*6.5)), // left
-                mLetterTop + mPositionY+10, //bounds.exactCenterY(), //top
+        float mPositionX = (float) (bounds.width()-64);
+        myCanvas.drawText(drLabel,
+                mPositionX, // left
+                mLetterTop + mPositionY+4, //bounds.exactCenterY(), //top
                 mLetterPaint);
 
         // draw label "Audiophile", quality color
@@ -894,7 +977,7 @@ public class IconProviders {
         // mLetterTop = (textMathRect.height() / 6f);
         mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
         myCanvas.drawText(label1,
-                bounds.exactCenterX() +20, //left
+                bounds.exactCenterX() +36, //left
                 mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
                 mLetterPaint);
 
@@ -1176,6 +1259,7 @@ public class IconProviders {
         return myBitmap;
     }
 
+    @Deprecated
     public static Bitmap createTrackQualityIcon(Context context, MusicTag tag) {
         int width =  144; //280; // 16x46, 24x70
         int height = 96; //1.5

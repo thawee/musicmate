@@ -2,7 +2,6 @@ package apincer.android.mmate.dlna;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -266,9 +265,7 @@ public class MediaServerDevice extends LocalDevice {
                 String modelName = "MusicMate Server";
                 String modelDescription = "DLNA (UPnP/AV 1.0) Compliant Media Server - "+ApplicationUtils.getDeviceDetails();
                 String friendlyName = "MusicMate Server ["+ApplicationUtils.getDeviceModel()+"]";
-              //  ManufacturerDetails manufacturerDetails = new ManufacturerDetails("Thawee",
-              //          "https://github.com/thawee/musicmate");
-                ModelDetails modelDetails = new ModelDetails(modelName,
+            ModelDetails modelDetails = new ModelDetails(modelName,
                         modelDescription,
                         modelNumber);
                 URI presentationURI = null;

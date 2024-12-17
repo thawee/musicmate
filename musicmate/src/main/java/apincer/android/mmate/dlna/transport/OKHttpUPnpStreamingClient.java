@@ -1,7 +1,5 @@
 package apincer.android.mmate.dlna.transport;
 
-import android.util.Log;
-
 import org.jupnp.model.message.StreamRequestMessage;
 import org.jupnp.model.message.StreamResponseMessage;
 import org.jupnp.model.message.UpnpHeaders;

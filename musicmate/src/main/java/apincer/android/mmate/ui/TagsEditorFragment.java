@@ -403,13 +403,13 @@ public class TagsEditorFragment extends Fragment {
                 }
         ).thenAccept(
                 unused -> {
-                    stopProgressBar();
                     // set updated item on main activity
-                    getActivity().runOnUiThread(() -> {
+                    tagsActivity.runOnUiThread(() -> {
                         bypassChange = true;
                         bindViews();
                         bypassChange = false;
                     });
+                    stopProgressBar();
                 }
         ).exceptionally(
                 throwable -> {
@@ -493,7 +493,7 @@ public class TagsEditorFragment extends Fragment {
                 unused -> {
                     stopProgressBar();
                     // set updated item on main activity
-                    getActivity().runOnUiThread(() -> {
+                    tagsActivity.runOnUiThread(() -> {
                         bypassChange = true;
                         bindViews();
                         bypassChange = false;

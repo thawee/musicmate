@@ -214,14 +214,14 @@ public class FFMPegReader extends TagReader {
         return null;
     } */
 
-    protected List<MusicTag> readFromFile(String path) {
-        Log.d(TAG, "readFromFile: "+path);
+    protected List<MusicTag> read(String path) {
+        Log.d(TAG, "read: "+path);
         MusicTag tag = extractTagFromFile(path);
         return List.of(tag);
     }
 
-    protected List<MusicTag> readFullyFromFile(String path) {
-        Log.d(TAG, "readFullyFromFile: "+path);
+    protected List<MusicTag> readFully(String path) {
+        Log.d(TAG, "readFully: "+path);
         MusicTag tag = extractTagFromFile(path);
         detectMQA(tag,50000); // timeout 50 seconds
         return List.of(tag);

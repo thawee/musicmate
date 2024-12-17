@@ -154,6 +154,7 @@ public class HTTPServer {
         // initialize status descriptions lookup table
         Arrays.fill(statuses, "Unknown Status");
         statuses[100] = "Continue";
+        statuses[101] = "Switching Protocols";
         statuses[200] = "OK";
         statuses[201] = "Created";
         statuses[204] = "No Content";
@@ -186,8 +187,7 @@ public class HTTPServer {
      * A mapping of path suffixes (e.g. file extensions) to their
      * corresponding MIME types.
      */
-    protected static final Map<String, String> contentTypes =
-            new ConcurrentHashMap<String, String>();
+    protected static final Map<String, String> contentTypes = new ConcurrentHashMap<>();
 
     static {
         // add some default common content types
@@ -508,7 +508,7 @@ public class HTTPServer {
     /**
      * The {@code MultipartInputStream} decodes an InputStream whose
      * data has a "multipart/*" content type (as defined in RFC 2046),
-     * provoding the underlying data of its various parts.
+     * providing the underlying data of its various parts.
      * <p>
      * The {@code InputStream} methods (e.g. {@link #read}) relate only to
      * the current part, and the {@link #nextPart} method advances to the
@@ -532,7 +532,7 @@ public class HTTPServer {
          * @throws IllegalArgumentException if the given boundary's size is not
          *         between 1 and 70
          */
-        protected MultipartInputStream(InputStream in, byte[] boundary) {
+        public MultipartInputStream(InputStream in, byte[] boundary) {
             super(in);
             int len = boundary.length;
             if (len == 0 || len > 70)
@@ -773,6 +773,7 @@ public class HTTPServer {
             in = new MultipartInputStream(req.getBody(), getBytes(boundary));
         }
 
+        @Override
         public boolean hasNext() {
             try {
                 return next || (next = in.nextPart());
@@ -781,6 +782,7 @@ public class HTTPServer {
             }
         }
 
+        @Override
         public Part next() {
             if (!hasNext())
                 throw new NoSuchElementException();
@@ -798,6 +800,7 @@ public class HTTPServer {
             return p;
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
@@ -819,8 +822,7 @@ public class HTTPServer {
             protected String param; // parameter name (null if not a param node)
             protected int rank; // defines the order of precedence of matched contexts
             protected ContextInfo[] children = new ContextInfo[0];
-            protected Map<String, ContextHandler> handlers =
-                    new ConcurrentHashMap<String, ContextHandler>(2);
+            protected Map<String, ContextHandler> handlers = new ConcurrentHashMap<>(2);
 
             /**
              * Constructs a ContextInfo with the given context path and segment.
@@ -981,10 +983,10 @@ public class HTTPServer {
         }
 
         protected final String name;
-        protected final Set<String> aliases = new CopyOnWriteArraySet<String>();
+        protected final Set<String> aliases = new CopyOnWriteArraySet<>();
         protected volatile String directoryIndex = "index.html";
         protected volatile boolean allowGeneratedIndex;
-        protected final Set<String> methods = new CopyOnWriteArraySet<String>();
+        protected final Set<String> methods = new CopyOnWriteArraySet<>();
         protected final ContextInfo rootContext = new ContextInfo("", ""); // root of context tree
 
         /**
@@ -1198,6 +1200,7 @@ public class HTTPServer {
             this.base = dir.getCanonicalFile();
         }
 
+        @Override
         public int serve(Request req, Response resp) throws IOException {
             String path = req.getPath();
             String filename = req.getParams().get("*");
@@ -1231,13 +1234,14 @@ public class HTTPServer {
                 throw new IllegalArgumentException("invalid method signature: " + m);
         }
 
+        @Override
         public int serve(Request req, Response resp) throws IOException {
             try {
                 return (Integer)m.invoke(obj, req, resp);
             } catch (InvocationTargetException ite) {
-                throw new IOException("error: " + ite.getCause().getMessage());
+                throw new IOException(ite.getCause());
             } catch (Exception e) {
-                throw new IOException("error: " + e);
+                throw new IOException(e);
             }
         }
     }
@@ -1433,7 +1437,7 @@ public class HTTPServer {
          * @return the header's parameter names and values
          */
         public Map<String, String> getParams(String name) {
-            Map<String, String> params = new LinkedHashMap<String, String>();
+            Map<String, String> params = new LinkedHashMap<>();
             for (String param : split(get(name), ";", -1)) {
                 String[] pair = split(param, "=", 2);
                 // [RFC9110#5.6.6] param names are case-insensitive
@@ -1451,6 +1455,7 @@ public class HTTPServer {
          *
          * @return an Iterator over the headers
          */
+        @Override
         public Iterator<Header> iterator() {
             // we use the built-in wrapper instead of a trivial custom implementation
             // since even a tiny anonymous class here compiles to a 1.5K class file
@@ -1498,7 +1503,7 @@ public class HTTPServer {
                 if (encodings.isEmpty() || !encodings.get(encodings.size() - 1).equals("chunked"))
                     throw new IOException("final transfer encoding must be \"chunked\"");
                 trailers = new Headers();
-                body = new ChunkedInputStream(in, trailers); // RFC9110#6.5 - separate trailers from headers
+                body = new ChunkedInputStream(in, trailers); // [RFC9110#6.5] separate trailers from headers
             } else {
                 header = headers.get("Content-Length");
                 long len = header == null ? 0 : parseULong(header, 10);
@@ -1628,7 +1633,7 @@ public class HTTPServer {
          * @see HTTPServer#parseParamsList(String)
          */
         public List<String[]> getParamsList() throws IOException {
-            List<String[]> params = new ArrayList<String[]>(4);
+            List<String[]> params = new ArrayList<>(4);
             getVirtualHost().rootContext.getContext(getPath(), 0, false, 0, params); // path params
             String ct = headers.get("Content-Type"); // body params
             if (ct != null && ct.toLowerCase(Locale.US).startsWith("application/x-www-form-urlencoded"))
@@ -1690,49 +1695,55 @@ public class HTTPServer {
             int i = 0;
             int len = 0;
             int token = 0; // number of tokens parsed
-            while ((c = in.read()) != -1) {
-                if (c > ' ') { // append char to token
-                    if (i == len) { // buffer is full
-                        if (i >= 8192)
-                            throw new IOException(
-                                    token == 1 ? "URI too long" : "request line too long");
-                        len = len == 0 ? 128 : 2 * len; // double capacity
-                        byte[] temp = new byte[len]; // lazy init since connection may close between requests
-                        if (b != null)
-                            System.arraycopy(b, 0, temp, 0, i);
-                        b = temp;
-                    }
-                    // if path is a relative uri, we must remove '//' prefix which URI parses as host name
-                    // (we also merge other repeating slashes as is common practice, although not required)
-                    if (c != '/' || i == 0 || b[i - 1] != '/' || b[0] != '/')
-                        b[i++] = (byte)c;
-                } else { // whitespace delimiter
-                    if (i > 0) { // the end of a non-empty token
-                        if (token == 0) { // method
-                            method = new String(b, 0, i, "ISO8859_1");
-                        } else if (token == 1) { // uri
-                            try {
-                                this.uri = new URI(new String(b, 0, i, "ISO8859_1"));
-                            } catch (URISyntaxException use) {
-                                throw new IOException("invalid URI: " + use.getMessage());
-                            }
-                        } else if (token == 2) { // version
-                            if (i != 8 || b[0] != 'H' || b[1] != 'T' || b[2] != 'T' || b[3] != 'P' || b[4] != '/'
-                                    || b[6] != '.' || b[5] < '0' || b[5] > '9' || b[7] < '0' || b[7] > '9')
-                                throw new IOException("invalid version");
-                            version = 10 * (b[5] - '0') + (b[7] - '0'); // parse as 2-digit integer
+            boolean query = false; // true when reaching URL query or fragment
+            try {
+                while ((c = in.read()) != -1) {
+                    if (c > ' ') { // append char to token
+                        if (i == len) { // buffer is full
+                            if (i >= 8192)
+                                throw new IOException(token == 1 ? "URI too long" : "request line too long");
+                            len = len == 0 ? 128 : 2 * len; // double capacity
+                            byte[] temp = new byte[len]; // lazy init since connection may close between requests
+                            if (b != null)
+                                System.arraycopy(b, 0, temp, 0, i);
+                            b = temp;
                         }
-                        i = 0;
-                        token++;
-                    }
-                    if (c == '\n' && token > 0) { // end of request line (unless it's empty)
-                        if (token == 3) // got our 3 valid tokens
-                            return;
-                        throw new IOException("invalid request line"); // wrong number of tokens
+                        // if path is a relative uri, we must remove "//" prefix which URI parses as host name
+                        // we also merge repeated slashes in path as is common practice (although not required)
+                        if (c == '?' || c == '#') // don't merge slashes in query or fragment
+                            query = true;
+                        if (c != '/' || i == 0 || b[i - 1] != '/' || b[0] != '/' || query)
+                            b[i++] = (byte)c;
+                    } else { // whitespace delimiter
+                        if (i > 0) { // the end of a non-empty token
+                            if (token == 0) { // method
+                                method = new String(b, 0, i, "ISO8859_1");
+                            } else if (token == 1) { // uri
+                                this.uri = new URI(new String(b, 0, i, "ISO8859_1"));
+                            } else if (token == 2) { // version
+                                if (i != 8 || b[0] != 'H' || b[1] != 'T' || b[2] != 'T' || b[3] != 'P' || b[4] != '/'
+                                        || b[6] != '.' || b[5] < '0' || b[5] > '9' || b[7] < '0' || b[7] > '9')
+                                    throw new IOException("invalid version");
+                                version = 10 * (b[5] - '0') + (b[7] - '0'); // parse as 2-digit integer
+                            }
+                            i = 0; // start next token
+                            token++;
+                        }
+                        if (c == '\n' && token > 0) { // end of request line (unless it's empty)
+                            if (token == 3) // got our 3 valid tokens
+                                return;
+                            throw new IOException("invalid request line"); // wrong number of tokens
+                        }
                     }
                 }
+                throw new EOFException("unexpected end of stream");
+            } catch (URISyntaxException use) {
+                throw new IOException("invalid URI: " + use.getMessage());
+            } catch (IOException ioe) {
+                if (i > 0 || token > 0) // if already started parsing request
+                    throw ioe; // rethrow exception to send error response
+                throw new IOException("missing request line"); // otherwise, close connection without response
             }
-            throw new IOException("missing request line");
         }
 
         /**
@@ -1854,6 +1865,7 @@ public class HTTPServer {
          *
          * @throws IOException if an error occurs
          */
+        @Override
         public void close() throws IOException {
             state = -1; // closed
             if (encodedOut != null)
@@ -1876,7 +1888,7 @@ public class HTTPServer {
                 throw new IOException("headers were already sent");
             if (!headers.contains("Date"))
                 headers.add("Date", formatDate(System.currentTimeMillis()));
-            headers.add("Server", "JLHTTP/3.1");
+            headers.add("Server", "JLHTTP/3.2");
             out.write(getBytes("HTTP/1.1 ", Integer.toString(status), " ", statuses[status]));
             out.write(CRLF);
             headers.writeTo(out);
@@ -2058,6 +2070,7 @@ public class HTTPServer {
                 while (serv != null && !serv.isClosed()) {
                     final Socket sock = serv.accept();
                     executor.execute(new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 try {
@@ -2090,7 +2103,7 @@ public class HTTPServer {
     protected volatile boolean secure;
     protected volatile Executor executor;
     protected volatile ServerSocket serv;
-    protected final Map<String, VirtualHost> hosts = new ConcurrentHashMap<String, VirtualHost>();
+    protected final Map<String, VirtualHost> hosts = new ConcurrentHashMap<>();
 
     /**
      * Constructs an HTTPServer which can accept connections on the given port.
@@ -2174,7 +2187,7 @@ public class HTTPServer {
      * @return all virtual hosts (as an unmodifiable set)
      */
     public Set<VirtualHost> getVirtualHosts() {
-        return Collections.unmodifiableSet(new HashSet<VirtualHost>(hosts.values()));
+        return Collections.unmodifiableSet(new HashSet<>(hosts.values()));
     }
 
     /**
@@ -2230,7 +2243,9 @@ public class HTTPServer {
 
     /**
      * Stops this server. If it is already stopped, does nothing.
-     * Note that if an {@link #setExecutor Executor} was set, it must be closed separately.
+     * New connections will not be accepted, but existing ones are allowed to complete.
+     * If an {@link #setExecutor Executor} was set, it must be shut down separately.
+     * The default {@code Executor} will terminate its threads after 60 seconds of inactivity.
      */
     public synchronized void stop() {
         try {
@@ -2272,7 +2287,7 @@ public class HTTPServer {
                     if (t instanceof InterruptedIOException) // e.g. SocketTimeoutException
                         resp.sendError(408);
                     else if (t instanceof IOException && t.getMessage().contains("URI too long"))
-                        resp.sendError(414); // RFC9112#3 - must return 414 if URI is too long
+                        resp.sendError(414); // [RFC9112#3] must return 414 if URI is too long
                     else
                         resp.sendError(400, "Invalid request: " + t.getMessage());
                 } else if (!resp.headersSent()) { // if headers were not already sent, we can send an error response
@@ -2288,7 +2303,8 @@ public class HTTPServer {
             transfer(req.getBody(), null, -1);
             // [RFC9112#9.3/9.6] persist connection unless client or server close explicitly (or legacy client)
         } while (!"close".equalsIgnoreCase(req.getHeaders().get("Connection"))
-                && !"close".equalsIgnoreCase(resp.getHeaders().get("Connection")) && req.getVersion() == 11);
+                && !"close".equalsIgnoreCase(resp.getHeaders().get("Connection"))
+                && req.getVersion() == 11 && serv != null); // also close if the server is shutting down
     }
 
     /**
@@ -2342,7 +2358,7 @@ public class HTTPServer {
                     return false;
                 }
             }
-        } else if (version < 10 || version >= 20) {  // [RFC9112#C1] - drop HTTP/0.9 support
+        } else if (version < 10 || version >= 20) {  // [RFC9112#C1] drop HTTP/0.9 support
             resp.sendError(505);
             return false;
         }
@@ -2369,7 +2385,7 @@ public class HTTPServer {
         } else if (method.equals("TRACE")) { // default TRACE handler
             handleTrace(req, resp);
         } else {
-            Set<String> methods = new LinkedHashSet<String>();
+            Set<String> methods = new LinkedHashSet<>();
             methods.addAll(Arrays.asList("GET", "HEAD", "TRACE", "OPTIONS")); // built-in methods
             // "*" is a special server-wide (no-context) request supported by OPTIONS
             boolean isServerOptions = req.getPath().equals("*") && method.equals("OPTIONS");
@@ -2379,7 +2395,7 @@ public class HTTPServer {
                 resp.getHeaders().add("Content-Length", "0"); // no content
                 resp.sendHeaders(200);
             } else if (req.getVirtualHost().getMethods().contains(method)) {
-                resp.sendHeaders(405); // supported by server, but not this context (nor built-in)
+                resp.sendError(405); // supported by server, but not this context (nor built-in)
             } else {
                 resp.sendError(501); // unsupported method
             }
@@ -2400,7 +2416,7 @@ public class HTTPServer {
         out.write(getBytes("TRACE ", req.getURI().toString(), " HTTP/" + version / 10 + "." + version % 10));
         out.write(CRLF);
         req.getHeaders().writeTo(out); // warning: this may disclose sensitive headers (cookies, auth etc.)
-        transfer(req.getBody(), out, -1); // RFC9110#9.3.8 - client must not send content (but we echo it anyway)
+        transfer(req.getBody(), out, -1); // [RFC9110#9.3.8] client must not send content (but we echo it anyway)
     }
 
     /**
@@ -2543,7 +2559,7 @@ public class HTTPServer {
     public static List<String[]> parseParamsList(String s) {
         if (s == null || s.length() == 0)
             return Collections.emptyList();
-        List<String[]> params = new ArrayList<String[]>(8);
+        List<String[]> params = new ArrayList<>(8);
         for (String pair : split(s, "&", -1)) {
             int pos = pair.indexOf('=');
             String name = pos < 0 ? pair : pair.substring(0, pos);
@@ -2573,7 +2589,7 @@ public class HTTPServer {
     public static <K, V> Map<K, V> toMap(Collection<? extends Object[]> pairs) {
         if (pairs == null || pairs.isEmpty())
             return Collections.emptyMap();
-        Map<K, V> map = new LinkedHashMap<K, V>(pairs.size());
+        Map<K, V> map = new LinkedHashMap<>(pairs.size());
         for (Object[] pair : pairs)
             if (!map.containsKey(pair[0]))
                 map.put((K)pair[0], (V)pair[1]);
@@ -2582,44 +2598,43 @@ public class HTTPServer {
 
     /**
      * Returns the absolute (zero-based) content range value specified
-     * by the given range string. If multiple ranges are requested, a single
-     * range containing all of them is returned.
+     * by the given range string. If multiple ranges are requested,
+     * they are coalesced into a single range encompassing all of them.
      *
      * @param range the string containing the range description
      * @param length the full length of the requested resource
-     * @return the requested range, or null if the range value is invalid
+     * @return the requested range (which is satisfiable only if its start
+     *         position is less than length), or null if the range value
+     *         is invalid or the entire resource should be sent
      */
     public static long[] parseRange(String range, long length) {
         long min = Long.MAX_VALUE;
         long max = Long.MIN_VALUE;
         try {
             for (String token : splitElements(range, false)) {
-                long start, end;
+                long start;
+                long end = length - 1;
                 int dash = token.indexOf('-');
                 if (dash == 0) { // suffix range
-                    start = length - parseULong(token.substring(1), 10);
-                    end = length - 1;
-                } else if (dash == token.length() - 1) { // open range
+                    long i = parseULong(token.substring(1), 10);
+                    start = length < i ? 0 : length - i;
+                    if (length == 0 && i > 0)
+                        return null;
+                } else { // full range or open-ended range
                     start = parseULong(token.substring(0, dash), 10);
-                    end = length - 1;
-                } else { // explicit range
-                    start = parseULong(token.substring(0, dash), 10);
-                    end = parseULong(token.substring(dash + 1), 10);
+                    if (dash < token.length() - 1) { // full range
+                        long i = parseULong(token.substring(dash + 1), 10);
+                        end = i < end ? i : end;
+                        if (i < start)
+                            throw new RuntimeException();
+                    }
                 }
-                if (end < start)
-                    throw new RuntimeException();
                 if (start < min)
                     min = start;
                 if (end > max)
                     max = end;
             }
-            if (min < 0)
-                min = 0; // suffix range larger than length
-            if (max < 0) // no tokens
-                throw new RuntimeException();
-            if (max >= length && min < length)
-                max = length - 1;
-            return new long[] { min, max }; // min might be >= length!
+            return max < -1 ? null : new long[] { min, max }; // min can be >= length!
         } catch (RuntimeException re) { // NFE, IOOBE or explicit RE
             return null; // [RFC9110#14.2] ignore Range header if invalid
         }
@@ -2722,7 +2737,7 @@ public class HTTPServer {
         String value = null;
         double qvalue = -1;
         double wildcard = -1;
-        List<String> items = new ArrayList<String>(Arrays.asList(supported)); // supported but unmentioned values
+        List<String> items = new ArrayList<>(Arrays.asList(supported)); // supported but unmentioned values
         for (String s : splitElements(list, true)) {
             String[] pair = split(s, ";", -1);
             double q = pair.length > 1 && pair[1].startsWith("q=") ? Double.parseDouble(pair[1].substring(2)) : 1;
@@ -2753,7 +2768,7 @@ public class HTTPServer {
     public static String[] split(String str, String delimiters, int limit) {
         if (str == null)
             return new String[0];
-        Collection<String> elements = new ArrayList<String>();
+        Collection<String> elements = new ArrayList<>();
         int len = str.length();
         int start = 0;
         int end;
@@ -3074,25 +3089,25 @@ public class HTTPServer {
      */
     public static int getConditionalStatus(Request req, long lastModified, String etag, boolean range) {
         Headers headers = req.getHeaders();
-        // If-Match
+        // If-Match [RFC9110#13.1.1]
         String header = headers.get("If-Match");
         if (header != null) {
             if (!match(true, splitElements(header, false), etag))
                 return 412;
         } else {
-            // If-Unmodified-Since
+            // If-Unmodified-Since [RFC9110#13.1.4]
             Date date = headers.getDate("If-Unmodified-Since");
             if (date != null && lastModified > date.getTime())
                 return 412;
         }
         boolean isGetOrHead = req.getMethod().equals("GET") || req.getMethod().equals("HEAD");
-        // If-None-Match
+        // If-None-Match [RFC9110#13.1.2]
         header = headers.get("If-None-Match");
         if (header != null) {
             if (match(false, splitElements(header, false), etag)) // [RFC9110#13.1.2] weak matching
                 return isGetOrHead ? 304 : 412;
         } else if (isGetOrHead) {
-            // If-Modified-Since
+            // If-Modified-Since [RFC9110#13.1.3]
             Date date = headers.getDate("If-Modified-Since");
             if (date != null && lastModified <= date.getTime())
                 return 304;
@@ -3101,7 +3116,7 @@ public class HTTPServer {
         // and evaluated only if the response would otherwise be 200 (which is true at this point)
         if (!range || !isGetOrHead)
             return 200;
-        // If-Range
+        // If-Range [RFC9110#13.1.5]
         header = req.getHeaders().get("If-Range"); // either a date or an etag
         if (header != null) {
             if (!header.startsWith("\"") && !header.startsWith("W/")) {
@@ -3117,7 +3132,7 @@ public class HTTPServer {
 
     /**
      * Serves the contents of a file, with its corresponding content type,
-     * last modification time, etc. conditional and partial retrievals are
+     * last modification time, etc. Conditional and partial retrievals are
      * handled according to the RFC.
      *
      * @param file the existing and readable file whose contents are served
@@ -3142,18 +3157,18 @@ public class HTTPServer {
         // send the response
         Headers respHeaders = resp.getHeaders();
         switch (status) {
-            case 304: // [RFC9110#15.4.5] no other headers or body
+            case 304: // [RFC9110#15.4.5] no other headers or body allowed
                 respHeaders.add("ETag", etag);
                 respHeaders.add("Vary", "Accept-Encoding");
                 respHeaders.add("Last-Modified", formatDate(lastModified));
                 resp.sendHeaders(304);
                 break;
             case 412:
-                resp.sendHeaders(412);
+                resp.sendError(412);
                 break;
             case 416:
                 respHeaders.add("Content-Range", "bytes */" + len);
-                resp.sendHeaders(416);
+                resp.sendError(416);
                 break;
             case 200:
                 // send OK response
@@ -3168,7 +3183,7 @@ public class HTTPServer {
                 }
                 break;
             default:
-                resp.sendHeaders(500); // should never happen
+                resp.sendError(500); // should never happen
                 break;
         }
     }
@@ -3215,7 +3230,6 @@ public class HTTPServer {
         }
         return 0;
     }
-
 
     /**
      * Serves the contents of a directory as an HTML file index.
@@ -3287,6 +3301,7 @@ public class HTTPServer {
             host.setAllowGeneratedIndex(true); // with directory index pages
             host.addContext("/{*}", new FileContextHandler(dir));
             host.addContext("/api/time", new ContextHandler() {
+                @Override
                 public int serve(Request req, Response resp) throws IOException {
                     long now = System.currentTimeMillis();
                     resp.getHeaders().add("Content-Type", "text/plain");

@@ -259,7 +259,7 @@ public class FileRepository {
             String mediaPath = file.getAbsolutePath();
             long lastModified = file.lastModified();
             if(file.length() < 1024) {
-                Log.i(TAG, "scanMusicFile: skip small file - "+mediaPath);
+                Log.i(TAG, "scanFile: skip small file - "+mediaPath);
                 return; // skip file less than 1 Mb
             }
             if(forceRead) {
@@ -381,15 +381,21 @@ public class FileRepository {
 
     public String getStorageIdFor(MusicTag metadata) {
         String STORAGE_PRIMARY = StorageId.PRIMARY;
-        if(metadata.isDSD() || metadata.isSACDISO()) {
+       // if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
-            return STORAGE_PRIMARY;
-        }else if (MusicTagUtils.isHiRes(metadata)) {
-            return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
+       //     return STORAGE_PRIMARY;
+       // }else if (MusicTagUtils.isHiRes(metadata)) {
+       //     return STORAGE_PRIMARY;
+       // }else
+        if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping()) ||
+                Constants.GROUPING_THAI_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
         }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
+        }else if(Constants.GROUPING_JAZZ.equalsIgnoreCase(metadata.getGrouping()) ||
+                Constants.GROUPING_THAI_JAZZ.equalsIgnoreCase(metadata.getGrouping())) {
+            return STORAGE_PRIMARY;
+
       /*  }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
                  Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
@@ -490,10 +496,11 @@ public class FileRepository {
 
         assert oldDir != null;
         File [] files = oldDir.listFiles(file -> Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(file).toLowerCase()));
-        assert files != null;
-        for(File f : files) {
-            File newRelated = new File(newDir, f.getName());
-            FileSystem.copy(getContext(), f, newRelated);
+        if(files != null) {
+            for (File f : files) {
+                File newRelated = new File(newDir, f.getName());
+                FileSystem.copy(getContext(), f, newRelated);
+            }
         }
     }
 

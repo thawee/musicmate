@@ -69,7 +69,18 @@ dependencies {
 
 //	implementation deps.apache.httpclient
     implementation deps.apache.httpmime
-	
+    implementation deps.apache.commons_codec
+    implementation deps.apache.commons_logging
+
+    // MapsForge
+    implementation 'org.mapsforge:mapsforge-map-android:0.22.0'
+    implementation 'org.mapsforge:mapsforge-map:0.22.0'
+    implementation 'org.mapsforge:mapsforge-themes:0.22.0'
+
+    implementation("org.mapsforge:mapsforge-poi-android:0.22.0")
+    implementation ("org.mapsforge:mapsforge-map-reader:0.22.0")
+    implementation("com.caverock:androidsvg:1.4")
+
 //    implementation deps.ui.materialedittext
 
     // Firebase UI

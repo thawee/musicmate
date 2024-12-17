@@ -25,4 +25,7 @@ dependencies {
     implementation deps.androidx.activity
     implementation deps.androidx.recyclerView
     implementation deps.androidx.annotation
+    implementation deps.jetbrains.annotations
+    implementation deps.androidx.lifecycle_runtime
+    implementation deps.androidx.lifecycle_process
 }

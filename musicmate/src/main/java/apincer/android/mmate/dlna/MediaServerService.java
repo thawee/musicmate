@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -33,7 +32,6 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.android.AndroidRouter;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.StringUtils;
 
 /**
  * DLNA Media Server consists of
@@ -60,7 +58,6 @@ public class MediaServerService extends Service {
     protected LocalDevice mediaServerDevice;
     protected UpnpServiceConfiguration upnpServiceCfg;
     protected IBinder binder = new MediaServerServiceBinder();
-  //  private LocalService<ContentDirectory> contentDirectoryService;
     protected static MediaServerService INSTANCE;
     private boolean initialized;
 
@@ -143,70 +140,6 @@ public class MediaServerService extends Service {
             MediaServerService.this.initialized = true;
         }
     }
-/*
-    private LocalDevice createMediaServerDevice() {
-        String versionName;
-        String mediaServerUuid;
-        // when the service starts, the preferences are initialized
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        mediaServerUuid = preferences.getString(Constants.PREF_MEDIA_SERVER_UUID_KEY, null);
-        if (mediaServerUuid == null) {
-            mediaServerUuid = UUID.randomUUID().toString();
-            preferences.edit().putString(Constants.PREF_MEDIA_SERVER_UUID_KEY, mediaServerUuid).apply();
-        }
-        Log.d(TAG, "Create MediaServer with ID: " + mediaServerUuid);
-        try {
-            versionName = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0).versionName;
-        } catch (PackageManager.NameNotFoundException ex) {
-            Log.e(TAG, "Error while creating device", ex);
-            versionName = "??";
-        }
-        try {
-            String friendlyName = "MusicMate Server ["+getDeviceModel()+"]";
-            ManufacturerDetails manufacturerDetails = new ManufacturerDetails("Thawee",
-                    "https://github.com/thawee/musicmate");
-            ModelDetails modelDetails = new ModelDetails("MusicMate",
-                    "DLNA (UPnP/AV 1.0) Media Server, "+getDeviceDetails(),
-                    versionName);
-            URI presentationURI = null;
-            if (!StringUtils.isEmpty(MediaServerSession.streamServerHost)) {
-                String webInterfaceUrl = "http://" + MediaServerSession.streamServerHost + ":" + HCContentServer.SERVER_PORT +"/musicmate.html";
-                presentationURI = URI.create(webInterfaceUrl);
-            }
-            DeviceDetails msDetails = new DeviceDetails(
-                    null,
-                    friendlyName,
-                    manufacturerDetails,
-                    modelDetails,
-                    null,
-                    null,
-                    presentationURI,
-                    DLNA_DOCS,
-                    DLNA_CAPS); //,
-                    //SEC_CAP);
-
-            DeviceIdentity identity = new DeviceIdentity(new UDN(mediaServerUuid), MIN_ADVERTISEMENT_AGE_SECONDS);
-
-            LocalDevice localServer = new LocalDevice(identity, new UDADeviceType("MediaServer"), msDetails, createDeviceIcons(), createMediaServerServices());
-         //   upnpService.getRegistry().addDevice(localServer);
-            // send live notification
-           // upnpService.getProtocolFactory().createSendingNotificationAlive(localServer).run();
-            return localServer;
-        } catch (ValidationException e) {
-            Log.e(TAG, "Exception during device creation", e);
-           // Log.e(TAG, "Exception during device creation Errors:" + e.getErrors());
-            throw new IllegalStateException("Exception during device creation", e);
-        }
-    } */
-
-    private String getDeviceModel() {
-        return StringUtils.trimToEmpty(Build.MODEL);
-    }
-
-    /*
-    private String getDeviceDetails() {
-        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+".";
-    } */
 
     private void showNotification() {
         ((MusixMateApp) getApplicationContext()).createGroupNotification();
@@ -222,164 +155,6 @@ public class MediaServerService extends Service {
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
     }
-
-    /*
-    private Icon[] createDeviceIcons() {
-        ArrayList<Icon> icons = new ArrayList<>();
-         icons.add(new Icon("image/png", 64, 64, 24, "musicmate.png", getIconAsByteArray("iconpng64.png")));
-         icons.add(new Icon("image/png", 128, 128, 24, "musicmate128.png", getIconAsByteArray("iconpng128.png")));
-        return icons.toArray(new Icon[]{});
-    }
-
-    private byte[] getIconAsByteArray(String iconFile) {
-        try {
-            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), iconFile);
-            if(in != null) {
-                return IOUtils.toByteArray(in);
-            }
-        } catch (IOException ex) {
-            Log.e("getIconAsByteArray", "cannot get icon file - "+iconFile, ex);
-        }
-        return null;
-    } */
-
-    /*
-    private LocalService<?>[] createMediaServerServices() {
-        List<LocalService<?>> services = new ArrayList<>();
-        services.add(createServerConnectionManagerService());
-        services.add(createContentDirectoryService());
-      //  services.add(createMediaReceiverRegistrarService());
-        return services.toArray(new LocalService[]{});
-    } */
-
-    /*
-    private LocalService<AbstractMediaReceiverRegistrarService> createMediaReceiverRegistrarService() {
-        AnnotationLocalServiceBinder binder = new AnnotationLocalServiceBinder();
-        LocalService<AbstractMediaReceiverRegistrarService> service = binder.read(AbstractMediaReceiverRegistrarService.class);
-        service.setManager(new DefaultServiceManager<>(service, null) {
-
-            @Override
-            protected int getLockTimeoutMillis() {
-                return LOCK_TIMEOUT;
-            }
-
-            @Override
-            protected AbstractMediaReceiverRegistrarService createServiceInstance() {
-                return new MediaReceiverRegistrarService();
-            }
-        });
-        return service;
-    } */
-
-    /*
-    private LocalService<ConnectionManagerService>  createServerConnectionManagerService() {
-        LocalService<ConnectionManagerService> service = new AnnotationLocalServiceBinder().read(ConnectionManagerService.class);
-        final ProtocolInfos sourceProtocols = getSourceProtocolInfos();
-
-        service.setManager(new DefaultServiceManager<>(service, ConnectionManagerService.class) {
-
-            @Override
-            protected int getLockTimeoutMillis() {
-                return LOCK_TIMEOUT;
-            }
-
-            @Override
-            protected ConnectionManagerService createServiceInstance() {
-                return new ConnectionManagerService(sourceProtocols, null);
-            }
-        });
-
-        return service;
-    }
- */
-
-    /*
-    private ProtocolInfos getSourceProtocolInfos() {
-        return new ProtocolInfos(
-                //this one overlap all ???
-               // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, MimeType.WILDCARD, ProtocolInfo.WILDCARD),
-                //this one overlap all images ???
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio", ProtocolInfo.WILDCARD),
-                //this one overlap all audio ???
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD),
-
-                //IMAGE
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_TN"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_SM"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_MED"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_LRG"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_RES_H_V"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_TN"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_LRG"),
-               // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/gif", "DLNA.ORG_PN=GIF_LRG"),
-
-                //AUDIO
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3"),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wav", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wave", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-wav", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/flac", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-flac", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", ProtocolInfo.WILDCARD),
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-mp4", ProtocolInfo.WILDCARD), // alac
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-m4a", ProtocolInfo.WILDCARD), // aac
-                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO") // aac
-              //  new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=44100;channels=2", "DLNA.ORG_PN=LPCM")
-               // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16", "DLNA.ORG_PN=LPCM"),
-              //  new ProtocolInfo("http-get:*:audio/aac:*"), // added by thawee
-               // new ProtocolInfo("http-get:*:audio/mpeg:*"),
-              //  new ProtocolInfo("http-get:*:audio/x-mpegurl:*"),
-              //  new ProtocolInfo("http-get:*:audio/x-wav:*"),
-               // new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"),
-              //  new ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"),
-               // new ProtocolInfo("http-get:*:audio/x-flac:*"),
-             //   new ProtocolInfo("http-get:*:audio/x-aiff:*"),
-               // new ProtocolInfo("http-get:*:audio/x-ogg:*"),
-               // new ProtocolInfo("http-get:*:audio/wav:*"),
-              //  new ProtocolInfo("http-get:*:audio/wave:*"),
-               // new ProtocolInfo("http-get:*:audio/x-ape:*"),
-              //  new ProtocolInfo("http-get:*:audio/x-m4a:*"),
-               // new ProtocolInfo("http-get:*:audio/x-mp4:*"), // added by thawee
-               // new ProtocolInfo("http-get:*:audio/x-m4b:*"),
-              //  new ProtocolInfo("http-get:*:audio/basic:*"),
-              //  new ProtocolInfo("http-get:*:audio/L16;rate=11025;channels=2:DLNA.ORG_PN=LPCM"),
-              //  new ProtocolInfo("http-get:*:audio/L16;rate=22050;channels=2:DLNA.ORG_PN=LPCM"),
-               // new ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"),
-              //  new ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"),
-              //  new ProtocolInfo("http-get:*:audio/L16;rate=88200;channels=2:DLNA.ORG_PN=LPCM"),
-              //  new ProtocolInfo("http-get:*:audio/L16;rate=96000;channels=2:DLNA.ORG_PN=LPCM"),
-              //  new ProtocolInfo("http-get:*:audio/L16;rate=192000;channels=2:DLNA.ORG_PN=LPCM"));
-               // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01"),
-               // new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"),
-               // new ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3X"),
-               // new ProtocolInfo("http-get:*:image/jpeg:*"),
-               // new ProtocolInfo("http-get:*:image/png:*"),
-               // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_LRG"),
-               // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED"),
-              //  new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM"),
-               // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
-        );
-    } */
-
-    /*
-    private LocalService<ContentDirectory> createContentDirectoryService() {
-        contentDirectoryService = new AnnotationLocalServiceBinder().read(ContentDirectory.class);
-        contentDirectoryService.setManager(new DefaultServiceManager<>(contentDirectoryService, null) {
-
-            @Override
-            protected int getLockTimeoutMillis() {
-                return LOCK_TIMEOUT;
-            }
-
-            @Override
-            protected ContentDirectory createServiceInstance() {
-                return new ContentDirectory(getApplicationContext());
-            }
-        });
-        return contentDirectoryService;
-    } */
 
 
     @Override
@@ -460,9 +235,5 @@ public class MediaServerService extends Service {
             return MediaServerService.this;
         }
     }
-
-    /*
-    private static class MediaReceiverRegistrarService extends AbstractMediaReceiverRegistrarService {
-    } */
 
 }

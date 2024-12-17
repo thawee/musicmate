@@ -156,14 +156,14 @@ public abstract class TagReader {
     }
 
     public static List<MusicTag> readTag(Context context, String mediaPath) {
-        return getReader(context, mediaPath).readFromFile(mediaPath);
+        return getReader(context, mediaPath).read(mediaPath);
     }
 
     public static List<MusicTag> readTagFully(Context context, String mediaPath) {
-        return getReader(context, mediaPath).readFullyFromFile(mediaPath);
+        return getReader(context, mediaPath).readFully(mediaPath);
     }
 
-    protected abstract List<MusicTag> readFromFile(String mediaPath);
+    protected abstract List<MusicTag> read(String mediaPath);
 
-    protected abstract List<MusicTag> readFullyFromFile(String mediaPath);
+    protected abstract List<MusicTag> readFully(String mediaPath);
 }

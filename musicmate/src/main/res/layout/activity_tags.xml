@@ -293,17 +293,32 @@
 
                         <ImageView
                             android:id="@+id/icon_quality"
-                            android:layout_width="@dimen/dimen_48_dp"
+                            android:layout_width="@dimen/dimen_72_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:contentDescription="@string/editor_musicmate_info"
                             android:gravity="center"
-                            android:padding="@dimen/dimen_2_dp"
+                            android:padding="@dimen/dimen_1_dp"
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_audiophile"
                             tools:ignore="ImageContrastCheck" />
 
+                        <!--
+                        <ImageView
+                            android:id="@+id/icon_audiophile"
+                            android:layout_width="@dimen/dimen_68_dp"
+                            android:layout_height="@dimen/dimen_32_dp"
+                            android:layout_gravity="end|center_vertical"
+                            android:layout_marginEnd="@dimen/dimen_4_dp"
+                            android:contentDescription="@string/editor_musicmate_info"
+                            android:gravity="end|center_vertical"
+                            android:padding="@dimen/dimen_2_dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/ic_audiophile"
+                            tools:ignore="ImageContrastCheck" />
+                            -->
+                        <!--
                         <ImageView
                             android:id="@+id/icon_audiophile"
                             android:layout_width="@dimen/dimen_68_dp"
@@ -317,6 +332,7 @@
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_audiophile"
                             tools:ignore="ImageContrastCheck" />
+                            -->
 
                         <ImageView
                             android:id="@+id/icon_hires"

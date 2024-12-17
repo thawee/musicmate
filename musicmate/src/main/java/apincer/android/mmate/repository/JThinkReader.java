@@ -60,8 +60,8 @@ public class JThinkReader extends TagReader{
     public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
     @Override
-    protected List<MusicTag> readFromFile(String mediaPath) {
-        Log.i(TAG, "readFromFile: path - "+mediaPath);
+    protected List<MusicTag> read(String mediaPath) {
+        Log.i(TAG, "read: path - "+mediaPath);
         AudioFile read = getAudioFile(mediaPath);
         if(read != null) {
             MusicTag tag = new MusicTag();
@@ -78,8 +78,8 @@ public class JThinkReader extends TagReader{
     }
 
     @Override
-    protected List<MusicTag> readFullyFromFile(String mediaPath) {
-        Log.i(TAG, "readFullyFromFile: path - "+mediaPath);
+    protected List<MusicTag> readFully(String mediaPath) {
+        Log.i(TAG, "readFully: path - "+mediaPath);
         AudioFile read = getAudioFile(mediaPath);
         if(read != null) {
             MusicTag tag = new MusicTag();

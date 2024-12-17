@@ -57,6 +57,9 @@ android {
 dependencies {
     implementation deps.kotlin.stdlib
     implementation deps.androidx.annotation
+    implementation deps.jetbrains.annotations
+    implementation deps.androidx.lifecycle_runtime
+    implementation deps.androidx.lifecycle_process
     implementation deps.ffmpeg
     testImplementation deps.junit
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

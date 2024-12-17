@@ -104,6 +104,7 @@ import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.repository.TagWriter;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -1512,7 +1513,7 @@ public class MainActivity extends AppCompatActivity {
                         //calculate track RG
                         //FFMPegReader.measureDRandStat(tag);
                         MusicAnalyser analyser = new MusicAnalyser();
-                        if(analyser.isSupported(tag)) {
+                       // if(analyser.isSupported(tag)) {
                             if (analyser.analyst(tag)) {
                                 tag.setDynamicRange(analyser.getDynamicRange());
                                 tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
@@ -1520,7 +1521,8 @@ public class MainActivity extends AppCompatActivity {
                                 tag.setResampledInd(analyser.getResampled());
 
                                 //write quality to file
-                                FFMpegWriter.writeTagQualityToFile(MainActivity.this, tag);
+                               // FFMpegWriter.writeTagQualityToFile(MainActivity.this, tag);
+                                TagWriter.writeTagToFile(getApplicationContext(), tag);
                                 // update MusicMate Library
                                 TagRepository.saveTag(tag);
                                 statusList.put(tag, "Success");
@@ -1531,9 +1533,9 @@ public class MainActivity extends AppCompatActivity {
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, Constants.STATUS_SUCCESS, tag);
                             EventBus.getDefault().postSticky(message);
                           //  statusList.put(tag, "Done");
-                        }else {
-                            statusList.put(tag, "Skip");
-                        }
+                       // }else {
+                       //     statusList.put(tag, "Skip");
+                       // }
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
                             progressBar.setProgress((int) (pct + rate));

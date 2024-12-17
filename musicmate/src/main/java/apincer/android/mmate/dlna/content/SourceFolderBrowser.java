@@ -21,8 +21,8 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 
 public class SourceFolderBrowser extends ContentBrowser {
-    private static final String TAG = "DIRFolderBrowser";
-    public static final String ALL_SONGS = "All Songs";
+    private static final String TAG = "SourceFolderBrowser";
+    public static final String ALL_SONGS = "* All Songs *";
 
     public SourceFolderBrowser(Context context) {
         super(context);

@@ -101,13 +101,7 @@ public class AboutActivity extends AppCompatActivity {
             View v = inflater.inflate(R.layout.fragment_about, container, false);
 
             TextView version = v.findViewById(R.id.app_version);
-            //version.setText("");
-            try {
-                PackageInfo packageInfo = getActivity().getPackageManager().getPackageInfo(getActivity().getPackageName(), 0);
-                version.setText(packageInfo.versionName);
-
-            }
-            catch (PackageManager.NameNotFoundException ignore) {}
+            version.setText(ApplicationUtils.getVersionNumber(getContext()));
 
             TextView encodingHeader = v.findViewById(R.id.encoding_header);
             TextView encodingDetail = v.findViewById(R.id.encoding_details);

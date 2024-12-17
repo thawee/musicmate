@@ -63,7 +63,6 @@ import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.repository.TagWriter;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
@@ -98,7 +97,7 @@ public class TagsActivity extends AppCompatActivity {
    // private TextView drView;
     private TextView fileTypeView;
     private ImageView hiresView;
-    private ImageView audiophileView;
+   // private ImageView audiophileView;
     private ImageView resolutionView;
     private ImageView qualityView;
 
@@ -154,7 +153,6 @@ public class TagsActivity extends AppCompatActivity {
                         }
                     }
 
-                    // may need go reload from db
                     displayTag = buildDisplayTag();
                     runOnUiThread(this::updateTitlePanel);
                     stopProgressBar();
@@ -329,7 +327,7 @@ public class TagsActivity extends AppCompatActivity {
         pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
         hiresView = findViewById(R.id.icon_hires);
-        audiophileView = findViewById(R.id.icon_audiophile);
+      //  audiophileView = findViewById(R.id.icon_audiophile);
         resolutionView = findViewById(R.id.icon_resolution);
        // drView = findViewById(R.id.icon_dr);
         qualityView = findViewById(R.id.icon_quality);
@@ -385,12 +383,12 @@ public class TagsActivity extends AppCompatActivity {
 
        // drView.setText(MusicTagUtils.getTrackDRScore(displayTag));
 
-        if(MusicTagUtils.isFLACFile(displayTag)) {
+       // if(MusicTagUtils.isFLACFile(displayTag)) {
             qualityView.setVisibility(View.VISIBLE);
-            try {
-                audiophileView.setVisibility(View.VISIBLE);
-                audiophileView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
-            }catch(Exception ex){}
+           // try {
+           //     audiophileView.setVisibility(View.VISIBLE);
+           //     audiophileView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
+           // }catch(Exception ignored){}
             // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
              request = new ImageRequest.Builder(getApplicationContext())
                     .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
@@ -399,9 +397,9 @@ public class TagsActivity extends AppCompatActivity {
                     .build();
             imageLoader.enqueue(request);
            // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), BitmapHelper.createHexagonBitmap(400, 400)));
-        }else {
-            qualityView.setVisibility(View.GONE);
-        }
+      //  }else {
+      //      qualityView.setVisibility(View.GONE);
+      //  }
 
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
@@ -738,7 +736,7 @@ public class TagsActivity extends AppCompatActivity {
 
         @Override
         public void handleOnBackPressed() {
-            if(previewState) {
+           // if(previewState) {
                 if (criteria != null) {
                     Intent resultIntent = new Intent();
                     ApplicationUtils.setSearchCriteria(resultIntent, criteria);
@@ -746,20 +744,21 @@ public class TagsActivity extends AppCompatActivity {
                 }
                 finish();
                 //doOpenMainActivity(criteria);
-            }else {
+          /*  }else {
                 startProgressBar();
                 // should reload tag from db or file again
-                buildDisplayTag();
+
                 // display preview screen
                 appBarLayout.setExpanded(true, true);
-                   // runOnUiThread(() -> {
+                    runOnUiThread(() -> {
                         if(displayTag != null) {
+                            buildDisplayTag();
                             updateTitlePanel();
                             setUpPageViewer();
                         }
-                        stopProgressBar();
-                  //  });
-            }
+                    });
+                stopProgressBar();
+            } */
         }
     }
 

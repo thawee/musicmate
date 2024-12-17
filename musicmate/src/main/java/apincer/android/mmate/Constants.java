@@ -68,6 +68,9 @@ public final class Constants {
 
     public static final String GROUPING_CLASSICAL = "Classical";
     public static final String GROUPING_TRADITIONAL = "Traditional";
+    public static final String GROUPING_JAZZ = "Jazz";
+    public static final String GROUPING_THAI_JAZZ = "Thai Jazz";
+    public static final String GROUPING_THAI_CLASSICAL = "Thai Classical";
 
   //  public static final String GROUPING_LOUNGE = "Lounge";
  //   public static final String GROUPING_ACOUSTIC = "Acoustic";

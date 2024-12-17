@@ -5,15 +5,15 @@
 
 ext.versions = [
         //https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google
-        androidGradlePlugin: '8.7.2', //'8.6.0-rc01', //'8.5.2', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
+        androidGradlePlugin: '8.7.3', //'8.6.0-rc01', //'8.5.2', //'8.3.2', //'8.0.2', //''7.3.1', //''7.2.2', //beta04', //'7.1.1', //''7.0.3',
         // 7.2.0 - require gradle min ver 7.3.3
         // 7.1.3 - require gradle min ver 7.2.0
         minSdk             : 34, // support running on android 11 ot higher
         targetSdk          : 34, //33, // required 33 for photopicker, android 13
         compileSdk         : 35, //34, //33, // required 33 for photopicker
-        buildTools         : '35.0.0', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '36.0.0-rc1', //''35.0.0', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
-        kotlin             : '2.0.21', //'2.0.0', //''1.9.24', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
+        kotlin             : '2.1.0', //''2.0.21', //'2.0.0', //''1.9.24', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "-" + getDate(),
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '4.0.3', //''3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
@@ -46,12 +46,12 @@ apache.httpcore = "org.apache.httpcomponents.core5:httpcore5:5.3.1"
 apache.http2core = "org.apache.httpcomponents.core5:httpcore5-h2:5.3.1"
 apache.httpmime = "org.apache.httpcomponents:httpmime:4.5.14"
 apache.commons_codec = "commons-codec:commons-codec:1.17.1"
-apache.commons_io = "commons-io:commons-io:2.17.0" //2.15.1"
+apache.commons_io = "commons-io:commons-io:2.18.0" //2.15.1"
 apache.commons_logging = "commons-logging:commons-logging:1.3.4"
 // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 apache.commons_lang3 = 'org.apache.commons:commons-lang3:3.17.0'
 // https://mvnrepository.com/artifact/org.apache.commons/commons-text
-apache.commons_text = 'org.apache.commons:commons-text:1.12.0'
+apache.commons_text = 'org.apache.commons:commons-text:1.13.0'
 deps.apache = apache
 
 def androidx = [:]
@@ -144,8 +144,8 @@ retrofit.okhttp_logging_interceptor = "com.squareup.okhttp3:logging-interceptor:
 deps.retrofit = retrofit
 
 def fasterxml = [:]
-fasterxml.jackson_core = "com.fasterxml.jackson.core:jackson-core:2.18.1"
-fasterxml.jackson_databind = "com.fasterxml.jackson.core:jackson-databind:2.18.1"
+fasterxml.jackson_core = "com.fasterxml.jackson.core:jackson-core:2.18.2"
+fasterxml.jackson_databind = "com.fasterxml.jackson.core:jackson-databind:2.18.2"
 deps.fasterxml = fasterxml
 
 def dagger = [:]
@@ -252,8 +252,8 @@ ui.photoview = 'com.github.chrisbanes:PhotoView:2.3.0'
 // https://github.com/VrUnd14/VPAwesomeWidgets
 ui.vpawesomewidgets = 'awesome.vrund.vpawesomewidgets:VPAwesomeWidgets:1.5.2'
 //https://github.com/scwang90/SmartRefreshLayout
-ui.refresh_layout_kernel = 'io.github.scwang90:refresh-layout-kernel:2.1.0'
-ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.1.0'
+ui.refresh_layout_kernel = 'io.github.scwang90:refresh-layout-kernel:2.1.1'
+ui.refresh_header_classics =  'io.github.scwang90:refresh-header-classics:2.1.1'
 //https://github.com/soulqw/CoCo
 ui.coco ='com.github.soulqw:CoCo:1.1.2'
 //https://github.com/medyo/android-about-page

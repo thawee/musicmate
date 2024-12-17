@@ -50,7 +50,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class HCContentServer  {
+public class HCContentServer  implements StreamServerImpl.Server {
     private final Context context;
     private static final String TAG = "HCContentServer";
 
@@ -74,15 +74,15 @@ public class HCContentServer  {
         return context;
     }
 
-    synchronized public void init(InetAddress bindAddress) throws InitializationException {
+    synchronized public void initServer(InetAddress bindAddress) throws InitializationException {
 
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    Log.v(TAG, "Running HttpCore5 Content Server: " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
-
+                   // Log.v(TAG, "Running HttpCore5 Content Server: " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
+                    Log.i(TAG, "Start Content Server (AHC): "+ bindAddress.getHostAddress()+":"+SERVER_PORT);
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     IOReactorConfig config = IOReactorConfig.custom()
                             .setIoThreadCount(2) // for small memory and 10 tps
@@ -96,29 +96,6 @@ public class HCContentServer  {
                             .build();
 
                     server = H2ServerBootstrap.bootstrap()
-                           /* .setExceptionCallback(e -> Log.w(TAG, "Exception: "+e.getMessage()))
-                            .setStreamListener(new Http1StreamListener() {
-
-                                @Override
-                                public void onRequestHead(final HttpConnection connection, final HttpRequest request) {
-                                    System.out.println(connection.getRemoteAddress() + " " + new RequestLine(request) +" "+ request.getLastHeader("User-Agent"));
-                                }
-
-                                @Override
-                                public void onResponseHead(final HttpConnection connection, final HttpResponse response) {
-                                    System.out.println(connection.getRemoteAddress() + " " + new StatusLine(response) +" Content-Type: "+ response.getLastHeader("Content-Type").getValue());
-                                }
-
-                                @Override
-                                public void onExchangeComplete(final HttpConnection connection, final boolean keepAlive) {
-                                    if (keepAlive) {
-                                        System.out.println(connection.getRemoteAddress() + " exchange completed (connection kept alive)");
-                                    } else {
-                                        System.out.println(connection.getRemoteAddress() + " exchange completed (connection closed)");
-                                    }
-                                }
-
-                            }) */
                             .setCanonicalHostName(bindAddress.getHostAddress())
                             .setIOReactorConfig(config)
                             .register("/*", new ResourceHandler())
@@ -135,9 +112,9 @@ public class HCContentServer  {
 
     }
 
-    synchronized public void stop() {
+    synchronized public void stopServer() {
         if(server != null) {
-            Log.v(TAG, "Shutting down HttpCore5 Content Server");
+            Log.i(TAG, "Stop Content Server (AHC)");
             server.initiateShutdown();
             try {
                 server.awaitShutdown(TimeValue.ofSeconds(3));
@@ -357,8 +334,6 @@ public class HCContentServer  {
                         // if not found return null
                         File file = new File(getFilePath());
                         result = AsyncEntityProducers.create(file, contentType);
-                      //  Buffer buff = FileUtils.getBytes(new File(getFilePath()));
-                       // result = AsyncEntityProducers.create(buff.readByteArray(), contentType);
                     }
                 }
             } else if (content != null) {

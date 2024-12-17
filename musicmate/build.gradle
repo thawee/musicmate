@@ -237,16 +237,20 @@ dependencies {
     implementation deps.okio
     implementation deps.jtransforms
 
+   // implementation "io.ktor:ktor-server-core:3.0.2"
+   // implementation "io.ktor:ktor-server-cio:3.0.2"
+   // implementation "io.ktor:ktor-server-host-common:3.0.2"
+  //  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
+  //  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0"
+
     // Coil
     implementation deps.coil.runtime2
    // implementation deps.coil.transformations
 
- //   implementation 'net.sourceforge.jaadec:jaad:0.8.6'
-
     // Local Library
     //https://bitbucket.org/ijabz/jaudiotagger/src/master/
     implementation project(':library:justdsd')
-    implementation project(':library:JustFLAC')
+   // implementation project(':library:JustFLAC')
     implementation project(':library:library')
     implementation project(':library:androidtagview')
     implementation project(':library:jaudiotagger-android')

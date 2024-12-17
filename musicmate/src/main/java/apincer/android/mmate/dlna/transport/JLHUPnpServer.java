@@ -14,9 +14,9 @@ import org.jupnp.model.message.UpnpRequest;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
-import org.jupnp.transport.spi.StreamServer;
 import org.jupnp.transport.spi.UpnpStream;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
@@ -29,42 +29,39 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import apincer.android.mmate.dlna.MediaServerSession;
+import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.utils.ApplicationUtils;
 
-public class JLHStreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
-    private static final String TAG = "JLHStreamServerImpl";
-    public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
-    public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
+public class JLHUPnpServer implements StreamServerImpl.Server {
+    private static final String TAG = "JLHUPnpServer";
+    public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
+    public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0";
+    private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
+    static final SimpleDateFormat dateFormatter = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
+    static {
+        dateFormatter.setTimeZone(GMT_ZONE);
+    }
 
     final protected StreamServerConfigurationImpl configuration;
-    protected int localPort;
+    private final Router router;
     private final HTTPServer server;
-    private final HCContentServer contentServer;
+    private final File coverartDir;
+    private final String serverName;
 
-    public JLHStreamServerImpl(Context context, StreamServerConfigurationImpl configuration) {
+    public JLHUPnpServer(Context context, Router router, StreamServerConfigurationImpl configuration)  {
         this.configuration = configuration;
-        this.localPort = configuration.getListenPort();
-        this.server = new HTTPServer(localPort);
-        this.contentServer = new HCContentServer(context);
+        this.router = router;
+        this.server = new HTTPServer(configuration.getListenPort());
+        this.coverartDir = context.getExternalCacheDir();
+        this.serverName = "MusicMate/"+ ApplicationUtils.getVersionNumber(context);
     }
 
-    public StreamServerConfigurationImpl getConfiguration() {
-        return configuration;
-    }
-
-    synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
-        initServer(bindAddress, router);
-        contentServer.initServer(bindAddress);
-    }
-
-    private void initServer(InetAddress bindAddress, final Router router) throws InitializationException {
+    synchronized public void initServer(InetAddress bindAddress) throws InitializationException {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "Adding jlh stream server connector: " + bindAddress.getHostAddress() + ":" + getConfiguration().getListenPort());
-                   // ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(100);
-                  //  server.setExecutor(executor);
-                    // Set socket timeout (in milliseconds)
+                    Log.i(TAG, "Start UPNP Server (JLH): " + bindAddress.getHostAddress() + ":" + configuration.getListenPort());
                     server.setSocketTimeout(30000); // 30 seconds
 
                     HTTPServer.VirtualHost host = server.getVirtualHost(null);  // default virtual host
@@ -80,32 +77,39 @@ public class JLHStreamServerImpl implements StreamServer<StreamServerConfigurati
         thread.start();
     }
 
-    synchronized public int getPort() {
-        return this.localPort;
-    }
-
-    synchronized public void stop() {
+    synchronized public void stopServer() {
         if(server != null) {
+            Log.i(TAG, "Stop UPNP Server (JLH)");
             server.stop();
         }
-        if(contentServer != null) {
-            contentServer.stopServer();
-        }
     }
 
-    public void run() {
-        //do nothing all stuff done in init
-    }
-
-    private static class UpnpStreamHandler extends UpnpStream implements HTTPServer.ContextHandler {
-        static final SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-        protected UpnpStreamHandler(ProtocolFactory protocolFactory) {
+    private class UpnpStreamHandler extends UpnpStream implements HTTPServer.ContextHandler {
+         protected UpnpStreamHandler(ProtocolFactory protocolFactory) {
             super(protocolFactory);
-            dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
         }
 
         @Override
         public int serve(HTTPServer.Request req, HTTPServer.Response resp) throws IOException {
+            if (req.getPath().startsWith("/album/")) {
+                try {
+                    String albumId = req.getPath().substring("/album/".length());
+                    String path = CoverArtProvider.COVER_ARTS + albumId;
+                    File pathFile = new File(coverartDir, path);
+                    if (pathFile.exists()) {
+                        HTTPServer.serveFile(pathFile.getParentFile(), "/album/", req, resp);
+                    }
+                    return 0;
+                } catch (Exception e) {
+                    Log.e(TAG, "AlbumArt: - not found " + req.getPath(), e);
+                }
+            }else {
+                return serveUPNP(req, resp);
+            }
+            return 0;
+        }
+
+        private int serveUPNP(HTTPServer.Request req, HTTPServer.Response resp) throws IOException {
             try {
                 String userAgent = getUserAgent(req);
                 if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
@@ -142,7 +146,13 @@ public class JLHStreamServerImpl implements StreamServer<StreamServerConfigurati
             // Headers
             for (Map.Entry<String, List<String>> entry : responseMessage.getHeaders().entrySet()) {
                 for (String value : entry.getValue()) {
-                    resp.getHeaders().add(entry.getKey(), value);
+                    if("Server".equalsIgnoreCase(entry.getKey())) {
+                        // add server
+                        String sName = String.format("%s %s %s",serverName,value,SERVER_SUFFIX);
+                        resp.getHeaders().add("Server", sName);
+                    }else {
+                        resp.getHeaders().add(entry.getKey(), value);
+                    }
                 }
             }
             // The Date header is recommended in UDA
@@ -154,14 +164,7 @@ public class JLHStreamServerImpl implements StreamServer<StreamServerConfigurati
             int contentLength = responseBodyBytes != null ? responseBodyBytes.length : -1;
 
             if (contentLength > 0) {
-             //   Log.v(TAG, "Response message has body, writing bytes to stream...");
-              //  Log.d(TAG, "Response message has body, "+new String(responseBodyBytes));
-                /*ContentType ct = ContentType.APPLICATION_XML;
-                if (responseMessage.getContentTypeHeader() != null) {
-                    ct = ContentType.parse(responseMessage.getContentTypeHeader().getValue().toString());
-                } */
-
-                resp.getHeaders().add("Content-Type", "application/xml");
+               // resp.getHeaders().add("Content-Type", "application/xml");
                 resp.sendHeaders(statusCode);
                 resp.getOutputStream().write(responseBodyBytes);
                 resp.getOutputStream().close();

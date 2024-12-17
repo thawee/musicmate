@@ -239,7 +239,7 @@ public class ApplicationUtils {
         } catch (PackageManager.NameNotFoundException ignored) {
 
         }
-        return "1";
+        return "1.0.0";
     }
 
 

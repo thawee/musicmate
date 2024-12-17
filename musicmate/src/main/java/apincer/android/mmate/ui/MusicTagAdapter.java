@@ -321,7 +321,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         TextView mDurationView;
         TextView mFileSizeView;
         ImageView mCoverArtView;
-        ImageView mFileSourceView;
+      //  ImageView mFileSourceView;
         TextView mFileTypeView;
        // TextView mDynamicRange;
         Context mContext;
@@ -346,7 +346,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
-            this.mFileSourceView = view.findViewById(R.id.item_src_icon);
+         //   this.mFileSourceView = view.findViewById(R.id.item_src_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
@@ -451,7 +451,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
-        if(MusicTagUtils.isFLACFile(tag)) {
+       // if(MusicTagUtils.isFLACFile(tag)) {
             holder.mAudioQuality.setVisibility(View.VISIBLE);
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
                     .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
@@ -459,9 +459,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     .target(holder.mAudioQuality)
                     .build();
             imageLoader.enqueue(request);
-        }else {
-            holder.mAudioQuality.setVisibility(View.GONE);
-        }
+       // }else {
+       //     holder.mAudioQuality.setVisibility(View.GONE);
+       // }
 
         if (isListening) {
             //show music player icon
@@ -489,7 +489,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mNewLabelView.setVisibility(View.VISIBLE);
         }
 
-        ImageRequest request;
+      //  ImageRequest request;
         // Show AlbumArt
        Uri coverArtUri = CoverArtProvider.getUriForMusicTag(holder.mContext, tag);
        request = new ImageRequest.Builder(holder.mContext)
@@ -525,13 +525,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-        Bitmap srcBmp = IconProviders.getSourceIcon(holder.mContext, tag);
+       /* Bitmap srcBmp = IconProviders.getSourceIcon(holder.mContext, tag);
         if(srcBmp!=null) {
             holder.mFileSourceView.setImageBitmap(srcBmp);
             holder.mFileSourceView.setVisibility(View.VISIBLE);
         }else {
             holder.mFileSourceView.setVisibility(View.GONE);
-        }
+        } */
     }
 
     private Drawable getDefaultNoCover(MusicTag tag) {

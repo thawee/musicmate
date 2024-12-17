@@ -31,7 +31,7 @@ public class JustDSDReader extends TagReader{
     }
 
     @Override
-    protected List<MusicTag> readFromFile(String path) {
+    protected List<MusicTag> read(String path) {
         Log.d(TAG, "JustDSD -> "+path);
         try {
             String fileExtension = FileUtils.getExtension(path).toUpperCase();
@@ -124,8 +124,8 @@ public class JustDSDReader extends TagReader{
     }
 
     @Override
-    protected List<MusicTag> readFullyFromFile(String path) {
-        return readFromFile(path);
+    protected List<MusicTag> readFully(String path) {
+        return read(path);
     }
 
     private void readJSON(MusicTag metadata) {

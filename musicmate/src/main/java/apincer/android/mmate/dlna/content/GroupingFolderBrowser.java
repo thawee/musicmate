@@ -58,12 +58,6 @@ public class GroupingFolderBrowser extends ContentBrowser {
     public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
-       /* String name = myId.substring(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().length());
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ) { // ||
-              //  "None".equalsIgnoreCase(name)) {
-            name = null;
-        } */
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_GROUPING_PREFIX);
         List<MusicTag> tags;
         String downloadName = getContext().getString(R.string.downloaded);

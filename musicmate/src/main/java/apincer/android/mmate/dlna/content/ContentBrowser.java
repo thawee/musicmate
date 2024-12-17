@@ -110,7 +110,7 @@ public abstract class ContentBrowser {
         Res resource = new Res(protocolInfo, tag.getFileSize(), uri);
         resource.setDuration(StringUtils.formatDuration(tag.getAudioDuration(), false));
         MusicTrack musicTrack = new MusicTrack(itemPrefix + id, parentId,
-                title, creator, tag.getAlbum(), tag.getArtist(), resource);
+                title, creator, StringUtils.trim(tag.getAlbum(),"-"), StringUtils.trim(tag.getArtist(),"-"), resource);
         musicTrack.replaceFirstProperty(new DIDLObject.Property.UPNP.ALBUM_ART_URI(
                 albumArtUri));
         musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getArtist(), "AlbumArtist")});

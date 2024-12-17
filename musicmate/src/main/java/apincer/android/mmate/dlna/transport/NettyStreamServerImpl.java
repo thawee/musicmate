@@ -95,7 +95,7 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
 
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
         initServer(bindAddress, router);
-        contentServer.init(bindAddress);
+        contentServer.initServer(bindAddress);
     }
 
     private void initServer(InetAddress bindAddress, final Router router) throws InitializationException {
@@ -134,8 +134,6 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
                             .option(ChannelOption.SO_TIMEOUT, 30000) // 30 sec
                             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000) // 30 sec
                             .childHandler(new HttpServerInitializer(router));
-                   // Channel ch = b.bind(localPort).sync().channel();
-                   // ch.closeFuture().sync();
                     channelFuture = b.bind(localPort).sync();
                     channelFuture.channel().closeFuture().sync();
                 } catch (Exception ex) {
@@ -158,17 +156,7 @@ public class NettyStreamServerImpl implements StreamServer<StreamServerConfigura
         if (channelFuture != null) {
             channelFuture.channel().close();
         }
-       /* try {
-            bossGroup.shutdownGracefully().sync();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            workerGroup.shutdownGracefully().sync();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } */
-        contentServer.stop();
+        contentServer.stopServer();
     } 
 
     @Override

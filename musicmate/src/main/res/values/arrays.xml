@@ -188,5 +188,6 @@
         <item>Recommended</item>
         <item>Good</item>
         <item>Bad</item>
+        <item>Not Rated</item>
     </string-array>
 </resources>

@@ -27,6 +27,9 @@ dependencies {
     implementation deps.google.material
     implementation deps.androidx.constraintlayout
     implementation deps.androidx.annotation
+    implementation deps.jetbrains.annotations
+    implementation deps.androidx.lifecycle_runtime
+    implementation deps.androidx.lifecycle_process
 
     testImplementation deps.junit
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
