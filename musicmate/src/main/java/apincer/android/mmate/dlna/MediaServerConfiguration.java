@@ -15,17 +15,18 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
-import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
+import apincer.android.mmate.dlna.transport.JettyStreamingClientImpl;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
 
 public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
-    public static final int STREAM_SERVER_PORT = 49152; //2869;
+    public static final int UPNP_SERVER_PORT = 49152; //2869;
+    public static final int CONTENT_SERVER_PORT = 8089;
     private final Context context;
 
     MediaServerConfiguration(Context context) {
-        super(STREAM_SERVER_PORT, 0);
+        super(UPNP_SERVER_PORT, 0);
         this.context = context;
     }
 
@@ -46,14 +47,20 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
-
+        /*
         return new OKHttpUPnpStreamingClient(
                 new StreamClientConfigurationImpl(
                         getSyncProtocolExecutorService(),
                         10,
                         5
                 )
-        );
+        ); */
+        return new JettyStreamingClientImpl(
+                new StreamClientConfigurationImpl(
+                getSyncProtocolExecutorService(),
+                10,
+                5
+        ));
     }
 
     @Override

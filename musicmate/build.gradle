@@ -33,8 +33,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 90
-        versionName  "3.9.0"+ versions.buildDate
+        versionCode 91
+        versionName  "3.9.1"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -118,9 +118,6 @@ repositories {
 }
 
 dependencies {
-    //  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
-    // android JDK is not complat with JDK, no java.util.ServiceLoader$Provider required by jetty12
-
     // AndroidX
     implementation deps.androidx.activity
     implementation deps.androidx.recyclerView
@@ -154,8 +151,6 @@ dependencies {
     // google
     implementation deps.google.material
     implementation deps.filepicker
-
-    implementation deps.jetbrains.annotations
 
     // epoxy
     //implementation deps.epoxy.runtime
@@ -206,7 +201,6 @@ dependencies {
     implementation deps.guava
     implementation deps.ffmpeg
     //implementation deps.coverartarchive
-   // implementation 'com.tomgibara.bits:bits:2.1.0'
 
 
     //retrofit and json Librariess
@@ -217,6 +211,8 @@ dependencies {
     implementation deps.apache.commons_logging
     implementation deps.apache.commons_lang3
     implementation deps.apache.commons_text
+    implementation deps.apache.commons_match3
+    implementation deps.jlarge_arrays
 
     implementation deps.fasterxml.jackson_core
     implementation deps.fasterxml.jackson_databind
@@ -229,21 +225,15 @@ dependencies {
 
     implementation deps.jupnp_android
     implementation deps.jupnp_support
-    implementation deps.apache.httpcore
-    implementation deps.apache.http2core
+    implementation deps.jetty_server12
+    implementation deps.jetty_client12
+   // implementation deps.apache.httpcore
+   // implementation deps.apache.http2core
     //implementation deps.netty_codec_http
    // implementation deps.apache.httpclient
-    implementation deps.okhttp3
-    implementation deps.okio
+   // implementation deps.okhttp3
+   // implementation deps.okio
     implementation deps.jtransforms
-
-    implementation 'org.eclipse.jetty:jetty-server:12.1.0.alpha0'
-
-   // implementation "io.ktor:ktor-server-core:3.0.2"
-   // implementation "io.ktor:ktor-server-cio:3.0.2"
-   // implementation "io.ktor:ktor-server-host-common:3.0.2"
-  //  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
-  //  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0"
 
     // Coil
     implementation deps.coil.runtime2

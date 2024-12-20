@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna;
 
+import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -38,7 +40,6 @@ import java.util.UUID;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.dlna.content.ContentDirectory;
-import apincer.android.mmate.dlna.transport.HCContentServer;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -187,11 +188,6 @@ public class MediaServerDevice extends LocalDevice {
         LocalService<ContentDirectory> contentDirectoryService = new AnnotationLocalServiceBinder().read(ContentDirectory.class);
         contentDirectoryService.setManager(new DefaultServiceManager<>(contentDirectoryService, null) {
 
-           // @Override
-          //  protected int getLockTimeoutMillis() {
-          //      return LOCK_TIMEOUT;
-          //  }
-
             @Override
             protected void lock() {
                 //don't lock cds.
@@ -271,7 +267,7 @@ public class MediaServerDevice extends LocalDevice {
                         modelNumber);
                 URI presentationURI = null;
                 if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
-                    String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + HCContentServer.SERVER_PORT +"/musicmate.html";
+                    String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + CONTENT_SERVER_PORT +"/musicmate.html";
                     presentationURI = URI.create(webInterfaceUrl);
                 }
                 return new DeviceDetails(

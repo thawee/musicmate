@@ -44,13 +44,13 @@ import java.util.Map;
 import apincer.android.mmate.provider.CoverArtProvider;
 import de.esoco.lib.expression.Action;
 
-public class JettyUPnpServer extends StreamServerImpl.StreamServer {
+public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
 
     private Server server;
     //private static final String httpServerName="Jetty/12.1.0.alpha0";
 
-    public JettyUPnpServer(Context context, Router router, StreamServerConfigurationImpl configuration) {
+    public JettyUPnpServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
     }
 

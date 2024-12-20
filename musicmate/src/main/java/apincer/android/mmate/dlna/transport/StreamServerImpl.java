@@ -28,11 +28,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             return transCodeList.contains(enc);
         }
         return false;
-
     }
 
-    //public static final String TYPE_IMAGE_PNG = "image/png";
-    //public static final String TYPE_IMAGE_JPEG = "image/jpeg";
     abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
         public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0";
@@ -82,7 +79,6 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
     private static final String TAG = "StreamServerImpl";
     final private StreamServerConfigurationImpl configuration;
-    // private HCContentServer contentServer;
     private StreamServer contentServer;
     private StreamServer upnpServer;
     private final Context context;
@@ -116,11 +112,11 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         //upnpServer = new JLHUPnpServer(context,router, configuration);
        // upnpServer = new NettyUPnpServer(context,router, configuration);
-        this.upnpServer = new JettyUPnpServer(context,router, configuration);
+        this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
         this.upnpServer.initServer(bindAddress);
 
-        this.contentServer = new HCContentServer(context,router, configuration);
-        this.contentServer = new JettyContentServer(context, router, configuration);
+       // this.contentServer = new HCContentServer(context,router, configuration);
+        this.contentServer = new JettyContentServerImpl(context, router, configuration);
         this.contentServer.initServer(bindAddress);
     }
 

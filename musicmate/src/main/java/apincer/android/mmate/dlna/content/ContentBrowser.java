@@ -1,4 +1,7 @@
 package apincer.android.mmate.dlna.content;
+
+import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
+
 import android.content.Context;
 
 import org.jupnp.support.model.DIDLObject;
@@ -17,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerConfiguration;
-import apincer.android.mmate.dlna.transport.HCContentServer;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -68,7 +70,7 @@ public abstract class ContentBrowser {
      /*  if(MediaServerSession.isTransCoded(tag)) {
             return "http://" + MediaServerSession.getIpAddress() + ":" + HCContentServer.SERVER_PORT + "/res/" + tag.getId() + "/file.raw";
         }*/
-        return "http://" + StreamServerImpl.streamServerHost + ":" +HCContentServer.SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
+        return "http://" + StreamServerImpl.streamServerHost + ":" +CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
 
      //   return "http://" + MediaServerSession.getIpAddress() + ":" +MediaServerConfiguration.STREAM_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
@@ -82,7 +84,7 @@ public abstract class ContentBrowser {
         return URI.create("http://"
                 + StreamServerImpl.streamServerHost + ":"
                // + HCContentServer.SERVER_PORT + "/album/" + uri);
-                + MediaServerConfiguration.STREAM_SERVER_PORT + "/coverart/" + uri);
+                + MediaServerConfiguration.UPNP_SERVER_PORT + "/coverart/" + uri);
     }
 
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
@@ -118,9 +120,6 @@ public abstract class ContentBrowser {
         resource.setBitrate(tag.getAudioBitRate());
         musicTrack.setGenres(tag.getGenre().split(",", -1));
         //musicTrack.setOriginalTrackNumber(tag.getTrack());
-
-       // Log.d(TAG, "MusicTrack: " + id + " Title: "
-       //         + title + " Uri: " + uri);
         return musicTrack;
     }
 

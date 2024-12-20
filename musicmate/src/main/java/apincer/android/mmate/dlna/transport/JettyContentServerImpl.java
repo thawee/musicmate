@@ -1,6 +1,6 @@
 package apincer.android.mmate.dlna.transport;
 
-import static apincer.android.mmate.dlna.transport.HCContentServer.SERVER_PORT;
+import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
 
 import android.content.Context;
 import android.util.Log;
@@ -31,10 +31,10 @@ import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 
-public class JettyContentServer extends StreamServerImpl.StreamServer {
+public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyContentServer";
 
-    public JettyContentServer(Context context, Router router, StreamServerConfigurationImpl configuration) {
+    public JettyContentServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
     }
 
@@ -45,7 +45,7 @@ public class JettyContentServer extends StreamServerImpl.StreamServer {
         // Initialize the server with the specified port.
         Thread thread = new Thread(() -> {
             try {
-                Log.i(TAG, "  Start Content Server (Jetty): " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
+                Log.i(TAG, "  Start Content Server (Jetty): " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT);
 
                 server = new Server();
 
@@ -63,7 +63,7 @@ public class JettyContentServer extends StreamServerImpl.StreamServer {
                 // configure an idle timeout.
                 try (ServerConnector http = new ServerConnector(server,
                         new HttpConnectionFactory(httpConfig))) {
-                    http.setPort(SERVER_PORT);
+                    http.setPort(CONTENT_SERVER_PORT);
                     http.setIdleTimeout(30000);
                     http.setAcceptQueueSize(500); // Increase the accept queue size
 
