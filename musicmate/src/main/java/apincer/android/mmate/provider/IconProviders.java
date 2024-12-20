@@ -402,7 +402,7 @@ public class IconProviders {
             label = "MP3";
         }else {
             // any others format i.e. mpeg, aac
-            label = tag.getAudioEncoding().toUpperCase(Locale.US);
+            label = StringUtils.trim(tag.getAudioEncoding(), tag.getFileFormat()).toUpperCase(Locale.US);
         }
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);

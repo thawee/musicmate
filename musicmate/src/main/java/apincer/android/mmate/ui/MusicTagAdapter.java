@@ -227,11 +227,32 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     return criteria.getKeyword();
                 }
             } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
-              //  if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
-              //      return Constants.TITLE_DSD_AUDIO;
-              //  }else {
-                    return criteria.getKeyword();
-              //  }
+                //  if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
+                //      return Constants.TITLE_DSD_AUDIO;
+                //  }else {
+                return criteria.getKeyword();
+                //  }
+            } else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
+                String keyword = criteria.getKeyword();
+                if("SMART_LIST_FINFIN_SONGS".equals(keyword)) {
+                    return "ฟังเพลงฟินๆ รินเบียร์เย็นๆ";
+                }else if("SMART_LIST_FINFIN_EN_SONGS".equals(keyword)) {
+                    return "ฟังเพลงสากลฟินๆ รินเบียร์เย็นๆ";
+                }else if("SMART_LIST_FINFIN_TH_SONGS".equals(keyword)) {
+                    return "ฟังเพลงไทยฟินๆ รินเบียร์เย็นๆ";
+                }else if("SMART_LIST_RELAXED_TH_SONGS".equals(keyword)) {
+                    return "ยานอนหลับ ฉบับไทยๆ";
+                }else if("SMART_LIST_RELAXED_EN_SONGS".equals(keyword)) {
+                    return "ยานอนหลับ ฉบับสากล";
+                }else if("SMART_LIST_RELAXED_SONGS".equals(keyword)) {
+                    return "ยานอนหลับ ฉบับรวมมิตร";
+                }else if("SMART_LIST_ISAAN_SONGS".equals(keyword)) {
+                    return "สะออนแฮง สำเนียงเสียงลำ";
+                }else if("SMART_LIST_BAANTHUNG_SONGS".equals(keyword)) {
+                    return "คิดถึง บ้านทุ่งท้องนา";
+                }else if("SMART_LIST_CLASSIC_SONGS".equals(keyword)) {
+                    return "คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+                }
             } else {
                 return criteria.getKeyword();
             }

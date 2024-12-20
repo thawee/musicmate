@@ -81,7 +81,7 @@ public abstract class ContentBrowser {
         return URI.create("http://"
                 + MediaServerSession.getIpAddress() + ":"
                // + HCContentServer.SERVER_PORT + "/album/" + uri);
-                + MediaServerConfiguration.STREAM_SERVER_PORT + "/album/" + uri);
+                + MediaServerConfiguration.STREAM_SERVER_PORT + "/coverart/" + uri);
     }
 
     protected MusicTrack toMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {

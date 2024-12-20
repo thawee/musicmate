@@ -144,8 +144,13 @@ public abstract class TagReader {
         tag.setFileLastModified(file.lastModified());
         tag.setFileSize(file.length());
         tag.setFileFormat(FileUtils.getExtension(file).toLowerCase(Locale.US));
+
         tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
         tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
+
+        //set default, will be override by reader
+        tag.setAudioEncoding(tag.getFileFormat());
+        tag.setTitle(file.getName());
     }
 
     protected static String extractField(String[] tags, int i) {

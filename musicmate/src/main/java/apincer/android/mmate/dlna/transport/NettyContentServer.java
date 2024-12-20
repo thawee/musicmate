@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna.transport;
 
+import static apincer.android.mmate.dlna.transport.StreamServerImpl.TYPE_IMAGE_JPEG;
+import static apincer.android.mmate.dlna.transport.StreamServerImpl.TYPE_IMAGE_PNG;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -68,8 +70,6 @@ public class NettyContentServer {
     private static final String TAG = "NettyContentServer";
     private static LruCache<String, ByteBuffer> transCodeCached;
     public static final int SERVER_PORT = 8089;
-    public static final String TYPE_IMAGE_PNG = "image/png";
-    public static final String TYPE_IMAGE_JPEG = "image/jpeg";
 
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();

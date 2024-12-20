@@ -237,6 +237,8 @@ dependencies {
     implementation deps.okio
     implementation deps.jtransforms
 
+    implementation 'org.eclipse.jetty:jetty-server:12.1.0.alpha0'
+
    // implementation "io.ktor:ktor-server-core:3.0.2"
    // implementation "io.ktor:ktor-server-cio:3.0.2"
    // implementation "io.ktor:ktor-server-host-common:3.0.2"

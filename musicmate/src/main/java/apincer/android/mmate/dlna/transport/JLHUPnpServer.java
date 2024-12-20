@@ -20,40 +20,21 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 
 import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.provider.CoverArtProvider;
-import apincer.android.mmate.utils.ApplicationUtils;
 
-public class JLHUPnpServer implements StreamServerImpl.Server {
+public class JLHUPnpServer extends StreamServerImpl.UPnpServer {
     private static final String TAG = "JLHUPnpServer";
-    public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
-    public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0";
-    private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
-    static final SimpleDateFormat dateFormatter = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
-    static {
-        dateFormatter.setTimeZone(GMT_ZONE);
-    }
-
-    final protected StreamServerConfigurationImpl configuration;
-    private final Router router;
     private final HTTPServer server;
-    private final File coverartDir;
-    private final String serverName;
 
     public JLHUPnpServer(Context context, Router router, StreamServerConfigurationImpl configuration)  {
-        this.configuration = configuration;
-        this.router = router;
+        super(context, router, configuration);
         this.server = new HTTPServer(configuration.getListenPort());
-        this.coverartDir = context.getExternalCacheDir();
-        this.serverName = "MusicMate/"+ ApplicationUtils.getVersionNumber(context);
     }
 
     synchronized public void initServer(InetAddress bindAddress) throws InitializationException {
@@ -61,12 +42,12 @@ public class JLHUPnpServer implements StreamServerImpl.Server {
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "Start UPNP Server (JLH): " + bindAddress.getHostAddress() + ":" + configuration.getListenPort());
+                    Log.i(TAG, "Start UPNP Server (JLH): " + bindAddress.getHostAddress() + ":" + getListenPort());
                     server.setSocketTimeout(30000); // 30 seconds
 
                     HTTPServer.VirtualHost host = server.getVirtualHost(null);  // default virtual host
                     host.setAllowGeneratedIndex(false);
-                    host.addContext("/{*}", new UpnpStreamHandler(router.getProtocolFactory()), "GET", "POST");
+                    host.addContext("/{*}", new UpnpStreamHandler(getProtocolFactory()), "GET", "POST");
                     server.start();
                 } catch (Exception ex) {
                     throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
@@ -91,13 +72,13 @@ public class JLHUPnpServer implements StreamServerImpl.Server {
 
         @Override
         public int serve(HTTPServer.Request req, HTTPServer.Response resp) throws IOException {
-            if (req.getPath().startsWith("/album/")) {
+            if (req.getPath().startsWith("/coverart/")) {
                 try {
-                    String albumId = req.getPath().substring("/album/".length());
+                    String albumId = req.getPath().substring("/coverart/".length());
                     String path = CoverArtProvider.COVER_ARTS + albumId;
-                    File pathFile = new File(coverartDir, path);
+                    File pathFile = new File(getCoverartDir(), path);
                     if (pathFile.exists()) {
-                        HTTPServer.serveFile(pathFile.getParentFile(), "/album/", req, resp);
+                        HTTPServer.serveFile(pathFile.getParentFile(), "/coverart/", req, resp);
                     }
                     return 0;
                 } catch (Exception e) {
@@ -148,8 +129,8 @@ public class JLHUPnpServer implements StreamServerImpl.Server {
                 for (String value : entry.getValue()) {
                     if("Server".equalsIgnoreCase(entry.getKey())) {
                         // add server
-                        String sName = String.format("%s %s %s",serverName,value,SERVER_SUFFIX);
-                        resp.getHeaders().add("Server", sName);
+                       // String sName = String.format("%s %s %s",getServerName(),value,SERVER_SUFFIX);
+                        resp.getHeaders().add("Server", getFullServerName(value));
                     }else {
                         resp.getHeaders().add(entry.getKey(), value);
                     }

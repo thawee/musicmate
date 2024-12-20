@@ -946,6 +946,10 @@ public class MainActivity extends AppCompatActivity {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.GENRE, TagRepository.getActualGenreList(getApplicationContext()).get(0));
             return true;
+      //  }else if(item.getItemId() == R.id.menu_playlist) {
+      //      doHideSearch();
+      //      doStartRefresh(SearchCriteria.TYPE.PLAYLIST, TagRepository.getPlaylists(getApplicationContext()).get(0));
+      //      return true;
         }else if(item.getItemId() == R.id.menu_settings) {
             Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(myIntent);

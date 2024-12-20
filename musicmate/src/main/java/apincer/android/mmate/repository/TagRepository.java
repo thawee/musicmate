@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -374,5 +375,21 @@ public class TagRepository {
                     list.add(dir);
         }
         return list;
+    }
+
+    public static List<String> getPlaylists(Context applicationContext) {
+        List<String> playlists = new ArrayList<>();
+        playlists.add("SMART_LIST_FINFIN_SONGS");
+        playlists.add("SMART_LIST_FINFIN_TH_SONGS");
+        playlists.add("SMART_LIST_FINFIN_EN_SONGS");
+        playlists.add("SMART_LIST_RELAXED_TH_SONGS");
+        playlists.add("SMART_LIST_RELAXED_EN_SONGS");
+        playlists.add("SMART_LIST_RELAXED_SONGS");
+        playlists.add("SMART_LIST_BAANTHUNG_SONGS");
+        playlists.add("SMART_LIST_ISAAN_SONGS");
+        playlists.add("SMART_LIST_CLASSIC_SONGS");
+
+        Collections.sort(playlists);
+        return playlists;
     }
 }

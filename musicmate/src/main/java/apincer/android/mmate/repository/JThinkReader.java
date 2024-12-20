@@ -73,8 +73,13 @@ public class JThinkReader extends TagReader{
             tag.setAudioStartTime(0);
            // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
+        }else {
+            MusicTag tag = new MusicTag();
+            tag.setPath(mediaPath);
+            readFileInfo(context, tag);
+            tag.setAudioStartTime(0);
+            return Collections.singletonList(tag);
         }
-        return EMPTY_LIST;
     }
 
     @Override
@@ -90,8 +95,13 @@ public class JThinkReader extends TagReader{
             detectMQA(tag);
             tag.setAudioStartTime(0);
             return Collections.singletonList(tag);
+        }else {
+            MusicTag tag = new MusicTag();
+            tag.setPath(mediaPath);
+            readFileInfo(context, tag);
+            tag.setAudioStartTime(0);
+            return Collections.singletonList(tag);
         }
-        return EMPTY_LIST;
     }
 
     private void readHeader(AudioFile read, MusicTag metadata) {
@@ -130,7 +140,7 @@ public class JThinkReader extends TagReader{
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
                  InvalidAudioFrameException |
                  BufferUnderflowException e) {
-            Log.e(TAG, "getAudioFile: "+path, e);
+            Log.e(TAG, "getAudioFile: "+path +" - "+ e.getMessage());
         }
         return null;
     }

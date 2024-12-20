@@ -50,7 +50,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class HCContentServer  implements StreamServerImpl.Server {
+public class HCContentServer {
     private final Context context;
     private static final String TAG = "HCContentServer";
 
@@ -82,7 +82,7 @@ public class HCContentServer  implements StreamServerImpl.Server {
             public void run() {
                 try {
                    // Log.v(TAG, "Running HttpCore5 Content Server: " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
-                    Log.i(TAG, "Start Content Server (AHC): "+ bindAddress.getHostAddress()+":"+SERVER_PORT);
+                    Log.i(TAG, "  Start Content Server (AHC): "+ bindAddress.getHostAddress()+":"+SERVER_PORT);
                     MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     IOReactorConfig config = IOReactorConfig.custom()
                             .setIoThreadCount(2) // for small memory and 10 tps
@@ -114,7 +114,7 @@ public class HCContentServer  implements StreamServerImpl.Server {
 
     synchronized public void stopServer() {
         if(server != null) {
-            Log.i(TAG, "Stop Content Server (AHC)");
+            Log.i(TAG, "  Stop Content Server (AHC)");
             server.initiateShutdown();
             try {
                 server.awaitShutdown(TimeValue.ofSeconds(3));

@@ -75,5 +75,11 @@
         android:title="Media Format"
         app:showAsAction="always" />
 -->
-
+    <!--
+    <item
+        android:icon="@drawable/round_playlist_play_24"
+        android:id="@+id/menu_playlist"
+        android:title="Playlist"
+        app:showAsAction="always" />
+-->
 </menu>
