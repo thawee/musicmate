@@ -1,6 +1,6 @@
 package apincer.android.mmate.dlna.content;
 
-import static apincer.android.mmate.dlna.MediaServerSession.forceFullContent;
+import static apincer.android.mmate.dlna.transport.StreamServerImpl.forceFullContent;
 
 import android.content.Context;
 

@@ -4,10 +4,7 @@ import android.content.Context;
 
 import org.jupnp.android.AndroidUpnpServiceConfiguration;
 import org.jupnp.model.Namespace;
-import org.jupnp.model.message.UpnpHeaders;
-import org.jupnp.model.message.header.UpnpHeader;
 import org.jupnp.model.meta.Device;
-import org.jupnp.model.meta.RemoteDeviceIdentity;
 import org.jupnp.model.meta.Service;
 import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDAServiceType;
@@ -18,7 +15,6 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
-import apincer.android.mmate.dlna.transport.NettyStreamServerImpl;
 import apincer.android.mmate.dlna.transport.OKHttpUPnpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
@@ -45,11 +41,7 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamServer<StreamServerConfigurationImpl> createStreamServer(NetworkAddressFactory networkAddressFactory) {
-       // return new HttpCoreStreamServer(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-//        return new NettyStreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-     //     return new JLHStreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
         return new StreamServerImpl(context, new StreamServerConfigurationImpl(networkAddressFactory.getStreamListenPort()));
-
     }
 
     @Override
@@ -104,16 +96,4 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
             }
         };
     }
-
-    @Override
-    public UpnpHeaders getDescriptorRetrievalHeaders(RemoteDeviceIdentity identity) {
-        if (identity.getUdn().getIdentifierString().equals("aa-bb-cc-dd-ee-ff")) {
-            UpnpHeaders headers = new UpnpHeaders();
-            headers.add(UpnpHeader.Type.USER_AGENT.getHttpName(), "MyCustom/Agent");
-            headers.add("X-Custom-Header", "foo");
-            return headers;
-        }
-        return null;
-    }
-
 }

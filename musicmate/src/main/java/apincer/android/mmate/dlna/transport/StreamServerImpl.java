@@ -11,15 +11,29 @@ import org.jupnp.transport.spi.StreamServer;
 import java.io.File;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
+import apincer.android.mmate.utils.StringUtils;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
-    public static final String TYPE_IMAGE_PNG = "image/png";
-    public static final String TYPE_IMAGE_JPEG = "image/jpeg";
-    abstract static class UPnpServer {
+    public static boolean isTransCoded(MusicTag tag) {
+        String enc = tag.getAudioEncoding();
+        if(!StringUtils.isEmpty(enc)) {
+            enc = enc.toUpperCase(Locale.US);
+            return transCodeList.contains(enc);
+        }
+        return false;
+
+    }
+
+    //public static final String TYPE_IMAGE_PNG = "image/png";
+    //public static final String TYPE_IMAGE_JPEG = "image/jpeg";
+    abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
         public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0";
         private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
@@ -30,12 +44,14 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         private final StreamServerConfigurationImpl configuration;
         private final Router router;
+        private final Context context;
         private final File coverartDir;
         private final String serverName;
 
-        public UPnpServer(Context context, Router router, StreamServerConfigurationImpl configuration) {
+        public StreamServer(Context context, Router router, StreamServerConfigurationImpl configuration) {
             this.configuration = configuration;
             this.router = router;
+            this.context = context;
             this.coverartDir = context.getExternalCacheDir();
             this.serverName = "MusicMate/"+ ApplicationUtils.getVersionNumber(context);
         }
@@ -43,8 +59,12 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         public abstract void initServer(InetAddress bindAddress) throws InitializationException;
         public abstract void stopServer();
 
-        public String getFullServerName(String httpServerName) {
-            return String.format("%s %s %s",serverName,httpServerName,SERVER_SUFFIX);
+        public String getFullServerName( ) {
+            return String.format("%s %s",serverName,SERVER_SUFFIX);
+        }
+
+        public Context getContext() {
+            return context;
         }
 
         public int getListenPort() {
@@ -55,27 +75,26 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             return coverartDir;
         }
 
-        public String getDate() {
-            return serverName;
-        }
         public ProtocolFactory getProtocolFactory() {
             return router.getProtocolFactory();
-        }
-
-        public Router getRouter() {
-            return  router;
         }
     }
 
     private static final String TAG = "StreamServerImpl";
     final private StreamServerConfigurationImpl configuration;
-    private HCContentServer contentServer;
-    private UPnpServer upnpServer;
+    // private HCContentServer contentServer;
+    private StreamServer contentServer;
+    private StreamServer upnpServer;
     private final Context context;
+
+    public static boolean forceFullContent = false;
+    public static String streamServerHost = "";
+    private static final List<String> transCodeList = new ArrayList<>();
 
     public StreamServerImpl(Context context, StreamServerConfigurationImpl configuration) {
         this.configuration = configuration;
         this.context = context;
+        transCodeList.add("AAC");
     }
 
     public StreamServerConfigurationImpl getConfiguration() {
@@ -86,15 +105,23 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         Log.i(TAG, "Initialise Stream Servers");
 
         Log.i(TAG, "  Stop servers before start if server already running.");
-        stop();
+        if(upnpServer != null) {
+            upnpServer.stopServer();
+        }
+        if(contentServer != null) {
+            contentServer.stopServer();
+        }
+
+        streamServerHost = bindAddress.getHostAddress();
 
         //upnpServer = new JLHUPnpServer(context,router, configuration);
        // upnpServer = new NettyUPnpServer(context,router, configuration);
-        upnpServer = new JettyUPnpServer(context,router, configuration);
-        upnpServer.initServer(bindAddress);
+        this.upnpServer = new JettyUPnpServer(context,router, configuration);
+        this.upnpServer.initServer(bindAddress);
 
-        this.contentServer = new HCContentServer(context);
-        contentServer.initServer(bindAddress);
+        this.contentServer = new HCContentServer(context,router, configuration);
+        this.contentServer = new JettyContentServer(context, router, configuration);
+        this.contentServer.initServer(bindAddress);
     }
 
     synchronized public int getPort() {

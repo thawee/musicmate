@@ -9,6 +9,8 @@ import android.util.LruCache;
 
 import androidx.core.content.ContextCompat;
 
+import com.google.common.net.HttpHeaders;
+
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
@@ -30,6 +32,7 @@ import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
+import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
 
 import java.io.File;
@@ -42,7 +45,6 @@ import java.util.Locale;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.FFMpegHelper;
@@ -50,16 +52,15 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
-public class HCContentServer {
-    private final Context context;
+public class HCContentServer extends StreamServerImpl.StreamServer {
     private static final String TAG = "HCContentServer";
 
     private HttpAsyncServer server;
     private static LruCache<String, ByteBuffer> transCodeCached;
     public static final int SERVER_PORT = 8089;
 
-    public HCContentServer(Context context) {
-        this.context = context;
+    public HCContentServer(Context context, Router router, StreamServerConfigurationImpl configuration) {
+        super(context, router, configuration);
         int cacheSize = 1024 * 1024 * 64; // 64 MB cache
         transCodeCached = new LruCache<>(cacheSize) {
             @Override
@@ -68,10 +69,6 @@ public class HCContentServer {
                 return data.capacity();
             }
         };
-    }
-
-    private Context getContext() {
-        return context;
     }
 
     synchronized public void initServer(InetAddress bindAddress) throws InitializationException {
@@ -83,7 +80,6 @@ public class HCContentServer {
                 try {
                    // Log.v(TAG, "Running HttpCore5 Content Server: " + bindAddress.getHostAddress() + ":" + SERVER_PORT);
                     Log.i(TAG, "  Start Content Server (AHC): "+ bindAddress.getHostAddress()+":"+SERVER_PORT);
-                    MediaServerSession.streamServerHost = bindAddress.getHostAddress();
                     IOReactorConfig config = IOReactorConfig.custom()
                             .setIoThreadCount(2) // for small memory and 10 tps
                             .setSoTimeout(Timeout.ofSeconds(30))
@@ -149,15 +145,8 @@ public class HCContentServer {
             // Extract what we need from the HTTP httpRequest
             String requestMethod = request.getHead().getMethod()
                     .toUpperCase(Locale.ENGLISH);
-            String userAgent = request.getHead().getLastHeader("User-Agent").getValue();
-           // Log.d(TAG, "HTTP Request: "
-            //        + request.getHead().getRequestUri()+" - "
-            //        + userAgent);
-            // Only accept HTTP-GET
+            String userAgent = request.getHead().getLastHeader(HttpHeaders.USER_AGENT).getValue();
             if (!requestMethod.equals("GET") && !requestMethod.equals("HEAD")) {
-                Log.d(TAG,
-                        "HTTP request isn't GET or HEAD stop! Method was: "
-                                + requestMethod);
                 throw new MethodNotSupportedException(requestMethod
                         + " method not supported");
             }
@@ -179,7 +168,6 @@ public class HCContentServer {
                     responseBuilder.setStatus(HttpStatus.SC_FORBIDDEN);
                     responseBuilder.setEntity(AsyncEntityProducers.create("<html><body><h1>Access denied</h1></body></html>", ContentType.TEXT_HTML));
                     responseTrigger.submitResponse(responseBuilder.build(), context);
-                   // Log.d(getClass().getName(), "end doService: Access denied");
                 }else {
                     ContentHolder contentHolder = lookupAlbumArt(albumId);
                     responseBuilder.setStatus(HttpStatus.SC_OK);
@@ -189,10 +177,10 @@ public class HCContentServer {
             } else if ("res".equals(type)) {
                 contentId = pathSegments.get(1);
                 try {
-                   // Long.parseLong(contentId);
                     ContentHolder contentHolder = lookupContent(contentId, userAgent);
                     responseBuilder.setStatus(HttpStatus.SC_OK);
                     responseBuilder.setEntity(contentHolder.getEntityProducer(getContext()));
+
                     responseTrigger.submitResponse(responseBuilder.build(), context);
                 } catch (Exception nex) {
                     responseBuilder.setStatus(HttpStatus.SC_NOT_FOUND);
@@ -232,7 +220,7 @@ public class HCContentServer {
                     PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
                     MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
                     result = new ContentHolder(contentType, String.valueOf(tag.getId()), tag.getPath());
-                    result.transcode = MediaServerSession.isTransCoded(tag);
+                    result.transcode = StreamServerImpl.isTransCoded(tag);
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "lookupContent: - " + contentId, ex);
@@ -265,7 +253,7 @@ public class HCContentServer {
     }
 
     private ContentType getContentType(MusicTag tag) {
-        if(MediaServerSession.isTransCoded(tag)) {
+        if(StreamServerImpl.isTransCoded(tag)) {
             return ContentType.parse( "audio/mpeg");
         }else if(MusicTagUtils.isAIFFile(tag)) {
             return ContentType.parse( "audio/x-aiff");
@@ -319,7 +307,7 @@ public class HCContentServer {
             if (!isEmpty(getFilePath())) {
                 if (new File(getFilePath()).exists()) {
                     if(transcode) {
-                        // transcode to lpcm before send to
+                        // transcode to lpcm/mp3 before reply
                         ByteBuffer buff = transCodeCached.get(resId);
                         if(buff == null) {
                             ByteBuffer data = FFMpegHelper.transcodeFile(context, getFilePath());

@@ -1,13 +1,13 @@
 package apincer.android.mmate.utils;
 
-import apincer.android.mmate.dlna.MediaServerSession;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.repository.MusicTag;
 
 public class MediaTypeDetector {
     private static final String defaultType = "application/octet-stream";
 
     public static String getContentType(MusicTag tag) {
-        if(MediaServerSession.isTransCoded(tag)) {
+        if(StreamServerImpl.isTransCoded(tag)) {
             return "audio/mpeg";
         }else if(MusicTagUtils.isAIFFile(tag)) {
             return "audio/x-aiff";

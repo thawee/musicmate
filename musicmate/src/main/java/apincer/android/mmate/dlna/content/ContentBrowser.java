@@ -17,9 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerConfiguration;
-import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.dlna.transport.HCContentServer;
-import apincer.android.mmate.dlna.transport.NettyStreamServerImpl;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -66,10 +65,12 @@ public abstract class ContentBrowser {
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
-        if(MediaServerSession.isTransCoded(tag)) {
+     /*  if(MediaServerSession.isTransCoded(tag)) {
             return "http://" + MediaServerSession.getIpAddress() + ":" + HCContentServer.SERVER_PORT + "/res/" + tag.getId() + "/file.raw";
-        }
-        return "http://" + MediaServerSession.getIpAddress() + ":" +HCContentServer.SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
+        }*/
+        return "http://" + StreamServerImpl.streamServerHost + ":" +HCContentServer.SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
+
+     //   return "http://" + MediaServerSession.getIpAddress() + ":" +MediaServerConfiguration.STREAM_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
@@ -79,7 +80,7 @@ public abstract class ContentBrowser {
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, String key) {
         String uri = key+".png";
         return URI.create("http://"
-                + MediaServerSession.getIpAddress() + ":"
+                + StreamServerImpl.streamServerHost + ":"
                // + HCContentServer.SERVER_PORT + "/album/" + uri);
                 + MediaServerConfiguration.STREAM_SERVER_PORT + "/coverart/" + uri);
     }
@@ -124,7 +125,7 @@ public abstract class ContentBrowser {
     }
 
     private ProtocolInfo getProtocolInfo(MusicTag tag) {
-        if(MediaServerSession.isTransCoded(tag)) {
+        if(StreamServerImpl.isTransCoded(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=44100;channels=2", "DLNA.ORG_PN=LPCM");
         }else if(MusicTagUtils.isAIFFile(tag)) {
             return new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", ProtocolInfo.WILDCARD);

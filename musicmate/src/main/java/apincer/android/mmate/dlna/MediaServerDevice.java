@@ -39,6 +39,7 @@ import java.util.UUID;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.dlna.content.ContentDirectory;
 import apincer.android.mmate.dlna.transport.HCContentServer;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
@@ -269,8 +270,8 @@ public class MediaServerDevice extends LocalDevice {
                         modelDescription,
                         modelNumber);
                 URI presentationURI = null;
-                if (!StringUtils.isEmpty(MediaServerSession.streamServerHost)) {
-                    String webInterfaceUrl = "http://" + MediaServerSession.streamServerHost + ":" + HCContentServer.SERVER_PORT +"/musicmate.html";
+                if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
+                    String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + HCContentServer.SERVER_PORT +"/musicmate.html";
                     presentationURI = URI.create(webInterfaceUrl);
                 }
                 return new DeviceDetails(

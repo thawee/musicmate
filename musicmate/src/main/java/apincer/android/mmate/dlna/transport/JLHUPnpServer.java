@@ -25,10 +25,9 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.dlna.MediaServerSession;
 import apincer.android.mmate.provider.CoverArtProvider;
 
-public class JLHUPnpServer extends StreamServerImpl.UPnpServer {
+public class JLHUPnpServer extends StreamServerImpl.StreamServer {
     private static final String TAG = "JLHUPnpServer";
     private final HTTPServer server;
 
@@ -96,7 +95,7 @@ public class JLHUPnpServer extends StreamServerImpl.UPnpServer {
                 if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
                     // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
                    // Log.v(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
-                    MediaServerSession.forceFullContent = true;
+                    StreamServerImpl.forceFullContent = true;
                 }
 
                 StreamRequestMessage requestMessage = readRequestMessage(req);
@@ -129,8 +128,8 @@ public class JLHUPnpServer extends StreamServerImpl.UPnpServer {
                 for (String value : entry.getValue()) {
                     if("Server".equalsIgnoreCase(entry.getKey())) {
                         // add server
-                       // String sName = String.format("%s %s %s",getServerName(),value,SERVER_SUFFIX);
-                        resp.getHeaders().add("Server", getFullServerName(value));
+                        resp.getHeaders().add("Server", getFullServerName());
+                        resp.getHeaders().add("X-Powered-By", value);
                     }else {
                         resp.getHeaders().add(entry.getKey(), value);
                     }
