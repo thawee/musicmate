@@ -1,5 +1,7 @@
 package apincer.android.mmate.provider;
 
+import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
+
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
@@ -90,26 +92,20 @@ public final class CoverArtProvider extends ContentProvider {
     public ParcelFileDescriptor openFile(@NonNull Uri uri, @NonNull String str) {
             try {
                 File dir =  getContext().getExternalCacheDir();
-               // String albumUniqueKey = getPathForUri(uri);
                 String path = getCacheCover(uri);
 
                 File pathFile = new File(dir, path);
-               /* if(!pathFile.exists()) {
-                        dir = pathFile.getParentFile();
-                        dir.mkdirs();
-                        // extract covert to cache directory
-                        MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
-                        FileRepository.extractCoverArt(tag, pathFile);
-                        pathFile = new File(dir, path);
-                } */
                 if(pathFile.exists()) {
                     //Log.d(TAG,"found "+pathFile.toPath());
                     return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(pathFile.toPath()));
+                }else {
+                    File defaultCover = new File(dir, COVER_ARTS);
+                    defaultCover = new File(defaultCover, DEFAULT_COVERART_FILE);
+                    return ParcelFileDescriptorUtil.pipeFrom(Files.newInputStream(defaultCover.toPath()));
                 }
             } catch (Exception e) {
                 Log.d(TAG,"openFile: ", e);
             }
-//            Log.d(TAG,"no coverart for "+uri.getPath());
             return null;
         }
 

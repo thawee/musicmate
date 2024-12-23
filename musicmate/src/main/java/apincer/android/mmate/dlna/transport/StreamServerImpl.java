@@ -110,12 +110,9 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         streamServerHost = bindAddress.getHostAddress();
 
-        //upnpServer = new JLHUPnpServer(context,router, configuration);
-       // upnpServer = new NettyUPnpServer(context,router, configuration);
         this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
         this.upnpServer.initServer(bindAddress);
 
-       // this.contentServer = new HCContentServer(context,router, configuration);
         this.contentServer = new JettyContentServerImpl(context, router, configuration);
         this.contentServer.initServer(bindAddress);
     }

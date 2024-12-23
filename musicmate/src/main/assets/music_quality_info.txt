@@ -7,25 +7,25 @@ Dynamic Range (DR) measures how much the volume changes in a piece of music or a
 
 Music Groupings
 
-Classical Music - formal and complex
+Classical Music - Formal and Complex
  Indian Classical: Hindustani, Carnatic
  Chinese Classical: Guqin, Guzheng, Pipa
  Japanese Classical: Gagaku, Shakuhachi, Koto
  Thai Classical: Piphat, Khrueang Sai, Mahori
 
-Traditional Music - cultural and evolving
+Traditional Music - Cultural and Evolving
  African: Djembe drumming, Mbira music
  Asian: Indian Raga, Chinese Guzheng
  European: Celtic music, Flamenco
  Latin American: Mariachi, Samba
  Thai: Mor Lum, Luk Thung
 
-Popular Music - modern and accessible
+Popular Music - Modern and Accessible
  Rock: The Beatles, Led Zeppelin
  Pop: Michael Jackson, Madonna
  Hip-Hop: Tupac, Jay-Z
  Electronic: Daft Punk, Avicii
 
-Jazz - dynamic and influential
-Styles: Dixieland, Swing, Bebop, Cool Jazz, Free Jazz
-Artists: Louis Armstrong, Duke Ellington, Miles Davis, John Coltrane
+Jazz Music - Dynamic and Influential
+ Styles: Dixieland, Swing, Bebop, Cool Jazz, Free Jazz
+ Artists: Louis Armstrong, Duke Ellington, Miles Davis, John Coltrane

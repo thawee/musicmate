@@ -151,7 +151,7 @@
     <string name="label_genres">Genres</string>
     <string name="label_groupings">Groupings</string>
     <string name="downloaded">Downloads</string>
-    <string name="directory">Source Directories</string>
+    <string name="directory">Music Sources</string>
 
     <string name="music">Music</string>
     <string name="playerNameAvTransport">remote</string>

@@ -12,6 +12,8 @@ import java.util.List;
  */
 
 public final class Constants {
+    public static final String DEFAULT_COVERART_FILE = "default_covert.png";
+
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
     public static final String QUALITY_BAD = "Unsatisfactory";
@@ -37,11 +39,7 @@ public final class Constants {
     public static final String IND_RESAMPLED_NONE = "";
     public static final String IND_RESAMPLED_INVALID = "F";
 
-  //  public static final double MIN_SPL_RATIO = 0.8; //0.72; //just magic number, it's should be 1.0 for actual results
-   // public static final double MIN_SPL_16BIT_IN_DB = SPL_16BIT_IN_DB*MIN_SPL_RATIO;
-   // public static final double MIN_SPL_24BIT_IN_DB = SPL_24BIT_IN_DB*MIN_SPL_RATIO;
-
-   // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
+    // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
    // public static final long QUALITY_SAMPLING_RATE_88 = 88200;
   //  public static final int QUALITY_SAMPLING_RATE_48 = 48000;
@@ -71,11 +69,6 @@ public final class Constants {
     public static final String GROUPING_JAZZ = "Jazz";
     public static final String GROUPING_THAI_JAZZ = "Thai Jazz";
     public static final String GROUPING_THAI_CLASSICAL = "Thai Classical";
-
-  //  public static final String GROUPING_LOUNGE = "Lounge";
- //   public static final String GROUPING_ACOUSTIC = "Acoustic";
-  //  public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
-  //  public static final String GROUPING_THAI_ACOUSTIC = "Thai Acoustic";
 
     public static final String TITLE_LIBRARY = "Collections";
     public static final String TITLE_RESOLUTION = "Resolutions";

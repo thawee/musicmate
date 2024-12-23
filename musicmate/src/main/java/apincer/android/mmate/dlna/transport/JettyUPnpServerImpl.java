@@ -1,6 +1,7 @@
 package apincer.android.mmate.dlna.transport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -8,7 +9,9 @@ import android.util.Log;
 
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.content.HttpContent;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -63,8 +66,8 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
                 // Configure thread pool
                 QueuedThreadPool threadPool = new QueuedThreadPool();
-                threadPool.setMaxThreads(60); // Adjust based on your server's capacity
-                threadPool.setMinThreads(6);
+                threadPool.setMaxThreads(120); // Adjust based on your server's capacity
+                threadPool.setMinThreads(10);
                 threadPool.setIdleTimeout(60000);
 
                 server = new Server(threadPool);
@@ -95,7 +98,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
                 // Resource handler for cover art
                 File pathFile = new File(getCoverartDir(), CoverArtProvider.COVER_ARTS);
-                ResourceHandler coverartHandler = new ResourceHandler();
+                ResourceHandler coverartHandler = new CoverartHandler();
                 coverartHandler.setBaseResource(ResourceFactory.of(coverartHandler).newResource(pathFile.toPath()));
                 coverartHandler.setDirAllowed(false);
                 coverartHandler.setServer(server);
@@ -258,6 +261,36 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
             }
             return requestMessage;
+        }
+    }
+
+
+    private class CoverartHandler extends ResourceHandler {
+        private CoverartHandler( ) {
+        }
+
+        @Override
+        public boolean handle(Request request, Response response, Callback callback) throws Exception {
+            if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod()))
+            {
+                // try another handler
+                return super.handle(request, response, callback);
+            }
+
+            HttpContent content = getResourceService().getContent(Request.getPathInContext(request), request);
+            if (content == null)
+            {
+                // check file and create if not existed
+                content = getResourceService().getContent(DEFAULT_COVERART_FILE, request);
+            }
+
+            if (content == null)
+            {
+                return super.handle(request, response, callback); // no content - try other handlers
+            }
+
+            getResourceService().doGet(request, response, callback, content);
+            return true;
         }
     }
 

@@ -8,10 +8,8 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -457,9 +455,9 @@ public class TagsActivity extends AppCompatActivity {
 
         request = new ImageRequest.Builder(getApplicationContext())
                 .data(CoverArtProvider.getUriForMusicTag(getApplicationContext(), displayTag))
-                .size(1024,1024)
+                .size(640,640)
                 .placeholder(R.drawable.progress)
-                .error(getDefaultNoCover(displayTag))
+               // .error(getDefaultNoCover(displayTag))
                // .error(R.drawable.no_cover2)
                 .target(coverArtView)
                 .build();
@@ -559,10 +557,11 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    /*
     private Drawable getDefaultNoCover(MusicTag tag) {
         byte[] b = MusixMateApp.getInstance().getDefaultNoCoverart(tag);
         return new BitmapDrawable(MusixMateApp.getInstance().getResources(), BitmapFactory.decodeByteArray(b, 0, b.length));
-    }
+    } */
 
     private void doOpenMainActivity(SearchCriteria criteria) {
       //  Intent myIntent = new Intent(this, MainActivity.class);

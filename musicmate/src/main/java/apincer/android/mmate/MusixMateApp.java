@@ -1,5 +1,8 @@
 package apincer.android.mmate;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
+
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -19,7 +22,9 @@ import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
 import java.io.File;
-import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +62,7 @@ public class MusixMateApp extends Application {
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
 
-    private static final List<ByteBuffer> NO_IMAGE_COVERS = new ArrayList<>();
+   // private static final List<ByteBuffer> NO_IMAGE_COVERS = new ArrayList<>();
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -105,7 +110,7 @@ public class MusixMateApp extends Application {
         LogHelper.initial();
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(this);
-        initNoImageCovers();
+        //initNoImageCovers();
 
         // initialize thread executors
         MusicMateExecutors.getInstance();
@@ -139,6 +144,16 @@ public class MusixMateApp extends Application {
                 .setButtonBackgroundColor(Color.parseColor("#317DED"))
                 .setButtonTextColor(Color.parseColor("#FFFFFF"))
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
+
+        // setup default cover art
+        try {
+            File pathFile = new File(getApplicationContext().getExternalCacheDir(), CoverArtProvider.COVER_ARTS);
+            File defaultCoverart = new File(pathFile, DEFAULT_COVERART_FILE);
+            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "no_cover.png");
+            Files.copy(in, defaultCoverart.toPath(), REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         /*
         // to detect not expected thread
@@ -230,6 +245,7 @@ public class MusixMateApp extends Application {
         }
     }
 
+    /*
     private void initNoImageCovers() {
         // init by genre
         NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_01.jpg"));
@@ -252,7 +268,7 @@ public class MusixMateApp extends Application {
         }else {
             return NO_IMAGE_COVERS.get(0).array();
         }
-    }
+    } */
 
     /*
 Provides the SQLite Helper Object among the application
