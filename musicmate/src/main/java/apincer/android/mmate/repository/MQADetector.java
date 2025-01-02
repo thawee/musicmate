@@ -10,6 +10,7 @@ import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mqaidentifier.NativeLib;
 
+@Deprecated
 public class MQADetector {
     private static final String TAG = MQADetector.class.getName();
     public static final String NOT_FOUND = "NF";

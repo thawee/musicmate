@@ -160,12 +160,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-           // builder.where().eq("drScore",0).or()
-            builder.where().eq("upscaledInd", IND_UPSCALED_INVALID).or()
+            builder.where().eq("drScore",0)
+                    .or().eq("dynamicRange", 0);
+           /* builder.where().eq("upscaledInd", IND_UPSCALED_INVALID).or()
                     .isNull("upscaledInd").or()
                     .eq("resampledInd", IND_RESAMPLED_INVALID).or()
-                    .isNull("resampledInd").and()
-                    .notIn("audioEncoding", "aac", "mpeg");
+                    .isNull("resampledInd"); */
+                   // .and.notIn("audioEncoding", "aac", "mpeg");
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;

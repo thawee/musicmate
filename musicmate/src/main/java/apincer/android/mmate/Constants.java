@@ -12,7 +12,8 @@ import java.util.List;
  */
 
 public final class Constants {
-    public static final String DEFAULT_COVERART_FILE = "default_covert.png";
+    public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
+    public static final String DLNA_DEFAULT_COVERART_FILE = "dlna_coverart.png";
 
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";

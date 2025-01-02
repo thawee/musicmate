@@ -28,6 +28,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.skydoves.powermenu.CircularEffect;
@@ -49,11 +51,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
-import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.ui.glide.GlideApp;
 import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -61,10 +63,6 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
-import coil.Coil;
-import coil.ImageLoader;
-import coil.request.ImageRequest;
-import coil.transform.RoundedCornersTransformation;
 
 public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
@@ -538,6 +536,7 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {
+        /*
         ImageLoader imageLoader = Coil.imageLoader(tagsActivity.getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(tagsActivity.getApplicationContext())
                 //.data(MusicTagUtils.getCoverArt(tagsActivity.getApplicationContext(), tag))
@@ -546,7 +545,16 @@ public class TagsEditorFragment extends Fragment {
                 .crossfade(false)
                 .target(previewCoverart)
                 .build();
-        imageLoader.enqueue(request);
+        imageLoader.enqueue(request); */
+
+        GlideApp.with(this)
+                .load(tag)
+                .placeholder(R.drawable.progress) // Set a placeholder image
+                .diskCacheStrategy(DiskCacheStrategy.DATA) // Cache all versions of the image
+                .skipMemoryCache(true) // Skip memory cache
+                .transform(new RoundedCorners(8))
+                .into(previewCoverart);
+
 
         previewTitle.setText(MusicTagUtils.getFormattedTitle(getContext(),tag));
         previewArtist.setText(tag.getArtist());

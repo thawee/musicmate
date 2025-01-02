@@ -26,7 +26,6 @@ public class ColorUtils {
      * 颜色加深
      * @param argbColor ARGB颜色值
      * @param darkValue 0-255 加深范围
-     * @return
      */
     public static int TranslateDark(String argbColor, int darkValue) {
         int startAlpha = Integer.parseInt(argbColor.substring(0, 2), 16);
@@ -46,7 +45,6 @@ public class ColorUtils {
      * 颜色加深
      * @param colorInt ARGB颜色值
      * @param darkValue 0~255 加深范围
-     * @return
      */
     public static int TranslateDark(int colorInt, int darkValue) {
         String argbColor = intToString(colorInt);

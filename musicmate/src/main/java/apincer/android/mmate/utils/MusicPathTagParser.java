@@ -11,7 +11,7 @@ import apincer.android.utils.FileUtils;
 
 public class MusicPathTagParser {
     public void parse(MusicTag tag, List<String> patterns) {
-        if (patterns.size() <= 0) {
+        if (patterns.isEmpty()) {
             return;
         }
 
@@ -35,24 +35,13 @@ public class MusicPathTagParser {
         }
 
         text = text.substring(firstTagIndex);
-        //String lastTagTex = "";
-        String tagType="";
-        //String lastTagType ="";
-        //String nextTag ="";
+        String tagType;
         for (int i = 0; i < patterns.size(); i++) {
             String curTag = patterns.get(i);
-            //if((i+1) <= patterns.size()) {
-            //    nextTag = patterns.get(i);
-           // }else {
-           //     nextTag = "";
-           // }
             String nextTagText = "";
-            //lastTagType = tagType;
             tagType = curTag;
             int nextTagSeq = i + 1;
             if ((nextTagSeq) < patterns.size()) {
-                // last tag
-                //lastTagTex = nextTagText;
                 nextTagText = patterns.get(nextTagSeq);
             }
 
@@ -120,24 +109,6 @@ public class MusicPathTagParser {
             } else if ("sp".equals(tagType)) {
                 // eat space(s)
                 text = text.trim();
-           /* } else if ("*".equals(tagType)) {
-                // eat any text until next pattern
-                if (patterns.size() > nextTagSeq + 1) {
-                    String nextToken = patterns.get(nextTagSeq + 1);
-                    int nextIndex = 0;
-                    for (nextIndex = 0; nextIndex < text.length(); nextIndex++) {
-                        if (nextToken.equals(text.charAt(nextIndex))) {
-                            break;
-                        }
-                    }
-                    if (nextIndex < text.length()) {
-                        text = text.substring(nextIndex);
-                    } else {
-                        text = "";
-                    }
-                } else {
-                    text = "";
-                } */
             } else {
                 // eat tag type from text
                 if ((text.length() - tagType.length()) > 0) {
@@ -172,13 +143,10 @@ public class MusicPathTagParser {
             if (indx < 0) {
                 indx = text.indexOf("\t");
             }
-        } else if (nextTagType.trim().length() > 0 && text.contains(nextTagType)) {
+        } else if (!nextTagType.trim().isEmpty() && text.contains(nextTagType)) {
             indx = text.indexOf(nextTagType);
         }else if ("?".equals(nextTagType)) {
             indx = 1;  // text.indexOf(" ");
-            // if(indx <0) {
-            //     indx = text.indexOf("\t");
-            //  }
         }
 
         return indx;

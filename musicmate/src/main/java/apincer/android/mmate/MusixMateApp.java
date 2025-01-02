@@ -2,6 +2,7 @@ package apincer.android.mmate;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
+import static apincer.android.mmate.Constants.DLNA_DEFAULT_COVERART_FILE;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -149,7 +150,13 @@ public class MusixMateApp extends Application {
         try {
             File pathFile = new File(getApplicationContext().getExternalCacheDir(), CoverArtProvider.COVER_ARTS);
             File defaultCoverart = new File(pathFile, DEFAULT_COVERART_FILE);
-            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "no_cover.png");
+            FileUtils.createParentDirs(defaultCoverart);
+            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "no_cover2.png");
+            Files.copy(in, defaultCoverart.toPath(), REPLACE_EXISTING);
+
+            defaultCoverart = new File(pathFile, DLNA_DEFAULT_COVERART_FILE);
+            FileUtils.createParentDirs(defaultCoverart);
+            in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "no_cover2.png");
             Files.copy(in, defaultCoverart.toPath(), REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -244,31 +251,6 @@ public class MusixMateApp extends Application {
             ScanAudioFileWorker.startScan(getApplicationContext());
         }
     }
-
-    /*
-    private void initNoImageCovers() {
-        // init by genre
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_01.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_02.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_03.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_04.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_05.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_06.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_07.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_08.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_09.jpg"));
-        NO_IMAGE_COVERS.add(ApplicationUtils.getAssetsAsBytes(getApplicationContext(), "missing_10.jpg"));
-    }
-
-    public byte[] getDefaultNoCoverart(MusicTag tag) {
-        // 0 - 9
-        if(tag != null) {
-            int index = (int) tag.getId() % 9;
-            return NO_IMAGE_COVERS.get(index).array();
-        }else {
-            return NO_IMAGE_COVERS.get(0).array();
-        }
-    } */
 
     /*
 Provides the SQLite Helper Object among the application

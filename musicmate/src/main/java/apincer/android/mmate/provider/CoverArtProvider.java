@@ -21,7 +21,7 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
-import apincer.android.mmate.worker.MusicMateExecutors;
+import apincer.android.utils.FileUtils;
 
 public final class CoverArtProvider extends ContentProvider {
     private static final String TAG = "CoverArtProvider";
@@ -29,7 +29,7 @@ public final class CoverArtProvider extends ContentProvider {
 
     public static Uri getUriForMusicTag(Context context, MusicTag item) {
             // use music file
-        MusicMateExecutors.parallels(() -> {
+       // MusicMateExecutors.execute(() -> {
             try {
                 // extract cover art during build uri in background
                 File dir = context.getExternalCacheDir();
@@ -38,8 +38,9 @@ public final class CoverArtProvider extends ContentProvider {
 
                 File pathFile = new File(dir, path);
                 if (!pathFile.exists()) {
-                    dir = pathFile.getParentFile();
-                    dir.mkdirs();
+                    FileUtils.createParentDirs(pathFile);
+                    //dir = pathFile.getParentFile();
+                    //dir.mkdirs();
                     // extract covert to cache directory
                     MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
                     FileRepository.extractCoverArt(tag, pathFile);
@@ -47,7 +48,7 @@ public final class CoverArtProvider extends ContentProvider {
             } catch (Exception e) {
                 Log.d(TAG,"getUriForMusicTag: ", e);
             }
-        });
+//});
 
             return new Builder().scheme("content").authority("apincer.mmate.coverart.provider").path(item.getAlbumUniqueKey()).build();
         }

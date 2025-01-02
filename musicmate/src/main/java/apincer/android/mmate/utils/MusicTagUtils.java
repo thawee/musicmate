@@ -197,7 +197,7 @@ public class MusicTagUtils {
     public static String getTrackDRScore(MusicTag tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {
-            text = "-";
+            text = "";
         }else {
             text = String.format(Locale.US, "%.0f", tag.getDynamicRangeScore());
         }
@@ -208,7 +208,7 @@ public class MusicTagUtils {
     public static String getDynamicRangeAsString(MusicTag tag) {
         String text;
         if(tag.getDynamicRange()==0.00) {
-            text = " - dB";
+            text = "";
         }else {
            // text = String.format(Locale.US, "%.2f dB", tag.getDynamicRange());
             text = String.format(Locale.US, "%.0f dB", tag.getDynamicRange());
@@ -450,5 +450,10 @@ public class MusicTagUtils {
 
     public static boolean isAACFile(MusicTag musicTag) {
         return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
+    }
+
+    public static int getChannels(MusicTag tag) {
+        String chStr = tag.getAudioChannels();
+        return 2;
     }
 }

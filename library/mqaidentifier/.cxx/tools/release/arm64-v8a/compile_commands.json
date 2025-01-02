@@ -1,7 +1,7 @@
 [
 {
-  "directory": "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/RelWithDebInfo/3df4d471/arm64-v8a",
-  "command": "/Users/thawee.p/Library/Android/sdk/ndk/27.0.11718014/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ --target=aarch64-none-linux-android30 --sysroot=/Users/thawee.p/Library/Android/sdk/ndk/27.0.11718014/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dmqaidentifier_EXPORTS -I/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC -o CMakeFiles/mqaidentifier.dir/mqaid.cpp.o -c /Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/mqaid.cpp",
+  "directory": "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/.cxx/RelWithDebInfo/15o4s3k1/arm64-v8a",
+  "command": "/Users/thawee.p/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ --target=aarch64-none-linux-android34 --sysroot=/Users/thawee.p/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dmqaidentifier_EXPORTS -I/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/../include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC -o CMakeFiles/mqaidentifier.dir/mqaid.cpp.o -c /Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/mqaid.cpp",
   "file": "/Users/thawee.p/Workspaces/musicmate/library/mqaidentifier/src/main/cpp/mqaid.cpp"
 }
 ]

@@ -736,8 +736,8 @@ public class IconProviders {
         int height = 96;
         String qualityText = trimToEmpty(tag.getMediaQuality());
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
-        int drColor = context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
-        int drsColor = context.getColor(R.color.white);
+        int drColor = context.getColor(R.color.white); //context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
+        int drsColor = context.getColor(R.color.grey200); //context.getColor(R.color.white);
         int drsHexagonColor = context.getColor(R.color.blue_accent200);
         int drsHexagonBroaderColor = context.getColor(R.color.material_color_green_400);
         int blackColor = context.getColor(R.color.black);
@@ -886,25 +886,27 @@ public class IconProviders {
         myCanvas.drawPath(path, paint);
 
         // draw label Dynamic Range Scored, grey color
-        Typeface drsFont = ResourcesCompat.getFont(context, R.font.k2d_bold);
-        int drsTextSize = 48;
-        int drsMargin = 32;
-        Paint drsPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        drsPaint.setColor(drsColor);
-        drsPaint.setTypeface(drsFont);
-        drsPaint.setAntiAlias(true);
-        drsPaint.setDither(true);
-        drsPaint.setTextSize(drsTextSize);
-        drsPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        Rect drsMathRect = new Rect();
-        drsPaint.getTextBounds(drsLabel, 0, 1, drsMathRect);
-        float drsPositionTop = drsMathRect.height() + drsMargin;
-       // float drsPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
-        myCanvas.drawText(drsLabel,
-                drsMargin+padding, // left
-                drsPositionTop, //top
-                drsPaint);
+        if(!isEmpty(drsLabel)) {
+            Typeface drsFont = ResourcesCompat.getFont(context, R.font.k2d_bold);
+            int drsTextSize = 46;
+            int drsMargin = 32;
+            Paint drsPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            drsPaint.setColor(drsColor);
+            drsPaint.setTypeface(drsFont);
+            drsPaint.setAntiAlias(true);
+            drsPaint.setDither(true);
+            drsPaint.setTextSize(drsTextSize);
+            drsPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect drsMathRect = new Rect();
+            drsPaint.getTextBounds(drsLabel, 0, 1, drsMathRect);
+            float drsPositionTop = drsMathRect.height() + drsMargin;
+            // float drsPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+            myCanvas.drawText(drsLabel,
+                    drsMargin + padding, // left
+                    drsPositionTop, //top
+                    drsPaint);
+        }
 
         // draw dr shape
         float barBottomY = bounds.height() - padding;
@@ -923,29 +925,31 @@ public class IconProviders {
         myCanvas.drawPath(path, paint);
 
         // draw label Dynamic Range (dB), grey color
-        Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
-        int letterTextSize = 32; //24; //28;
-        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mLetterPaint.setColor(drColor);
-        mLetterPaint.setTypeface(font);
-        mLetterPaint.setAntiAlias(true);
-        mLetterPaint.setDither(true);
-        mLetterPaint.setTextSize(letterTextSize);
-        mLetterPaint.setTextAlign(Paint.Align.CENTER);
-        // Text draws from the baselineAdd some top padding to center vertically.
-        Rect textMathRect = new Rect();
-        mLetterPaint.getTextBounds(drLabel, 0, 1, textMathRect);
-        float mLetterTop = textMathRect.height() ;
-        float mPositionY= bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
-        float mPositionX = (float) (bounds.width()-64);
-        myCanvas.drawText(drLabel,
-                mPositionX, // left
-                mLetterTop + mPositionY+4, //bounds.exactCenterY(), //top
-                mLetterPaint);
+        if(!isEmpty(drLabel)) {
+            Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
+            int letterTextSize = 36; //24; //28;
+            Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            mLetterPaint.setColor(drColor);
+            mLetterPaint.setTypeface(font);
+            mLetterPaint.setAntiAlias(true);
+            mLetterPaint.setDither(true);
+            mLetterPaint.setTextSize(letterTextSize);
+            mLetterPaint.setTextAlign(Paint.Align.CENTER);
+            // Text draws from the baselineAdd some top padding to center vertically.
+            Rect textMathRect = new Rect();
+            mLetterPaint.getTextBounds(drLabel, 0, 1, textMathRect);
+            float mLetterTop = textMathRect.height();
+            float mPositionY = bounds.exactCenterY(); //-(bounds.exactCenterY()/2);
+            float mPositionX = (float) (bounds.width() - 64);
+            myCanvas.drawText(drLabel,
+                    mPositionX, // left
+                    mLetterTop + mPositionY + 4, //bounds.exactCenterY(), //top
+                    mLetterPaint);
+        }
 
         // draw label "Audiophile", quality color
-        font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
-        letterTextSize = 32; //82;
+        Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
+        int letterTextSize = 32; //82;
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
             // Audiophile
           //  letterTextSize = 32; //82;
@@ -964,7 +968,7 @@ public class IconProviders {
             qualityColor = context.getColor(R.color.quality_no_rating); //recordsColor;
         }
 
-        mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        Paint mLetterPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLetterPaint.setColor(qualityColor);
         mLetterPaint.setTypeface(font);
         mLetterPaint.setAntiAlias(true);
@@ -972,10 +976,10 @@ public class IconProviders {
         mLetterPaint.setTextSize(letterTextSize);
         mLetterPaint.setTextAlign(Paint.Align.CENTER);
         // Text draws from the baselineAdd some top padding to center vertically.
-        textMathRect = new Rect();
+        Rect textMathRect = new Rect();
         mLetterPaint.getTextBounds(label1, 0, 1, textMathRect);
         // mLetterTop = (textMathRect.height() / 6f);
-        mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
+        float mPositionY= bounds.exactCenterY()-16;//+(bounds.exactCenterY()/4);
         myCanvas.drawText(label1,
                 bounds.exactCenterX() +36, //left
                 mPositionY,// - mLetterTop, //bounds.exactCenterY(), // top
@@ -983,7 +987,6 @@ public class IconProviders {
 
         return myBitmap;
     }
-
 
     @Deprecated
     public static Bitmap createSourceQualityIcon(Context context) {

@@ -1,7 +1,5 @@
 package apincer.android.mmate.utils;
 
-import static androidx.core.content.ContextCompat.startActivity;
-
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -13,8 +11,6 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.webkit.MimeTypeMap;
-
-import androidx.fragment.app.FragmentActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +25,6 @@ import apincer.android.mmate.provider.MusicFileProvider;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.TagsActivity;
-import de.vdheide.mp3.ID3v2;
 
 public class ApplicationUtils {
 

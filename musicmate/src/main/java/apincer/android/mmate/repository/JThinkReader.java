@@ -1,7 +1,7 @@
 package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
-import static apincer.android.mmate.repository.MQADetector.detectMQA;
+import static apincer.android.mmate.repository.MusicAnalyser.analystFull;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
@@ -44,7 +44,6 @@ import apincer.android.mmate.utils.StringUtils;
 
 public class JThinkReader extends TagReader{
     private static final String TAG = "JThinkReader";
-    private static final List<MusicTag> EMPTY_LIST = null;
     private final Context context;
 
     public JThinkReader(Context context) {
@@ -69,9 +68,7 @@ public class JThinkReader extends TagReader{
             readFileInfo(context, tag);
             readHeader(read, tag);
             readTags(read, tag);
-            //detectMQA(tag);
             tag.setAudioStartTime(0);
-           // detectMQA(tag,5000); // timeout 5 seconds
             return Collections.singletonList(tag);
         }else {
             MusicTag tag = new MusicTag();
@@ -92,7 +89,8 @@ public class JThinkReader extends TagReader{
             readFileInfo(context, tag);
             readHeader(read, tag);
             readTags(read, tag);
-            detectMQA(tag);
+           // detectMQA(tag);
+            analystFull(tag);
             tag.setAudioStartTime(0);
             return Collections.singletonList(tag);
         }else {

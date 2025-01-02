@@ -135,9 +135,9 @@ public class MusicTag implements Cloneable, Parcelable {
     @DatabaseField
     protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
     @DatabaseField
-    protected double drScore; //gainTrackDR; // Dynamic Range
+    protected double drScore = 0; //gainTrackDR; // Dynamic Range
    @DatabaseField
-   protected double dynamicRange;
+   protected double dynamicRange = 0;
 
     @DatabaseField
     protected String upscaledInd; // -1 = upscaled, 0 - not analyst, 1 - not upscaled, increasing the bit depth from original file

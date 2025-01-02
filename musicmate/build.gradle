@@ -33,8 +33,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 92
-        versionName  "3.9.2"+ versions.buildDate
+        versionCode 94
+        versionName  "3.9.4"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -72,7 +72,7 @@ android {
     }
 
     buildFeatures {
-        dataBinding = true
+        dataBinding = false
     }
     packagingOptions {
         resources {
@@ -124,6 +124,7 @@ dependencies {
     implementation deps.androidx.recyclerView_selection
     implementation deps.androidx.coordinatorlayout
     implementation deps.androidx.appCompat
+    implementation deps.androidx.fragment
     implementation deps.androidx.cardView
     implementation deps.androidx.annotation
     implementation deps.androidx.lifecycle_runtime
@@ -138,7 +139,6 @@ dependencies {
     implementation deps.androidx.drawerlayout
     implementation deps.androidx.viewpager2
 
-    implementation deps.jetbrains.annotations
     // room
     //implementation deps.androidx.room
     //annotationProcessor deps.androidx.room_compiler
@@ -190,10 +190,9 @@ dependencies {
     implementation deps.ui.refresh_header_classics
 
     implementation deps.ui.aboutlibraries
-    //implementation deps.ui.toasty
   //  implementation deps.ui.shapeofview
     implementation deps.ui.photoview
-    implementation deps.ui.alerter
+   // implementation deps.ui.alerter
 
     //others
     implementation deps.eventbus
@@ -201,7 +200,6 @@ dependencies {
     implementation deps.guava
     implementation deps.ffmpeg
     //implementation deps.coverartarchive
-
 
     //retrofit and json Librariess
     implementation deps.google.gson
@@ -217,7 +215,7 @@ dependencies {
     implementation deps.fasterxml.jackson_core
     implementation deps.fasterxml.jackson_databind
 
-    implementation deps.kotlin.stdlib
+    //implementation deps.kotlin.stdlib
     implementation deps.androidx.annotation
     implementation deps.jetbrains.annotations
 
@@ -227,16 +225,14 @@ dependencies {
     implementation deps.jupnp_support
     implementation deps.jetty_server12
     implementation deps.jetty_client12
-   // implementation deps.apache.httpcore
-   // implementation deps.apache.http2core
-    //implementation deps.netty_codec_http
-   // implementation deps.apache.httpclient
-   // implementation deps.okhttp3
-   // implementation deps.okio
-    implementation deps.jtransforms
+   // implementation deps.jtransforms
+
+    // Glide
+    implementation deps.glide.runtime
+    kapt deps.glide.compiler
 
     // Coil
-    implementation deps.coil.runtime2
+   // implementation deps.coil.runtime2
    // implementation deps.coil.transformations
 
     // Local Library
@@ -313,7 +309,9 @@ aboutLibraries {
             ~"io.github.scwang90:refresh-footer-classics",
             ~"io.github.scwang90:refresh-drawable-paint",
             ~"com.afollestad.*",
-            ~"com.github.bumptech.*",
+            ~"com.github.bumptech.glide:annotations",
+            ~"com.github.bumptech.glide:disklrucache",
+            ~"com.github.bumptech.glide:gifdecoder",
             ~"com.arthenica:*",
             ~"io.netty:netty-buffer",
             ~"io.netty:netty-codec",
@@ -324,8 +322,18 @@ aboutLibraries {
             ~"io.netty:netty-transport-native-unix-common",
             ~"org.jupnp:org.jupnp.support",
             ~"com.halfhp.fig:*",
-            ~"com.facebook.shimmer:*",
-            ~"org.jupnp:org.jupnp"
+            ~"com.facebook.shimmer:shimmer",
+            ~"org.jupnp:org.jupnp",
+            ~"com.github.wendykierp:JTransforms",
+            ~"org.eclipse.jetty:jetty-alpn-client",
+            ~"org.eclipse.jetty:jetty-io",
+            ~"org.eclipse.jetty:jetty-http",
+            ~"org.eclipse.jetty:jetty-util",
+            ~"org.eclipse.jetty.compression:jetty-compression-common",
+            ~"org.eclipse.jetty.compression:jetty-compression-gzip",
+            ~"com.squareup.okhttp3:okhttp",
+            ~"pl.edu.icm:JLargeArrays",
+            ~"org.apache.commons:commons-math3"
     ]
 }
 

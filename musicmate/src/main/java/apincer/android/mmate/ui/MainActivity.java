@@ -54,6 +54,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
@@ -95,16 +100,15 @@ import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
-import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
-import apincer.android.mmate.repository.FFMpegWriter;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.repository.TagWriter;
+import apincer.android.mmate.ui.glide.GlideApp;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -115,7 +119,6 @@ import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PLSBuilder;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mmate.utils.ToastHelper;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
@@ -126,10 +129,6 @@ import cn.iwgang.simplifyspan.other.SpecialGravity;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialLabelUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
-import coil.Coil;
-import coil.ImageLoader;
-import coil.request.ImageRequest;
-import coil.target.Target;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -282,27 +281,12 @@ public class MainActivity extends AppCompatActivity {
                         AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, Constants.STATUS_SUCCESS, tag);
                         EventBus.getDefault().postSticky(message);
                         updateStatus(itemsView, statusList, tag, "Deleted");
-                       // statusList.put(tag, "Deleted");
                     }else {
-                      //  statusList.put(tag, "Fail");
                         updateStatus(itemsView, statusList, tag, "Fail");
                     }
-                   /* runOnUiThread(() -> {
-                        int pct = progressBar.getProgress();
-                        progressBar.setProgress((int) (pct + rate));
-                        progressBar.invalidate();
-                        itemsView.invalidateViews();
-                    }); */
                 } catch (Exception e) {
                     Log.e(TAG,"deleteFile",e);
-                   // statusList.put(tag, "Fail");
                     updateStatus(itemsView, statusList, tag, "Fail");
-                   /* runOnUiThread(() -> {
-                        int pct = progressBar.getProgress();
-                        progressBar.setProgress((int) (pct + rate));
-                        progressBar.invalidate();
-                        itemsView.invalidateViews();
-                    });*/
                 }
                 finally {
                     updateProgressBar(progressBar, cnt*rate);
@@ -392,73 +376,24 @@ public class MainActivity extends AppCompatActivity {
 
             btnOK.setEnabled(false);
             btnOK.setVisibility(View.GONE);
-
-          //  final int len = selections.size();
-          //  AtomicInteger count = new AtomicInteger(0);
-         /*   MusicMateExecutors.executeParallels(selections, 2, (Action<MusicTag>) tag -> {
-                try {
-                   // int currentCount = count.incrementAndGet();
-                    Log.d(TAG, "doSaveMediaItem: "+tag.getPath());
-                    statusList.put(tag, "Moving");
-                    MusicMateExecutors.ui(itemsView::invalidateViews);
-                   // runOnUiThread(itemsView::invalidateViews);
-                    boolean status = repos.importAudioFile(tag);
-                    if(status) {
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, tag);
-                        EventBus.getDefault().postSticky(message);
-                        statusList.put(tag, "Done");
-                    }else {
-                        statusList.put(tag, "Fail");
-                    }
-                } catch (Exception e) {
-                    statusList.put(tag, "Fail");
-                    Log.e(TAG, "doSaveMediaItem", e);
-                }
-                updateProgressBar(progressBar, itemsView, rate);
-            }); */
             busy = false;
-            //busy = true;
             AtomicInteger count = new AtomicInteger(0);
             for(MusicTag tag: selections) {
                 MusicMateExecutors.parallels(() -> {
                     int cnt = count.incrementAndGet();
                     try {
-                        //statusList.put(tag, "Moving");
                         updateStatus(itemsView, statusList, tag, "Moving");
-                       /* runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
-                            progressBar.invalidate();
-                            itemsView.invalidateViews();
-                        }); */
                         boolean status = repos.importAudioFile(tag);
                         if(status) {
                             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, Constants.STATUS_SUCCESS, tag);
                             EventBus.getDefault().postSticky(message);
-                           // statusList.put(tag, "Done");
                             updateStatus(itemsView, statusList, tag, "Done");
                         }else {
-                           // statusList.put(tag, "Fail");
                             updateStatus(itemsView, statusList, tag, "Fail");
                         }
-                       /* runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
-                            progressBar.invalidate();
-                            itemsView.invalidateViews();
-                        }); */
                     } catch (Exception e) {
                         Log.e(TAG,"importFile",e);
                         updateStatus(itemsView, statusList, tag, "Fail");
-                       /* try {
-                            runOnUiThread(() -> {
-                                statusList.put(tag, "Fail");
-                                int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct + rate));
-                                progressBar.invalidate();
-                                itemsView.invalidateViews();
-                            });
-                        }catch (Exception ignored) {} */
                     }finally {
                         updateProgressBar(progressBar, cnt*rate);
                     }
@@ -471,15 +406,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateProgressBar(ProgressBar progressBar, double rate) {
-       /* MusicMateExecutors.ui(() -> {
-            int pct = progressBar.getProgress();
-            progressBar.setProgress((int) (pct + rate));
-            progressBar.invalidate();
-            itemsView.invalidateViews();
-        }); */
         runOnUiThread(() -> {
-            //int pct = progressBar.getProgress();
-           // System.out.println("updateProgressBar: "+rate);
             progressBar.setProgress((int) (rate));
             progressBar.invalidate();
         });
@@ -501,60 +428,46 @@ public class MainActivity extends AppCompatActivity {
             setUpNowPlayingView();
         }
         nowPlaying = song;
-
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                //.data(MusicTagUtils.getCoverArt(this, song))
-                //.data(MusicCoverArtProvider.getUriForMusicTag(song))
-                .data(CoverArtProvider.getUriForMusicTag(getApplicationContext(), song))
-                .allowHardware(false)
-                //.placeholder(R.drawable.progress)
-              //  .error(R.drawable.ic_broken_image_black_24dp)
-               // .error(R.drawable.no_image0)
-                .target(new Target() {
+        GlideApp.with(this)
+                .load(song)
+                .placeholder(R.drawable.progress) // Set a placeholder image
+                .diskCacheStrategy(DiskCacheStrategy.DATA) // Cache all versions of the image
+                .skipMemoryCache(true) // Skip memory cache
+               // .override(240, 240) // Resize the image
+               // .transform(new CircleCrop()) // Apply a transformation (e.g., circle crop)
+                .addListener(new RequestListener<>() {
                     @Override
-                    public void onStart(@Nullable Drawable drawable) {
-                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.progress));
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, @NonNull Target<Drawable> target, boolean isFirstResource) {
+                        return false;
                     }
 
                     @Override
-                    public void onError(@Nullable Drawable drawable) {
-                        nowPlayingCoverArt.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.no_cover2));
-                    }
-
-                    @Override
-                    public void onSuccess(@NonNull Drawable drawable) {
-                        try {
-                            nowPlayingCoverArt.setImageDrawable(drawable);
-                            MusicMateExecutors.ui(() -> {
-                                Bitmap bmp = BitmapHelper.drawableToBitmap(drawable);
-                                Palette palette = Palette.from(bmp).generate();
-                                int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
-                                int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(),R.color.transparent));
-                                runOnUiThread(() -> {
-                                    try {
-                                        nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
-                                        nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
-                                        nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
-                                    }catch (Exception ignored){}
-                                });
-                            });
-                        }catch (Exception ex) {
-                            Log.e(TAG, "doShowNowPlayingSongFAB", ex);
-                        }
+                    public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model, Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
+                        Bitmap bmp = BitmapHelper.drawableToBitmap(resource);
+                        Palette palette = Palette.from(bmp).generate();
+                        int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(), R.color.transparent));
+                        int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(), R.color.transparent));
+                        runOnUiThread(() -> {
+                            try {
+                                nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
+                                nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
+                                nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
+                            } catch (Exception ignored) {
+                            }
+                        });
+                        return false; // Return false to allow Glide to handle the resource as well
                     }
                 })
-                .build();
-        imageLoader.enqueue(request);
+                .into(nowPlayingCoverArt);
+
         nowPlayingTitle.setText(song.getTitle());
 
-        imageLoader = Coil.imageLoader(getApplicationContext());
-        request = new ImageRequest.Builder(getApplicationContext())
-                .data(IconProviders.getResolutionIcon(getApplicationContext(), song))
-                .crossfade(false)
-                .target(nowPlayingType)
-                .build();
-        imageLoader.enqueue(request);
+        GlideApp.with(this)
+                .load(IconProviders.getResolutionIcon(getApplicationContext(), song))
+                .skipMemoryCache(false) // Skip memory cache
+                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
+                .into(nowPlayingType);
+
         PlayerInfo player = MusixMateApp.getPlayerControl().getPlayerInfo();
         if(player!=null) {
             nowPlayingPlayer.setImageDrawable(player.getPlayerIconDrawable());
@@ -627,12 +540,6 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 })
-               /* .setListener(new ViewPropertyAnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(@NonNull View view) {
-                        view.setVisibility(View.GONE);
-                    }
-                }) */
                 .start());
     }
 
@@ -1576,7 +1483,13 @@ public class MainActivity extends AppCompatActivity {
     private void doExportPlaylists() {
         MusicMateExecutors.execute(() -> {
             PLSBuilder.exportPlaylists(getApplicationContext());
-            runOnUiThread(() -> ToastHelper.showActionMessage(MainActivity.this, "", "Playlists are created successfully."));
+            runOnUiThread(() -> {
+                Snackbar snackbar = Snackbar.make(mSearchView,"Custom Snackbar",Snackbar.LENGTH_SHORT);
+                snackbar.setAction("Dismiss", view -> snackbar.dismiss());
+
+                snackbar.setActionTextColor(Color.BLUE);
+                snackbar.show();
+            });
         });
     }
 

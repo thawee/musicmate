@@ -11,7 +11,7 @@ ext.versions = [
         minSdk             : 34, // support running on android 11 ot higher
         targetSdk          : 34, //33, // required 33 for photopicker, android 13
         compileSdk         : 35, //34, //33, // required 33 for photopicker
-        buildTools         : '36.0.0-rc1', //''35.0.0', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
+        buildTools         : '36.0.0-rc3', //''35.0.0', //''34.0.0', //''33.0.1', //'33.0.0-rc1', //'32.0.0', //'32.0.0-rc1', // '31.0.0', //''30.0.3',
         //https://plugins.gradle.org/plugin/org.jetbrains.kotlin.android
         kotlin             : '2.1.0', //''2.0.21', //'2.0.0', //''1.9.24', //''1.8.22', //''1.7.22', //''1.7.10', //''1.7.0', //''1.6.21', //''1.6.20', //''1.6.10',  //'1.5.31',
         buildDate          : "-" + getDate(),
@@ -57,6 +57,8 @@ apache.commons_text = 'org.apache.commons:commons-text:1.13.0'
 deps.apache = apache
 
 def androidx = [:]
+//https://developer.android.com/jetpack/androidx/versions
+
 //https://developer.android.com/jetpack/androidx/releases/core
 androidx.core = "androidx.core:core:1.13.1" //
 //https://developer.android.com/jetpack/androidx/releases/activity
@@ -65,6 +67,7 @@ androidx.activity = "androidx.activity:activity:1.9.3" //1.4.0"
 androidx.annotation = "androidx.annotation:annotation:1.9.1"
 //https://developer.android.com/jetpack/androidx/releases/appcompat
 androidx.appCompat = "androidx.appcompat:appcompat:1.7.0" //1.6.1"
+androidx.fragment = "androidx.fragment:fragment:1.8.5"
 //https://developer.android.com/jetpack/androidx/releases/cardview
 androidx.cardView = "androidx.cardview:cardview:1.0.0"
 //https://developer.android.com/jetpack/androidx/releases/constraintlayout
@@ -310,8 +313,8 @@ coil.transformations = "com.github.Commit451.coil-transformations:transformation
 deps.coil = coil
 
 def glide = [:]
-glide.runtime = "com.github.bumptech.glide:glide:4.12.0" //23/01/2020
-glide.compiler = "com.github.bumptech.glide:compiler:4.12.0" //23/01/2020
+glide.runtime = "com.github.bumptech.glide:glide:4.16.0" //23/01/2020
+glide.compiler = "com.github.bumptech.glide:compiler:4.16.0" //23/01/2020
 deps.glide = glide
 
 deps.dexmaker = "com.linkedin.dexmaker:dexmaker-mockito:2.25.0" //23/06/2019
@@ -366,8 +369,8 @@ deps.jupnp_android = 'org.jupnp:org.jupnp.android:3.0.2'
 deps.jupnp_support =  'org.jupnp:org.jupnp.support:3.0.2'
 //https://netty.io/
 deps.netty_codec_http = 'io.netty:netty-codec-http:4.1.116.Final'
-deps.jetty_server12 = 'org.eclipse.jetty:jetty-server:12.1.0.alpha0'
-deps.jetty_client12 = 'org.eclipse.jetty:jetty-client:12.1.0.alpha0'
+deps.jetty_server12 = 'org.eclipse.jetty:jetty-server:12.1.0.alpha1'
+deps.jetty_client12 = 'org.eclipse.jetty:jetty-client:12.1.0.alpha1'
 deps.filepicker = 'io.github.tutorialsandroid:filepicker:9.2.5'
 // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 deps.okhttp3 = 'com.squareup.okhttp3:okhttp:4.12.0'

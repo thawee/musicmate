@@ -13,6 +13,8 @@ import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,29 @@ public class FileRepository {
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);
         }
+    }
+
+    public static InputStream getCoverArt(Context context, MusicTag tag) {
+        if(tag == null) return null;
+        try {
+            String path = tag.getPath();
+            File coverArtFile = getFolderCoverArt(path);
+            if(coverArtFile!=null) {
+                return new FileInputStream(coverArtFile);
+            }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
+                String coverFile = CoverArtProvider.COVER_ARTS +tag.getAlbumUniqueKey()+".png";
+                File dir =  context.getExternalCacheDir();
+                File pathFile = new File(dir, coverFile);
+                if(!pathFile.exists()) {
+                    FileUtils.createParentDirs(pathFile);
+                    FFMpegHelper.extractCoverArt(path, pathFile);
+                }
+                return new FileInputStream(pathFile);
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "getCoverArt",e);
+        }
+        return null;
     }
 
     public void extractCoverArt(MusicTag tag) {

@@ -1,14 +1,12 @@
 package apincer.android.mmate.repository;
 
 import static java.util.Arrays.sort;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_BAD;
-import static apincer.android.mmate.Constants.IND_RESAMPLED_GOOD;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_INVALID;
 import static apincer.android.mmate.Constants.IND_RESAMPLED_NONE;
-import static apincer.android.mmate.Constants.IND_UPSCALED_BAD;
-import static apincer.android.mmate.Constants.IND_UPSCALED_GOOD;
 import static apincer.android.mmate.Constants.IND_UPSCALED_INVALID;
 import static apincer.android.mmate.Constants.IND_UPSCALED_NONE;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.toLong;
 
 import android.media.AudioFormat;
 import android.media.MediaCodec;
@@ -16,28 +14,34 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.util.Log;
 
-import org.jtransforms.fft.DoubleFFT_1D;
-
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mqaidentifier.NativeLib;
+
 public class MusicAnalyser {
     private static final String TAG = "MusicAnalyser";
-    // private static final double BLOCKSIZE_SECONDS = 0.2; //3;
-   // private static final double UPMOST_BLOCKS_RATIO = 1; //0.2; //0.2;
+    public static final String NOT_FOUND = "NF";
+    public static final String NOT_SCAN = "NS";
 
     private static final double BLOCKSIZE_SECONDS = 3; // Example value
     private static final int MIN_BLOCK_COUNT = 1; // Example value
     private static final double UPMOST_BLOCKS_RATIO = 0.2; // Example value
     private static final int NTH_HIGHEST_PEAK = 2; // Example value
-   // private static final double MIN_DURATION = MIN_BLOCK_COUNT * BLOCKSIZE_SECONDS;
 
     public static final double MAX_DR_8BIT = 49.8;
     public static final double MAX_DR_16BIT = 96.33;
     public static final double MAX_DR_24BIT = 144.49;
+
+    public static final long MQA_MAGIC_WORD = 0xbe0498c88L;
 
     public double getDynamicRange() {
         return dynamicRange;
@@ -72,32 +76,85 @@ public class MusicAnalyser {
     private boolean isMQAStudio = false;
     private long originalSampleRate;
 
-   // public boolean isSupported(MusicTag tag) {
-    //    return true; //MusicTagUtils.isFLACFile(tag);
-   // }
+    public static boolean analystFull(MusicTag tag) {
+        MusicAnalyser analyser = new MusicAnalyser();
+        analyser.analyst(tag);
+        tag.setDynamicRange(analyser.getDynamicRange());
+        tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
+        if (MusicTagUtils.isFLACFile(tag)) {
+            analyser.detectMQANative(tag);
+            if(analyser.isMQAStudio) {
+                tag.setMqaInd("MQA Studio");
+            }else if(analyser.isMQA) {
+                tag.setMqaInd("MQA");
+            }else {
+                tag.setMqaInd(NOT_FOUND);
+            }
+            tag.setMqaSampleRate(analyser.getOriginalSampleRate());
+        }
+        return true;
+    }
+
+    private void detectMQANative(MusicTag tag) {
+
+        if(!NOT_SCAN.equals(tag.getMqaInd())) return; //prevent re scan
+        try {
+            NativeLib lib = new NativeLib();
+            String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(tag.getPath()));
+            // MQA Studio|96000
+            // MQA|96000
+            if(!isEmpty(mqaInfo) && mqaInfo.contains("|")) {
+                String[] tags = mqaInfo.split("\\|", -1);
+               // tag.setMqaInd(trimToEmpty(tags[0]));
+               // tag.setMqaSampleRate(toLong(tags[1]));
+                isMQA = true;
+                originalSampleRate = toLong(tags[1]);
+                if(tags[0].contains("Studio")) {
+                    isMQAStudio = true;
+                }
+                //  tag.setMqaScanned(true);
+            }else {
+                isMQA = false;
+                isMQAStudio = false;
+              //  tag.setMqaInd(NOT_FOUND);
+                //   tag.setMqaScanned(true);
+            }
+        }catch (Exception ex) {
+            isMQA = false;
+            isMQAStudio = false;
+           // tag.setMqaInd(NOT_FOUND);
+            // tag.setMqaScanned(true);
+            Log.e(TAG, "detectMQA", ex);
+        }
+    }
 
     public boolean analyst(MusicTag tag) {
-        int durationInSeconds = 20;
-        double[][] samples = extractPCM(tag.getPath(), durationInSeconds);
-
-        if(samples != null) {
-
-            // Decode input FLAC file
-            //  File file = new File(tag.getPath());
-
-            // try (FlacDecoder dec = new FlacDecoder(file)) {
-            //    int duration = 16; // seconds
-            //  int[][] samples = getSamples(dec, duration);
+        int durationInSeconds = 30; //20;
             try {
-              //  double a = calculateDynamicRange(samples, (int) tag.getAudioSampleRate());
-                calculateDynamicRange(samples);
+                byte[] audioData = getAudioBytes(tag.getPath(), durationInSeconds);
+               // int[][] samples = convertToSamples(audioData, MusicTagUtils.getChannels(tag), tag.audioBitsDepth);
+                        //  double a = calculateDynamicRange(samples, (int) tag.getAudioSampleRate());
+                //calculateDynamicRange(samples);
+                dynamicRange = calculateDynamicRange(audioData, tag.audioBitsDepth);
+
                 //dynamicRange(samples, (int)tag.getAudioSampleRate(), samples[0].length);
                 //calculateDynamicRangeScore(this.dynamicRange, getMaxDynamicRange(tag.getAudioBitsDepth()));
-                calculateDRScore(samples, durationInSeconds, (int) tag.getAudioSampleRate(), 2);
-                upscaled = checkUpscaled(samples) ? IND_UPSCALED_BAD : IND_UPSCALED_GOOD;
-                resampled = checkResampled(samples, tag.getAudioSampleRate()) ? IND_RESAMPLED_BAD : IND_RESAMPLED_GOOD;
+               // calculateDRScore(samples, durationInSeconds, (int) tag.getAudioSampleRate(), 2);
+               // upscaled = checkUpscaled(samples) ? IND_UPSCALED_BAD : IND_UPSCALED_GOOD;
+               // resampled = checkResampled(samples, tag.getAudioSampleRate()) ? IND_RESAMPLED_BAD : IND_RESAMPLED_GOOD;
 
-                checkMQA(samples, tag.getAudioBitsDepth(), tag.getAudioSampleRate());
+             //   byte[] audioData = getAudioBytes(tag.getPath(), durationInSeconds);
+              //  double dr = calculateDynamicRange(audioData, tag.getAudioBitsDepth());
+              //  dynamicRangeScore = calculateDynamicRangeScore(audioData, tag.getAudioBitsDepth());
+                int windowSizeMs = 50; // Window size for RMS calculation in milliseconds
+                double noiseFloor = -60; // Noise floor in dB
+                dynamicRangeScore = calculateDynamicRangeMeter(audioData, tag.getAudioBitsDepth(), (int) tag.getAudioSampleRate(), windowSizeMs, noiseFloor);
+
+               // System.out.println("Dynamic Range: " + dr + " dB");
+                //System.out.println("DR: "+getDynamicRange()+", New DR:"+dr);
+                //checkMQA(audioData, tag.getAudioBitsDepth(), tag.getAudioSampleRate());
+               // boolean mqa = detectMQA(audioData, tag.getAudioBitsDepth());
+               // System.out.println("MQA:" + mqa);
                 System.out.println("DR: " + getDynamicRange() + ", DRS: " + getDynamicRangeScore() + ", MQA: " + isMQA + ",  MQA Studio: " + isMQAStudio + ", OriginalSampleRate: " + getOriginalSampleRate());
                 return true;
             } catch (IllegalArgumentException e) {
@@ -117,8 +174,75 @@ public class MusicAnalyser {
                 Log.e(TAG, "analyst", e);
                 return false;
             }
+    }
+
+    public static byte[] getAudioBytes(String audioFile, int durationInSeconds) throws IOException {
+        MediaExtractor extractor = new MediaExtractor();
+        extractor.setDataSource(audioFile);
+
+        MediaFormat format = null;
+        for (int i = 0; i < extractor.getTrackCount(); i++) {
+            format = extractor.getTrackFormat(i);
+            String mime = format.getString(MediaFormat.KEY_MIME);
+            if (mime!= null && mime.startsWith("audio/")) {
+                extractor.selectTrack(i);
+                break;
+            }
         }
-        return false;
+
+        if (format == null) {
+            throw new IOException("No audio track found in file.");
+        }
+
+        MediaCodec codec = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME));
+        codec.configure(format, null, null, 0);
+        codec.start();
+
+        int sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+        int bitPerSample =  getBitsPerSample(format);
+        int channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+        int bufferSize = sampleRate * channels * (bitPerSample / 8) * durationInSeconds;
+
+        MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        boolean isEOS = false;
+
+        while (!isEOS) {
+            int inIndex = codec.dequeueInputBuffer(10000);
+            if (inIndex >= 0) {
+                ByteBuffer buffer = codec.getInputBuffer(inIndex);
+                if (buffer != null) {
+                    int sampleSize = extractor.readSampleData(buffer, 0);
+                    if (sampleSize < 0) {
+                        codec.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                        isEOS = true;
+                    } else {
+                        codec.queueInputBuffer(inIndex, 0, sampleSize, extractor.getSampleTime(), 0);
+                        extractor.advance();
+                    }
+                }
+            }
+
+            int outIndex = codec.dequeueOutputBuffer(info, 10000);
+            while (outIndex >= 0) {
+                ByteBuffer buffer = codec.getOutputBuffer(outIndex);
+                if (buffer != null) {
+                    byte[] chunk = new byte[info.size];
+                    buffer.get(chunk);
+                    buffer.clear();
+                    byteArrayOutputStream.write(chunk);
+                }
+                codec.releaseOutputBuffer(outIndex, false);
+                outIndex = codec.dequeueOutputBuffer(info, 0);
+            }
+            if (byteArrayOutputStream.size() > bufferSize) break;
+        }
+
+        codec.stop();
+        codec.release();
+        extractor.release();
+
+        return byteArrayOutputStream.toByteArray();
     }
 
     public double[][] extractPCM(String inputFilePath, int durationInSeconds) {
@@ -195,52 +319,13 @@ public class MusicAnalyser {
         return pcmData;
     }
 
-    private double getMaxDynamicRange(int audioBitsDepth) {
-        if (audioBitsDepth >= 24) {
-            return MAX_DR_24BIT;
-        }else if (audioBitsDepth >= 16) {
-            return MAX_DR_16BIT;
-        }else {
-            return  MAX_DR_8BIT;
-        }
-    }
-
-    /*
-    audio data (2D array: channels x samples)
-    /*
-    /*
-    private @NonNull int[][] getSamples(FlacDecoder decoder, int duration) throws IOException {
-        // Handle metadata header blocks
-        while (decoder.readAndHandleMetadataBlock() != null) ;
-        StreamInfo streamInfo = decoder.streamInfo;
-        if (streamInfo.sampleDepth % 8 != 0)
-            throw new UnsupportedOperationException("Only whole-byte sample depth supported");
-
-        int sampleRate = streamInfo.sampleRate;
-        int numSamples = duration * sampleRate; //20 * sampleRate;  // 20 seconds duration
-
-        // Initialize the sample segment array
-        int[][] samples = new int[streamInfo.numChannels][numSamples];
-
-        int totalSamples =0;
-        while (totalSamples < numSamples) {
-            int samplesRead = decoder.readAudioBlock(samples, 0);
-            if (samplesRead == 0) break; // End of stream
-            totalSamples += samplesRead;
-        }
-
-        decoder.close();
-
-        return samples;
-    } */
-
-    private boolean checkUpscaled(double[][] samples) {
+    private boolean checkUpscaled(int[][] samples) {
         int threshold = 256; // Threshold for detecting upscaling (for 16-bit to 24-bit)
         int upscaleCount = 0;
         int totalSamples = 0;
 
-        for (double[] channel : samples) {
-            for (double sample : channel) {
+        for (int[] channel : samples) {
+            for (int sample : channel) {
                 // Check if the sample value is a multiple of the threshold
                 if (sample % threshold == 0) {
                     upscaleCount++;
@@ -252,207 +337,6 @@ public class MusicAnalyser {
         // If a significant portion of samples are multiples of the threshold, it might be upscaled
         double upscaleRatio = (double) upscaleCount / totalSamples;
         return upscaleRatio ==1 ; //> 0.5; //0.5; // Adjust this ratio based on your criteria
-    }
-
-    private boolean checkResampled(double[][] samples, long newSampleRate) {
-        int totalSamples = samples.length;
-        double[] fftData = new double[totalSamples];
-        DoubleFFT_1D fft = new DoubleFFT_1D(totalSamples);
-
-        // Convert samples to double and perform FFT on the first channel
-        System.arraycopy(samples[0], 0, fftData, 0, totalSamples);
-        fft.realForward(fftData);
-
-        // Analyze the frequency spectrum
-        double maxFrequency = newSampleRate / 2.0;
-        double frequencyResolution = newSampleRate / (double) totalSamples;
-        boolean resampled = false;
-
-        for (int i = 0; i < totalSamples / 2; i++) {
-            double frequency = i * frequencyResolution;
-            if (frequency > maxFrequency / 2.0 && fftData[i] > 0.1) { // Threshold for detecting aliasing
-                resampled = true;
-                break;
-            }
-        }
-
-        return resampled;
-    }
-
-   private void calculateDynamicRange(double[][] samples) {
-            double minSample =  Integer.MAX_VALUE;
-            double maxSample = Integer.MIN_VALUE;
-            boolean samplesProcessed = false;
-
-            for (double[] channelSamples : samples) {
-                for (double sample : channelSamples) {
-                    samplesProcessed = true;
-                    double absSample = Math.abs(sample);
-                    absSample = absSample==0?1:absSample;
-                    if (absSample < minSample) {
-                        minSample = absSample;
-                    }
-                    if (absSample > maxSample) {
-                        maxSample = absSample;
-                    }
-                }
-            }
-
-            if (samplesProcessed) {
-                this.dynamicRange = roundUp(20 * Math.log10(maxSample / minSample), 2);
-            }
-    }
-
-    private void calculateDRScore(double[][] samples, int duration, int sampleRate, int channels) {//} MusicTag tag)   {
-       long frames = (long) duration * sampleRate;
-
-        int blockSize = (int) (BLOCKSIZE_SECONDS * sampleRate);
-        int totalBlocks = (int) Math.ceil((double) frames / blockSize);
-
-        double[][] blockRms = new double[totalBlocks][channels];
-        double[][] blockPeak = new double[totalBlocks][channels];
-
-        analyzeBlockLevels(samples, totalBlocks, blockSize, channels, blockRms, blockPeak, sampleRate);
-
-        double[] peakPressure = calculatePeakPressure(blockPeak, channels);
-        double[] pre2 = calculateUpmostBlocksRms(blockRms, totalBlocks, channels);
-
-        double[] drScore = calculateDrScore(peakPressure, pre2, channels);
-        updateDynamicRangeScore(drScore);
-        /*
-       // double[] rmsPressure = new double[channels];
-        double[] peakPressure = new double[channels];
-        for (int i = 0; i < channels; i++) {
-            int finalI = i;
-           // rmsPressure[i] = Math.sqrt(Arrays.stream(blockRms).mapToDouble(b -> b[finalI] * b[finalI]).average().orElse(0));
-            peakPressure[i] = Arrays.stream(blockPeak).mapToDouble(b -> b[finalI]).max().orElse(0);
-        }
-
-        double upmostBlocks = (totalBlocks * UPMOST_BLOCKS_RATIO);
-        double[][] upmostBlocksRms = Arrays.copyOfRange(blockRms, (int)(totalBlocks - upmostBlocks), totalBlocks);
-
-        double[] pre2 = new double[channels];
-        for (int i = 0; i < channels; i++) {
-            int finalI = i;
-            double pre0 = Arrays.stream(upmostBlocksRms).mapToDouble(b -> b[finalI] * b[finalI]).sum();
-            pre2[i] = Math.sqrt(pre0 / upmostBlocks);
-        }
-
-        double[] drScore = new double[channels];
-        for (int i = 0; i < channels; i++) {
-            drScore[i] = 20 * Math.log10(peakPressure[i] / pre2[i]);
-           // System.out.println("dr: "+drScore[i]);
-            if(drScore[i] > dynamicRangeScore) {
-                dynamicRangeScore = roundUp(drScore[i],0);
-            }
-        } */
-    }
-
-    private double[] calculatePeakPressure(double[][] blockPeak, int channels) {
-        double[] peakPressure = new double[channels];
-        for (int i = 0; i < channels; i++) {
-            int finalI = i;
-            peakPressure[i] = Arrays.stream(blockPeak).mapToDouble(b -> b[finalI]).max().orElse(0);
-        }
-        return peakPressure;
-    }
-
-    private double[] calculateUpmostBlocksRms(double[][] blockRms, int totalBlocks, int channels) {
-        double upmostBlocks = totalBlocks * UPMOST_BLOCKS_RATIO;
-        double[][] upmostBlocksRms = Arrays.copyOfRange(blockRms, (int) (totalBlocks - upmostBlocks), totalBlocks);
-
-        double[] pre2 = new double[channels];
-        for (int i = 0; i < channels; i++) {
-            int finalI = i;
-            double pre0 = Arrays.stream(upmostBlocksRms).mapToDouble(b -> b[finalI] * b[finalI]).sum();
-            pre2[i] = Math.sqrt(pre0 / upmostBlocks);
-        }
-        return pre2;
-    }
-
-    private double[] calculateDrScore(double[] peakPressure, double[] pre2, int channels) {
-        double[] drScore = new double[channels];
-        for (int i = 0; i < channels; i++) {
-            drScore[i] = 20 * Math.log10(peakPressure[i] / pre2[i]);
-        }
-        return drScore;
-    }
-
-    private void updateDynamicRangeScore(double[] drScore) {
-        for (double score : drScore) {
-            if (score > dynamicRangeScore) {
-                dynamicRangeScore = roundUp(score, 0);
-            }
-        }
-    }
-
-    @Deprecated
-    public void dynamicRange(int[][] data, int sampleRate, int frames) throws Exception {
-        int blocksize = (int) Math.round(BLOCKSIZE_SECONDS * sampleRate);
-        int totalBlocks = (int) Math.ceil((double) frames / blocksize);
-        if (totalBlocks < MIN_BLOCK_COUNT) {
-            throw new Exception("File cannot be shorter than " + (MIN_BLOCK_COUNT * BLOCKSIZE_SECONDS) + " seconds");
-        }
-
-        double[][][] blockLevels = analyzeBlockLevels(data, totalBlocks, blocksize);
-        double[][] blockRms = blockLevels[0];
-        double[][] blockPeak = blockLevels[1];
-        double rmsPressure = Math.sqrt(Arrays.stream(blockRms).flatMapToDouble(Arrays::stream).map(x -> x * x).average().orElse(0));
-        double peakPressure = Arrays.stream(blockPeak).flatMapToDouble(Arrays::stream).max().orElse(0);
-
-        int upmostBlocks = (int) Math.round(totalBlocks * UPMOST_BLOCKS_RATIO);
-        double[] upmostBlocksRms = Arrays.stream(blockRms).flatMapToDouble(Arrays::stream).sorted().skip(blockRms.length - upmostBlocks).toArray();
-        double pre0 = Arrays.stream(upmostBlocksRms).map(x -> x * x).sum();
-        double pre2 = Math.sqrt(pre0 / upmostBlocks);
-
-        double[] drScore = new double[data.length];
-        for (int i = 0; i < data.length; i++) {
-            double peak = blockPeak[blockPeak.length - NTH_HIGHEST_PEAK][i];
-            drScore[i] = pre2 > 0 ? 20 * Math.log10(peak / pre2) : 0.0;
-        }
-        System.out.println("Done");
-    }
-
-    @Deprecated
-    public static double calculateDynamicRange(double[][] data, int sampleRate, int period) {
-        int BLOCK_SIZE_MS = period * 1000; //3000; // Block size in milliseconds
-
-        int blockSize = (sampleRate * BLOCK_SIZE_MS) / 1000; // Convert block size to samples
-        int totalBlocks = (int) Math.ceil((double) data[0].length / blockSize);
-
-        double[][] blockRms = new double[totalBlocks][data.length];
-        double[][] blockPeak = new double[totalBlocks][data.length];
-
-        for (int blockIndex = 0; blockIndex < totalBlocks; blockIndex++) {
-            int start = blockIndex * blockSize;
-            int end = Math.min(start + blockSize, data[0].length);
-
-            for (int ch = 0; ch < data.length; ch++) {
-                double[] block = Arrays.copyOfRange(data[ch], start, end);
-                blockRms[blockIndex][ch] = calculateRMS(block);
-                blockPeak[blockIndex][ch] = calculatePeak(block);
-            }
-        }
-
-        double[] rmsValues = Arrays.stream(blockRms).flatMapToDouble(Arrays::stream).toArray();
-        double[] peakValues = Arrays.stream(blockPeak).flatMapToDouble(Arrays::stream).toArray();
-
-        double rmsMean = Arrays.stream(rmsValues).average().orElse(0);
-        double peakMax = Arrays.stream(peakValues).max().orElse(0);
-
-        return 20 * Math.log10(peakMax / rmsMean);
-    }
-
-    private static double calculateRMS(double[] block) {
-        double sum = 0;
-        for (double sample : block) {
-            sum += sample * sample;
-        }
-        return Math.sqrt(sum / block.length);
-    }
-
-    private static double calculatePeak(double[] block) {
-        return Arrays.stream(block).map(Math::abs).max().orElse(0);
     }
 
     private double getSampleRate(double sample, int sampleFormat) {
@@ -482,140 +366,159 @@ public class MusicAnalyser {
         }
     }
 
-    public double[][][] analyzeBlockLevels(int[][] data, int totalBlocks, int blocksize) {
-        int channels = data.length;
-        double[][] blockRms = new double[totalBlocks][channels];
-        double[][] blockPeak = new double[totalBlocks][channels];
-
-        for (int nn = 0; nn < totalBlocks; nn++) {
-            int start = nn * blocksize;
-            int end = Math.min(start + blocksize, data[0].length);
-            int[][] block = new int[channels][end - start];
-
-            for (int ch = 0; ch < channels; ch++) {
-                System.arraycopy(data[ch], start, block[ch], 0, end - start);
-                double[] interim = Arrays.stream(block[ch]).mapToDouble(x -> 2 * Math.pow(Math.abs(x), 2)).toArray();
-                blockRms[nn][ch] = Math.sqrt(Arrays.stream(interim).average().orElse(0));
-                blockPeak[nn][ch] = Arrays.stream(block[ch]).map(Math::abs).max().orElse(0);
-            }
-        }
-
-        // Sort the arrays
-        for (int ch = 0; ch < channels; ch++) {
-            final int channel = ch;
-            sort(blockRms, Comparator.comparingDouble(a -> a[channel]));
-            sort(blockPeak, Comparator.comparingDouble(a -> a[channel]));
-        }
-
-        return new double[][][]{blockRms, blockPeak};
-    }
-
-    private void analyzeBlockLevels(double[][] samples, int totalBlocks, int blocksize, int channels, double[][] blockRms, double[][] blockPeak, int sampleRate)   {
-       try {
-           for (int i = 0; i < totalBlocks; i++) {
-               for (int j = 0; j < channels; j++) {
-                   double[] channelData = new double[blocksize];
-                   for (int k = 0; k < blocksize; k++) {
-                       channelData[k] = getSampleRate(samples[j][k], sampleRate);
-                   }
-                   blockRms[i][j] = Math.sqrt(Arrays.stream(channelData).map(d -> d * d).average().orElse(0));
-                   blockPeak[i][j] = Arrays.stream(channelData).map(Math::abs).max().orElse(0);
-
-                   // Debug statements
-                  // System.out.printf("Block %d, Channel %d - RMS: %f, Peak: %f%n", i, j, blockRms[i][j], blockPeak[i][j]);
-               }
-           }
-       }catch (Exception ex) {
-           Log.e(TAG, "analyzeBlockLevels", ex);
-       }
-    }
-
     public double getDynamicRangeScore() {
         return dynamicRangeScore;
     }
 
-    private void checkMQA(double[][] samples, int bps, long sampleRate) {
-        long buffer = 0;
-        long buffer1 = 0;
-        long buffer2 = 0;
-        final int pos = bps - 16; // aim for 16th bit
-        int maxSamples = (int) (sampleRate * 3); // Number of samples for 3 seconds
-/*
-        int sampleCount = 0;
-        for (int i = 0; i < channels; i++) {
-            for (int j = 0; j < indexLength; j++) {
-                transposed[j+i] = samples[i][j];
-                if (sampleCount >= maxSamples) {
-                    break;
-                }
-                sampleCount++;
-            }
-        } */
+    protected void checkMQA2(double[][] samples, int bps, long sampleRate) {
+        long buffer = Integer.toUnsignedLong(0);
+        long buffer1 = Integer.toUnsignedLong(0);
+        long buffer2 = Integer.toUnsignedLong(0);
+        final int pos = (int) (bps - Integer.toUnsignedLong(16)); //16; // aim for 16th bit
+        int maxSamples = (int) (sampleRate * 4); // Number of samples for 3 seconds
 
-        double[] transposed = convert2DTo1D(samples, maxSamples);
+        long unsignedOne = Integer.toUnsignedLong(1);
+        long unsignedF = 0xFFFFFFFFFL;
 
-        for (int i=0;  i< transposed.length-1;i=i+2) {
-           // System.out.printf("s["+i+"]: 0x%08X, s["+(i+1)+"]: 0x%08X%n", transposed[i],transposed[i+1]);
-               // int xorResult = transposed[i] ^ transposed[i+1];
-               double xorResult = XOR(transposed[i], transposed[i+1]);
+        // c/c++ - vector of array[2]
+        // java - double[2][] samples
 
-               // long bit = (xorResult >> pos) & 1;
-               // long bit1 = (xorResult >> (pos + 1)) & 1;
-               // long bit2 = (xorResult >> (pos + 2)) & 1;
-             long bit = RIGHTSHIF(xorResult, pos) & 1;
-             long bit1 = RIGHTSHIF(xorResult,(pos + 1)) & 1;
-             long bit2 = RIGHTSHIF(xorResult,(pos + 2)) & 1;
+        int length = samples[0].length;
+        maxSamples = Math.min(maxSamples, length);
+        double[][] newSamples= flipArray(samples, maxSamples);
+       // for(int i=0; i< maxSamples;i++) {
+        for (double []sample: newSamples) {
+            double ch1Data = sample[0];
+            double ch2Data = sample[1];
+           // long xorResult = XOR(ch1Data, ch2Data);
+           // long bit = (xorResult >>> pos);
+          // bit = bit & unsignedOne;
+           // long bit1 = (xorResult >>> (pos + 1));
+           // long bit2 = (xorResult >>> (pos + 2));
+           // System.out.printf("bit: 0x%010X, bit1: 0x%010X, bit2: 0x%010X%n", bit, bit1, bit2);
 
-            buffer |= bit;
-            buffer1 |= bit1;
-            buffer2 |= bit2;
-            //      System.out.printf("buffer: 0x%010X, buffer1: 0x%010X, buffer2: 0x%010X%n", buffer, buffer1, buffer2);
+           // buffer |= bit;
+           // buffer1 |= bit1;
+           // buffer2 |= bit2;
+            buffer |= XOR(ch1Data, ch2Data) >>> pos;
+            buffer1 |= XOR(ch1Data, ch2Data) >>> (pos+1);
+            buffer2 |= XOR(ch1Data, ch2Data) >>> (pos+2);
 
-                if (checkMQAMagicWord(buffer, transposed, pos, i)) return;
-                if (checkMQAMagicWord(buffer1, transposed, pos, i)) return;
-                if (checkMQAMagicWord(buffer2, transposed, pos, i)) return;
+          //  System.out.printf("xorResult: 0x%010X, buffer: 0x%010X, buffer1: 0x%010X, buffer2: 0x%010X%n",xorResult, buffer, buffer1, buffer2);
 
-                buffer <<= 1;
-                buffer1 <<= 1;
-               buffer2 <<= 1;
+            if (checkMQAMagicWord(buffer, samples[0], pos, 1)) return;
+            if (checkMQAMagicWord(buffer1, samples[0], pos, 1)) return;
+            if (checkMQAMagicWord(buffer2, samples[0], pos, 1)) return;
+
+            buffer = (buffer << unsignedOne) & unsignedF;
+            buffer1 = (buffer1 << unsignedOne) & unsignedF;
+            buffer2 = (buffer2 << unsignedOne) & unsignedF;
         }
     }
 
+    private double[][] flipArray(double[][] samples, int maxSamples) {
+        double[][] transposed = new double[maxSamples][samples.length];
+        for (int i = 0; i < samples.length; i++) {
+            for (int j = 0; j < maxSamples; j++) {
+                transposed[j][i] = samples[i][j];
+            }
+        }
+        return transposed;
+    }
+
     private long RIGHTSHIF(double value, int shiftAmount) {
-        long longValue = Double.doubleToLongBits(value);
+        long longValue = Double.doubleToRawLongBits(value);
         return (longValue >> shiftAmount);
     }
 
     private long XOR(double v, double v1) {
         // Convert double to long using Double.doubleToLongBits
-        long aBits = Double.doubleToLongBits(v);
-        long bBits = Double.doubleToLongBits(v1);
+        long aBits = Double.doubleToRawLongBits(v);
+        long bBits = Double.doubleToRawLongBits(v1);
 
         // Perform bitwise XOR
-        return (aBits ^ bBits);
+        return aBits ^ bBits;
     }
 
-    private double[] convert2DTo1D(double[][] twoDArray, int maxSamples) {
-        int chs = twoDArray.length;
-        int cols = twoDArray[0].length;
-        maxSamples = Math.min(maxSamples, chs * cols);
-        double[] oneDArray = new double[maxSamples];
+    protected void checkMQA(byte[] soundData, int bps, long sampleRate) {
+        int maxSamples = (int) (sampleRate * 4); // Number of samples for 3 seconds
 
-        int index = 0;
-        for (double[] doubles : twoDArray) {
-            for (int j = 0; j < cols; j++) {
-                if (index >= maxSamples) {
-                    break;
-                }
-                oneDArray[index++] = doubles[j];
-            }
+     //   int length = samples[0].length;
+      //  maxSamples = Math.min(maxSamples, length);
+       // double[] newSamples= convert2DTo1D(samples, maxSamples);int sampleWidth = bps / 8;
+
+        int sampwidth = bps / 8;
+        int[] samples;
+
+        if (sampwidth == 3) {
+            samples = iterI24AsI32(soundData);
+        } else if (sampwidth == 2) {
+            samples = iterI16AsI32(soundData);
+        } else {
+            throw new IllegalArgumentException("Input must be 16- or 24-bit");
         }
 
-        return oneDArray;
+        final int MAGIC = 0xbe0498c8;
+        boolean foundMagic = false;
+        for (int p = 16; p < 24; p++) {
+            for (int i = 0; i < samples.length - 1; i += 2) {
+                long x = Double.doubleToRawLongBits(samples[i]);
+                long y = Double.doubleToRawLongBits(samples[i + 1]);
+               // long buffer = ((x ^ y) >>> p & 1);
+                long buffer = (((x ^ y) >>> p) & 1);
+               // System.out.printf("MAGIC: 0x%010X, buffer: 0x%010X%n", MAGIC, buffer);
+                String text = String.format("0x%010X", buffer);
+                if(text.contains("0498C8")) {
+                    System.out.printf("MQA_MAGIC_WORD: 0x%010X, buffer: 0x%010X%n", MQA_MAGIC_WORD, buffer);
+                }
+                if (buffer == MQA_MAGIC_WORD) {
+                    foundMagic = true;
+                    break;
+                }
+            }
+            if (foundMagic) break;
+        }
+
+        if (foundMagic) {
+            System.out.println("\u001B[1;31m MQA syncword present.  \u001B[0m");
+        } else {
+            System.out.println("\u001B[1;32m Didn't find an MQA syncword. \u001B[0m");
+        }
+    }
+
+    public static int twosComplement(int n, int bits) {
+        int mask = 1 << (bits - 1);
+        return -(n & mask) + (n & ~mask);
+    }
+
+    public static int[] iterI24AsI32(byte[] data) {
+        int[] result = new int[data.length / 3];
+        for (int i = 0; i < data.length; i += 3) {
+            if(i+2 >= data.length) break;
+            int l = data[i] & 0xFF;
+            int h = ((data[i + 1] & 0xFF) << 8) | (data[i + 2] & 0xFF);
+            result[i / 3] = twosComplement((h << 8) | l, 24) << 8;
+        }
+        return result;
+    }
+
+    public static int[] iterI16AsI32(byte[] data) {
+        int[] result = new int[data.length / 2];
+        for (int i = 0; i < data.length; i += 2) {
+            if(i+1 >= data.length) break;
+            int x = ((data[i + 1] & 0xFF) << 8) | (data[i] & 0xFF);
+            result[i / 2] = x << 16;
+        }
+        return result;
     }
 
     private boolean checkMQAMagicWord(long buffer, double[] s, int pos, int index) {
-        if (buffer == 0xbe0498c88L) { // MQA magic word
+        System.out.printf("MQA_MAGIC_WORD: 0x%010X, buffer: 0x%010X%n", MQA_MAGIC_WORD, buffer);
+        String text = String.format("0x%010X", buffer);
+        if(text.contains("8C88")) {
+            System.out.printf("MQA_MAGIC_WORD: 0x%010X, buffer: 0x%010X%n", MQA_MAGIC_WORD, buffer);
+        }
+        if (buffer == MQA_MAGIC_WORD) { // MQA magic word
             this.isMQA = true;
             // Get Original Sample Rate
             long orsf = 0;
@@ -671,5 +574,262 @@ public class MusicAnalyser {
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
+    }
+
+    private static int[] byteArrayToIntArray(byte[] byteArray, int bitDepth) {
+        int bytesPerSample = bitDepth / 8;
+        int intArrayLength = byteArray.length / bytesPerSample;
+        int[] intArray = new int[intArrayLength];
+        for (int i = 0; i < intArrayLength; i++) {
+            int value = 0;
+            for (int j = 0; j < bytesPerSample; j++) {
+                value |= (byteArray[i * bytesPerSample + j] & 0xFF) << (8 * j);
+            }
+            intArray[i] = value;
+        }
+        return intArray;
+    }
+
+    ///////////////
+
+    public static int[][] convertToSamples(byte[] audioData, int numChannels, int sampleSizeInBits) {
+        int bytesPerSample = sampleSizeInBits / 8;
+        int numSamples = audioData.length / (numChannels * bytesPerSample);
+        int[][] samples = new int[numChannels][numSamples];
+
+        for (int i = 0; i < numSamples; i++) {
+            for (int channel = 0; channel < numChannels; channel++) {
+                int sampleIndex = (i * numChannels + channel) * bytesPerSample;
+                int sample = 0;
+
+                for (int byteIndex = 0; byteIndex < bytesPerSample; byteIndex++) {
+                    sample |= (audioData[sampleIndex + byteIndex] & 0xFF) << (byteIndex * 8);
+                }
+
+                // Handle sign extension for 24-bit samples
+                if (sampleSizeInBits == 24 && (sample & 0x800000) != 0) {
+                    sample |= 0xFF000000;
+                }
+
+                samples[channel][i] = sample;
+            }
+        }
+
+        return samples;
+    }
+
+    ///////
+    public static double calculateDynamicRangeMeter(byte[] audioData, int bitDepth, int sampleRate, int windowSizeMs, double noiseFloor) {
+        if (audioData == null || audioData.length == 0) {
+            throw new IllegalArgumentException("Audio data cannot be null or empty");
+        }
+        if (bitDepth != 16 && bitDepth != 24) {
+            throw new IllegalArgumentException("Unsupported bit depth: " + bitDepth);
+        }
+
+        int bytesPerSample = bitDepth / 8;
+        int samplesPerWindow = (sampleRate * windowSizeMs) / 1000;
+        int totalSamples = audioData.length / bytesPerSample;
+
+        double[] rmsValues = new double[totalSamples / samplesPerWindow];
+        int rmsIndex = 0;
+
+        for (int i = 0; i < totalSamples; i += samplesPerWindow) {
+            double sum = 0;
+            int sampleCount = 0;
+
+            for (int j = 0; j < samplesPerWindow && (i + j) < totalSamples; j++) {
+                int sample = 0;
+
+                // Extract sample value based on bit depth
+                switch (bitDepth) {
+                    case 16:
+                        sample = ByteBuffer.wrap(audioData, (i + j) * bytesPerSample, bytesPerSample)
+                                .order(ByteOrder.LITTLE_ENDIAN)
+                                .getShort(); // 16-bit signed value
+                        break;
+                    case 24:
+                        int index = (i + j) * bytesPerSample;
+                        sample = ((audioData[index + 2] << 16) | ((audioData[index + 1] & 0xFF) << 8) | (audioData[index] & 0xFF));
+                        if ((audioData[index + 2] & 0x80) != 0) { // Sign extension for 24-bit
+                            sample |= 0xFF000000;
+                        }
+                        break;
+                }
+
+                sum += sample * sample;
+                sampleCount++;
+            }
+            if(rmsIndex>=rmsValues.length) break;
+
+            if (sampleCount > 0) {
+                double rms = Math.sqrt(sum / sampleCount);
+                if(Double.isNaN(rms)) continue;
+
+                // convert RMS to decibels (dB)
+                double rmsDb = 20 * Math.log10(rms);
+                if(rmsDb > noiseFloor) { //Ignore values below the noise floor
+                    rmsValues[rmsIndex++] = rmsDb;
+                }
+            }
+        }
+
+        // sort RMS values to exclude extreme outliers
+        Arrays.sort(rmsValues, 0, rmsIndex);
+
+        // use 95th percentile and 5th percentile for max and moin RMS
+        int lowerIndex = (int)(0.05 * rmsIndex);
+        int upperIndex = (int)(0.95 * rmsIndex);
+
+        //Calculate the dynamic range
+        double maxRMS = rmsValues[upperIndex];
+        double minRMS = rmsValues[lowerIndex];
+
+        // Compute dynamic range meter value
+        return maxRMS - minRMS;
+    }
+
+    ////////
+    public static double calculateDynamicRange(byte[] audioData, int bitDepth) {
+        if (bitDepth != 16 && bitDepth != 24) {
+            throw new IllegalArgumentException("Unsupported bit depth. Only 16-bit and 24-bit are supported.");
+        }
+
+        int sampleCount = bitDepth == 16 ? audioData.length / 2 : audioData.length / 3;
+        double[] samples = new double[sampleCount];
+
+        // Convert byte array to samples (16-bit or 24-bit PCM)
+        for (int i = 0; i < sampleCount; i++) {
+            if (bitDepth == 16) {
+                int low = audioData[2 * i] & 0xFF;
+                int high = audioData[2 * i + 1] & 0xFF;
+                samples[i] = (short) ((high << 8) | low);
+            } else if (bitDepth == 24) {
+                int low = audioData[3 * i] & 0xFF;
+                int mid = audioData[3 * i + 1] & 0xFF;
+                int high = audioData[3 * i + 2] & 0xFF;
+                samples[i] = (high << 16) | (mid << 8) | low;
+                if (samples[i] > 0x7FFFFF) {
+                    samples[i] -= 0x1000000; // Convert to signed 24-bit
+                }
+            }
+        }
+
+        // Calculate peak level and noise floor
+        double peakLevel = 0;
+        double noiseFloor = Double.MAX_VALUE;
+
+        for (double sample : samples) {
+            double absSample = Math.abs(sample);
+            if (absSample > peakLevel) {
+                peakLevel = absSample;
+            }
+            if (absSample != 0 && absSample < noiseFloor) {
+                noiseFloor = absSample;
+            }
+        }
+
+        // If there are no non-zero samples, the dynamic range is zero
+        if (noiseFloor == Double.MAX_VALUE) {
+            noiseFloor = 0;
+        }
+
+        // Calculate dynamic range in decibels
+        double dynamicRange;
+        if (noiseFloor == 0) {
+            dynamicRange = Double.POSITIVE_INFINITY; // Infinite dynamic range
+        } else {
+            dynamicRange = 20 * Math.log10(peakLevel / noiseFloor);
+        }
+
+        return dynamicRange;
+    }
+
+    ///
+    public boolean detectMQA(byte[] audioData, int bitDepth) {
+        if (bitDepth != 16 && bitDepth != 24) {
+            throw new IllegalArgumentException("Unsupported bit depth. Only 16-bit and 24-bit are supported.");
+        }
+
+        int sampleCount = bitDepth == 16 ? audioData.length / 2 : audioData.length / 3;
+
+        // Convert byte array to samples (16-bit or 24-bit PCM)
+        int [] samples = new int[sampleCount];
+        for (int i = 0; i < sampleCount; i++) {
+            int sample;
+            if (bitDepth == 16) {
+                int low = audioData[2 * i] & 0xFF;
+                int high = audioData[2 * i + 1] & 0xFF;
+                sample = (short) ((high << 8) | low);
+            } else { // 24-bit
+                int low = audioData[3 * i] & 0xFF;
+                int mid = audioData[3 * i + 1] & 0xFF;
+                int high = audioData[3 * i + 2] & 0xFF;
+                sample = (high << 16) | (mid << 8) | low;
+                if (sample > 0x7FFFFF) {
+                    sample -= 0x1000000; // Convert to signed 24-bit
+                }
+            }
+            samples[i] = sample;
+        }
+
+        long buffer = Integer.toUnsignedLong(0);
+        long buffer1 = Integer.toUnsignedLong(0);
+        long buffer2 = Integer.toUnsignedLong(0);
+        final int pos = (int) (bitDepth - Integer.toUnsignedLong(16)); //16; // aim for 16th bit
+
+        long unsignedOne = Integer.toUnsignedLong(1);
+        long unsignedF = 0xFFFFFFFFFL;
+        for (int i=0; i< sampleCount-1;i++) {
+            int ch1Data = samples[i];
+            int ch2Data = samples[i+1];
+            buffer |= (ch1Data ^ ch2Data) >>> pos;
+            buffer1 |= (ch1Data ^ ch2Data) >>> (pos + 1);
+            buffer2 |= (ch1Data ^ ch2Data) >>> (pos + 2);
+
+            if (checkMQAMagicWord(buffer, samples, pos, i)) return true;
+            if (checkMQAMagicWord(buffer1, samples, pos, i)) return true;
+            if (checkMQAMagicWord(buffer2, samples, pos, i)) return true;
+
+            buffer = (buffer << unsignedOne) & unsignedF;
+            buffer1 = (buffer1 << unsignedOne) & unsignedF;
+            buffer2 = (buffer2 << unsignedOne) & unsignedF;
+        }
+
+        return false;
+    }
+
+    private boolean checkMQAMagicWord(long buffer, int[] s, int pos, int index) {
+       // System.out.printf("MQA_MAGIC_WORD: 0x%010X, buffer: 0x%010X%n", MQA_MAGIC_WORD, buffer);
+        String text = String.format("0x%010X", buffer);
+        if(text.contains("8C88")) {
+            System.out.printf("MQA_MAGIC_WORD: 0x%010X, buffer: 0x%010X%n", MQA_MAGIC_WORD, buffer);
+        }
+        if (buffer == MQA_MAGIC_WORD) { // MQA magic word
+            this.isMQA = true;
+            // Get Original Sample Rate
+            long orsf = 0;
+            for (int m = (index+3); m < (index+7); m++) { // TODO: this needs fix (orsf is 5 bits)
+                double cur = s[m];
+                // int j = ((cur ^ s[index+1]) >> (pos + 1)) & 1;
+                long j = RIGHTSHIF(XOR(cur,s[index+1]), pos + 1) & 1;
+                orsf |= j << (6 - m);
+            }
+            this.originalSampleRate = decodeSampleRate(orsf);
+
+            // Get MQA Studio
+            long provenance = 0;
+            for (int m = (index+29); m < (index+34); m++) {
+                double cur = s[m];
+                //int j = ((cur ^ s[index+1]) >> (pos + 1)) & 1;
+                long j = RIGHTSHIF(XOR(cur,s[index+1]),pos + 1) & 1;
+                provenance |= j << (33 - m);
+            }
+            this.isMQAStudio = provenance > 8;
+
+            // We are done, return true
+            return true;
+        }
+        return false;
     }
 }

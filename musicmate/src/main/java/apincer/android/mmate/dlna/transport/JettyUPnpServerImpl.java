@@ -1,7 +1,7 @@
 package apincer.android.mmate.dlna.transport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
+import static apincer.android.mmate.Constants.DLNA_DEFAULT_COVERART_FILE;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -281,7 +281,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
             if (content == null)
             {
                 // check file and create if not existed
-                content = getResourceService().getContent(DEFAULT_COVERART_FILE, request);
+                content = getResourceService().getContent(DLNA_DEFAULT_COVERART_FILE, request);
             }
 
             if (content == null)

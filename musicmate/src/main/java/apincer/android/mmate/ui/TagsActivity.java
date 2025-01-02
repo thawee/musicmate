@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -52,7 +53,6 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
-import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
@@ -60,6 +60,7 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.repository.TagWriter;
+import apincer.android.mmate.ui.glide.GlideApp;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -70,9 +71,6 @@ import apincer.android.mmate.worker.MusicMateExecutors;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
-import coil.Coil;
-import coil.ImageLoader;
-import coil.request.ImageRequest;
 import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
@@ -371,13 +369,18 @@ public class TagsActivity extends AppCompatActivity {
             titleView.setText(trim(displayTag.getTitle(), " - "));
         }
         artistView.setText(trim(displayTag.getArtist(), " - "));
-        ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
+       /* ImageLoader imageLoader = Coil.imageLoader(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
                 .crossfade(false)
                 .target(resolutionView)
                 .build();
-        imageLoader.enqueue(request);
+        imageLoader.enqueue(request); */
+        GlideApp.with(this)
+                .load(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
+                .skipMemoryCache(false) // Skip memory cache
+                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
+                .into(resolutionView);
 
        // drView.setText(MusicTagUtils.getTrackDRScore(displayTag));
 
@@ -388,12 +391,18 @@ public class TagsActivity extends AppCompatActivity {
            //     audiophileView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
            // }catch(Exception ignored){}
             // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
-             request = new ImageRequest.Builder(getApplicationContext())
+         /*    request = new ImageRequest.Builder(getApplicationContext())
                     .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
                     .crossfade(false)
                     .target(qualityView)
                     .build();
-            imageLoader.enqueue(request);
+            imageLoader.enqueue(request); */
+        GlideApp.with(this)
+                .load(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
+                .skipMemoryCache(false) // Skip memory cache
+                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
+                .into(qualityView);
+
            // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), BitmapHelper.createHexagonBitmap(400, 400)));
       //  }else {
       //      qualityView.setVisibility(View.GONE);
@@ -453,7 +462,7 @@ public class TagsActivity extends AppCompatActivity {
 
         genreView.setText(mediaTypeAndPublisher);
 
-        request = new ImageRequest.Builder(getApplicationContext())
+      /*  request = new ImageRequest.Builder(getApplicationContext())
                 .data(CoverArtProvider.getUriForMusicTag(getApplicationContext(), displayTag))
                 .size(640,640)
                 .placeholder(R.drawable.progress)
@@ -461,7 +470,13 @@ public class TagsActivity extends AppCompatActivity {
                // .error(R.drawable.no_cover2)
                 .target(coverArtView)
                 .build();
-        imageLoader.enqueue(request);
+        imageLoader.enqueue(request); */
+
+        GlideApp.with(this)
+                .load(displayTag)
+                .skipMemoryCache(true) // Skip memory cache
+                .diskCacheStrategy(DiskCacheStrategy.DATA) // Do not cache on disk
+                .into(coverArtView);
 
         // Tag
         int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
