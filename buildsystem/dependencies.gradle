@@ -18,7 +18,7 @@ ext.versions = [
         //https://github.com/objectbox/objectbox-java/releases
         objectbox          : '4.0.3', //''3.8.0', //''3.6.0', //''3.2.1' , //'3.1.3',
         //https://github.com/mikepenz/AboutLibraries/releases
-        aboutlibraries     : '11.2.3', //''11.1.4', //''10.8.3', //''10.3.1',  11.2.1 not work
+        aboutlibraries     : '11.4.0', //''11.1.4', //''10.8.3', //''10.3.1',  11.2.1 not work
         ]
 
 ext.gradlePlugins = [
@@ -60,7 +60,7 @@ def androidx = [:]
 //https://developer.android.com/jetpack/androidx/versions
 
 //https://developer.android.com/jetpack/androidx/releases/core
-androidx.core = "androidx.core:core:1.13.1" //
+androidx.core = "androidx.core:core:1.15.0" //
 //https://developer.android.com/jetpack/androidx/releases/activity
 androidx.activity = "androidx.activity:activity:1.9.3" //1.4.0"
 //https://developer.android.com/jetpack/androidx/releases/annotation
@@ -320,7 +320,7 @@ deps.glide = glide
 deps.dexmaker = "com.linkedin.dexmaker:dexmaker-mockito:2.25.0" //23/06/2019
 //https://github.com/JakeWharton/timber
 deps.timber = "com.jakewharton.timber:timber:5.0.1"
-deps.junit = "junit:junit:4.13.2"
+deps.junit4 = "junit:junit:4.13.2"
 deps.mock_web_server = "com.squareup.okhttp3:mockwebserver:$versions.mockwebserver"
 //https://github.com/ReactiveX/RxAndroid
 deps.rxjava3 = "io.reactivex.rxjava3:rxjava:3.1.5" //10/12/2019
@@ -369,6 +369,7 @@ deps.jupnp_android = 'org.jupnp:org.jupnp.android:3.0.2'
 deps.jupnp_support =  'org.jupnp:org.jupnp.support:3.0.2'
 //https://netty.io/
 deps.netty_codec_http = 'io.netty:netty-codec-http:4.1.116.Final'
+// https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-serve
 deps.jetty_server12 = 'org.eclipse.jetty:jetty-server:12.1.0.alpha1'
 deps.jetty_client12 = 'org.eclipse.jetty:jetty-client:12.1.0.alpha1'
 deps.filepicker = 'io.github.tutorialsandroid:filepicker:9.2.5'

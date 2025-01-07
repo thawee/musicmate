@@ -1,13 +1,11 @@
 package apincer.android.mmate.utils;
 
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.DOWNLOADS_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.DUPLICATED_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_CLASSIC_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_FINFIN_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_ISAAN_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_RELAXED_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS;
 import static apincer.android.mmate.utils.MusicTagUtils.getExtension;
 
 import android.content.Context;
@@ -30,7 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 
@@ -79,7 +76,7 @@ public class PLSBuilder {
         Map<String,List<MusicTag>> mapped = new HashMap<>();
         mapped.put(DOWNLOADS_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_ISAAN_SONGS, new ArrayList<>());
-        mapped.put(SMART_LIST_RELAXED_TH_SONGS, new ArrayList<>());
+       // mapped.put(SMART_LIST_RELAXED_TH_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_RELAXED_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_FINFIN_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_BAANTHUNG_SONGS, new ArrayList<>());
@@ -93,9 +90,9 @@ public class PLSBuilder {
             if(MusicTagUtils.isISaanPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_ISAAN_SONGS)).add(tag);
             }
-            if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).add(tag);
-            }
+            //if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
+            //    Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).add(tag);
+           // }
             if(MusicTagUtils.isRelaxedPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_SONGS)).add(tag);
             }
@@ -110,7 +107,7 @@ public class PLSBuilder {
             }
         }
 
-        mapped.put(DUPLICATED_SONGS, MusixMateApp.getInstance().getOrmLite().findDuplicateSong());
+       // mapped.put(DUPLICATED_SONGS, MusixMateApp.getInstance().getOrmLite().findDuplicateSong());
 
         for(String name: mapped.keySet()) {
             exportPlaylist(context, name, mapped.get(name));

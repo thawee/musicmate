@@ -68,8 +68,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             return configuration.getListenPort();
         }
 
-        public File getCoverartDir() {
-            return coverartDir;
+        public File getCoverartDir(String coverartName) {
+            return new File(coverartDir, coverartName);
         }
 
         public ProtocolFactory getProtocolFactory() {

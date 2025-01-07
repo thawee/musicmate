@@ -46,9 +46,9 @@ public class CollectionFolderBrowser extends ContentBrowser {
         if(CollectionsBrowser.MY_SONGS.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findMySongs();
         }
-        if(CollectionsBrowser.DUPLICATED_SONGS.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
-        }
+        //if(CollectionsBrowser.DUPLICATED_SONGS.equals(name)) {
+        //    return MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
+        //}
         List<MusicTag> results = new ArrayList<>();
         List<MusicTag> list = MusixMateApp.getInstance().getOrmLite().findMySongs();
         for(MusicTag tag: list) {
@@ -60,18 +60,20 @@ public class CollectionFolderBrowser extends ContentBrowser {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_FINFIN_TH_SONGS.equals(name) && MusicTagUtils.isFinFinThaiPlaylist(tag)) {
+            }else if (CollectionsBrowser.SMART_LIST_FINFIN_TH_SONGS.equals(name) && MusicTagUtils.isThaiFinFinPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_FINFIN_EN_SONGS.equals(name) && MusicTagUtils.isFinFinEnglishPlaylist(tag)) {
-                results.add(tag);
+           // }else if (CollectionsBrowser.SMART_LIST_FINFIN_EN_SONGS.equals(name) && MusicTagUtils.isEnglishFinFinPlaylist(tag)) {
+           //     results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_RELAXED_SONGS.equals(name) && MusicTagUtils.isRelaxedPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS.equals(name) && MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
+            }else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_RELAXED_EN_SONGS.equals(name) && MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
-                results.add(tag);
+          //  }else if (CollectionsBrowser.SMART_LIST_RELAXED_TH_SONGS.equals(name) && MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
+           //     results.add(tag);
+           // }else if (CollectionsBrowser.SMART_LIST_RELAXED_EN_SONGS.equals(name) && MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
+           //     results.add(tag);
             }
         }
         return results;

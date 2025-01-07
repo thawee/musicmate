@@ -33,8 +33,8 @@ android {
         applicationId "apincer.android.mmate"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 94
-        versionName  "3.9.4"+ versions.buildDate
+        versionCode 95
+        versionName  "3.9.5"+ versions.buildDate
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters 'arm64-v8a'
         multiDexEnabled true
@@ -139,12 +139,6 @@ dependencies {
     implementation deps.androidx.drawerlayout
     implementation deps.androidx.viewpager2
 
-    // room
-    //implementation deps.androidx.room
-    //annotationProcessor deps.androidx.room_compiler
-    // To use Kotlin annotation processing tool (kapt)
-    //kapt deps.androidx.room_compiler
-
     // OrmLite
     implementation deps.ormlite
 
@@ -152,37 +146,20 @@ dependencies {
     implementation deps.google.material
     implementation deps.filepicker
 
-    // epoxy
-    //implementation deps.epoxy.runtime
-    //kapt deps.epoxy.annotationProcessor
-
     // UI Libs
     //implementation deps.ui.groupie
     implementation deps.ui.powerspinner
     implementation deps.ui.powermenu
     implementation deps.ui.progressview
     implementation deps.ui.simplifyspan
-    //implementation deps.ui.materialratingbar
-    //implementation deps.ui.aspectRatioImageview //use for musicbrainz screen
     implementation deps.ui.fastscroll
     implementation deps.ui.elasticviews
     implementation deps.ui.stateViews
     implementation deps.ui.androidribbon
     implementation deps.ui.mpandroidchart
    // implementation "com.androidplot:androidplot-core:1.5.11"
-    //implementation 'com.github.giangpham96.expandable-text:expandable_textview:2.0.1'
-    //implementation "com.github.skydoves:doublelift:1.0.4"
     implementation deps.ui.textbuilder
     implementation deps.ui.carouselrecyclerview
-    //implementation deps.ui.datatables
-    //https://github.com/DmitryMalkovich/circular-with-floating-action-button
-    //implementation 'com.dmitrymalkovich.android:progress-fab:1.6'
-
-    //https://github.com/pejman-74/ProgressFloatingActionButton
-    //implementation 'com.github.pejman-74:ProgressFloatingActionButton:1.0'
-
-    //https://github.com/getActivity/XXPermissions
-    //implementation 'com.github.getActivity:XXPermissions:16.2'
 
     //https://github.com/Chrisvin/FlipTabs
     //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
@@ -225,7 +202,6 @@ dependencies {
     implementation deps.jupnp_support
     implementation deps.jetty_server12
     implementation deps.jetty_client12
-   // implementation deps.jtransforms
 
     // Glide
     implementation deps.glide.runtime

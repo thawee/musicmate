@@ -17,6 +17,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
     namespace 'com.balsikandar.crashreporter'
 }
 
@@ -38,5 +42,5 @@ dependencies {
     implementation deps.androidx.lifecycle_process
     //implementation 'androidx.appcompat:appcompat:1.4.1'
    // implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    testImplementation deps.junit
+    testImplementation deps.junit4
 }

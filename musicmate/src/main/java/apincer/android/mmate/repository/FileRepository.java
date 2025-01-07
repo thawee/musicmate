@@ -167,12 +167,12 @@ public class FileRepository {
         return coverFile;
     }
 
-    public static File getFolderCoverArt(String path) {
+    public static File getFolderCoverArt(String musicPath) {
         // try loading from folder
         // front.png, front.jpg
         // cover.png, cover.jpg
 
-        File mediaFile = new File(path);
+        File mediaFile = new File(musicPath);
         File coverFile = null;
         File coverDir = mediaFile;
         if(mediaFile.isFile()) {
@@ -182,12 +182,12 @@ public class FileRepository {
         // get cover file with same name as audio file
         String ext = FileUtils.getExtension(mediaFile);
         if(!(isEmpty(ext) && mediaFile.isDirectory())) {
-            String artFile = path.replace("." + ext, ".jpg");
+            String artFile = musicPath.replace("." + ext, ".jpg");
             File cover = new File(artFile);
             if (cover.exists()) {
                 coverFile = cover;
             } else {
-                artFile = path.replace("." + ext, ".png");
+                artFile = musicPath.replace("." + ext, ".png");
                 cover = new File(artFile);
                 if (cover.exists()) {
                     coverFile = cover;

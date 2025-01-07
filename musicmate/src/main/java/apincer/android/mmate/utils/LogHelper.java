@@ -17,6 +17,7 @@ public class LogHelper {
         setLogLevel(LOGGER_JAUDIOTAGGER_AUDIO, Level.OFF);
         setLogLevel(LOGGER_JAUDIOTAGGER_FLAC, Level.OFF);
         setLogLevel(LOGGER_JAUDIOTAGGER_WAV, Level.OFF);
+        setLogLevel("CCodecConfig", Level.OFF);
         setLogLevel("android.view.View", Level.OFF);
         setLogLevel("androidx.recyclerview.selection.DefaultSelectionTracker", Level.OFF);
         setLogLevel("org.greenrobot.eventbus.EventBus", Level.OFF);

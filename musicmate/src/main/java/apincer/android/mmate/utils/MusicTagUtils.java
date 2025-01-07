@@ -385,6 +385,7 @@ public class MusicTagUtils {
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) &&
                 (genre.contains("ACOUSTIC") ||
+                        genre.contains("VOCAL") ||
                 grouping.equalsIgnoreCase("Jazz") ||
                 grouping.equalsIgnoreCase("Thai Jazz"));
     }
@@ -394,6 +395,7 @@ public class MusicTagUtils {
         return StringUtils.compare(path, tag.getPath());
     }
 
+    /*
     public static boolean isRelaxedThaiPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
@@ -411,7 +413,7 @@ public class MusicTagUtils {
                         grouping.equalsIgnoreCase("Thai Jazz") ||
                         (genre.equalsIgnoreCase("ACOUSTIC") &&
                                 grouping.equalsIgnoreCase("Popular")));
-    }
+    } */
 
     public static boolean isClassicPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
@@ -424,27 +426,27 @@ public class MusicTagUtils {
         return ((grouping.equalsIgnoreCase("Popular") ||
                 grouping.equalsIgnoreCase("Thai Popular")) &&
                 !(isISaanPlaylist(tag) ||
-                  isBaanThungPlaylist(tag) ||
-                  isRelaxedPlaylist(tag))
+                  isBaanThungPlaylist(tag)) // ||
+                 // isRelaxedPlaylist(tag))
         );
     }
 
-    public static boolean isFinFinThaiPlaylist(MusicTag tag) {
+    public static boolean isThaiFinFinPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
         return (grouping.equalsIgnoreCase("Thai Popular") &&
                 !(isISaanPlaylist(tag) ||
-                        isBaanThungPlaylist(tag) ||
-                        isRelaxedPlaylist(tag))
+                        isBaanThungPlaylist(tag)) // ||
+                       // isRelaxedPlaylist(tag))
         );
     }
 
-    public static boolean isFinFinEnglishPlaylist(MusicTag tag) {
+    public static boolean isEnglishFinFinPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
         return ((grouping.equalsIgnoreCase("Popular") ||
                 grouping.equalsIgnoreCase("English")) &&
                 !(isISaanPlaylist(tag) ||
-                        isBaanThungPlaylist(tag) ||
-                        isRelaxedPlaylist(tag))
+                        isBaanThungPlaylist(tag)) // ||
+                       // isRelaxedPlaylist(tag))
         );
     }
 
@@ -455,5 +457,10 @@ public class MusicTagUtils {
     public static int getChannels(MusicTag tag) {
         String chStr = tag.getAudioChannels();
         return 2;
+    }
+
+    public static boolean isTraditionalPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
+        return grouping.equalsIgnoreCase("Traditional");
     }
 }

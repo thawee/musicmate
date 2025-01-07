@@ -116,6 +116,7 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
             if(uri.startsWith("/res/")) {
                 try {
                     String agent = request.getHeaders().get(HttpHeader.USER_AGENT);
+                    //System.out.println("Client Headers: "+ request.getHeaders());
                     String contentId = uri.substring(5, uri.indexOf("/", 5));
                     MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
                     if (tag != null) {

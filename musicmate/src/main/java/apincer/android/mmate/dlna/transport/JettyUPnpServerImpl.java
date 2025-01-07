@@ -1,7 +1,7 @@
 package apincer.android.mmate.dlna.transport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static apincer.android.mmate.Constants.DLNA_DEFAULT_COVERART_FILE;
+import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -44,14 +44,16 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.provider.CoverArtProvider;
+import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTag;
 import de.esoco.lib.expression.Action;
 
 public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
 
     private Server server;
-    //private static final String httpServerName="Jetty/12.1.0.alpha0";
 
     public JettyUPnpServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
@@ -97,9 +99,8 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 upnpContext.setHandler(new UPnpHandler());
 
                 // Resource handler for cover art
-                File pathFile = new File(getCoverartDir(), CoverArtProvider.COVER_ARTS);
                 ResourceHandler coverartHandler = new CoverartHandler();
-                coverartHandler.setBaseResource(ResourceFactory.of(coverartHandler).newResource(pathFile.toPath()));
+                coverartHandler.setBaseResource(ResourceFactory.of(coverartHandler).newResource("/"));
                 coverartHandler.setDirAllowed(false);
                 coverartHandler.setServer(server);
                 ContextHandler coverartContext = new ContextHandler("/coverart");
@@ -266,22 +267,41 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
 
     private class CoverartHandler extends ResourceHandler {
+        File defaultCoverartDir;
         private CoverartHandler( ) {
+            defaultCoverartDir = new File(getCoverartDir(CoverArtProvider.COVER_ARTS),DEFAULT_COVERART_FILE);
         }
 
         @Override
         public boolean handle(Request request, Response response, Callback callback) throws Exception {
-            if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod()))
-            {
+            if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
                 // try another handler
                 return super.handle(request, response, callback);
             }
 
+            //extracted embed cover art
             HttpContent content = getResourceService().getContent(Request.getPathInContext(request), request);
+            if (content == null) {
+                // folder cover art
+                String uri = request.getHttpURI().getPath();
+                try {
+                    String albumUniqueKey = uri.substring("/coverart/".length(), uri.indexOf(".png"));
+                    MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
+                    if (tag != null) {
+                        File covertFile = FileRepository.getFolderCoverArt(tag.getPath());
+                        if(covertFile !=null) {
+                            content = getResourceService().getContent(covertFile.getAbsolutePath(), request);
+                        }
+                    }
+                } catch (Exception ex) {
+                    Log.e(TAG, "lookupContent: - " + uri, ex);
+                }
+            }
+
             if (content == null)
             {
-                // check file and create if not existed
-                content = getResourceService().getContent(DLNA_DEFAULT_COVERART_FILE, request);
+                // default cover art
+                content = getResourceService().getContent(defaultCoverartDir.getAbsolutePath(), request);
             }
 
             if (content == null)
