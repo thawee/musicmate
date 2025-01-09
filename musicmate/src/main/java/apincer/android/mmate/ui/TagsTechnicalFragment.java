@@ -32,8 +32,8 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagReader;
 import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.utils.ReflectUtil;
 import apincer.android.mmate.utils.StringUtils;
-import de.esoco.lib.reflect.ReflectUtil;
 
 public class TagsTechnicalFragment extends Fragment {
     protected Context context;

@@ -72,12 +72,13 @@
             android:title="Full Scan Songs"
             app:showAsAction="always" />
     -->
+	<!--
 	<item
 		android:id="@+id/menu_about_libraries"
 		android:icon="@drawable/ic_outline_code_24"
 		android:title="Third-Party Libraries"
 		app:showAsAction="always" />
-
+-->
 	<item
 		android:id="@+id/menu_about_crash"
 		android:icon="@drawable/ic_round_report_gmailerrorred_24"

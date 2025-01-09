@@ -74,7 +74,6 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/AppTheme.Material3"
         tools:ignore="UnusedAttribute">
-
         <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
         <service
             android:name="apincer.android.mmate.player.NotificationListener"

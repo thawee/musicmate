@@ -18,7 +18,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.work.WorkManager;
 
 import com.arthenica.ffmpegkit.FFmpegKitConfig;
-import com.balsikandar.crashreporter.CrashReporter;
+//import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
@@ -110,7 +110,7 @@ public class MusixMateApp extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         LogHelper.initial();
         LogHelper.setSLF4JOn();
-        CrashReporter.initialize(this);
+        //CrashReporter.initialize(this);
         //initNoImageCovers();
 
         // initialize thread executors
@@ -133,7 +133,7 @@ public class MusixMateApp extends Application {
                 .addState("error",
                         "No Connection",
                         "Error retrieving information from server.",
-                        AppCompatResources.getDrawable(this, R.drawable.ic_server_error),
+                        AppCompatResources.getDrawable(this, sakout.mehdi.StateViews.R.drawable.ic_server_error),
                         "Retry"
                 )
 

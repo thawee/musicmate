@@ -1,5 +1,10 @@
-apply plugin: 'com.android.application'
-apply plugin: 'io.objectbox' // Apply last.
+//apply plugin: 'com.android.application'
+//apply plugin: 'io.objectbox' // Apply last.
+plugins {
+    // id("com.android.application")
+    alias libs.plugins.android.application
+    alias libs.plugins.objectbox
+}
 
 android {
     compileSdkVersion versions.compileSdk
@@ -24,16 +29,20 @@ android {
             excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0']
         }
     }
-    namespace 'apincer.android.tripmate'
+    compileOptions {
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+    namespace = 'apincer.android.tripmate'
 }
 
 dependencies { 
 
 //    implementation deps.androidx.recyclerView
-    implementation deps.androidx.core
-    implementation deps.androidx.appCompat
+    implementation libs.androidx.core
+    implementation libs.androidx.appCompat
 //    implementation deps.androidx.cardView
-    annotationProcessor deps.androidx.annotation
+    annotationProcessor libs.androidx.annotation
     //implementation deps.androidx.lifecycle_compiler
     //implementation deps.androidx.lifecycle_extensions
     //implementation deps.androidx.palette
@@ -42,7 +51,7 @@ dependencies {
    // implementation deps.androidx.room
    // annotationProcessor deps.androidx.room_compiler
 
-    implementation deps.google.material
+    implementation libs.google.material
     //implementation deps.google.android_maps_utils
 
     implementation deps.timber
@@ -68,18 +77,18 @@ dependencies {
 //    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
 //	implementation deps.apache.httpclient
-    implementation deps.apache.httpmime
-    implementation deps.apache.commons_codec
-    implementation deps.apache.commons_logging
+    implementation libs.httpcomponents.httpmime
+    implementation libs.commons.codec
+    implementation libs.commons.logging
 
     // MapsForge
-    implementation 'org.mapsforge:mapsforge-map-android:0.22.0'
-    implementation 'org.mapsforge:mapsforge-map:0.22.0'
-    implementation 'org.mapsforge:mapsforge-themes:0.22.0'
+   // implementation 'org.mapsforge:mapsforge-map-android:0.22.0'
+    //implementation 'org.mapsforge:mapsforge-map:0.22.0'
+   // implementation 'org.mapsforge:mapsforge-themes:0.22.0'
 
-    implementation("org.mapsforge:mapsforge-poi-android:0.22.0")
-    implementation ("org.mapsforge:mapsforge-map-reader:0.22.0")
-    implementation("com.caverock:androidsvg:1.4")
+   // implementation("org.mapsforge:mapsforge-poi-android:0.22.0")
+   // implementation ("org.mapsforge:mapsforge-map-reader:0.22.0")
+   // implementation("com.caverock:androidsvg:1.4")
 
 //    implementation deps.ui.materialedittext
 

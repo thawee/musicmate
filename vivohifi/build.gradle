@@ -32,13 +32,13 @@ android {
 }
 
 dependencies {
-    implementation deps.androidx.appCompat
+    implementation libs.androidx.appCompat
     //  implementation deps.androidx.cardView
-    implementation deps.androidx.annotation
+    implementation libs.androidx.annotation
     // implementation deps.androidx.lifecycle_extensions
-    implementation deps.androidx.palette
-    implementation deps.google.material
-    implementation deps.kotlin.stdlib
+    implementation libs.androidx.palette
+    implementation libs.google.material
+    implementation libs.kotlin.stdlib
 
    // testImplementation 'junit:junit:4.12'
    // androidTestImplementation 'androidx.test:runner:1.1.0'

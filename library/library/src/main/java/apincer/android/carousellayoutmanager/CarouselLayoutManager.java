@@ -313,13 +313,12 @@ public class CarouselLayoutManager extends RecyclerView.LayoutManager implements
     }
 
     @Override
-    public void onMeasure(final RecyclerView.Recycler recycler, final RecyclerView.State state, final int widthSpec, final int heightSpec) {
+    public void onMeasure(@NonNull final RecyclerView.Recycler recycler, @NonNull final RecyclerView.State state, final int widthSpec, final int heightSpec) {
         mDecoratedChildSizeInvalid = true;
 
         super.onMeasure(recycler, state, widthSpec, heightSpec);
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public void onAdapterChanged(final RecyclerView.Adapter oldAdapter, final RecyclerView.Adapter newAdapter) {
         super.onAdapterChanged(oldAdapter, newAdapter);
@@ -406,12 +405,7 @@ public class CarouselLayoutManager extends RecyclerView.LayoutManager implements
 
         if (mCenterItemPosition != centerItem) {
             mCenterItemPosition = centerItem;
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    selectItemCenterPosition(centerItem);
-                }
-            });
+            new Handler(Looper.getMainLooper()).post(() -> selectItemCenterPosition(centerItem));
         }
     }
 
@@ -562,7 +556,8 @@ public class CarouselLayoutManager extends RecyclerView.LayoutManager implements
 
     private void recyclerOldViews(final RecyclerView.Recycler recycler) {
         for (RecyclerView.ViewHolder viewHolder : new ArrayList<>(recycler.getScrapList())) {
-            int adapterPosition = viewHolder.getAdapterPosition();
+            //int adapterPosition = viewHolder.getAdapterPosition();
+            int adapterPosition = viewHolder.getAbsoluteAdapterPosition();
             boolean found = false;
             for (LayoutOrder layoutOrder : mLayoutHelper.mLayoutOrder) {
                 if (layoutOrder.mItemAdapterPosition == adapterPosition) {
@@ -673,12 +668,7 @@ public class CarouselLayoutManager extends RecyclerView.LayoutManager implements
         final int targetPosition = getPosition(view);
         final float directionDistance = getScrollDirection(targetPosition);
 
-        final int distance = Math.round(directionDistance * getScrollItemSize());
-        if (mCircleLayout) {
-            return distance;
-        } else {
-            return distance;
-        }
+        return Math.round(directionDistance * getScrollItemSize());
     }
 
     /**
@@ -856,7 +846,7 @@ public class CarouselLayoutManager extends RecyclerView.LayoutManager implements
         }
 
         private CarouselSavedState(@NonNull final Parcel in) {
-            mSuperState = in.readParcelable(Parcelable.class.getClassLoader());
+            mSuperState = in.readParcelable(Parcelable.class.getClassLoader(), Parcelable.class);
             mCenterItemPosition = in.readInt();
         }
 
@@ -877,7 +867,7 @@ public class CarouselLayoutManager extends RecyclerView.LayoutManager implements
         }
 
         public static final Parcelable.Creator<CarouselSavedState> CREATOR
-                = new Parcelable.Creator<CarouselSavedState>() {
+                = new Parcelable.Creator<>() {
             @Override
             public CarouselSavedState createFromParcel(final Parcel parcel) {
                 return new CarouselSavedState(parcel);

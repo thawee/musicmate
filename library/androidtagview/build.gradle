@@ -1,37 +1,39 @@
-apply plugin: 'com.android.library'
-
+//apply plugin: 'com.android.library'
+plugins {
+    alias(libs.plugins.android.library)
+}
 android {
-    compileSdkVersion versions.compileSdk
-    buildToolsVersion versions.buildTools
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
 
     defaultConfig {
-        minSdkVersion versions.minSdk
-        targetSdkVersion versions.targetSdk
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled = false
+            proguardFiles = [getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro']
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
     }
-    namespace 'co.lujun.androidtagview'
+    namespace = 'co.lujun.androidtagview'
 }
 
 dependencies {
-    implementation deps.androidx.activity
-    implementation deps.androidx.appCompat
-    implementation deps.google.material
-    implementation deps.androidx.constraintlayout
-    implementation deps.androidx.annotation
-    implementation deps.jetbrains.annotations
-    implementation deps.androidx.lifecycle_runtime
-    implementation deps.androidx.lifecycle_process
+    implementation libs.androidx.activity
+    implementation libs.androidx.appCompat
+    implementation libs.google.material
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.annotation
+    implementation libs.jetbrains.annotations
+    implementation libs.androidx.lifecycle.runtime
+    implementation libs.androidx.lifecycle.process
 
-    testImplementation deps.junit4
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
 }

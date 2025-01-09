@@ -16,7 +16,8 @@ public abstract class CarouselChildSelectionListener {
         @Override
         public void onClick(final View v) {
             final RecyclerView.ViewHolder holder = mRecyclerView.getChildViewHolder(v);
-            final int position = holder.getAdapterPosition();
+           // final int position = holder.getAdapterPosition();
+            final int position = holder.getAbsoluteAdapterPosition();
 
             if (position == mCarouselLayoutManager.getCenterItemPosition()) {
                 onCenterItemClicked(mRecyclerView, mCarouselLayoutManager, v);
@@ -32,12 +33,12 @@ public abstract class CarouselChildSelectionListener {
 
         mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
-            public void onChildViewAttachedToWindow(final View view) {
+            public void onChildViewAttachedToWindow(@NonNull final View view) {
                 view.setOnClickListener(mOnClickListener);
             }
 
             @Override
-            public void onChildViewDetachedFromWindow(final View view) {
+            public void onChildViewDetachedFromWindow(@NonNull final View view) {
                 view.setOnClickListener(null);
             }
         });

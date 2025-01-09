@@ -206,8 +206,8 @@ public class TagsActivity extends AppCompatActivity {
         int statusBarHeight = getStatusBarHeight();
         int height = UIUtils.getScreenHeight(this); // getWindow().getWindowManager().getDefaultDisplay().getHeight();
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
-        toolbar_from_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
-        toolbar_to_color = ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary);
+        toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
+        toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         StateView mStateView = findViewById(R.id.status_page);
         mStateView.hideStates();
         setUpTitlePanel();
@@ -340,7 +340,7 @@ public class TagsActivity extends AppCompatActivity {
         playerPanel.setOnLongClickListener(view -> {
             closePreview = !closePreview;
             if(closePreview) {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent));
+                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), apincer.android.library.R.drawable.bg_transparent));
             }else {
                 playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
             }
@@ -354,7 +354,7 @@ public class TagsActivity extends AppCompatActivity {
             playerPanel.setVisibility(View.VISIBLE);
             playerBtn.setBackground(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
             if(closePreview) {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.bg_transparent));
+                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), apincer.android.library.R.drawable.bg_transparent));
             }else {
                 playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
             }

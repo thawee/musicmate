@@ -1,12 +1,15 @@
-apply plugin: 'com.android.library'
+//apply plugin: 'com.android.library'
+plugins {
+    alias(libs.plugins.android.library)
+}
 
 android {
-    compileSdkVersion versions.compileSdk
-    buildToolsVersion versions.buildTools
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
 
     defaultConfig {
-        minSdkVersion versions.minSdk
-        targetSdkVersion versions.targetSdk
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
 
         //  testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -17,30 +20,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
     }
-    namespace 'com.balsikandar.crashreporter'
+    namespace = 'com.balsikandar.crashreporter'
 }
 
 dependencies {
-   // androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
-   //     exclude group: 'com.android.support', module: 'support-annotations'
-   // })
-   // api 'com.android.support:recyclerview-v7:' + rootProject.ext.support_version
-   // api 'com.android.support:appcompat-v7:' + rootProject.ext.support_version
-   // api 'com.android.support:design:' + rootProject.ext.support_version
-    implementation deps.androidx.core
-    implementation deps.androidx.activity
-    implementation deps.google.material
-    implementation deps.androidx.recyclerView
-    implementation deps.androidx.appCompat
-    implementation deps.androidx.annotation
-    implementation deps.jetbrains.annotations
-    implementation deps.androidx.lifecycle_runtime
-    implementation deps.androidx.lifecycle_process
-    //implementation 'androidx.appcompat:appcompat:1.4.1'
-   // implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    testImplementation deps.junit4
+    implementation libs.androidx.core
+    implementation libs.androidx.activity
+    implementation libs.google.material
+    implementation libs.androidx.recyclerView
+    implementation libs.androidx.appCompat
+    implementation libs.androidx.annotation
+    implementation libs.jetbrains.annotations
+    implementation libs.androidx.lifecycle.runtime
+    implementation libs.androidx.lifecycle.process
+    testImplementation libs.junit
 }

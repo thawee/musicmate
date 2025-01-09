@@ -1,22 +1,50 @@
+pluginManagement {
+    repositories {
+       /* google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+                includeGroupByRegex("io\\.objectbox.*")
+            }
+        } */
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url='https://jitpack.io' }
+        maven { url='https://dl.bintray.com/tsubasap91/maven' }
+        maven { url='https://mvnrepository.com/artifact/'}
+        maven { url='https://repo1.maven.org/maven2/'}
+        maven { url="https://objectbox.net/beta-repo/"}
+        }
+}
+
 rootProject.name = 'multi-projects'
 include ':musicmate'
-include ':TripMate'
+//include ':TripMate'
 include ':library:library'
 include ':library:justdsd'
 //include ':library:JustFLAC'
-include ':library:MaterialEditText'
+//include ':library:MaterialEditText'
 include ':library:CircleProgressView'
 include ':library:androidtagview'
-include ':library:TableFixHeaders'
-include ':library:AnimatedExpandableListView'
-include ':library:paralloid'
-include ':library:slideDateTimePicker'
+//include ':library:TableFixHeaders'
+//include ':library:AnimatedExpandableListView'
+//include ':library:paralloid'
+//include ':library:slideDateTimePicker'
 include ':library:androidtagview'
 include ':library:crashreporter'
-include ':library:coroutines'
-include ':library:objectrelations'
-include ':library:esoco-common'
-include ':library:esoco-monads'
+//include ':library:coroutines'
+//include ':library:objectrelations'
+//include ':library:esoco-common'
+//include ':library:esoco-monads'
 //include ':library:placesAPI'
 //include ':library:curvebottombar'
 //include ':library:spacetablayout'

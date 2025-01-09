@@ -1,17 +1,18 @@
+//apply plugin: 'com.android.library'
 plugins {
-    id 'com.android.library'
+    alias(libs.plugins.android.library)
 }
 
 android {
-    namespace 'org.jaudiotagger'
-    compileSdkVersion versions.compileSdk
-    buildToolsVersion versions.buildTools
+    namespace = 'org.jaudiotagger'
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
 
     defaultConfig {
-        minSdkVersion versions.minSdk
-        targetSdkVersion versions.targetSdk
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+       // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -22,16 +23,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
     }
 }
 
-dependencies {
-
-   // implementation 'androidx.appcompat:appcompat:1.6.1'
-  //  implementation 'com.google.android.material:material:1.11.0'
-    testImplementation 'junit:junit:4.13.2'
-  //  androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-  //  androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+tasks.register('testClasses') {
+    doLast {
+        println 'This is a dummy testClasses task'
+    }
 }

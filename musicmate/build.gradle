@@ -1,6 +1,5 @@
-import com.mikepenz.aboutlibraries.plugin.DuplicateMode
-import com.mikepenz.aboutlibraries.plugin.DuplicateRule
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /*
  * Copyright (C) 2014 The Android Open Source Project
@@ -19,34 +18,43 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  */
 
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    id("kotlin-kapt")
-    id("com.mikepenz.aboutlibraries.plugin")
+   // id("com.android.application")
+    alias libs.plugins.android.application
+    //id("kotlin-android")
+   // id("kotlin-kapt")
+    alias libs.plugins.kotlin.android
+    alias libs.plugins.kotlin.kapt
+    alias libs.plugins.devtools.ksp
+   // id("com.mikepenz.aboutlibraries.plugin")
+   // alias libs.plugins.android.aboutlibraries
 }
 
 android {
-    compileSdkVersion versions.compileSdk
-    buildToolsVersion versions.buildTools
+   // compileSdkVersion versions.compileSdk
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+    //buildTools( libs.versions.buildTools.get())
 
     defaultConfig {
-        applicationId "apincer.android.mmate"
-        minSdkVersion versions.minSdk
-        targetSdkVersion versions.targetSdk
-        versionCode 95
-        versionName  "3.9.5"+ versions.buildDate
+        applicationId = "apincer.android.mmate"
+        //minSdkVersion versions.minSdk
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        //targetSdkVersion versions.targetSdk
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+        versionCode = 95
+        versionName  = "3.9.5-"+ getDate()
         //noinspection ChromeOsAbiSupport
-        ndk.abiFilters 'arm64-v8a'
-        multiDexEnabled true
-		renderscriptTargetApi versions.compileSdk
-		renderscriptSupportModeEnabled true
-        vectorDrawables.useSupportLibrary true
+        ndk.abiFilters = ['arm64-v8a']
+        multiDexEnabled = true
+		//renderscriptTargetApi versions.renderscriptTargetApi
+		//renderscriptSupportModeEnabled = true
+        vectorDrawables.useSupportLibrary = true
     }
+
     compileOptions {
-        //coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
         // jetty12 required java 17
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
     }
 
     kotlinOptions {
@@ -54,19 +62,14 @@ android {
     }
 
     tasks.withType(KotlinCompile).configureEach {
-        kotlinOptions {
-            jvmTarget = "17"
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
-    ///dexOptions {
-       // preDexLibraries = true
-       /// jumboMode true
-       /// javaMaxHeapSize "3g"
-    ///}
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -74,6 +77,7 @@ android {
     buildFeatures {
         dataBinding = false
     }
+
     packagingOptions {
         resources {
             excludes += ['META-INF/library_release.kotlin_module', 'META-INF/library-core_release.kotlin_module', 'META-INF/LICENSE.md', 'META-INF/NOTICE.md', 'META-INF/AL2.0', 'META-INF/LGPL2.1','META-INF/INDEX.LIST','META-INF/io.netty.versions.properties']
@@ -87,132 +91,95 @@ android {
         }
     }
     lint {
-        abortOnError true
+        abortOnError = true
     }
 
-    namespace 'apincer.android.mmate'
+    namespace = 'apincer.android.mmate'
 }
 kapt {
     // required by epoxy
     correctErrorTypes = true
 }
 
-//project.android.buildTypes.all { buildType ->
-//    buildType.javaCompileOptions.annotationProcessorOptions.arguments =
-//            [
-//                    validateEpoxyModelUsage     : "true",
-//                    requireHashCodeInEpoxyModels: "true",
-//                    requireAbstractEpoxyModels  : "true",
-//                    implicitlyAddAutoModels     : "true",
-//                    logEpoxyTimings     : "false",
-//                   // enableParallelEpoxyProcessing     : "true",
-//            ]
-//}
-
-repositories {
-    maven { url "https://jitpack.io" }
-    maven { url 'https://dl.bintray.com/tsubasap91/maven' }
-    maven { url 'https://mvnrepository.com/artifact/'}
-    maven { url 'https://repo1.maven.org/maven2/'}
-   // maven { url 'http://dl.bintray.com/raphaelbussa/maven' }
-}
-
 dependencies {
     // AndroidX
-    implementation deps.androidx.activity
-    implementation deps.androidx.recyclerView
-    implementation deps.androidx.recyclerView_selection
-    implementation deps.androidx.coordinatorlayout
-    implementation deps.androidx.appCompat
-    implementation deps.androidx.fragment
-    implementation deps.androidx.cardView
-    implementation deps.androidx.annotation
-    implementation deps.androidx.lifecycle_runtime
-    implementation deps.androidx.lifecycle_process
-    implementation deps.androidx.palette
-    implementation deps.androidx.preference
-    implementation deps.androidx.documentFile
-    implementation deps.androidx.work
-    implementation deps.androidx.drawerlayout
-    implementation deps.androidx.loader
-    implementation deps.androidx.localbroadcastmanager
-    implementation deps.androidx.drawerlayout
-    implementation deps.androidx.viewpager2
+    implementation libs.androidx.annotation
+    implementation libs.androidx.core
+    implementation libs.androidx.activity
+    implementation libs.androidx.recyclerView
+    implementation libs.androidx.recyclerView.selection
+    implementation libs.androidx.coordinatorlayout
+    implementation libs.androidx.appCompat
+    implementation libs.androidx.fragment
+    implementation libs.androidx.cardView
+    implementation libs.androidx.annotation
+    implementation libs.androidx.lifecycle.runtime
+    implementation libs.androidx.lifecycle.process
+    implementation libs.androidx.palette
+    implementation libs.androidx.preference
+    implementation libs.androidx.documentFile
+    implementation libs.androidx.work
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.loader
+    implementation libs.androidx.localbroadcastmanager
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.viewpager2
 
     // OrmLite
-    implementation deps.ormlite
+    implementation libs.ormlite.android
 
     // google
-    implementation deps.google.material
-    implementation deps.filepicker
+    implementation libs.google.material
+    implementation libs.google.gson
+    implementation libs.google.guava
 
     // UI Libs
-    //implementation deps.ui.groupie
-    implementation deps.ui.powerspinner
-    implementation deps.ui.powermenu
-    implementation deps.ui.progressview
-    implementation deps.ui.simplifyspan
-    implementation deps.ui.fastscroll
-    implementation deps.ui.elasticviews
-    implementation deps.ui.stateViews
-    implementation deps.ui.androidribbon
-    implementation deps.ui.mpandroidchart
-   // implementation "com.androidplot:androidplot-core:1.5.11"
-    implementation deps.ui.textbuilder
-    implementation deps.ui.carouselrecyclerview
-
-    //https://github.com/Chrisvin/FlipTabs
-    //implementation 'com.github.Chrisvin:FlipTabs:v1.5'
-    implementation deps.ui.refresh_layout_kernel
-    implementation deps.ui.refresh_header_classics
-
-    implementation deps.ui.aboutlibraries
-  //  implementation deps.ui.shapeofview
-    implementation deps.ui.photoview
-   // implementation deps.ui.alerter
+    implementation libs.skydoves.powerspinner
+    implementation libs.skydoves.powermenu
+    implementation libs.skydoves.progressview
+    implementation libs.skydoves.androidribbon
+    implementation libs.skydoves.elasticviews
+    implementation libs.iwgang.simplifyspan
+    implementation libs.zhanghai.fastscroll
+    implementation libs.medyo.stateviews
+    implementation libs.chrisbanes.photoview
+    implementation libs.philjay.mpandroidchart
+    implementation libs.vanniktech.textbuilder
+    implementation libs.sparrow007.carouselrecyclerview
+    implementation libs.refresh.layout.kernel
+    implementation libs.refresh.header.classics
+    //implementation libs.mikepenz.aboutlibraries
+    implementation libs.tutorialsandroid.filepicker
 
     //others
-    implementation deps.eventbus
-    implementation deps.storage
-    implementation deps.guava
-    implementation deps.ffmpeg
+    implementation libs.greenrobot.eventbus
+    implementation libs.anggrayudi.storage
+    implementation libs.ffmpegkit.audio
     //implementation deps.coverartarchive
 
-    //retrofit and json Librariess
-    implementation deps.google.gson
+    implementation libs.commons.codec
+    implementation libs.commons.io
+    implementation libs.commons.logging
+    implementation libs.commons.lang3
+    implementation libs.commons.text
+    implementation libs.commons.match3
+    implementation libs.icm.jlargearrays
 
-    implementation deps.apache.commons_codec
-    implementation deps.apache.commons_io
-    implementation deps.apache.commons_logging
-    implementation deps.apache.commons_lang3
-    implementation deps.apache.commons_text
-    implementation deps.apache.commons_match3
-    implementation deps.jlarge_arrays
-
-    implementation deps.fasterxml.jackson_core
-    implementation deps.fasterxml.jackson_databind
-
-    //implementation deps.kotlin.stdlib
-    implementation deps.androidx.annotation
-    implementation deps.jetbrains.annotations
-
-    implementation deps.slf4j
-
-    implementation deps.jupnp_android
-    implementation deps.jupnp_support
-    implementation deps.jetty_server12
-    implementation deps.jetty_client12
+    implementation libs.jackson.core
+    implementation libs.jackson.databind
+    implementation libs.jetbrains.annotations
+    implementation libs.slf4j.api
+    implementation libs.jupnp.android
+    implementation libs.jupnp.support
+    implementation libs.jetty.server12
+    implementation libs.jetty.client12
 
     // Glide
-    implementation deps.glide.runtime
-    kapt deps.glide.compiler
-
-    // Coil
-   // implementation deps.coil.runtime2
-   // implementation deps.coil.transformations
+    implementation libs.glide.runtime
+    kapt libs.glide.compiler
+    //ksp libs.glide.compiler
 
     // Local Library
-    //https://bitbucket.org/ijabz/jaudiotagger/src/master/
     implementation project(':library:justdsd')
    // implementation project(':library:JustFLAC')
     implementation project(':library:library')
@@ -222,7 +189,7 @@ dependencies {
    // implementation project(':library:MaterialEditText')
     implementation project(':library:mqaidentifier')
    // implementation project(':library:coroutines')
-    implementation project(':library:objectrelations')
+   // implementation project(':library:objectrelations')
    // implementation project(':library:esoco-common')
    // implementation project(':library:esoco-monads')
 }
@@ -235,6 +202,7 @@ configurations.implementation {
    // exclude group: 'com.google.code.gson', module: 'gson'
 }
 
+/*
 aboutLibraries {
     // define the path configuration files are located in. E.g. additional libraries, licenses to add to the target .json
     configPath = "buildsystem"
@@ -312,4 +280,9 @@ aboutLibraries {
             ~"org.apache.commons:commons-math3"
     ]
 }
+ */
 
+static def getDate() {
+    def date = new Date()
+    return date.format('yyMMdd')
+}

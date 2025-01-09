@@ -2,7 +2,6 @@ package com.rengwuxian.materialedittext;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
@@ -15,7 +14,6 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -304,7 +302,7 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
   private boolean clearButtonClicking;
   private ColorStateList textColorStateList;
   private ColorStateList textColorHintStateList;
-  private ArgbEvaluator focusEvaluator = new ArgbEvaluator();
+  private final ArgbEvaluator focusEvaluator = new ArgbEvaluator();
   Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
   TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
   StaticLayout textLayout;
@@ -326,7 +324,6 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
     init(context, attrs);
   }
 
-  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   public MaterialMultiAutoCompleteTextView(Context context, AttributeSet attrs, int style) {
     super(context, attrs, style);
     init(context, attrs);
@@ -352,12 +349,8 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
     int defaultPrimaryColor;
     TypedValue primaryColorTypedValue = new TypedValue();
     try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         context.getTheme().resolveAttribute(android.R.attr.colorPrimary, primaryColorTypedValue, true);
         defaultPrimaryColor = primaryColorTypedValue.data;
-      } else {
-        throw new RuntimeException("SDK_INT less than LOLLIPOP");
-      }
     } catch (Exception e) {
       try {
         int colorPrimaryId = getResources().getIdentifier("colorPrimary", "attr", getContext().getPackageName());
@@ -429,12 +422,8 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
     innerPaddingBottom = paddingsTypedArray.getDimensionPixelSize(4, padding);
     paddingsTypedArray.recycle();
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
       setBackground(null);
-    } else {
-      setBackgroundDrawable(null);
-    }
-    if (singleLineEllipsis) {
+      if (singleLineEllipsis) {
       TransformationMethod transformationMethod = getTransformationMethod();
       setSingleLine();
       setTransformationMethod(transformationMethod);
@@ -679,7 +668,6 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
 
   /**
    * Set the color of the underline for normal state
-   * @param color
    */
   public void setUnderlineColor(int color) {
     this.underlineColor = color;
@@ -695,7 +683,6 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
    * <p/>
    * Pass null to force fallback to use hint's value.
    *
-   * @param floatingLabelText
    */
   public void setFloatingLabelText(@Nullable CharSequence floatingLabelText) {
     this.floatingLabelText = floatingLabelText == null ? getHint() : floatingLabelText;
@@ -819,7 +806,19 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
       Layout.Alignment alignment = (getGravity() & Gravity.RIGHT) == Gravity.RIGHT || isRTL() ?
         Layout.Alignment.ALIGN_OPPOSITE : (getGravity() & Gravity.LEFT) == Gravity.LEFT ?
         Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_CENTER;
-      textLayout = new StaticLayout(tempErrorText != null ? tempErrorText : helperText, textPaint, getWidth() - getBottomTextLeftOffset() - getBottomTextRightOffset() - getPaddingLeft() - getPaddingRight(), alignment, 1.0f, 0.0f, true);
+
+     // textLayout = new StaticLayout(tempErrorText != null ? tempErrorText : helperText, textPaint, getWidth() - getBottomTextLeftOffset() - getBottomTextRightOffset() - getPaddingLeft() - getPaddingRight(), alignment, 1.0f, 0.0f, true);
+      StaticLayout textLayout = StaticLayout.Builder.obtain(
+                      tempErrorText != null ? tempErrorText : helperText,
+                      0,
+                      (tempErrorText != null ? tempErrorText : helperText).length(),
+                      textPaint,
+                      getWidth() - getBottomTextLeftOffset() - getBottomTextRightOffset() - getPaddingLeft() - getPaddingRight()
+              )
+              .setAlignment(alignment)
+              .setLineSpacing(0.0f, 1.0f)
+              .setIncludePad(true)
+              .build();
       destBottomLines = Math.max(textLayout.getLineCount(), minBottomTextLines);
     } else {
       destBottomLines = minBottomLines;
@@ -886,22 +885,19 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
       }
     });
     // observe the focus state to animate the floating label's text color appropriately
-    innerFocusChangeListener = new OnFocusChangeListener() {
-      @Override
-      public void onFocusChange(View v, boolean hasFocus) {
-        if (floatingLabelEnabled && highlightFloatingLabel) {
-          if (hasFocus) {
-            getLabelFocusAnimator().start();
-          } else {
-            getLabelFocusAnimator().reverse();
-          }
+    innerFocusChangeListener = (v, hasFocus) -> {
+      if (floatingLabelEnabled && highlightFloatingLabel) {
+        if (hasFocus) {
+          getLabelFocusAnimator().start();
+        } else {
+          getLabelFocusAnimator().reverse();
         }
-        if (validateOnFocusLost && !hasFocus) {
-          validate();
-        }
-        if (outerFocusChangeListener != null) {
-          outerFocusChangeListener.onFocusChange(v, hasFocus);
-        }
+      }
+      if (validateOnFocusLost && !hasFocus) {
+        validate();
+      }
+      if (outerFocusChangeListener != null) {
+        outerFocusChangeListener.onFocusChange(v, hasFocus);
       }
     };
     super.setOnFocusChangeListener(innerFocusChangeListener);
@@ -1403,12 +1399,8 @@ public class MaterialMultiAutoCompleteTextView extends AppCompatMultiAutoComplet
     super.onDraw(canvas);
   }
 
-  @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
   private boolean isRTL() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      return false;
-    }
-    Configuration config = getResources().getConfiguration();
+      Configuration config = getResources().getConfiguration();
     return config.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
   }
 

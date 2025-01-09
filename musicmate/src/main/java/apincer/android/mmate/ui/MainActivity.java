@@ -65,7 +65,7 @@ import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
-import com.mikepenz.aboutlibraries.LibsBuilder;
+//import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.skydoves.powermenu.MenuAnimation;
 import com.skydoves.powermenu.PowerMenu;
@@ -445,8 +445,8 @@ public class MainActivity extends AppCompatActivity {
                     public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model, Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
                         Bitmap bmp = BitmapHelper.drawableToBitmap(resource);
                         Palette palette = Palette.from(bmp).generate();
-                        int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(), R.color.transparent));
-                        int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(), R.color.transparent));
+                        int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
+                        int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
                         runOnUiThread(() -> {
                             try {
                                 nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
@@ -865,9 +865,9 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
             startActivity(intent);
             return true;
-        }else if(item.getItemId() == R.id.menu_about_libraries) {
+      /*  }else if(item.getItemId() == R.id.menu_about_libraries) {
             doShowAboutLibraries();
-            return true;
+            return true; */
         }else if(item.getItemId() == R.id.menu_about_music_mate) {
             doShowAboutApp();
             return true;
@@ -1023,6 +1023,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(myIntent);
     }
 
+    /*
     private void doShowAboutLibraries() {
        new LibsBuilder()
                 .withAboutAppName("Music Mate")
@@ -1037,7 +1038,7 @@ public class MainActivity extends AppCompatActivity {
                 .withSortEnabled(true)
                 .withActivityTitle("Third-Party Libraries")
                 .start(this);
-    }
+    } */
 
     private void setUpSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
@@ -1174,7 +1175,7 @@ public class MainActivity extends AppCompatActivity {
                     .setTextSize(16)
                     .setSelectedTextColor(Color.WHITE)
                     .setMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary_light))
-                    .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
+                    .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), apincer.android.library.R.color.colorPrimary))
                     .setAutoDismiss(true)
                     .setDividerHeight(1)
                     .setSelectedEffect(false)

@@ -27,7 +27,8 @@ public class Utils {
     }
 
     public static float sp2px(Context context, float sp) {
-        final float scale = context.getResources().getDisplayMetrics().scaledDensity;
+       // final float scale = context.getResources().getDisplayMetrics().scaledDensity;
+        float scale = context.getResources().getConfiguration().fontScale * context.getResources().getDisplayMetrics().density;
         return sp * scale;
     }
 

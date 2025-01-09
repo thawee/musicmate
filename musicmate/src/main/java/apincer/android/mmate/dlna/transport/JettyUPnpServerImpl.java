@@ -7,7 +7,6 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import android.content.Context;
 import android.util.Log;
 
-import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
@@ -48,7 +47,6 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import de.esoco.lib.expression.Action;
 
 public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
@@ -242,7 +240,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
             }
 
             UpnpHeaders headers = new UpnpHeaders();
-            req.getHeaders().stream().iterator().forEachRemaining((Action<HttpField>) rValue -> headers.add(rValue.getName(), rValue.getValue()));
+            req.getHeaders().stream().iterator().forEachRemaining(httpField -> headers.add(httpField.getName(), httpField.getValue()));
             requestMessage.setHeaders(headers);
 
             // Body

@@ -9,5 +9,9 @@ android {
         targetSdkVersion versions.targetSdk
 
     }
+    compileOptions {
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
     namespace 'com.inqbarna.tablefixheaders'
 }

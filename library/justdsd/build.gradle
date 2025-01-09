@@ -1,15 +1,19 @@
-apply plugin: 'com.android.library'
+//apply plugin: 'com.android.library'
+plugins {
+    alias(libs.plugins.android.library)
+}
+
 android {
-    compileSdkVersion versions.compileSdk
-    buildToolsVersion versions.buildTools
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
 
     defaultConfig {
-        minSdkVersion versions.minSdk
-        targetSdkVersion versions.targetSdk
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
     }
     buildTypes {
         release {
@@ -17,10 +21,10 @@ android {
         }
     }
     lint {
-        abortOnError true
+        abortOnError = true
     }
-    namespace 'org.justdsd'
+    namespace = 'org.justdsd'
 }
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }

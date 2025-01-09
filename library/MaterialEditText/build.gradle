@@ -1,38 +1,36 @@
 apply plugin: 'com.android.library'
 
 android {
-  compileSdkVersion versions.compileSdk
-  buildToolsVersion versions.buildTools
+  compileSdkVersion = versions.compileSdk
+  buildToolsVersion = versions.buildTools
 
   defaultConfig {
-    minSdkVersion versions.minSdk
-    targetSdkVersion versions.targetSdk
+    minSdk = versions.minSdk
+    targetSdk = versions.targetSdk
   }
   buildTypes {
     release {
-      minifyEnabled false
+      minifyEnabled = false
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
   }
-    namespace 'com.rengwuxian.materialedittext'
+  compileOptions {
+    sourceCompatibility = JavaLanguageVersion.of(17)
+    targetCompatibility = JavaLanguageVersion.of(17)
+  }
+    namespace = 'com.rengwuxian.materialedittext'
 }
 
 dependencies {
- // compile 'com.android.support:support-annotations:22.2.0'
- // implementation 'com.nineoldandroids:library:2.4.0'
-  implementation deps.androidx.core
- // implementation deps.androidx.fragment
-  implementation deps.androidx.appCompat
-  implementation deps.google.material
-  implementation deps.androidx.activity
-  implementation deps.androidx.recyclerView
-  implementation deps.androidx.annotation
-  implementation deps.kotlin.stdlib
-  implementation deps.jetbrains.annotations
-  implementation deps.androidx.lifecycle_runtime
-  implementation deps.androidx.lifecycle_process
-  implementation deps.androidx.documentFile
- // compile 'com.android.support:appcompat-v7:22.2.0'
+  implementation libs.androidx.core
+  implementation libs.androidx.appCompat
+  implementation libs.google.material
+  implementation libs.androidx.activity
+  implementation libs.androidx.recyclerView
+  implementation libs.androidx.annotation
+  implementation libs.kotlin.stdlib
+  implementation libs.jetbrains.annotations
+  implementation libs.androidx.lifecycle.runtime
+  implementation libs.androidx.lifecycle.process
+  implementation libs.androidx.documentFile
 }
-
- 

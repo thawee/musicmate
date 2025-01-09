@@ -8,8 +8,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -383,7 +381,7 @@ public class AboutActivity extends AppCompatActivity {
             mappedColors.put("Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_400));//ColorTemplate.rgb("#a8aa41"));
             mappedColors.put("Live", ContextCompat.getColor(getContext(), R.color.material_color_yellow_100)); //ColorTemplate.rgb("#a8aa41"));
             mappedColors.put("English", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_600)); //ColorTemplate.rgb("#488f31"));
-            mappedColors.put(Constants.UNKNOWN_GROUP, ContextCompat.getColor(getContext(), R.color.red_light)); //ColorTemplate.rgb("#de425b"));
+            mappedColors.put(Constants.UNKNOWN_GROUP, ContextCompat.getColor(getContext(), R.color.material_color_red_900)); //ColorTemplate.rgb("#de425b"));
             mappedColors.put("Thai", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_200)); //ColorTemplate.rgb("#de425b"));
             mappedColors.put("Thai Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_800)); //ColorTemplate.rgb("#488f31"));
             mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));

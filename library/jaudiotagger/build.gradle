@@ -17,9 +17,9 @@ android {
         }
     }
     lint {
-        abortOnError true
+        abortOnError = true
     }
-    namespace 'org.jaudiotagger'
+    namespace = 'org.jaudiotagger'
 }
 
 dependencies {

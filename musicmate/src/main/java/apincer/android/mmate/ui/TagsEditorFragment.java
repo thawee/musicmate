@@ -188,7 +188,7 @@ public class TagsEditorFragment extends Fragment {
                                 .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
                                 .setSelectedTextColor(Color.WHITE)
                                 .setMenuColor(ContextCompat.getColor(context, R.color.material_color_blue_grey_100))
-                                .setSelectedMenuColor(ContextCompat.getColor(context, R.color.colorPrimary))
+                                .setSelectedMenuColor(ContextCompat.getColor(context, apincer.android.library.R.color.colorPrimary))
                                 .setAutoDismiss(true)
                                 .setOnMenuItemClickListener((position, item) -> {
                                     bypassChange = true;
@@ -536,17 +536,6 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {
-        /*
-        ImageLoader imageLoader = Coil.imageLoader(tagsActivity.getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(tagsActivity.getApplicationContext())
-                //.data(MusicTagUtils.getCoverArt(tagsActivity.getApplicationContext(), tag))
-                .data(CoverArtProvider.getUriForMusicTag(getContext(), tag))
-                .transformations(new RoundedCornersTransformation())
-                .crossfade(false)
-                .target(previewCoverart)
-                .build();
-        imageLoader.enqueue(request); */
-
         GlideApp.with(this)
                 .load(tag)
                 .placeholder(R.drawable.progress) // Set a placeholder image
@@ -554,7 +543,6 @@ public class TagsEditorFragment extends Fragment {
                 .skipMemoryCache(true) // Skip memory cache
                 .transform(new RoundedCorners(8))
                 .into(previewCoverart);
-
 
         previewTitle.setText(MusicTagUtils.getFormattedTitle(getContext(),tag));
         previewArtist.setText(tag.getArtist());
