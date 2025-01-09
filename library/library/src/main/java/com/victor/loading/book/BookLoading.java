@@ -13,6 +13,8 @@ import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
 
+import androidx.annotation.NonNull;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -95,7 +97,7 @@ public class BookLoading extends FrameLayout {
             boolean change = false;
 
             @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
+            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
                 if (animation.getCurrentPlayTime() > DURATION / 2 && !change) {
                     change = true;
                     view.bringToFront();
@@ -105,24 +107,24 @@ public class BookLoading extends FrameLayout {
         });
         animator.addListener(new Animator.AnimatorListener() {
             @Override
-            public void onAnimationStart(Animator animation) {
+            public void onAnimationStart(@NonNull Animator animation) {
                 if ((int) view.getTag(R.string.app_name) == PAGE_NUM - 1) {
                     view.bringToFront();
                 }
             }
 
             @Override
-            public void onAnimationEnd(Animator animation) {
+            public void onAnimationEnd(@NonNull Animator animation) {
 
             }
 
             @Override
-            public void onAnimationCancel(Animator animation) {
+            public void onAnimationCancel(@NonNull Animator animation) {
 
             }
 
             @Override
-            public void onAnimationRepeat(Animator animation) {
+            public void onAnimationRepeat(@NonNull Animator animation) {
 
             }
         });
@@ -146,14 +148,15 @@ public class BookLoading extends FrameLayout {
     }
 
     static class BookHandler extends Handler {
-        private WeakReference<BookLoading> weakReference;
+        private final WeakReference<BookLoading> weakReference;
 
         public BookHandler(BookLoading bookLoading) {
+            super();
             weakReference = new WeakReference<>(bookLoading);
         }
 
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             BookLoading bookLoading = weakReference.get();
             if (null == bookLoading)

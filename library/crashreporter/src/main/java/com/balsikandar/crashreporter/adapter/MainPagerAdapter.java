@@ -1,5 +1,6 @@
 package com.balsikandar.crashreporter.adapter;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
@@ -15,13 +16,14 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
 
     private CrashLogFragment crashLogFragment;
     private ExceptionLogFragment exceptionLogFragment;
-    private String[] titles;
+    private final String[] titles;
 
     public MainPagerAdapter(FragmentManager fm, String[] titles) {
         super(fm);
         this.titles = titles;
     }
 
+    @NonNull
     @Override
     public Fragment getItem(int position) {
         if (position == 0) {

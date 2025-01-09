@@ -1,6 +1,0 @@
-{
-  "uniqueId": "androidx",
-  "name": "AndroidX",
-  "developers":[{"name":"The Android Open Source Project"}],
-  "description": "Provide the base libraries and support class for android applications i.e. Activity, RecycleView, etc."
-}

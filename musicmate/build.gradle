@@ -18,15 +18,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
  */
 
 plugins {
-   // id("com.android.application")
     alias libs.plugins.android.application
-    //id("kotlin-android")
-   // id("kotlin-kapt")
     alias libs.plugins.kotlin.android
     alias libs.plugins.kotlin.kapt
-    alias libs.plugins.devtools.ksp
-   // id("com.mikepenz.aboutlibraries.plugin")
-   // alias libs.plugins.android.aboutlibraries
+   // alias libs.plugins.devtools.ksp
 }
 
 android {
@@ -148,7 +143,6 @@ dependencies {
     implementation libs.sparrow007.carouselrecyclerview
     implementation libs.refresh.layout.kernel
     implementation libs.refresh.header.classics
-    //implementation libs.mikepenz.aboutlibraries
     implementation libs.tutorialsandroid.filepicker
 
     //others
@@ -186,101 +180,12 @@ dependencies {
     implementation project(':library:androidtagview')
     implementation project(':library:jaudiotagger-android')
     debugImplementation project(':library:crashreporter')
-   // implementation project(':library:MaterialEditText')
     implementation project(':library:mqaidentifier')
-   // implementation project(':library:coroutines')
-   // implementation project(':library:objectrelations')
-   // implementation project(':library:esoco-common')
-   // implementation project(':library:esoco-monads')
 }
 
 configurations.implementation {
     exclude group: 'com.hazelcast', module: 'hazelcast'
-   // exclude group: 'org.slf4j', module: 'slf4j-api'
-   // exclude group: 'com.github.bumptech.glide', module: 'glide'
-   // exclude group: 'io.coil-kt', module: 'coil-base'
-   // exclude group: 'com.google.code.gson', module: 'gson'
 }
-
-/*
-aboutLibraries {
-    // define the path configuration files are located in. E.g. additional libraries, licenses to add to the target .json
-    configPath = "buildsystem"
-    //excludeFields = ["licenses","funding"]
-
-    // Enable the duplication mode, allows to merge, or link dependencies which relate
-    duplicationMode = DuplicateMode.LINK
-    // Configure the duplication rule, to match "duplicates" with
-    duplicationRule = DuplicateRule.SIMPLE
-
-    exclusionPatterns = [
-            ~"org.jetbrains.*",
-            ~"androidx.*",
-            ~"androidx.activity*",
-            ~"androidx.databinding*",
-            ~"androidx.emoji2:emoji2-*",
-            ~"androidx.lifecycle:lifecycle-*",
-            ~"androidx.room*",
-            ~"androidx.sqlite:sqlite*",
-            ~"javax.validation:validation-api",
-            ~"com.google.guava.*",
-            ~"com.google.errorprone.*",
-            ~"com.google.j2objc.*",
-            ~"org.checkerframework.*",
-            ~"org.greenrobot.*",
-            ~"com.google.code.findbugs:jsr305",
-            ~"com.fasterxml.jackson.*",
-            ~"org.slf4j:slf4j-api",
-            ~"org.jsoup:jsoup",
-            ~"commons-io:commons-io",
-            ~"commons-logging:commons-logging",
-            ~"commons-codec:commons-codec",
-           // ~"org.apache.*",
-            ~"io.coil-kt:coil-base",
-            ~"com.airbnb.android:epoxy-annotations",
-            ~"io.objectbox:objectbox-kotlin",
-            ~"io.objectbox:objectbox-java",
-            ~"io.objectbox:objectbox-java-api",
-            ~"com.mikepenz:aboutlibraries-core-android",
-            ~"com.squareup.retrofit2:retrofit-mock",
-            ~"org.reactivestreams:reactive-streams",
-            ~"com.mikepenz:fastadapter",
-            ~"com.squareup.okio:okio-jvm",
-            ~"com.arthenica:smart-exception-common",
-            ~"com.arthenica:smart-exception-java",
-            ~"com.squareup.retrofit2:converter-gson",
-            ~"io.github.scwang90:refresh-header-classics",
-            ~"io.github.scwang90:refresh-footer-classics",
-            ~"io.github.scwang90:refresh-drawable-paint",
-            ~"com.afollestad.*",
-            ~"com.github.bumptech.glide:annotations",
-            ~"com.github.bumptech.glide:disklrucache",
-            ~"com.github.bumptech.glide:gifdecoder",
-            ~"com.arthenica:*",
-            ~"io.netty:netty-buffer",
-            ~"io.netty:netty-codec",
-            ~"io.netty:netty-common",
-            ~"io.netty:netty-handler",
-            ~"io.netty:netty-resolver",
-            ~"io.netty:netty-transport",
-            ~"io.netty:netty-transport-native-unix-common",
-            ~"org.jupnp:org.jupnp.support",
-            ~"com.halfhp.fig:*",
-            ~"com.facebook.shimmer:shimmer",
-            ~"org.jupnp:org.jupnp",
-            ~"com.github.wendykierp:JTransforms",
-            ~"org.eclipse.jetty:jetty-alpn-client",
-            ~"org.eclipse.jetty:jetty-io",
-            ~"org.eclipse.jetty:jetty-http",
-            ~"org.eclipse.jetty:jetty-util",
-            ~"org.eclipse.jetty.compression:jetty-compression-common",
-            ~"org.eclipse.jetty.compression:jetty-compression-gzip",
-            ~"com.squareup.okhttp3:okhttp",
-            ~"pl.edu.icm:JLargeArrays",
-            ~"org.apache.commons:commons-math3"
-    ]
-}
- */
 
 static def getDate() {
     def date = new Date()

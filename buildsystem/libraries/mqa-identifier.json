@@ -1,8 +1,0 @@
-{
-  "uniqueId": "MQA_identifier",
-  "name": "MQA Identifier",
-  "artifactVersion": "1.3",
-  "developers":[{"name":"purpl3F0x"}],
-  "description": "Master Quality Authenticated codec reverse engineering, Tool to identify MQA encoding and Master's Sample Rate.",
-  "website": "https://github.com/purpl3F0x/MQA_identifier"
-}

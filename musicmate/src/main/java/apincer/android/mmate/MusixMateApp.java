@@ -18,7 +18,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.work.WorkManager;
 
 import com.arthenica.ffmpegkit.FFmpegKitConfig;
-//import com.balsikandar.crashreporter.CrashReporter;
+import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
@@ -62,8 +62,6 @@ public class MusixMateApp extends Application {
     private static final PlayerControl playerControl = new PlayerControl();
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
-
-   // private static final List<ByteBuffer> NO_IMAGE_COVERS = new ArrayList<>();
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -110,7 +108,7 @@ public class MusixMateApp extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         LogHelper.initial();
         LogHelper.setSLF4JOn();
-        //CrashReporter.initialize(this);
+        CrashReporter.initialize(this);
         //initNoImageCovers();
 
         // initialize thread executors
@@ -174,75 +172,6 @@ public class MusixMateApp extends Application {
                 .penaltyLog()
                 .build());
          */
-
-        // Do it on main process
-       // BlockCanary.install(this, new AppBlockCanaryContext()).start();
-/*
-        BlockCanary.install(this, new BlockCanaryContext() {
-
-            public String provideQualifier() {
-                return "unknown";
-            }
-
-            public String provideUid() {
-                return "uid";
-            }
-
-            public String provideNetworkType() {
-                return "unknown";
-            }
-
-            public int provideMonitorDuration() {
-                return -1;
-            }
-
-            public int provideBlockThreshold() {
-                return 1000;
-            }
-
-            public int provideDumpInterval() {
-                return provideBlockThreshold();
-            }
-
-            public String providePath() {
-                return "/blockcanary/";
-            }
-
-            public boolean displayNotification() {
-                return true;
-            }
-
-            public boolean zip(File[] src, File dest) {
-                return false;
-            }
-
-            public void upload(File zippedFile) {
-                throw new UnsupportedOperationException();
-            }
-
-
-            public List<String> concernPackages() {
-                return null;
-            }
-
-            public boolean filterNonConcernStack() {
-                return false;
-            }
-
-            public List<String> provideWhiteList() {
-                LinkedList<String> whiteList = new LinkedList<>();
-                whiteList.add("org.chromium");
-                return whiteList;
-            }
-
-            public boolean deleteFilesInWhiteList() {
-                return true;
-            }
-
-            public void onBlock(Context context, BlockInfo blockInfo) {
-
-            }
-        }).start(); */
 
         // scan music files
         WorkManager.getInstance(getApplicationContext()).pruneWork();
@@ -309,9 +238,8 @@ Provides the SQLite Helper Object among the application
         // /tmp/
        // CoverArtProvider.COVER_ARTS
         // /Icons/
-        FileUtils.deleteDirectory(new File(dir, "/tmp/"));
+       // FileUtils.deleteDirectory(new File(dir, "/tmp/"));
         FileUtils.deleteDirectory(new File(dir, "/Icons/"));
         FileUtils.deleteDirectory(new File(dir, CoverArtProvider.COVER_ARTS));
-       // ToastHelper.showActionMessage(getApplicationContext(), "", "");
     }
 }
