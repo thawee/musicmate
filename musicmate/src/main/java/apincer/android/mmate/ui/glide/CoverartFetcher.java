@@ -1,5 +1,7 @@
 package apincer.android.mmate.ui.glide;
 
+import static apincer.android.mmate.Constants.DEFAULT_COVERART_RES;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -31,7 +33,7 @@ public class CoverartFetcher implements DataFetcher<InputStream> {
         if(inputStream!=null) {
             callback.onDataReady(inputStream);
         }else {
-            callback.onDataReady(ApplicationUtils.getAssetsAsStream(context, "no_cover2.png"));
+            callback.onDataReady(ApplicationUtils.getAssetsAsStream(context, DEFAULT_COVERART_RES));
         }
     }
 

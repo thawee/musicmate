@@ -1,5 +1,7 @@
 package org.justcodecs.dsd;
 
+import android.annotation.SuppressLint;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -113,7 +115,8 @@ public class DFFExtractor {
 		}
 	}
 
-	public static void extractDff(File iso, File target, int track, boolean cue, boolean ove, Progress progress)
+	@SuppressLint("DefaultLocale")
+    public static void extractDff(File iso, File target, int track, boolean cue, boolean ove, Progress progress)
 			throws ExtractionProblem {
 		RandomAccessFile dff = null;
 		DISOFormat dsf = new DISOFormat();

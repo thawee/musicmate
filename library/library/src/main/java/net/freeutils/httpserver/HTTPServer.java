@@ -21,6 +21,8 @@
 
 package net.freeutils.httpserver;
 
+import android.annotation.SuppressLint;
+
 import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -1990,6 +1992,7 @@ public class HTTPServer {
          * @param text the text body (sent as text/html)
          * @throws IOException if an error occurs
          */
+        @SuppressLint("DefaultLocale")
         public void sendError(int status, String text) throws IOException {
             send(status, String.format(
                     "<!DOCTYPE html>%n<html>%n<head><title>%d %s</title></head>%n" +
@@ -3301,6 +3304,7 @@ public class HTTPServer {
             host.setAllowGeneratedIndex(true); // with directory index pages
             host.addContext("/{*}", new FileContextHandler(dir));
             host.addContext("/api/time", new ContextHandler() {
+                @SuppressLint("DefaultLocale")
                 @Override
                 public int serve(Request req, Response resp) throws IOException {
                     long now = System.currentTimeMillis();

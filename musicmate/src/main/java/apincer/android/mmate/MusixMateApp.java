@@ -1,8 +1,6 @@
 package apincer.android.mmate;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
-import static apincer.android.mmate.Constants.DLNA_DEFAULT_COVERART_FILE;
+import static apincer.android.mmate.Constants.COVER_ARTS;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -23,9 +21,6 @@ import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,12 +29,10 @@ import java.util.Map;
 import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.MainActivity;
-import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
@@ -144,22 +137,6 @@ public class MusixMateApp extends Application {
                 .setButtonTextColor(Color.parseColor("#FFFFFF"))
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
-        // setup default cover art
-        try {
-            File pathFile = new File(getApplicationContext().getExternalCacheDir(), CoverArtProvider.COVER_ARTS);
-            File defaultCoverart = new File(pathFile, DEFAULT_COVERART_FILE);
-            FileUtils.createParentDirs(defaultCoverart);
-            InputStream in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "no_cover2.png");
-            Files.copy(in, defaultCoverart.toPath(), REPLACE_EXISTING);
-
-            defaultCoverart = new File(pathFile, DLNA_DEFAULT_COVERART_FILE);
-            FileUtils.createParentDirs(defaultCoverart);
-            in = ApplicationUtils.getAssetsAsStream(getApplicationContext(), "no_cover2.png");
-            Files.copy(in, defaultCoverart.toPath(), REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
         /*
         // to detect not expected thread
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
@@ -235,11 +212,8 @@ Provides the SQLite Helper Object among the application
 
     public void clearCaches() {
         File dir = getApplicationContext().getExternalCacheDir();
-        // /tmp/
-       // CoverArtProvider.COVER_ARTS
-        // /Icons/
        // FileUtils.deleteDirectory(new File(dir, "/tmp/"));
         FileUtils.deleteDirectory(new File(dir, "/Icons/"));
-        FileUtils.deleteDirectory(new File(dir, CoverArtProvider.COVER_ARTS));
+        FileUtils.deleteDirectory(new File(dir, COVER_ARTS));
     }
 }

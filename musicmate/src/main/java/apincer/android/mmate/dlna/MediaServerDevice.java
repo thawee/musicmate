@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,9 +50,7 @@ public class MediaServerDevice extends LocalDevice {
 
     private final Context context;
     private final DeviceDetailsProvider deviceDetailsProvider;
-    private final ContentDirectory contentDirectoryService;
-    private final ConnectionManagerService connectionManagerService;
-  //  private final UmsMediaReceiverRegistrarService mediaReceiverRegistrarService;
+
     public MediaServerDevice(Context context) throws ValidationException {
         super(
                 new DeviceIdentity(new UDN(getUuid(context))),
@@ -63,8 +62,8 @@ public class MediaServerDevice extends LocalDevice {
         );
         this.context = context;
         this.deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
-        this.contentDirectoryService = getServiceImplementation(ContentDirectory.class);
-        this.connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
+        ContentDirectory contentDirectoryService = getServiceImplementation(ContentDirectory.class);
+        ConnectionManagerService connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
     //    this.mediaReceiverRegistrarService = getServiceImplementation(UmsMediaReceiverRegistrarService.class);
     }
 
@@ -77,12 +76,7 @@ public class MediaServerDevice extends LocalDevice {
     }
 
     private <T> T getServiceImplementation(Class<T> baseClass) {
-        for (LocalService service : getServices()) {
-            if (service != null && service.getManager().getImplementation().getClass().equals(baseClass)) {
-                return (T) service.getManager().getImplementation();
-            }
-        }
-        return null;
+        return Arrays.stream(getServices()).filter(service -> service != null && service.getManager().getImplementation().getClass().equals(baseClass)).findFirst().map(service -> (T) service.getManager().getImplementation()).orElse(null);
     }
 
     private static LocalService<?>[] createMediaServerServices(Context context) {

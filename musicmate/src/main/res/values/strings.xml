@@ -193,7 +193,7 @@
     <string name="label_hi_res">Hi-Res</string>
     <string name="label_dsd">DSD</string>
     <string name="label_mqa">MQA</string>
-    <string name="label_audio_encoding_format">Audio Encodings</string>
+    <string name="label_audio_encoding_format">Music Encodings</string>
     <string name="label_file_format">File Format:</string>
     <string name="label_file_resolution">Resolution:</string>
     <string name="label_file_recommended">Recommended Genre:</string>

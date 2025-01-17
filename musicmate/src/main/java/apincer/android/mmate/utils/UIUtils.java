@@ -184,7 +184,7 @@ public class UIUtils  {
 
     public static void setSearchViewTextColor(@NonNull SearchView searchView, @ColorInt int color, @ColorInt int hintColor) {
         try {
-            Field searchField = SearchView.class
+            @SuppressLint("DiscouragedPrivateApi") Field searchField = SearchView.class
                     .getDeclaredField("mSearchSrcTextView");
             searchField.setAccessible(true);
             TextView searchBtn = (TextView) searchField.get(searchView);

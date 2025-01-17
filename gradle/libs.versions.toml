@@ -8,7 +8,7 @@ minSdkVersion    = "34" # support running on android 11 ot higher
 targetSdkVersion = "34" # //33, // required 33, android 13
 compileSdkVersion = "35"
 buildTools ="36.0.0-rc3"
-androidGradlePlugin = "8.8.0-rc02"
+androidGradlePlugin = "8.8.0"
 aboutlibraries = "11.4.0"
 validationApi = "2.0.1.Final"
 kotlin = "2.1.0"
@@ -24,7 +24,7 @@ google-guava = { module = "com.google.guava:guava", version = "33.4.0-android"  
 jetbrains-annotations = {module = "org.jetbrains:annotations", version="26.0.1"}
 
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 
 httpcomponents-httpmime = {module = "org.apache.httpcomponents:httpmime", version="4.5.14"}
 commons-codec = {module = "commons-codec:commons-codec", version="1.17.2"}
@@ -52,6 +52,7 @@ greenrobot-eventbus = {module = "org.greenrobot:eventbus", version="3.3.1"}
 slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.16"}
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.2"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.2"}
+#https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
 jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.0.alpha1"}
 jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0.alpha1"}
 tutorialsandroid-filepicker = {module = "io.github.tutorialsandroid:filepicker", version="9.2.5"}
@@ -75,14 +76,14 @@ philjay-mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version=
 mikepenz-aboutlibraries = {module = "com.mikepenz:aboutlibraries", version.ref="aboutlibraries"}
 
 androidx-core = {module = "androidx.core:core", version="1.15.0"}
-androidx-activity = {module = "androidx.activity:activity", version="1.9.3"}
+androidx-activity = {module = "androidx.activity:activity", version="1.10.0"}
 androidx-annotation = {module = "androidx.annotation:annotation", version="1.9.1"}
 androidx-appCompat = {module = "androidx.appcompat:appcompat", version="1.7.0"}
 androidx-fragment = {module = "androidx.fragment:fragment", version="1.8.5"}
 androidx-cardView = {module = "androidx.cardview:cardview", version="1.0.0"}
 androidx-constraintlayout = {module = "androidx.constraintlayout:constraintlayout", version="2.2.0"}
 androidx-coordinatorlayout = {module = "androidx.coordinatorlayout:coordinatorlayout", version="1.2.0"}
-androidx-recyclerView = {module = "androidx.recyclerview:recyclerview", version="1.3.2"}
+androidx-recyclerView = {module = "androidx.recyclerview:recyclerview", version="1.4.0"}
 androidx-recyclerView-selection = {module = "androidx.recyclerview:recyclerview-selection", version="1.1.0"}
 androidx-palette = {module = "androidx.palette:palette", version="1.0.0"}
 androidx-swiperefreshlayout = {module = "androidx.swiperefreshlayout:swiperefreshlayout", version="1.1.0"}

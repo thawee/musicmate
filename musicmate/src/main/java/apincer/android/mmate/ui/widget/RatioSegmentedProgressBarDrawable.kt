@@ -65,7 +65,9 @@ class RatioSegmentedProgressBarDrawable(
     override fun setAlpha(alpha: Int) {}
 
 
-    @Deprecated("Deprecated in Java")
+    @Deprecated("Deprecated in Java",
+        ReplaceWith("PixelFormat.TRANSLUCENT", "android.graphics.PixelFormat")
+    )
     override fun getOpacity(): Int {
         return PixelFormat.TRANSLUCENT
     }

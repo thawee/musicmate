@@ -1870,7 +1870,7 @@ public class CircleProgressView extends View {
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
 
-        if (mSeekModeEnabled == false) {
+        if (!mSeekModeEnabled) {
             return super.onTouchEvent(event);
         }
 

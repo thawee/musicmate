@@ -18,6 +18,8 @@
  */
 package org.jaudiotagger.audio.flac.metadatablock;
 
+import android.annotation.SuppressLint;
+
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.logging.ErrorMessage;
 
@@ -61,7 +63,8 @@ public class MetadataBlockHeader
         rawdata.rewind();
         return new MetadataBlockHeader(startByte, rawdata);
     }
-
+ 
+    @SuppressLint("DefaultLocale")
     public String toString()
     {
         return String.format("StartByte:%d BlockType:%s DataLength:%d isLastBlock:%s",startByte, blockType, dataLength, isLastBlock);
@@ -70,7 +73,6 @@ public class MetadataBlockHeader
     /**
      * Construct header by reading bytes
      *
-     * @param rawdata
      */
     public MetadataBlockHeader(long startByte, ByteBuffer rawdata) throws CannotReadException
     {

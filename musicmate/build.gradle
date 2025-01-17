@@ -25,19 +25,16 @@ plugins {
 }
 
 android {
-   // compileSdkVersion versions.compileSdk
     compileSdk = libs.versions.compileSdkVersion.get() as Integer
     buildToolsVersion = libs.versions.buildTools.get()
     //buildTools( libs.versions.buildTools.get())
 
     defaultConfig {
         applicationId = "apincer.android.mmate"
-        //minSdkVersion versions.minSdk
         minSdk = libs.versions.minSdkVersion.get() as Integer
-        //targetSdkVersion versions.targetSdk
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 95
-        versionName  = "3.9.5-"+ getDate()
+        versionCode = 96
+        versionName  = "3.9.6-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
@@ -120,6 +117,9 @@ dependencies {
     implementation libs.androidx.drawerlayout
     implementation libs.androidx.viewpager2
 
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
+
     // OrmLite
     implementation libs.ormlite.android
 
@@ -149,7 +149,6 @@ dependencies {
     implementation libs.greenrobot.eventbus
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio
-    //implementation deps.coverartarchive
 
     implementation libs.commons.codec
     implementation libs.commons.io
@@ -185,6 +184,7 @@ dependencies {
 
 configurations.implementation {
     exclude group: 'com.hazelcast', module: 'hazelcast'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
 }
 
 static def getDate() {

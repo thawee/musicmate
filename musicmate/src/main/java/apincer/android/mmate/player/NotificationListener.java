@@ -22,40 +22,9 @@ public class NotificationListener extends NotificationListenerService {
 
   //  Context context;
 
-  /*  @Override
-    public IBinder onBind(Intent intent) {
-        return super.onBind(intent);
-    } */
-
-   /* @Override
-    public void onDestroy() {
-        super.onDestroy();
-       // Log.d(TAG, "onDestroy MusicMate Notification");
-    } */
-
-    /*
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        //context = getApplicationContext();
-       // Log.d(TAG, "onCreate MusicMate Notification");
-    }
-
-    @Override
-    public void onListenerConnected() {
-        Log.i(TAG, "Notification Listener connected");
-        // Handle the connection
-    }
-
-    @Override
-    public void onListenerDisconnected() {
-        Log.i(TAG, "Notification Listener disconnected");
-        // Handle the disconnection
-    } */
-
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        Log.i(TAG, "Notification posted: " + sbn.getPackageName());
+       // Log.i(TAG, "Notification posted: " + sbn.getPackageName());
         String pack = sbn.getPackageName();
         Bundle extras = sbn.getNotification().extras;
         if (PlayerControl.PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equals(pack)) {
@@ -89,7 +58,7 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         // Handle the notification removed event
-        Log.i(TAG, "Notification removed: " + sbn.getPackageName());
+       // Log.i(TAG, "Notification removed: " + sbn.getPackageName());
     }
 
     public void publishNowPlaying(String pack, String title, String artist) {
@@ -97,13 +66,6 @@ public class NotificationListener extends NotificationListenerService {
             prvPack = pack;
             prvTitle = title;
             prvArtist = artist;
-           /* Intent intent = new Intent("apincer.android.mmate");
-            intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PACKAGE, pack);
-            intent.putExtra(MusicBroadcastReceiver.INTENT_KEY_PLAYER, pack);
-            intent.putExtra("track", title);
-            intent.putExtra("artist", artist);
-
-            sendBroadcast(intent); */
             try {
                 MusixMateApp.getPlayerControl().setPlayingSong(getApplicationContext(), pack, title, artist, null);
             } catch (Exception ex) {

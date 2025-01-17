@@ -89,7 +89,7 @@ public class PermissionActivity extends AppCompatActivity {
     }
 
     private View getPermissionView(LayoutInflater layoutInflater, Drawable icon, String title, String required, String desc) {
-        View perm = layoutInflater.inflate(R.layout.view_permission_item, null);
+        @SuppressLint("InflateParams") View perm = layoutInflater.inflate(R.layout.view_permission_item, null);
         ImageView imgIcon = perm.findViewById(R.id.item_needs_image);
         TextView txtTitle = perm.findViewById(R.id.item_needs_title);
         TextView txtRequired = perm.findViewById(R.id.item_needs_require);

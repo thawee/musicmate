@@ -1,6 +1,9 @@
 package apincer.android.mmate.dlna.transport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static apincer.android.mmate.Constants.COVER_ARTS;
+import static apincer.android.mmate.Constants.DEFAULT_COVERART_DLNA_RES;
 import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
@@ -37,16 +40,19 @@ import org.jupnp.transport.spi.UpnpStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.ApplicationUtils;
+import apincer.android.utils.FileUtils;
 
 public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
@@ -267,7 +273,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private class CoverartHandler extends ResourceHandler {
         File defaultCoverartDir;
         private CoverartHandler( ) {
-            defaultCoverartDir = new File(getCoverartDir(CoverArtProvider.COVER_ARTS),DEFAULT_COVERART_FILE);
+            defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
         }
 
         @Override
@@ -299,6 +305,19 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
             if (content == null)
             {
                 // default cover art
+                // setup default cover art
+                try {
+                    if(!defaultCoverartDir.exists()) {
+                       // File pathFile = new File(getContext().getExternalCacheDir(), COVER_ARTS);
+                       // File defaultCoverart = new File(pathFile, DEFAULT_COVERART_FILE);
+                        FileUtils.createParentDirs(defaultCoverartDir);
+                        InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES);
+                        Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Init default missing cover art", e);
+                }
+
                 content = getResourceService().getContent(defaultCoverartDir.getAbsolutePath(), request);
             }
 

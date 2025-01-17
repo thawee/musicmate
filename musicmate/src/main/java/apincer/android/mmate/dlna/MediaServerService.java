@@ -18,7 +18,6 @@ import org.jupnp.model.meta.LocalDevice;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.registry.Registry;
 import org.jupnp.transport.Router;
-import org.jupnp.transport.RouterException;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -67,10 +66,6 @@ public class MediaServerService extends Service {
 
     public static void stopMediaServer(Application application) {
         application.stopService(new Intent(application, MediaServerService.class));
-    }
-
-    public boolean isMediaServerStarted() throws RouterException {
-        return upnpService != null && upnpService.getRouter().isEnabled();
     }
 
     /**

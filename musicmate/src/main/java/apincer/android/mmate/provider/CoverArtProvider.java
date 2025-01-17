@@ -1,5 +1,6 @@
 package apincer.android.mmate.provider;
 
+import static apincer.android.mmate.Constants.COVER_ARTS;
 import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
 
 import android.content.ContentProvider;
@@ -23,9 +24,9 @@ import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ParcelFileDescriptorUtil;
 import apincer.android.utils.FileUtils;
 
+@Deprecated
 public final class CoverArtProvider extends ContentProvider {
     private static final String TAG = "CoverArtProvider";
-    public static final String COVER_ARTS = "/CoverArts/";
 
     public static Uri getUriForMusicTag(Context context, MusicTag item) {
             // use music file

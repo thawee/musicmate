@@ -615,6 +615,7 @@ public class StringUtils {
         return artist;
     }
 
+    @SuppressLint("DefaultLocale")
     public static String formatDurationAsMinute(double totalseconds) {
         Duration duration = Duration.ofSeconds((long) totalseconds);
         long minutes = duration.toMinutes();

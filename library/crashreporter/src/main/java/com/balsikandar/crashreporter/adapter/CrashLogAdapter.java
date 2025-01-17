@@ -1,5 +1,6 @@
 package com.balsikandar.crashreporter.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -48,6 +49,7 @@ public class CrashLogAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
 
+    @SuppressLint("NotifyDataSetChanged")
     public void updateList(ArrayList<File> allCrashLogs) {
         crashFileList = allCrashLogs;
         notifyDataSetChanged();

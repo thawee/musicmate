@@ -38,5 +38,6 @@ dependencies {
     implementation libs.jetbrains.annotations
     implementation libs.androidx.lifecycle.runtime
     implementation libs.androidx.lifecycle.process
+    implementation libs.kotlin.stdlib
     testImplementation libs.junit
 }

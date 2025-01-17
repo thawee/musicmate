@@ -1,5 +1,7 @@
 package org.justcodecs.dsd;
 
+import android.annotation.SuppressLint;
+
 import java.io.IOException;
 import java.math.BigInteger;
 
@@ -36,7 +38,8 @@ public class ChunkUNK extends BaseChunk {
 		skip(ds);
 	}
 
-	@Override
+	@SuppressLint("DefaultLocale")
+    @Override
 	public String toString() {
 		return String.format("ChunkUNK 0%x(%s) of %d/0%x", ID, IDS, size, start);
 	}

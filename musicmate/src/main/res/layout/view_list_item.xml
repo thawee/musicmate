@@ -219,7 +219,7 @@
             android:layout_width="68dp"
             android:layout_height="64dp"
             android:padding="@dimen/dimen_4_dp"
-            android:scaleType="fitXY"
+            android:scaleType="centerCrop"
             tools:ignore="ContentDescription" />
         <apincer.android.mmate.ui.view.TriangleLabelView
             android:id="@+id/item_new_label"
@@ -240,6 +240,7 @@
             app:secondaryTextColor="@color/material_color_yellow_100"
             app:secondaryTextSize="6sp" />
     </FrameLayout>
+    <!--
     <ImageView
         android:id="@+id/item_player"
         android:layout_width="@dimen/dimen_24_dp"
@@ -252,18 +253,19 @@
         android:src="@mipmap/ic_launcher"
         android:background="@drawable/shape_play_next_background_refresh"
         tools:ignore="ContentDescription" />
-    <!--
+    -->
     <ImageView
         android:id="@+id/item_player"
         android:layout_width="@dimen/dimen_24_dp"
         android:layout_height="@dimen/dimen_24_dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/dimen_24_dp"
-        android:layout_marginEnd="@dimen/dimen_6_dp"
+        android:layout_marginTop="@dimen/dimen_14_dp"
+        android:layout_marginEnd="@dimen/dimen_4_dp"
         android:padding="@dimen/dimen_2_dp"
         android:src="@mipmap/ic_launcher"
-        android:background="@drawable/shape_border_playing"/>
-        -->
+        android:background="@drawable/shape_play_next_background_refresh"
+        tools:ignore="ContentDescription"/>
+
 
 </RelativeLayout>

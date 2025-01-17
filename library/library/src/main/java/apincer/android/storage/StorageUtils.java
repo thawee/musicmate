@@ -1,6 +1,7 @@
 package apincer.android.storage;
 
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -93,7 +94,7 @@ public class StorageUtils {
         List<StorageVolume> mounts = new ArrayList<>();
         Object[] sv = null;
         try {
-            Method getVolumeList = StorageManager.class.getDeclaredMethod("getVolumeList");
+            @SuppressLint("DiscouragedPrivateApi") Method getVolumeList = StorageManager.class.getDeclaredMethod("getVolumeList");
             sv = (Object[])getVolumeList.invoke(mStorageManager);
         } catch (Exception e) {
             e.printStackTrace();

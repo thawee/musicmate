@@ -1,5 +1,6 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.Constants.COVER_ARTS;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -21,7 +22,6 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.provider.CoverArtProvider;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -80,7 +80,7 @@ public class FileRepository {
             if(coverArtFile!=null) {
                 return new FileInputStream(coverArtFile);
             }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
-                String coverFile = CoverArtProvider.COVER_ARTS +tag.getAlbumUniqueKey()+".png";
+                String coverFile = COVER_ARTS +tag.getAlbumUniqueKey()+".png";
                 File dir =  context.getExternalCacheDir();
                 File pathFile = new File(dir, coverFile);
                 if(!pathFile.exists()) {
@@ -97,7 +97,7 @@ public class FileRepository {
 
     public void extractCoverArt(MusicTag tag) {
         try {
-            String coverFile = CoverArtProvider.COVER_ARTS +tag.getAlbumUniqueKey()+".png";
+            String coverFile = COVER_ARTS +tag.getAlbumUniqueKey()+".png";
             File dir =  getContext().getExternalCacheDir();
             File pathFile = new File(dir, coverFile);
             if(!pathFile.exists()) {
@@ -560,7 +560,7 @@ public class FileRepository {
     }
 
     public void cleanCacheCover(Context context, MusicTag item) {
-        String coverFile = CoverArtProvider.COVER_ARTS +item.getAlbumUniqueKey()+".png";
+        String coverFile = COVER_ARTS +item.getAlbumUniqueKey()+".png";
         File dir =  getContext().getExternalCacheDir();
         File pathFile = new File(dir, coverFile);
         if(pathFile.exists()) {

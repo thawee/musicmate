@@ -12,9 +12,6 @@ import java.util.List;
  */
 
 public final class Constants {
-    public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
-    public static final String DLNA_DEFAULT_COVERART_FILE = "dlna_coverart.png";
-
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
     public static final String QUALITY_BAD = "Unsatisfactory";
@@ -175,6 +172,11 @@ public final class Constants {
     public static final String PUBLISHER_SPOTIFY = "Spotify";
     public static final String PUBLISHER_TIDAL = "Tidal";
     public static final String PUBLISHER_YOUTUBE = "Youtube";
+
+    public static final String COVER_ARTS = "/CoverArts/";
+    public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
+    public static final String DEFAULT_COVERART_RES = "no_cover4.png";
+    public static final String DEFAULT_COVERART_DLNA_RES = "no_cover4.png";
 
     public static List<String> getSourceList(Context context) {
         String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);

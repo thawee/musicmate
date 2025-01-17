@@ -52,7 +52,7 @@ public abstract class AudioFileReader
     public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.generic");
     protected static final int MINIMUM_SIZE_FOR_VALID_AUDIO_FILE = 100;
 
-    /*
+    /**
     * Returns the encoding info object associated wih the current File.
     * The subclass can assume the RAF pointer is at the first byte of the file.
     * The RandomAccessFile must be kept open after this function, but can point
