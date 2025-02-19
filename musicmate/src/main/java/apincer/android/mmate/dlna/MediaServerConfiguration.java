@@ -14,7 +14,6 @@ import org.jupnp.transport.spi.StreamServer;
 
 import java.net.URI;
 
-import apincer.android.mmate.dlna.android.WifiNetworkAddressFactory;
 import apincer.android.mmate.dlna.transport.JettyStreamingClientImpl;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
@@ -47,14 +46,6 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
-        /*
-        return new OKHttpUPnpStreamingClient(
-                new StreamClientConfigurationImpl(
-                        getSyncProtocolExecutorService(),
-                        10,
-                        5
-                )
-        ); */
         return new JettyStreamingClientImpl(
                 new StreamClientConfigurationImpl(
                 getSyncProtocolExecutorService(),

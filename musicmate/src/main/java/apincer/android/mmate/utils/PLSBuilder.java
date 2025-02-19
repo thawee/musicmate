@@ -5,7 +5,7 @@ import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_B
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_CLASSIC_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_FINFIN_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_ISAAN_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_RELAXED_SONGS;
+import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_VOCAL_SONGS;
 import static apincer.android.mmate.utils.MusicTagUtils.getExtension;
 
 import android.content.Context;
@@ -77,7 +77,7 @@ public class PLSBuilder {
         mapped.put(DOWNLOADS_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_ISAAN_SONGS, new ArrayList<>());
        // mapped.put(SMART_LIST_RELAXED_TH_SONGS, new ArrayList<>());
-        mapped.put(SMART_LIST_RELAXED_SONGS, new ArrayList<>());
+        mapped.put(SMART_LIST_VOCAL_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_FINFIN_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_BAANTHUNG_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_CLASSIC_SONGS, new ArrayList<>());
@@ -93,8 +93,8 @@ public class PLSBuilder {
             //if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
             //    Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).add(tag);
            // }
-            if(MusicTagUtils.isRelaxedPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_SONGS)).add(tag);
+            if(MusicTagUtils.isVocalPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_VOCAL_SONGS)).add(tag);
             }
             if(MusicTagUtils.isFinFinPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_SONGS)).add(tag);

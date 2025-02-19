@@ -308,8 +308,6 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 // setup default cover art
                 try {
                     if(!defaultCoverartDir.exists()) {
-                       // File pathFile = new File(getContext().getExternalCacheDir(), COVER_ARTS);
-                       // File defaultCoverart = new File(pathFile, DEFAULT_COVERART_FILE);
                         FileUtils.createParentDirs(defaultCoverartDir);
                         InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES);
                         Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);

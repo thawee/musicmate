@@ -95,7 +95,7 @@ public class FileRepository {
         return null;
     }
 
-    public void extractCoverArt(MusicTag tag) {
+    public File extractCoverArt(MusicTag tag) {
         try {
             String coverFile = COVER_ARTS +tag.getAlbumUniqueKey()+".png";
             File dir =  getContext().getExternalCacheDir();
@@ -104,12 +104,14 @@ public class FileRepository {
                 FileUtils.createParentDirs(pathFile);
                 extractCoverArt(tag, pathFile);
             }
+            return pathFile;
         } catch (Exception e) {
             Log.d(TAG,"extractCoverArt:", e);
         }
+        return null;
     }
 
-    public static void extractCoverArt(MusicTag tag, File targetFile) {
+    private static void extractCoverArt(MusicTag tag, File targetFile) {
         if(tag == null) return;
         try {
             // Log.d(TAG, "extractCoverArt: "+path);

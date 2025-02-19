@@ -15,9 +15,6 @@ import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.UpnpServiceImpl;
 import org.jupnp.model.meta.LocalDevice;
-import org.jupnp.protocol.ProtocolFactory;
-import org.jupnp.registry.Registry;
-import org.jupnp.transport.Router;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -28,7 +25,6 @@ import java.util.regex.Pattern;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.android.AndroidRouter;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 
@@ -114,10 +110,10 @@ public class MediaServerService extends Service {
             upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());
             upnpService = new UpnpServiceImpl(upnpServiceCfg) {
 
-                @Override
+               /* @Override
                 protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
                     return new AndroidRouter(getConfiguration(), protocolFactory, MediaServerService.this);
-                }
+                }*/
 
                 @Override
                 public synchronized void shutdown() {

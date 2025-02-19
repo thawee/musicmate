@@ -380,7 +380,7 @@ public class MusicTagUtils {
         return ("Luk Thung".equalsIgnoreCase(tag.getGenre()));
     }
 
-    public static boolean isRelaxedPlaylist(MusicTag tag) {
+    public static boolean isVocalPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) &&

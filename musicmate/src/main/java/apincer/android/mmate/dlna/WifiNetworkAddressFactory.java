@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.android;
+package apincer.android.mmate.dlna;
 
 import static apincer.android.mmate.dlna.MediaServerService.IPV4_PATTERN;
 

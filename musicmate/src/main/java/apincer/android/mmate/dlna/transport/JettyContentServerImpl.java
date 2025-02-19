@@ -120,7 +120,8 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                     String contentId = uri.substring(5, uri.indexOf("/", 5));
                     MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(contentId));
                     if (tag != null) {
-                        PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
+                        //PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp));
+                        PlayerInfo player = PlayerInfo.buildStreamPlayer(agent, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp_white));
                         MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
                         content = getResourceService().getContent(tag.getPath(), request);
                     }

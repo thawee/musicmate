@@ -21,9 +21,6 @@ import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -35,10 +32,14 @@ import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.ui.glide.GlideApp;
+import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import coil3.ImageLoader;
+import coil3.SingletonImageLoader;
+import coil3.request.ImageRequest;
+import coil3.target.ImageViewTarget;
 
 public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHolder> {
     private SearchCriteria criteria;
@@ -462,26 +463,26 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
-       // ImageLoader imageLoader = Coil.imageLoader(holder.mContext);
+        ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
 
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
        // if(MusicTagUtils.isFLACFile(tag)) {
-       /*     holder.mAudioQuality.setVisibility(View.VISIBLE);
+            holder.mAudioQuality.setVisibility(View.VISIBLE);
             ImageRequest request = new ImageRequest.Builder(holder.mContext)
                     .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
-                    .crossfade(false)
-                    .target(holder.mAudioQuality)
+                   // .crossfade(false)
+                    .target(new ImageViewTarget(holder.mAudioQuality))
                     .build();
-            imageLoader.enqueue(request); */
-
+            imageLoader.enqueue(request);
+/*
         GlideApp.with(holder.mContext)
                 .load(IconProviders.getTrackQualityIcon(holder.mContext, tag))
                 .skipMemoryCache(false) // Skip memory cache
                 .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
                 .into(holder.mAudioQuality);
-
+*/
        // }else {
        //     holder.mAudioQuality.setVisibility(View.GONE);
        // }
@@ -527,26 +528,40 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .transformations(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request); */
+        request = CoverartFetcher.builder(holder.mContext, tag)
+                .data(tag)
+                .size(240, 240)
+                //.size(Size.ORIGINAL)
+                //.scale(Scale.FILL) // Set the scale type
+                //.crossfade(false)
+                .target(new ImageViewTarget(holder.mCoverArtView))
+                //.placeholder(R.drawable.progress)
+                //.error(getDefaultNoCover(tag))
+                //.error(R.drawable.no_cover2)
+                //(new RoundedCornersTransformation(8, 8, 8, 8))
+                .build();
+        imageLoader.enqueue(request);
 
+        /*
         GlideApp.with(holder.mContext)
                 .load(tag)
                 .skipMemoryCache(true) // Skip memory cache
                 .diskCacheStrategy(DiskCacheStrategy.DATA) // Do not cache on disk
                 .transform(new RoundedCorners(8))
-                .into(holder.mCoverArtView);
+                .into(holder.mCoverArtView); */
 
         // show enc i.e. PCM, MQA, DSD
-       /* request = new ImageRequest.Builder(holder.mContext)
+        request = new ImageRequest.Builder(holder.mContext)
                 .data(IconProviders.getResolutionIcon(holder.mContext, tag))
-                .crossfade(false)
-                .target(holder.mAudioResolutionView)
+               // .crossfade(false)
+                .target(new ImageViewTarget(holder.mAudioResolutionView))
                 .build();
-        imageLoader.enqueue(request); */
-        GlideApp.with(holder.mContext)
+        imageLoader.enqueue(request);
+       /* GlideApp.with(holder.mContext)
                 .load(IconProviders.getResolutionIcon(holder.mContext, tag))
                 .skipMemoryCache(false) // Skip memory cache
                 .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(holder.mAudioResolutionView);
+                .into(holder.mAudioResolutionView); */
 
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));

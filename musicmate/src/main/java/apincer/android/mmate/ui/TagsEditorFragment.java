@@ -28,8 +28,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.skydoves.powermenu.CircularEffect;
@@ -51,11 +49,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
+import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.ui.glide.GlideApp;
 import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -63,6 +61,10 @@ import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
+import coil3.ImageLoader;
+import coil3.SingletonImageLoader;
+import coil3.request.ImageRequest;
+import coil3.target.ImageViewTarget;
 
 public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
@@ -536,13 +538,20 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {
+        /*
         GlideApp.with(this)
                 .load(tag)
                 .placeholder(R.drawable.progress) // Set a placeholder image
                 .diskCacheStrategy(DiskCacheStrategy.DATA) // Cache all versions of the image
                 .skipMemoryCache(true) // Skip memory cache
                 .transform(new RoundedCorners(8))
-                .into(previewCoverart);
+                .into(previewCoverart); */
+        ImageLoader imageLoader = SingletonImageLoader.get(getContext());
+        ImageRequest request = CoverartFetcher.builder(getContext(), tag)
+                                .data(tag)
+                .target(new ImageViewTarget(previewCoverart))
+                                .build();
+        imageLoader.enqueue(request);
 
         previewTitle.setText(MusicTagUtils.getFormattedTitle(getContext(),tag));
         previewArtist.setText(tag.getArtist());

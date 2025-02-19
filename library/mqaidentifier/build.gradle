@@ -40,7 +40,7 @@ android {
         cmake {
             path = "src/main/cpp/CMakeLists.txt"
             //version "3.18.1"
-            version = "3.31.1" //3.22.1"
+            version = "3.31.5" //"3.31.1" //3.22.1"
         }
     }
     compileOptions {
@@ -52,7 +52,8 @@ android {
     //ndkVersion '25.2.9519653'
     //ndkVersion '27.0.11718014'
     //ndkVersion = '27.0.12077973'
-    ndkVersion = '28.0.12674087'
+    //ndkVersion = '28.0.12674087'
+    ndkVersion = '28.0.13004108'
     namespace = 'apincer.android.mqaidentifier'
 }
 

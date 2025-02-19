@@ -9,7 +9,12 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.NotificationCompat;
@@ -55,6 +60,7 @@ public class MusixMateApp extends Application {
     private static final PlayerControl playerControl = new PlayerControl();
 
     private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
+    private ConnectivityManager connectivityManager;
 
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
@@ -102,6 +108,10 @@ public class MusixMateApp extends Application {
         LogHelper.initial();
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(this);
+
+        // Initialize Coil with custom ImageLoader
+       // Coil.setImageLoader(newImageLoader());
+
         //initNoImageCovers();
 
         // initialize thread executors
@@ -114,9 +124,30 @@ public class MusixMateApp extends Application {
 
         //initialize ObjectBox is when your app starts
         //ObjectBox.init(this);
-        if(Settings.isEnableMediaServer(getApplicationContext())) {
-            MediaServerService.startMediaServer(this);
-        }
+       // if(Settings.isEnableMediaServer(getApplicationContext())) {
+       //     MediaServerService.startMediaServer(this);
+       // }
+
+        connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
+        NetworkRequest networkRequest = new NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .build();
+        connectivityManager.registerNetworkCallback(networkRequest, new ConnectivityManager.NetworkCallback(){
+            @Override
+            public void onLost(@NonNull Network network) {
+                //super.onLost(network);
+                // Stop the UPnP server when network is lost
+                MediaServerService.stopMediaServer(MusixMateApp.this);
+            }
+
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                //super.onAvailable(network);
+                // Stop the UPnP server when network is lost
+                MediaServerService.startMediaServer(MusixMateApp.this);
+            }
+        });
 
         StateViewsBuilder
                 .init(this)

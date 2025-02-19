@@ -54,18 +54,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
-//import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.skydoves.powermenu.MenuAnimation;
 import com.skydoves.powermenu.PowerMenu;
@@ -100,6 +94,7 @@ import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
+import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
@@ -108,7 +103,6 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.repository.TagWriter;
-import apincer.android.mmate.ui.glide.GlideApp;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
@@ -129,6 +123,14 @@ import cn.iwgang.simplifyspan.other.SpecialGravity;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialLabelUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
+import coil3.BitmapImage;
+import coil3.Image;
+import coil3.ImageLoader;
+import coil3.SingletonImageLoader;
+import coil3.request.ImageRequest;
+import coil3.target.ImageViewTarget;
+import coil3.target.Target;
+import coil3.target.ViewTarget;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -428,6 +430,8 @@ public class MainActivity extends AppCompatActivity {
             setUpNowPlayingView();
         }
         nowPlaying = song;
+        ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
+        /*
         GlideApp.with(this)
                 .load(song)
                 .placeholder(R.drawable.progress) // Set a placeholder image
@@ -435,9 +439,9 @@ public class MainActivity extends AppCompatActivity {
                 .skipMemoryCache(true) // Skip memory cache
                // .override(240, 240) // Resize the image
                // .transform(new CircleCrop()) // Apply a transformation (e.g., circle crop)
-                .addListener(new RequestListener<>() {
+                .addListener(new RequestListener<Drawable>() {
                     @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, @NonNull Target<Drawable> target, boolean isFirstResource) {
+                    public boolean onLoadFailed(@Nullable GlideException e, @Nullable Object model, @NonNull Target<Drawable> target, boolean isFirstResource) {
                         return false;
                     }
 
@@ -458,15 +462,48 @@ public class MainActivity extends AppCompatActivity {
                         return false; // Return false to allow Glide to handle the resource as well
                     }
                 })
-                .into(nowPlayingCoverArt);
+                .into(nowPlayingCoverArt); */
+
+        ImageRequest request = CoverartFetcher.builder(getApplicationContext(), song)
+                .data(song)
+                .target(new ImageViewTarget(nowPlayingCoverArt))
+               /* .target(new Target() {
+                    @Override
+                    public void onSuccess(@NonNull Image result) {
+                        if(result instanceof BitmapImage bitmapImage) {
+                            Bitmap bmp = bitmapImage.getBitmap();
+                            Palette palette = Palette.from(bmp).generate();
+                            int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
+                            int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
+                            runOnUiThread(() -> {
+                                try {
+                                    nowPlayingCoverArt.setImageBitmap(bmp);
+                                    nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
+                                    nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
+                                    nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
+                                } catch (Exception ignored) {
+                                }
+                            });
+                        }
+                        Target.super.onSuccess(result);
+                    }
+                })*/
+                .build();
+        imageLoader.enqueue(request);
 
         nowPlayingTitle.setText(song.getTitle());
 
+        request = new ImageRequest.Builder(getApplicationContext())
+                .data(IconProviders.getResolutionIcon(getApplicationContext(), song))
+                .target(new ImageViewTarget(nowPlayingType))
+                .build();
+        imageLoader.enqueue(request);
+        /*
         GlideApp.with(this)
                 .load(IconProviders.getResolutionIcon(getApplicationContext(), song))
                 .skipMemoryCache(false) // Skip memory cache
                 .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(nowPlayingType);
+                .into(nowPlayingType); */
 
         PlayerInfo player = MusixMateApp.getPlayerControl().getPlayerInfo();
         if(player!=null) {

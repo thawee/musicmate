@@ -48,7 +48,7 @@ public class JettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
         int cpus = Runtime.getRuntime().availableProcessors();
         int maxThreads = 5 * cpus;
 
-        final QueuedThreadPool queuedThreadPool = createThreadPool("jupnp-jetty-client", 5, maxThreads, 60000);
+        final QueuedThreadPool queuedThreadPool = createThreadPool(5, maxThreads, 60000);
 
         httpClient.setExecutor(queuedThreadPool);
 
@@ -147,42 +147,37 @@ public class JettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
     protected Callable<StreamResponseMessage> createCallable(StreamRequestMessage requestMessage, Request request) {
         return () -> {
             //logger.trace("Sending HTTP request: {}", requestMessage);
-            try {
-                final ContentResponse httpResponse = request.send();
+            final ContentResponse httpResponse = request.send();
 
-              //  logger.trace("Received HTTP response: {}", httpResponse.getReason());
+            //  logger.trace("Received HTTP response: {}", httpResponse.getReason());
 
-                // Status
-                final UpnpResponse responseOperation = new UpnpResponse(httpResponse.getStatus(),
-                        httpResponse.getReason());
+            // Status
+            final UpnpResponse responseOperation = new UpnpResponse(httpResponse.getStatus(),
+                    httpResponse.getReason());
 
-                // Message
-                final StreamResponseMessage responseMessage = new StreamResponseMessage(responseOperation);
+            // Message
+            final StreamResponseMessage responseMessage = new StreamResponseMessage(responseOperation);
 
-                // Headers
-                responseMessage.setHeaders(new UpnpHeaders(readHeaders(httpResponse)));
+            // Headers
+            responseMessage.setHeaders(new UpnpHeaders(readHeaders(httpResponse)));
 
-                // Body
-                final byte[] bytes = httpResponse.getContent();
-                if (bytes == null || 0 == bytes.length) {
-                   // logger.trace("HTTP response message has no entity");
-
-                    return responseMessage;
-                }
-
-                if (responseMessage.isContentTypeMissingOrText()) {
-                    Log.v(TAG, "HTTP response message contains text entity");
-                } else {
-                    Log.v(TAG, "HTTP response message contains binary entity");
-                }
-
-                responseMessage.setBodyCharacters(bytes);
+            // Body
+            final byte[] bytes = httpResponse.getContent();
+            if (bytes == null || 0 == bytes.length) {
+               // logger.trace("HTTP response message has no entity");
 
                 return responseMessage;
-            } catch (final RuntimeException e) {
-              //  logger.error("Request: {} failed", request, e);
-                throw e;
             }
+
+            if (responseMessage.isContentTypeMissingOrText()) {
+                Log.v(TAG, "HTTP response message contains text entity");
+            } else {
+                Log.v(TAG, "HTTP response message contains binary entity");
+            }
+
+            responseMessage.setBodyCharacters(bytes);
+
+            return responseMessage;
         };
     }
 
@@ -219,15 +214,15 @@ public class JettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
       //  logger.trace("Shutting down HTTP client connection manager/pool");
         try {
             httpClient.stop();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
            // logger.info("Shutting down of HTTP client throwed exception", e);
         }
     }
 
-    private QueuedThreadPool createThreadPool(String consumerName, int minThreads, int maxThreads,
+    private QueuedThreadPool createThreadPool(int minThreads, int maxThreads,
                                               int keepAliveTimeout) {
         QueuedThreadPool queuedThreadPool = new QueuedThreadPool(maxThreads, minThreads, keepAliveTimeout);
-        queuedThreadPool.setName(consumerName);
+        queuedThreadPool.setName("jupnp-jetty-client");
         queuedThreadPool.setDaemon(true);
         return queuedThreadPool;
     }

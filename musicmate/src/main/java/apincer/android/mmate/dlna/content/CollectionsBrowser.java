@@ -28,16 +28,16 @@ import apincer.android.mmate.utils.MusicTagUtils;
 public class CollectionsBrowser extends ContentBrowser {
     public static final String MY_SONGS = "All Songs";
     public static final String DOWNLOADS_SONGS = "Incoming Songs";
-    public static final String SMART_LIST_FINFIN_SONGS = "ฟังเพลงฟินๆ รินเบียร์เย็นๆ";
+    public static final String SMART_LIST_FINFIN_SONGS = "ฟังสุดอิน ฟินสุดๆ";  //"เพลงฟินๆ รินเบียร์เย็นๆ";
    // public static final String SMART_LIST_FINFIN_EN_SONGS = "ฟังเพลงสากลฟินๆ รินเบียร์เย็นๆ";
-    public static final String SMART_LIST_FINFIN_TH_SONGS = "เพลงไทยฟินๆ รินเบียร์เย็นๆ";
+    //public static final String SMART_LIST_FINFIN_TH_SONGS = "เพลงไทยฟินๆ รินเบียร์เย็นๆ";
    // public static final String SMART_LIST_RELAXED_TH_SONGS = "ยานอนหลับ ฉบับไทยๆ";
    // public static final String SMART_LIST_RELAXED_EN_SONGS = "ยานอนหลับ ฉบับสากล";
-    public static final String SMART_LIST_RELAXED_SONGS = "ยานอนหลับ ฉบับรวมมิตร";
-    public static final String SMART_LIST_ISAAN_SONGS = "สะออนแฮง สำเนียงเสียงลำ";
-    public static final String SMART_LIST_BAANTHUNG_SONGS = "คิดถึง บ้านทุ่งท้องนา";
-    public static final String SMART_LIST_TRADITIONAL_SONGS = "สืบสาน ตำนานพื้นบ้าน";
-    public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+    public static final String SMART_LIST_VOCAL_SONGS = "เสียงใสๆ สกิดใจวัยรุ่น";
+    public static final String SMART_LIST_ISAAN_SONGS = "สำเนียง เสียงลำ วาทะศิลป์ ถิ่นอีสาน"; //"สะออนแฮง สำเนียงเสียงลำ";
+    public static final String SMART_LIST_BAANTHUNG_SONGS = "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง"; // "คิดถึง บ้านทุ่งท้องนา";
+    public static final String SMART_LIST_TRADITIONAL_SONGS = "เพลงพื้นบ้าน ตำนานท้องถิ่น สืบทอดต่อกันมา";
+    public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคเพราะๆ กล่อมโลกให้หายเหงา"; //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
    // public static final String SMART_LIST_INDIE_SONGS = "นอกกระแส แค่ฟังก็ฟิน";
     public static final List<String> playlists = new ArrayList<>();
     static {
@@ -45,12 +45,12 @@ public class CollectionsBrowser extends ContentBrowser {
         playlists.add(DOWNLOADS_SONGS);
        // playlists.add(DUPLICATED_SONGS);
         playlists.add(SMART_LIST_FINFIN_SONGS);
-        playlists.add(SMART_LIST_FINFIN_TH_SONGS);
+       // playlists.add(SMART_LIST_FINFIN_TH_SONGS);
        // playlists.add(SMART_LIST_FINFIN_EN_SONGS);
      //   playlists.add(SMART_LIST_RELAXED_TH_SONGS);
      //   playlists.add(SMART_LIST_RELAXED_EN_SONGS);
 
-        playlists.add(SMART_LIST_RELAXED_SONGS);
+        playlists.add(SMART_LIST_VOCAL_SONGS);
         playlists.add(SMART_LIST_BAANTHUNG_SONGS);
         playlists.add(SMART_LIST_TRADITIONAL_SONGS);
         playlists.add(SMART_LIST_ISAAN_SONGS);
@@ -97,8 +97,8 @@ public class CollectionsBrowser extends ContentBrowser {
            // if(MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
            //     Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_EN_SONGS)).addChildCount();
            // }
-            if(MusicTagUtils.isRelaxedPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_SONGS)).addChildCount();
+            if(MusicTagUtils.isVocalPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_VOCAL_SONGS)).addChildCount();
             }
             if(MusicTagUtils.isTraditionalPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_TRADITIONAL_SONGS)).addChildCount();
@@ -106,9 +106,9 @@ public class CollectionsBrowser extends ContentBrowser {
             if(MusicTagUtils.isFinFinPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_SONGS)).addChildCount();
             }
-            if(MusicTagUtils.isThaiFinFinPlaylist(tag)) {
+            /*if(MusicTagUtils.isThaiFinFinPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_TH_SONGS)).addChildCount();
-            }
+            }*/
            // if(MusicTagUtils.isEnglishFinFinPlaylist(tag)) {
            //     Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_EN_SONGS)).addChildCount();
             //}

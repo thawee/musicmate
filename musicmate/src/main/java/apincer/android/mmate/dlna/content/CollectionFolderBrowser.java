@@ -60,13 +60,13 @@ public class CollectionFolderBrowser extends ContentBrowser {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_FINFIN_TH_SONGS.equals(name) && MusicTagUtils.isThaiFinFinPlaylist(tag)) {
-                results.add(tag);
+            //}else if (CollectionsBrowser.SMART_LIST_FINFIN_TH_SONGS.equals(name) && MusicTagUtils.isThaiFinFinPlaylist(tag)) {
+            //    results.add(tag);
            // }else if (CollectionsBrowser.SMART_LIST_FINFIN_EN_SONGS.equals(name) && MusicTagUtils.isEnglishFinFinPlaylist(tag)) {
            //     results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_RELAXED_SONGS.equals(name) && MusicTagUtils.isRelaxedPlaylist(tag)) {
+            }else if (CollectionsBrowser.SMART_LIST_VOCAL_SONGS.equals(name) && MusicTagUtils.isVocalPlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
                 results.add(tag);

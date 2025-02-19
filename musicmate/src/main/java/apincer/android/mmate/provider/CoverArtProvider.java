@@ -44,7 +44,7 @@ public final class CoverArtProvider extends ContentProvider {
                     //dir.mkdirs();
                     // extract covert to cache directory
                     MusicTag tag = TagRepository.getMusicTagAlbumUniqueKey(albumUniqueKey);
-                    FileRepository.extractCoverArt(tag, pathFile);
+                    FileRepository.newInstance(context).extractCoverArt(tag);
                 }
             } catch (Exception e) {
                 Log.d(TAG,"getUriForMusicTag: ", e);
