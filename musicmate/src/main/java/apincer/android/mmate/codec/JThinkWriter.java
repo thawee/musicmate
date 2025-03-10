@@ -1,10 +1,10 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
-import static apincer.android.mmate.repository.TagReader.KEY_MM_TRACK_DR;
-import static apincer.android.mmate.repository.TagReader.KEY_MM_TRACK_DR_SCORE;
-import static apincer.android.mmate.repository.TagReader.KEY_MM_TRACK_RESAMPLED;
-import static apincer.android.mmate.repository.TagReader.KEY_MM_TRACK_UPSCALED;
+import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_DR;
+import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_DR_SCORE;
+import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_RESAMPLED;
+import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_UPSCALED;
 
 import android.content.Context;
 import android.util.Log;
@@ -42,8 +42,8 @@ import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.StandardCharsets;
 
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
-import apincer.android.mmate.utils.StringUtils;
 
 public class JThinkWriter extends  TagWriter {
     private static final String TAG = "JThinkWriter";
@@ -125,8 +125,8 @@ public class JThinkWriter extends  TagWriter {
     void setCustomTagsFields(AudioFile audioFile, MusicTag tag) {
         setTagFieldCustom(audioFile, KEY_MM_TRACK_DR, Double.toString(tag.getDynamicRange()));
         setTagFieldCustom(audioFile, KEY_MM_TRACK_DR_SCORE,Double.toString(tag.getDynamicRangeScore()));
-        setTagFieldCustom(audioFile, KEY_MM_TRACK_UPSCALED,StringUtils.trimToEmpty(tag.getUpscaledInd()));
-        setTagFieldCustom(audioFile, KEY_MM_TRACK_RESAMPLED,StringUtils.trimToEmpty(tag.getResampledInd()));
+        setTagFieldCustom(audioFile, KEY_MM_TRACK_UPSCALED,Double.toString(tag.getUpscaledScore()));
+        setTagFieldCustom(audioFile, KEY_MM_TRACK_RESAMPLED,Double.toString(tag.getResampledScore()));
     }
 
     void setTagField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
@@ -137,7 +137,7 @@ public class JThinkWriter extends  TagWriter {
      * This will write a custom ID3 tag (TXXX). This works only with MP3 files
      * (Flac with ID3-Tag not tested).
      *
-     * @param description The description of the custom tag i.e. "catalognr"
+     * @param description The description of the custom tag i.e. "cataloger"
      * There can only be one custom TXXX tag with that description in one MP3
      * file
      * @param text The actual text to be written into the new tag field

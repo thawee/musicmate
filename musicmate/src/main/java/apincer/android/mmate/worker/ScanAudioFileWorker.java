@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.Settings;
+import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.repository.TagReader;
 import apincer.android.mmate.utils.LogHelper;
 
 public class ScanAudioFileWorker extends Worker {

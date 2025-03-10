@@ -1,7 +1,7 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
-import static apincer.android.mmate.repository.MusicAnalyser.analystFull;
+import static apincer.android.mmate.repository.MusicAnalyser.process;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -89,8 +90,7 @@ public class JThinkReader extends TagReader{
             readFileInfo(context, tag);
             readHeader(read, tag);
             readTags(read, tag);
-           // detectMQA(tag);
-            analystFull(tag);
+            process(tag);
             tag.setAudioStartTime(0);
             return Collections.singletonList(tag);
         }else {
@@ -192,10 +192,10 @@ public class JThinkReader extends TagReader{
                     metadata.setDynamicRange(toDouble(tags.get(KEY_MM_TRACK_DR)));
                 }
                 if (tags.containsKey(KEY_MM_TRACK_UPSCALED)) {
-                    metadata.setUpscaledInd(tags.get(KEY_MM_TRACK_UPSCALED));
+                    metadata.setUpscaledScore(toDouble(tags.get(KEY_MM_TRACK_UPSCALED)));
                 }
                 if (tags.containsKey(KEY_MM_TRACK_RESAMPLED)) {
-                    metadata.setResampledInd(tags.get(KEY_MM_TRACK_RESAMPLED));
+                    metadata.setResampledScore(toDouble(tags.get(KEY_MM_TRACK_RESAMPLED)));
                 }
                 if (tags.containsKey(KEY_TAG_PUBLISHER)) {
                     metadata.setPublisher(tags.get(KEY_TAG_PUBLISHER));

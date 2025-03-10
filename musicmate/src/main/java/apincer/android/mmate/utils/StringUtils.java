@@ -623,4 +623,28 @@ public class StringUtils {
 
         return String.format("%02d:%02d Min", minutes, seconds);
     }
+
+    /**
+     * Extracts the track number as an integer from a string that might be formatted as "1" or "1/2"
+     * @param trackNumberStr The track number string to parse
+     * @return The integer track number, or 0 if parsing fails
+     */
+    public static int extractTrackNumber(String trackNumberStr) {
+        if (isEmpty(trackNumberStr)) {
+            return 0;
+        }
+
+        // If the track number contains a slash, extract just the part before it
+        int slashIndex = trackNumberStr.indexOf('/');
+        if (slashIndex > 0) {
+            trackNumberStr = trackNumberStr.substring(0, slashIndex);
+        }
+
+        // Try to parse the track number as an integer
+        try {
+            return Integer.parseInt(trackNumberStr.trim());
+        } catch (NumberFormatException e) {
+            return 0; // Return 0 for any parsing failures
+        }
+    }
 }

@@ -1,7 +1,5 @@
 package apincer.android.mmate.dlna.content;
 
-import static apincer.android.mmate.dlna.transport.StreamServerImpl.forceFullContent;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 
@@ -19,7 +17,7 @@ import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
 
-public class GroupingFolderBrowser extends ContentBrowser {
+public class GroupingFolderBrowser extends AbstractContentBrowser {
     private static final String TAG = "GroupingFolderBrowser";
     public GroupingFolderBrowser(Context context) {
         super(context);
@@ -28,22 +26,20 @@ public class GroupingFolderBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), myId, "mmate", getSize(
-                contentDirectory, myId), null);
+        return new StorageFolder(myId,
+                ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(),
+                myId,
+                "mmate",
+                getTotalMatches(contentDirectory, myId), null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
-        String name = myId.substring(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().length());
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name)) { // ||
-               // "None".equalsIgnoreCase(name)) {
-            name = "";
-        }
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        String name = extractName(myId,ContentDirectoryIDs.MUSIC_GROUPING_PREFIX);
         String downloadName = getContext().getString(R.string.downloaded);
         if(downloadName.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs().size();
+            return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs(0, 0).size();
         }else {
-            return MusixMateApp.getInstance().getOrmLite().findByGrouping(name).size();
+            return MusixMateApp.getInstance().getOrmLite().findByGrouping(name, 0, 0).size();
         }
     }
 
@@ -62,18 +58,18 @@ public class GroupingFolderBrowser extends ContentBrowser {
         List<MusicTag> tags;
         String downloadName = getContext().getString(R.string.downloaded);
         if(downloadName.equals(name)) {
-            tags = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
+            tags = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs(firstResult, maxResults);
         }else {
-            tags = MusixMateApp.getInstance().getOrmLite().findByGrouping(name);
+            tags = MusixMateApp.getInstance().getOrmLite().findByGrouping(name, firstResult, maxResults);
         }
-        int currentCount = 0;
+        //int currentCount = 0;
         for(MusicTag tag: tags) {
-            if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
+           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
 
                 result.add(musicTrack);
-            }
-            if(!forceFullContent)  currentCount++;
+           // }
+           // if(!forceFullContent)  currentCount++;
             //currentCount++;
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));

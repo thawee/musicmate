@@ -538,19 +538,12 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {
-        /*
-        GlideApp.with(this)
-                .load(tag)
-                .placeholder(R.drawable.progress) // Set a placeholder image
-                .diskCacheStrategy(DiskCacheStrategy.DATA) // Cache all versions of the image
-                .skipMemoryCache(true) // Skip memory cache
-                .transform(new RoundedCorners(8))
-                .into(previewCoverart); */
         ImageLoader imageLoader = SingletonImageLoader.get(getContext());
         ImageRequest request = CoverartFetcher.builder(getContext(), tag)
                                 .data(tag)
                 .target(new ImageViewTarget(previewCoverart))
-                                .build();
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(getContext()))
+                .build();
         imageLoader.enqueue(request);
 
         previewTitle.setText(MusicTagUtils.getFormattedTitle(getContext(),tag));

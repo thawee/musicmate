@@ -22,7 +22,12 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.codec.FFMPegReader;
+import apincer.android.mmate.codec.JustDSDReader;
+import apincer.android.mmate.codec.TagReader;
+import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.provider.FileSystem;
+import apincer.android.mmate.codec.FFMpegHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -417,8 +422,8 @@ public class FileRepository {
         if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping()) ||
                 Constants.GROUPING_THAI_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
+       // }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
+       //     return STORAGE_PRIMARY;
         }else if(Constants.GROUPING_JAZZ.equalsIgnoreCase(metadata.getGrouping()) ||
                 Constants.GROUPING_THAI_JAZZ.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;

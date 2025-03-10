@@ -12,6 +12,7 @@ import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.utils.FileUtils;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -205,6 +206,17 @@ public class MusicTagUtils {
         return text;
     }
 
+    public static String getTrackLUFS(MusicTag tag) {
+        String text;
+        if(tag.getDynamicRangeScore()==0.00) {
+            text = "";
+        }else {
+            text = String.format(Locale.US, "%.0f", tag.getDynamicRangeScore());
+        }
+
+        return text;
+    }
+
     public static String getDynamicRangeAsString(MusicTag tag) {
         String text;
         if(tag.getDynamicRange()==0.00) {
@@ -381,13 +393,21 @@ public class MusicTagUtils {
     }
 
     public static boolean isVocalPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
+        //String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
         String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (!isClassicPlaylist(tag)) &&
                 (genre.contains("ACOUSTIC") ||
-                        genre.contains("VOCAL") ||
-                grouping.equalsIgnoreCase("Jazz") ||
-                grouping.equalsIgnoreCase("Thai Jazz"));
+                        genre.contains("VOCAL")); // ||
+               // grouping.equalsIgnoreCase("Jazz") ||
+               // grouping.equalsIgnoreCase("Thai Jazz"));
+    }
+
+    public static boolean isJazzPlaylist(MusicTag tag) {
+        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
+       // String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
+        return (
+            grouping.equalsIgnoreCase("Jazz") ||
+            grouping.equalsIgnoreCase("Thai Jazz"));
     }
 
     public static boolean isManagedInLibrary(Context context, MusicTag tag) {
@@ -462,5 +482,9 @@ public class MusicTagUtils {
     public static boolean isTraditionalPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
         return grouping.equalsIgnoreCase("Traditional");
+    }
+
+    public static boolean isAudiophile(MusicTag tag) {
+        return Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality());
     }
 }

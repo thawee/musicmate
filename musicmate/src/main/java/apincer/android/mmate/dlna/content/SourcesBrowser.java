@@ -21,7 +21,7 @@ import apincer.android.mmate.repository.TagRepository;
 /**
  * Browser  for the music genres folder.
  */
-public class SourcesBrowser extends ContentBrowser {
+public class SourcesBrowser extends AbstractContentBrowser {
     public SourcesBrowser(Context context) {
         super(context);
     }
@@ -31,12 +31,11 @@ public class SourcesBrowser extends ContentBrowser {
         // /English
         // /Download
         // /IMDP
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
-       // return new StorageFolder(ContentDirectoryIDs.MUSIC_DIRS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate",0,null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
 
         return rootDIRs.size(); // +1; // +1 for Downloads folder

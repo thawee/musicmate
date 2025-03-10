@@ -21,7 +21,7 @@ import apincer.android.mmate.repository.TagRepository;
 /**
  * Browser  for the music genres folder.
  */
-public class GroupingsBrowser extends ContentBrowser {
+public class GroupingsBrowser extends AbstractContentBrowser {
     public GroupingsBrowser(Context context) {
         super(context);
     }
@@ -29,12 +29,12 @@ public class GroupingsBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_groupings), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_groupings), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
 
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         return TagRepository.getActualGroupingList(getContext()).size(); // +1; // +1 for Downloads folder
     }
 

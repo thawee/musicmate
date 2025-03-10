@@ -83,7 +83,6 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     private StreamServer upnpServer;
     private final Context context;
 
-    public static boolean forceFullContent = false;
     public static String streamServerHost = "";
     private static final List<String> transCodeList = new ArrayList<>();
 

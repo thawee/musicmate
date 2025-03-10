@@ -2,6 +2,7 @@ package apincer.android.mmate.dlna.content;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
@@ -10,10 +11,8 @@ import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
 
@@ -21,7 +20,7 @@ import apincer.android.mmate.repository.MusicTag;
 /**
  * Browser for a music artist folder.
  */
-public class ArtistFolderBrowser extends ContentBrowser {
+public class ArtistFolderBrowser extends AbstractContentBrowser {
     public ArtistFolderBrowser(Context context) {
         super(context);
     }
@@ -29,18 +28,13 @@ public class ArtistFolderBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), myId, "mmate", getSize(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), myId, "mmate", getTotalMatches(
                 contentDirectory, myId), null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
-        String name = myId.substring(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId().length());
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
-                Constants.UNKNOWN.equalsIgnoreCase(name)) {
-            name = "";
-        }
-        return MusixMateApp.getInstance().getOrmLite().findByGenre(name).size();
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        String name = extractName(myId, ContentDirectoryIDs.MUSIC_ARTIST_PREFIX);
+        return MusixMateApp.getInstance().getOrmLite().findByArtist(name, 0, 0).size();
     }
 
     @Override
@@ -54,24 +48,17 @@ public class ArtistFolderBrowser extends ContentBrowser {
     public List<MusicTrack> browseItem(ContentDirectory contentDirectory,
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
-        String name = myId.substring(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId().length());
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
-                Constants.UNKNOWN.equalsIgnoreCase(name)) {
-            name = "";
-        }
-        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByArtist(name);
-        int currentCount = 0;
+        String name = extractName(myId, ContentDirectoryIDs.MUSIC_ARTIST_PREFIX);
+        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByArtist(name, firstResult, maxResults);
         for(MusicTag tag: tags) {
-            if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
+            try {
+                MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
                 result.add(musicTrack);
+            } catch (Exception e) {
+                // Log error but continue processing other tracks
+                Log.e("ArtistFolderBrowser", "Error processing track: " + tag.getTitle(), e);
             }
-            currentCount++;
         }
-        result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
-
     }
-
 }

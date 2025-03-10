@@ -25,7 +25,7 @@ import apincer.android.mmate.utils.MusicTagUtils;
 /**
  * Browser  for the music playlist folder.
  */
-public class ResolutionsBrowser extends ContentBrowser {
+public class ResolutionsBrowser extends AbstractContentBrowser {
     private final List<String> playlists = new ArrayList<>();
     public ResolutionsBrowser(Context context) {
         super(context);
@@ -39,11 +39,11 @@ public class ResolutionsBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_audio_encoding_format), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_audio_encoding_format), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         return playlists.size();
     }
 

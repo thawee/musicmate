@@ -96,12 +96,15 @@ public class MediaServerDevice extends LocalDevice {
 
             @Override
             protected int getLockTimeoutMillis() {
-                return 1000; //LOCK_TIMEOUT;
+                return 1500; // Slightly increased from 1000 for better reliability
             }
 
             @Override
             protected ConnectionManagerService createServiceInstance() {
-                return new ConnectionManagerService(sourceProtocols, new ProtocolInfos());
+                ConnectionManagerService connectionManager = new ConnectionManagerService(sourceProtocols, new ProtocolInfos());
+                // Customize connection manager for better streaming
+                //connectionManager.(50);  // Increased connections for multiple clients
+                return connectionManager;
             }
         });
 
@@ -111,6 +114,43 @@ public class MediaServerDevice extends LocalDevice {
 
     private static ProtocolInfos getSourceProtocolInfos() {
         return new ProtocolInfos(
+                // Wildcard entries for discovery
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/" + MimeType.WILDCARD, ProtocolInfo.WILDCARD),
+
+                // Image formats with DLNA parameters for thumbnails
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_TN;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=00f00000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_SM;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=00f00000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_MED;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=00f00000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/jpeg", "DLNA.ORG_PN=JPEG_LRG;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=00f00000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "image/png", "DLNA.ORG_PN=PNG_TN;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=00f00000000000000000000000000000"),
+
+                // Audio formats with DLNA parameters for seeking and streaming
+                // MP3 - very widely compatible
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mpeg", "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+
+                // FLAC - critical for RoPieeeXL hi-res playback
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/flac", "DLNA.ORG_PN=FLAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-flac", "DLNA.ORG_PN=FLAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+
+                // WAV - for uncompressed audio
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/wav", "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-wav", "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+
+                // AIFF - for studio quality audio
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-aiff", "DLNA.ORG_PN=AIFF;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+
+                // ALAC (Apple Lossless) and AAC
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-mp4", "DLNA.ORG_PN=AAC_ISO_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/mp4", "DLNA.ORG_PN=AAC_ISO;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/x-m4a", "DLNA.ORG_PN=AAC_ISO;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+
+                // PCM/LPCM - for direct renderer interface
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=44100;channels=2", "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"),
+                new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, "audio/L16;rate=48000;channels=2", "DLNA.ORG_PN=LPCM;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000")
+        );
+
+       /* return new ProtocolInfos(
                 //this one overlap all ???
                 // new ProtocolInfo(Protocol.HTTP_GET, ProtocolInfo.WILDCARD, MimeType.WILDCARD, ProtocolInfo.WILDCARD),
                 //this one overlap all images ???
@@ -175,7 +215,7 @@ public class MediaServerDevice extends LocalDevice {
                 // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED"),
                 //  new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM"),
                 // new ProtocolInfo("http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN"));
-        );
+        ); */
     }
 
     private static LocalService<ContentDirectory> createContentDirectoryService(Context context) {
@@ -243,7 +283,12 @@ public class MediaServerDevice extends LocalDevice {
         private static final String MANUFACTURER_URL = "https://github.com/thawee/musicmate";
         private static final ManufacturerDetails MANUFACTURER_DETAILS = new ManufacturerDetails(MANUFACTURER_NAME, MANUFACTURER_URL);
         private	static final DLNADoc[] DLNA_DOCS = new DLNADoc[] {new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
-        private	static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {});
+        // Replace the empty DLNA_CAPS with these capabilities
+        private static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {
+                "image-upload", "audio-upload", "connection-stalling", "time-seek",
+                "range", "limited-operations", "rw", "search"
+        });
+        private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
         private static final DLNACaps SEC_CAP = new DLNACaps(new String[] {"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
 
         private MediaDeviceDetailsProvider(Context context) {
@@ -252,14 +297,23 @@ public class MediaServerDevice extends LocalDevice {
 
         @Override
         public DeviceDetails provide(RemoteClientInfo info) {
-                String modelNumber = ApplicationUtils.getVersionNumber(context);
-                String modelName = "MusicMate Server";
-                String modelDescription = "DLNA (UPnP/AV 1.0) Compliant Media Server - "+ApplicationUtils.getDeviceDetails();
-                String friendlyName = "MusicMate Server ["+ApplicationUtils.getDeviceModel()+"]";
+            String modelNumber = ApplicationUtils.getVersionNumber(context);
+            String modelName = "MusicMate Server";
+            String modelDescription = "DLNA (UPnP/AV 1.0) Compliant Media Server - "+ApplicationUtils.getDeviceDetails();
+
+            // For better display in mConnectHD, include the device model in brackets
+            String friendlyName = "MusicMate Server ["+ApplicationUtils.getDeviceModel()+"]";
+
+            // Add serialNumber for better device identification
+            String serialNumber = getUuid(context).substring(0, 12).toUpperCase();
+
             ModelDetails modelDetails = new ModelDetails(modelName,
                         modelDescription,
-                        modelNumber);
-                URI presentationURI = null;
+                        modelNumber,
+                    "https://github.com/thawee/musicmate"  // Add modelURL for more information
+            );
+
+            URI presentationURI = null;
                 if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
                     String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + CONTENT_SERVER_PORT +"/musicmate.html";
                     presentationURI = URI.create(webInterfaceUrl);
@@ -269,7 +323,7 @@ public class MediaServerDevice extends LocalDevice {
                         friendlyName,
                         MANUFACTURER_DETAILS,
                         modelDetails,
-                        null,
+                        serialNumber,
                         null,
                         presentationURI,
                         DLNA_DOCS,

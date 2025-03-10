@@ -8,12 +8,12 @@ minSdkVersion    = "34" # support running on android 11 ot higher
 targetSdkVersion = "34" # //33, // required 33, android 13
 compileSdkVersion = "35"
 buildTools ="36.0.0-rc5"
-androidGradlePlugin = "8.9.0-rc02"
+androidGradlePlugin = "8.9.0"
 aboutlibraries = "11.4.0"
-validationApi = "2.0.1.Final"
+#validationApi = "2.0.1.Final"
 kotlin = "2.1.10"
 coroutines = "1.10.1"
-ksp="2.1.0-1.0.29"
+#ksp="2.1.0-1.0.29"
 
 [libraries]
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
@@ -41,15 +41,15 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 jupiter-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
-jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.18.2"}
-jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.18.2"}
+jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.18.3"}
+jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.18.3"}
 
-glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}
-glide-compiler = {module = "com.github.bumptech.glide:compiler", version="4.16.0" }
+#glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}
+#glide-compiler = {module = "com.github.bumptech.glide:compiler", version="4.16.0" }
 anggrayudi-storage = {module = "com.anggrayudi:storage", version="2.0.0"}
 ffmpegkit-audio = {module = "com.arthenica:ffmpeg-kit-audio", version="6.0-2.LTS"}
 greenrobot-eventbus = {module = "org.greenrobot:eventbus", version="3.3.1"}
-slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.16"}
+slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.17"}
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.3"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.3"}
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
@@ -62,7 +62,7 @@ refresh-layout-kernel = {module = "io.github.scwang90:refresh-layout-kernel", ve
 refresh-header-classics =  {module = "io.github.scwang90:refresh-header-classics", version="2.1.1"}
 medyo-stateviews =  {module = "com.github.medyo:state-views", version="0.2"}
 chrisbanes-photoview = {module = "com.github.chrisbanes:PhotoView", version="2.3.0"}
-validation-api = { module = "javax.validation:validation-api", version.ref = "validationApi" }
+#validation-api = { module = "javax.validation:validation-api", version.ref = "validationApi" }
 zhanghai-fastscroll =  {module = "me.zhanghai.android.fastscroll:library", version="1.3.0"}
 skydoves-powerspinner = {module = "com.github.skydoves:powerspinner", version="1.2.7"}
 skydoves-powermenu = {module = "com.github.skydoves:powermenu", version="2.2.4"}
@@ -73,16 +73,16 @@ iwgang-simplifyspan = {module = "com.github.iwgang:simplifyspan", version="2.2"}
 vanniktech-textbuilder = {module = "com.vanniktech:textbuilder", version="0.4.0"}
 sparrow007-carouselrecyclerview = {module = "com.github.sparrow007:carouselrecyclerview", version="1.2.6"}
 philjay-mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version="v3.1.0"}
-mikepenz-aboutlibraries = {module = "com.mikepenz:aboutlibraries", version.ref="aboutlibraries"}
+#mikepenz-aboutlibraries = {module = "com.mikepenz:aboutlibraries", version.ref="aboutlibraries"}
 
 androidx-core = {module = "androidx.core:core", version="1.15.0"}
-androidx-activity = {module = "androidx.activity:activity", version="1.10.0"}
+androidx-activity = {module = "androidx.activity:activity", version="1.10.1"}
 androidx-annotation = {module = "androidx.annotation:annotation", version="1.9.1"}
 androidx-appCompat = {module = "androidx.appcompat:appcompat", version="1.7.0"}
 androidx-fragment = {module = "androidx.fragment:fragment", version="1.8.6"}
 androidx-cardView = {module = "androidx.cardview:cardview", version="1.0.0"}
-androidx-constraintlayout = {module = "androidx.constraintlayout:constraintlayout", version="2.2.0"}
-androidx-coordinatorlayout = {module = "androidx.coordinatorlayout:coordinatorlayout", version="1.2.0"}
+androidx-constraintlayout = {module = "androidx.constraintlayout:constraintlayout", version="2.2.1"}
+androidx-coordinatorlayout = {module = "androidx.coordinatorlayout:coordinatorlayout", version="1.3.0"}
 androidx-recyclerView = {module = "androidx.recyclerview:recyclerview", version="1.4.0"}
 androidx-recyclerView-selection = {module = "androidx.recyclerview:recyclerview-selection", version="1.1.0"}
 androidx-palette = {module = "androidx.palette:palette", version="1.0.0"}
@@ -93,22 +93,27 @@ androidx-drawerlayout = {module = "androidx.drawerlayout:drawerlayout", version=
 androidx-loader = {module = "androidx.loader:loader", version="1.1.0"}
 androidx-localbroadcastmanager = {module = "androidx.localbroadcastmanager:localbroadcastmanager", version="1.1.0"}
 androidx-viewpager2 = {module = "androidx.viewpager2:viewpager2", version="1.1.0"}
-androidx-lifecycle-compiler = {module = "androidx.lifecycle:lifecycle-compiler", version="2.8.7"}
+#androidx-lifecycle-compiler = {module = "androidx.lifecycle:lifecycle-compiler", version="2.8.7"}
 androidx-lifecycle-runtime = {module = "androidx.lifecycle:lifecycle-runtime", version="2.8.7"}
 androidx-lifecycle-process = {module = "androidx.lifecycle:lifecycle-process", version="2.8.7"}
-androidx-lifecycle-commonjava8 = {module = "androidx.lifecycle:lifecycle-common-java8", version="2.8.7"}
-androidx-lifecycle-reactivestreams = {module = "androidx.lifecycle:lifecycle-reactivestreams", version="2.8.7"}
-androidx-lifecycle-core-testing = {module = "androidx.arch.core:core-testing", version="2.8.7"}
-androidx-paging = {module = "androidx.paging:paging-runtime", version="3.3.6"}
-androidx-paging-common = {module = "androidx.paging:paging-common", version="3.3.6"}
-androidx-paging-rxjava2 = {module = "androidx.paging:paging-rxjava2", version="3.3.6"}
+#androidx-lifecycle-commonjava8 = {module = "androidx.lifecycle:lifecycle-common-java8", version="2.8.7"}
+#androidx-lifecycle-reactivestreams = {module = "androidx.lifecycle:lifecycle-reactivestreams", version="2.8.7"}
+#androidx-lifecycle-core-testing = {module = "androidx.arch.core:core-testing", version="2.8.7"}
+#androidx-paging = {module = "androidx.paging:paging-runtime", version="3.3.6"}
+#androidx-paging-common = {module = "androidx.paging:paging-common", version="3.3.6"}
+#androidx-paging-rxjava2 = {module = "androidx.paging:paging-rxjava2", version="3.3.6"}
 androidx-work = {module = "androidx.work:work-runtime", version="2.10.0"}
 coilkt-coil3 = {module="io.coil-kt.coil3:coil", version="3.1.0"}
+iirj = {module="uk.me.berndporr:iirj", version="1.7"}
+markwon-core = {module="io.noties.markwon:core", version="4.6.2"}
+markwon-html = {module="io.noties.markwon:html", version="4.6.2"}
+jcodec = {module="org.jcodec:jcodec", version="0.2.5"}
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 android-aboutlibraries = {id = "com.mikepenz.aboutlibraries.plugin", version.ref="aboutlibraries"}
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+#devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 objectbox = { id = "io.objectbox", version = "4.0.3" }

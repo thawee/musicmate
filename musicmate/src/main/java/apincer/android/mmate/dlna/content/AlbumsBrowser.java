@@ -25,7 +25,7 @@ import apincer.android.mmate.utils.StringUtils;
 /**
  * Browser  for the music albums folder.
  */
-public class AlbumsBrowser extends ContentBrowser {
+public class AlbumsBrowser extends AbstractContentBrowser {
     //this is album (by this is artist)
    private final Pattern pattern = Pattern.compile("(?i)(.*)\\s*\\(by\\s*(.*)\\)");
    private static final String TAG = "AlbumsBrowser";
@@ -35,13 +35,11 @@ public class AlbumsBrowser extends ContentBrowser {
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.albums), creator, getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.albums), creator, getTotalMatches(contentDirectory, myId),
                 null);
-
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         return MusixMateApp.getInstance().getOrmLite().getAlbumAndArtistWithChildrenCount().size();
     }
 
@@ -83,5 +81,4 @@ public class AlbumsBrowser extends ContentBrowser {
         return new ArrayList<>();
 
     }
-
 }

@@ -23,7 +23,7 @@ import apincer.android.mmate.utils.StringUtils;
 /**
  * Browser for a music genre folder.
  */
-public class AlbumFolderBrowser extends ContentBrowser {
+public class AlbumFolderBrowser extends AbstractContentBrowser {
     //this is album (by this is artist)
     private final Pattern pattern = Pattern.compile("(?i)(.*)\\s*\\(by\\s*(.*)\\)");
     public AlbumFolderBrowser(Context context) {
@@ -33,16 +33,15 @@ public class AlbumFolderBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), myId, "mmate", getSize(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), myId, "mmate", getTotalMatches(
                 contentDirectory, myId), null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         String name = myId.substring(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().length());
         String album = "";
         String albumArtist = "";
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
+        if(Constants.NONE.equalsIgnoreCase(name) ||
                 Constants.UNKNOWN.equalsIgnoreCase(name)) {
             album = "";
             albumArtist = "";
@@ -56,7 +55,7 @@ public class AlbumFolderBrowser extends ContentBrowser {
                 album = name;
             }
         }
-        return MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist).size();
+        return MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist, 0, 0).size();
     }
 
     @Override
@@ -75,8 +74,7 @@ public class AlbumFolderBrowser extends ContentBrowser {
         String name = myId.substring(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId().length());
         String album = "";
         String albumArtist = "";
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name) ||
+        if(Constants.NONE.equalsIgnoreCase(name) ||
                 Constants.UNKNOWN.equalsIgnoreCase(name)) {
             album = "";
             albumArtist = "";
@@ -91,17 +89,17 @@ public class AlbumFolderBrowser extends ContentBrowser {
             }
         }
 
-        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist);
-        int currentCount = 0;
+        List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist, firstResult, maxResults);
+       // int currentCount = 0;
         for(MusicTag tag: tags) {
-            if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
+           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
                 result.add(musicTrack);
-            }
-            currentCount++;
+           // }
+           // currentCount++;
         }
 
-        result.sort(Comparator.comparing(DIDLObject::getTitle));
+       // result.sort(Comparator.comparing(DIDLObject::getTitle));
 
         return result;
 

@@ -3,19 +3,19 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<item
-		android:icon="@drawable/round_view_carousel_24"
+		android:icon="@drawable/round_note_alt_24"
 		android:id="@+id/action_edit_metadata"
 		android:title="Preview Tags"
 		app:showAsAction="always"/>
 
 	<item
-		android:icon="@drawable/rounded_music_note_24"
+		android:icon="@drawable/sharp_settings_suggest_24"
 		android:id="@+id/action_encoding_file"
 		android:title="Encode Files"
 		app:showAsAction="always"/>
 
 	<item
-		android:icon="@drawable/round_troubleshoot_24"
+		android:icon="@drawable/round_query_stats_24"
 		android:id="@+id/action_calculate_replay_gain"
 		android:title="Measure DR"
 		app:showAsAction="always"/>

@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.FFMPegReader;
-import apincer.android.mmate.repository.FFMpegHelper;
+import apincer.android.mmate.codec.FFMPegReader;
+import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.TagReader;
 import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.codec.FFMpegHelper;
 import apincer.android.mmate.utils.ReflectUtil;
 import apincer.android.mmate.utils.StringUtils;
 

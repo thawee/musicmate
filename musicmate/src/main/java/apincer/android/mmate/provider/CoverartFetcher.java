@@ -6,6 +6,8 @@ import static apincer.android.mmate.Constants.DEFAULT_COVERART_DLNA_RES;
 import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +26,8 @@ import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.utils.FileUtils;
+import coil3.BitmapImage;
+import coil3.Image;
 import coil3.ImageLoader;
 import coil3.decode.DataSource;
 import coil3.decode.FileImageSource;
@@ -50,6 +54,22 @@ public class CoverartFetcher implements Fetcher {
         this.musicTag = musicTag;
     }
 
+    public static Image getDefaultCover(Context mContext) {
+        File defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
+        try {
+            if(!defaultCoverartDir.exists()) {
+                FileUtils.createParentDirs(defaultCoverartDir);
+                InputStream in = ApplicationUtils.getAssetsAsStream(MusixMateApp.getInstance(), DEFAULT_COVERART_DLNA_RES);
+                Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
+            }
+
+        } catch (IOException ignored) { }
+
+        Bitmap bitmap = BitmapFactory.decodeFile(defaultCoverartDir.getAbsolutePath());
+
+        return new BitmapImage(bitmap, true);
+    }
+
     @Nullable
     @Override
     public FetchResult fetch(@NonNull Continuation<? super FetchResult> continuation) {
@@ -61,26 +81,29 @@ public class CoverartFetcher implements Fetcher {
         if(covertFile != null) {
             Path imagePath = Path.get(covertFile);
 
-            ImageSource source = new FileImageSource(imagePath, FileSystem.SYSTEM, key, null,null);
+            ImageSource source = new FileImageSource(imagePath, FileSystem.SYSTEM, key, null, null);
 
             return new SourceFetchResult(
                     source,
                     null, // mime type
                     DataSource.DISK
             );
+        }
+        /*
         }else {
             // return default image
+            File defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
             try {
-                File defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
                 if(!defaultCoverartDir.exists()) {
                     FileUtils.createParentDirs(defaultCoverartDir);
                     InputStream in = ApplicationUtils.getAssetsAsStream(MusixMateApp.getInstance(), DEFAULT_COVERART_DLNA_RES);
                     Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
                 }
-                covertFile = defaultCoverartDir;
+
             } catch (IOException ignored) { }
 
-            if(covertFile != null) {
+            covertFile = defaultCoverartDir;
+            //if(covertFile != null) {
                 Path imagePath = Path.get(covertFile);
                 ImageSource source = new FileImageSource(imagePath, FileSystem.SYSTEM, key, null, null);
 
@@ -89,12 +112,12 @@ public class CoverartFetcher implements Fetcher {
                         null, // mime type
                         DataSource.DISK
                 );
-            }
-        }
+           // }
+        } */
         return null;
     }
 
-    public File getCoverartDir(String coverartName) {
+    public static File getCoverartDir(String coverartName) {
         File coverartDir = MusixMateApp.getInstance().getExternalCacheDir();
         return new File(coverartDir, coverartName);
     }

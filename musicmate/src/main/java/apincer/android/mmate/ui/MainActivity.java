@@ -12,8 +12,6 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -38,14 +36,12 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
-import androidx.palette.graphics.Palette;
 import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
@@ -90,25 +86,22 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
+import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverartFetcher;
-import apincer.android.mmate.provider.IconProviders;
-import apincer.android.mmate.repository.FFMpegHelper;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.repository.TagWriter;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
-import apincer.android.mmate.utils.BitmapHelper;
-import apincer.android.mmate.utils.ColorUtils;
+import apincer.android.mmate.codec.FFMpegHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PLSBuilder;
 import apincer.android.mmate.utils.PermissionUtils;
@@ -123,14 +116,10 @@ import cn.iwgang.simplifyspan.other.SpecialGravity;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialLabelUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
-import coil3.BitmapImage;
-import coil3.Image;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
 import coil3.target.ImageViewTarget;
-import coil3.target.Target;
-import coil3.target.ViewTarget;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -178,12 +167,12 @@ public class MainActivity extends AppCompatActivity {
     private RefreshLayout refreshLayout;
     private StateView mStateView;
     private View nowPlayingView;
-    private View nowPlayingPanel;
-    private View nowPlayingIconView;
-    private View nowPlayingTitlePanel;
+   // private View nowPlayingPanel;
+   // private View nowPlayingIconView;
+   // private View nowPlayingTitlePanel;
     private ImageView nowPlayingCoverArt;
-    private TextView nowPlayingTitle;
-    private ImageView nowPlayingType;
+   // private TextView nowPlayingTitle;
+   // private ImageView nowPlayingType;
     private ImageView nowPlayingPlayer;
     private ImageView nowPlayingOutputDevice;
 
@@ -431,79 +420,13 @@ public class MainActivity extends AppCompatActivity {
         }
         nowPlaying = song;
         ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
-        /*
-        GlideApp.with(this)
-                .load(song)
-                .placeholder(R.drawable.progress) // Set a placeholder image
-                .diskCacheStrategy(DiskCacheStrategy.DATA) // Cache all versions of the image
-                .skipMemoryCache(true) // Skip memory cache
-               // .override(240, 240) // Resize the image
-               // .transform(new CircleCrop()) // Apply a transformation (e.g., circle crop)
-                .addListener(new RequestListener<Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, @Nullable Object model, @NonNull Target<Drawable> target, boolean isFirstResource) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model, Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
-                        Bitmap bmp = BitmapHelper.drawableToBitmap(resource);
-                        Palette palette = Palette.from(bmp).generate();
-                        int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
-                        int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
-                        runOnUiThread(() -> {
-                            try {
-                                nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
-                                nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
-                                nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
-                            } catch (Exception ignored) {
-                            }
-                        });
-                        return false; // Return false to allow Glide to handle the resource as well
-                    }
-                })
-                .into(nowPlayingCoverArt); */
 
         ImageRequest request = CoverartFetcher.builder(getApplicationContext(), song)
                 .data(song)
                 .target(new ImageViewTarget(nowPlayingCoverArt))
-               /* .target(new Target() {
-                    @Override
-                    public void onSuccess(@NonNull Image result) {
-                        if(result instanceof BitmapImage bitmapImage) {
-                            Bitmap bmp = bitmapImage.getBitmap();
-                            Palette palette = Palette.from(bmp).generate();
-                            int mutedColor = palette.getMutedColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
-                            int dominantColor = palette.getDominantColor(ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.transparent));
-                            runOnUiThread(() -> {
-                                try {
-                                    nowPlayingCoverArt.setImageBitmap(bmp);
-                                    nowPlayingPanel.setBackgroundTintList(ColorStateList.valueOf(mutedColor));
-                                    nowPlayingTitlePanel.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(mutedColor, 80)));
-                                    nowPlayingIconView.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.TranslateDark(dominantColor, 80)));
-                                } catch (Exception ignored) {
-                                }
-                            });
-                        }
-                        Target.super.onSuccess(result);
-                    }
-                })*/
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
                 .build();
         imageLoader.enqueue(request);
-
-        nowPlayingTitle.setText(song.getTitle());
-
-        request = new ImageRequest.Builder(getApplicationContext())
-                .data(IconProviders.getResolutionIcon(getApplicationContext(), song))
-                .target(new ImageViewTarget(nowPlayingType))
-                .build();
-        imageLoader.enqueue(request);
-        /*
-        GlideApp.with(this)
-                .load(IconProviders.getResolutionIcon(getApplicationContext(), song))
-                .skipMemoryCache(false) // Skip memory cache
-                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(nowPlayingType); */
 
         PlayerInfo player = MusixMateApp.getPlayerControl().getPlayerInfo();
         if(player!=null) {
@@ -698,11 +621,11 @@ public class MainActivity extends AppCompatActivity {
     private void setUpNowPlayingView() {
         // Now Playing
         nowPlayingView = findViewById(R.id.now_playing_panel);
-        nowPlayingPanel = findViewById(R.id.now_playing_panel_inner);
-        nowPlayingIconView = findViewById(R.id.now_playing_icon_panel);
-        nowPlayingTitlePanel = findViewById(R.id.now_playing_title_panel);
-        nowPlayingTitle = findViewById(R.id.now_playing_title);
-        nowPlayingType = findViewById(R.id.now_playing_file_type);
+        //nowPlayingPanel = findViewById(R.id.now_playing_panel_inner);
+        //nowPlayingIconView = findViewById(R.id.now_playing_icon_panel);
+       // nowPlayingTitlePanel = findViewById(R.id.now_playing_title_panel);
+       // nowPlayingTitle = findViewById(R.id.now_playing_title);
+       // nowPlayingType = findViewById(R.id.now_playing_file_type);
         nowPlayingPlayer = findViewById(R.id.now_playing_player);
         nowPlayingOutputDevice = findViewById(R.id.now_playing_device);
         nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
@@ -1059,23 +982,6 @@ public class MainActivity extends AppCompatActivity {
         Intent myIntent = new Intent(MainActivity.this, AboutActivity.class);
         startActivity(myIntent);
     }
-
-    /*
-    private void doShowAboutLibraries() {
-       new LibsBuilder()
-                .withAboutAppName("Music Mate")
-                .withAboutIconShown(true)
-                .withAboutVersionShown(true)
-                .withAboutVersionShownCode(false)
-                .withAboutVersionShownName(true)
-                .withEdgeToEdge(false)
-                .withLicenseShown(true)
-                .withLicenseDialog(false)
-                .withSearchEnabled(false)
-                .withSortEnabled(true)
-                .withActivityTitle("Third-Party Libraries")
-                .start(this);
-    } */
 
     private void setUpSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
@@ -1459,18 +1365,13 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         statusList.put(tag, "Evaluating");
                         runOnUiThread(itemsView::invalidateViews);
-                        //calculate track RG
-                        //FFMPegReader.measureDRandStat(tag);
-                        MusicAnalyser analyser = new MusicAnalyser();
-                       // if(analyser.isSupported(tag)) {
-                            if (analyser.analyst(tag)) {
-                                tag.setDynamicRange(analyser.getDynamicRange());
-                                tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
-                                tag.setUpscaledInd(analyser.getUpscaled());
-                                tag.setResampledInd(analyser.getResampled());
+                            if (MusicAnalyser.process(tag)) {
+                               // tag.setDynamicRange(analyser.getDynamicRange());
+                               // tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
+                               // tag.setUpscaledScore(analyser.getUpScaledScore());
+                               // tag.setResampledScore(analyser.getReSampledScore());
 
                                 //write quality to file
-                               // FFMpegWriter.writeTagQualityToFile(MainActivity.this, tag);
                                 TagWriter.writeTagToFile(getApplicationContext(), tag);
                                 // update MusicMate Library
                                 TagRepository.saveTag(tag);

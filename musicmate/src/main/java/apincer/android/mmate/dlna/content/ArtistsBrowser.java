@@ -22,7 +22,7 @@ import apincer.android.mmate.repository.TagRepository;
 /**
  * Browser  for the music artists folder.
  */
-public class ArtistsBrowser extends ContentBrowser {
+public class ArtistsBrowser extends AbstractContentBrowser {
     private static final String TAG = "MusicArtistsBrowser";
     public ArtistsBrowser(Context context) {
         super(context);
@@ -31,12 +31,11 @@ public class ArtistsBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.artists), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.artists), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
-
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         return TagRepository.getArtistList().size();
     }
 
@@ -50,7 +49,7 @@ public class ArtistsBrowser extends ContentBrowser {
             result.add(musicAlbum);
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
-        Log.d(TAG, "Returning " + result.size() + " MusicAlbum Containers");
+       // Log.d(TAG, "Returning " + result.size() + " MusicAlbum Containers");
         return result;
     }
 

@@ -1,6 +1,6 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.MQADetector.NOT_SCAN;
+import static apincer.android.mmate.repository.MusicAnalyser.NOT_SCAN;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -74,9 +74,6 @@ public class MusicTag implements Cloneable, Parcelable {
 
    @DatabaseField(index = true)
    protected String mediaQuality;
-   // @DatabaseField
-   // protected int rating; //0-10
-    // audio information
     @DatabaseField
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
    @DatabaseField(index = true)
@@ -140,10 +137,10 @@ public class MusicTag implements Cloneable, Parcelable {
    protected double dynamicRange = 0;
 
     @DatabaseField
-    protected String upscaledInd; // -1 = upscaled, 0 - not analyst, 1 - not upscaled, increasing the bit depth from original file
+    protected double upscaledScore; // -1 = upscaled, 0 - not analyst, 1 - not upscaled, increasing the bit depth from original file
 
     @DatabaseField
-    protected String resampledInd; // -1 = re sampling, 0 - not analyst, 1 - not re sampling, resampling the sampling rate from original file
+    protected double resampledScore; // -1 = re sampling, 0 - not analyst, 1 - not re sampling, resampling the sampling rate from original file
 
     public String getMqaInd() {
         return mqaInd;
@@ -232,8 +229,8 @@ public class MusicTag implements Cloneable, Parcelable {
         audioStartTime = in.readDouble();
         //mmReadError = in.readByte() != 0;
         drScore = in.readDouble();
-        upscaledInd = in.readString();
-        resampledInd = in.readString();
+        upscaledScore = in.readDouble();
+        resampledScore = in.readDouble();
         dynamicRange = in.readDouble();
     }
 
@@ -452,10 +449,8 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.storageId = storageId;
         tag.simpleName = simpleName;
         tag.fileSize = fileSize;
-        //tag.fileSizeRatio = fileSizeRatio;
         tag.fileFormat = fileFormat;
         tag.fileLastModified = fileLastModified;
-       // tag.mmReadError = mmReadError;
 
         tag.audioBitsDepth = audioBitsDepth;
         tag.audioBitRate = audioBitRate;
@@ -467,8 +462,8 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.gainTrackRG = gainTrackRG;
         tag.gainTrackTP = gainTrackTP;
         tag.drScore = drScore;
-        tag.upscaledInd = upscaledInd;
-        tag.resampledInd = resampledInd;
+        tag.upscaledScore = upscaledScore;
+        tag.resampledScore = resampledScore;
         tag.dynamicRange = dynamicRange;
 
         tag.title = title;
@@ -541,8 +536,8 @@ public class MusicTag implements Cloneable, Parcelable {
         this.gainTrackTP = tag.gainTrackTP;
         this.gainTrackRG = tag.gainTrackRG;
         this.drScore = tag.drScore;
-        this.upscaledInd = tag.upscaledInd;
-        this.resampledInd = tag.resampledInd;
+        this.upscaledScore = tag.upscaledScore;
+        this.resampledScore = tag.resampledScore;
         this.dynamicRange = tag.dynamicRange;
 
         this.publisher = tag.publisher;
@@ -596,8 +591,8 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeString(coverartMime);
         parcel.writeDouble(audioStartTime);
         parcel.writeDouble(drScore);
-        parcel.writeString(upscaledInd);
-        parcel.writeString(resampledInd);
+        parcel.writeDouble(upscaledScore);
+        parcel.writeDouble(resampledScore);
         parcel.writeDouble(dynamicRange);
     }
 
@@ -705,20 +700,20 @@ public class MusicTag implements Cloneable, Parcelable {
         this.dynamicRange = measuredDR;
     }
 
-    public String getUpscaledInd() {
-        return upscaledInd;
+    public double getUpscaledScore() {
+        return upscaledScore;
     }
 
-    public void setUpscaledInd(String upscaled) {
-        this.upscaledInd = upscaled;
+    public void setUpscaledScore(double upscaled) {
+        this.upscaledScore = upscaled;
     }
 
-    public String getResampledInd() {
-        return resampledInd;
+    public double getResampledScore() {
+        return resampledScore;
     }
 
-    public void setResampledInd(String upsampled) {
-        this.resampledInd = upsampled;
+    public void setResampledScore(double upsampled) {
+        this.resampledScore = upsampled;
     }
 
 }

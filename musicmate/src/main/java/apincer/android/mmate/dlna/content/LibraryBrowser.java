@@ -17,7 +17,7 @@ import apincer.android.mmate.R;
 /**
  * Browser  for the music folder.
  */
-public class LibraryBrowser extends ContentBrowser {
+public class LibraryBrowser extends AbstractContentBrowser {
 
     public LibraryBrowser(Context context) {
         super(context);
@@ -26,12 +26,17 @@ public class LibraryBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.PARENT_OF_ROOT.getId(), getContext().getString(R.string.music), "mmate", 4,
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_FOLDER.getId(), ContentDirectoryIDs.PARENT_OF_ROOT.getId(), getContext().getString(R.string.music), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
     }
 
     @Override
     public List<Container> browseContainer(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
+        // Common container classes:
+        // object.container.storageFolder - Generic folder
+        // object.container.album.musicAlbum - Music album
+        // object.container.person.musicArtist - Music artist
+        // object.container.genre.musicGenre - Music genre
         List<Container> result = new ArrayList<>();
        // result.add((Container) new AllTitlesBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALL_TITLES_FOLDER.getId(), firstResult, maxResults, orderby));
        // result.add((Container) new AlbumsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
@@ -51,5 +56,10 @@ public class LibraryBrowser extends ContentBrowser {
     @Override
     public List<Item> browseItem(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         return new ArrayList<>();
+    }
+
+    @Override
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        return browseContainer(contentDirectory, myId,0,0,null).size();
     }
 }

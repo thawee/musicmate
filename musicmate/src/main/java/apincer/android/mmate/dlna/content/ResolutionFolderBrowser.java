@@ -1,7 +1,5 @@
 package apincer.android.mmate.dlna.content;
 
-import static apincer.android.mmate.dlna.transport.StreamServerImpl.forceFullContent;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 
@@ -12,14 +10,13 @@ import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
 
-public class ResolutionFolderBrowser extends ContentBrowser {
+public class ResolutionFolderBrowser extends AbstractContentBrowser {
     private static final String TAG = "ResolutionFolderBrowser";
     public ResolutionFolderBrowser(Context context) {
         super(context);
@@ -28,35 +25,30 @@ public class ResolutionFolderBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), myId, "mmate", getSize(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), myId, "mmate", getTotalMatches(
                 contentDirectory, myId), null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
-        String name = myId.substring(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId().length());
-        if("_EMPTY".equalsIgnoreCase(name) ||
-                "_NULL".equalsIgnoreCase(name)) { // ||
-               // "None".equalsIgnoreCase(name)) {
-            name = "";
-        }
-        return getItems(contentDirectory, name).size();
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        String name = extractName(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX);
+        return getItems(contentDirectory, name, 0, 0).size();
     }
 
-    private List<MusicTag> getItems(ContentDirectory contentDirectory, String name) {
+    private List<MusicTag> getItems(ContentDirectory contentDirectory, String name, long firstResult, long maxResults) {
         if(Constants.TITLE_MASTER_AUDIO.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findMQASongs();
+            return MusixMateApp.getInstance().getOrmLite().findMQASongs(firstResult, maxResults);
         }
         if(Constants.TITLE_HIRES.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findHiRes();
+            return MusixMateApp.getInstance().getOrmLite().findHiRes(firstResult, maxResults);
         }
         if(Constants.TITLE_HIFI_LOSSLESS.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findLosslessSong();
+            return MusixMateApp.getInstance().getOrmLite().findLosslessSong(firstResult, maxResults);
         }
         if(Constants.TITLE_HIGH_QUALITY.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findHighQuality();
+            return MusixMateApp.getInstance().getOrmLite().findHighQuality(firstResult, maxResults);
         }
         if(Constants.TITLE_DSD_AUDIO.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findDSDSongs();
+            return MusixMateApp.getInstance().getOrmLite().findDSDSongs(firstResult, maxResults);
         }
         return new ArrayList<>();
     }
@@ -73,17 +65,17 @@ public class ResolutionFolderBrowser extends ContentBrowser {
                                        String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
         List<MusicTrack> result = new ArrayList<>();
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX);
-        List<MusicTag> tags = getItems(contentDirectory, name);
-        int currentCount = 0;
+        List<MusicTag> tags = getItems(contentDirectory, name, firstResult, maxResults);
+        //int currentCount = 0;
         for(MusicTag tag: tags) {
-            if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
-                MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId());
+           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
+                MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);
-            }
-            if(!forceFullContent)  currentCount++;
+           // }
+           // if(!forceFullContent)  currentCount++;
             //currentCount++;
         }
-        result.sort(Comparator.comparing(DIDLObject::getTitle));
+       // result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
     }
 }

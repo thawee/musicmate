@@ -479,7 +479,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:src="@drawable/round_troubleshoot_24"
+                    android:src="@drawable/round_query_stats_24"
                     android:contentDescription="@string/editor_musicmate_info"/>
 
                 <TextView

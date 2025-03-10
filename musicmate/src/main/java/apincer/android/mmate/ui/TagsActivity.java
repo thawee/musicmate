@@ -49,6 +49,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
+import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
@@ -58,7 +59,6 @@ import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
-import apincer.android.mmate.repository.TagWriter;
 import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -73,7 +73,6 @@ import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
-import coil3.size.Scale;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
 import sakout.mehdi.StateViews.StateView;
@@ -135,13 +134,12 @@ public class TagsActivity extends AppCompatActivity {
                 () -> {
                     startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
-                        MusicAnalyser analyser = new MusicAnalyser();
                         try {
-                            if (analyser.analyst(tag)) {
-                                tag.setDynamicRange(analyser.getDynamicRange());
-                                tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
-                                tag.setUpscaledInd(analyser.getUpscaled());
-                                tag.setResampledInd(analyser.getResampled());
+                            if (MusicAnalyser.process(tag)) {
+                                //tag.setDynamicRange(analyser.getDynamicRange());
+                                //tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
+                                //tag.setUpscaledScore(analyser.getUpScaledScore());
+                                //tag.setResampledScore(analyser.getReSampledScore());
 
                                 //write quality to file
                                // FFMpegWriter.writeTagQualityToFile(this, tag);
@@ -381,37 +379,14 @@ public class TagsActivity extends AppCompatActivity {
                 .target(new ImageViewTarget(resolutionView))
                 .build();
         imageLoader.enqueue(request);
-       /* GlideApp.with(this)
-                .load(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
-                .skipMemoryCache(false) // Skip memory cache
-                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(resolutionView); */
 
-       // drView.setText(MusicTagUtils.getTrackDRScore(displayTag));
-
-       // if(MusicTagUtils.isFLACFile(displayTag)) {
             qualityView.setVisibility(View.VISIBLE);
-           // try {
-           //     audiophileView.setVisibility(View.VISIBLE);
-           //     audiophileView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
-           // }catch(Exception ignored){}
-            // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), IconProviders.createQualityIcon(getApplicationContext(), displayTag)));
-             request = new ImageRequest.Builder(getApplicationContext())
+                 request = new ImageRequest.Builder(getApplicationContext())
                     .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
                    // .crossfade(false)
                     .target(new ImageViewTarget(qualityView))
                     .build();
             imageLoader.enqueue(request);
-       /* GlideApp.with(this)
-                .load(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
-                .skipMemoryCache(false) // Skip memory cache
-                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(qualityView); */
-
-           // qualityView.setImageDrawable(BitmapHelper.bitmapToDrawable(getApplicationContext(), BitmapHelper.createHexagonBitmap(400, 400)));
-      //  }else {
-      //      qualityView.setVisibility(View.GONE);
-      //  }
 
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
@@ -422,18 +397,6 @@ public class TagsActivity extends AppCompatActivity {
         Drawable resolutionBackground = IconProviders.getFileFormatBackground(getApplicationContext(), displayTag);
         fileTypeView.setBackground(resolutionBackground);
         fileTypeView.setText(trimToEmpty(displayTag.getAudioEncoding()).toUpperCase(Locale.US));
-
-      /*  if (!isEmpty(displayTag.getMediaQuality())) {
-            request = new ImageRequest.Builder(getApplicationContext())
-                    .data(IconProviders.getSourceQualityIcon(getApplicationContext(), displayTag))
-                    .crossfade(false)
-                    .target(audiophileView)
-                    .build();
-            imageLoader.enqueue(request);
-            audiophileView.setVisibility(View.VISIBLE);
-        } else {
-            audiophileView.setVisibility(View.GONE);
-        } */
 
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
@@ -471,6 +434,7 @@ public class TagsActivity extends AppCompatActivity {
                 .size(Size.ORIGINAL)
                 .data(displayTag)
                 .target(new ImageViewTarget(coverArtView))
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
                 .build();
         imageLoader.enqueue(request);
 
@@ -567,12 +531,6 @@ public class TagsActivity extends AppCompatActivity {
             Log.e(TAG, "updateTitlePanel", ex);
         }
     }
-
-    /*
-    private Drawable getDefaultNoCover(MusicTag tag) {
-        byte[] b = MusixMateApp.getInstance().getDefaultNoCoverart(tag);
-        return new BitmapDrawable(MusixMateApp.getInstance().getResources(), BitmapFactory.decodeByteArray(b, 0, b.length));
-    } */
 
     private void doOpenMainActivity(SearchCriteria criteria) {
       //  Intent myIntent = new Intent(this, MainActivity.class);

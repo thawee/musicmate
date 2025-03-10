@@ -9,7 +9,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,12 +38,14 @@ import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.vanniktech.textbuilder.TextBuilder;
+import com.vanniktech.textbuilder.TextBuilder.*;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
@@ -50,8 +58,17 @@ import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
+import io.noties.markwon.Markwon;
+import io.noties.markwon.html.HtmlPlugin;
 
 public class AboutActivity extends AppCompatActivity {
+    // Color constants
+    private static final int COLOR_TITLE = Color.parseColor("#1976D2");
+    private static final int COLOR_SECTION = Color.parseColor("#2196F3");
+    private static final int COLOR_CATEGORY = Color.parseColor("#7B1FA2");
+    private static final int COLOR_HIGHLIGHT = Color.parseColor("#E65100");
+    private static final int COLOR_NORMAL = Color.BLACK;
+
     public static void showAbout(Activity activity) {
         Intent myIntent = new Intent(activity, AboutActivity.class);
         activity.startActivity(myIntent);
@@ -111,10 +128,17 @@ public class AboutActivity extends AppCompatActivity {
             updateEncodings(TITLE_HQ, encodingHeader, encodingDetail);
 
             TextView qualityDetail = v.findViewById(R.id.quality_details);
-            String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.txt");
-            new TextBuilder(getContext())
+            String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.md");
+
+            renderMarkdown(content, qualityDetail);
+
+            /*new TextBuilder(getContext())
                     .addFormableText(content)
-                    .format("Dynamic Range Score")
+                    .format("Dynamic Range Meter")
+                    .bold()
+                    .textColor(Color.BLACK)
+                    .done()
+                    .format("What the Numbers Mean for Your Listening Experience")
                     .bold()
                     .textColor(Color.BLACK)
                     .done()
@@ -142,7 +166,7 @@ public class AboutActivity extends AppCompatActivity {
                     .bold()
                     .textColor(Color.BLACK)
                     .done()
-                    .into(qualityDetail);
+                    .into(qualityDetail); */
 
             MusicMateExecutors.ui(() -> {
                 List<MusicTag> tags = TagRepository.getAllMusics();
@@ -203,6 +227,12 @@ public class AboutActivity extends AppCompatActivity {
             });
 
             return v;
+        }
+
+        private void renderMarkdown(String content, TextView qualityDetail) {
+            Markwon markwon = Markwon.builder(context)
+                    .usePlugin(HtmlPlugin.create()).build();
+            markwon.setMarkdown(qualityDetail, content);
         }
 
         private void updateEncodings(String btn, TextView encodingHeader, TextView encodingDetail) {

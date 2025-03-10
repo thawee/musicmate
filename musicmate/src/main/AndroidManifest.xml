@@ -152,11 +152,6 @@
             android:authorities="apincer.android.mmate.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>
-        <provider
-            android:name="apincer.android.mmate.provider.CoverArtProvider"
-            android:authorities="apincer.mmate.coverart.provider"
-            android:exported="false"
-            android:grantUriPermissions="true"/>
         <!--
         <provider
             android:name="apincer.android.mmate.provider.MusicbrainzCoverArtProvider"

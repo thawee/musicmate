@@ -434,4 +434,32 @@
     <color name="grays_silver">#C0C0C0</color>
     <color name="grays_slate">#708090</color>
 
+    <!-- Dynamic Range Color Scheme - Main Tiers -->
+    <color name="dr_low">#FF4500</color>            <!-- 1-6 dB - Bright Orange-Red -->
+    <color name="dr_medium">#32CD32</color>         <!-- 7-12 dB - Lime Green -->
+    <color name="dr_high">#1E90FF</color>           <!-- 13-18 dB - Dodger Blue -->
+    <color name="dr_very_high">#9370DB</color>      <!-- 19+ dB - Medium Purple -->
+
+    <!-- Dynamic Range - Detailed Gradient -->
+    <color name="dr_1_4">#FF3300</color>            <!-- 1-4 dB - Bright Red -->
+    <color name="dr_5_8">#FF9900</color>            <!-- 5-8 dB - Orange -->
+    <color name="dr_9_12">#FFCC00</color>           <!-- 9-12 dB - Amber -->
+    <color name="dr_13_16">#33CCFF</color>          <!-- 13-16 dB - Sky Blue -->
+    <color name="dr_17_20">#3366FF</color>          <!-- 17-20 dB - Royal Blue -->
+    <color name="dr_21_plus">#9933CC</color>        <!-- 21+ dB - Purple -->
+
+    <!-- Transparent Versions for Overlays (50% opacity) -->
+    <color name="dr_low_trans">#80FF4500</color>
+    <color name="dr_medium_trans">#8032CD32</color>
+    <color name="dr_high_trans">#801E90FF</color>
+    <color name="dr_very_high_trans">#809370DB</color>
+
+    <!-- Dark Text Colors for Light Backgrounds -->
+    <color name="text_on_light">#DE000000</color>   <!-- 87% black -->
+    <color name="text_on_light_secondary">#99000000</color> <!-- 60% black -->
+
+    <!-- Light Text Colors for Dark Backgrounds -->
+    <color name="text_on_dark">#FFFFFF</color>
+    <color name="text_on_dark_secondary">#B3FFFFFF</color> <!-- 70% white -->
+
 </resources>

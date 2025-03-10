@@ -56,6 +56,11 @@ import apincer.android.utils.FileUtils;
 
 public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
+    // Jetty tuning parameters for better streaming
+    private static final int OUTPUT_BUFFER_SIZE = 65536; // 64KB buffer for better streaming
+    private static final int MAX_THREADS = 50;           // Enough threads for multiple clients
+    private static final int MIN_THREADS = 8;            // Keep some threads alive for responsiveness
+    private static final int IDLE_TIMEOUT = 30000;       // 30 seconds idle timeout
 
     private Server server;
 
@@ -73,43 +78,49 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 // Configure thread pool
                 QueuedThreadPool threadPool = new QueuedThreadPool();
                 threadPool.setMaxThreads(120); // Adjust based on your server's capacity
-                threadPool.setMinThreads(10);
-                threadPool.setIdleTimeout(60000);
+                threadPool.setMaxThreads(MAX_THREADS);
+                threadPool.setMinThreads(MIN_THREADS);
+                threadPool.setIdleTimeout(IDLE_TIMEOUT);
+                threadPool.setName("dlna-server");
 
                 server = new Server(threadPool);
 
-                // HTTP Configuration
+                // HTTP Configuration - optimized for streaming
                 HttpConfiguration httpConfig = new HttpConfiguration();
-               // httpConfig.setOutputBufferSize(32768);
+                httpConfig.setOutputBufferSize(OUTPUT_BUFFER_SIZE);
                 httpConfig.setSendDateHeader(true);
-                httpConfig.setSendServerVersion(false);
-                httpConfig.setSendXPoweredBy(true);
+                httpConfig.setSendServerVersion(false); // will send custom header
+                httpConfig.setSendXPoweredBy(true); // required by custom header
+                httpConfig.setRequestHeaderSize(8192);
 
-                // HTTP connector
-                // The first server connector we create is the one for http, passing in
-                // the http configuration we configured above so it can get things like
-                // the output buffer size, etc. We also set the port (8080) and
-                // configure an idle timeout.
-                try (ServerConnector http = new ServerConnector(server,
+                // Create connector with tuned parameters
+                try (ServerConnector connector = new ServerConnector(server,
                         new HttpConnectionFactory(httpConfig))) {
-                    http.setPort(getListenPort());
-                    http.setIdleTimeout(30000);
-                    http.setAcceptQueueSize(500); // Increase the accept queue size
+                    connector.setHost("0.0.0.0"); // Bind only to IPv4
+                    connector.setPort(getListenPort());
+                    connector.setIdleTimeout(60000); // 60 second timeout
+                    connector.setAcceptQueueSize(128); // More reasonable queue size
 
-                    server.setConnectors(new Connector[]{http});
+                    server.setConnectors(new Connector[]{connector});
                 }
 
+                // UPnP/DLNA context handler
                 ContextHandler upnpContext = new ContextHandler("/dms");
                 upnpContext.setHandler(new UPnpHandler());
 
-                // Resource handler for cover art
+                // Optimized resource handler for cover art
                 ResourceHandler coverartHandler = new CoverartHandler();
                 coverartHandler.setBaseResource(ResourceFactory.of(coverartHandler).newResource("/"));
                 coverartHandler.setDirAllowed(false);
+                coverartHandler.setAcceptRanges(true); // Enable range requests
+                coverartHandler.setEtags(true);        // Enable ETag support
+                coverartHandler.setCacheControl("max-age=3600,public"); // Cache cover art
                 coverartHandler.setServer(server);
+
                 ContextHandler coverartContext = new ContextHandler("/coverart");
                 coverartContext.setHandler(coverartHandler);
 
+                // Collect all context handlers
                 ContextHandlerCollection contexts = new ContextHandlerCollection(
                         upnpContext, coverartContext
                 );
@@ -117,6 +128,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 server.setHandler(contexts);
                 server.start();
             } catch (Exception e) {
+                Log.e(TAG, "Failed to start DLNA server", e);
                 throw new RuntimeException(e);
             }
         });
@@ -129,20 +141,30 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         // Stop the server.
         try {
             Log.i(TAG, "  Stop UPNP Server (Jetty)");
-            server.stop();
+            if (server != null && server.isRunning()) {
+                server.stop();
+            }
         } catch (Exception e) {
+            Log.e(TAG, "Error stopping DLNA server", e);
             throw new RuntimeException(e);
         }
     }
 
     private class UPnpHandler extends Handler.Abstract {
         private final UpnpStream upnpStream;
+        // Known problematic clients that need special handling
+        private static final String[] CLIENTS_NEEDING_FULL_RESPONSE = {
+                "CyberGarage-HTTP/1.0",          // mConnectHD on iOS
+                "Panasonic iOS VR-CP UPnP/2.0",  // Another possible client
+                "mconnect/", // mConnectHD other versions
+                "UPnP/1.0 DLNADOC/1.50 Intel_SDK_for_UPnP" // Intel UPnP SDK clients
+        };
 
         private UPnpHandler( ) {
             this.upnpStream = new UpnpStream(getProtocolFactory()) {
                 @Override
                 public void run() {
-
+                    // Empty implementation as we handle the stream processing manually
                 }
             };
         }
@@ -150,72 +172,84 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         @Override
         public boolean handle(Request request, Response response, Callback callback) {
             try {
-                String userAgent = request.getHeaders().get(HttpHeader.USER_AGENT);
+               /* String userAgent = request.getHeaders().get(HttpHeader.USER_AGENT);
                 if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
                     // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
                     // Log.v(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
                     StreamServerImpl.forceFullContent = true;
-                }
+                } */
 
                 StreamRequestMessage requestMessage = readRequestMessage(request);
-                // Log.v(TAG, "Processing new request message: " + requestMessage);
-
                 StreamResponseMessage responseMessage = upnpStream.process(requestMessage);
 
                 if (responseMessage != null) {
-                    // Log.v(TAG, "Preparing HTTP response message: " + responseMessage);
                     writeResponseMessage(responseMessage, response, callback);
+                    return true;
                 } else {
-                    // Declare response encoding and types
+                    // No response message, return 404
                     response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/html; charset=utf-8");
-                    // Declare response status code
                     response.setStatus(HttpStatus.NOT_FOUND_404);
-                    // Write back response
-                    Content.Sink.write(response, true, "<h1>File Not Found</h1>\n", callback);
+                    Content.Sink.write(response, true, "<h1>Resource Not Found</h1>\n", callback);
+                    return true;
                 }
-                return true;
             } catch (Throwable t) {
-                Log.e(TAG, "Exception occurred during UPnP stream processing: "+ t.getMessage());
-               // resp.sendError(500, t.getMessage());
-                //upnpStream.responseException(t);
-                // Declare response encoding and types
+                Log.e(TAG, "Exception occurred during UPnP stream processing: "+ t.getMessage(), t);
                 response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/html; charset=utf-8");
-                // Declare response status code
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
-                // Write back response
-                Content.Sink.write(response, true, "<h1>"+t.getMessage()+"</h1>\n", callback);
+                Content.Sink.write(response, true, "<h1>Internal Server Error</h1><p>" + t.getMessage() + "</p>\n", callback);
+                return true;
             }
-            return false;
         }
 
         private void writeResponseMessage(StreamResponseMessage responseMessage, Response resp, Callback callback) {
             int statusCode = responseMessage.getOperation().getStatusCode();
 
-            // Headers
+            // Set status first
+            resp.setStatus(statusCode);
+
+            // Headers from response message
             for (Map.Entry<String, List<String>> entry : responseMessage.getHeaders().entrySet()) {
                 for (String value : entry.getValue()) {
-                    if(HttpHeader.SERVER.name().equalsIgnoreCase(entry.getKey())) {
-                        // add server
-                        resp.getHeaders().add(HttpHeader.SERVER, getFullServerName());
-                    }else {
-                        resp.getHeaders().add(entry.getKey(), value);
+                    String headerName = entry.getKey();
+
+                    // Special handling for Server header
+                    if (HttpHeader.SERVER.name().equalsIgnoreCase(headerName)) {
+                        resp.getHeaders().put(HttpHeader.SERVER, getFullServerName());
+                    } else {
+                        resp.getHeaders().add(headerName, value);
                     }
                 }
             }
 
-            // cache control
-            resp.getHeaders().add(HttpHeader.PRAGMA, "no-cache");
-            resp.getHeaders().add(HttpHeader.CACHE_CONTROL, "must-revalidate,no-cache,no-store");
-           // resp.getHeaders().add(HttpHeader.LAST_MODIFIED, "0");
-           // resp.getHeaders().add(HttpHeader.EXPIRES, "0");
+            // Add DLNA-specific headers for better streaming support
+            if (!resp.getHeaders().contains(HttpHeader.CONTENT_TYPE) &&
+                    resp.getHeaders().get(HttpHeader.CONTENT_TYPE) != null &&
+                    resp.getHeaders().get(HttpHeader.CONTENT_TYPE).contains("audio/")) {
 
-            // The Date header is recommended in UDA, jetty already add date header
-            //Calendar time = new GregorianCalendar();
-            //resp.getHeaders().add(HttpHeader.DATE, dateFormatter.format(time.getTime()));
+                // Add DLNA headers for audio streaming
+                resp.getHeaders().add("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+                resp.getHeaders().add("transferMode.dlna.org", "Streaming");
 
-            // Body
+                // Support byte range requests for seeking
+                resp.getHeaders().add(HttpHeader.ACCEPT_RANGES, "bytes");
+
+                // Less aggressive caching for audio
+                resp.getHeaders().add(HttpHeader.CACHE_CONTROL, "no-cache");
+            } else {
+                // Standard cache control for other resources
+                resp.getHeaders().add(HttpHeader.PRAGMA, "no-cache");
+                resp.getHeaders().add(HttpHeader.CACHE_CONTROL, "must-revalidate,no-cache,no-store");
+            }
+
+            // Body handling
             byte[] responseBody = responseMessage.hasBody() ? responseMessage.getBodyBytes() : null;
-            int contentLength = responseBody != null ? responseBody.length : -1;
+            if (responseBody != null && responseBody.length > 0) {
+                resp.write(true, ByteBuffer.wrap(responseBody), callback);
+            } else {
+                // Empty response
+                resp.write(true, ByteBuffer.allocate(0), callback);
+            }
+           /* int contentLength = responseBody != null ? responseBody.length : -1;
 
             if (contentLength > 0) {
                 // Declare response status code
@@ -223,7 +257,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 // Write back response
                 resp.write(true, ByteBuffer.wrap(responseBody), callback);
               //  Log.d(TAG, new String(responseBody));
-            }
+            } */
         }
 
         private StreamRequestMessage readRequestMessage(Request req) throws IOException {
@@ -272,6 +306,10 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
     private class CoverartHandler extends ResourceHandler {
         File defaultCoverartDir;
+        // Cache control for cover art
+        private static final String COVER_ART_CACHE_CONTROL = "max-age=3600,public";
+        private static final long COVER_ART_MAX_AGE = 3600 * 1000; // 1 hour in milliseconds
+
         private CoverartHandler( ) {
             defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
         }
@@ -279,14 +317,24 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         @Override
         public boolean handle(Request request, Response response, Callback callback) throws Exception {
             if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
-                // try another handler
                 return super.handle(request, response, callback);
             }
 
-            //extracted embed cover art
+            // Enable efficient caching of cover art
+            response.getHeaders().add(HttpHeader.CACHE_CONTROL, COVER_ART_CACHE_CONTROL);
+
+            // Set Last-Modified and Expires headers for better caching
+            long now = System.currentTimeMillis();
+            response.getHeaders().put(HttpHeader.LAST_MODIFIED, now - 86400000); // Yesterday
+            response.getHeaders().put(HttpHeader.EXPIRES, now + COVER_ART_MAX_AGE); // 1 hour in future
+
+            // Enable ETags and Accept-Ranges for more efficient transfers
+            response.getHeaders().add(HttpHeader.ACCEPT_RANGES, "bytes");
+
+            // Try to find the cover art
             HttpContent content = getResourceService().getContent(Request.getPathInContext(request), request);
             if (content == null) {
-                // folder cover art
+                // Try to find folder cover art
                 String uri = request.getHttpURI().getPath();
                 try {
                     String albumUniqueKey = uri.substring("/coverart/".length(), uri.indexOf(".png"));
@@ -302,26 +350,30 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 }
             }
 
-            if (content == null)
-            {
-                // default cover art
-                // setup default cover art
+            // Fallback to default cover art if necessary
+            if (content == null) {
                 try {
                     if(!defaultCoverartDir.exists()) {
                         FileUtils.createParentDirs(defaultCoverartDir);
                         InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES);
                         Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
                     }
+                    content = getResourceService().getContent(defaultCoverartDir.getAbsolutePath(), request);
                 } catch (IOException e) {
                     Log.e(TAG, "Init default missing cover art", e);
                 }
-
-                content = getResourceService().getContent(defaultCoverartDir.getAbsolutePath(), request);
             }
 
-            if (content == null)
-            {
+            if (content == null) {
                 return super.handle(request, response, callback); // no content - try other handlers
+            }
+
+            // Add MIME type explicitly for improved compatibility
+            if (request.getHttpURI().getPath().endsWith(".png")) {
+                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "image/png");
+            } else if (request.getHttpURI().getPath().endsWith(".jpg") ||
+                    request.getHttpURI().getPath().endsWith(".jpeg")) {
+                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "image/jpeg");
             }
 
             getResourceService().doGet(request, response, callback, content);

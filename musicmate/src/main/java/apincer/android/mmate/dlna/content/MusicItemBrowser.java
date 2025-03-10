@@ -19,7 +19,7 @@ import apincer.android.mmate.utils.StringUtils;
  * Browser for a music item, for 1st level music folder, i.e. All Title, Downloads
  *
  */
-public class MusicItemBrowser extends ContentBrowser {
+public class MusicItemBrowser extends AbstractContentBrowser {
     private static final String TAG = "MusicItemBrowser";
     private final String folderId;
     private final String itemPrefix;
@@ -38,7 +38,7 @@ public class MusicItemBrowser extends ContentBrowser {
 
         String id = myId.substring(itemPrefix.length());
         MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(StringUtils.toLong(id));
-        result = toMusicTrack(contentDirectory, tag, folderId, itemPrefix);
+        result = buildMusicTrack(contentDirectory, tag, folderId, itemPrefix);
 
         return result;
     }
@@ -56,5 +56,10 @@ public class MusicItemBrowser extends ContentBrowser {
         List<Item> result = new ArrayList<>();
         result.add((Item) browseMeta(contentDirectory, myId, firstResult, maxResults, orderby));
         return result;
+    }
+
+    @Override
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        return 1;
     }
 }

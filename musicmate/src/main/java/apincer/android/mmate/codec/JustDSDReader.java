@@ -1,4 +1,4 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.codec;
 
 import android.content.Context;
 import android.util.Log;
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 

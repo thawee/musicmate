@@ -20,7 +20,7 @@ import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
 
 public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
-    public static final int UPNP_SERVER_PORT = 49152; //2869;
+    public static final int UPNP_SERVER_PORT = 49152; // IANA-recommended range 49152-65535 for UPnP
     public static final int CONTENT_SERVER_PORT = 8089;
     private final Context context;
 
@@ -36,7 +36,11 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public ServiceType[] getExclusiveServiceTypes() {
-        return new ServiceType[]{new UDAServiceType("ContentDirectory"), new UDAServiceType("ConnectionManager"), new UDAServiceType("X_MS_MediaReceiverRegistrar")};
+        // Keep these types to ensure mConnectHD can fully control your server
+        return new ServiceType[]{
+                new UDAServiceType("ContentDirectory"),
+                new UDAServiceType("ConnectionManager"),
+                new UDAServiceType("X_MS_MediaReceiverRegistrar")};
     }
 
     @Override
@@ -46,11 +50,12 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
+        // Increased timeouts for better reliability with RoPieeeXL streaming
         return new JettyStreamingClientImpl(
                 new StreamClientConfigurationImpl(
                 getSyncProtocolExecutorService(),
-                10,
-                5
+                        15,    // Increased from 10 to 15 seconds for connection timeout
+                        8      // Increased from 5 to 8 seconds for data timeout
         ));
     }
 

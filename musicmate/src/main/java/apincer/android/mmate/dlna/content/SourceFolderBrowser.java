@@ -1,7 +1,5 @@
 package apincer.android.mmate.dlna.content;
 
-import static apincer.android.mmate.dlna.transport.StreamServerImpl.forceFullContent;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 
@@ -20,9 +18,9 @@ import java.util.Map;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 
-public class SourceFolderBrowser extends ContentBrowser {
+public class SourceFolderBrowser extends AbstractContentBrowser {
     private static final String TAG = "SourceFolderBrowser";
-    public static final String ALL_SONGS = "* All Songs *";
+    public static final String ALL_SONGS = "** All Songs";
 
     public SourceFolderBrowser(Context context) {
         super(context);
@@ -102,7 +100,6 @@ public class SourceFolderBrowser extends ContentBrowser {
             id = id.substring(0, id.length()-ALL_SONGS.length()-1);
         }
 
-        maxResults = forceFullContent?0:maxResults;
         List<MusicTag> list = TagRepository.findInPath(id);
         int idlength = id.length();
         int currentCount = 0;
@@ -111,16 +108,27 @@ public class SourceFolderBrowser extends ContentBrowser {
             int idx = path.indexOf("/", idlength+1); // for
             if(allSongs || (idx <= idlength)) {
                 // found music on t=current directory
-                if (maxResults==0 || ((currentCount >= firstResult) && currentCount < (firstResult+maxResults))){
-                    MusicTrack musicTrack = toMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_SOURCE_ITEM_PREFIX.getId());
+                if (maxResults== 0 || ((currentCount >= firstResult) && currentCount < (firstResult+maxResults))) {
+                    MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_SOURCE_ITEM_PREFIX.getId());
                     result.add(musicTrack);
+                }else if(currentCount >= maxResults){
+                    break;
                 }
                 currentCount++;
-                //if(!forceFullContent) currentCount++;
             }
         }
 
-        result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
+    }
+
+    @Override
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+        boolean allSongs = myId.endsWith(ALL_SONGS);
+        if(allSongs) {
+            return browseItem(contentDirectory,myId, 0, 0, null).size();
+        }else {
+            return browseContainer(contentDirectory, myId, 0, 0, null).size() +
+                    browseItem(contentDirectory, myId, 0, 0, null).size();
+        }
     }
 }

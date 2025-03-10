@@ -1,35 +1,34 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.codec;
 
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_BIT_RATE;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_DURATION;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_START_TIME;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_ALBUM;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_ALBUM_ARTIST;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_ARTIST;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_COMMENT;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_COMPILATION;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_COMPOSER;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_DISC;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_GENRE;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_GROUPING;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_ALBUM_ARTIST;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_COMPOSER;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_PUBLISHER;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_TITLE;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_MP4_YEAR;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_TITLE;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_TRACK;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_ALBUM_ARTIST;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_COMPOSER;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_DISC;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_GROUP;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_MEDIA;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_PUBLISHER;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_WAVE_YEAR;
-import static apincer.android.mmate.repository.FFMpegHelper.KEY_TAG_YEAR;
-import static apincer.android.mmate.repository.MQADetector.detectMQA;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_BIT_RATE;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_DURATION;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_START_TIME;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_ALBUM;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_ALBUM_ARTIST;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_ARTIST;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_COMMENT;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_COMPILATION;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_COMPOSER;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_DISC;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_GENRE;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_GROUPING;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_MP4_ALBUM_ARTIST;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_MP4_COMPOSER;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_MP4_PUBLISHER;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_MP4_TITLE;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_MP4_YEAR;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_TITLE;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_TRACK;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_ALBUM_ARTIST;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_COMPOSER;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_DISC;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_GROUP;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_MEDIA;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_PUBLISHER;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_YEAR;
+import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_YEAR;
 import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
 import static apincer.android.mmate.utils.StringUtils.gainToDouble;
 import static apincer.android.mmate.utils.StringUtils.getWord;
@@ -59,6 +58,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -73,91 +73,7 @@ public class FFMPegReader extends TagReader {
     }
 
 
-/*
-    private static final String KEY_BIT_RATE = "bit_rate";
-    private static final String KEY_START_TIME = "start_time";
-    private static final String KEY_DURATION = "duration";
-    private static final String KEY_TAG = "TAG:";
-    private static final String KEY_TAG_ARTIST = "ARTIST";
-    private static final String KEY_TAG_ALBUM = "ALBUM";
-    private static final String KEY_TAG_ALBUM_ARTIST = "album_artist";
-    private static final String KEY_TAG_COMPOSER = "COMPOSER";
-    private static final String KEY_TAG_COMMENT = "COMMENT";
-    private static final String KEY_TAG_COMPILATION = "COMPILATION";
-    private static final String KEY_TAG_DISC = "disc"; //"DISCNUMBER";
-    private static final String KEY_TAG_GENRE = "GENRE";
-    private static final String KEY_TAG_GROUPING = "GROUPING";
-    private static final String KEY_TAG_TRACK = "track";
-    private static final String KEY_TAG_PUBLISHER = "PUBLISHER";
-
-   // private static final String KEY_TAG_RATING = "RATING";
-    private static final String KEY_TAG_TITLE = "TITLE";
-    private static final String KEY_TAG_YEAR = "YEAR";
-
-    // WAVE file
-    //https://www.digitizationguidelines.gov/audio-visual/documents/listinfo.html
-   // private static final String KEY_TAG_WAVE_ARTIST = "IART"; //artist
-   // private static final String KEY_TAG_WAVE_ALBUM = "IPRD"; // album
-    private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG"; // engineers
-   // private static final String KEY_TAG_WAVE_GENRE = "IGNR"; //genre
-   // private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
-   // private static final String KEY_TAG_WAVE_TITLE = "INAM"; //title
-    private static final String KEY_TAG_WAVE_YEAR = "date"; //""ICRD"; //date
-    private static final String KEY_TAG_WAVE_MEDIA = "IMED";
-   // private static final String KEY_TAG_WAVE_COMMENT = "ICMT"; // comment
-    private static final String KEY_TAG_WAVE_PUBLISHER = "ISRC"; // name of person or organization
-    private static final String KEY_TAG_WAVE_DISC = "ISRF"; // original form of material
-    private static final String KEY_TAG_WAVE_GROUP = "IKEY"; // list of keyword, saperated by semicolon
-    private static final String KEY_TAG_WAVE_COMPOSER = "ICMS"; // person who commision the subject
-    private static final String KEY_TAG_WAVE_QUALITY = "ISBJ"; // Describes the contents of the file
-
-    // AIF/AIFF
-  //  private static final String KEY_TAG_AIF_ARTIST = "ARTIST";
-  //  private static final String KEY_TAG_AIF_ALBUM = "ALBUM";
-  //  private static final String KEY_TAG_AIF_ALBUM_ARTIST = "album_artist";
-  //  private static final String KEY_TAG_AIF_COMPOSER = "COMPOSER";
-  //  private static final String KEY_TAG_AIF_COMMENT = "COMMENT";
-  //  private static final String KEY_TAG_AIF_COMPILATION = "COMPILATION";
-  //  private static final String KEY_TAG_AIF_DISC = "disc"; //"DISCNUMBER";
-  //  private static final String KEY_TAG_AIF_GENRE = "GENRE";
-  //  private static final String KEY_TAG_AIF_GROUPING = "GROUPING";
-  //  private static final String KEY_TAG_AIF_TRACK = "track";
-  //  private static final String KEY_TAG_AIF_PUBLISHER = "PUBLISHER";
-    //private static final String KEY_TAG_AIF_LANGUAGE = "LANGUAGE";
-   // private static final String KEY_TAG_AIF_MEDIA = "MEDIA";
-   // private static final String KEY_TAG_AIF_RATING = "RATING";
-   // private static final String KEY_TAG_AIF_QUALITY = "QUALITY";
-   // private static final String KEY_TAG_AIF_TITLE = "TITLE";
-   // private static final String KEY_TAG_AIF_YEAR = "YEAR";
-
-    // QuickTime/MOV/MP4/M4A
-    // https://wiki.multimedia.cx/index.php/FFmpeg_Metadata
-    //private static final String KEY_TAG_MP4_ARTIST = "artist"; //for aac
-  //  private static final String KEY_TAG_MP4_AUTHOR = "author"; // for alac
-  //  private static final String KEY_TAG_MP4_ALBUM = "album"; // album
-    private static final String KEY_TAG_MP4_ALBUM_ARTIST = "album_artist";
-   // private static final String KEY_TAG_MP4_GENRE = "genre"; //genre
-  //  private static final String KEY_TAG_MP4_TRACK = "track"; //track
-    private static final String KEY_TAG_MP4_TITLE = "title"; //title
-    private static final String KEY_TAG_MP4_YEAR = "year"; //date
-    private static final String KEY_TAG_MP4_COMPOSER = "composer";
-  //  private static final String KEY_TAG_MP4_GROUPING = "grouping";
-  //  private static final String KEY_TAG_MP4_COMMENT = "comment";  // comment
-    private static final String KEY_TAG_MP4_PUBLISHER = "copyright"; //copy right
-
-    //https://gist.github.com/eyecatchup/0757b3d8b989fe433979db2ea7d95a01
-  //  private static final String KEY_TAG_MP3_ARTIST = "artist"; //artist
-  //  private static final String KEY_TAG_MP3_ALBUM = "album"; // album
- //   private static final String KEY_TAG_MP3_ALBUM_ARTIST = "album_artist";
-  //  private static final String KEY_TAG_MP3_GENRE = "genre"; //genre
- //   private static final String KEY_TAG_MP3_TRACK = "track"; //track
- //   private static final String KEY_TAG_MP3_TITLE = "title"; //title
- //   private static final String KEY_TAG_MP3_YEAR = "date"; //date
- //   private static final String KEY_TAG_MP3_DISC = "disc";
-  //  private static final String KEY_TAG_MP3_COMMENT = "comment";  // comment
-  //  private static final String METADATA_KEY = "-metadata";
-*/
-    public static class Loudness {
+public static class Loudness {
         double integratedLoudness;
         double loudnessRange;
         double truePeak;
@@ -223,19 +139,12 @@ public class FFMPegReader extends TagReader {
     protected List<MusicTag> readFully(String path) {
         Log.d(TAG, "readFully: "+path);
         MusicTag tag = extractTagFromFile(path);
-        detectMQA(tag,50000); // timeout 50 seconds
+        //detectMQA(tag,50000); // timeout 50 seconds
         return List.of(tag);
     }
 
     public MusicTag extractTagFromFile(String path) {
-        // String cmd ="-hide_banner -of default=noprint_wrappers=0 -show_format -print_format json \""+path+"\"";
-        // String filter = " -filter:a drmeter,replaygain ";
-        // if(MusicTagUtils.isDSDFile(path)) {
-        //     filter = " -filter:a drmeter ";
-        // }
-       // String filter = " -filter:a drmeter ";
 
-       // String cmd ="-hide_banner -nostats -i \""+path+"\""+filter+" -f null -";
         String cmd ="-hide_banner -nostats -i \""+path+"\" -f null -";
         LogHelper.setFFMpegOn();
         FFmpegSession session = FFmpegKit.execute(cmd);
@@ -414,21 +323,16 @@ public class FFMPegReader extends TagReader {
         // tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_TRACK_LOUDNESS)));
         tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_TAG_TRACK_GAIN)));
         tag.setTrackTP(toDouble(getValueForKey(tags, KEY_TAG_TRACK_PEAK)));
-        // tag.setAlbumRG(gainToDouble(getValueForKey(tags, KEY_ALBUM_GAIN)));
-        // tag.setAlbumTruePeak(toDouble(getValueForKey(tags, KEY_ALBUM_PEAK)));
         tag.setDynamicRange(toDouble(getValueForKey(tags, KEY_MM_TRACK_DR)));
         tag.setDynamicRangeScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_DR_SCORE)));
-        tag.setUpscaledInd(getValueForKey(tags, KEY_MM_TRACK_UPSCALED));
-        tag.setResampledInd(getValueForKey(tags, KEY_MM_TRACK_RESAMPLED));
+        tag.setUpscaledScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_UPSCALED)));
+        tag.setResampledScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_RESAMPLED)));
 
         // read Quick time Specific tags
         if(isMp4File(tag)) {
             tag.setTitle(getValueForKey(tags, KEY_TAG_MP4_TITLE));
             tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_MP4_ALBUM_ARTIST));
             tag.setComposer(getValueForKey(tags, KEY_TAG_MP4_COMPOSER));
-            // tag.setCompilation(toBoolean(getTagforKey(tags, KEY_TAG_MP4_COMPILATION)));
-            // tag.setMediaType(getTagforKey(tags, KEY_TAG_MP4_MEDIA));
-            // tag.setMediaQuality(getTagforKey(tags, KEY_TAG_MP4_QUALITY));
             tag.setPublisher(getValueForKey(tags, KEY_TAG_MP4_PUBLISHER));
             tag.setYear(getValueForKey(tags, KEY_TAG_MP4_YEAR));
         }
@@ -518,14 +422,6 @@ public class FFMPegReader extends TagReader {
             }
 
             // media info
-            /*tag.setFileFormat(tags.get(KEY_FORMAT_NAME)); // format_name
-            if(tag.getFileFormat().contains(",")) {
-                // found mov,mp4,m4a,...
-                // use information from encoding
-                if(!isEmpty(tag.getAudioEncoding())) {
-                    tag.setFileFormat(getWord(tag.getAudioEncoding()," ",0));
-                }
-            } */
             tag.setAudioStartTime(toDouble(tags.get(KEY_START_TIME))); // start_time
             tag.setAudioDuration(toDouble(tags.get(KEY_DURATION))); // duration
             tag.setAudioBitRate(toLong(tags.get(KEY_BIT_RATE))); // bit_rate
@@ -591,24 +487,12 @@ public class FFMPegReader extends TagReader {
             tag.setPublisher(getTagforKey(tags, KEY_TAG_PUBLISHER));
 
             // MQA from tag and encoder
-           /* String encoder = getTagforKey(tags, KEY_TAG_ENCODER);
-            String mqaEncoder = getTagforKey(tags, KEY_TAG_MQA_ENCODER);
-            if(!MusicTagUtils.isFLACFile(tag)) {
-                tag.setMqaInd("None");
-            }else if(encoder.contains(KEY_MM_MQA) || !isEmpty(mqaEncoder)) {
-                tag.setMqaInd("MQA");
-                tag.setMqaSampleRate(toLong(getTagforKey(tags, KEY_TAG_MQA_ORIGINAL_SAMPLERATE)));
-                tag.setMqaScanned(false);
-            } */
 
             // read Quick time Specific tags
             if(isMp4File(tag)) {
                 tag.setTitle(getTagforKey(tags, KEY_TAG_MP4_TITLE));
                 tag.setAlbumArtist(getTagforKey(tags, KEY_TAG_MP4_ALBUM_ARTIST));
                 tag.setComposer(getTagforKey(tags, KEY_TAG_MP4_COMPOSER));
-               // tag.setCompilation(toBoolean(getTagforKey(tags, KEY_TAG_MP4_COMPILATION)));
-               // tag.setMediaType(getTagforKey(tags, KEY_TAG_MP4_MEDIA));
-               // tag.setMediaQuality(getTagforKey(tags, KEY_TAG_MP4_QUALITY));
                 tag.setPublisher(getTagforKey(tags, KEY_TAG_MP4_PUBLISHER));
                 tag.setYear(getTagforKey(tags, KEY_TAG_MP4_YEAR));
             }
@@ -765,12 +649,6 @@ public class FFMPegReader extends TagReader {
 24 x 6 = 144 dB of dynamic range – high resolution dynamic range.
 
 The definition of signal-to-noise ratio (SNR) is the difference in level between the maximum input your gear can handle before noise creeps into the signal.
-    } */
-
-    /*
-    private static String escapeFileName(String srcPath) {
-        srcPath = srcPath.replace("'", "\\'");
-        return "'"+srcPath+"'";
     } */
 
     private static String getFFmpegOutputData(FFmpegSession session) {

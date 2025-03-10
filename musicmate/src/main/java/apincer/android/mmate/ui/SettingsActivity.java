@@ -14,7 +14,6 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.MediaServerService;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
@@ -56,10 +55,14 @@ public class SettingsActivity extends AppCompatActivity {
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String s) {
             if(Constants.PREF_ENABLE_MEDIA_SERVER.equals(s)) {
                 boolean enableMediaServer = sharedPreferences.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER, false);
-                if (enableMediaServer) {
+                /*if (enableMediaServer) {
                     MediaServerService.startMediaServer(MusixMateApp.getInstance());
                 } else {
                     MediaServerService.stopMediaServer(MusixMateApp.getInstance());
+                }*/
+                // Notify the application of the change
+                if (getActivity()!=null && getActivity().getApplication() instanceof MusixMateApp) {
+                    ((MusixMateApp) getActivity().getApplication()).onMediaServerSettingChanged(enableMediaServer);
                 }
             }else if(Constants.PREF_CLEAR_CACHED.equals(s)) {
                 MusixMateApp.getInstance().clearCaches();
@@ -71,32 +74,5 @@ public class SettingsActivity extends AppCompatActivity {
             super.onResume();
             PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
         }
-
-        /*  SwitchPreferenceCompat httpServer = findPreference("preference_http_streaming_server");
-            if(httpServer!=null) {
-                String summary = String.valueOf(httpServer.getSummary());
-                String ip = HostInterface.getIPv4Address(); // ApplicationUtils.getIPAddress(true);
-                summary = summary.replace("<ip>", ip+":"+http_port);
-                httpServer.setSummary(summary);
-                if (MusixMateApp.getInstance().isHttpServerRunning()) {
-                    httpServer.setChecked(true);
-                } else {
-                    httpServer.setChecked(false);
-                }
-                httpServer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
-                        if ((Boolean) newValue) {
-                           // MusixMateApp.statHttpServer(getActivity());
-                           // Intent myIntent = new Intent(getContext(), UpnpServerControlActivity.class);
-                           // startActivity(myIntent);
-                        } else {
-                           // MusixMateApp.stopHttpServer(getActivity());
-                        }
-                        return true;
-                    }
-                });
-            }*/
-       // }
     }
 }

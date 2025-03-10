@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -185,7 +184,7 @@ public class TagRepository {
     }
 
     public static List<MusicTag> findInPath(String path) {
-        return MusixMateApp.getInstance().getOrmLite().findInPath(path);
+            return MusixMateApp.getInstance().getOrmLite().findInPath(path);
     }
 
     public static List<MusicTag> findMediaByTitle(String title) {
@@ -219,7 +218,7 @@ public class TagRepository {
                 if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
                     list = MusixMateApp.getInstance().getOrmLite().findMySongs();
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-                    list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs();
+                    list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs(0, 0);
                 } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyUnsatisfiedSongs();
                 } else if (Constants.TITLE_TO_ANALYST_DR.equals(criteria.getKeyword())) {
@@ -234,21 +233,21 @@ public class TagRepository {
             } else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 list = MusixMateApp.getInstance().getOrmLite().findByMediaQuality(criteria.getKeyword());
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.AUDIO_SQ_DSD.equals(criteria.keyword)) {
-                list = MusixMateApp.getInstance().getOrmLite().findDSDSongs();
+                list = MusixMateApp.getInstance().getOrmLite().findDSDSongs(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.AUDIO_SQ_PCM_MQA.equals(criteria.keyword)) {
-                list = MusixMateApp.getInstance().getOrmLite().findMQASongs();
+                list = MusixMateApp.getInstance().getOrmLite().findMQASongs(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIGH_QUALITY.equals(criteria.keyword)) {
-                list = MusixMateApp.getInstance().getOrmLite().findHighQuality();
+                list = MusixMateApp.getInstance().getOrmLite().findHighQuality(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)) {
-                list = MusixMateApp.getInstance().getOrmLite().findLosslessSong();
+                list = MusixMateApp.getInstance().getOrmLite().findLosslessSong(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIRES.equals(criteria.keyword)) {
-                list = MusixMateApp.getInstance().getOrmLite().findHiRes();
+                list = MusixMateApp.getInstance().getOrmLite().findHiRes(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 String val = criteria.getKeyword();
                 if (isEmpty(val) || StringUtils.EMPTY.equalsIgnoreCase(val)) {
                     val = "";
                 }
-                list = MusixMateApp.getInstance().getOrmLite().findByGrouping(val);
+                list = MusixMateApp.getInstance().getOrmLite().findByGrouping(val, 0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.GENRE) {
 
                 String val = criteria.getKeyword();

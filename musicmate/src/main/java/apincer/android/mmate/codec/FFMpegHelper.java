@@ -1,4 +1,4 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
@@ -22,6 +22,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.provider.FileSystem;
+import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 

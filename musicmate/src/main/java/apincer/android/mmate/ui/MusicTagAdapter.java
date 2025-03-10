@@ -36,10 +36,12 @@ import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import coil3.Image;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
 import coil3.target.ImageViewTarget;
+import kotlin.jvm.functions.Function1;
 
 public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHolder> {
     private SearchCriteria criteria;
@@ -476,16 +478,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     .target(new ImageViewTarget(holder.mAudioQuality))
                     .build();
             imageLoader.enqueue(request);
-/*
-        GlideApp.with(holder.mContext)
-                .load(IconProviders.getTrackQualityIcon(holder.mContext, tag))
-                .skipMemoryCache(false) // Skip memory cache
-                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(holder.mAudioQuality);
-*/
-       // }else {
-       //     holder.mAudioQuality.setVisibility(View.GONE);
-       // }
 
         if (isListening) {
             //show music player icon
@@ -513,21 +505,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mNewLabelView.setVisibility(View.VISIBLE);
         }
 
-      //  ImageRequest request;
-        // Show AlbumArt
-      /* Uri coverArtUri = CoverArtProvider.getUriForMusicTag(holder.mContext, tag);
-       request = new ImageRequest.Builder(holder.mContext)
-               .data(coverArtUri)
-                // .size(800, 800)
-                .crossfade(false)
-                .target(holder.mCoverArtView)
-               //.placeholder(R.drawable.no_image0)
-               .placeholder(R.drawable.progress)
-               //.error(getDefaultNoCover(tag))
-               //.error(R.drawable.no_cover2)
-                .transformations(new RoundedCornersTransformation(8, 8, 8, 8))
-                .build();
-        imageLoader.enqueue(request); */
         request = CoverartFetcher.builder(holder.mContext, tag)
                 .data(tag)
                 .size(240, 240)
@@ -535,20 +512,15 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 //.scale(Scale.FILL) // Set the scale type
                 //.crossfade(false)
                 .target(new ImageViewTarget(holder.mCoverArtView))
+                .error(imageRequest -> {
+                    return CoverartFetcher.getDefaultCover(holder.mContext);
+                })
                 //.placeholder(R.drawable.progress)
                 //.error(getDefaultNoCover(tag))
                 //.error(R.drawable.no_cover2)
                 //(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request);
-
-        /*
-        GlideApp.with(holder.mContext)
-                .load(tag)
-                .skipMemoryCache(true) // Skip memory cache
-                .diskCacheStrategy(DiskCacheStrategy.DATA) // Do not cache on disk
-                .transform(new RoundedCorners(8))
-                .into(holder.mCoverArtView); */
 
         // show enc i.e. PCM, MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
@@ -557,11 +529,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .target(new ImageViewTarget(holder.mAudioResolutionView))
                 .build();
         imageLoader.enqueue(request);
-       /* GlideApp.with(holder.mContext)
-                .load(IconProviders.getResolutionIcon(holder.mContext, tag))
-                .skipMemoryCache(false) // Skip memory cache
-                .diskCacheStrategy(DiskCacheStrategy.NONE) // Do not cache on disk
-                .into(holder.mAudioResolutionView); */
 
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
@@ -575,13 +542,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-       /* Bitmap srcBmp = IconProviders.getSourceIcon(holder.mContext, tag);
-        if(srcBmp!=null) {
-            holder.mFileSourceView.setImageBitmap(srcBmp);
-            holder.mFileSourceView.setVisibility(View.VISIBLE);
-        }else {
-            holder.mFileSourceView.setVisibility(View.GONE);
-        } */
     }
 
     // Return the size of your dataset (invoked by the layout manager)

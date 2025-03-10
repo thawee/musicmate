@@ -21,17 +21,17 @@ import apincer.android.mmate.repository.TagRepository;
 /**
  * Browser  for the music genres folder.
  */
-public class GenresBrowser extends ContentBrowser {
+public class GenresBrowser extends AbstractContentBrowser {
     public GenresBrowser(Context context) {
         super(context);
     }
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new GenreContainer(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_genres), creator, getSize(contentDirectory, myId));
+        return new GenreContainer(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_genres), creator, getTotalMatches(contentDirectory, myId));
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         return TagRepository.getActualGenreList(getContext()).size();
     }
 

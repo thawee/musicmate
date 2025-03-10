@@ -276,10 +276,9 @@
 					   android:layout_height="wrap_content"
 					   android:layout_alignParentBottom="true"
 					   android:layout_alignParentEnd="true"
-					   android:layout_marginEnd="@dimen/dimen_48_dp"
+					   android:layout_marginEnd="@dimen/dimen_1_dp"
 					   android:layout_marginBottom="@dimen/dimen_96_dp"
-					   android:padding="@dimen/dimen_1_dp"
-					   android:background="@drawable/shape_now_playing_background_l1">
+					   android:padding="@dimen/dimen_1_dp">
 					   <include layout="@layout/view_now_playing"/>
 				   </com.skydoves.elasticviews.ElasticLayout>
 				   <!--

@@ -169,11 +169,11 @@ public class JettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
                 return responseMessage;
             }
 
-            if (responseMessage.isContentTypeMissingOrText()) {
+           /* if (responseMessage.isContentTypeMissingOrText()) {
                 Log.v(TAG, "HTTP response message contains text entity");
             } else {
                 Log.v(TAG, "HTTP response message contains binary entity");
-            }
+            } */
 
             responseMessage.setBodyCharacters(bytes);
 

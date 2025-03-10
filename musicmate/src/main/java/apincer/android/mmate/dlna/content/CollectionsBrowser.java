@@ -25,37 +25,34 @@ import apincer.android.mmate.utils.MusicTagUtils;
 /**
  * Browser  for the music playlist folder.
  */
-public class CollectionsBrowser extends ContentBrowser {
+public class CollectionsBrowser extends AbstractContentBrowser {
     public static final String MY_SONGS = "All Songs";
     public static final String DOWNLOADS_SONGS = "Incoming Songs";
-    public static final String SMART_LIST_FINFIN_SONGS = "ฟังสุดอิน ฟินสุดๆ";  //"เพลงฟินๆ รินเบียร์เย็นๆ";
+    public static final String AUDIOPHILE_SONGS = "Audiophile";
+    public static final String SMART_LIST_FINFIN_SONGS = "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป";  //"เพลงฟินๆ รินเบียร์เย็นๆ";
    // public static final String SMART_LIST_FINFIN_EN_SONGS = "ฟังเพลงสากลฟินๆ รินเบียร์เย็นๆ";
     //public static final String SMART_LIST_FINFIN_TH_SONGS = "เพลงไทยฟินๆ รินเบียร์เย็นๆ";
    // public static final String SMART_LIST_RELAXED_TH_SONGS = "ยานอนหลับ ฉบับไทยๆ";
    // public static final String SMART_LIST_RELAXED_EN_SONGS = "ยานอนหลับ ฉบับสากล";
     public static final String SMART_LIST_VOCAL_SONGS = "เสียงใสๆ สกิดใจวัยรุ่น";
-    public static final String SMART_LIST_ISAAN_SONGS = "สำเนียง เสียงลำ วาทะศิลป์ ถิ่นอีสาน"; //"สะออนแฮง สำเนียงเสียงลำ";
+    public static final String SMART_LIST_ISAAN_SONGS = "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ"; //"สะออนแฮง สำเนียงเสียงลำ";
     public static final String SMART_LIST_BAANTHUNG_SONGS = "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง"; // "คิดถึง บ้านทุ่งท้องนา";
-    public static final String SMART_LIST_TRADITIONAL_SONGS = "เพลงพื้นบ้าน ตำนานท้องถิ่น สืบทอดต่อกันมา";
-    public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคเพราะๆ กล่อมโลกให้หายเหงา"; //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+    public static final String SMART_LIST_TRADITIONAL_SONGS = "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ";
+    public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ"; //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+    public static final String SMART_LIST_JAZZ_SONGS = "เพลงแจ๊ส ฟังง่าย ผ่อนคลาย สะบายอารมณ์";
    // public static final String SMART_LIST_INDIE_SONGS = "นอกกระแส แค่ฟังก็ฟิน";
     public static final List<String> playlists = new ArrayList<>();
     static {
         playlists.add(MY_SONGS);
         playlists.add(DOWNLOADS_SONGS);
-       // playlists.add(DUPLICATED_SONGS);
+        playlists.add(AUDIOPHILE_SONGS);
         playlists.add(SMART_LIST_FINFIN_SONGS);
-       // playlists.add(SMART_LIST_FINFIN_TH_SONGS);
-       // playlists.add(SMART_LIST_FINFIN_EN_SONGS);
-     //   playlists.add(SMART_LIST_RELAXED_TH_SONGS);
-     //   playlists.add(SMART_LIST_RELAXED_EN_SONGS);
-
         playlists.add(SMART_LIST_VOCAL_SONGS);
         playlists.add(SMART_LIST_BAANTHUNG_SONGS);
         playlists.add(SMART_LIST_TRADITIONAL_SONGS);
         playlists.add(SMART_LIST_ISAAN_SONGS);
         playlists.add(SMART_LIST_CLASSIC_SONGS);
-     //   playlists.add(SMART_LIST_INDIE_SONGS);
+        playlists.add(SMART_LIST_JAZZ_SONGS);
     }
     public CollectionsBrowser(Context context) {
         super(context);
@@ -64,11 +61,11 @@ public class CollectionsBrowser extends ContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
 
-        return new StorageFolder(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_dlna_collections), "mmate", getSize(contentDirectory, myId),
+        return new StorageFolder(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.label_dlna_collections), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
     }
 
-    private Integer getSize(ContentDirectory contentDirectory, String myId) {
+    public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
         return playlists.size();
     }
 
@@ -91,12 +88,9 @@ public class CollectionsBrowser extends ContentBrowser {
             if(MusicTagUtils.isISaanPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_ISAAN_SONGS)).addChildCount();
             }
-           // if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
-           //     Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).addChildCount();
-           // }
-           // if(MusicTagUtils.isRelaxedEnglishPlaylist(tag)) {
-           //     Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_EN_SONGS)).addChildCount();
-           // }
+            if(MusicTagUtils.isAudiophile(tag)) {
+                Objects.requireNonNull(mapped.get(AUDIOPHILE_SONGS)).addChildCount();
+            }
             if(MusicTagUtils.isVocalPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_VOCAL_SONGS)).addChildCount();
             }
@@ -106,25 +100,16 @@ public class CollectionsBrowser extends ContentBrowser {
             if(MusicTagUtils.isFinFinPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_SONGS)).addChildCount();
             }
-            /*if(MusicTagUtils.isThaiFinFinPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_TH_SONGS)).addChildCount();
-            }*/
-           // if(MusicTagUtils.isEnglishFinFinPlaylist(tag)) {
-           //     Objects.requireNonNull(mapped.get(SMART_LIST_FINFIN_EN_SONGS)).addChildCount();
-            //}
             if(MusicTagUtils.isBaanThungPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_BAANTHUNG_SONGS)).addChildCount();
             }
             if(MusicTagUtils.isClassicPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_CLASSIC_SONGS)).addChildCount();
             }
-           /* if(MusicTagUtils.isIndiePlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_INDIE_SONGS)).addChildCount();
-            }*/
-
+            if(MusicTagUtils.isJazzPlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_JAZZ_SONGS)).addChildCount();
+            }
         }
-        //List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findDuplicateSong();
-        //Objects.requireNonNull(mapped.get(DUPLICATED_SONGS)).setChildCount(tags.size());
 
         for(MusicFolder group: mapped.values()) {
             MusicGenre musicAlbum = new MusicGenre(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId() + group.getName(), ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), group.getName(), "", 0);
