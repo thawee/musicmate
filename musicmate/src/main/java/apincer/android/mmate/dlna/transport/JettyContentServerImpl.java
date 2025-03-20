@@ -125,6 +125,11 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
         }
     }
 
+    @Override
+    protected String getServerVersion() {
+        return "Jetty/12.0.1";
+    }
+
     private class ContentHandler extends ResourceHandler {
         private ContentHandler( ) {
         }
@@ -184,23 +189,29 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                         addDlnaHeaders(response, tag);
                     } else {
                         Log.w(TAG, "Content not found: " + contentId);
-                        response.setStatus(HttpStatus.NOT_FOUND_404);
-                        return true;
+                        //response.setStatus(HttpStatus.NOT_FOUND_404);
+                        //return true;
+                        return super.handle(request, response, callback);
                     }
                 } catch (Exception ex) {
                     Log.e(TAG, "lookupContent: - " + uri, ex);
+                    return super.handle(request, response, callback);
                 }
             }
 
             if (content == null) {
-                return super.handle(request, response, callback); // no content - try other handlers
+                Log.w(TAG, "Content not found");
+                //response.setStatus(HttpStatus.NOT_FOUND_404);
+
+                //return true;
+                return super.handle(request, response, callback);
+            }else {
+                // Set resource-based headers
+                response.getHeaders().put(HttpHeader.ACCEPT_RANGES, "bytes");
+                getResourceService().doGet(request, response, callback, content);
+
+                return true;
             }
-
-            // Set resource-based headers
-            response.getHeaders().put(HttpHeader.ACCEPT_RANGES, "bytes");
-
-            getResourceService().doGet(request, response, callback, content);
-            return true;
         }
 
         /**

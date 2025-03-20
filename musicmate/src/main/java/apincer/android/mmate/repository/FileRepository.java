@@ -290,8 +290,8 @@ public class FileRepository {
         try {
             String mediaPath = file.getAbsolutePath();
             long lastModified = file.lastModified();
-            if(file.length() < 1024) {
-                Log.i(TAG, "scanFile: skip small file - "+mediaPath);
+            if(file.length() == 0) { //< 1024) {
+                Log.i(TAG, "scanFile: skip zero byte file - "+mediaPath);
                 return; // skip file less than 1 Mb
             }
             if(forceRead) {
@@ -424,8 +424,8 @@ public class FileRepository {
             return STORAGE_PRIMARY;
        // }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
        //     return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_JAZZ.equalsIgnoreCase(metadata.getGrouping()) ||
-                Constants.GROUPING_THAI_JAZZ.equalsIgnoreCase(metadata.getGrouping())) {
+        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
+                Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
 
       /*  }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||

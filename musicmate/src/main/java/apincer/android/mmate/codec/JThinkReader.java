@@ -130,11 +130,13 @@ public class JThinkReader extends TagReader{
     }
 
     private AudioFile getAudioFile(String path) {
+        if (!isMediaFileExist(path)) {
+            return null;
+        }
+
         try {
-            if(isMediaFileExist(path)) {
-                setupTagOptions();
-                return AudioFileIO.read(new File(path));
-            }
+            setupTagOptions();
+            return AudioFileIO.read(new File(path));
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
                  InvalidAudioFrameException |
                  BufferUnderflowException e) {
@@ -168,10 +170,6 @@ public class JThinkReader extends TagReader{
                 metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
-            //    metadata.setRating(toInt(getId3TagValue(tag, FieldKey.RATING)));
-               // metadata.setPublisher(getId3TagValue(tag, FieldKey.COPYRIGHT));
-                //metadata.setBpm(toInt(getId3TagValue(tag, FieldKey.BPM)));
-                //  metadata.setEncoder(getId3TagValue(tag, FieldKey.ENCODER));
                 metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
                 if(tag.getFirstArtwork() != null) {
                     metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
@@ -179,7 +177,7 @@ public class JThinkReader extends TagReader{
 
                 // read replay gain fields
                 Map<String, String> tags = parseCustomTagFields(tag);
-                if (tags.containsKey(KEY_TAG_TRACK_GAIN)) {
+                /*if (tags.containsKey(KEY_TAG_TRACK_GAIN)) {
                     metadata.setTrackRG(extractDouble(tags.get(KEY_TAG_TRACK_GAIN), " dB"));
                 }
                 if (tags.containsKey(KEY_TAG_TRACK_PEAK)) {
@@ -196,7 +194,8 @@ public class JThinkReader extends TagReader{
                 }
                 if (tags.containsKey(KEY_MM_TRACK_RESAMPLED)) {
                     metadata.setResampledScore(toDouble(tags.get(KEY_MM_TRACK_RESAMPLED)));
-                }
+                } */
+
                 if (tags.containsKey(KEY_TAG_PUBLISHER)) {
                     metadata.setPublisher(tags.get(KEY_TAG_PUBLISHER));
                 }
@@ -333,7 +332,7 @@ public class JThinkReader extends TagReader{
 
             data[0] = data[0].substring(13, data[0].length() - 1).toUpperCase();
 
-            if (data[0].equals("TRACK")) {data[0] = KEY_TAG_TRACK_GAIN;}
+           // if (data[0].equals("TRACK")) {data[0] = KEY_TAG_TRACK_GAIN;}
             // else if (data[0].equals("ALBUM")) {data[0] = REPLAYGAIN_ALBUM_GAIN;}
 
             tags.put(data[0], extractId3Val(data[1]));
@@ -360,7 +359,7 @@ public class JThinkReader extends TagReader{
             tags.put(field.getId(), StringUtils.trimToEmpty(tag.getFirst(field.getId())));
         }
 
-        //
+        /*
         if (tag.hasField(KEY_MM_TRACK_DR)) {
             tags.put(KEY_MM_TRACK_DR, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DR)));
         }
@@ -372,7 +371,7 @@ public class JThinkReader extends TagReader{
         }
         if (tag.hasField(KEY_MM_TRACK_RESAMPLED)) {
             tags.put(KEY_MM_TRACK_RESAMPLED, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_RESAMPLED)));
-        }
+        } */
 
         return tags;
     }

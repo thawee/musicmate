@@ -165,8 +165,11 @@ dependencies {
     implementation libs.slf4j.api
     implementation libs.jupnp.android
     implementation libs.jupnp.support
-    implementation libs.jetty.server12
-    implementation libs.jetty.client12
+     implementation libs.jetty.server12
+     implementation libs.jetty.client12
+    //implementation libs.jetty.server10
+    //implementation libs.jetty.client10
+    implementation libs.netty.codec.http
     implementation libs.coilkt.coil3
 
     implementation libs.iirj
@@ -185,7 +188,7 @@ dependencies {
     implementation project(':library:androidtagview')
     implementation project(':library:jaudiotagger-android')
     debugImplementation project(':library:crashreporter')
-    implementation project(':library:mqaidentifier')
+    //implementation project(':library:mqaidentifier')
 }
 
 configurations.implementation {

@@ -4,7 +4,7 @@ espressoCore = "3.6.1"
 junit = "4.13.2"
 junitBom = "5.11.4"
 junitVersion = "1.2.1"
-minSdkVersion    = "34" # support running on android 11 ot higher
+minSdkVersion    = "31" # support running on 31 for android 12 ot higher
 targetSdkVersion = "34" # //33, // required 33, android 13
 compileSdkVersion = "35"
 buildTools ="36.0.0-rc5"
@@ -55,6 +55,10 @@ jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.3"}
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
 jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.0.alpha1"}
 jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0.alpha1"}
+jetty-server10 = {module = "org.eclipse.jetty:jetty-server", version="10.0.24"}
+jetty-client10 = {module = "org.eclipse.jetty:jetty-client", version="10.0.24"}
+
+netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.0.RC4"}
 tutorialsandroid-filepicker = {module = "io.github.tutorialsandroid:filepicker", version="9.2.5"}
 icm-jlargearrays =  {module = "pl.edu.icm:JLargeArrays", version="1.6"}
 

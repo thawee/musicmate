@@ -100,7 +100,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <LinearLayout
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|top"
+                android:contentDescription="TODO"
+                android:src="@drawable/ic_round_save_24"
+                android:layout_margin="@dimen/dimen_1_dp"
+                app:fabSize="mini"
+                app:backgroundTint="@color/colorPrimary"
+                tools:ignore="RelativeOverlap,RtlHardcoded" />
+            <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -111,7 +125,7 @@
                 android:layout_marginTop="@dimen/dimen_8_dp"
                 android:background="@color/transparent"
                 android:text="@string/editor_info"
-                android:textColor="@color/colorPrimary_light"
+                android:textColor="@color/material_color_blue_grey_300"
                 android:textSize="16sp" />
 
             <!-- title -->
@@ -258,7 +272,7 @@
                 android:layout_marginTop="@dimen/dimen_12_dp"
                 android:background="@color/transparent"
                 android:text="@string/editor_musicmate_info"
-                android:textColor="@color/colorPrimary_light"
+                android:textColor="@color/material_color_blue_grey_300"
                 android:textSize="16sp" />
 
             <!-- genre, grouping [drop down]-->
@@ -433,5 +447,6 @@
             </RadioGroup>
             -->
         </LinearLayout>
+        </FrameLayout>
     </ScrollView>
 </LinearLayout>

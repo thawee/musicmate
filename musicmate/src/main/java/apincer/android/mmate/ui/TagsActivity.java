@@ -16,7 +16,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -193,9 +196,17 @@ public class TagsActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
         }
         super.onCreate(savedInstanceState);
+
+        // set status bar color to black
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+
         setContentView(R.layout.activity_tags);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
@@ -387,6 +398,7 @@ public class TagsActivity extends AppCompatActivity {
                     .target(new ImageViewTarget(qualityView))
                     .build();
             imageLoader.enqueue(request);
+      //  qualityView.setImageBitmap(IconProviders.createQualityIcon(getApplicationContext(), displayTag));
 
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
@@ -620,7 +632,7 @@ public class TagsActivity extends AppCompatActivity {
                 .setPositiveButton("DELETE", (dialogInterface, i) -> {
                     startProgressBar();
                     if(getEditItems().size()==1) {
-                        MusicMateExecutors.parallels(() -> {
+                        MusicMateExecutors.executeParallel(() -> {
                             try {
                                 boolean status = repos.deleteMediaItem(getEditItems().get(0));
                                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, getEditItems().get(0));
@@ -777,23 +789,25 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            // Handle the back button click
+            if (criteria != null) {
+                Intent resultIntent = new Intent();
+                ApplicationUtils.setSearchCriteria(resultIntent, criteria);
+                setResult(RESULT_OK, resultIntent);
+            }
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
             return item -> {
                 if (item.getItemId() == R.id.menu_preview_calculate_dr) {
                     doMeasureDR();
-               /* } else if (item.getItemId() == R.id.menu_preview_following_listening) {
-                    if (refreshOnNewSong) {
-                        refreshOnNewSong = false;
-                        UIUtils.getTintedDrawable(item.getIcon(), Color.WHITE);
-                    } else {
-                        refreshOnNewSong = true;
-                        UIUtils.getTintedDrawable(item.getIcon(), Color.GREEN);
-                        MusicTag tag = MusixMateApp.getPlayingSong();
-                        if (tag != null) {
-                            MusicTagRepository.load(tag);
-                            updatePreview(tag);
-                        }
-                    }*/
                 }
                 return false;
             };

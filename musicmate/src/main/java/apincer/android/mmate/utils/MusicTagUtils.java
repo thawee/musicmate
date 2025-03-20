@@ -12,7 +12,6 @@ import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.utils.FileUtils;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -206,7 +205,7 @@ public class MusicTagUtils {
         return text;
     }
 
-    public static String getTrackLUFS(MusicTag tag) {
+    public static String getDynamicRangeScore(MusicTag tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {
             text = "";
@@ -402,12 +401,11 @@ public class MusicTagUtils {
                // grouping.equalsIgnoreCase("Thai Jazz"));
     }
 
-    public static boolean isJazzPlaylist(MusicTag tag) {
+    public static boolean isLoungePlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
        // String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
         return (
-            grouping.equalsIgnoreCase("Jazz") ||
-            grouping.equalsIgnoreCase("Thai Jazz"));
+            grouping.equalsIgnoreCase("Lounge"));
     }
 
     public static boolean isManagedInLibrary(Context context, MusicTag tag) {
@@ -415,58 +413,16 @@ public class MusicTagUtils {
         return StringUtils.compare(path, tag.getPath());
     }
 
-    /*
-    public static boolean isRelaxedThaiPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (!isClassicPlaylist(tag)) &&
-                ( grouping.equalsIgnoreCase("Thai Jazz") ||
-                        (genre.equalsIgnoreCase("ACOUSTIC") &&
-                                grouping.equalsIgnoreCase("Thai Popular")));
-    }
-
-    public static boolean isRelaxedEnglishPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (!isClassicPlaylist(tag)) &&
-                (grouping.equalsIgnoreCase("Jazz") ||
-                        grouping.equalsIgnoreCase("Thai Jazz") ||
-                        (genre.equalsIgnoreCase("ACOUSTIC") &&
-                                grouping.equalsIgnoreCase("Popular")));
-    } */
-
     public static boolean isClassicPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return (grouping.equalsIgnoreCase("Classical") ||
-                grouping.equalsIgnoreCase("Thai Classical"));
+        return (grouping.equalsIgnoreCase("Classical"));
     }
 
     public static boolean isFinFinPlaylist(MusicTag tag) {
         String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return ((grouping.equalsIgnoreCase("Popular") ||
-                grouping.equalsIgnoreCase("Thai Popular")) &&
+        return ((grouping.equalsIgnoreCase("Contemporary")) &&
                 !(isISaanPlaylist(tag) ||
-                  isBaanThungPlaylist(tag)) // ||
-                 // isRelaxedPlaylist(tag))
-        );
-    }
-
-    public static boolean isThaiFinFinPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return (grouping.equalsIgnoreCase("Thai Popular") &&
-                !(isISaanPlaylist(tag) ||
-                        isBaanThungPlaylist(tag)) // ||
-                       // isRelaxedPlaylist(tag))
-        );
-    }
-
-    public static boolean isEnglishFinFinPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return ((grouping.equalsIgnoreCase("Popular") ||
-                grouping.equalsIgnoreCase("English")) &&
-                !(isISaanPlaylist(tag) ||
-                        isBaanThungPlaylist(tag)) // ||
-                       // isRelaxedPlaylist(tag))
+                  isBaanThungPlaylist(tag))
         );
     }
 
@@ -486,5 +442,19 @@ public class MusicTagUtils {
 
     public static boolean isAudiophile(MusicTag tag) {
         return Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality());
+    }
+
+    // Helper to determine if a format is lossless (for audiophile renderers)
+    public static boolean isLosslessFormat(MusicTag tag) {
+        String format = tag.getFileFormat() != null ? tag.getFileFormat().toLowerCase() : "";
+        String codec = tag.getAudioEncoding() != null ? tag.getAudioEncoding().toLowerCase() : "";
+        String path = tag.getPath().toLowerCase();
+
+        return format.contains("flac") || format.contains("alac") || format.contains("aiff") ||
+                format.contains("wav") || format.contains("dsd") || format.contains("dff") ||
+                codec.contains("flac") || codec.contains("alac") || codec.contains("pcm") ||
+                path.endsWith(".flac") || path.endsWith(".alac") || path.endsWith(".aiff") ||
+                path.endsWith(".wav") || path.endsWith(".dsd") || path.endsWith(".dff") ||
+                path.endsWith(".dsf");
     }
 }

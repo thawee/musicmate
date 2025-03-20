@@ -101,7 +101,8 @@ public class PermissionUtils {
     }
 
     public static boolean checkAccessPermissions(Context context) {
-        return checkMediaAccessPermissions(context) && checkFullStorageAccessPermissions(context);
+      //  return checkMediaAccessPermissions(context) && checkFullStorageAccessPermissions(context);
+        return checkFullStorageAccessPermissions(context);
     }
 
     public static boolean checkFullStorageAccessPermissions(Context context) {

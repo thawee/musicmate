@@ -49,19 +49,20 @@ public class TheGlowingLoader extends FrameLayout {
 
     private void getStuffFromXML(AttributeSet attrs) {
         configuration = new Configuration();
-        TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.TheGlowingLoader);
-        configuration.setLine1Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_line_1_color, R.color.white)));
-        configuration.setLine2Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_line_2_color, R.color.red)));
-        configuration.setRippleColor(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_ripple_color, R.color.white)));
-        configuration.setParticle1Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_particle_1_color, R.color.yellow)));
-        configuration.setParticle2Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_particle_2_color, R.color.white)));
-        configuration.setParticle3Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_particle_3_color, R.color.blue)));
-        configuration.setLineStrokeWidth(a.getInt(R.styleable.TheGlowingLoader_theglowingloader_line_stroke_width, Constants.DEF_LINE_STROKE_WIDTH));
-        configuration.setDisableShadows(a.getBoolean(R.styleable.TheGlowingLoader_theglowingloader_disable_shadows, false));
-        configuration.setDisableRipple(a.getBoolean(R.styleable.TheGlowingLoader_theglowingloader_disable_ripple, false));
-        configuration.setShadowOpacity(a.getFloat(R.styleable.TheGlowingLoader_theglowingloader_shadow_opacity, Constants.DEF_SHADOW_OPACITY));
-    }
+        try (TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.TheGlowingLoader)) {
+            configuration.setLine1Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_line_1_color, R.color.white)));
+            configuration.setLine2Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_line_2_color, R.color.red)));
+            configuration.setRippleColor(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_ripple_color, R.color.white)));
+            configuration.setParticle1Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_particle_1_color, R.color.yellow)));
+            configuration.setParticle2Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_particle_2_color, R.color.white)));
+            configuration.setParticle3Color(ContextCompat.getColor(getContext(), a.getResourceId(R.styleable.TheGlowingLoader_theglowingloader_particle_3_color, R.color.blue)));
+            configuration.setLineStrokeWidth(a.getInt(R.styleable.TheGlowingLoader_theglowingloader_line_stroke_width, Constants.DEF_LINE_STROKE_WIDTH));
+            configuration.setDisableShadows(a.getBoolean(R.styleable.TheGlowingLoader_theglowingloader_disable_shadows, false));
+            configuration.setDisableRipple(a.getBoolean(R.styleable.TheGlowingLoader_theglowingloader_disable_ripple, false));
+            configuration.setShadowOpacity(a.getFloat(R.styleable.TheGlowingLoader_theglowingloader_shadow_opacity, Constants.DEF_SHADOW_OPACITY));
 
+        }
+    }
     public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
         init();

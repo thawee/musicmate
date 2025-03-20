@@ -1,10 +1,10 @@
 package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
-import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_DR;
-import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_DR_SCORE;
-import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_RESAMPLED;
-import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_UPSCALED;
+//import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_DR;
+//import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_DR_SCORE;
+//import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_RESAMPLED;
+//import static apincer.android.mmate.codec.TagReader.KEY_MM_TRACK_UPSCALED;
 
 import android.content.Context;
 import android.util.Log;
@@ -78,7 +78,7 @@ public class JThinkWriter extends  TagWriter {
             Tag newTag = audioFile.getTagOrCreateDefault();
             setTagFieldsCommon(newTag, tag);
             setTagFieldsExtended(newTag, tag);
-            setCustomTagsFields(audioFile, tag);
+            //setCustomTagsFields(audioFile, tag);
             audioFile.commit();
             return true;
         }catch (Exception ex) {
@@ -122,12 +122,13 @@ public class JThinkWriter extends  TagWriter {
         setTagField(FieldKey.QUALITY, musicTag.getMediaQuality(), tag);
     }
 
+    /*
     void setCustomTagsFields(AudioFile audioFile, MusicTag tag) {
         setTagFieldCustom(audioFile, KEY_MM_TRACK_DR, Double.toString(tag.getDynamicRange()));
         setTagFieldCustom(audioFile, KEY_MM_TRACK_DR_SCORE,Double.toString(tag.getDynamicRangeScore()));
         setTagFieldCustom(audioFile, KEY_MM_TRACK_UPSCALED,Double.toString(tag.getUpscaledScore()));
         setTagFieldCustom(audioFile, KEY_MM_TRACK_RESAMPLED,Double.toString(tag.getResampledScore()));
-    }
+    } */
 
     void setTagField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
         tag.setField(fieldKey, value);

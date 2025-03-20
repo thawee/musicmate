@@ -39,7 +39,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
     public static final String SMART_LIST_BAANTHUNG_SONGS = "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง"; // "คิดถึง บ้านทุ่งท้องนา";
     public static final String SMART_LIST_TRADITIONAL_SONGS = "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ";
     public static final String SMART_LIST_CLASSIC_SONGS = "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ"; //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
-    public static final String SMART_LIST_JAZZ_SONGS = "เพลงแจ๊ส ฟังง่าย ผ่อนคลาย สะบายอารมณ์";
+    public static final String SMART_LIST_LOUNGE_SONGS = "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์";
    // public static final String SMART_LIST_INDIE_SONGS = "นอกกระแส แค่ฟังก็ฟิน";
     public static final List<String> playlists = new ArrayList<>();
     static {
@@ -52,7 +52,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
         playlists.add(SMART_LIST_TRADITIONAL_SONGS);
         playlists.add(SMART_LIST_ISAAN_SONGS);
         playlists.add(SMART_LIST_CLASSIC_SONGS);
-        playlists.add(SMART_LIST_JAZZ_SONGS);
+        playlists.add(SMART_LIST_LOUNGE_SONGS);
     }
     public CollectionsBrowser(Context context) {
         super(context);
@@ -106,8 +106,8 @@ public class CollectionsBrowser extends AbstractContentBrowser {
             if(MusicTagUtils.isClassicPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_CLASSIC_SONGS)).addChildCount();
             }
-            if(MusicTagUtils.isJazzPlaylist(tag)) {
-                Objects.requireNonNull(mapped.get(SMART_LIST_JAZZ_SONGS)).addChildCount();
+            if(MusicTagUtils.isLoungePlaylist(tag)) {
+                Objects.requireNonNull(mapped.get(SMART_LIST_LOUNGE_SONGS)).addChildCount();
             }
         }
 

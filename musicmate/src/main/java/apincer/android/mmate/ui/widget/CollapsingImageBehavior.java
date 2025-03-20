@@ -30,9 +30,10 @@ public class CollapsingImageBehavior extends CoordinatorLayout.Behavior<View> {
     public CollapsingImageBehavior(Context context, AttributeSet attrs) {
 
         if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CollapsingImageBehavior);
-            mTargetId = a.getResourceId(R.styleable.CollapsingImageBehavior_collapsedTarget, 0);
-            a.recycle();
+            try (TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CollapsingImageBehavior)) {
+                mTargetId = a.getResourceId(R.styleable.CollapsingImageBehavior_collapsedTarget, 0);
+                a.recycle();
+            }
         }
 
         if (mTargetId == 0) {

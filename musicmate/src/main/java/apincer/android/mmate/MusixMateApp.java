@@ -109,9 +109,9 @@ public class MusixMateApp extends Application {
         }
 
         // Stop media server if running
-        if (isMediaServerRunning) {
-            MediaServerService.stopMediaServer(this);
-        }
+       // if (isMediaServerRunning) {
+          //  MediaServerService.stopMediaServer(this);
+       // }
 
         // Rest of your termination code
         MediaServerService.stopMediaServer(this);

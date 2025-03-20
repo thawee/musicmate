@@ -33,11 +33,12 @@ public class AspectRatioPhotoView extends PhotoView {
 
     private void init(AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.AspectRatioPhotoView);
-        widthRatio = typedArray.getInteger(R.styleable.AspectRatioPhotoView_widthRatio, DEFAULT_ASPECT_RATIO);
-        heightRatio = typedArray.getInteger(R.styleable.AspectRatioPhotoView_heightRatio, DEFAULT_ASPECT_RATIO);
-        typedArray.recycle();
-        validateRatio(widthRatio);
-        validateRatio(heightRatio);
+            widthRatio = typedArray.getInteger(R.styleable.AspectRatioPhotoView_widthRatio, DEFAULT_ASPECT_RATIO);
+            heightRatio = typedArray.getInteger(R.styleable.AspectRatioPhotoView_heightRatio, DEFAULT_ASPECT_RATIO);
+            typedArray.recycle();
+            validateRatio(widthRatio);
+            validateRatio(heightRatio);
+
     }
 
     @Override

@@ -30,7 +30,6 @@ import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_YEAR;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_YEAR;
 import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
-import static apincer.android.mmate.utils.StringUtils.gainToDouble;
 import static apincer.android.mmate.utils.StringUtils.getWord;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
@@ -321,12 +320,13 @@ public static class Loudness {
 
         // replay gain
         // tag.setTrackLoudness(toDouble(getValueForKey(tags, KEY_TRACK_LOUDNESS)));
-        tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_TAG_TRACK_GAIN)));
+       /* tag.setTrackRG(gainToDouble(getValueForKey(tags, KEY_TAG_TRACK_GAIN)));
         tag.setTrackTP(toDouble(getValueForKey(tags, KEY_TAG_TRACK_PEAK)));
         tag.setDynamicRange(toDouble(getValueForKey(tags, KEY_MM_TRACK_DR)));
         tag.setDynamicRangeScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_DR_SCORE)));
         tag.setUpscaledScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_UPSCALED)));
         tag.setResampledScore(toDouble(getValueForKey(tags, KEY_MM_TRACK_RESAMPLED)));
+*/
 
         // read Quick time Specific tags
         if(isMp4File(tag)) {
@@ -472,10 +472,10 @@ public static class Loudness {
             tag.setTitle(getTagforKey(tags, KEY_TAG_TITLE));
 
             // KEY_TRACK_GAIN
-            tag.setTrackRG(toDouble(getTagforKey(tags, KEY_TAG_TRACK_GAIN)));
+            //tag.setTrackRG(toDouble(getTagforKey(tags, KEY_TAG_TRACK_GAIN)));
 
             //KEY_TRACK_PEAK
-            tag.setTrackTP(toDouble(getTagforKey(tags, KEY_TAG_TRACK_PEAK)));
+            //tag.setTrackTP(toDouble(getTagforKey(tags, KEY_TAG_TRACK_PEAK)));
 
             // KEY_ALBUM_GAIN
            // tag.setAlbumRG(toDouble(getTagforKey(tags, KEY_ALBUM_GAIN)));

@@ -27,13 +27,11 @@ import androidx.core.content.ContextCompat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import apincer.android.mmate.R;
-import coil3.Image;
 
 public class BitmapHelper {
     private static final float BITMAP_SCALE = 1f;

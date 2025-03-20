@@ -92,7 +92,7 @@ import apincer.android.utils.FileUtils;
 
 public class FFMpegWriter extends TagWriter {
     private static final String TAG = "FFMpegWriter";
-    private Context context;
+    private final Context context;
 
     /*
    // private static final String KEY_BIT_RATE = "bit_rate";
@@ -419,21 +419,21 @@ public class FFMpegWriter extends TagWriter {
                 getMetadataTrackKey(KEY_TAG_MP4_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_MP4_YEAR, tag.getYear());
 
-        tags = tags +
-                getMetadataTrackKey(TagReader.KEY_TAG_TRACK_LOUDNESS, "");
+       // tags = tags +
+       //         getMetadataTrackKey(TagReader.KEY_TAG_TRACK_LOUDNESS, "");
 
-        if(tag.getTrackRG() == 0.0) {
-            tags = tags +
-                    getMetadataTrackKey(TagReader.KEY_TAG_TRACK_GAIN, "") +
-                    getMetadataTrackKey(TagReader.KEY_TAG_TRACK_PEAK, "");
-        }else {
-            tags = tags +
-                    getMetadataTrackKey(TagReader.KEY_TAG_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
-                    getMetadataTrackKey(TagReader.KEY_TAG_TRACK_PEAK, String.format("%,.6f", tag.getTrackTP()));
-        }
-        tags = tags +
-                getMetadataTrackKey(TagReader.KEY_TAG_ALBUM_GAIN, "") +
-                getMetadataTrackKey(TagReader.KEY_TAG_ALBUM_PEAK, "");
+       // if(tag.getTrackRG() == 0.0) {
+        //    tags = tags +
+        //            getMetadataTrackKey(TagReader.KEY_TAG_TRACK_GAIN, "") +
+        //            getMetadataTrackKey(TagReader.KEY_TAG_TRACK_PEAK, "");
+       // }else {
+       //     tags = tags +
+       //             getMetadataTrackKey(TagReader.KEY_TAG_TRACK_GAIN, String.format("%,.2f dB", tag.getTrackRG())) +
+        //            getMetadataTrackKey(TagReader.KEY_TAG_TRACK_PEAK, String.format("%,.6f", tag.getTrackTP()));
+       // }
+       // tags = tags +
+       //         getMetadataTrackKey(TagReader.KEY_TAG_ALBUM_GAIN, "") +
+        //        getMetadataTrackKey(TagReader.KEY_TAG_ALBUM_PEAK, "");
 
         return tags;
     }
@@ -529,6 +529,7 @@ public class FFMpegWriter extends TagWriter {
             tags = " -write_id3v2 1 ";
         }
 
+        /*
         tags = tags +
                     getMetadataTrackKey(TagReader.KEY_TAG_TRACK_LOUDNESS, "");
 
@@ -551,7 +552,7 @@ public class FFMpegWriter extends TagWriter {
                     getMetadataTrackKey(TagReader.KEY_MM_TRACK_DR_SCORE, tag.getDynamicRangeScore())+
                     getMetadataTrackKey(TagReader.KEY_MM_TRACK_UPSCALED, tag.getUpscaledScore())+
                     getMetadataTrackKey(TagReader.KEY_MM_TRACK_RESAMPLED, tag.getResampledScore());
-
+*/
         return tags;
     }
 

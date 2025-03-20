@@ -9,17 +9,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
-import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -38,14 +34,12 @@ import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.vanniktech.textbuilder.TextBuilder;
-import com.vanniktech.textbuilder.TextBuilder.*;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
@@ -62,12 +56,6 @@ import io.noties.markwon.Markwon;
 import io.noties.markwon.html.HtmlPlugin;
 
 public class AboutActivity extends AppCompatActivity {
-    // Color constants
-    private static final int COLOR_TITLE = Color.parseColor("#1976D2");
-    private static final int COLOR_SECTION = Color.parseColor("#2196F3");
-    private static final int COLOR_CATEGORY = Color.parseColor("#7B1FA2");
-    private static final int COLOR_HIGHLIGHT = Color.parseColor("#E65100");
-    private static final int COLOR_NORMAL = Color.BLACK;
 
     public static void showAbout(Activity activity) {
         Intent myIntent = new Intent(activity, AboutActivity.class);
@@ -82,6 +70,11 @@ public class AboutActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
         }
         super.onCreate(savedInstanceState);
+
+        // set status bar color to black
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
 
         setContentView(R.layout.activity_fragement);
         getSupportActionBar().setTitle(R.string.app_name);
@@ -132,43 +125,7 @@ public class AboutActivity extends AppCompatActivity {
 
             renderMarkdown(content, qualityDetail);
 
-            /*new TextBuilder(getContext())
-                    .addFormableText(content)
-                    .format("Dynamic Range Meter")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("What the Numbers Mean for Your Listening Experience")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("Dynamic Range")
-                        .bold()
-                        .textColor(Color.BLACK)
-                    .done()
-                    .format("Music Groupings")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("Classical Music")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("Traditional Music")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("Popular Music")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .format("Jazz Music")
-                    .bold()
-                    .textColor(Color.BLACK)
-                    .done()
-                    .into(qualityDetail); */
-
-            MusicMateExecutors.ui(() -> {
+            MusicMateExecutors.executeUI(() -> {
                 List<MusicTag> tags = TagRepository.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
                 Map<String, Integer> grpList = new HashMap<>();
@@ -215,14 +172,9 @@ public class AboutActivity extends AppCompatActivity {
                     UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
 
                     // file type piechart
-                    //setupEncodingChart(v, encList, "Music File Format");
-                   // setupEncodingChart(v, grpList, "");
                     setupEncodingChart(v, encList, "");
 
                     // setup digital music details
-                   // String content = ApplicationUtils.getAssetsText(getActivity(),"digital_music.html");
-                   // Editor renderer = v.findViewById(R.id.editor);
-                  //  renderer.render(content);
                 });
             });
 
@@ -356,8 +308,6 @@ public class AboutActivity extends AppCompatActivity {
             //chart.setUsePercentValues(true);
             chart.getDescription().setEnabled(false);
             chart.setExtraOffsets(0, 4, 0, 0);
-            //chart.setExtraOffsets(5, 10, 5, 10);
-            //chart.setExtraOffsets(20f, 130f, 20f, 20f);
 
             chart.setDragDecelerationFrictionCoef(0.95f);
 
@@ -379,14 +329,6 @@ public class AboutActivity extends AppCompatActivity {
             chart.setHighlightPerTapEnabled(false);
 
             Legend l = chart.getLegend();
-            //l.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
-            //l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
-           // l.setOrientation(Legend.LegendOrientation.VERTICAL);
-           // l.setDrawInside(false);
-           // l.setXEntrySpace(5f);
-           // l.setYEntrySpace(0f);
-           // l.setYOffset(2f);
-           // l.setStackSpace(12);
             l.setTextColor(Color.WHITE);
             l.setWordWrapEnabled(true);
 

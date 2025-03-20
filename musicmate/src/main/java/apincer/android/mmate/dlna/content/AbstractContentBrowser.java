@@ -7,7 +7,6 @@ import android.content.Context;
 
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.Person;
-import org.jupnp.support.model.PersonWithRole;
 import org.jupnp.support.model.Protocol;
 import org.jupnp.support.model.ProtocolInfo;
 import org.jupnp.support.model.Res;
@@ -128,9 +127,11 @@ public abstract class AbstractContentBrowser {
         }
 
         // Add technical metadata for streaming optimization
-        if(!isEmpty(tag.getAlbumArtist())) {
-            musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getAlbumArtist(), "AlbumArtist")});
-        }
+       // if(!isEmpty(tag.getAlbumArtist())) {
+        //    musicTrack.setArtists(new PersonWithRole[]{new PersonWithRole(tag.getAlbumArtist(), "AlbumArtist")});
+        //}
+       // DIDLObject.Property.
+
         if(!isEmpty(tag.getGenre())) {
             musicTrack.setGenres(tag.getGenre().split(",", -1));
         }
@@ -282,10 +283,10 @@ public abstract class AbstractContentBrowser {
 
     private String escapeXml(String input) {
         if (input == null) return "";
-        return input.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&apos;");
+        return //input.replace("&", "&amp;")
+                input.replace("<", "&lt;")
+                .replace(">", "&gt;");
+                //.replace("\"", "&quot;");
+                //.replace("'", "&apos;");
     }
 }

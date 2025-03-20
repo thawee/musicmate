@@ -1,8 +1,5 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
-import static apincer.android.mmate.utils.StringUtils.toLong;
-
 import android.util.Log;
 
 import org.apache.commons.math3.complex.Complex;
@@ -20,15 +17,16 @@ import java.util.stream.Collectors;
 
 import apincer.android.mmate.codec.AudioDecoder;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mqaidentifier.NativeLib;
-// Import JCodec classes
-
+//import apincer.android.mqaidentifier.NativeLib;
 
 public class MusicAnalyser {
     private static final String TAG = "MusicAnalyser";
     public static final String NOT_FOUND = "NF";
     public static final String NOT_SCAN = "NS";
+    //Scores > 0.65 strongly indicate upscaled audio (artificially increased from lower resolution)
+    public static final double THRESHOLD_UPSCALED = 0.65;
+    //A score of 0.70 or higher strongly indicates resampling has occurred
+    public static final double THRESHOLD_RESAMPLED = 0.70;
 
     // Change from String to double for numerical representation
     private double upscaledScore = 0.0;
@@ -87,6 +85,7 @@ public class MusicAnalyser {
         return true;
     }
 
+    /*
     @Deprecated
     private void detectMQANative(MusicTag tag) {
 
@@ -112,7 +111,7 @@ public class MusicAnalyser {
             isMQAStudio = false;
             Log.e(TAG, "detectMQA", ex);
         }
-    }
+    } */
 
     private void doAnalyst(MusicTag tag) {
         int durationInSeconds = 30; //20;
@@ -131,7 +130,8 @@ public class MusicAnalyser {
                 if (MusicTagUtils.isFLACFile(tag)) {
                     enhancedMQADetection(audioData);
                 }
-                System.out.println("DR: " + getDynamicRange() + "dB, DRS: " + getDynamicRangeScore() + ", UpScaledScore: "+getUpScaledScore()+", ReSampledScore: "+getReSampledScore()+", MQA: " + isMQA() + ",  MQA Studio: " + isMQAStudio() + ", OriginalSampleRate: " + getOriginalSampleRate());
+                System.out.println(tag.getPath());
+                System.out.println("DR: " + getDynamicRange() + "dB, DRS: " + getDynamicRangeScore() + ", UpScaledScore: "+getUpScaledScore()+", ReSampledScore: "+getReSampledScore()+", MQA: " + isMQA() + ", MQA Studio: " + isMQAStudio() + ", OriginalSampleRate: " + getOriginalSampleRate());
             } catch (IllegalArgumentException e) {
                 Log.w(TAG, "analyst: " + e.getMessage());
             } catch (OutOfMemoryError e) {

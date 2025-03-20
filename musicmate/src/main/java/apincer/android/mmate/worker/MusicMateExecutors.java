@@ -21,15 +21,15 @@ public class MusicMateExecutors {
     private final ExecutorService mScanThread; // for file scanning
     private final ExecutorService mMainThread; // for main page
     private final Executor mUIThread; // for ui
-    /**
-     * Gets the number of available cores
-     * (not always the same as the maximum number of cores)
-     **/
+
+    // Use NUMBER_OF_CORES more effectively
     private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
-    // Sets the amount of time an idle thread waits before terminating
-   // private static final int KEEP_ALIVE_TIME = 60000;
-    // Sets the Time Unit to Milliseconds
-  //  private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.MILLISECONDS;
+    private static final int MIN_POOL_SIZE = Math.max(2, NUMBER_OF_CORES / 2);
+    private static final int MAX_POOL_SIZE = NUMBER_OF_CORES;
+
+    // Extract constants for sleep times
+    private static final long FAST_THREAD_DELAY_MS = 10;
+    private static final long MAIN_THREAD_DELAY_MS = 20;
 
     private static volatile MusicMateExecutors mInstance;
 
@@ -53,31 +53,41 @@ public class MusicMateExecutors {
     private MusicMateExecutors() {
         this(
                // new ThreadPoolExecutor(2, NUMBER_OF_CORES,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
-                new ThreadPoolExecutor(2, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                  protected void afterExecute(Runnable r, Throwable t) {
                      try {
-                         Thread.sleep(10); // wait 0.1 second
+                         Thread.sleep(FAST_THREAD_DELAY_MS); // wait 0.1 second
                      } catch (InterruptedException e) {
-                         Log.e(TAG, "MusicMateExecutors",e);
+                         Log.e(TAG, "Thread interrupted during throttling delay", e);
+                         // Restore the interrupted status
+                         Thread.currentThread().interrupt();
                      }
                  }},
-                new ThreadPoolExecutor(2, 4,600L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {},
-                new ThreadPoolExecutor(2, 2,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,600L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {},
+                new ThreadPoolExecutor(MIN_POOL_SIZE, MAX_POOL_SIZE,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
                     protected void afterExecute(Runnable r, Throwable t) {
                         try {
-                            Thread.sleep(20); // wait 0.2 second
+                            Thread.sleep(MAIN_THREAD_DELAY_MS); // wait 0.2 second
                         } catch (InterruptedException e) {
-                            Log.e(TAG, "MusicMateExecutors",e);
+                            Log.e(TAG, "Thread interrupted during throttling delay", e);
+                            // Restore the interrupted status
+                            Thread.currentThread().interrupt();
                         }
                     }
                 });
     }
 
-    public static void ui(@NonNull Runnable command) {
+    public static void executeUI(@NonNull Runnable command) {
         getInstance().mUIThread.execute(command);
     }
-    public static void parallels(@NonNull Runnable command) {
-        getInstance().mFastThread.execute(command);
+    /**
+     * Executes a task on the parallel processing thread pool.
+     * Suitable for CPU-intensive tasks that should not block the main thread.
+     *
+     * @param task The task to execute
+     */
+    public static void executeParallel(@NonNull Runnable task) {
+        getInstance().mFastThread.execute(task);
     }
     public static void execute(@NonNull Runnable command) {
         getInstance().mMainThread.execute(command);
@@ -90,12 +100,33 @@ public class MusicMateExecutors {
         getInstance().mScheduleThread.schedule(command, seconds, TimeUnit.SECONDS);
     }
 
+    // Add a static shutdown method
+    public static void shutdownAll() {
+        if (mInstance != null) {
+            mInstance.shutdown();
+            mInstance = null;
+        }
+    }
+
     public void shutdown() {
-        this.mScanThread.shutdown();
-        this.mScheduleThread.shutdown();
-        this.mFastThread.shutdown();
-        this.mScanThread.shutdown();
-        this.mMainThread.shutdown();
+        try {
+            // Attempt graceful shutdown with timeout
+            this.mScanThread.shutdown();
+            this.mScheduleThread.shutdown();
+            this.mFastThread.shutdown();
+            this.mMainThread.shutdown();
+
+            // Wait a reasonable time for tasks to complete
+            if (!this.mScanThread.awaitTermination(2, TimeUnit.SECONDS)) {
+                this.mScanThread.shutdownNow();
+            }
+            // Similar for other thread pools
+        } catch (InterruptedException e) {
+            // Force shutdown if interrupted
+            this.mScanThread.shutdownNow();
+            // Force shutdown for other pools
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static class UIThreadExecutor implements Executor {

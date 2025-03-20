@@ -107,7 +107,7 @@
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
     <string name="import_songs_label">Import</string>
-    <string name="measure_dr_label">DR</string>
+    <string name="measure_dr_label">DRM</string>
     <string name="edit_tags_label">TAG</string>
     <string name="delete_song_label">Delete</string>
     <string name="aspect_label">Aspect</string>
@@ -174,7 +174,7 @@
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
-    <string name="title_dynamic_range_and_replay_gain">Analysis for audio file quality</string>
+    <string name="title_dynamic_range_and_replay_gain">Analysis audio file quality</string>
     <string name="title_import_to_music_directory">Add to Music Directory</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>

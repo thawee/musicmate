@@ -3,6 +3,7 @@ package apincer.android.mmate.dlna.transport;
 import android.content.Context;
 import android.util.Log;
 
+import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
@@ -32,7 +33,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
     abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
-        public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0";
+        public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0.2";
         private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
         static final SimpleDateFormat dateFormatter = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
         static {
@@ -57,8 +58,10 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         public abstract void stopServer();
 
         public String getFullServerName( ) {
-            return String.format("%s %s",serverName,SERVER_SUFFIX);
+            return String.format("%s %s %s",SERVER_SUFFIX, getServerVersion(), serverName);
         }
+
+        protected abstract String getServerVersion();
 
         public Context getContext() {
             return context;
@@ -74,6 +77,10 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         public ProtocolFactory getProtocolFactory() {
             return router.getProtocolFactory();
+        }
+
+        public UpnpServiceConfiguration getConfiguration() {
+            return router.getConfiguration();
         }
     }
 
@@ -109,10 +116,12 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         streamServerHost = bindAddress.getHostAddress();
 
-        this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
+        //this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
+        this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
         this.upnpServer.initServer(bindAddress);
 
-        this.contentServer = new JettyContentServerImpl(context, router, configuration);
+        //this.contentServer = new JettyContentServerImpl(context, router, configuration);
+        this.contentServer = new NettyContentServerImpl(context, router, configuration);
         this.contentServer.initServer(bindAddress);
     }
 

@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.transition.Slide;
 import android.util.Log;
@@ -24,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -264,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
             AtomicInteger count = new AtomicInteger(0);
             progressBar.setProgress(getInitialProgress(selections.size(), rate));
             for(MusicTag tag: selections) {
-            MusicMateExecutors.parallels(() -> {
+            MusicMateExecutors.executeParallel(() -> {
                 int cnt = count.incrementAndGet();
                 try {
                     boolean status = repos.deleteMediaItem(tag);
@@ -370,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
             busy = false;
             AtomicInteger count = new AtomicInteger(0);
             for(MusicTag tag: selections) {
-                MusicMateExecutors.parallels(() -> {
+                MusicMateExecutors.executeParallel(() -> {
                     int cnt = count.incrementAndGet();
                     try {
                         updateStatus(itemsView, statusList, tag, "Moving");
@@ -386,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG,"importFile",e);
                         updateStatus(itemsView, statusList, tag, "Fail");
                     }finally {
-                        updateProgressBar(progressBar, cnt*rate);
+                        updateProgressBar(progressBar, Math.ceil(cnt*rate));
                     }
                 });
             }
@@ -398,7 +400,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateProgressBar(ProgressBar progressBar, double rate) {
         runOnUiThread(() -> {
-            progressBar.setProgress((int) (rate));
+            progressBar.setProgress((int) Math.ceil(rate));
             progressBar.invalidate();
         });
     }
@@ -433,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
             nowPlayingPlayer.setImageDrawable(player.getPlayerIconDrawable());
         }
 
-            MusicMateExecutors.ui(() -> {
+            MusicMateExecutors.executeUI(() -> {
                 if(player != null) {
                     if (player.isStreamPlayer()) {
                         nowPlayingOutputDevice.setVisibility(View.VISIBLE);
@@ -512,10 +514,10 @@ public class MainActivity extends AppCompatActivity {
     protected RecyclerView mRecyclerView;
 
     private void initActivityTransitions() {
-            Slide transition = new Slide();
+           /* Slide transition = new Slide();
             transition.excludeTarget(android.R.id.statusBarBackground, true);
             getWindow().setEnterTransition(transition);
-            getWindow().setReturnTransition(transition);
+            getWindow().setReturnTransition(transition); */
     }
 
     @Override
@@ -529,6 +531,11 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onCreate(savedInstanceState);
 
+        // set status bar color to black
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+
         // setup search criteria from starting intent
 
         SearchCriteria searchCriteria = ApplicationUtils.getSearchCriteria(getIntent());
@@ -538,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 
         repos = FileRepository.newInstance(getApplicationContext());
-        initActivityTransitions();
+       // initActivityTransitions();
         setContentView(R.layout.activity_main);
         //setUpEditorLauncher();
         setUpHeaderPanel();
@@ -734,7 +741,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagPlayingEvent event) {
-        MusicMateExecutors.ui(() -> {
+        MusicMateExecutors.executeUI(() -> {
             MusicTag tag = event.getPlayingSong();
             onPlaying(tag);
         });
@@ -744,7 +751,7 @@ public class MainActivity extends AppCompatActivity {
     public void onMessageEvent(AudioTagEditResultEvent event) {
         // call from EventBus
         try {
-            MusicMateExecutors.ui(() -> {
+            MusicMateExecutors.executeUI(() -> {
                 if(event.getItem()!=null) {
                     int position = adapter.getMusicTagPosition(event.getItem());
                     if(AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
@@ -1388,7 +1395,7 @@ public class MainActivity extends AppCompatActivity {
                        // }
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
+                            progressBar.setProgress((int) Math.ceil(pct + rate));
                             progressBar.invalidate();
                             itemsView.invalidateViews();
                         });
@@ -1561,7 +1568,7 @@ public class MainActivity extends AppCompatActivity {
                         statusList.put(tag, "Encoding");
                         runOnUiThread(() -> {
                             int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
+                            progressBar.setProgress((int) Math.ceil(pct + rate));
                             progressBar.invalidate();
                             itemsView.invalidateViews();
                         });
@@ -1571,7 +1578,7 @@ public class MainActivity extends AppCompatActivity {
                             //repos.scanMusicFile(new File(targetPath),true); // re scan file
                             runOnUiThread(() -> {
                                     int pct = progressBar.getProgress();
-                                    progressBar.setProgress((int) (pct+rate));
+                                    progressBar.setProgress((int) Math.ceil(pct+rate));
                                     progressBar.invalidate();
                                     itemsView.invalidateViews();
                                 });
@@ -1579,20 +1586,11 @@ public class MainActivity extends AppCompatActivity {
                             statusList.put(tag, "Fail");
                             runOnUiThread(() -> {
                                 int pct = progressBar.getProgress();
-                                progressBar.setProgress((int) (pct+rate));
+                                progressBar.setProgress((int) Math.ceil(pct+rate));
                                 progressBar.invalidate();
                                 itemsView.invalidateViews();
                             });
                         }
-                  /*  }else {
-                        statusList.put(tag, "Skip");
-                        runOnUiThread(() -> {
-                            int pct = progressBar.getProgress();
-                            progressBar.setProgress((int) (pct + rate));
-                            progressBar.invalidate();
-                            itemsView.invalidateViews();
-                        });
-                    }  */
                 }
 
             });

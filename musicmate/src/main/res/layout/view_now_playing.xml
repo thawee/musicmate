@@ -5,7 +5,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="@dimen/dimen_1_dp"
-    android:background="@drawable/shape_border_grey">
+    android:background="@drawable/shape_border_playing">
 
         <LinearLayout
             android:id="@+id/now_playing_icon_panel"
@@ -21,6 +21,7 @@
             android:paddingTop="@dimen/dimen_1_dp"
             android:paddingRight="@dimen/dimen_1_dp"
             android:paddingBottom="@dimen/dimen_1_dp"
+            android:background="@drawable/shape_border_playing_black"
             tools:ignore="RtlHardcoded,RtlSymmetry">
             <ImageView
                 android:id="@+id/now_playing_coverart"
@@ -50,13 +51,13 @@
                     android:layout_width="@dimen/dimen_24_dp"
                     android:layout_height="@dimen/dimen_24_dp"
                     android:padding="@dimen/dimen_2_dp"
-                    android:background="@drawable/shape_border_playing"
+                    android:background="@drawable/border_back_label"
                     tools:ignore="ContentDescription" />
 
                 <ImageView
                     android:id="@+id/now_playing_device"
                     android:layout_width="@dimen/dimen_42_dp"
-                    android:background="@drawable/shape_border_grey"
+                    android:background="@drawable/border_back_label"
                     android:layout_height="@dimen/dimen_24_dp"
                     android:layout_margin="@dimen/dimen_1_dp"
                     android:scaleType="fitXY"

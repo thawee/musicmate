@@ -52,7 +52,7 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_JAZZ_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
+            }else if (CollectionsBrowser.SMART_LIST_LOUNGE_SONGS.equals(name) && MusicTagUtils.isLoungePlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.SMART_LIST_VOCAL_SONGS.equals(name) && MusicTagUtils.isVocalPlaylist(tag)) {
                 results.add(tag);

@@ -290,64 +290,65 @@ public class TagContainerLayout extends ViewGroup {
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.AndroidTagView,
-                defStyleAttr, 0);
-        mVerticalInterval = (int) attributes.getDimension(R.styleable.AndroidTagView_vertical_interval,
-                dp2px(context, DEFAULT_INTERVAL));
-        mHorizontalInterval = (int) attributes.getDimension(R.styleable.AndroidTagView_horizontal_interval,
-                dp2px(context, DEFAULT_INTERVAL));
-        mBorderWidth = attributes.getDimension(R.styleable.AndroidTagView_container_border_width,
-                dp2px(context, mBorderWidth));
-        mBorderRadius = attributes.getDimension(R.styleable.AndroidTagView_container_border_radius,
-                dp2px(context, mBorderRadius));
-        mTagBdDistance = attributes.getDimension(R.styleable.AndroidTagView_tag_bd_distance,
-                dp2px(context, mTagBdDistance));
-        mBorderColor = attributes.getColor(R.styleable.AndroidTagView_container_border_color,
-                mBorderColor);
-        mBackgroundColor = attributes.getColor(R.styleable.AndroidTagView_container_background_color,
-                mBackgroundColor);
-        mDragEnable = attributes.getBoolean(R.styleable.AndroidTagView_container_enable_drag, false);
-        mSensitivity = attributes.getFloat(R.styleable.AndroidTagView_container_drag_sensitivity,
-                mSensitivity);
-        mGravity = attributes.getInt(R.styleable.AndroidTagView_container_gravity, mGravity);
-        mMaxLines = attributes.getInt(R.styleable.AndroidTagView_container_max_lines, mMaxLines);
-        mTagMaxLength = attributes.getInt(R.styleable.AndroidTagView_tag_max_length, mTagMaxLength);
-        mTheme = attributes.getInt(R.styleable.AndroidTagView_tag_theme, mTheme);
-        mTagBorderWidth = attributes.getDimension(R.styleable.AndroidTagView_tag_border_width,
-                dp2px(context, mTagBorderWidth));
-        mTagBorderRadius = attributes.getDimension(
-                R.styleable.AndroidTagView_tag_corner_radius, dp2px(context, mTagBorderRadius));
-        mTagHorizontalPadding = (int) attributes.getDimension(
-                R.styleable.AndroidTagView_tag_horizontal_padding,
-                dp2px(context, mTagHorizontalPadding));
-        mTagVerticalPadding = (int) attributes.getDimension(
-                R.styleable.AndroidTagView_tag_vertical_padding, dp2px(context, mTagVerticalPadding));
-        mTagTextSize = attributes.getDimension(R.styleable.AndroidTagView_tag_text_size,
-                sp2px(context, mTagTextSize));
-        mTagBorderColor = attributes.getColor(R.styleable.AndroidTagView_tag_border_color,
-                mTagBorderColor);
-        mTagBackgroundColor = attributes.getColor(R.styleable.AndroidTagView_tag_background_color,
-                mTagBackgroundColor);
-        mTagTextColor = attributes.getColor(R.styleable.AndroidTagView_tag_text_color, mTagTextColor);
-        mTagTextDirection = attributes.getInt(R.styleable.AndroidTagView_tag_text_direction, mTagTextDirection);
-        isTagViewClickable = attributes.getBoolean(R.styleable.AndroidTagView_tag_clickable, false);
-        isTagViewSelectable = attributes.getBoolean(R.styleable.AndroidTagView_tag_selectable, false);
-        mRippleColor = attributes.getColor(R.styleable.AndroidTagView_tag_ripple_color, Color.parseColor("#EEEEEE"));
-        mRippleAlpha = attributes.getInteger(R.styleable.AndroidTagView_tag_ripple_alpha, mRippleAlpha);
-        mRippleDuration = attributes.getInteger(R.styleable.AndroidTagView_tag_ripple_duration, mRippleDuration);
-        mEnableCross = attributes.getBoolean(R.styleable.AndroidTagView_tag_enable_cross, mEnableCross);
-        mCrossAreaWidth = attributes.getDimension(R.styleable.AndroidTagView_tag_cross_width,
-                dp2px(context, mCrossAreaWidth));
-        mCrossAreaPadding = attributes.getDimension(R.styleable.AndroidTagView_tag_cross_area_padding,
-                dp2px(context, mCrossAreaPadding));
-        mCrossColor = attributes.getColor(R.styleable.AndroidTagView_tag_cross_color, mCrossColor);
-        mCrossLineWidth = attributes.getDimension(R.styleable.AndroidTagView_tag_cross_line_width,
-                dp2px(context, mCrossLineWidth));
-        mTagSupportLettersRTL = attributes.getBoolean(R.styleable.AndroidTagView_tag_support_letters_rlt,
-                mTagSupportLettersRTL);
-        mTagBackgroundResource = attributes.getResourceId(R.styleable.AndroidTagView_tag_background,
-                mTagBackgroundResource);
-        attributes.recycle();
+        try (TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.AndroidTagView,
+                defStyleAttr, 0)) {
+            mVerticalInterval = (int) attributes.getDimension(R.styleable.AndroidTagView_vertical_interval,
+                    dp2px(context, DEFAULT_INTERVAL));
+            mHorizontalInterval = (int) attributes.getDimension(R.styleable.AndroidTagView_horizontal_interval,
+                    dp2px(context, DEFAULT_INTERVAL));
+            mBorderWidth = attributes.getDimension(R.styleable.AndroidTagView_container_border_width,
+                    dp2px(context, mBorderWidth));
+            mBorderRadius = attributes.getDimension(R.styleable.AndroidTagView_container_border_radius,
+                    dp2px(context, mBorderRadius));
+            mTagBdDistance = attributes.getDimension(R.styleable.AndroidTagView_tag_bd_distance,
+                    dp2px(context, mTagBdDistance));
+            mBorderColor = attributes.getColor(R.styleable.AndroidTagView_container_border_color,
+                    mBorderColor);
+            mBackgroundColor = attributes.getColor(R.styleable.AndroidTagView_container_background_color,
+                    mBackgroundColor);
+            mDragEnable = attributes.getBoolean(R.styleable.AndroidTagView_container_enable_drag, false);
+            mSensitivity = attributes.getFloat(R.styleable.AndroidTagView_container_drag_sensitivity,
+                    mSensitivity);
+            mGravity = attributes.getInt(R.styleable.AndroidTagView_container_gravity, mGravity);
+            mMaxLines = attributes.getInt(R.styleable.AndroidTagView_container_max_lines, mMaxLines);
+            mTagMaxLength = attributes.getInt(R.styleable.AndroidTagView_tag_max_length, mTagMaxLength);
+            mTheme = attributes.getInt(R.styleable.AndroidTagView_tag_theme, mTheme);
+            mTagBorderWidth = attributes.getDimension(R.styleable.AndroidTagView_tag_border_width,
+                    dp2px(context, mTagBorderWidth));
+            mTagBorderRadius = attributes.getDimension(
+                    R.styleable.AndroidTagView_tag_corner_radius, dp2px(context, mTagBorderRadius));
+            mTagHorizontalPadding = (int) attributes.getDimension(
+                    R.styleable.AndroidTagView_tag_horizontal_padding,
+                    dp2px(context, mTagHorizontalPadding));
+            mTagVerticalPadding = (int) attributes.getDimension(
+                    R.styleable.AndroidTagView_tag_vertical_padding, dp2px(context, mTagVerticalPadding));
+            mTagTextSize = attributes.getDimension(R.styleable.AndroidTagView_tag_text_size,
+                    sp2px(context, mTagTextSize));
+            mTagBorderColor = attributes.getColor(R.styleable.AndroidTagView_tag_border_color,
+                    mTagBorderColor);
+            mTagBackgroundColor = attributes.getColor(R.styleable.AndroidTagView_tag_background_color,
+                    mTagBackgroundColor);
+            mTagTextColor = attributes.getColor(R.styleable.AndroidTagView_tag_text_color, mTagTextColor);
+            mTagTextDirection = attributes.getInt(R.styleable.AndroidTagView_tag_text_direction, mTagTextDirection);
+            isTagViewClickable = attributes.getBoolean(R.styleable.AndroidTagView_tag_clickable, false);
+            isTagViewSelectable = attributes.getBoolean(R.styleable.AndroidTagView_tag_selectable, false);
+            mRippleColor = attributes.getColor(R.styleable.AndroidTagView_tag_ripple_color, Color.parseColor("#EEEEEE"));
+            mRippleAlpha = attributes.getInteger(R.styleable.AndroidTagView_tag_ripple_alpha, mRippleAlpha);
+            mRippleDuration = attributes.getInteger(R.styleable.AndroidTagView_tag_ripple_duration, mRippleDuration);
+            mEnableCross = attributes.getBoolean(R.styleable.AndroidTagView_tag_enable_cross, mEnableCross);
+            mCrossAreaWidth = attributes.getDimension(R.styleable.AndroidTagView_tag_cross_width,
+                    dp2px(context, mCrossAreaWidth));
+            mCrossAreaPadding = attributes.getDimension(R.styleable.AndroidTagView_tag_cross_area_padding,
+                    dp2px(context, mCrossAreaPadding));
+            mCrossColor = attributes.getColor(R.styleable.AndroidTagView_tag_cross_color, mCrossColor);
+            mCrossLineWidth = attributes.getDimension(R.styleable.AndroidTagView_tag_cross_line_width,
+                    dp2px(context, mCrossLineWidth));
+            mTagSupportLettersRTL = attributes.getBoolean(R.styleable.AndroidTagView_tag_support_letters_rlt,
+                    mTagSupportLettersRTL);
+            mTagBackgroundResource = attributes.getResourceId(R.styleable.AndroidTagView_tag_background,
+                    mTagBackgroundResource);
+            attributes.recycle();
+        }
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mRectF = new RectF();

@@ -3,6 +3,8 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.Constants.ARTIST_SEP;
 import static apincer.android.mmate.Constants.ARTIST_SEP_SPACE;
 import static apincer.android.mmate.Constants.NONE;
+import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_RESAMPLED;
+import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_UPSCALED;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -199,8 +201,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                     .in("audioEncoding", "aac", "mpeg"); */
             builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
                     .lt("drScore", 2).or()
-                    .gt("upscaledScore", 0.8).or()
-                    .gt("resampledScore", 0.8).or()
+                    .gt("upscaledScore", THRESHOLD_UPSCALED).or()
+                    .gt("resampledScore", THRESHOLD_RESAMPLED).or()
                     .in("audioEncoding", "AAC", "MPEG");
             //  String bad = "mediaQuality = '"+Constants.QUALITY_BAD+"' ";
          //   builder.where().raw(bad+" OR (fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24))) order by title");

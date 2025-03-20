@@ -92,8 +92,7 @@ public class TrapezoidPartsView extends ScrollView {
         int mTextSize = 50;
         int mTextColor = Color.WHITE;
         if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TrapezoidPartsView);
-            try {
+            try (TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TrapezoidPartsView)) {
                 float alpha = a.getFloat(R.styleable.TrapezoidPartsView_tpv_touch_alpha, 0.7f);
                 mTouchAlpha = (int) (alpha * 255);
                 mParam.mSpace = a.getDimensionPixelSize(R.styleable.TrapezoidPartsView_tpv_space, mParam.mSpace);
@@ -105,8 +104,6 @@ public class TrapezoidPartsView extends ScrollView {
                 mTextSize = a.getDimensionPixelSize(R.styleable.TrapezoidPartsView_tpv_text_size, mTextSize);
                 mTextColor = a.getColor(R.styleable.TrapezoidPartsView_tpv_text_color, mTextColor);
                 mAllParallelogram = a.getBoolean(R.styleable.TrapezoidPartsView_tpv_all_parallelogram, false);
-            } finally {
-                a.recycle();
             }
         } else {
             mParam.mSpace = 64;

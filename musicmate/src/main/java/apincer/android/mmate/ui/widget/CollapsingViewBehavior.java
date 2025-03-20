@@ -35,9 +35,10 @@ public class CollapsingViewBehavior extends CoordinatorLayout.Behavior<View> {
 
     public CollapsingViewBehavior(Context context, AttributeSet attrs) {
         if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CollapsingViewBehavior);
-            targetPlaceId = a.getResourceId(R.styleable.CollapsingViewBehavior_target_place, 0);
-            a.recycle();
+            try (TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CollapsingViewBehavior)) {
+                targetPlaceId = a.getResourceId(R.styleable.CollapsingViewBehavior_target_place, 0);
+                a.recycle();
+            }
         }
 
         if (targetPlaceId == 0) {

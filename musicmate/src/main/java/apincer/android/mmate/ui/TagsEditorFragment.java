@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.skydoves.powermenu.CircularEffect;
 import com.skydoves.powermenu.MenuAnimation;
@@ -88,6 +89,7 @@ public class TagsEditorFragment extends Fragment {
     private TextInputEditText txtGrouping;
     private TextInputEditText txtMediaType;
     private TextInputEditText txtPublisher;
+    private FloatingActionButton fabSav;
    private PowerSpinnerView fileQuality;
     private PowerMenu powerMenu;
     private volatile boolean bypassChange = false;
@@ -120,7 +122,11 @@ public class TagsEditorFragment extends Fragment {
         txtMediaType = v.findViewById(R.id.input_media_type);
         txtPublisher = v.findViewById(R.id.input_publisher);
         fileQuality = v.findViewById(R.id.mediaFileQuality);
+        fabSav = v.findViewById(R.id.fab_save);
+
         setupFileQualityList(fileQuality);
+        //fabSav.setVisibility(View.GONE);
+        fabSav.setOnClickListener(view -> doSaveMediaItem());
 
         // popup list
         setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
@@ -176,7 +182,7 @@ public class TagsEditorFragment extends Fragment {
                             .filter(rValue -> toLowerCase(rValue).contains(txt))
                             .limit(10)
                             .forEach(s -> items.add(new PowerMenuItem(s)));
-                    if((!autoSelect) || items.size()>=1) {
+                    if((!autoSelect) || !items.isEmpty()) {
                         powerMenu = new PowerMenu.Builder(context)
                                 .setWidth(textInput.getWidth()+24)
                                 .setLifecycleOwner(getViewLifecycleOwner())
@@ -226,8 +232,7 @@ public class TagsEditorFragment extends Fragment {
     }
 
     public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
-        return item -> {
-            if (item.getItemId() == R.id.menu_editor_read_tag) {
+        return item -> {if (item.getItemId() == R.id.menu_editor_read_tag) {
                 doShowReadTagsPreview();
             } else if (item.getItemId() == R.id.menu_editor_format_tag) {
                 doFormatTags();
@@ -377,7 +382,7 @@ public class TagsEditorFragment extends Fragment {
                     final int len = list.size();
                     AtomicInteger count = new AtomicInteger(0);
                     for (MusicTag tag: list) {
-                        MusicMateExecutors.parallels(() -> {
+                        MusicMateExecutors.executeParallel(() -> {
                             try {
                                 int currentCount = count.incrementAndGet();
                                 boolean status = repos.setMusicTag(tag);
@@ -389,17 +394,6 @@ public class TagsEditorFragment extends Fragment {
                             }
                         });
                     }
-                    /*MusicMateExecutors.arallels(list, 2, (Action<MusicTag>) tag -> {
-                        try {
-                            int currentCount = count.incrementAndGet();
-                            boolean status = repos.setMusicTag(tag);
-                            updateProgressBar(currentCount + "/" + len);
-                            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, (MusicTag) tag);
-                            EventBus.getDefault().postSticky(message);
-                        } catch (Exception e) {
-                            Log.e(TAG, "doSaveMediaItem", e);
-                        }
-                    }); */
                 }
         ).thenAccept(
                 unused -> {

@@ -28,15 +28,6 @@ public final class Constants {
     public static final int FLAC_OPTIMAL_COMPRESS_LEVEL = 4;
     public static final int FLAC_NO_COMPRESS_LEVEL = 0;
 
-    public static final String IND_UPSCALED_BAD = "B";
-    public static final String IND_UPSCALED_GOOD = "G";
-    public static final String IND_UPSCALED_NONE = "";
-    public static final String IND_UPSCALED_INVALID = "F";
-    public static final String IND_RESAMPLED_BAD = "B";
-    public static final String IND_RESAMPLED_GOOD = "G";
-    public static final String IND_RESAMPLED_NONE = "";
-    public static final String IND_RESAMPLED_INVALID = "F";
-
     // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
    // public static final long QUALITY_SAMPLING_RATE_88 = 88200;
@@ -64,8 +55,8 @@ public final class Constants {
 
     public static final String GROUPING_CLASSICAL = "Classical";
     public static final String GROUPING_TRADITIONAL = "Traditional";
-    public static final String GROUPING_JAZZ = "Jazz";
-    public static final String GROUPING_THAI_JAZZ = "Thai Jazz";
+    public static final String GROUPING_LOUNGE = "Lounge";
+    public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
     public static final String GROUPING_THAI_CLASSICAL = "Thai Classical";
 
     public static final String TITLE_LIBRARY = "Collections";

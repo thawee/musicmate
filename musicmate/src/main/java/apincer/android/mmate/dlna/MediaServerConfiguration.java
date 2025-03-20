@@ -15,6 +15,7 @@ import org.jupnp.transport.spi.StreamServer;
 import java.net.URI;
 
 import apincer.android.mmate.dlna.transport.JettyStreamingClientImpl;
+import apincer.android.mmate.dlna.transport.NettyStreamingClientImpl;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
@@ -51,12 +52,19 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     @Override
     public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
         // Increased timeouts for better reliability with RoPieeeXL streaming
-        return new JettyStreamingClientImpl(
+       /* return new JettyStreamingClientImpl(
                 new StreamClientConfigurationImpl(
                 getSyncProtocolExecutorService(),
                         15,    // Increased from 10 to 15 seconds for connection timeout
                         8      // Increased from 5 to 8 seconds for data timeout
-        ));
+        )); */
+        return new NettyStreamingClientImpl(
+                new StreamClientConfigurationImpl(
+                        getSyncProtocolExecutorService(),
+                        15,    // Increased from 10 to 15 seconds for connection timeout
+                        8      // Increased from 5 to 8 seconds for data timeout
+                ));
+
     }
 
     @Override

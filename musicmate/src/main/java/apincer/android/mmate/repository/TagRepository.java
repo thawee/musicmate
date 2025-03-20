@@ -45,7 +45,7 @@ public class TagRepository {
             tag.setUniqueKey(keyword);
         }
         if(path.contains("/music/") && !path.contains("/telegram/")) {
-            // if has alblum, use parent dir
+            // if has album, use parent dir
             if(!StringUtils.isEmpty(tag.getAlbum())) {
                 // use directory
                 path = FileUtils.getParentName(path);

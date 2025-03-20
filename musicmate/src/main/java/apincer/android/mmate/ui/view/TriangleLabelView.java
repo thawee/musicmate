@@ -121,41 +121,41 @@ public class TriangleLabelView extends View {
     private void init(Context context, AttributeSet attrs) {
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.TriangleLabelView);
 
-        this.topPadding = ta.getDimension(R.styleable.TriangleLabelView_labelTopPadding, dp2px(7));
-        this.centerPadding = ta.getDimension(R.styleable.TriangleLabelView_labelCenterPadding, dp2px(3));
-        this.bottomPadding = ta.getDimension(R.styleable.TriangleLabelView_labelBottomPadding, dp2px(3));
+            this.topPadding = ta.getDimension(R.styleable.TriangleLabelView_labelTopPadding, dp2px(7));
+            this.centerPadding = ta.getDimension(R.styleable.TriangleLabelView_labelCenterPadding, dp2px(3));
+            this.bottomPadding = ta.getDimension(R.styleable.TriangleLabelView_labelBottomPadding, dp2px(3));
 
-        this.backGroundColor = ta.getColor(R.styleable.TriangleLabelView_backgroundColor, Color.parseColor("#66000000"));
-        this.primary.color = ta.getColor(R.styleable.TriangleLabelView_primaryTextColor, Color.WHITE);
-        this.secondary.color = ta.getColor(R.styleable.TriangleLabelView_secondaryTextColor, Color.WHITE);
+            this.backGroundColor = ta.getColor(R.styleable.TriangleLabelView_backgroundColor, Color.parseColor("#66000000"));
+            this.primary.color = ta.getColor(R.styleable.TriangleLabelView_primaryTextColor, Color.WHITE);
+            this.secondary.color = ta.getColor(R.styleable.TriangleLabelView_secondaryTextColor, Color.WHITE);
 
-        this.primary.size = ta.getDimension(R.styleable.TriangleLabelView_primaryTextSize, sp2px(11));
-        this.secondary.size = ta.getDimension(R.styleable.TriangleLabelView_secondaryTextSize, sp2px(8));
+            this.primary.size = ta.getDimension(R.styleable.TriangleLabelView_primaryTextSize, sp2px(11));
+            this.secondary.size = ta.getDimension(R.styleable.TriangleLabelView_secondaryTextSize, sp2px(8));
 
-        final String primary = ta.getString(R.styleable.TriangleLabelView_primaryText);
-        if (primary != null) {
-            this.primary.text = primary;
-        }
-        final String secondary = ta.getString(R.styleable.TriangleLabelView_secondaryText);
-        if (secondary != null) {
-            this.secondary.text = secondary;
-        }
+            final String primary = ta.getString(R.styleable.TriangleLabelView_primaryText);
+            if (primary != null) {
+                this.primary.text = primary;
+            }
+            final String secondary = ta.getString(R.styleable.TriangleLabelView_secondaryText);
+            if (secondary != null) {
+                this.secondary.text = secondary;
+            }
 
-        this.primary.style = ta.getInt(R.styleable.TriangleLabelView_primaryTextStyle, 2);
-        this.secondary.style = ta.getInt(R.styleable.TriangleLabelView_secondaryTextStyle, 0);
+            this.primary.style = ta.getInt(R.styleable.TriangleLabelView_primaryTextStyle, 2);
+            this.secondary.style = ta.getInt(R.styleable.TriangleLabelView_secondaryTextStyle, 0);
 
-        this.corner = Corner.from(ta.getInt(R.styleable.TriangleLabelView_corner, 1));
+            this.corner = Corner.from(ta.getInt(R.styleable.TriangleLabelView_corner, 1));
 
-        ta.recycle();
+            ta.recycle();
 
-        this.primary.initPaint();
-        this.secondary.initPaint();
+            this.primary.initPaint();
+            this.secondary.initPaint();
 
-        trianglePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        trianglePaint.setColor(backGroundColor);
+            trianglePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            trianglePaint.setColor(backGroundColor);
 
-        this.primary.resetStatus();
-        this.secondary.resetStatus();
+            this.primary.resetStatus();
+            this.secondary.resetStatus();
     }
 
     public void setLabelTopPadding(float dp) {

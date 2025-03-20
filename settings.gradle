@@ -52,7 +52,7 @@ include ':library:crashreporter'
 // ':library:circleimageview',
 //':library:jaudiotagger20181016',':library:jaudiotagger226',':library:SearchFilter',,'TripMate',':library:slideDateTimePicker',':library:placesAPI',
 
-include ':library:mqaidentifier'
+//include ':library:mqaidentifier'
 //include ':library:musicmeterlib'
 //include ':library:jaudiotagger'
 include ':library:jaudiotagger-android'

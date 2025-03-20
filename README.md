@@ -100,3 +100,8 @@ DLNA servers use specific ports for communication. Here are the relevant ports:
 TCP Port 5001: This is the default port for DLNA media streaming. If you’re using a different port number, make sure to use that value.
 TCP Port 2869: Used for DLNA/UPnP discovery (SSDP). It helps devices find each other on the network.
 UDP Port 1900: Also used for DLNA/UPnP discovery (SSDP).
+
+
+---
+jetty 12.1 required android 14 or higher
+

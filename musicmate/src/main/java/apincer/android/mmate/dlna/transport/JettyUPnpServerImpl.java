@@ -150,15 +150,13 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         }
     }
 
+    @Override
+    protected String getServerVersion() {
+        return "Jetty/12.0.1";
+    }
+
     private class UPnpHandler extends Handler.Abstract {
         private final UpnpStream upnpStream;
-        // Known problematic clients that need special handling
-        private static final String[] CLIENTS_NEEDING_FULL_RESPONSE = {
-                "CyberGarage-HTTP/1.0",          // mConnectHD on iOS
-                "Panasonic iOS VR-CP UPnP/2.0",  // Another possible client
-                "mconnect/", // mConnectHD other versions
-                "UPnP/1.0 DLNADOC/1.50 Intel_SDK_for_UPnP" // Intel UPnP SDK clients
-        };
 
         private UPnpHandler( ) {
             this.upnpStream = new UpnpStream(getProtocolFactory()) {
@@ -172,12 +170,6 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         @Override
         public boolean handle(Request request, Response response, Callback callback) {
             try {
-               /* String userAgent = request.getHeaders().get(HttpHeader.USER_AGENT);
-                if("CyberGarage-HTTP/1.0".equals(userAgent)) { // ||
-                    // "Panasonic iOS VR-CP UPnP/2.0".equals(userAgent)) {//     requestMessage.getHeaders().getFirstHeader("User-agent"))) {
-                    // Log.v(TAG, "Interim FIX for MConnect on IPadOS 18 beta, return all songs for MConnect(fix show only 20 songs)");
-                    StreamServerImpl.forceFullContent = true;
-                } */
 
                 StreamRequestMessage requestMessage = readRequestMessage(request);
                 StreamResponseMessage responseMessage = upnpStream.process(requestMessage);
@@ -320,16 +312,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 return super.handle(request, response, callback);
             }
 
-            // Enable efficient caching of cover art
-            response.getHeaders().add(HttpHeader.CACHE_CONTROL, COVER_ART_CACHE_CONTROL);
-
-            // Set Last-Modified and Expires headers for better caching
-            long now = System.currentTimeMillis();
-            response.getHeaders().put(HttpHeader.LAST_MODIFIED, now - 86400000); // Yesterday
-            response.getHeaders().put(HttpHeader.EXPIRES, now + COVER_ART_MAX_AGE); // 1 hour in future
-
-            // Enable ETags and Accept-Ranges for more efficient transfers
-            response.getHeaders().add(HttpHeader.ACCEPT_RANGES, "bytes");
+            boolean controlCache = true;
 
             // Try to find the cover art
             HttpContent content = getResourceService().getContent(Request.getPathInContext(request), request);
@@ -359,6 +342,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                         Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
                     }
                     content = getResourceService().getContent(defaultCoverartDir.getAbsolutePath(), request);
+                    controlCache = false;
                 } catch (IOException e) {
                     Log.e(TAG, "Init default missing cover art", e);
                 }
@@ -366,6 +350,18 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
             if (content == null) {
                 return super.handle(request, response, callback); // no content - try other handlers
+            }
+
+            // Enable ETags and Accept-Ranges for more efficient transfers
+            response.getHeaders().add(HttpHeader.ACCEPT_RANGES, "bytes");
+            if(controlCache) {
+                // Enable efficient caching of cover art
+                response.getHeaders().add(HttpHeader.CACHE_CONTROL, COVER_ART_CACHE_CONTROL);
+
+                // Set Last-Modified and Expires headers for better caching
+                long now = System.currentTimeMillis();
+                response.getHeaders().put(HttpHeader.LAST_MODIFIED, now - 86400000); // Yesterday
+                response.getHeaders().put(HttpHeader.EXPIRES, now + COVER_ART_MAX_AGE); // 1 hour in future
             }
 
             // Add MIME type explicitly for improved compatibility

@@ -171,7 +171,7 @@ public class MediaServerService extends Service {
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.d(TAG, "Network available in media server service");
+                //Log.d(TAG, "Network available in media server service");
                 isNetworkAvailable = true;
 
                 // Don't re-initialize if already running
@@ -180,7 +180,7 @@ public class MediaServerService extends Service {
                     if (!initialized) {
                         Thread initThread = new Thread(() -> {
                             initialize();
-                            Log.i(TAG, "Media server re-initialized after network connection");
+                            //Log.i(TAG, "Media server re-initialized after network connection");
                         });
                         initThread.setName("DLNA-Reinit");
                         initThread.start();
@@ -189,7 +189,7 @@ public class MediaServerService extends Service {
                 }
 
                 // Network is available and server is running - re-announce
-                MusicMateExecutors.getInstance().schedule(() -> {
+                MusicMateExecutors.schedule(() -> {
                     try {
                         // Re-register and announce
                         upnpService.getRegistry().addDevice(mediaServerDevice);
@@ -203,14 +203,14 @@ public class MediaServerService extends Service {
 
             @Override
             public void onLost(@NonNull Network network) {
-                Log.d(TAG, "Network lost in media server service");
+              //  Log.d(TAG, "Network lost in media server service");
                 isNetworkAvailable = false;
 
                 // Send byebye notification when network is lost
                 if (initialized && upnpService != null && mediaServerDevice != null) {
                     try {
                         upnpService.getProtocolFactory().createSendingNotificationByebye(mediaServerDevice).run();
-                        Log.d(TAG, "Sent byebye notification for lost network");
+                       // Log.d(TAG, "Sent byebye notification for lost network");
                     } catch (Exception e) {
                         Log.e(TAG, "Error sending byebye notification", e);
                     }
@@ -237,17 +237,11 @@ public class MediaServerService extends Service {
             shutdown(); // clean up before start
 
             try {
-                Log.d(TAG, "Initializing DLNA media server");
+                //Log.d(TAG, "Initializing DLNA media server");
 
                 // Create server configuration
                 upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());
                 upnpService = new UpnpServiceImpl(upnpServiceCfg) {
-
-                   /* @Override
-                    protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
-                        return new AndroidRouter(getConfiguration(), protocolFactory, MediaServerService.this);
-                    }*/
-
                     @Override
                     public synchronized void shutdown() {
                         // Now we can concurrently run the Cling shutdown code, without occupying the
@@ -338,7 +332,7 @@ public class MediaServerService extends Service {
      */
     private void logAvailableServices() {
         if (mediaServerDevice != null) {
-            Log.d(TAG, "Available DLNA services:");
+           // Log.d(TAG, "Available DLNA services:");
             for (org.jupnp.model.meta.Service service : mediaServerDevice.getServices()) {
                 Log.d(TAG, " - " + service.getServiceType().getType());
             }

@@ -152,28 +152,23 @@
         <item>EDM</item>
         <item>Rap</item>
         <item>Indie</item>
-        <!--
+        <item>Thai Instrument</item>
         <item>Thai Classical</item>
         <item>Thai Pop</item>
         <item>Thai Indie</item>
-        <item>Thai Vocal</item>
+        <item>Thai Pop, Vocal</item>
         <item>Thai Rock</item>
         <item>Thai Folk</item>
         <item>Thai Jazz</item>
         <item>Kantrum</item>
-        -->
-
         <item>Luk Thung</item>
         <item>Mor Lum</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Classical</item>
-        <item>Jazz</item>
+        <item>Lounge</item>
         <item>Traditional</item>
-        <item>Popular</item>
-        <item>Thai Classical</item>
-        <item>Thai Popular</item>
-        <item>Thai Jazz</item>
+        <item>Contemporary</item>
         <!--
         <item>Classical</item>
         <item>English</item>

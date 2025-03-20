@@ -3,7 +3,6 @@ package apincer.android.mmate.codec;
 import static apincer.android.mmate.Constants.MEDIA_ENC_AIFF;
 import static apincer.android.mmate.Constants.MEDIA_ENC_ALAC;
 import static apincer.android.mmate.Constants.MEDIA_ENC_FLAC;
-import static apincer.android.mmate.Constants.MEDIA_ENC_WAVE;
 
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
@@ -40,14 +39,24 @@ public class AudioDecoder {
      */
     public static byte[] decodeAudio(MusicTag tag, int maxDurationSeconds) throws IOException {
         String extension = tag.getAudioEncoding().toUpperCase();
+        String filePath = tag.getPath();
 
-        return switch (extension) {
-           // case MEDIA_ENC_WAVE -> decodeWav(tag.getPath(), maxDurationSeconds);
-            case MEDIA_ENC_ALAC -> decodeAlac(tag.getPath(), maxDurationSeconds);
-            case MEDIA_ENC_FLAC -> decodeFlac(tag.getPath(), maxDurationSeconds);
-            case MEDIA_ENC_AIFF -> decodeAiff(tag.getPath(), maxDurationSeconds);
-            default -> decodeAndroid(tag.getPath(), maxDurationSeconds);
-        };
+        try {
+            return switch (extension) {
+                // case MEDIA_ENC_WAVE -> decodeWav(filePath, maxDurationSeconds);
+                case MEDIA_ENC_ALAC -> decodeAlac(filePath, maxDurationSeconds);
+                case MEDIA_ENC_FLAC -> decodeFlac(filePath, maxDurationSeconds);
+                case MEDIA_ENC_AIFF -> decodeAiff(filePath, maxDurationSeconds);
+                default -> decodeAndroid(filePath, maxDurationSeconds);
+            };
+        } catch (Exception e) {
+            // Log the exception
+            android.util.Log.w(TAG, "Failed to decode with specialized decoder for " + extension +
+                    ": " + e.getMessage() + ". Falling back to Android decoder.");
+
+            // Fallback to Android decoder
+            return decodeAndroid(filePath, maxDurationSeconds);
+        }
     }
 
     public static byte[] decodeAlac(String filePath, int maxDurationSeconds) throws IOException {
