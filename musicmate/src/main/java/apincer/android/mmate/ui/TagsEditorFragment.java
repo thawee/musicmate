@@ -5,6 +5,7 @@ import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.utils.StringUtils.toLowerCase;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -71,8 +72,8 @@ public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
-    private AlertDialog progressDialog;
-    private TextView progressLabel;
+    //private AlertDialog progressDialog;
+    //private TextView progressLabel;
     private TextView previewTitle;
     private TextView previewArtist;
     private TextView previewAlbum;
@@ -172,9 +173,8 @@ public class TagsEditorFragment extends Fragment {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if(bypassChange) return;
                 String txt = toLowerCase(charSequence.toString());
-                if(powerMenu!=null) {
-                    powerMenu.dismiss();
-                }
+                dismissPowerMenu(); // Use the method to safely dismiss
+
                 if(txt.length()>=minChar) {
                     // popup list
                     List<PowerMenuItem> items = new ArrayList<>();
@@ -229,6 +229,25 @@ public class TagsEditorFragment extends Fragment {
         MusicTag musicTag = tagsActivity.buildDisplayTag();
         doPreviewMusicInfo(musicTag);
         initEditorInputs(musicTag);
+    }
+
+    @Override
+    public void onDestroyView() {
+        dismissPowerMenu();
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onPause() {
+        dismissPowerMenu();
+        super.onPause();
+    }
+
+    private void dismissPowerMenu() {
+        if (powerMenu != null) {
+            powerMenu.dismiss();
+            powerMenu = null;
+        }
     }
 
     public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
@@ -363,6 +382,28 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void bindViews() {
+        if (!isAdded() || getActivity() == null) return;
+
+        MusicTag tag = tagsActivity.buildDisplayTag();
+        if (tag == null) return;
+
+        // Update display first for better UX
+        doPreviewMusicInfo(tag);
+
+        // Bulk UI update to reduce layout passes
+        getActivity().runOnUiThread(() -> {
+            // Temporarily disable text watchers to prevent cascading updates
+            bypassChange = true;
+            try {
+                initEditorInputs(tag);
+                tagsActivity.updateTitlePanel();
+            } finally {
+                bypassChange = false;
+            }
+        });
+    }
+
+    private void bindViews2() {
         MusicTag tag = tagsActivity.buildDisplayTag();
         doPreviewMusicInfo(tag);
         initEditorInputs(tag);
@@ -370,7 +411,72 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private void doSaveMediaItem() {
-        startProgressBar();
+        tagsActivity.startProgressBar();
+
+        // Get a snapshot of items to avoid concurrent modification
+        final List<MusicTag> itemsToSave = new ArrayList<>(tagsActivity.getEditItems());
+        final int totalItems = itemsToSave.size();
+        final AtomicInteger completedCount = new AtomicInteger(0);
+
+        // Process tags in a thread pool more efficiently
+        CompletableFuture<Void> processingFuture = CompletableFuture.runAsync(() -> {
+            // Build pending tags in bulk first
+            for (MusicTag item : itemsToSave) {
+                buildPendingTags(item);
+            }
+        }).thenCompose(unused -> {
+            // Create repository once
+            FileRepository repos = FileRepository.newInstance(tagsActivity.getApplicationContext());
+
+            // Process all items in parallel but with controlled concurrency
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+            for (MusicTag tag : itemsToSave) {
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        boolean status = repos.setMusicTag(tag);
+                        int current = completedCount.incrementAndGet();
+                        tagsActivity.updateProgressBar(current + "/" + totalItems);
+
+                        // Post events one at a time
+                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(
+                                AudioTagEditResultEvent.ACTION_UPDATE,
+                                status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
+                                tag);
+                        EventBus.getDefault().postSticky(message);
+                    } catch (Exception e) {
+                        Log.e(TAG, "doSaveMediaItem", e);
+                    }
+                }, MusicMateExecutors.getExecutorService());
+                futures.add(future);
+            }
+
+            // Wait for all futures to complete
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        });
+
+        // Handle completion
+        processingFuture.whenComplete((result, exception) -> {
+            if (exception != null) {
+                Log.e(TAG, "Error saving tags", exception);
+            }
+
+            // Update UI
+            Activity activity = getActivity();
+            if (activity != null && isAdded()) {
+                activity.runOnUiThread(() -> {
+                    bypassChange = true;
+                    bindViews();
+                    bypassChange = false;
+                    tagsActivity.stopProgressBar();
+                });
+            } else {
+                tagsActivity.stopProgressBar();
+            }
+        });
+    }
+
+    private void doSaveMediaItem2() {
+        tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
                     for(MusicTag item:tagsActivity.getEditItems()) {
@@ -386,7 +492,7 @@ public class TagsEditorFragment extends Fragment {
                             try {
                                 int currentCount = count.incrementAndGet();
                                 boolean status = repos.setMusicTag(tag);
-                                updateProgressBar(currentCount + "/" + len);
+                                tagsActivity.updateProgressBar(currentCount + "/" + len);
                                 AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, tag);
                                 EventBus.getDefault().postSticky(message);
                             } catch (Exception e) {
@@ -403,11 +509,11 @@ public class TagsEditorFragment extends Fragment {
                         bindViews();
                         bypassChange = false;
                     });
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                 }
         ).exceptionally(
                 throwable -> {
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                     return null;
                 }
         );
@@ -459,7 +565,7 @@ public class TagsEditorFragment extends Fragment {
 
 
     private void doFormatTags() {
-        startProgressBar();
+        tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
                     for(MusicTag tag:tagsActivity.getEditItems()) {
@@ -485,7 +591,7 @@ public class TagsEditorFragment extends Fragment {
                 }
         ).thenAccept(
                 unused -> {
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                     // set updated item on main activity
                     tagsActivity.runOnUiThread(() -> {
                         bypassChange = true;
@@ -495,7 +601,7 @@ public class TagsEditorFragment extends Fragment {
                 }
         ).exceptionally(
                 throwable -> {
-                    stopProgressBar();
+                    tagsActivity.stopProgressBar();
                     return null;
                 }
         );
@@ -547,22 +653,75 @@ public class TagsEditorFragment extends Fragment {
 
     }
 
+    /*
     private void startProgressBar() {
-        tagsActivity.runOnUiThread(() -> {
-            try {
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(tagsActivity, R.style.AlertDialogTheme);
-                View v = getLayoutInflater().inflate(R.layout.progress_dialog_layout, null);
-                progressLabel = v.findViewById(R.id.process_label);
-                dialogBuilder.setView(v);
-               // dialogBuilder.setView(R.layout.progress_dialog_layout);
-                dialogBuilder.setCancelable(false);
-                progressDialog = dialogBuilder.create();
-                progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                progressDialog.show();
-            }catch (Exception ex) {
-                Log.e(TAG, "startProgressBar",ex);
-            }
-        });
+        if (!isAdded() || getActivity() == null) return;
+
+        try {
+            Activity activity = getActivity();
+            if (activity == null) return;
+
+            activity.runOnUiThread(() -> {
+                try {
+                    if (!isAdded() || getActivity() == null) return;
+
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
+                    View v = getLayoutInflater().inflate(R.layout.animated_progress_dialog_layout, null);
+                    progressLabel = v.findViewById(R.id.process_label);
+                    dialogBuilder.setView(v);
+                    dialogBuilder.setCancelable(false);
+                    progressDialog = dialogBuilder.create();
+
+                    if(progressDialog.getWindow() != null) {
+                        progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                        progressDialog.getWindow().setWindowAnimations(R.style.DialogAnimation);
+                    }
+
+                    progressDialog.show();
+
+                    // Add additional entrance animation
+                    View dialogContent = v.findViewById(R.id.lottie_animation);
+                    if (dialogContent != null) {
+                        dialogContent.setAlpha(0f);
+                        dialogContent.animate()
+                                .alpha(1f)
+                                .setDuration(400)
+                                .setInterpolator(new AccelerateDecelerateInterpolator())
+                                .start();
+                    }
+                } catch (Exception e) {
+                    Log.e("TagsEditorFragment", "Error in startProgressBar UI thread", e);
+                }
+            });
+        } catch (Exception e) {
+            Log.e("TagsEditorFragment", "Error in startProgressBar", e);
+        }
+    }
+
+
+    private void startProgressBar2() {
+        if (!isAdded() || getActivity() == null) return;
+
+        try {
+            Activity activity = getActivity();
+            if (activity == null) return;
+
+            activity.runOnUiThread(() -> {
+                try {
+                    if (!isAdded() || getActivity() == null) return;
+
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
+                    dialogBuilder.setView(R.layout.progress_dialog_layout);
+                    dialogBuilder.setCancelable(false);
+                    progressDialog = dialogBuilder.create();
+                    progressDialog.show();
+                } catch (Exception e) {
+                    Log.e("TagsTechnicalFragment", "Error in startProgressBar UI thread", e);
+                }
+            });
+        } catch (Exception e) {
+            Log.e("TagsTechnicalFragment", "Error in startProgressBar", e);
+        }
     }
 
     private void stopProgressBar() {
@@ -581,5 +740,5 @@ public class TagsEditorFragment extends Fragment {
                 progressLabel.setText(label);
             }
         });
-    }
+    } */
 }

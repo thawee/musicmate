@@ -73,9 +73,10 @@ public class CoverartFetcher implements Fetcher {
     @Nullable
     @Override
     public FetchResult fetch(@NonNull Continuation<? super FetchResult> continuation) {
-        File covertFile = FileRepository.getFolderCoverArt(musicTag.getPath());
+        File covertFile = FileRepository.getCoverArt(musicTag);
         String key = musicTag.isMusicManaged()?musicTag.getAlbumUniqueKey():musicTag.getUniqueKey();
         if(covertFile == null) {
+            // FIXME: should remove, cover already extracted during scan
             covertFile = FileRepository.newInstance(MusixMateApp.getInstance()).extractCoverArt(musicTag);
         }
         if(covertFile != null) {
@@ -89,31 +90,7 @@ public class CoverartFetcher implements Fetcher {
                     DataSource.DISK
             );
         }
-        /*
-        }else {
-            // return default image
-            File defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
-            try {
-                if(!defaultCoverartDir.exists()) {
-                    FileUtils.createParentDirs(defaultCoverartDir);
-                    InputStream in = ApplicationUtils.getAssetsAsStream(MusixMateApp.getInstance(), DEFAULT_COVERART_DLNA_RES);
-                    Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
-                }
 
-            } catch (IOException ignored) { }
-
-            covertFile = defaultCoverartDir;
-            //if(covertFile != null) {
-                Path imagePath = Path.get(covertFile);
-                ImageSource source = new FileImageSource(imagePath, FileSystem.SYSTEM, key, null, null);
-
-                return new SourceFetchResult(
-                        source,
-                        null, // mime type
-                        DataSource.DISK
-                );
-           // }
-        } */
         return null;
     }
 

@@ -108,6 +108,10 @@ public class MusicMateExecutors {
         }
     }
 
+    public static Executor getExecutorService() {
+        return getInstance().mMainThread;
+    }
+
     public void shutdown() {
         try {
             // Attempt graceful shutdown with timeout

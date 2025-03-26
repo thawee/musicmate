@@ -5,12 +5,12 @@ import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_RESAMPLED;
 import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_UPSCALED;
 import static apincer.android.mmate.utils.MusicTagUtils.getBPSAndSampleRate;
+import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRange;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeAsString;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeScore;
 import static apincer.android.mmate.utils.MusicTagUtils.getEncodingColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getResolutionColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getSourceRescId;
-import static apincer.android.mmate.utils.MusicTagUtils.getTrackDRScore;
 import static apincer.android.mmate.utils.MusicTagUtils.isAIFFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isALACFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isDSD;
@@ -103,8 +103,8 @@ public class IconProviders {
     public static File getTrackQualityIcon(Context context, MusicTag tag) {
         //TrackQuality_DR_DRS_UP_RE.png
         File dir = context.getExternalCacheDir();
-        String quality = String.format("Quality_%s_%s_%s.png", getTrackQuality(tag), getDynamicRangeAsString(tag), getTrackDRScore(tag));
-        String path = "/Icons/"+quality;
+        String quality = String.format("%s_%s_%s_%s_%s.png", getTrackQuality(tag), getDynamicRange(tag), getDynamicRangeScore(tag), getUpscaledScore(tag), getResampledScore(tag));
+        String path = "/Icons/Sq/"+quality;
 
         File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
@@ -124,6 +124,14 @@ public class IconProviders {
         return pathFile;
     }
 
+    private static int getResampledScore(MusicTag tag) {
+        return (int) Math.round(tag.getResampledScore() * 100);
+    }
+
+    private static int getUpscaledScore(MusicTag tag) {
+        return (int) Math.round(tag.getUpscaledScore() * 100);
+    }
+
     public static int getDRBackgroundColor(Context context, int drValue) {
         if (drValue < 7) return ContextCompat.getColor(context, R.color.dr_low_trans);
         else if (drValue < 13) return ContextCompat.getColor(context, R.color.dr_medium_trans);
@@ -138,22 +146,27 @@ public class IconProviders {
     public static File getResolutionIcon( Context context, MusicTag tag) {
         //Resolution_ENC_samplingrate|bitrate.png
         File dir = context.getExternalCacheDir();
-        String path = "/Icons/";
+        String path = "/Icons/Res/";
 
         if(tag.isDSD()) {
             // dsd use bitrate
             path = path+"DSD" + tag.getAudioBitRate();
         }else if(isMQA(tag)) {
-            path = path + "MQA" +tag.getAudioBitsDepth()+"_"+ tag.getAudioSampleRate()+"_"+ tag.getMqaSampleRate();
+            String mqa = "MQA";
             if(isMQAStudio(tag)) {
-                path = path + "_Studio";
+                mqa = "MQAS";
             }
-        }else if(isLossless(tag)){
-            path = path + "PCM"+tag.getAudioBitsDepth()+"_" + tag.getAudioSampleRate();
+            path = String.format("%s%s_%s_%s.png", path, mqa, tag.getAudioBitsDepth(), tag.getMqaSampleRate());
+
+          //  path = path + mqa +sep+tag.getAudioBitsDepth()+sep+ tag.getMqaSampleRate();
+        }else if(isHiRes(tag) || isLossless(tag)){
+           // path = path + "PCM"+sep+tag.getAudioBitsDepth()+sep + tag.getAudioSampleRate();
+            path = String.format("%s%s_%s_%s.png", path, "PCM", tag.getAudioBitsDepth(), tag.getAudioSampleRate());
         }else {
-            path = path + tag.getFileFormat()+tag.getAudioBitsDepth()+"_"+ tag.getAudioBitRate();
+            //path = path + tag.getFileFormat()+sep+tag.getAudioBitsDepth()+sep+ tag.getAudioBitRate();
+            path = String.format("%s%s_%s_%s.png", path, tag.getFileFormat(), tag.getAudioBitsDepth(), tag.getAudioSampleRate());
         }
-        File pathFile = new File(dir, path+".png");
+        File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
             // create file
             try {
@@ -351,7 +364,7 @@ public class IconProviders {
         return myBitmap;
     }
 
-    public static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
+    private static Bitmap createEncodingSamplingRateIcon(Context context, MusicTag tag) {
         int width = 400; //340; // 24x105, 18x78 , 16x70
         int height = 96; //4.2
         int padding = 8;
@@ -717,7 +730,7 @@ public class IconProviders {
         return myBitmap;
     }
 
-    public static Bitmap createQualityIcon(Context context, MusicTag tag) {
+    private static Bitmap createQualityIcon(Context context, MusicTag tag) {
         int width = 280; // 16x46, 24x70
         int height = 96;
         String qualityText = trimToEmpty(tag.getMediaQuality());
@@ -988,7 +1001,7 @@ public class IconProviders {
         labelPaint.setTypeface(font);
         labelPaint.setTextSize(12);
         labelPaint.setTextAlign(Paint.Align.CENTER);
-        myCanvas.drawText("U", upscaledX + squareWidth/2, squaresY + squareHeight - 4, labelPaint);
+        myCanvas.drawText("U", upscaledX + (float) squareWidth /2, squaresY + squareHeight - 4, labelPaint);
 
         // Draw resampled square
         int resampledX = upscaledX + squareWidth + squareSpacing;
@@ -1005,14 +1018,12 @@ public class IconProviders {
         myCanvas.drawRect(resampledRect, borderPaint);
 
         // Draw "R" label inside resampled square
-        myCanvas.drawText("R", resampledX + squareWidth/2, squaresY + squareHeight - 4, labelPaint);
+        myCanvas.drawText("R", resampledX + (float) squareWidth /2, squaresY + squareHeight - 4, labelPaint);
 
         // draw label "Audiophile", quality color
         font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
         int letterTextSize = 32; //82;
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
-            // Audiophile
-            //  letterTextSize = 32; //82;
             qualityColor = context.getColor(R.color.quality_audiophile);
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
             //  letterTextSize = 30; //82;
@@ -1048,7 +1059,7 @@ public class IconProviders {
         return myBitmap;
     }
 
-    public static Bitmap createQualityIconGood(Context context, MusicTag tag) {
+    private static Bitmap createQualityIconGood(Context context, MusicTag tag) {
         int width = 280; // 16x46, 24x70
         int height = 96;
         String qualityText = trimToEmpty(tag.getMediaQuality());
@@ -1226,17 +1237,6 @@ public class IconProviders {
         }
 
         // draw dr shape
-      /*  float barBottomY = bounds.height() - padding;
-        float barTopY = bounds.height()/2 + padding;
-        float barX1 = 68;
-        positionY = (float) bounds.height() /2;
-        path = new Path();
-        path.moveTo(barBottomY, barX1);
-        path.quadTo(bounds.width() / 4, bounds.height() / 2, bounds.width() / 2, bounds.height());
-        path.quadTo(3 * bounds.width() / 4, bounds.height() / 2, bounds.width() / 2, bounds.height() / 4);
-
-        // Draw the water drop
-        myCanvas.drawPath(path, paint); */
 
         // draw label Dynamic Range (dB), grey color
         if(!isEmpty(drLabel)) {
@@ -1265,8 +1265,6 @@ public class IconProviders {
         Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
         int letterTextSize = 32; //82;
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
-            // Audiophile
-          //  letterTextSize = 32; //82;
             qualityColor = context.getColor(R.color.quality_audiophile);
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
           //  letterTextSize = 30; //82;
@@ -1302,7 +1300,7 @@ public class IconProviders {
         return myBitmap;
     }
 
-    public static Bitmap createQualityIconOld(Context context, MusicTag tag) {
+    private static Bitmap createQualityIconOld(Context context, MusicTag tag) {
         int width = 280; // 16x46, 24x70
         int height = 96;
         String qualityText = trimToEmpty(tag.getMediaQuality());
@@ -1316,7 +1314,7 @@ public class IconProviders {
         int greyColor = context.getColor(R.color.grey200);
         String label1 =  isEmpty(qualityText)?"No Rated":qualityText;
         String drLabel = getDynamicRangeAsString(tag); //String.format("DR %s | %s", getTrackDRScore(tag), getDynamicRangeAsString(tag));
-        String drsLabel = getTrackDRScore(tag);
+        String drsLabel = getDynamicRangeScore(tag);
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -1481,13 +1479,13 @@ public class IconProviders {
 
         // draw dr shape
         float barBottomY = bounds.height() - padding;
-        float barTopY = bounds.height()/2 + padding;
+        float barTopY = (float) bounds.height() /2 + padding;
         float barX1 = 68;
         positionY = (float) bounds.height() /2;
         path = new Path();
         path.moveTo(barBottomY, barX1);
-        path.quadTo(bounds.width() / 4, bounds.height() / 2, bounds.width() / 2, bounds.height());
-        path.quadTo(3 * bounds.width() / 4, bounds.height() / 2, bounds.width() / 2, bounds.height() / 4);
+        path.quadTo((float) bounds.width() / 4, (float) bounds.height() / 2, (float) bounds.width() / 2, bounds.height());
+        path.quadTo((float) (3 * bounds.width()) / 4, (float) bounds.height() / 2, (float) bounds.width() / 2, (float) bounds.height() / 4);
 
         // Draw the water drop
         myCanvas.drawPath(path, paint);
@@ -1519,8 +1517,6 @@ public class IconProviders {
         Typeface font =  ResourcesCompat.getFont(context, R.font.k2d_extra_bold_italic);
         int letterTextSize = 32; //82;
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
-            // Audiophile
-            //  letterTextSize = 32; //82;
             qualityColor = context.getColor(R.color.quality_audiophile);
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
             //  letterTextSize = 30; //82;
@@ -1815,17 +1811,7 @@ public class IconProviders {
         int drScoreColor = context.getColor(R.color.white);
 
         int upscaleColor = context.getColor(R.color.quality_scale_not_test);
-       /* if(IND_UPSCALED_GOOD.equals(tag.getUpscaledInd())) {
-            upscaleColor = context.getColor(R.color.quality_scale_matched);
-        }else if(IND_UPSCALED_BAD.equals(tag.getUpscaledInd()) || IND_UPSCALED_INVALID.equals(tag.getUpscaledInd())) {
-            upscaleColor = context.getColor(R.color.quality_scale_not_matched);
-        }*/
         int resampledColor = context.getColor(R.color.quality_scale_not_test); //(tag.isUpsampled()?context.getColor(R.color.quality_bad):context.getColor(R.color.quality_good));
-        /*if(IND_RESAMPLED_GOOD.equals(tag.getResampledInd())) {
-            resampledColor = context.getColor(R.color.quality_scale_matched);
-        }else if(IND_RESAMPLED_BAD.equals(tag.getResampledInd()) || IND_RESAMPLED_INVALID.equals(tag.getResampledInd())) {
-            resampledColor = context.getColor(R.color.quality_scale_not_matched);
-        }*/
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
@@ -1951,9 +1937,8 @@ public class IconProviders {
         myCanvas.drawCircle(centerX,centerY, radius, bgPaint);
 
         // draw dynamic range score
-        // if(tag.getDynamicRangeScore()!=0.00) {
-        String drScore = getTrackDRScore(tag);
-        if(tag.getDynamicRangeScore()==-1 || tag.getDynamicRangeScore()==0.00) {
+        String drScore = getDynamicRangeScore(tag);
+        if(isEmpty(drScore)) {
             drScore = StringUtils.SYMBOL_MUSIC_NOTE;
         }
         Typeface font = ResourcesCompat.getFont(context, R.font.k2d_bold);
@@ -1994,7 +1979,7 @@ public class IconProviders {
             mLetterRight = textMathRect.width();
             myCanvas.drawText(dr,
                     (centerX - (mLetterRight / 2) + 4), // left
-                    separatorY + (separatorY / 2) + (mLetterTop / 2) + 2, //top
+                    separatorY + ((float) separatorY / 2) + (mLetterTop / 2) + 2, //top
                     mLetterPaint);
         }
 

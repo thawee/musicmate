@@ -164,7 +164,7 @@ public final class Constants {
     public static final String PUBLISHER_TIDAL = "Tidal";
     public static final String PUBLISHER_YOUTUBE = "Youtube";
 
-    public static final String COVER_ARTS = "/CoverArts/";
+    public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
     public static final String DEFAULT_COVERART_RES = "no_cover4.png";
     //public static final String DEFAULT_COVERART_DLNA_RES = "no_cover4.png";

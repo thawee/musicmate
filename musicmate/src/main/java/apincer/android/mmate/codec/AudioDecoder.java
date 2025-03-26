@@ -66,7 +66,7 @@ public class AudioDecoder {
             throw new IOException("File not found: " + filePath);
         }
 
-        DemuxerTrack audioTrack = null;
+        DemuxerTrack audioTrack;
         org.jcodec.containers.mp4.demuxer.MP4Demuxer demuxer = null;
 
         try {

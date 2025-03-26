@@ -12,21 +12,19 @@ package org.jaudiotagger.utils.tree;
  * by adding or removing child nodes, or by changing the contents
  * of a user object stored in the node.
  *
- * @see DefaultMutableTreeNode
- * @see javax.swing.JTree
- *
- * @version 1.13 03/23/10
  * @author Rob Davis
  * @author Scott Violet
+ * @version 1.13 03/23/10
+ * @see DefaultMutableTreeNode
+ * @see javax.swing.JTree
  */
 
-public interface MutableTreeNode<T> extends TreeNode<T>
-{
+public interface MutableTreeNode extends TreeNode {
     /**
      * Adds <code>child</code> to the receiver at <code>index</code>.
      * <code>child</code> will be messaged with <code>setParent</code>.
      */
-    void insert(MutableTreeNode<T> child, int index);
+    void insert(MutableTreeNode child, int index);
 
     /**
      * Removes the child at <code>index</code> from the receiver.
@@ -37,12 +35,12 @@ public interface MutableTreeNode<T> extends TreeNode<T>
      * Removes <code>node</code> from the receiver. <code>setParent</code>
      * will be messaged on <code>node</code>.
      */
-    void remove(MutableTreeNode<T> node);
+    void remove(MutableTreeNode node);
 
     /**
      * Resets the user object of the receiver to <code>object</code>.
      */
-    void setUserObject(T object);
+    void setUserObject(Object object);
 
     /**
      * Removes the receiver from its parent.
@@ -52,5 +50,5 @@ public interface MutableTreeNode<T> extends TreeNode<T>
     /**
      * Sets the parent of the receiver to <code>newParent</code>.
      */
-    void setParent(MutableTreeNode<T> newParent);
+    void setParent(MutableTreeNode newParent);
 }

@@ -290,8 +290,10 @@ public class TagContainerLayout extends ViewGroup {
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        try (TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.AndroidTagView,
-                defStyleAttr, 0)) {
+        TypedArray attributes = null;
+        try {
+            attributes = context.obtainStyledAttributes(attrs, R.styleable.AndroidTagView,
+                defStyleAttr, 0);
             mVerticalInterval = (int) attributes.getDimension(R.styleable.AndroidTagView_vertical_interval,
                     dp2px(context, DEFAULT_INTERVAL));
             mHorizontalInterval = (int) attributes.getDimension(R.styleable.AndroidTagView_horizontal_interval,
@@ -348,7 +350,7 @@ public class TagContainerLayout extends ViewGroup {
             mTagBackgroundResource = attributes.getResourceId(R.styleable.AndroidTagView_tag_background,
                     mTagBackgroundResource);
             attributes.recycle();
-        }
+        } catch (Exception ignored) {}
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mRectF = new RectF();

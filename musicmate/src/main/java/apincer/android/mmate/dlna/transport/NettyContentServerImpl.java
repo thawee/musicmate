@@ -1,6 +1,9 @@
 package apincer.android.mmate.dlna.transport;
 
+import static apincer.android.mmate.utils.MusicTagUtils.isAACFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isALACFile;
+import static apincer.android.mmate.utils.MusicTagUtils.isHiRes;
+import static apincer.android.mmate.utils.MusicTagUtils.isLossless;
 import static apincer.android.mmate.utils.MusicTagUtils.isLosslessFormat;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -30,7 +33,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,10 +95,6 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
     private final LruCache<String, ByteBuf> audioChunkCache;
     private final Map<String, Long> popularFiles = new ConcurrentHashMap<>();
 
-    // Rate limiting
-    private final Map<String, TokenBucket> clientRateLimiters = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, AtomicInteger> connectionCounter = new ConcurrentHashMap<>();
-
     // Pre-buffering and scheduling
     private final Timer scheduler = new HashedWheelTimer(100, TimeUnit.MILLISECONDS);
 
@@ -120,8 +118,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
 
         // Optimize thread allocation based on device capabilities
         int cpuCores = Runtime.getRuntime().availableProcessors();
-        this.bossGroup = new MultiThreadIoEventLoopGroup(Math.min(2, cpuCores/4), NioIoHandler.newFactory());
-        this.workerGroup = new MultiThreadIoEventLoopGroup(cpuCores * 2, NioIoHandler.newFactory());
+        this.bossGroup = new MultiThreadIoEventLoopGroup(2, NioIoHandler.newFactory());
+        this.workerGroup = new MultiThreadIoEventLoopGroup(Math.min(4,cpuCores), NioIoHandler.newFactory());
 
         // Initialize content cache with appropriate size based on available memory
         ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -156,7 +154,13 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         int memoryClass = am.getMemoryClass();
 
         // Scale buffer sizes based on available memory
-        if (memoryClass > 192) {  // High-end device
+        // Optimized buffers for high-RAM devices (12GB+)
+        if (memoryClass > 512) {  // Devices with 8GB+ RAM
+            AUDIO_CHUNK_SIZE = 65536;  // 64KB chunks
+            INITIAL_BUFFER_SIZE = 262144;  // 256KB initial
+            HIGH_WATERMARK = 1048576;  // 1MB high
+            LOW_WATERMARK = 524288;   // 512KB low
+        }else if (memoryClass > 192) {  // High-end device
             AUDIO_CHUNK_SIZE = 24576;  // 24KB chunks
             INITIAL_BUFFER_SIZE = 131072;  // 128KB initial
             HIGH_WATERMARK = 524288;  // 512KB high
@@ -181,20 +185,6 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 5      // Max concurrent connections
         ));
 
-        // Sony devices (PlayStation, etc)
-        CLIENT_PROFILES.put("sony", new ClientProfile(
-                AUDIO_CHUNK_SIZE * 2,
-                false, // Some Sony devices have issues with keep-alive
-                2      // Limit connections to avoid buffer issues
-        ));
-
-        // Samsung TVs/devices
-        CLIENT_PROFILES.put("samsung", new ClientProfile(
-                AUDIO_CHUNK_SIZE,
-                true,
-                3
-        ));
-
         // Apple devices (more likely to play ALAC)
         CLIENT_PROFILES.put("apple", new ClientProfile(
                 AUDIO_CHUNK_SIZE * 2,  // Larger chunks for lossless audio
@@ -202,14 +192,16 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 4
         ));
 
-        // RopieeeXL - Audiophile Raspberry Pi renderer
-        // Optimized for high-quality audio streaming
-        CLIENT_PROFILES.put("ropieee", new ClientProfile(
-                32768,       // 32KB chunks for better throughput with high-res audio
-                true,        // Keep-alive support for continuous playback
-                2,           // Limited connections for more focused bandwidth
-                true,        // Support gapless playback
-                true         // Support for high-res audio
+        // MPD profile - optimized for audiophile playback
+        CLIENT_PROFILES.put("mpd", new ClientProfile(
+                49152,       // 48KB chunks - larger chunks for high-resolution audio files
+                true,        // Keep-alive supports continuous playback
+                3,           // Limited connections for focused bandwidth
+                true,        // Full support for gapless playback (critical for audiophile use)
+                true,         // Support for high-res audio formats (24-bit/192kHz+)
+                false,
+                true,
+                false
         ));
 
         // mConnectHD controller profile
@@ -218,7 +210,9 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 true,                  // Keep-alive for continuous control
                 3,                     // Standard connection limit
                 true,                  // Support gapless
-                true                   // Support high-res
+                true,                   // Support high-res
+                true,
+                false
         ));
 
         // jPlay controller profile - audiophile player with specific requirements
@@ -227,25 +221,9 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 true,        // Keep-alive
                 2,           // Limited connections for focused bandwidth
                 true,        // Support gapless playback
-                true         // Support high-res
-        ));
-
-        // Sonos players - known for reliable streaming
-        CLIENT_PROFILES.put("sonos", new ClientProfile(
-                24576,       // 24KB chunks
-                true,        // Keep-alive
-                3,           // Standard connections
-                true,        // Gapless support
-                true         // High-res support
-        ));
-
-        // Bubble UPnP - popular controller app
-        CLIENT_PROFILES.put("bubble", new ClientProfile(
-                AUDIO_CHUNK_SIZE * 2,  // Larger chunks
-                true,                  // Keep-alive
-                4,                     // More connections for browsing
-                true,                  // Gapless support
-                true                   // High-res support
+                true,         // Support high-res
+                true,
+                false
         ));
     }
 
@@ -361,8 +339,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         audioChunkCache.evictAll();
         clientMetrics.clear();
         popularFiles.clear();
-        clientRateLimiters.clear();
-        connectionCounter.clear();
+       // clientRateLimiters.clear();
+      //  connectionCounter.clear();
 
         // Close the server channel
         if (serverChannel != null) {
@@ -455,68 +433,9 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         }, 100, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * Rate limiter implementation using token bucket algorithm
-     */
-    private static class TokenBucket {
-        private final long capacity;
-        private final double refillRate;
-        private double tokens;
-        private long lastRefillTime;
-
-        public TokenBucket(long capacity, double tokensPerSecond) {
-            this.capacity = capacity;
-            this.refillRate = tokensPerSecond;
-            this.tokens = capacity;
-            this.lastRefillTime = System.currentTimeMillis();
-        }
-
-        public synchronized boolean tryConsume(long tokensToConsume) {
-            refill();
-
-            if (tokens < tokensToConsume) {
-                return false;
-            }
-
-            tokens -= tokensToConsume;
-            return true;
-        }
-
-        private void refill() {
-            long now = System.currentTimeMillis();
-            double secondsSinceLastRefill = (now - lastRefillTime) / 1000.0;
-            double tokensToAdd = secondsSinceLastRefill * refillRate;
-
-            tokens = Math.min(capacity, tokens + tokensToAdd);
-            lastRefillTime = now;
-        }
-    }
-
     public class ContentServerInitializer extends ChannelInitializer<SocketChannel> {
         @Override
         protected void initChannel(SocketChannel ch) {
-            // Get client IP for tracking
-            String clientIp = ch.remoteAddress().getAddress().getHostAddress();
-
-            // Check connection limit for this client
-            AtomicInteger connectionCount = connectionCounter.computeIfAbsent(clientIp,
-                    k -> new AtomicInteger(0));
-
-            int count = connectionCount.incrementAndGet();
-
-            // If client has too many connections, reject
-            if (count > 10) { // Hard limit for any client
-                Log.w(TAG, "Too many connections from " + clientIp + " (" + count + "), rejecting");
-                ch.close();
-                return;
-            }
-
-            // Register connection close callback to decrement counter
-            ch.closeFuture().addListener((ChannelFutureListener) future ->
-                    connectionCounter.computeIfPresent(clientIp, (k, v) -> {
-                        v.decrementAndGet();
-                        return v;
-                    }));
 
             ChannelPipeline pipeline = ch.pipeline();
             pipeline.addLast(new HttpServerCodec());
@@ -531,23 +450,41 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
      * Client profile for device-specific optimizations
      */
     static class ClientProfile {
+        final boolean supportsBitPerfectStreaming;
         int chunkSize;
         final boolean keepAlive;
         final int maxConnections;
         final boolean supportsGapless;
         final boolean supportsHighRes;
+        final boolean supportsDirectStreaming;
+        final boolean supportsLosslessStreaming;
 
         ClientProfile(int chunkSize, boolean keepAlive, int maxConnections) {
-            this(chunkSize, keepAlive, maxConnections, false, false);
+            this(chunkSize, keepAlive, maxConnections, false, false,false,false);
         }
 
         ClientProfile(int chunkSize, boolean keepAlive, int maxConnections,
-                      boolean supportsGapless, boolean supportsHighRes) {
+                      boolean supportsGapless, boolean supportsHighRes, boolean supportsDirectStreaming, boolean supportsLosslessStreaming) {
             this.chunkSize = chunkSize;
             this.keepAlive = keepAlive;
             this.maxConnections = maxConnections;
             this.supportsGapless = supportsGapless;
             this.supportsHighRes = supportsHighRes;
+            this.supportsDirectStreaming = supportsDirectStreaming;
+            this.supportsLosslessStreaming = supportsLosslessStreaming;
+            this.supportsBitPerfectStreaming = false;
+        }
+
+        ClientProfile(int chunkSize, boolean keepAlive, int maxConnections,
+                      boolean supportsGapless, boolean supportsHighRes, boolean supportsDirectStreaming, boolean supportsLosslessStreaming, boolean supportsBitPerfectStreaming) {
+            this.chunkSize = chunkSize;
+            this.keepAlive = keepAlive;
+            this.maxConnections = maxConnections;
+            this.supportsGapless = supportsGapless;
+            this.supportsHighRes = supportsHighRes;
+            this.supportsDirectStreaming = supportsDirectStreaming;
+            this.supportsLosslessStreaming = supportsLosslessStreaming;
+            this.supportsBitPerfectStreaming = supportsBitPerfectStreaming;
         }
     }
 
@@ -607,9 +544,13 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             }
 
             // Check for specific controller/renderer identification in User-Agent
-            if (userAgent.contains("ropieee") || userAgent.contains("ropieexl")) {
-                Log.i(TAG, "RopieeeXL renderer detected from " + clientIp);
-                return CLIENT_PROFILES.getOrDefault("ropieee", CLIENT_PROFILES.get("default"));
+            // Check for MPD with more detailed detection
+            if (userAgent.contains("music player daemon") ||
+                    userAgent.contains("mpd") ||
+                    userAgent.contains("mpdclient")) {
+                // Use RopieeeXL use MPD client
+                Log.i(TAG, "Music Player Daemon detected from " + clientIp + ": " + userAgent);
+                return CLIENT_PROFILES.getOrDefault("mpd", CLIENT_PROFILES.get("default"));
             } else if (userAgent.contains("mconnect") || userAgent.contains("mconnecthd")) {
                 Log.i(TAG, "mConnectHD controller detected from " + clientIp);
                 return CLIENT_PROFILES.getOrDefault("mconnect", CLIENT_PROFILES.get("default"));
@@ -646,7 +587,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                             true,
                             5,
                             false,
-                            false
+                            false, false, false
                     );
 
                     // If client has had rebuffer events, reduce chunk size
@@ -690,17 +631,6 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             if (!request.method().equals(HttpMethod.GET) && !request.method().equals(HttpMethod.HEAD)) {
                 errorCounter.incrementAndGet();
                 sendError(ctx, METHOD_NOT_ALLOWED);
-                return;
-            }
-
-            // Apply rate limiting for the client
-            TokenBucket rateLimiter = clientRateLimiters.computeIfAbsent(clientIp,
-                    k -> new TokenBucket(1024 * 1024, 512 * 1024)); // 1MB/s with 512KB/s refill
-
-            if (!rateLimiter.tryConsume(1024)) { // Take minimal token to check rate
-                errorCounter.incrementAndGet();
-                Log.w(TAG, "Rate limit exceeded for client: " + clientIp);
-                sendError(ctx, TOO_MANY_REQUESTS);
                 return;
             }
 
@@ -1022,15 +952,12 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 String filePath = tag.getPath().toLowerCase();
 
                 // Set more specific MIME types for certain formats if needed
-                if (filePath.endsWith(".m4a")) {
-                    // Differentiate between AAC and ALAC
-                    if (isALACFile(tag)) {
-                        // ALAC uses audio/x-alac or audio/apple-lossless
-                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "audio/apple-lossless");
-                    } else {
-                        // AAC in M4A container
-                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "audio/aac");
-                    }
+                if (isALACFile(tag)) {
+                    // ALAC uses audio/x-alac or audio/apple-lossless
+                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, "audio/apple-lossless");
+                } else if(isAACFile(tag)) {
+                    // AAC in M4A container
+                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, "audio/mp4");
                 } else if (filePath.endsWith(".aiff") || filePath.endsWith(".aif")) {
                     // Ensure AIFF has the correct MIME type
                     response.headers().set(HttpHeaderNames.CONTENT_TYPE, "audio/aiff");
@@ -1055,13 +982,35 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                     response.headers().set("X-Audio-Codec", tag.getAudioEncoding());
                 }
 
-                // Add sample rate and bit depth info for high-res audio clients
-                if (profile.supportsHighRes) {
-                    if (tag.getAudioSampleRate() > 0) {
-                        response.headers().set("X-Audio-Sample-Rate", String.valueOf(tag.getAudioSampleRate()));
+                if(isLossless(tag) || isHiRes(tag)) {
+                    // Add sample rate and bit depth info for high-res audio clients
+                    if (profile.supportsHighRes) {
+                        if (tag.getAudioSampleRate() > 0) {
+                            response.headers().set("X-Audio-Sample-Rate", String.valueOf(tag.getAudioSampleRate()));
+                        }
+                        if (tag.getAudioBitsDepth() > 0) {
+                            response.headers().set("X-Audio-Bit-Depth", String.valueOf(tag.getAudioBitsDepth()));
+                        }
                     }
-                    if (tag.getAudioBitsDepth() > 0) {
-                        response.headers().set("X-Audio-Bit-Depth", String.valueOf(tag.getAudioBitsDepth()));
+
+                    // Special header for mConnectHD and jPlay
+                    if (profile.supportsDirectStreaming) {
+                        // if (profile == CLIENT_PROFILES.get("mconnect") || profile == CLIENT_PROFILES.get("jplay")) {
+                        // These controllers benefit from direct streaming hint
+                        response.headers().set("X-Direct-Streaming", "true");
+                    }
+
+                    // For RopieeeXL and audiophile renderers, add lossless streaming hint
+                    if (profile.supportsLosslessStreaming) {
+                        response.headers().set("X-Lossless-Streaming", "true");
+                    }
+
+                    if (profile.supportsBitPerfectStreaming) {
+                        // Signal bit-perfect streaming capabilities
+                        response.headers().set("X-Bit-Perfect-Streaming", "true");
+
+                        // Indicate original unmodified format for bit-perfect playback
+                        response.headers().set("X-Original-Format", "true");
                     }
                 }
 
@@ -1073,17 +1022,6 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 // DLNA headers with proper capitalization
                 response.headers().set("TransferMode.DLNA.ORG", "Streaming");
                 response.headers().set("ContentFeatures.DLNA.ORG", getDLNAContentFeatures(tag));
-
-                // Special header for mConnectHD and jPlay
-                if (profile == CLIENT_PROFILES.get("mconnect") || profile == CLIENT_PROFILES.get("jplay")) {
-                    // These controllers benefit from direct streaming hint
-                    response.headers().set("X-Direct-Streaming", "true");
-                }
-
-                // For RopieeeXL and audiophile renderers, add lossless streaming hint
-                if (profile == CLIENT_PROFILES.get("ropieee") && isLosslessFormat(tag)) {
-                    response.headers().set("X-Lossless-Streaming", "true");
-                }
 
                 // If client supports gapless playback
                 if (profile.supportsGapless) {
@@ -1104,7 +1042,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 return "DLNA.ORG_PN=FLAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0";
             } else if (mimeType.contains("wav")) {
                 return "DLNA.ORG_PN=WAV;DLNA.ORG_OP=01;DLNA.ORG_CI=0";
-            } else if (mimeType.contains("aac") || tag.getPath().endsWith(".aac")) {
+            } else if (isAACFile(tag)) {
                 return "DLNA.ORG_PN=AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0";
             } else if (mimeType.contains("ogg")) {
                 return "DLNA.ORG_PN=OGG;DLNA.ORG_OP=01;DLNA.ORG_CI=0";

@@ -21,7 +21,7 @@ import apincer.android.mmate.repository.MusicTag;
 
 public class DeleteAudioFileWorker extends Worker {
     private static final String TAG = DeleteAudioFileWorker.class.getName();
-    FileRepository repos;
+    final FileRepository repos;
 
     private DeleteAudioFileWorker(
             @NonNull Context context,
@@ -34,7 +34,21 @@ public class DeleteAudioFileWorker extends Worker {
     @Override
     public Result doWork() {
        List<MusicTag> list = list();
-       list.parallelStream().forEach(this::delete);
+       //list.parallelStream().forEach(this::delete);
+
+        list.forEach(tag -> {
+            try {
+                boolean status = delete(tag);
+
+                AudioTagEditResultEvent message = new AudioTagEditResultEvent(
+                        AudioTagEditResultEvent.ACTION_DELETE,
+                        status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
+                        tag);
+                EventBus.getDefault().postSticky(message);
+            } catch (Exception e) {
+                Log.e(TAG, "delete", e);
+            }
+        });
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -51,14 +65,19 @@ public class DeleteAudioFileWorker extends Worker {
         return MusixMateApp.getPendingItems("Delete");
     }
 
-    private void delete(MusicTag tag) {
-        try {
+    private boolean delete(MusicTag tag) {
+       /* try {
             boolean status = repos.deleteMediaItem(tag);
 
             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
             EventBus.getDefault().postSticky(message);
         } catch (Exception e) {
             Log.e(TAG, "delete",e);
+        }
+        return false; */
+        // Synchronize on repos if needed
+        synchronized(repos) {
+            return repos.deleteMediaItem(tag);
         }
     }
 }

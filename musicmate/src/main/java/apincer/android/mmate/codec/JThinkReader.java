@@ -46,11 +46,10 @@ import apincer.android.mmate.utils.StringUtils;
 public class JThinkReader extends TagReader{
     private static final String TAG = "JThinkReader";
     private final Context context;
+    private static boolean tagOptionsInitialized = false;
 
-    public JThinkReader(Context context) {
-        LogHelper.initial();
-        this.context = context;
-    }
+    // Reusable map for temporary tag storage
+    private final Map<String, String> tempTagsMap = new HashMap<>();
 
     private static final String KEY_TAG_WAVE_GROUP = "IKEY";
     private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
@@ -59,70 +58,76 @@ public class JThinkReader extends TagReader{
 
     public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
-    @Override
-    protected List<MusicTag> read(String mediaPath) {
-        Log.i(TAG, "read: path - "+mediaPath);
-        AudioFile read = getAudioFile(mediaPath);
-        if(read != null) {
-            MusicTag tag = new MusicTag();
-            tag.setPath(mediaPath);
-            readFileInfo(context, tag);
-            readHeader(read, tag);
-            readTags(read, tag);
-            tag.setAudioStartTime(0);
-            return Collections.singletonList(tag);
-        }else {
-            MusicTag tag = new MusicTag();
-            tag.setPath(mediaPath);
-            readFileInfo(context, tag);
-            tag.setAudioStartTime(0);
-            return Collections.singletonList(tag);
+    public JThinkReader(Context context) {
+        LogHelper.initial();
+        this.context = context;
+
+        // Initialize tag options once
+        synchronized(JThinkReader.class) {
+            if (!tagOptionsInitialized) {
+                setupTagOptions();
+                tagOptionsInitialized = true;
+            }
         }
     }
 
     @Override
-    protected List<MusicTag> readFully(String mediaPath) {
-        Log.i(TAG, "readFully: path - "+mediaPath);
-        AudioFile read = getAudioFile(mediaPath);
-        if(read != null) {
-            MusicTag tag = new MusicTag();
-            tag.setPath(mediaPath);
-            readFileInfo(context, tag);
-            readHeader(read, tag);
-            readTags(read, tag);
-            process(tag);
-            tag.setAudioStartTime(0);
-            return Collections.singletonList(tag);
-        }else {
-            MusicTag tag = new MusicTag();
-            tag.setPath(mediaPath);
-            readFileInfo(context, tag);
-            tag.setAudioStartTime(0);
-            return Collections.singletonList(tag);
+    protected List<MusicTag> read(String mediaPath) {
+        Log.i(TAG, "read: path - " + mediaPath);
+        MusicTag tag = new MusicTag();
+        tag.setPath(mediaPath);
+        readFileInfo(context, tag);
+        tag.setAudioStartTime(0);
+
+        AudioFile audioFile = getAudioFile(mediaPath);
+        if(audioFile != null) {
+            readHeader(audioFile, tag);
+            readTags(audioFile, tag);
         }
+        return Collections.singletonList(tag);
+    }
+
+    @Override
+    protected List<MusicTag> readFully(String mediaPath) {
+        Log.i(TAG, "readFully: path - " + mediaPath);
+        MusicTag tag = new MusicTag();
+        tag.setPath(mediaPath);
+        readFileInfo(context, tag);
+        tag.setAudioStartTime(0);
+
+        AudioFile audioFile = getAudioFile(mediaPath);
+        if (audioFile != null) {
+            readHeader(audioFile, tag);
+            readTags(audioFile, tag);
+            process(tag);
+        }
+
+        return Collections.singletonList(tag);
     }
 
     private void readHeader(AudioFile read, MusicTag metadata) {
         try {
             AudioHeader header = read.getAudioHeader();
-            long sampleRate = header.getSampleRateAsNumber(); //44100/48000 Hz
-            int bitPerSample = header.getBitsPerSample(); //16/24/32
-            long bitRate = header.getBitRateAsNumber() * 1000; //128/256/320
-            //metadata.setLossless(header.isLossless());
-            metadata.setAudioEncoding(detectAudioEncoding(read,header.isLossless()));
-            if (header instanceof MP3AudioHeader) {
-                metadata.setAudioDuration(header.getPreciseTrackLength());
-            } else if (header instanceof Mp4AudioHeader) {
-                metadata.setAudioDuration(header.getPreciseTrackLength());
-            } else {
-                metadata.setAudioDuration(header.getTrackLength());
-            }
-            metadata.setAudioBitRate(bitRate);
-            metadata.setAudioBitsDepth(bitPerSample);
-            metadata.setAudioSampleRate(sampleRate);
-            metadata.setAudioChannels(header.getChannels());
-            if (header.getChannels().toLowerCase().contains("stereo")) {
-                metadata.setAudioChannels("2");
+            if(header != null) {
+                // Batch set properties to reduce method calls
+                metadata.setAudioEncoding(detectAudioEncoding(read, header.isLossless()));
+                metadata.setAudioSampleRate(header.getSampleRateAsNumber());
+                metadata.setAudioBitsDepth(header.getBitsPerSample());
+                metadata.setAudioBitRate(header.getBitRateAsNumber() * 1000);
+
+                // Set duration based on header type
+                if (header instanceof MP3AudioHeader || header instanceof Mp4AudioHeader) {
+                    metadata.setAudioDuration(header.getPreciseTrackLength());
+                } else {
+                    metadata.setAudioDuration(header.getTrackLength());
+                }
+
+                // Set channel info
+                String channels = header.getChannels();
+                metadata.setAudioChannels(channels);
+                if (channels != null && channels.toLowerCase().contains("stereo")) {
+                    metadata.setAudioChannels("2");
+                }
             }
         }catch (Exception ex) {
             Log.e(TAG, "readHeader: ",ex);
@@ -135,7 +140,6 @@ public class JThinkReader extends TagReader{
         }
 
         try {
-            setupTagOptions();
             return AudioFileIO.read(new File(path));
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException |
                  InvalidAudioFrameException |
@@ -146,16 +150,201 @@ public class JThinkReader extends TagReader{
     }
 
     private static void setupTagOptions() {
-        TagOptionSingleton.getInstance().setAndroid(true);
-        TagOptionSingleton.getInstance().setId3v23DefaultTextEncoding(TextEncoding.ISO_8859_1); // default = ISO_8859_1
-        TagOptionSingleton.getInstance().setId3v24DefaultTextEncoding(TextEncoding.UTF_8); // default = ISO_8859_1
-        TagOptionSingleton.getInstance().setId3v24UnicodeTextEncoding(TextEncoding.UTF_16); // default UTF-16
-
+        TagOptionSingleton instance = TagOptionSingleton.getInstance();
+        instance.setAndroid(true);
+        instance.setId3v23DefaultTextEncoding(TextEncoding.ISO_8859_1);
+        instance.setId3v24DefaultTextEncoding(TextEncoding.UTF_8);
+        instance.setId3v24UnicodeTextEncoding(TextEncoding.UTF_16);
     }
 
     private MusicTag readTags(AudioFile audioFile, MusicTag metadata) {
+        Tag tag = audioFile.getTag();
+        if (tag != null && !tag.isEmpty()) {
+            try {
+                // Get title or use filename
+                String title = getId3TagValue(tag, FieldKey.TITLE);
+                metadata.setTitle(!isEmpty(title) ? title : audioFile.getFile().getName());
+
+                // Read common metadata fields in batch
+                metadata.setAlbum(getId3TagValue(tag, FieldKey.ALBUM));
+                metadata.setArtist(getId3TagValue(tag, FieldKey.ARTIST));
+                metadata.setAlbumArtist(getId3TagValue(tag, FieldKey.ALBUM_ARTIST));
+                metadata.setGenre(getId3TagValue(tag, FieldKey.GENRE));
+                metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
+                metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
+                metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
+                metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
+
+                // Check for artwork
+                if (tag.getFirstArtwork() != null) {
+                    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
+                }
+
+                // Process format-specific tags
+                processFormatSpecificTags(tag, metadata);
+            } catch (Exception e) {
+                Log.e(TAG, "Error reading tags: ", e);
+            }
+        }
+        return metadata;
+    }
+
+    private void processFormatSpecificTags(Tag tag, MusicTag metadata) {
+        // Clear reusable map for this operation
+        tempTagsMap.clear();
+
+        // Parse custom tag fields into map
+        parseCustomTagFields(tag, tempTagsMap);
+
+        // Extract values from map that we're interested in
+        metadata.setPublisher(tempTagsMap.get(KEY_TAG_PUBLISHER));
+        metadata.setMediaQuality(tempTagsMap.get(KEY_TAG_QUALITY));
+        metadata.setMediaType(tempTagsMap.get(KEY_TAG_MEDIA));
+
+        // Handle format-specific tags
+        if (MusicTagUtils.isWavFile(metadata)) {
+            processWaveSpecificTags(metadata, tempTagsMap, tag);
+        } else if (MusicTagUtils.isMPegFile(metadata)) {
+            processMpegSpecificTags(metadata, tempTagsMap);
+        } else {
+            // Standard files support these tags directly
+            metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
+            metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
+            metadata.setMediaQuality(getId3TagValue(tag, FieldKey.QUALITY));
+            metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
+            metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
+        }
+    }
+
+    private void processWaveSpecificTags(MusicTag metadata, Map<String, String> tags, Tag tag) {
+        // Get wave-specific tags
+        metadata.setGrouping(tags.get(KEY_TAG_WAVE_GROUP));
+        metadata.setAlbumArtist(tags.get(KEY_TAG_WAVE_ALBUM_ARTIST));
+        metadata.setTrack(tags.get(KEY_TAG_WAVE_TRACK));
+        metadata.setMediaQuality(tags.get(KEY_TAG_WAVE_QUALITY));
+
+        // Process special comment format for WAV
+        String comment = tag.getFirst(FieldKey.COMMENT);
+        if (!isEmpty(comment)) {
+            processWaveComment(metadata, comment);
+        }
+    }
+
+    private void processMpegSpecificTags(MusicTag metadata, Map<String, String> tags) {
+        String comment = tags.get(KEY_TAG_MP3_COMMENT);
+        if (!isEmpty(comment)) {
+            processWaveComment(metadata, comment);
+        }
+    }
+
+    private void processWaveComment(MusicTag metadata, String comment) {
+        int start = comment.indexOf("<##>");
+        int end = comment.indexOf("</##>");
+
+        if (start >= 0 && end > start) {
+            // Found metadata comment
+            String mdata = comment.substring(start + 4, end);
+
+            // Extract user comment portion (if any)
+            if (comment.length() > (end + 5)) {
+                comment = comment.substring(end + 5);
+            } else {
+                comment = "";
+            }
+
+            // Parse metadata fields
+            String[] text = mdata.split("#", -1);
+
+            // Batch set values to avoid multiple conditionals
+            int fieldCount = text.length;
+            if (fieldCount > 0) metadata.setDisc(extractField(text, 0));
+            if (fieldCount > 1) metadata.setGrouping(extractField(text, 1));
+            if (fieldCount > 2) metadata.setMediaQuality(extractField(text, 2));
+            // Skip field 3 (rating) as it's commented out
+            if (fieldCount > 4) metadata.setAlbumArtist(extractField(text, 4));
+            if (fieldCount > 5) metadata.setComposer(extractField(text, 5));
+            if (fieldCount > 6) metadata.setDynamicRangeScore(toDouble(extractField(text, 6)));
+            if (fieldCount > 7) metadata.setDynamicRange(toDouble(extractField(text, 7)));
+        }
+
+        metadata.setComment(comment);
+    }
+
+    private String getId3TagValue(Tag id3Tag, FieldKey key) {
+        if (id3Tag != null && id3Tag.hasField(key)) {
+            return StringUtils.trimToEmpty(id3Tag.getFirst(key));
+        }
+        return "";
+    }
+
+    private void parseCustomTagFields(Tag tag, Map<String, String> resultMap) {
+        try {
+            if (tag instanceof VorbisCommentTag) {
+                parseVorbisTags((VorbisCommentTag) tag, resultMap);
+            } else if (tag instanceof FlacTag) {
+                parseVorbisTags(((FlacTag) tag).getVorbisCommentTag(), resultMap);
+            } else if (tag instanceof WavTag) {
+                parseWaveTags(((WavTag) tag).getInfoTag(), resultMap);
+            } else {
+                parseId3Tags(tag, resultMap);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "parseCustomTagFields error: ", e);
+        }
+    }
+
+    private void parseWaveTags(WavInfoTag infoTag, Map<String, String> resultMap) {
+        if (infoTag == null) return;
+
+        List<TagTextField> fields = infoTag.getUnrecognisedFields();
+        for (TagTextField field : fields) {
+            resultMap.put(field.getId(), trimToEmpty(field.getContent()));
+        }
+    }
+
+    private static void parseId3Tags(Tag tag, Map<String, String> resultMap) {
+        String id = null;
+
+        if (tag.hasField("TXXX")) {
+            id = "TXXX";
+        } else if (tag.hasField("RGAD")) {
+            id = "RGAD";
+        } else if (tag.hasField("RVA2")) {
+            id = "RVA2";
+        }
+
+        if (id == null) {
+            return;
+        }
+
+        for (TagField field : tag.getFields(id)) {
+            String fieldStr = field.toString();
+            if (isEmpty(fieldStr)) continue;
+
+            String[] data = fieldStr.split(";");
+            if (data.length < 2) continue;
+
+            String key = data[0].substring(13, data[0].length() - 1).toUpperCase();
+            resultMap.put(key, extractId3Val(data[1]));
+        }
+    }
+
+    private static void parseVorbisTags(VorbisCommentTag tag, Map<String, String> resultMap) {
+        if (tag == null) return;
+
+        List<TagField> list = tag.getAll();
+        for (TagField field : list) {
+            String id = field.getId();
+            if (!isEmpty(id)) {
+                resultMap.put(id, StringUtils.trimToEmpty(tag.getFirst(id)));
+            }
+        }
+    }
+
+    private MusicTag readTags2(AudioFile audioFile, MusicTag metadata) {
             Tag tag = audioFile.getTag();
             if (tag != null && !tag.isEmpty()) {
+
                 String title = getId3TagValue(tag, FieldKey.TITLE);
                 if (!StringUtils.isEmpty(title)) {
                     metadata.setTitle(title);
@@ -177,24 +366,6 @@ public class JThinkReader extends TagReader{
 
                 // read replay gain fields
                 Map<String, String> tags = parseCustomTagFields(tag);
-                /*if (tags.containsKey(KEY_TAG_TRACK_GAIN)) {
-                    metadata.setTrackRG(extractDouble(tags.get(KEY_TAG_TRACK_GAIN), " dB"));
-                }
-                if (tags.containsKey(KEY_TAG_TRACK_PEAK)) {
-                    metadata.setTrackTP(toDouble(tags.get(KEY_TAG_TRACK_PEAK)));
-                }
-                if (tags.containsKey(KEY_MM_TRACK_DR_SCORE)) {
-                    metadata.setDynamicRangeScore(toDouble(tags.get(KEY_MM_TRACK_DR_SCORE)));
-                }
-                if (tags.containsKey(KEY_MM_TRACK_DR)) {
-                    metadata.setDynamicRange(toDouble(tags.get(KEY_MM_TRACK_DR)));
-                }
-                if (tags.containsKey(KEY_MM_TRACK_UPSCALED)) {
-                    metadata.setUpscaledScore(toDouble(tags.get(KEY_MM_TRACK_UPSCALED)));
-                }
-                if (tags.containsKey(KEY_MM_TRACK_RESAMPLED)) {
-                    metadata.setResampledScore(toDouble(tags.get(KEY_MM_TRACK_RESAMPLED)));
-                } */
 
                 if (tags.containsKey(KEY_TAG_PUBLISHER)) {
                     metadata.setPublisher(tags.get(KEY_TAG_PUBLISHER));
@@ -280,13 +451,6 @@ public class JThinkReader extends TagReader{
             return metadata;
     }
 
-    private String getId3TagValue(Tag id3Tag, FieldKey key) {
-        if(id3Tag!=null && id3Tag.hasField(key)) {
-            return StringUtils.trimToEmpty(id3Tag.getFirst(key));
-        }
-        return "";
-    }
-
     private Map<String, String> parseCustomTagFields(Tag tag) {
         Map<String, String> tags = null;
         try {
@@ -332,9 +496,6 @@ public class JThinkReader extends TagReader{
 
             data[0] = data[0].substring(13, data[0].length() - 1).toUpperCase();
 
-           // if (data[0].equals("TRACK")) {data[0] = KEY_TAG_TRACK_GAIN;}
-            // else if (data[0].equals("ALBUM")) {data[0] = REPLAYGAIN_ALBUM_GAIN;}
-
             tags.put(data[0], extractId3Val(data[1]));
         }
 
@@ -359,30 +520,6 @@ public class JThinkReader extends TagReader{
             tags.put(field.getId(), StringUtils.trimToEmpty(tag.getFirst(field.getId())));
         }
 
-        /*
-        if (tag.hasField(KEY_MM_TRACK_DR)) {
-            tags.put(KEY_MM_TRACK_DR, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DR)));
-        }
-        if (tag.hasField(KEY_MM_TRACK_DR_SCORE)) {
-            tags.put(KEY_MM_TRACK_DR_SCORE, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_DR_SCORE)));
-        }
-        if (tag.hasField(KEY_MM_TRACK_UPSCALED)) {
-            tags.put(KEY_MM_TRACK_UPSCALED, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_UPSCALED)));
-        }
-        if (tag.hasField(KEY_MM_TRACK_RESAMPLED)) {
-            tags.put(KEY_MM_TRACK_RESAMPLED, StringUtils.trimToEmpty(tag.getFirst(KEY_MM_TRACK_RESAMPLED)));
-        } */
-
         return tags;
-    }
-
-    private double extractDouble(String val, String suffix) {
-        // extract number before match suffix
-        if(val == null) return 0L;
-        if(val.endsWith(suffix)) {
-            String txt = trimToEmpty(val.replace(suffix, ""));
-            return toDouble(txt);
-        }
-        return 0L;
     }
 }

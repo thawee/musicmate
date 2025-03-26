@@ -126,6 +126,7 @@
         <item>Bossa Nova</item>
         <item>Classical</item>
         <item>Instrument</item>
+        <item>Instrument, Vocal</item>
         <item>Concertos</item>
         <item>Jazz</item>
         <item>Jazz, Contemporary</item>
@@ -148,14 +149,18 @@
         <item>Rock, Soft Rock</item>
         <item>Reggae &amp; Ska</item>
         <item>Latin</item>
-        <item>Hip Hop</item>
+        <item>Hip-Hop</item>
         <item>EDM</item>
         <item>Rap</item>
         <item>Indie</item>
+
         <item>Thai Instrument</item>
+        <item>Thai Instrument, Vocal</item>
         <item>Thai Classical</item>
-        <item>Thai Pop</item>
+        <item>Thai Hip-Hop</item>
         <item>Thai Indie</item>
+        <item>Thai Pop</item>
+        <item>Thai Pop, Dance</item>
         <item>Thai Pop, Vocal</item>
         <item>Thai Rock</item>
         <item>Thai Folk</item>
@@ -163,6 +168,8 @@
         <item>Kantrum</item>
         <item>Luk Thung</item>
         <item>Mor Lum</item>
+
+        <item>Indonesia</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Classical</item>

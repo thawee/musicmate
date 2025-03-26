@@ -7,6 +7,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import android.content.Context;
 import android.util.Log;
+import android.util.LruCache;
 
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.model.message.StreamRequestMessage;
@@ -28,12 +29,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.FileRepository;
@@ -75,11 +78,26 @@ import io.netty.util.CharsetUtil;
 
 public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "NettyUPnpServer";
+    private static final String DEFAULT_COVERART_KEY = "DEFAULT_COVERART_KEY";
+    // Configuration constants - making hardcoded values configurable
+    private static final int CACHE_SIZE = 50;
+    private static final long CACHE_EXPIRY_MS = TimeUnit.MINUTES.toMillis(15);
+    private static final int SERVER_BACKLOG = 256;
+    private static final int SOCKET_TIMEOUT_MS = 15000;
+    private static final int WRITE_BUFFER_LOW = 8 * 1024;
+    private static final int WRITE_BUFFER_HIGH = 24 * 1024;
+    private static final int RECEIVE_BUFFER_SIZE = 1024;
+    private static final int SEND_BUFFER_SIZE = 2048;
+    private static final int MAX_HTTP_CONTENT_LENGTH = 5 * 1024 * 1024; // 5 MB
+
+    // Add a memory cache for album art to reduce database queries and disk I/O
+    private final LruCache<String, ContentHolder> albumArtCache = new LruCache<>(CACHE_SIZE); // Cache ~50 album arts
 
     EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory()); // Single boss thread is usually sufficient
     int processorCount = Runtime.getRuntime().availableProcessors();
-    EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(processorCount * 2, NioIoHandler.newFactory());
+    EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(processorCount, NioIoHandler.newFactory());
     private ChannelFuture channelFuture;
+    private boolean isInitialized = false;
 
     public NettyUPnpServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration)  {
         super(context, router, configuration);
@@ -87,13 +105,23 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
     @Override
     synchronized public void initServer(InetAddress bindAddress) throws InitializationException {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG, "Running Netty4 UPNP Server: " + bindAddress.getHostAddress() + ":" + getListenPort());
+        if (isInitialized) {
+            Log.w(TAG, "Server already initialized");
+            return;
+        }
 
-                    // Pooled buffers help reduce memory fragmentation and improve performance.
+        int processorCount = Runtime.getRuntime().availableProcessors();
+
+        try {
+            bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+
+            workerGroup = new MultiThreadIoEventLoopGroup(processorCount, NioIoHandler.newFactory());
+
+            Thread thread = new Thread(() -> {
+                try {
+                    Log.i(TAG, "Starting Netty4 UPNP Server: " + bindAddress.getHostAddress() + ":" + getListenPort());
+
+                    // Pooled buffers for better memory management
                     PooledByteBufAllocator allocator = new PooledByteBufAllocator(
                             true, // preferDirect
                             2, // nHeapArena
@@ -104,71 +132,130 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                             32, // normalCacheSize
                             true // useCacheForAllThreads
                     );
- 
+
                     ServerBootstrap b = new ServerBootstrap();
-                    // Add connection limiting to prevent resource exhaustion
-                    b.option(ChannelOption.SO_BACKLOG, 256)  //Set the size of the backlog of TCP connections.  The default and exact meaning of this parameter is JDK specific.
-                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));  // Flow control
+                    b.option(ChannelOption.SO_BACKLOG, SERVER_BACKLOG)
+                            .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
+                                    new WriteBufferWaterMark(WRITE_BUFFER_LOW, WRITE_BUFFER_HIGH));
+
                     b.group(bossGroup, workerGroup)
-                            .channel(NioServerSocketChannel.class)  // use nio
+                            .channel(NioServerSocketChannel.class)
                             .option(ChannelOption.SO_REUSEADDR, true)
-                            .option(ChannelOption.TCP_NODELAY, true) // true - great for low latency
+                            .option(ChannelOption.TCP_NODELAY, true)
                             .option(ChannelOption.SO_KEEPALIVE, true)
-
-                            // for minimized memory usage
-                            .childOption(ChannelOption.ALLOCATOR, allocator) //PooledByteBufAllocator.DEFAULT)
-                            .childOption(ChannelOption.SO_RCVBUF, 1024) // 1kB receive buffer
-                            .childOption(ChannelOption.SO_SNDBUF, 2048) // 2KB send buffer
-
-                            .option(ChannelOption.SO_TIMEOUT, 30000) // 30 sec
-                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000) // 30 sec
+                            .childOption(ChannelOption.ALLOCATOR, allocator)
+                            .childOption(ChannelOption.SO_RCVBUF, RECEIVE_BUFFER_SIZE)
+                            .childOption(ChannelOption.SO_SNDBUF, SEND_BUFFER_SIZE)
+                            .option(ChannelOption.SO_TIMEOUT, SOCKET_TIMEOUT_MS)
+                            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, SOCKET_TIMEOUT_MS)
                             .childHandler(new HttpServerInitializer(getProtocolFactory(), getConfiguration()));
-                    // Bind and start to accept incoming connections but don't block this thread
+
+                    // Bind and start to accept incoming connections
                     channelFuture = b.bind(getListenPort()).sync();
+                    isInitialized = true;
 
-                    // DON'T call this as it blocks forever until server is closed:
-                    // channelFuture.channel().closeFuture().sync();
+                    Log.i(TAG, "Netty4 UPNP Server started successfully");
 
-                    Log.v(TAG, "Netty4 UPNP Server started successfully");
+                    // Start a background thread to clean up expired cache entries
+                    startCacheCleanupTask();
                 } catch (Exception ex) {
                     Log.e(TAG, "Failed to initialize server: " + ex.getMessage(), ex);
                     stopServer(); // Clean up resources if startup fails
                     throw new RuntimeException("Could not initialize " + getClass().getSimpleName() + ": " + ex, ex);
                 }
+            });
+
+            thread.setName("UPNP-Server-Init");
+            thread.start();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing server groups", e);
+            cleanup(); // Ensure resources are released
+            throw new InitializationException("Failed to initialize server: " + e.getMessage(), e);
+        }
+    }
+
+    private void startCacheCleanupTask() {
+        Thread cleanupThread = new Thread(() -> {
+            try {
+                while (isInitialized) {
+                    try {
+                        purgeExpiredCacheEntries();
+                        Thread.sleep(TimeUnit.MINUTES.toMillis(15)); // Clean cache every 15 minutes
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error during cache cleanup", e);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Cache cleanup thread terminated with exception", e);
             }
         });
-        thread.setName("UPNP-Server-Init");
-        thread.start();
+        cleanupThread.setName("UPNP-Cache-Cleanup");
+        cleanupThread.setDaemon(true);
+        cleanupThread.start();
+    }
+
+    private void purgeExpiredCacheEntries() {
+        // LruCache doesn't support removeIf, so we need to collect keys to remove first
+        List<String> keysToRemove = new ArrayList<>();
+
+        // Iterate through all keys using LruCache's snapshot method
+        Map<String, ContentHolder> snapshot = albumArtCache.snapshot();
+        for (Map.Entry<String, ContentHolder> entry : snapshot.entrySet()) {
+            if (entry.getValue().isExpired()) {
+                keysToRemove.add(entry.getKey());
+            }
+        }
+
+        // Now remove the expired entries
+        for (String key : keysToRemove) {
+            albumArtCache.remove(key);
+        }
+
+        Log.d(TAG, "Cache cleanup: removed " + keysToRemove.size() + " expired entries");
     }
 
     synchronized public void stopServer() {
-        Log.v(TAG, "Stopping Netty4 UPNP Server");
+        if (!isInitialized) {
+            return; // Already stopped or not initialized
+        }
+
+        Log.i(TAG, "Stopping Netty4 UPNP Server");
+        isInitialized = false;
+        cleanup();
+        Log.i(TAG, "Netty4 UPNP Server stopped successfully");
+    }
+
+    private void cleanup() {
         try {
             if (channelFuture != null) {
                 channelFuture.channel().close().sync();
                 channelFuture = null;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error closing server channel: " + e.getMessage(), e);
+            Log.e(TAG, "Error closing server channel", e);
         }
 
         try {
             if (bossGroup != null) {
                 bossGroup.shutdownGracefully().sync();
+                bossGroup = null;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error shutting down boss group: " + e.getMessage(), e);
+            Log.e(TAG, "Error shutting down boss group", e);
         }
 
         try {
             if (workerGroup != null) {
                 workerGroup.shutdownGracefully().sync();
+                workerGroup = null;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error shutting down worker group: " + e.getMessage(), e);
+            Log.e(TAG, "Error shutting down worker group", e);
         }
-
-        Log.v(TAG, "Netty4 UPNP Server stopped successfully");
     }
 
     @Override
@@ -189,9 +276,42 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
             upnpStream = new UpnpStream(protocolFactory) {
                 @Override
                 public void run() {
-
+                    // Implementation not needed for this usage
                 }
             };
+
+            // Initialize default cover art
+            initDefaultCoverArt();
+        }
+
+        private void initDefaultCoverArt() {
+            try {
+                if (!defaultCoverartDir.exists()) {
+                    Log.d(TAG, "Default cover art not found, creating from assets");
+                    FileUtils.createParentDirs(defaultCoverartDir);
+                    try (InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES)) {
+                        if (in != null) {
+                            Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
+
+                            // Pre-cache the default cover art
+                            ByteBuffer buffer = FileUtils.getBytes(defaultCoverartDir);
+                            String mime = MimeTypeUtils.getMimeTypeFromPath(defaultCoverartDir.getAbsolutePath());
+                            albumArtCache.put(DEFAULT_COVERART_KEY, new ContentHolder(DEFAULT_COVERART_KEY, AsciiString.of(mime), HttpResponseStatus.OK, buffer.array()));
+                            Log.d(TAG, "Default cover art cached successfully");
+                        } else {
+                            Log.e(TAG, "Could not load default cover art from assets");
+                        }
+                    }
+                } else if (albumArtCache.get(DEFAULT_COVERART_KEY) == null) {
+                    // If file exists but not in cache
+                    ByteBuffer buffer = FileUtils.getBytes(defaultCoverartDir);
+                    String mime = MimeTypeUtils.getMimeTypeFromPath(defaultCoverartDir.getAbsolutePath());
+                    albumArtCache.put(DEFAULT_COVERART_KEY, new ContentHolder(DEFAULT_COVERART_KEY, AsciiString.of(mime), HttpResponseStatus.OK, buffer.array()));
+                    Log.d(TAG, "Existing default cover art cached");
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to initialize default cover art", e);
+            }
         }
 
         @Override
@@ -248,108 +368,154 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 buf.release();
 
                 String uri = request.uri();
+                ContentHolder contentHolder;
+
                 if (uri.startsWith(upnpPath)) {
-                    ContentHolder contentHolder = handleUPnpStream(request, data);
-                    DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), contentHolder.statusCode, Unpooled.wrappedBuffer(contentHolder.content));
-                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType);
-                    for (String key : contentHolder.headers.keySet()) {
-                        response.headers().set(AsciiString.of(key), contentHolder.headers.get(key));
-                    }
-                    sendAndCleanupConnection(ctx, request, response);
-                }else if (uri.startsWith("/coverart/")) {
-                        ContentHolder contentHolder = handleAlbumart(request, uri);
-                        DefaultFullHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), contentHolder.statusCode, Unpooled.wrappedBuffer(contentHolder.content));
-                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType);
-                        for(String key: contentHolder.headers.keySet()) {
-                            response.headers().set(AsciiString.of(key), contentHolder.headers.get(key));
-                        }
-                        sendAndCleanupConnection(ctx, request, response);
-                }else {
-                    // if not upnp stream
+                   // Log.d(TAG, "Processing UPnP request: " + request.method() + " " + uri);
+                    contentHolder = handleUPnpStream(request, data);
+                } else if (uri.startsWith("/coverart/")) {
+                   // Log.d(TAG, "Processing album art request: " + uri);
+                    contentHolder = handleAlbumArt(request, uri);
+                } else {
+                    Log.d(TAG, "Invalid request path: " + uri);
                     sendForbidden(ctx, request);
+                    return;
+                }
+
+                if (contentHolder != null) {
+                    DefaultFullHttpResponse response = new DefaultFullHttpResponse(
+                            request.protocolVersion(),
+                            contentHolder.statusCode,
+                            Unpooled.wrappedBuffer(contentHolder.content));
+
+                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, contentHolder.contentType);
+
+                    for (Map.Entry<String, String> entry : contentHolder.headers.entrySet()) {
+                        response.headers().set(AsciiString.of(entry.getKey()), entry.getValue());
+                    }
+
+                    sendAndCleanupConnection(ctx, request, response);
+                } else {
+                    // If contentHolder is null, return an error response
+                    sendInternalError(ctx, request, "Error processing request");
                 }
             }
         }
 
-        private ContentHolder handleAlbumart(FullHttpRequest request, String uri) {
+        private void sendInternalError(ChannelHandlerContext ctx, FullHttpRequest request, String message) {
+            FullHttpResponse response = new DefaultFullHttpResponse(
+                    HTTP_1_1,
+                    HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                    Unpooled.copiedBuffer(message, CharsetUtil.UTF_8));
+
+            response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+            sendAndCleanupConnection(ctx, request, response);
+            Log.e(TAG, "Sent error response: " + message);
+        }
+
+        private ContentHolder handleAlbumArt(FullHttpRequest request, String uri) {
             try {
                 String albumUniqueKey = uri.substring("/coverart/".length(), uri.indexOf(".png"));
+
+                // First check cache
+                ContentHolder cachedArt = albumArtCache.get(albumUniqueKey);
+                if (cachedArt != null) {
+                    Log.d(TAG, "Album art cache hit for: " + albumUniqueKey);
+                    return cachedArt;
+                }
+
+                // Not in cache, fetch from database
                 MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
                 if (tag != null) {
-                    File covertFile = FileRepository.getFolderCoverArt(tag.getPath());
-                    if (covertFile != null) {
-                            ByteBuffer buffer = FileUtils.getBytes(covertFile);
-                            String mime = MimeTypeUtils.getMimeTypeFromPath(covertFile.getAbsolutePath());
-                            return new ContentHolder(AsciiString.of(mime), HttpResponseStatus.OK, buffer.array());
+                    Log.d(TAG, "Found album tag for: " + albumUniqueKey);
+                    File coverFile = FileRepository.getCoverArt(tag);
+                    if (coverFile != null && coverFile.exists()) {
+                        try {
+                            ByteBuffer buffer = FileUtils.getBytes(coverFile);
+                            String mime = MimeTypeUtils.getMimeTypeFromPath(coverFile.getAbsolutePath());
+
+                            // Cache the album art for future requests
+                            ContentHolder albumArt = new ContentHolder(albumUniqueKey, AsciiString.of(mime), HttpResponseStatus.OK, buffer.array());
+                            albumArtCache.put(albumUniqueKey, albumArt);
+
+                            return albumArt;
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error reading cover file: " + coverFile, e);
+                        }
+                    } else {
+                        Log.d(TAG, "No cover file found for: " + tag.getPath());
                     }
+                } else {
+                    Log.d(TAG, "No tag found for album key: " + albumUniqueKey);
                 }
+
+                // Fall back to default cover art
+                ContentHolder defaultArt = albumArtCache.get(DEFAULT_COVERART_KEY);
+                if (defaultArt != null) {
+                    Log.d(TAG, "Using default cover art for: " + albumUniqueKey);
+                    return defaultArt;
+                }
+
+                // Last resort - try to load default cover art
+                initDefaultCoverArt();
+                defaultArt = albumArtCache.get(DEFAULT_COVERART_KEY);
+                if (defaultArt != null) {
+                    return defaultArt;
+                }
+
+                // If everything fails
+                Log.e(TAG, "Failed to find any cover art for: " + albumUniqueKey);
+                return new ContentHolder(null,
+                        HttpHeaderValues.TEXT_PLAIN,
+                        HttpResponseStatus.NOT_FOUND,
+                        "Cover art not found");
+
             } catch (Exception e) {
-                Log.e(TAG, "lookupAlbumArt: - not found " + uri, e);
+                Log.e(TAG, "Error handling album art request: " + uri, e);
+                return new ContentHolder(null,
+                        HttpHeaderValues.TEXT_PLAIN,
+                        HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                        "Error processing album art");
             }
-
-            try {
-                if(!defaultCoverartDir.exists()) {
-                    FileUtils.createParentDirs(defaultCoverartDir);
-                    InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES);
-                    Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
-                }
-
-                ByteBuffer buffer = FileUtils.getBytes(defaultCoverartDir);
-                String mime = MimeTypeUtils.getMimeTypeFromPath(defaultCoverartDir.getAbsolutePath());
-                return new ContentHolder(AsciiString.of(mime), HttpResponseStatus.OK, buffer.array());
-            } catch (IOException e) {
-                Log.e(TAG, "Init default missing cover art", e);
-            }
-            return null;
         }
 
         private  ContentHolder handleUPnpStream(FullHttpRequest request, byte[] bodyBytes) {
-            ContentHolder holder;
             try {
                 StreamRequestMessage requestMessage = readRequestMessage(request, bodyBytes);
-                // Log.v(TAG, "Processing new request message: " + requestMessage);
+                //Log.d(TAG, "Processing UPnP request: " + requestMessage.getOperation().getMethod() +
+                //        " " + requestMessage.getUri());
 
                 StreamResponseMessage responseMessage = upnpStream.process(requestMessage);
 
                 if (responseMessage != null) {
-                    // Log.v(TAG, "Preparing HTTP response message: " + responseMessage);
-                    holder = buildResponseMessage(responseMessage);
+                    return buildResponseMessage(responseMessage);
                 } else {
-                    // If it's null, it's 404
-                    holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.NOT_FOUND, "Not Found");
-                    Log.v(TAG, "Sending HTTP response status: 404" );
+                    Log.d(TAG, "UPnP stream returned null response for: " + request.uri());
+                    return new ContentHolder(null,
+                            HttpHeaderValues.TEXT_PLAIN,
+                            HttpResponseStatus.NOT_FOUND,
+                            "Resource not found");
                 }
             } catch (Throwable t) {
-                Log.e(TAG, "Exception occurred during UPnP stream processing: ", t);
-                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR");
-                // upnpStream.responseException(t);
+                Log.e(TAG, "Exception in UPnP stream processing: ", t);
+                return new ContentHolder(null,
+                        HttpHeaderValues.TEXT_PLAIN,
+                        HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                        "Error: " + t.getMessage());
             }
-            return  holder;
-        }
-
-        private String getUserAgent(StreamRequestMessage requestMessage) {
-            try {
-                return requestMessage.getHeaders().getFirstHeader("User-agent");
-            }catch (Exception ignore) {
-            }
-            return "";
         }
 
         protected StreamRequestMessage readRequestMessage(FullHttpRequest request, byte[] bodyBytes) {
-            // Extract what we need from the HTTP httpRequest
+            // Extract what we need from the HTTP request
             String requestMethod = request.method().name();
             String requestURI = request.uri();
 
-            // Log.v(TAG, "Processing HTTP request: " + requestMethod + " " + requestURI);
-
             StreamRequestMessage requestMessage;
             try {
-                requestMessage =
-                        new StreamRequestMessage(
-                                UpnpRequest.Method.getByHttpName(requestMethod),
-                                URI.create(requestURI)
-                        );
-
+                requestMessage = new StreamRequestMessage(
+                        UpnpRequest.Method.getByHttpName(requestMethod),
+                        URI.create(requestURI)
+                );
             } catch (IllegalArgumentException ex) {
                 throw new RuntimeException("Invalid request URI: " + requestURI, ex);
             }
@@ -358,55 +524,41 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 throw new RuntimeException("Method not supported: " + requestMethod);
             }
 
+            // Convert headers
             UpnpHeaders headers = new UpnpHeaders();
             HttpHeaders httpHeaders = request.headers();
-            for (Map.Entry<String, String> name : httpHeaders) {
-                headers.add(name.getKey(), name.getValue());
+            for (Map.Entry<String, String> entry : httpHeaders) {
+                headers.add(entry.getKey(), entry.getValue());
             }
             requestMessage.setHeaders(headers);
 
-            // Body
-            if (bodyBytes == null) {
-                bodyBytes = new byte[]{};
+            // Handle body
+            if (bodyBytes != null && bodyBytes.length > 0) {
+                if (requestMessage.isContentTypeMissingOrText()) {
+                    requestMessage.setBodyCharacters(bodyBytes);
+                } else {
+                    requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
+                }
             }
-            // Log.v(TAG, "Reading request body bytes: " + bodyBytes.length);
 
-            if (bodyBytes.length > 0 && requestMessage.isContentTypeMissingOrText()) {
-
-                // Log.v(TAG, "Request contains textual entity body, converting then setting string on message");
-                requestMessage.setBodyCharacters(bodyBytes);
-
-            } else if (bodyBytes.length > 0) {
-
-                // Log.v(TAG, "Request contains binary entity body, setting bytes on message");
-                requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
-
-           // } else {
-           //     Log.v(TAG, "Request did not contain entity body");
-            }
-            //  Log.v(TAG, "Request entity body: "+requestMessage.getBodyString());
             return requestMessage;
         }
 
         protected ContentHolder buildResponseMessage(StreamResponseMessage responseMessage) {
-            //   Log.v(TAG, "Sending HTTP response status: " + responseMessage.getOperation().getStatusCode());
-            ContentHolder holder;
+            // Create response body
+            byte[] responseBodyBytes = responseMessage.hasBody() ? responseMessage.getBodyBytes() : new byte[0];
 
-            // Body
-            byte[] responseBodyBytes = responseMessage.hasBody() ? responseMessage.getBodyBytes() : null;
-            int contentLength = responseBodyBytes != null ? responseBodyBytes.length : -1;
-
-            if (contentLength > 0) {
-                String contentType = "application/xml";
-                if (responseMessage.getContentTypeHeader() != null) {
-                    contentType = responseMessage.getContentTypeHeader().getValue().toString();
-                }
-                holder = new ContentHolder(new AsciiString(contentType), HttpResponseStatus.valueOf(responseMessage.getOperation().getStatusCode()), responseBodyBytes);
-            }else {
-                holder = new ContentHolder(HttpHeaderValues.TEXT_PLAIN, HttpResponseStatus.valueOf(responseMessage.getOperation().getStatusCode()), "");
+            String contentType = "application/xml";
+            if (responseMessage.getContentTypeHeader() != null) {
+                contentType = responseMessage.getContentTypeHeader().getValue().toString();
             }
 
-            // Headers
+            ContentHolder holder = new ContentHolder(null,
+                    new AsciiString(contentType),
+                    HttpResponseStatus.valueOf(responseMessage.getOperation().getStatusCode()),
+                    responseBodyBytes);
+
+            // Add headers
             for (Map.Entry<String, List<String>> entry : responseMessage.getHeaders().entrySet()) {
                 for (String value : entry.getValue()) {
                     holder.headers.put(entry.getKey(), value);
@@ -430,7 +582,7 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         public void initChannel(SocketChannel ch) {
             ChannelPipeline p = ch.pipeline();
             p.addLast(new HttpServerCodec());
-            p.addLast(new HttpObjectAggregator(5 * 1024 * 1024)); // 5 MB max  //Integer.MAX_VALUE));
+            p.addLast(new HttpObjectAggregator(MAX_HTTP_CONTENT_LENGTH)); // 5 MB max  //Integer.MAX_VALUE));
             p.addLast(new IdleStateHandler(60, 30, 0));
             p.addLast(new HttpServerHandler(protocolFactory, configuration.getNamespace().getBasePath().getPath()));
         }
@@ -441,16 +593,27 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         private final byte[] content;
         private final HttpResponseStatus statusCode;
         private final Map<String, String> headers = new HashMap<>();
+        final long timestamp;
+        final String key;
 
-        public ContentHolder(AsciiString mimeType, HttpResponseStatus statusCode, byte[] content) {
+        public ContentHolder(String key, AsciiString mimeType, HttpResponseStatus statusCode, byte[] content) {
             this.content = content;
             this.statusCode = statusCode;
             this.contentType = mimeType;
+            this.timestamp = System.currentTimeMillis();
+            this.key = key;
         }
-        public ContentHolder(AsciiString mimeType, HttpResponseStatus statusCode, String content) {
+        public ContentHolder(String key, AsciiString mimeType, HttpResponseStatus statusCode, String content) {
             this.content = content.getBytes(StandardCharsets.UTF_8);
             this.statusCode = statusCode;
             this.contentType = mimeType;
+            this.key = key;
+            this.timestamp = System.currentTimeMillis();
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() - timestamp > CACHE_EXPIRY_MS &&
+                    !DEFAULT_COVERART_KEY.equals(key); // Don't expire default cover art
         }
     }
 }

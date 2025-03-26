@@ -1,6 +1,7 @@
 package apincer.android.mmate;
 
 import static apincer.android.mmate.Constants.COVER_ARTS;
+import static apincer.android.mmate.player.NotificationListener.reconnectNotificationListener;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -31,7 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.player.PlayerControl;
@@ -52,6 +52,7 @@ public class MusixMateApp extends Application {
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
     private boolean isMediaServerRunning = false;
+    private boolean isFirstStart = true;
 
     private static MusixMateApp INSTANCE;
     private SearchCriteria criteria;
@@ -70,7 +71,7 @@ public class MusixMateApp extends Application {
     public static List<MusicTag> getPendingItems(String name) {
         List<MusicTag> list = new ArrayList<>();
         synchronized (pendingQueue) {
-            if (pendingQueue.containsKey(name)) {
+            if (pendingQueue.get(name) != null) {
                 list.addAll(pendingQueue.get(name));
                 pendingQueue.remove(name);
             }
@@ -146,7 +147,7 @@ public class MusixMateApp extends Application {
                 // Check media server settings before starting
                 if (Settings.isEnableMediaServer(getApplicationContext())) {
                     // Use a slight delay to allow network to stabilize
-                    MusicMateExecutors.getInstance().schedule(() -> {
+                    MusicMateExecutors.schedule(() -> {
                         try {
                             MediaServerService.startMediaServer(MusixMateApp.this);
                             isMediaServerRunning = true;
@@ -195,6 +196,8 @@ public class MusixMateApp extends Application {
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(this);
 
+        reconnectNotificationListener(this);
+
         // initialize thread executors
         MusicMateExecutors.getInstance();
 
@@ -225,11 +228,23 @@ public class MusixMateApp extends Application {
                 .setButtonTextColor(Color.parseColor("#FFFFFF"))
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
-        // scan music files
+    }
+
+    // Add this to your MusixMateApp class
+    public void startMusicScan() {
+        // Clean up any pending work requests
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
+            if (isFirstStart) {
+                Log.i(TAG, "Starting initial music scan");
+                isFirstStart = false;
+            } else {
+                Log.i(TAG, "Starting music scan on app restart");
+            }
             ScanAudioFileWorker.startScan(getApplicationContext());
+        } else {
+            Log.w(TAG, "Music scan skipped - no directories configured");
         }
     }
 

@@ -38,7 +38,7 @@ public class MimeTypeUtils {
         // Lossy formats
         MIME_MAP.put("mp3", "audio/mpeg");
         MIME_MAP.put("m4a", "audio/mp4");
-        MIME_MAP.put("aac", "audio/aac");
+        MIME_MAP.put("aac", "audio/mp4");
         MIME_MAP.put("ogg", "audio/ogg");
         MIME_MAP.put("oga", "audio/ogg");
         MIME_MAP.put("opus", "audio/opus");

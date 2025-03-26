@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 import apincer.android.mmate.codec.AudioDecoder;
 import apincer.android.mmate.utils.MusicTagUtils;
-//import apincer.android.mqaidentifier.NativeLib;
 
 public class MusicAnalyser {
     private static final String TAG = "MusicAnalyser";
@@ -85,34 +84,6 @@ public class MusicAnalyser {
         return true;
     }
 
-    /*
-    @Deprecated
-    private void detectMQANative(MusicTag tag) {
-
-        if(!NOT_SCAN.equals(tag.getMqaInd())) return; //prevent re scan
-        try {
-            NativeLib lib = new NativeLib();
-            String mqaInfo = StringUtils.trimToEmpty(lib.getMQAInfo(tag.getPath()));
-            // MQA Studio|96000
-            // MQA|96000
-            if(!isEmpty(mqaInfo) && mqaInfo.contains("|")) {
-                String[] tags = mqaInfo.split("\\|", -1);
-                isMQA = true;
-                originalSampleRate = toLong(tags[1]);
-                if(tags[0].contains("Studio")) {
-                    isMQAStudio = true;
-                }
-            }else {
-                isMQA = false;
-                isMQAStudio = false;
-            }
-        }catch (Exception ex) {
-            isMQA = false;
-            isMQAStudio = false;
-            Log.e(TAG, "detectMQA", ex);
-        }
-    } */
-
     private void doAnalyst(MusicTag tag) {
         int durationInSeconds = 30; //20;
         this.sampleRate = (int) tag.getAudioSampleRate();
@@ -165,16 +136,6 @@ public class MusicAnalyser {
         }
 
         return normalizedValue;
-    }
-
-    private double getSampleRate(double sample, int sampleFormat) {
-        return switch (sampleFormat) {
-            case 8 -> (sample - 0x80) / 128.0; // 8-bit
-            case 16 -> sample / 32768.0; // 16-bit
-            case 24 -> sample / 8388608.0; // 24-bit
-           // case 32 -> sample / 2147483648.0; // 32-bit
-            default -> sample;
-        };
     }
 
     public double getDynamicRangeScore() {
@@ -266,7 +227,7 @@ public class MusicAnalyser {
         // Calculate DR for each channel
         for (int ch = 0; ch < channels; ch++) {
             List<Block> blocksForChannel = channelBlocks.getOrDefault(ch, Collections.emptyList());
-            if (blocksForChannel.isEmpty()) continue;
+            if (blocksForChannel ==null || blocksForChannel.isEmpty()) continue;
 
             // Sort by RMS (loudness) in descending order
             blocksForChannel.sort(Comparator.comparing(Block::getRms).reversed());
@@ -317,7 +278,7 @@ public class MusicAnalyser {
                 int low = audioData[2 * i] & 0xFF;
                 int high = audioData[2 * i + 1] & 0xFF;
                 samples[i] = (short) ((high << 8) | low);
-            } else if (bitDepth == 24) {
+            } else {
                 int low = audioData[3 * i] & 0xFF;
                 int mid = audioData[3 * i + 1] & 0xFF;
                 int high = audioData[3 * i + 2] & 0xFF;
@@ -456,56 +417,6 @@ public class MusicAnalyser {
     }
 
     /**
-     * Process the raw audio data to extract samples
-     */
-    private void processAudioDataOld(byte[] audioData) {
-        int bytesPerSample = bitsPerSample / 8;
-        int frameSize = bytesPerSample * channels;
-        int numFrames = audioData.length / frameSize;
-
-        // Reserve enough capacity to avoid reallocations
-        samples = new ArrayList<>(Math.min(numFrames, sampleRate * 3));
-
-        // Limit processing to first 3 seconds as in the C++ code
-        int samplesToProcess = Math.min(numFrames, sampleRate * 3);
-
-        for (int i = 0; i < samplesToProcess; i++) {
-            int[] frame = new int[channels];
-
-            for (int ch = 0; ch < channels; ch++) {
-                int sampleOffset = i * frameSize + ch * bytesPerSample;
-
-                if (bitsPerSample == 16) {
-                    // Read 16-bit sample (little-endian)
-                    int low = audioData[sampleOffset] & 0xFF;
-                    int high = audioData[sampleOffset + 1] & 0xFF;
-                    frame[ch] = (short)((high << 8) | low); // Cast to short to handle sign correctly
-                }
-                else if (bitsPerSample == 24) {
-                    // Read 24-bit sample (little-endian)
-                    int low = audioData[sampleOffset] & 0xFF;
-                    int mid = audioData[sampleOffset + 1] & 0xFF;
-                    int high = audioData[sampleOffset + 2] & 0xFF;
-
-                    // Combine bytes into a 24-bit value
-                    int value = (high << 16) | (mid << 8) | low;
-
-                    // Sign-extend if negative (24-bit to 32-bit)
-                    if ((value & 0x800000) != 0) {
-                        value |= 0xFF000000;
-                    }
-
-                    frame[ch] = value;
-                }
-            }
-
-            samples.add(frame);
-        }
-
-        //System.out.println("Processed " + samples.size() + " audio frames");
-    }
-
-    /**
      * Enhanced MQA detection with improved reliability and verification
      * @param audioData Raw PCM audio data
      */
@@ -521,7 +432,6 @@ public class MusicAnalyser {
 
         // Result counters for verification
         int magicPatternCount = 0;
-        int detectedPosition = -1;
 
         // Check multiple bit positions to improve detection reliability
         for (int bitOffset = 0; bitOffset < 3; bitOffset++) {
@@ -542,7 +452,6 @@ public class MusicAnalyser {
                 // Compare with MQA magic word
                 if (buffer == MQA_MAGIC) {
                     magicPatternCount++;
-                    detectedPosition = pos;
 
                     // Extract MQA metadata at this position
                     extractMQAMetadata(i, pos);
@@ -1019,12 +928,8 @@ public class MusicAnalyser {
         double highFreqRatio = totalEnergy > 0 ? highFreqEnergy / totalEnergy : 0;
 
         // A simplistic heuristic - resampled files often lack high frequency energy
-        double resamplingConfidence = Math.max(0, 1.0 - (highFreqRatio * 8.0));
 
-      //  System.out.println("Resampling detection - High freq ratio: " + highFreqRatio +
-      //          ", Confidence: " + resamplingConfidence);
-
-        return resamplingConfidence;
+        return Math.max(0, 1.0 - (highFreqRatio * 8.0));
     }
 
     // Helper method to ensure FFT input is a power of 2 length

@@ -4,16 +4,17 @@ espressoCore = "3.6.1"
 junit = "4.13.2"
 junitBom = "5.11.4"
 junitVersion = "1.2.1"
-minSdkVersion    = "31" # support running on 31 for android 12 ot higher
+minSdkVersion    = "31" # support running on 31 for android 12
 targetSdkVersion = "34" # //33, // required 33, android 13
 compileSdkVersion = "35"
-buildTools ="36.0.0-rc5"
-androidGradlePlugin = "8.9.0"
+buildTools ="36.0.0"
+androidGradlePlugin = "8.9.1"
 aboutlibraries = "11.4.0"
 #validationApi = "2.0.1.Final"
-kotlin = "2.1.10"
+kotlin = "2.1.20"
 coroutines = "1.10.1"
 #ksp="2.1.0-1.0.29"
+okio = "3.10.2"
 
 [libraries]
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
@@ -43,6 +44,7 @@ jupiter-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
 jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.18.3"}
 jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.18.3"}
+airbnb-lottie={module="com.airbnb.android:lottie", version="6.6.4"}
 
 #glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}
 #glide-compiler = {module = "com.github.bumptech.glide:compiler", version="4.16.0" }
@@ -55,12 +57,13 @@ jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.3"}
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
 jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.0.alpha1"}
 jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0.alpha1"}
-jetty-server10 = {module = "org.eclipse.jetty:jetty-server", version="10.0.24"}
-jetty-client10 = {module = "org.eclipse.jetty:jetty-client", version="10.0.24"}
+#jetty-server10 = {module = "org.eclipse.jetty:jetty-server", version="10.0.24"}
+#jetty-client10 = {module = "org.eclipse.jetty:jetty-client", version="10.0.24"}
 
 netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.0.RC4"}
 tutorialsandroid-filepicker = {module = "io.github.tutorialsandroid:filepicker", version="9.2.5"}
 icm-jlargearrays =  {module = "pl.edu.icm:JLargeArrays", version="1.6"}
+square-okio = {module = "com.squareup.okio:okio", version.ref = "okio"}
 
 refresh-layout-kernel = {module = "io.github.scwang90:refresh-layout-kernel", version="2.1.1"}
 refresh-header-classics =  {module = "io.github.scwang90:refresh-header-classics", version="2.1.1"}
@@ -77,7 +80,8 @@ iwgang-simplifyspan = {module = "com.github.iwgang:simplifyspan", version="2.2"}
 vanniktech-textbuilder = {module = "com.vanniktech:textbuilder", version="0.4.0"}
 sparrow007-carouselrecyclerview = {module = "com.github.sparrow007:carouselrecyclerview", version="1.2.6"}
 philjay-mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version="v3.1.0"}
-#mikepenz-aboutlibraries = {module = "com.mikepenz:aboutlibraries", version.ref="aboutlibraries"}
+# mikepenz-aboutlibraries = {module = "com.mikepenz:aboutlibraries", version.ref="aboutlibraries"}
+# rouhim-jaudiotagger = {module="net.jthink:jaudiotagger", version="2.3.15"}
 
 androidx-core = {module = "androidx.core:core", version="1.15.0"}
 androidx-activity = {module = "androidx.activity:activity", version="1.10.1"}

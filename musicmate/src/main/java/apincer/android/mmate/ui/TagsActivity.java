@@ -4,6 +4,8 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
@@ -20,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -32,9 +35,11 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -44,9 +49,12 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -75,6 +83,7 @@ import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
+import coil3.request.CachePolicy;
 import coil3.request.ImageRequest;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
@@ -82,6 +91,8 @@ import sakout.mehdi.StateViews.StateView;
 
 public class TagsActivity extends AppCompatActivity {
     private static final String TAG = "TagsActivity";
+
+    private static final Object editItemsLock = new Object();
     private static final ArrayList<MusicTag> editItems = new ArrayList<>();
     private volatile MusicTag displayTag;
     private ImageView coverArtView;
@@ -119,6 +130,9 @@ public class TagsActivity extends AppCompatActivity {
     private TextView progressLabel;
     private boolean finishOnTimeout = false;
 
+    private final AtomicLong lastProgressUpdate = new AtomicLong(0);
+    private final long PROGRESS_UPDATE_THROTTLE_MS = 100; // Limit updates to every 100ms
+
     @Override
     public void onStart() {
         super.onStart();
@@ -139,15 +153,7 @@ public class TagsActivity extends AppCompatActivity {
                     for(MusicTag tag:this.getEditItems()) {
                         try {
                             if (MusicAnalyser.process(tag)) {
-                                //tag.setDynamicRange(analyser.getDynamicRange());
-                                //tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
-                                //tag.setUpscaledScore(analyser.getUpScaledScore());
-                                //tag.setResampledScore(analyser.getReSampledScore());
-
-                                //write quality to file
-                               // FFMpegWriter.writeTagQualityToFile(this, tag);
                                 TagWriter.writeTagToFile(getApplicationContext(), tag);
-                                // update MusicMate Library
                                 TagRepository.saveTag(tag);
                             }
                         }catch (Exception ex) {
@@ -185,7 +191,9 @@ public class TagsActivity extends AppCompatActivity {
     private SearchCriteria criteria;
 
     public List<MusicTag> getEditItems() {
-        return editItems;
+        synchronized (editItemsLock) {
+            return new ArrayList<>(editItems); // Return a copy to prevent concurrent modification
+        }
     }
 
     @Override
@@ -215,10 +223,9 @@ public class TagsActivity extends AppCompatActivity {
         repos = FileRepository.newInstance(getApplicationContext());
 
         coverArtView = findViewById(R.id.panel_cover_art);
-       // reflectionView = findViewById(R.id.panel_cover_reflection);
         CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
         int statusBarHeight = getStatusBarHeight();
-        int height = UIUtils.getScreenHeight(this); // getWindow().getWindowManager().getDefaultDisplay().getHeight();
+        int height = UIUtils.getScreenHeight(this);
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
         toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
@@ -236,6 +243,38 @@ public class TagsActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
+        // call from EventBus on preview/edit selected tags from main screen
+        try {
+            criteria = event.getSearchCriteria();
+
+            // Process data on a background thread
+            CompletableFuture.runAsync(() -> {
+                synchronized (editItemsLock) {
+                    editItems.clear();
+                    editItems.addAll(event.getItems());
+                    displayTagDirty = true;
+                    displayTag = buildDisplayTag();
+                }
+
+                if(displayTag != null) {
+                    runOnUiThread(() -> {
+                        updateTitlePanel();
+                        setUpPageViewer();
+                        stopProgressBar();
+                    });
+                }
+            }, MusicMateExecutors.getExecutorService()).exceptionally(ex -> {
+                Log.e(TAG, "Error processing event", ex);
+                stopProgressBar();
+                return null;
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "onMessageEvent", e);
+            stopProgressBar();
+        }
+    }
+
+    public void onMessageEvent2(AudioTagEditEvent event) {
         // call from EventBus on preview/edit selected tags from main screen
         try {
             criteria = event.getSearchCriteria();
@@ -273,9 +312,16 @@ public class TagsActivity extends AppCompatActivity {
 
     private void updatePreview(MusicTag playingSong) {
         try {
-            editItems.clear();
-            editItems.add(playingSong);
-            displayTag = buildDisplayTag();
+            if (playingSong == null) return;
+
+            MusicTag tagCopy = playingSong.clone(); // Work with a copy
+
+            synchronized (editItemsLock) {
+                editItems.clear();
+                editItems.add(tagCopy);
+                displayTag = buildDisplayTag();
+            }
+
             if (displayTag != null) {
                 runOnUiThread(() -> {
                     updateTitlePanel();
@@ -283,7 +329,7 @@ public class TagsActivity extends AppCompatActivity {
                 });
             }
         } catch (Exception e) {
-            Log.e(TAG, "onMessageEvent", e);
+            Log.e(TAG, "updatePreview", e);
         }
     }
 
@@ -383,21 +429,25 @@ public class TagsActivity extends AppCompatActivity {
             titleView.setText(trim(displayTag.getTitle(), " - "));
         }
         artistView.setText(trim(displayTag.getArtist(), " - "));
-        ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
+
+        // load resolution, quality, coverArt
+        loadImages(displayTag);
+
+        /*ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
         ImageRequest request = new ImageRequest.Builder(getApplicationContext())
                 .data(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
                 //.crossfade(false)
                 .target(new ImageViewTarget(resolutionView))
                 .build();
-        imageLoader.enqueue(request);
+        imageLoader.enqueue(request); */
 
-            qualityView.setVisibility(View.VISIBLE);
+         /*   qualityView.setVisibility(View.VISIBLE);
                  request = new ImageRequest.Builder(getApplicationContext())
                     .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
                    // .crossfade(false)
                     .target(new ImageViewTarget(qualityView))
                     .build();
-            imageLoader.enqueue(request);
+            imageLoader.enqueue(request); */
       //  qualityView.setImageBitmap(IconProviders.createQualityIcon(getApplicationContext(), displayTag));
 
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
@@ -442,13 +492,13 @@ public class TagsActivity extends AppCompatActivity {
 
         genreView.setText(mediaTypeAndPublisher);
 
-        request = CoverartFetcher.builder(getApplicationContext(), displayTag)
+       /* request = CoverartFetcher.builder(getApplicationContext(), displayTag)
                 .size(Size.ORIGINAL)
                 .data(displayTag)
                 .target(new ImageViewTarget(coverArtView))
                 .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
                 .build();
-        imageLoader.enqueue(request);
+        imageLoader.enqueue(request); */
 
         // Tag
         int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
@@ -555,6 +605,113 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     protected MusicTag buildDisplayTag() {
+        synchronized (editItemsLock) {
+            if(editItems.isEmpty()) return null;
+
+            // Cache the display tag and only rebuild when needed
+            if (displayTag != null && !displayTagDirty) {
+                return displayTag;
+            }
+
+            MusicTag firstTag = editItems.get(0);
+            if(editItems.size()==1) {
+                displayTag = firstTag.clone();
+                displayTagDirty = false;
+                return displayTag;
+            }
+
+            displayTag = firstTag.clone();
+            // Use a Set to track which fields are different
+            Set<String> multiValueFields = new HashSet<>();
+
+            // Compare first tag with all others to find differences
+            for (int i=1; i<editItems.size(); i++) {
+                MusicTag item = editItems.get(i);
+                checkAndMarkMultiValue(displayTag.getTitle(), item.getTitle(), "title", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getTrack(), item.getTrack(), "track", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getAlbum(), item.getAlbum(), "album", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getArtist(), item.getArtist(), "artist", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getAlbumArtist(), item.getAlbumArtist(), "albumArtist", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getGenre(), item.getGenre(), "genre", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getYear(), item.getYear(), "year", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getDisc(), item.getDisc(), "disc", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getComment(), item.getComment(), "comment", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getComposer(), item.getComposer(), "composer", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getGrouping(), item.getGrouping(), "grouping", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getMediaType(), item.getMediaType(), "mediaType", multiValueFields);
+                checkAndMarkMultiValue(displayTag.getPublisher(), item.getPublisher(), "publisher", multiValueFields);
+            }
+
+            // Apply multi-value markers to fields that differ
+            if (multiValueFields.contains("title")) displayTag.setTitle(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("track")) displayTag.setTrack(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("album")) displayTag.setAlbum(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("artist")) displayTag.setArtist(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("albumArtist")) displayTag.setAlbumArtist(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("genre")) displayTag.setGenre(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("year")) displayTag.setYear(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("disc")) displayTag.setDisc(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("comment")) displayTag.setComment(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("composer")) displayTag.setComposer(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("grouping")) displayTag.setGrouping(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("mediaType")) displayTag.setMediaType(StringUtils.MULTI_VALUES);
+            if (multiValueFields.contains("publisher")) displayTag.setPublisher(StringUtils.MULTI_VALUES);
+
+            displayTagDirty = false;
+            return displayTag;
+        }
+    }
+
+    // Helper method to check if values are equal and mark them for multi-value if not
+    private void checkAndMarkMultiValue(String val1, String val2, String fieldName, Set<String> multiValueFields) {
+        if (!StringUtils.equals(val1, val2)) {
+            multiValueFields.add(fieldName);
+        }
+    }
+
+    // Add this field to track when display tag needs rebuilding
+    private volatile boolean displayTagDirty = true;
+
+    // Mark display tag as dirty whenever edit items change
+    public void markDisplayTagDirty() {
+        displayTagDirty = true;
+    }
+
+    // Create a separate method for image loading to reduce clutter
+    private void loadImages(MusicTag displayTag) {
+        // Load all images in parallel
+        ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
+
+        // Resolution icon
+        ImageRequest resolutionRequest = new ImageRequest.Builder(getApplicationContext())
+                .data(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
+                .target(new ImageViewTarget(resolutionView))
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .build();
+
+        // Quality icon
+        ImageRequest qualityRequest = new ImageRequest.Builder(getApplicationContext())
+                .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
+                .target(new ImageViewTarget(qualityView))
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .build();
+
+        // Cover art with higher priority
+        ImageRequest coverRequest = CoverartFetcher.builder(getApplicationContext(), displayTag)
+                .size(Size.ORIGINAL)
+                .data(displayTag)
+                .target(new ImageViewTarget(coverArtView))
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
+                .build();
+
+        // Enqueue all requests
+        imageLoader.enqueue(resolutionRequest);
+        imageLoader.enqueue(qualityRequest);
+        imageLoader.enqueue(coverRequest);
+    }
+
+    protected MusicTag buildDisplayTag2() {
         if(editItems.isEmpty()) return null;
 
         MusicTag displayTag = editItems.get(0);
@@ -651,24 +808,20 @@ public class TagsActivity extends AppCompatActivity {
                         setResult(RESULT_OK, resultIntent);
                     }
 
-                   // if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
-                   //     finish(); // back to prev activity
-                  //  }else {
-                        // set timeout to finish, 3 seconds
-                        finishOnTimeout = true;
-                        MusicMateExecutors.schedule(() -> {
-                            if(finishOnTimeout) {
-                                finish(); // back to prev activity
-                            }
+
+                    // set timeout to finish, 3 seconds
+                    finishOnTimeout = true;
+                    MusicMateExecutors.schedule(() -> {
+                        if(finishOnTimeout) {
+                            finish(); // back to prev activity
+                        }
                         }, 3);
-                   // }
                 })
                 .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog alertDialog = builder.create();
         if(alertDialog.getWindow() != null) {
             alertDialog.getWindow().setGravity(Gravity.BOTTOM);
         }
-       // alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alertDialog.show();
     }
 
@@ -681,9 +834,6 @@ public class TagsActivity extends AppCompatActivity {
         }
         setResult(RESULT_OK, resultIntent);
 
-       // if(MusixMateApp.getPlayerControl().isPlaying() || closePreview) {
-       //     finish(); // back to prev activity
-       // }else {
             // set timeout to finish, 5 seconds
             finishOnTimeout = true;
             MusicMateExecutors.schedule(() -> {
@@ -691,7 +841,6 @@ public class TagsActivity extends AppCompatActivity {
                     finish(); // back to prev activity
                 }
             }, 5);
-       // }
     }
 
     public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {
@@ -716,33 +865,114 @@ public class TagsActivity extends AppCompatActivity {
 
         @Override
         public void handleOnBackPressed() {
-           // if(previewState) {
+            if (previewState) {
+                // In preview mode, return to main activity
                 if (criteria != null) {
                     Intent resultIntent = new Intent();
                     ApplicationUtils.setSearchCriteria(resultIntent, criteria);
                     setResult(RESULT_OK, resultIntent);
                 }
                 finish();
-                //doOpenMainActivity(criteria);
-          /*  }else {
-                startProgressBar();
-                // should reload tag from db or file again
-
-                // display preview screen
+            } else {
+                // In edit mode, return to preview mode
                 appBarLayout.setExpanded(true, true);
-                    runOnUiThread(() -> {
-                        if(displayTag != null) {
-                            buildDisplayTag();
-                            updateTitlePanel();
-                            setUpPageViewer();
-                        }
-                    });
-                stopProgressBar();
-            } */
+
+                // Refresh display tag to show any changes
+                markDisplayTagDirty();
+                displayTag = buildDisplayTag();
+                updateTitlePanel();
+            }
         }
     }
 
     class OffSetChangeListener implements AppBarLayout.OnOffsetChangedListener {
+        double prevScrollOffset = -1;
+        // Reuse these objects to avoid GC pressure
+        private final ArgbEvaluator argbEvaluator = new ArgbEvaluator();
+        private ObjectAnimator tabColorAnimation;
+        // Track state to avoid redundant updates
+        private boolean wasFullyExpanded = true;
+        private boolean wasFullyCollapsed = false;
+
+        @Override
+        public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+            double vScrollOffset = Math.abs(verticalOffset);
+            // Only continue if there's an actual change
+            if(vScrollOffset == prevScrollOffset) return;
+            prevScrollOffset = vScrollOffset;
+
+            double scrollRatio = 1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset;
+
+            // Scale cover art
+            double scale = (1 - (scrollRatio * 0.2));
+            coverArtView.setScaleX((float) scale);
+            coverArtView.setScaleY((float) scale);
+
+            // Fade toolbar title
+            fadeToolbarTitle(scrollRatio);
+
+            // Fully expanded state
+            boolean isFullyExpanded = verticalOffset == 0;
+            if (isFullyExpanded && !wasFullyExpanded) {
+                // State change: fully EXPANDED
+                wasFullyExpanded = true;
+                wasFullyCollapsed = false;
+                previewState = true;
+                setupMenuToolbar();
+
+                // No need to rebuild the display tag if it's not dirty
+                if (displayTagDirty) {
+                    displayTag = buildDisplayTag();
+                }
+                updateTitlePanel();
+            }
+            // Fully collapsed state
+            else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange() && !wasFullyCollapsed) {
+                // State change: fully COLLAPSED
+                wasFullyCollapsed = true;
+                wasFullyExpanded = false;
+                previewState = false;
+                setupMenuToolbar();
+            }
+
+            // Handle tab layout color fade based on scroll position
+            if (scrollRatio >= 0.8 && tabColorAnimation == null) {
+                // Animate to toolbar color only when needed
+                tabColorAnimation = ObjectAnimator.ofObject(
+                        tabLayout,
+                        "backgroundColor",
+                        argbEvaluator,
+                        ContextCompat.getColor(getApplicationContext(), R.color.bgColor),
+                        toolbar_to_color);
+                tabColorAnimation.setDuration(200); // Shorter duration for better performance
+                tabColorAnimation.start();
+            } else if (scrollRatio < 0.8 && tabColorAnimation == null) {
+                // Animate back to background color
+                tabColorAnimation = ObjectAnimator.ofObject(
+                        tabLayout,
+                        "backgroundColor",
+                        argbEvaluator,
+                        //tabLayout.getBackground() != null ?
+                        //        tabLayout.getBackground() :
+                                Color.TRANSPARENT,
+                        ContextCompat.getColor(getApplicationContext(), R.color.bgColor));
+                tabColorAnimation.setDuration(200);
+                tabColorAnimation.start();
+            }
+
+            // Clean up animation reference when done
+            if (tabColorAnimation != null && tabColorAnimation.isRunning()) {
+                tabColorAnimation.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        tabColorAnimation = null;
+                    }
+                });
+            }
+        }
+    }
+
+    class OffSetChangeListener2 implements AppBarLayout.OnOffsetChangedListener {
         double prevScrollOffset = -1;
 
         @Override
@@ -836,7 +1066,119 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Starts the progress bar with animation
+     */
     public void startProgressBar() {
+        runOnUiThread(() -> {
+            try {
+                if (progressDialog != null) {
+                    progressDialog.dismiss();
+                }
+
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
+                View v = getLayoutInflater().inflate(R.layout.animated_progress_dialog_layout, null);
+                progressLabel = v.findViewById(R.id.process_label);
+
+                // Get the animation view
+                LottieAnimationView animationView = v.findViewById(R.id.lottie_animation);
+                // Ensure animation is playing
+                animationView.playAnimation();
+
+                dialogBuilder.setView(v);
+                dialogBuilder.setCancelable(true);
+                progressDialog = dialogBuilder.create();
+                progressDialog.setCanceledOnTouchOutside(true);
+
+                if(progressDialog.getWindow() != null) {
+                    progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+                    // Add fade-in animation for the dialog
+                    Window window = progressDialog.getWindow();
+                    window.setWindowAnimations(R.style.DialogAnimation);
+                }
+
+                // Show the dialog with animation
+                progressDialog.show();
+
+                // Add additional entrance animation for content
+                View dialogContent = v.findViewById(R.id.lottie_animation);
+                if (dialogContent != null) {
+                    dialogContent.setAlpha(0f);
+                    dialogContent.animate()
+                            .alpha(1f)
+                            .setDuration(400)
+                            .setInterpolator(new AccelerateDecelerateInterpolator())
+                            .start();
+                }
+
+            } catch (Exception ex) {
+                Log.e(TAG, "startProgressBar", ex);
+            }
+        });
+    }
+
+    /**
+     * Updates the progress bar text with animation and throttling to prevent UI overload
+     * @param label Text to display in the progress bar
+     */
+    public void updateProgressBar(final String label) {
+        // Check if enough time has passed since the last update to avoid too many UI updates
+        long now = System.currentTimeMillis();
+        long lastUpdate = lastProgressUpdate.get();
+        if (now - lastUpdate < PROGRESS_UPDATE_THROTTLE_MS) {
+            return; // Skip this update to avoid overloading the UI thread
+        }
+
+        // Try to update the timestamp - if another thread beat us, return
+        if (!lastProgressUpdate.compareAndSet(lastUpdate, now)) {
+            return;
+        }
+
+        runOnUiThread(() -> {
+            if(progressDialog != null && progressLabel != null && !isFinishing()) {
+                // Animate text change
+                progressLabel.setAlpha(0.5f);
+                progressLabel.animate()
+                        .alpha(1f)
+                        .setDuration(300)
+                        .start();
+
+                progressLabel.setText(label);
+            }
+        });
+    }
+
+    /**
+     * Stops the progress bar with exit animation
+     */
+    public void stopProgressBar() {
+        if(progressDialog != null) {
+            runOnUiThread(() -> {
+                try {
+                    // Add exit animation
+                    View dialogView = progressDialog.findViewById(R.id.lottie_animation);
+                    if (dialogView != null) {
+                        dialogView.animate()
+                                .alpha(0f)
+                                .setDuration(300)
+                                .withEndAction(() -> {
+                                    try {
+                                        progressDialog.dismiss();
+                                        progressDialog = null;
+                                    } catch (Exception ignored) {}
+                                })
+                                .start();
+                    } else {
+                        progressDialog.dismiss();
+                        progressDialog = null;
+                    }
+                } catch (Exception ignored) {}
+            });
+        }
+    }
+
+    public void startProgressBar2() {
         runOnUiThread(() -> {
             try {
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
@@ -858,7 +1200,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
 
-    private void updateProgressBar(final String label) {
+    private void updateProgressBar2(final String label) {
         runOnUiThread(() -> {
             if(progressDialog!=null && progressLabel!= null) {
                 progressLabel.setText(label);
@@ -866,7 +1208,7 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
-    public void stopProgressBar() {
+    public void stopProgressBar2() {
         if(progressDialog!=null) {
             runOnUiThread(() -> {
                 try {

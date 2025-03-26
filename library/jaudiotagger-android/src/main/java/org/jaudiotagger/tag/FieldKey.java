@@ -2,13 +2,13 @@ package org.jaudiotagger.tag;
 
 /**
  * This is an enumeration of fields implemented by all major formats
- *
+ * <p>
+ * <p>
+ * <p>
  * This enumeration is used by subclasses to map from the common key to their implementation key, the keys
  * are grouped within EnumSets within Tag class.
- *
  */
-public enum FieldKey
-{
+public enum FieldKey {
     ACOUSTID_FINGERPRINT,
     ACOUSTID_ID,
     ALBUM,
@@ -17,7 +17,6 @@ public enum FieldKey
     ALBUM_ARTISTS,
     ALBUM_ARTISTS_SORT,
     ALBUM_SORT,
-    ALBUM_YEAR,
     AMAZON_ID,
     ARRANGER,
     ARRANGER_SORT,
@@ -37,7 +36,6 @@ public enum FieldKey
     COMPOSER_SORT,
     CONDUCTOR,
     CONDUCTOR_SORT,
-    COPYRIGHT,
     COUNTRY,
     COVER_ART,
     CUSTOM1,
@@ -49,37 +47,25 @@ public enum FieldKey
     DISC_SUBTITLE,
     DISC_TOTAL,
     DJMIXER,
-    DJMIXER_SORT,
     ENCODER,
     ENGINEER,
-    ENGINEER_SORT,
     ENSEMBLE,
     ENSEMBLE_SORT,
     FBPM,
     GENRE,
-    GROUP,
     GROUPING,
-    INSTRUMENT,
-    INVOLVEDPEOPLE,
-    IPI,
+    INVOLVED_PERSON,
     ISRC,
-    ISWC,
     IS_CLASSICAL,
-    IS_GREATEST_HITS,
-    IS_HD,
-    IS_LIVE,
     IS_SOUNDTRACK,
     IS_COMPILATION,
     ITUNES_GROUPING,
-    JAIKOZ_ID,
     KEY,
     LANGUAGE,
     LYRICIST,
-    LYRICIST_SORT,
     LYRICS,
     MEDIA,
     MIXER,
-    MIXER_SORT,
     MOOD,
     MOOD_ACOUSTIC,
     MOOD_AGGRESSIVE,
@@ -98,8 +84,6 @@ public enum FieldKey
     MUSICBRAINZ_ARTISTID,
     MUSICBRAINZ_DISC_ID,
     MUSICBRAINZ_ORIGINAL_RELEASE_ID,
-    MUSICBRAINZ_RECORDING_WORK,
-    MUSICBRAINZ_RECORDING_WORK_ID,
     MUSICBRAINZ_RELEASEARTISTID,
     MUSICBRAINZ_RELEASEID,
     MUSICBRAINZ_RELEASE_COUNTRY,
@@ -110,6 +94,8 @@ public enum FieldKey
     MUSICBRAINZ_TRACK_ID,
     MUSICBRAINZ_WORK,
     MUSICBRAINZ_WORK_ID,
+    MUSICBRAINZ_WORK_COMPOSITION,
+    MUSICBRAINZ_WORK_COMPOSITION_ID,
     MUSICBRAINZ_WORK_PART_LEVEL1,
     MUSICBRAINZ_WORK_PART_LEVEL1_ID,
     MUSICBRAINZ_WORK_PART_LEVEL1_TYPE,
@@ -134,11 +120,9 @@ public enum FieldKey
     ORCHESTRA,
     ORCHESTRA_SORT,
     ORIGINAL_ALBUM,
-    ORIGINALRELEASEDATE,
     ORIGINAL_ARTIST,
     ORIGINAL_LYRICIST,
     ORIGINAL_YEAR,
-    OVERALL_WORK,
     PART,
     PART_NUMBER,
     PART_TYPE,
@@ -147,22 +131,13 @@ public enum FieldKey
     PERFORMER_NAME_SORT,
     PERIOD,
     PRODUCER,
-    PRODUCER_SORT,
     QUALITY,
     RANKING,
     RATING,
     RECORD_LABEL,
-    RECORDINGDATE,
-    RECORDINGSTARTDATE,
-    RECORDINGENDDATE,
-    RECORDINGLOCATION,
     REMIXER,
-    ROONALBUMTAG,
-    ROONTRACKTAG,
-    SECTION,
     SCRIPT,
     SINGLE_DISC_TRACK_NO,
-    SONGKONG_ID,
     SUBTITLE,
     TAGS,
     TEMPO,
@@ -183,6 +158,4 @@ public enum FieldKey
     WORK,
     WORK_TYPE,
     YEAR,
-    VERSION
-    ;
 }

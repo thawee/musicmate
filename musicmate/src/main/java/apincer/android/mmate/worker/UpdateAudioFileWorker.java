@@ -22,7 +22,7 @@ import apincer.android.mmate.repository.FileRepository;
 
 public class UpdateAudioFileWorker extends Worker {
     private static final String TAG = UpdateAudioFileWorker.class.getName();
-    FileRepository repos;
+    final FileRepository repos;
 
     private UpdateAudioFileWorker(
             @NonNull Context context,
@@ -35,7 +35,20 @@ public class UpdateAudioFileWorker extends Worker {
     @Override
     public Result doWork() {
         List<MusicTag> list = list();
-        list.parallelStream().forEach(this::save);
+
+        list.forEach(tag -> {
+            try {
+                boolean status = save(tag);
+
+                AudioTagEditResultEvent message = new AudioTagEditResultEvent(
+                        AudioTagEditResultEvent.ACTION_UPDATE,
+                        status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
+                        tag);
+                EventBus.getDefault().postSticky(message);
+            } catch (Exception e) {
+                Log.e(TAG, "save", e);
+            }
+        });
 
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
@@ -51,21 +64,17 @@ public class UpdateAudioFileWorker extends Worker {
             OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(UpdateAudioFileWorker.class)
                     .setInputData(inputData).build();
             WorkManager.getInstance(context).enqueue(workRequest);
-           // WorkManager.getInstance(context).enqueueUniqueWork("UpdateWorker", ExistingWorkPolicy.APPEND, workRequest);
-        //}
     }
 
     private List<MusicTag> list() {
         return MusixMateApp.getPendingItems("Update");
     }
 
-    private void save(MusicTag tag) {
-        try {
-            boolean status = repos.setMusicTag(tag);
-            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-            EventBus.getDefault().postSticky(message);
-        } catch (Exception e) {
-            Log.e(TAG, "save",e);
-        }
+    private boolean save(MusicTag tag) {
+            try {
+                return repos.setMusicTag(tag);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
     }
 }

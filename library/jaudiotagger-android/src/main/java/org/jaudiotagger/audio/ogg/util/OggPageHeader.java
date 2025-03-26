@@ -1,17 +1,17 @@
 /*
  * Entagged Audio Tag library
  * Copyright (c) 2003-2005 Raphaël Slinckx <raphael@slinckx.net>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *  
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,29 +22,29 @@ import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /**
  * $Id$
- *
+ * <p>
  * reference:http://xiph.org/ogg/doc/framing.html
  *
  * @author Raphael Slinckx (KiKiDonK)
- * @version 16 d�cembre 2003
+ * @version 16 december 2003
  */
-public class OggPageHeader
-{
-    // Logger Object
-    public static Logger logger = Logger.getLogger("org.jaudiotagger.audio.ogg.atom");
+public class OggPageHeader {
+
+    private static final Logger logger = LoggerFactory.getLogger("org.jaudiotagger.audio.ogg.atom");
 
     //Capture pattern at start of header
     public static final byte[] CAPTURE_PATTERN = {'O', 'g', 'g', 'S'};
@@ -88,83 +88,131 @@ public class OggPageHeader
     public static final int FIELD_PAGE_CHECKSUM_LENGTH = 4;
     public static final int FIELD_PAGE_SEGMENTS_LENGTH = 1;
 
-    private byte[] rawHeaderData;
-    private double absoluteGranulePosition;
-    private int checksum;
-    private byte headerTypeFlag;
+    private final byte[] rawHeaderData;
 
-    private boolean isValid = false;
-    private int pageLength = 0;
-    private int pageSequenceNumber, streamSerialNumber;
+    private final byte streamStructureRevision;
+    private final byte headerTypeFlag;
+    private long absoluteGranulePosition;
+
+    private int streamSerialNumber;
+    private int pageSequenceNumber;
+    private int checksum;
+    private byte pageSegments;
     private byte[] segmentTable;
 
-    private List<PacketStartAndLength> packetList = new ArrayList<PacketStartAndLength>();
-    private boolean lastPacketIncomplete = false;
+    private transient boolean isValid;
+    private transient boolean lastPacketIncomplete;
+    private final transient boolean firstPage;
+    private final transient boolean continuedPage;
+    private final transient boolean lastPage;
 
-    private long startByte = 0;
+    private transient int pageLength = 0;
+    private transient long startByte = 0;
+    private final transient List<PacketStartAndLength> packetList = new ArrayList<>();
+
+    public static OggPageHeader createCommentHeader(int pageSize, boolean continued, int serial, int sequence) {
+        int fullPacketSegments = pageSize / MAXIMUM_NO_OF_SEGMENT_SIZE;
+        int pageRemainder = pageSize % MAXIMUM_NO_OF_SEGMENT_SIZE;
+
+        int totalPacketSegments = fullPacketSegments;
+        if (pageRemainder > 0) {
+            // last segment is not full
+            totalPacketSegments++;
+        }
+
+        byte[] raw = new byte[OGG_PAGE_HEADER_FIXED_LENGTH + totalPacketSegments];
+
+        ByteBuffer buf = ByteBuffer.wrap(raw).order(ByteOrder.LITTLE_ENDIAN);
+        buf.put(OggPageHeader.CAPTURE_PATTERN);
+        buf.put((byte) 0x0);
+        buf.put((byte) (continued ? 0x1 : 0x0));
+
+        buf.putLong(0L);
+        buf.putInt(serial);
+        buf.putInt(sequence);
+        buf.putInt(0x0); // checksum
+        buf.put((byte) totalPacketSegments);
+
+        // segment table
+        for (int segNum = 0; segNum < (fullPacketSegments & 0xFF); segNum++) {
+            buf.put((byte) 0xFF);
+        }
+
+        // last segment, if needed
+        if (pageRemainder > 0) {
+            buf.put((byte) pageRemainder);
+        }
+
+        return new OggPageHeader(raw);
+    }
+
+    private void calculateChecksumOverPage(ByteBuffer page) {
+        //CRC should be zero before calculating it
+        page.putInt(OggPageHeader.FIELD_PAGE_CHECKSUM_POS, 0);
+
+        //Compute CRC over the  page  //TODO shouldnt really use array();
+        byte[] crc = OggCRCFactory.computeCRC(page.array());
+        for (int i = 0; i < crc.length; i++) {
+            page.put(OggPageHeader.FIELD_PAGE_CHECKSUM_POS + i, crc[i]);
+        }
+
+        //Rewind to start of Page
+        page.rewind();
+    }
 
     /**
      * Read next PageHeader from Buffer
      *
      * @param byteBuffer
      * @return
-     * @throws IOException
      * @throws CannotReadException
      */
-    public static OggPageHeader read(ByteBuffer byteBuffer) throws IOException, CannotReadException
-       {
-           //byteBuffer
-           int start = byteBuffer.position();
-           logger.fine("Trying to read OggPage at:" + start);
+    public static OggPageHeader read(ByteBuffer byteBuffer) throws CannotReadException {
+        //byteBuffer
+        int start = byteBuffer.position();
+        logger.debug("Trying to read OggPage at:" + start);
 
-           byte[] b = new byte[OggPageHeader.CAPTURE_PATTERN.length];
-           byteBuffer.get(b);
-           if (!(Arrays.equals(b, OggPageHeader.CAPTURE_PATTERN)))
-           {
-               throw new CannotReadException(ErrorMessage.OGG_HEADER_CANNOT_BE_FOUND.getMsg(new String(b)));
-           }
+        byte[] b = new byte[OggPageHeader.CAPTURE_PATTERN.length];
+        byteBuffer.get(b);
+        if (!(Arrays.equals(b, OggPageHeader.CAPTURE_PATTERN))) {
+            throw new CannotReadException(ErrorMessage.OGG_HEADER_CANNOT_BE_FOUND.getMsg(new String(b)));
+        }
 
-           byteBuffer.position(start + OggPageHeader.FIELD_PAGE_SEGMENTS_POS);
-           int pageSegments = byteBuffer.get() & 0xFF; //unsigned
-           byteBuffer.position(start);
+        byteBuffer.position(start + OggPageHeader.FIELD_PAGE_SEGMENTS_POS);
+        int pageSegments = byteBuffer.get() & 0xFF; //unsigned
+        byteBuffer.position(start);
 
-           b = new byte[OggPageHeader.OGG_PAGE_HEADER_FIXED_LENGTH + pageSegments];
-           byteBuffer.get(b);
-           OggPageHeader pageHeader = new OggPageHeader(b);
+        b = new byte[OggPageHeader.OGG_PAGE_HEADER_FIXED_LENGTH + pageSegments];
+        byteBuffer.get(b);
 
-           //Now just after PageHeader, ready for Packet Data
-           return pageHeader;
-       }
+        //Now just after PageHeader, ready for Packet Data
+        return new OggPageHeader(b);
+    }
 
     /**
      * Read next PageHeader from file
+     *
      * @param raf
      * @return
      * @throws IOException
      * @throws CannotReadException
      */
-    public static OggPageHeader read(RandomAccessFile raf) throws IOException, CannotReadException
-    {
+    public static OggPageHeader read(RandomAccessFile raf) throws IOException, CannotReadException {
         long start = raf.getFilePointer();
-        logger.fine("Trying to read OggPage at:" + start);
+        logger.debug("Trying to read OggPage at: " + start);
 
         byte[] b = new byte[OggPageHeader.CAPTURE_PATTERN.length];
         raf.read(b);
-        if (!(Arrays.equals(b, OggPageHeader.CAPTURE_PATTERN)))
-        {
+        if (!(Arrays.equals(b, OggPageHeader.CAPTURE_PATTERN))) {
             raf.seek(start);
-            if(AbstractID3v2Tag.isId3Tag(raf))
-            {
-                logger.warning(ErrorMessage.OGG_CONTAINS_ID3TAG.getMsg(raf.getFilePointer() - start));
+            if (AbstractID3v2Tag.isId3Tag(raf)) {
+                logger.warn(ErrorMessage.OGG_CONTAINS_ID3TAG.getMsg(raf.getFilePointer() - start));
                 raf.read(b);
-                if ((Arrays.equals(b, OggPageHeader.CAPTURE_PATTERN)))
-                {
+                if ((Arrays.equals(b, OggPageHeader.CAPTURE_PATTERN))) {
                     //Go to the end of the ID3 header
-                    start=raf.getFilePointer() - OggPageHeader.CAPTURE_PATTERN.length;
+                    start = raf.getFilePointer() - OggPageHeader.CAPTURE_PATTERN.length;
                 }
-            }
-            else
-            {
+            } else {
                 throw new CannotReadException(ErrorMessage.OGG_HEADER_CANNOT_BE_FOUND.getMsg(new String(b)));
             }
         }
@@ -183,37 +231,32 @@ public class OggPageHeader
         return pageHeader;
     }
 
-    public OggPageHeader(byte[] b)
-    {
+    public OggPageHeader(byte[] b) {
         this.rawHeaderData = b;
-        int streamStructureRevision = b[FIELD_STREAM_STRUCTURE_VERSION_POS];
+        streamStructureRevision = b[FIELD_STREAM_STRUCTURE_VERSION_POS];
         headerTypeFlag = b[FIELD_HEADER_TYPE_FLAG_POS];
-        if (streamStructureRevision == 0)
-        {
-            this.absoluteGranulePosition = 0;
-            for (int i = 0; i < FIELD_ABSOLUTE_GRANULE_LENGTH; i++)
-            {
-                this.absoluteGranulePosition += u(b[i + FIELD_ABSOLUTE_GRANULE_POS]) * Math.pow(2, 8 * i);
-            }
 
-            streamSerialNumber = Utils.getIntLE(b, FIELD_STREAM_SERIAL_NO_POS, 17);
-            pageSequenceNumber = Utils.getIntLE(b, FIELD_PAGE_SEQUENCE_NO_POS, 21);
-            checksum = Utils.getIntLE(b, FIELD_PAGE_CHECKSUM_POS, 25);
-            @SuppressWarnings("unused")
-			int pageSegments = u(b[FIELD_PAGE_SEGMENTS_POS]);
+        continuedPage = (headerTypeFlag & 0x01) != 0;
+        firstPage = (headerTypeFlag & 0x02) != 0;
+        lastPage = (headerTypeFlag & 0x04) != 0;
+
+        if (streamStructureRevision == 0x0) {
+            this.absoluteGranulePosition = Utils.getLongLE(b, FIELD_ABSOLUTE_GRANULE_POS, 13);
+            this.streamSerialNumber = Utils.getIntLE(b, FIELD_STREAM_SERIAL_NO_POS, 17);
+            this.pageSequenceNumber = Utils.getIntLE(b, FIELD_PAGE_SEQUENCE_NO_POS, 21);
+            this.checksum = Utils.getIntLE(b, FIELD_PAGE_CHECKSUM_POS, 25);
+            this.pageSegments = b[FIELD_PAGE_SEGMENTS_POS];
 
             this.segmentTable = new byte[b.length - OGG_PAGE_HEADER_FIXED_LENGTH];
             int packetLength = 0;
             Integer segmentLength = null;
-            for (int i = 0; i < segmentTable.length; i++)
-            {
+            for (int i = 0; i < segmentTable.length; i++) {
                 segmentTable[i] = b[OGG_PAGE_HEADER_FIXED_LENGTH + i];
                 segmentLength = u(segmentTable[i]);
                 this.pageLength += segmentLength;
                 packetLength += segmentLength;
 
-                if (segmentLength < MAXIMUM_SEGMENT_SIZE)
-                {
+                if (segmentLength < MAXIMUM_SEGMENT_SIZE) {
                     packetList.add(new PacketStartAndLength(pageLength - packetLength, packetLength));
                     packetLength = 0;
                 }
@@ -221,10 +264,8 @@ public class OggPageHeader
 
             //If last segment value is 255 this packet continues onto next page
             //and will not have been added to the packetStartAndEnd list yet
-            if(segmentLength!=null)
-            {
-                if (segmentLength == MAXIMUM_SEGMENT_SIZE)
-                {
+            if (segmentLength != null) {
+                if (segmentLength == MAXIMUM_SEGMENT_SIZE) {
                     packetList.add(new PacketStartAndLength(pageLength - packetLength, packetLength));
                     lastPacketIncomplete = true;
                 }
@@ -232,150 +273,170 @@ public class OggPageHeader
             isValid = true;
         }
 
-        if(logger.isLoggable(Level.CONFIG))
-        {
-            logger.config("Constructed OggPage:" + this.toString());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Constructed OggPage: " + this);
         }
     }
 
-    private int u(int i)
-    {
+    public void write(ByteBuffer dst) {
+        dst.order(ByteOrder.LITTLE_ENDIAN);
+
+        dst.put(OggPageHeader.CAPTURE_PATTERN);
+        dst.put(streamStructureRevision);
+        dst.put(headerTypeFlag);
+
+        if (streamStructureRevision == 0x0) {
+            dst.putLong(absoluteGranulePosition);
+            dst.putInt(streamSerialNumber);
+            dst.putInt(pageSequenceNumber);
+            dst.putInt(checksum);
+            dst.put(pageSegments);
+            dst.put(segmentTable);
+        }
+    }
+
+    private int u(int i) {
         return i & 0xFF;
     }
 
     /**
      * @return true if the last packet on this page extends to the next page
      */
-    public boolean isLastPacketIncomplete()
-    {
+    public boolean isLastPacketIncomplete() {
         return lastPacketIncomplete;
     }
 
-    public double getAbsoluteGranulePosition()
-    {
-        logger.fine("Number Of Samples: " + absoluteGranulePosition);
+    public long getAbsoluteGranulePosition() {
+        logger.debug("Number Of Samples: " + absoluteGranulePosition);
         return this.absoluteGranulePosition;
     }
 
-
-    public int getCheckSum()
-    {
+    public int getCheckSum() {
         return checksum;
     }
 
+    public void setChecksum(int checksum) {
+        ByteBuffer.wrap(rawHeaderData).order(ByteOrder.LITTLE_ENDIAN).putInt(FIELD_PAGE_CHECKSUM_POS, checksum);
+        this.checksum = checksum;
+    }
 
-    public byte getHeaderType()
-    {
+    public byte getHeaderType() {
         return headerTypeFlag;
     }
 
 
-    public int getPageLength()
-    {
-        logger.finer("This page length: " + pageLength);
+    public int getPageLength() {
+        logger.debug("This page length: " + pageLength);
         return this.pageLength;
     }
 
-    public int getPageSequence()
-    {
+    public int getPageSequence() {
         return pageSequenceNumber;
     }
 
-    public int getSerialNumber()
-    {
+    public void setPageSequence(int seqNo) {
+        ByteBuffer.wrap(rawHeaderData).order(ByteOrder.LITTLE_ENDIAN).putInt(FIELD_PAGE_SEQUENCE_NO_POS, seqNo);
+        this.pageSequenceNumber = seqNo;
+    }
+
+    public int getSerialNumber() {
         return streamSerialNumber;
     }
 
-    public byte[] getSegmentTable()
-    {
+    public byte[] getSegmentTable() {
         return this.segmentTable;
     }
 
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return isValid;
     }
 
     /**
      * @return a list of packet start position and size within this page.
      */
-    public List<PacketStartAndLength> getPacketList()
-    {
+    public List<PacketStartAndLength> getPacketList() {
         return packetList;
     }
 
     /**
      * @return the raw header data that this pageheader is derived from
      */
-    public byte[] getRawHeaderData()
-    {
+    public byte[] getRawHeaderData() {
         return rawHeaderData;
     }
 
-    public String toString()
-    {
-        String out = "Ogg Page Header:isValid:" + isValid + ":type:" + headerTypeFlag + ":oggPageHeaderLength:" + rawHeaderData.length + ":length:" + pageLength + ":seqNo:" + getPageSequence() + ":packetIncomplete:" + isLastPacketIncomplete() + ":serNum:" + this.getSerialNumber();
+    public String toString() {
+        String out = "Ogg Page Header { isValid: " + isValid +
+                ", type: " + headerTypeFlag +
+                ", oggPageHeaderLength: " + rawHeaderData.length +
+                ", length: " + pageLength +
+                ", seqNo: " + getPageSequence() +
+                ", packetIncomplete: " + isLastPacketIncomplete() +
+                ", serNum: " + this.getSerialNumber() + " } ";
 
-        for (PacketStartAndLength packet : getPacketList())
-        {
+        for (PacketStartAndLength packet : getPacketList()) {
             out += packet.toString();
         }
         return out;
     }
 
-    /** Startbyte of this pageHeader in the file
-     *
+    /**
+     * Startbyte of this pageHeader in the file
+     * <p>
      * This is useful for Ogg files that contain unsupported additional data at the start of the file such
      * as ID3 data
      */
-    public long getStartByte()
-    {
+    public long getStartByte() {
         return startByte;
     }
 
-    public void setStartByte(long startByte)
-    {
+    public void setStartByte(long startByte) {
         this.startByte = startByte;
+    }
+
+    public boolean isFirstPage() {
+        return firstPage;
+    }
+
+    public boolean isContinuedPage() {
+        return continuedPage;
+    }
+
+    public boolean isLastPage() {
+        return lastPage;
     }
 
     /**
      * Within the page specifies the start and length of each packet
      * in the page offset from the end of the pageheader (after the segment table)
      */
-    public static class PacketStartAndLength
-    {
+    public static class PacketStartAndLength {
         private Integer startPosition = 0;
         private Integer length = 0;
 
-        public PacketStartAndLength(int startPosition, int length)
-        {
+        public PacketStartAndLength(int startPosition, int length) {
             this.startPosition = startPosition;
             this.length = length;
         }
 
-        public int getStartPosition()
-        {
+        public int getStartPosition() {
             return startPosition;
         }
 
-        public void setStartPosition(int startPosition)
-        {
+        public void setStartPosition(int startPosition) {
             this.startPosition = startPosition;
         }
 
-        public int getLength()
-        {
+        public int getLength() {
             return length;
         }
 
-        public void setLength(int length)
-        {
+        public void setLength(int length) {
             this.length = length;
         }
 
-        public String toString()
-        {
-            return "NextPkt(start:" + startPosition + ":length:" + length + "),";
+        public String toString() {
+            return "NextPkt(start: " + startPosition + ", length: " + length + "),";
         }
     }
 
@@ -385,8 +446,7 @@ public class OggPageHeader
      * a file would normally have a value of 0x5 because both the CONTINUED_PACKET
      * bit and the END_OF_BITSTREAM bit would be set.
      */
-    public static enum HeaderTypeFlag
-    {
+    public enum HeaderTypeFlag {
         FRESH_PACKET((byte) 0x0),
         CONTINUED_PACKET((byte) 0x1),
         START_OF_BITSTREAM((byte) 0x2),
@@ -394,16 +454,14 @@ public class OggPageHeader
 
         byte fileValue;
 
-        HeaderTypeFlag(byte fileValue)
-        {
+        HeaderTypeFlag(byte fileValue) {
             this.fileValue = fileValue;
         }
 
         /**
          * @return the value that should be written to file to enable this flag
          */
-        public byte getFileValue()
-        {
+        public byte getFileValue() {
             return fileValue;
         }
     }

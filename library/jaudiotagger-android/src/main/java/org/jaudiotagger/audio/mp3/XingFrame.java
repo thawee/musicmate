@@ -1,6 +1,8 @@
 package org.jaudiotagger.audio.mp3;
 
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -12,7 +14,7 @@ import java.util.Arrays;
  * instead of audio data. This is used to store additional information about the file. The most important aspect for
  * this library is details allowing us to determine the bitrate of a Variable Bit Rate VBR file without having
  * to process the whole file.
- *
+ * <p>
  * Xing VBR Tag data format is 120 bytes long
  * 4 bytes for Header Tag
  * 4 bytes for Header Flags
@@ -20,11 +22,11 @@ import java.util.Arrays;
  * 4 bytes for AUDIO_SIZE
  * 100 bytes for entry (NUMTOCENTRIES)
  * 4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst
- *
+ * <p>
  * It my then contain a Lame Frame ( a Lame frame is in essence an extended Xing Frame
  */
-public class XingFrame
-{
+public class XingFrame {
+    private static final Logger logger = LoggerFactory.getLogger(XingFrame.class);
 
     //The offset into first frame varies based on the MPEG frame properties
     private static final int MPEG_VERSION_1_MODE_MONO_OFFSET = 21;
@@ -57,7 +59,7 @@ public class XingFrame
     private static final byte[] XING_CBR_ID = {'I', 'n', 'f', 'o'};
 
 
-    private ByteBuffer header;
+    private final ByteBuffer header;
 
     private boolean vbr = false;
     private boolean isFrameCountEnabled = false;
@@ -69,9 +71,8 @@ public class XingFrame
     /**
      * Read the Xing Properties from the buffer
      */
-    private XingFrame(ByteBuffer header)
-    {
-        this.header=header;
+    private XingFrame(ByteBuffer header) {
+        this.header = header;
 
         //Go to start of Buffer
         header.rewind();
@@ -80,18 +81,16 @@ public class XingFrame
         setVbr();
 
         //Read Flags, only the fourth byte of interest to us
-        byte flagBuffer[] = new byte[XING_FLAG_BUFFER_SIZE];
+        byte[] flagBuffer = new byte[XING_FLAG_BUFFER_SIZE];
         header.get(flagBuffer);
 
         //Read FrameCount if flag set
-        if ((flagBuffer[BYTE_4] & (byte) (1)) != 0)
-        {
+        if ((flagBuffer[BYTE_4] & (byte) (1)) != 0) {
             setFrameCount();
         }
 
         //Read Size if flag set
-        if ((flagBuffer[BYTE_4] & (byte) (1 << 1)) != 0)
-        {
+        if ((flagBuffer[BYTE_4] & (byte) (1 << 1)) != 0) {
             setAudioSize();
         }
 
@@ -99,29 +98,25 @@ public class XingFrame
         //TODO VBR Quality
 
         //Look for LAME Header as long as we have enough bytes to do it properly
-        if (header.limit() >= XING_HEADER_BUFFER_SIZE + LameFrame.LAME_HEADER_BUFFER_SIZE)
-        {
+        if (header.limit() >= XING_HEADER_BUFFER_SIZE + LameFrame.LAME_HEADER_BUFFER_SIZE) {
             header.position(XING_HEADER_BUFFER_SIZE);
             lameFrame = LameFrame.parseLameFrame(header);
         }
     }
 
-    public LameFrame getLameFrame()
-    {
+    public LameFrame getLameFrame() {
         return lameFrame;
     }
 
     /**
      * Set whether or not VBR, (Xing can also be used for CBR though this is less useful)
      */
-    private void setVbr()
-    {
+    private void setVbr() {
         //Is it VBR or CBR
         byte[] identifier = new byte[XING_IDENTIFIER_BUFFER_SIZE];
         header.get(identifier);
-        if (Arrays.equals(identifier, XING_VBR_ID))
-        {
-            MP3File.logger.finest("Is Vbr");
+        if (Arrays.equals(identifier, XING_VBR_ID)) {
+            logger.debug("Is Vbr");
             vbr = true;
         }
     }
@@ -129,9 +124,8 @@ public class XingFrame
     /**
      * Set count of frames
      */
-    private void setFrameCount()
-    {
-        byte frameCountBuffer[] = new byte[XING_FRAMECOUNT_BUFFER_SIZE];
+    private void setFrameCount() {
+        byte[] frameCountBuffer = new byte[XING_FRAMECOUNT_BUFFER_SIZE];
         header.get(frameCountBuffer);
         isFrameCountEnabled = true;
         frameCount = (frameCountBuffer[BYTE_1] << 24) & 0xFF000000 | (frameCountBuffer[BYTE_2] << 16) & 0x00FF0000 | (frameCountBuffer[BYTE_3] << 8) & 0x0000FF00 | frameCountBuffer[BYTE_4] & 0x000000FF;
@@ -140,25 +134,22 @@ public class XingFrame
     /**
      * @return true if frameCount has been specified in header
      */
-    public final boolean isFrameCountEnabled()
-    {
+    public final boolean isFrameCountEnabled() {
         return isFrameCountEnabled;
     }
 
     /**
      * @return count of frames
      */
-    public final int getFrameCount()
-    {
+    public final int getFrameCount() {
         return frameCount;
     }
 
     /**
      * Set size of AudioData
      */
-    private void setAudioSize()
-    {
-        byte frameSizeBuffer[] = new byte[XING_AUDIOSIZE_BUFFER_SIZE];
+    private void setAudioSize() {
+        byte[] frameSizeBuffer = new byte[XING_AUDIOSIZE_BUFFER_SIZE];
         header.get(frameSizeBuffer);
         isAudioSizeEnabled = true;
         audioSize = (frameSizeBuffer[BYTE_1] << 24) & 0xFF000000 | (frameSizeBuffer[BYTE_2] << 16) & 0x00FF0000 | (frameSizeBuffer[BYTE_3] << 8) & 0x0000FF00 | frameSizeBuffer[BYTE_4] & 0x000000FF;
@@ -167,16 +158,14 @@ public class XingFrame
     /**
      * @return true if audioSize has been specified in header
      */
-    public final boolean isAudioSizeEnabled()
-    {
+    public final boolean isAudioSizeEnabled() {
         return isAudioSizeEnabled;
     }
 
     /**
      * @return size of audio data in bytes
      */
-    public final int getAudioSize()
-    {
+    public final int getAudioSize() {
         return audioSize;
     }
 
@@ -187,8 +176,7 @@ public class XingFrame
      * @return
      * @throws InvalidAudioFrameException
      */
-    public static XingFrame parseXingFrame(ByteBuffer header) throws InvalidAudioFrameException
-    {
+    public static XingFrame parseXingFrame(ByteBuffer header) throws InvalidAudioFrameException {
         XingFrame xingFrame = new XingFrame(header);
         return xingFrame;
     }
@@ -200,32 +188,23 @@ public class XingFrame
      * @param mpegFrameHeader
      * @return true if this is a Xing frame
      */
-    public static ByteBuffer isXingFrame(ByteBuffer bb, MPEGFrameHeader mpegFrameHeader)
-    {
+    public static ByteBuffer isXingFrame(ByteBuffer bb, MPEGFrameHeader mpegFrameHeader) {
         //We store this so can return here after scanning through buffer
         int startPosition = bb.position();
 
         //Get to Start of where Xing Frame Should be ( we dont know if it is one at this point)
-        if (mpegFrameHeader.getVersion() == MPEGFrameHeader.VERSION_1)
-        {
-            if (mpegFrameHeader.getChannelMode() == MPEGFrameHeader.MODE_MONO)
-            {
+        if (mpegFrameHeader.getVersion() == MPEGFrameHeader.VERSION_1) {
+            if (mpegFrameHeader.getChannelMode() == MPEGFrameHeader.MODE_MONO) {
                 bb.position(startPosition + MPEG_VERSION_1_MODE_MONO_OFFSET);
-            }
-            else
-            {
+            } else {
                 bb.position(startPosition + MPEG_VERSION_1_MODE_STEREO_OFFSET);
             }
         }
         //MPEGVersion 2 and 2.5
-        else
-        {
-            if (mpegFrameHeader.getChannelMode() == MPEGFrameHeader.MODE_MONO)
-            {
+        else {
+            if (mpegFrameHeader.getChannelMode() == MPEGFrameHeader.MODE_MONO) {
                 bb.position(startPosition + MPEG_VERSION_2_MODE_MONO_OFFSET);
-            }
-            else
-            {
+            } else {
                 bb.position(startPosition + MPEG_VERSION_2_MODE_STEREO_OFFSET);
             }
         }
@@ -239,11 +218,10 @@ public class XingFrame
         //Check Identifier
         byte[] identifier = new byte[XING_IDENTIFIER_BUFFER_SIZE];
         header.get(identifier);
-        if ((!Arrays.equals(identifier, XING_VBR_ID)) && (!Arrays.equals(identifier, XING_CBR_ID)))
-        {
+        if ((!Arrays.equals(identifier, XING_VBR_ID)) && (!Arrays.equals(identifier, XING_CBR_ID))) {
             return null;
         }
-        MP3File.logger.finest("Found Xing Frame");
+        logger.debug("Found Xing Frame");
         return header;
     }
 
@@ -252,21 +230,14 @@ public class XingFrame
      *
      * @return
      */
-    public final boolean isVbr()
-    {
+    public final boolean isVbr() {
         return vbr;
     }
 
     /**
      * @return a string representation
      */
-    public String toString()
-    {
-        return "Xing Header+\n"
-                + "\tvbr:" + vbr +"\n"
-                + "\tframeCountEnabled:" + isFrameCountEnabled+"\n"
-                + "\tframeCount:" + frameCount +"\n"
-                + "\taudioSizeEnabled:" + isAudioSizeEnabled+"\n"
-                + "\taudioFileSize:" + audioSize+"\n";
+    public String toString() {
+        return "xingheader" + " vbr:" + vbr + " frameCountEnabled:" + isFrameCountEnabled + " frameCount:" + frameCount + " audioSizeEnabled:" + isAudioSizeEnabled + " audioFileSize:" + audioSize;
     }
 }

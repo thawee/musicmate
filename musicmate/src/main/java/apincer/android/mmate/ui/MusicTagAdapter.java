@@ -36,51 +36,18 @@ import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import coil3.Image;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
 import coil3.target.ImageViewTarget;
-import kotlin.jvm.functions.Function1;
 
 public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHolder> {
-    private SearchCriteria criteria;
+    private final SearchCriteria criteria;
     private final List<MusicTag> localDataSet;
     private SelectionTracker<Long> mTracker;
     private OnListItemClick onListItemClick;
     private long totalSize;
     private double totalDuration;
-
-    @SuppressLint("NotifyDataSetChanged")
-    public void loadDataSets() {
-        localDataSet.clear();
-        totalSize =0;
-        totalDuration =0;
-        if(criteria==null) {
-            criteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
-        }
-        List<MusicTag> list = TagRepository.findMediaTag(criteria);
-        if(list == null) return; // NPE
-
-        boolean noFilters = !hasFilter();
-        if(noFilters) {
-            for (MusicTag tag : list) {
-                localDataSet.add(tag);
-                totalSize += tag.getFileSize();
-                totalDuration += tag.getAudioDuration();
-            }
-        }else {
-            for (MusicTag tag : list) {
-                if(!isMatchFilter(tag)) {
-                    continue;
-                }
-                localDataSet.add(tag);
-                totalSize += tag.getFileSize();
-                totalDuration += tag.getAudioDuration();
-            }
-        }
-        notifyDataSetChanged();
-    }
 
     public boolean isMatchFilter(MusicTag tag) {
         if(criteria==null || isEmpty(criteria.getFilterType())) {
@@ -103,11 +70,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         return false;
     }
 
-    public void loadDataSets(SearchCriteria finalCriteria) {
-        this.criteria = finalCriteria;
-        loadDataSets();
-    }
-
     public void setKeyword(String text) {
         criteria.setKeyword(text);
     }
@@ -125,7 +87,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public int getMusicTagPosition(MusicTag selectedSong) {
-       int i =0;
+        int i =0;
         for(MusicTag tag : localDataSet) {
             if(tag.equals(selectedSong)) return i;
             i++;
@@ -162,10 +124,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_TO_ANALYST_DR);
             titles.add(Constants.TITLE_BROKEN);
-           // titles.add(Constants.TITLE_NO_COVERART);
-       // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
-       //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
-        //    titles.add(Constants.TITLE_DSD_AUDIO);
+            // titles.add(Constants.TITLE_NO_COVERART);
+            // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
+            //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
+            //    titles.add(Constants.TITLE_DSD_AUDIO);
         }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             titles.add(Constants.QUALITY_AUDIOPHILE);
             titles.add(Constants.QUALITY_RECOMMENDED);
@@ -282,18 +244,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void notifyMusicTagChanged(MusicTag song) {
-        int position = getMusicTagPosition(song);
-        if(position != RecyclerView.NO_POSITION) {
-            if(position < getItemCount()) {
-                notifyItemChanged(position);
-            }
-        }
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
     public void removeMusicTag(int position, MusicTag song) {
-        localDataSet.remove( song);
+        localDataSet.remove(song);
         notifyDataSetChanged();
     }
 
@@ -301,9 +253,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(criteria!=null) {
             if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
                 return Constants.TITLE_LIBRARY;
-           // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
-           //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
-           //     return Constants.TITLE_DSD;
+                // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
+                //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
+                //     return Constants.TITLE_DSD;
             }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 return Constants.TITLE_QUALITY;
             }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
@@ -329,20 +281,49 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         criteria.setKeyword("");
     }
 
+    // New method to set music tags from ViewModel
+    @SuppressLint("NotifyDataSetChanged")
+    public void setMusicTags(List<MusicTag> tags) {
+        localDataSet.clear();
+        totalSize = 0;
+        totalDuration = 0;
+
+        if(tags == null) return;
+
+        boolean noFilters = !hasFilter();
+        if(noFilters) {
+            for (MusicTag tag : tags) {
+                localDataSet.add(tag);
+                totalSize += tag.getFileSize();
+                totalDuration += tag.getAudioDuration();
+            }
+        } else {
+            for (MusicTag tag : tags) {
+                if(!isMatchFilter(tag)) {
+                    continue;
+                }
+                localDataSet.add(tag);
+                totalSize += tag.getFileSize();
+                totalDuration += tag.getAudioDuration();
+            }
+        }
+        notifyDataSetChanged();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;
         View mCoverArtFrame;
         View mTitleLayout;
-       // View mDynamicRangePanel;
+        // View mDynamicRangePanel;
         TextView mTitle;
         TextView mSubtitle;
         TextView mDurationView;
         TextView mFileSizeView;
         ImageView mCoverArtView;
-      //  ImageView mFileSourceView;
+        //  ImageView mFileSourceView;
         TextView mFileTypeView;
-       // TextView mDynamicRange;
+        // TextView mDynamicRange;
         Context mContext;
         ImageView mPlayerView;
         ImageView mAudioResolutionView;
@@ -360,12 +341,12 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
-          //  this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
-           // this.mDynamicRangePanel = view.findViewById(R.id.item_dr_icon_panel);
+            //  this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
+            // this.mDynamicRangePanel = view.findViewById(R.id.item_dr_icon_panel);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
-         //   this.mFileSourceView = view.findViewById(R.id.item_src_icon);
+            //   this.mFileSourceView = view.findViewById(R.id.item_src_icon);
             this.mFileTypeView = view.findViewById(R.id.item_type_label);
 
             this.mFileSizeView = view.findViewById(R.id.item_file_size);
@@ -470,14 +451,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
-       // if(MusicTagUtils.isFLACFile(tag)) {
-            holder.mAudioQuality.setVisibility(View.VISIBLE);
-            ImageRequest request = new ImageRequest.Builder(holder.mContext)
-                    .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
-                   // .crossfade(false)
-                    .target(new ImageViewTarget(holder.mAudioQuality))
-                    .build();
-            imageLoader.enqueue(request);
+        // if(MusicTagUtils.isFLACFile(tag)) {
+        holder.mAudioQuality.setVisibility(View.VISIBLE);
+        ImageRequest request = new ImageRequest.Builder(holder.mContext)
+                .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
+                // .crossfade(false)
+                .target(new ImageViewTarget(holder.mAudioQuality))
+                .build();
+        imageLoader.enqueue(request);
 
         if (isListening) {
             //show music player icon
@@ -512,9 +493,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 //.scale(Scale.FILL) // Set the scale type
                 //.crossfade(false)
                 .target(new ImageViewTarget(holder.mCoverArtView))
-                .error(imageRequest -> {
-                    return CoverartFetcher.getDefaultCover(holder.mContext);
-                })
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
                 //.placeholder(R.drawable.progress)
                 //.error(getDefaultNoCover(tag))
                 //.error(R.drawable.no_cover2)
@@ -525,7 +504,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // show enc i.e. PCM, MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
                 .data(IconProviders.getResolutionIcon(holder.mContext, tag))
-               // .crossfade(false)
+                // .crossfade(false)
                 .target(new ImageViewTarget(holder.mAudioResolutionView))
                 .build();
         imageLoader.enqueue(request);

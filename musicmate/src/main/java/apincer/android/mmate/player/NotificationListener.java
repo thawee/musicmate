@@ -1,6 +1,8 @@
 package apincer.android.mmate.player;
 
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -15,6 +17,7 @@ import apincer.android.mmate.utils.StringUtils;
 
 public class NotificationListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
+    private final Object stateLock = new Object();
 
     // Constants for notification extras
     private static final String EXTRA_TITLE = "android.title";
@@ -41,8 +44,33 @@ public class NotificationListener extends NotificationListenerService {
 
     @Override
     public void onDestroy() {
-        // Ensure you're not manually calling unbindService here
+        Log.d(TAG, "NotificationListener service being destroyed");
+        // Reset state variables
+        previousPackage = null;
+        previousTitle = null;
+        previousArtist = null;
+
+        // Let the parent handle unbinding - don't call unbindService yourself
         super.onDestroy();
+    }
+
+    @Override
+    public void onListenerConnected() {
+        super.onListenerConnected();
+        Log.d(TAG, "NotificationListener service connected");
+        // Reset state variables
+        previousPackage = null;
+        previousTitle = null;
+        previousArtist = null;
+    }
+
+    @Override
+    public void onListenerDisconnected() {
+        super.onListenerDisconnected();
+        Log.d(TAG, "NotificationListener service disconnected");
+
+        // Attempt to reconnect
+        requestRebind(new ComponentName(this, NotificationListener.class));
     }
 
     @Override
@@ -118,38 +146,35 @@ public class NotificationListener extends NotificationListenerService {
 
     public void publishNowPlaying(String packageName, String title, String artist) {
         // Check if the playback information has changed to avoid unnecessary updates
-        if (!(StringUtils.compare(previousPackage, packageName) &&
-                StringUtils.compare(previousTitle, title) &&
-                StringUtils.compare(previousArtist, artist))) {
+        synchronized(stateLock) {
+            if (!(StringUtils.compare(previousPackage, packageName) &&
+                    StringUtils.compare(previousTitle, title) &&
+                    StringUtils.compare(previousArtist, artist))) {
 
-            // Update previous state
-            previousPackage = packageName;
-            previousTitle = title;
-            previousArtist = artist;
+                // Update previous state
+                previousPackage = packageName;
+                previousTitle = title;
+                previousArtist = artist;
 
-            Log.d(TAG, "Now playing update: " + title + " - " + artist + " [" + packageName + "]");
+                Log.d(TAG, "Now playing update: " + title + " - " + artist + " [" + packageName + "]");
 
-            try {
-                // Send the now playing information to PlayerControl
-                MusixMateApp.getPlayerControl().setPlayingSong(
-                        getApplicationContext(),
-                        packageName,
-                        title,
-                        artist,
-                        null);
-            } catch (Exception ex) {
-                Log.e(TAG, "Error sending now playing information", ex);
+                try {
+                    // Send the now playing information to PlayerControl
+                    MusixMateApp.getPlayerControl().setPlayingSong(
+                            getApplicationContext(),
+                            packageName,
+                            title,
+                            artist,
+                            null);
+                } catch (Exception ex) {
+                    Log.e(TAG, "Error sending now playing information", ex);
+                }
             }
         }
-       /* if(!(StringUtils.compare(prvPack, pack) && StringUtils.compare(prvTitle, title) && StringUtils.compare(prvArtist, artist))) {
-            prvPack = pack;
-            prvTitle = title;
-            prvArtist = artist;
-            try {
-                MusixMateApp.getPlayerControl().setPlayingSong(getApplicationContext(), pack, title, artist, null);
-            } catch (Exception ex) {
-                Log.e(TAG, "sendBroadcast", ex);
-            }
-        } */
+    }
+
+    public static void reconnectNotificationListener(Context context) {
+        ComponentName componentName = new ComponentName(context, NotificationListener.class);
+        NotificationListenerService.requestRebind(componentName);
     }
 }

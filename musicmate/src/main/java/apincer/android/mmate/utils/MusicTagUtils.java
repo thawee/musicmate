@@ -194,7 +194,7 @@ public class MusicTagUtils {
         return text;
     }
 
-    public static String getTrackDRScore(MusicTag tag) {
+    public static String getDynamicRangeScore(MusicTag tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {
             text = "";
@@ -205,12 +205,12 @@ public class MusicTagUtils {
         return text;
     }
 
-    public static String getDynamicRangeScore(MusicTag tag) {
+    public static String getDynamicRange(MusicTag tag) {
         String text;
-        if(tag.getDynamicRangeScore()==0.00) {
-            text = "";
+        if(tag.getDynamicRange()==0.00) {
+            text = "00";
         }else {
-            text = String.format(Locale.US, "%.0f", tag.getDynamicRangeScore());
+            text = String.format(Locale.US, "%.0f", tag.getDynamicRange());
         }
 
         return text;

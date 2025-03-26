@@ -5,6 +5,7 @@ import static apincer.android.mmate.utils.StringUtils.format;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -317,20 +318,33 @@ public class TagsTechnicalFragment extends Fragment {
     }
 
     private void startProgressBar() {
+        if (!isAdded() || getActivity() == null) return;
+
         getActivity().runOnUiThread(() -> {
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
-            dialogBuilder.setView(R.layout.progress_dialog_layout);
-            dialogBuilder.setCancelable(false);
-            progressDialog = dialogBuilder.create();
-            progressDialog.show();
+            try {
+                if (!isAdded() || getActivity() == null) return;
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
+                dialogBuilder.setView(R.layout.progress_dialog_layout);
+                dialogBuilder.setCancelable(false);
+                progressDialog = dialogBuilder.create();
+                progressDialog.show();
+            } catch (Exception e) {
+                Log.e("TagsTechnicalFragment", "Error showing progress dialog", e);
+            }
         });
     }
 
     private void stopProgressBar() {
+        if (!isAdded() || getActivity() == null) return;
+
         getActivity().runOnUiThread(() -> {
-            if(progressDialog!=null) {
-                progressDialog.dismiss();
-                progressDialog = null;
+            try {
+                if(progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                    progressDialog = null;
+                }
+            } catch (Exception e) {
+                Log.e("TagsTechnicalFragment", "Error dismissing progress dialog", e);
             }
         });
     }

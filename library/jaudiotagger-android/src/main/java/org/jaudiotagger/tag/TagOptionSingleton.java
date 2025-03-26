@@ -1,35 +1,35 @@
 /**
- *  @author : Paul Taylor
- *  @author : Eric Farng
- *
- *  Version @version:$Id$
- *
- *  MusicTag Copyright (C)2003,2004
- *
- *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- *  or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ * @author : Paul Taylor
+ * @author : Eric Farng
+ * <p>
+ * Version @version:$Id$
+ * <p>
+ * MusicTag Copyright (C)2003,2004
+ * <p>
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ * or (at your option) any later version.
+ * <p>
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * <p>
  * Description:
  * Options that are used for every datatype and class in this library.
- *
  */
 package org.jaudiotagger.tag;
 
 import org.jaudiotagger.audio.wav.WavOptions;
 import org.jaudiotagger.audio.wav.WavSaveOptions;
 import org.jaudiotagger.audio.wav.WavSaveOrder;
-import org.jaudiotagger.tag.id3.ID3v22Frames;
-import org.jaudiotagger.tag.id3.ID3v23Frames;
-import org.jaudiotagger.tag.id3.ID3v24Frames;
+import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
+import org.jaudiotagger.tag.id3.ID3v22Tag;
+import org.jaudiotagger.tag.id3.ID3v23Tag;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.id3.framebody.AbstractID3v2FrameBody;
 import org.jaudiotagger.tag.id3.framebody.FrameBodyCOMM;
 import org.jaudiotagger.tag.id3.framebody.FrameBodyTIPL;
@@ -47,79 +47,85 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class TagOptionSingleton
-{
-    private boolean   isWriteWavForTwonky = false;
+public class TagOptionSingleton {
+    private boolean isWriteWavForTwonky = false;
 
     private WavOptions wavOptions = WavOptions.READ_ID3_ONLY;
 
-    public void setWavOptions(WavOptions wavOptions)
-    {
+    /**
+     * Default based on user option
+     *
+     * @return
+     */
+    public static AbstractID3v2Tag createDefaultID3Tag() {
+        if (getInstance().getID3V2Version() == ID3V2Version.ID3_V24) {
+            return new ID3v24Tag();
+        } else if (getInstance().getID3V2Version() == ID3V2Version.ID3_V23) {
+            return new ID3v23Tag();
+        } else if (getInstance().getID3V2Version() == ID3V2Version.ID3_V22) {
+            return new ID3v22Tag();
+        }
+        //Default in case not set somehow
+        return new ID3v23Tag();
+    }
+
+    public void setWavOptions(WavOptions wavOptions) {
         this.wavOptions = wavOptions;
     }
 
-    public WavOptions getWavOptions()
-    {
+    public WavOptions getWavOptions() {
         return wavOptions;
     }
 
     private WavSaveOptions wavSaveOptions = WavSaveOptions.SAVE_BOTH;
 
-    public void setWavSaveOptions(WavSaveOptions wavSaveOptions)
-    {
+    public void setWavSaveOptions(WavSaveOptions wavSaveOptions) {
         this.wavSaveOptions = wavSaveOptions;
     }
 
-    public WavSaveOptions getWavSaveOptions()
-    {
+    public WavSaveOptions getWavSaveOptions() {
         return wavSaveOptions;
     }
 
     private WavSaveOrder wavSaveOrder = WavSaveOrder.INFO_THEN_ID3;
 
-    public void setWavSaveOrder(WavSaveOrder wavSaveOrder)
-    {
+    public void setWavSaveOrder(WavSaveOrder wavSaveOrder) {
         this.wavSaveOrder = wavSaveOrder;
     }
 
-    public WavSaveOrder getWavSaveOrder()
-    {
+    public WavSaveOrder getWavSaveOrder() {
         return wavSaveOrder;
     }
 
     private VorbisAlbumArtistSaveOptions vorbisAlbumArtistSaveOptions = VorbisAlbumArtistSaveOptions.WRITE_ALBUMARTIST;
 
-    public void setVorbisAlbumArtistSaveOptions(VorbisAlbumArtistSaveOptions vorbisAlbumArtistSaveOptions)
-    {
+    public void setVorbisAlbumArtistSaveOptions(VorbisAlbumArtistSaveOptions vorbisAlbumArtistSaveOptions) {
         this.vorbisAlbumArtistSaveOptions = vorbisAlbumArtistSaveOptions;
     }
 
-    public VorbisAlbumArtistSaveOptions getVorbisAlbumArtistSaveOptions()
-    {
+    public VorbisAlbumArtistSaveOptions getVorbisAlbumArtistSaveOptions() {
         return vorbisAlbumArtistSaveOptions;
     }
 
     private VorbisAlbumArtistReadOptions vorbisAlbumArtistReadOptions = VorbisAlbumArtistReadOptions.READ_ALBUMARTIST_THEN_JRIVER;
 
-    public void setVorbisAlbumArtistReadOptions(VorbisAlbumArtistReadOptions vorbisAlbumArtistReadOptions)
-    {
+    public void setVorbisAlbumArtistReadOptions(VorbisAlbumArtistReadOptions vorbisAlbumArtistReadOptions) {
         this.vorbisAlbumArtistReadOptions = vorbisAlbumArtistReadOptions;
     }
 
-    public VorbisAlbumArtistReadOptions getVorbisAlbumArtisReadOptions()
-    {
+    public VorbisAlbumArtistReadOptions getVorbisAlbumArtisReadOptions() {
         return vorbisAlbumArtistReadOptions;
     }
 
     /**
      *
      */
-    private static HashMap<String, TagOptionSingleton> tagOptionTable = new HashMap<String, TagOptionSingleton>();
+    private static final HashMap<String, TagOptionSingleton> tagOptionTable = new HashMap<String, TagOptionSingleton>();
 
     /**
      *
      */
-    private static String DEFAULT = "default";
+    private static final String DEFAULT = "default";
 
     /**
      *
@@ -225,20 +231,6 @@ public class TagOptionSingleton
      */
     private boolean id3v2Save = true;
 
-    /**
-     * Special mode for iTunes 12.6.
-     *
-     * If {@code true}, map
-     * {@link FieldKey#WORK} to {@link org.jaudiotagger.tag.id3.framebody.FrameBodyTIT1}
-     * and {@link FieldKey#GROUPING} to {@link org.jaudiotagger.tag.id3.framebody.FrameBodyGRP1}.
-     *
-     * If {@code false}, map
-     * {@link FieldKey#WORK} to special {@link org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX}
-     * and {@link FieldKey#GROUPING} to {@link org.jaudiotagger.tag.id3.framebody.FrameBodyTIT1}.
-     *
-     * The latter used to be the default behavior before iTunes 12.6.
-     */
-    private boolean id3v2ITunes12_6WorkGroupingMode = false;
 
     /**
      * if we should keep an empty Lyrics3 field while we're reading. This is
@@ -254,7 +246,7 @@ public class TagOptionSingleton
 
     /**
      * if we should save empty Lyrics3 field or not. Defaults to false.
-     *
+     * <p>
      * todo I don't think this is implemented yet.
      */
     private boolean lyrics3SaveEmptyField = false;
@@ -324,7 +316,7 @@ public class TagOptionSingleton
 
     /**
      * Frames such as TRCK and TPOS sometimes pad single digit numbers to aid sorting
-     *
+     * <p>
      * Currently only applies to ID3 files
      */
     private boolean padNumbers = false;
@@ -332,7 +324,7 @@ public class TagOptionSingleton
     /**
      * Number of padding zeroes digits 1- 9, numbers larger than nine will be padded accordingly based on the value.
      * Only has any effect if padNumbers is set to true
-     *
+     * <p>
      * Currently only applies to ID3 files
      */
     private PadNumberOption padNumberTotalLength = PadNumberOption.PAD_ONE_ZERO;
@@ -355,23 +347,23 @@ public class TagOptionSingleton
      * When this is set and using the generic interface jaudiotagger will make some adjustments
      * when saving field so they work best with the specified Tagger
      */
-     //TODO Not Actually Used yet, originally intended for dealing with ratings and genres
-    private int playerCompatability=-1;
+    //TODO Not Actually Used yet, originally intended for dealing with ratings and genres
+    private int playerCompatability = -1;
 
     /**
      * max size of data to copy when copying audiodata from one file to , default to 4mb
      */
-    private long writeChunkSize= (4 * 1024 * 1024);
+    private long writeChunkSize = (4 * 1024 * 1024);
 
-    private boolean isWriteMp4GenresAsText=false;
+    private boolean isWriteMp4GenresAsText = false;
 
-    private boolean isWriteMp3GenresAsText=false;
+    private boolean isWriteMp3GenresAsText = false;
 
     private ID3V2Version id3v2Version = ID3V2Version.ID3_V23;
-    
+
     /**
      * Whether Files.isWritable should be used to check if a file can be written. In some
-     * cases, isWritable can return false negatives. 
+     * cases, isWritable can return false negatives.
      */
     private boolean checkIsWritable = false;
 
@@ -381,15 +373,14 @@ public class TagOptionSingleton
     private boolean preserveFileIdentity = true;
 
     /**
-     * 
+     *
      */
-    
+
     /**
      * Creates a new TagOptions datatype. All Options are set to their default
      * values
      */
-    private TagOptionSingleton()
-    {
+    private TagOptionSingleton() {
         setToDefault();
     }
 
@@ -397,8 +388,7 @@ public class TagOptionSingleton
     /**
      * @return
      */
-    public static TagOptionSingleton getInstance()
-    {
+    public static TagOptionSingleton getInstance() {
         return getInstance(defaultOptions);
     }
 
@@ -406,12 +396,10 @@ public class TagOptionSingleton
      * @param instanceKey
      * @return
      */
-    public static TagOptionSingleton getInstance(String instanceKey)
-    {
+    public static TagOptionSingleton getInstance(String instanceKey) {
         TagOptionSingleton tagOptions = tagOptionTable.get(instanceKey);
 
-        if (tagOptions == null)
-        {
+        if (tagOptions == null) {
             tagOptions = new TagOptionSingleton();
             tagOptionTable.put(instanceKey, tagOptions);
         }
@@ -422,32 +410,28 @@ public class TagOptionSingleton
     /**
      * @param filenameTagSave
      */
-    public void setFilenameTagSave(boolean filenameTagSave)
-    {
+    public void setFilenameTagSave(boolean filenameTagSave) {
         this.filenameTagSave = filenameTagSave;
     }
 
     /**
      * @return
      */
-    public boolean isFilenameTagSave()
-    {
+    public boolean isFilenameTagSave() {
         return filenameTagSave;
     }
 
     /**
      * @param id3v2Version
      */
-    public void setID3V2Version(ID3V2Version  id3v2Version)
-    {
+    public void setID3V2Version(ID3V2Version id3v2Version) {
         this.id3v2Version = id3v2Version;
     }
 
     /**
      * @return
      */
-    public ID3V2Version getID3V2Version()
-    {
+    public ID3V2Version getID3V2Version() {
         return id3v2Version;
     }
 
@@ -455,16 +439,14 @@ public class TagOptionSingleton
     /**
      * @param instanceKey
      */
-    public void setInstanceKey(String instanceKey)
-    {
+    public void setInstanceKey(String instanceKey) {
         TagOptionSingleton.defaultOptions = instanceKey;
     }
 
     /**
      * @return
      */
-    public static String getInstanceKey()
-    {
+    public static String getInstanceKey() {
         return defaultOptions;
     }
 
@@ -472,128 +454,112 @@ public class TagOptionSingleton
     /**
      * @param id3v1Save
      */
-    public void setId3v1Save(boolean id3v1Save)
-    {
+    public void setId3v1Save(boolean id3v1Save) {
         this.id3v1Save = id3v1Save;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1Save()
-    {
+    public boolean isId3v1Save() {
         return id3v1Save;
     }
 
     /**
      * @param id3v1SaveAlbum
      */
-    public void setId3v1SaveAlbum(boolean id3v1SaveAlbum)
-    {
+    public void setId3v1SaveAlbum(boolean id3v1SaveAlbum) {
         this.id3v1SaveAlbum = id3v1SaveAlbum;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveAlbum()
-    {
+    public boolean isId3v1SaveAlbum() {
         return id3v1SaveAlbum;
     }
 
     /**
      * @param id3v1SaveArtist
      */
-    public void setId3v1SaveArtist(boolean id3v1SaveArtist)
-    {
+    public void setId3v1SaveArtist(boolean id3v1SaveArtist) {
         this.id3v1SaveArtist = id3v1SaveArtist;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveArtist()
-    {
+    public boolean isId3v1SaveArtist() {
         return id3v1SaveArtist;
     }
 
     /**
      * @param id3v1SaveComment
      */
-    public void setId3v1SaveComment(boolean id3v1SaveComment)
-    {
+    public void setId3v1SaveComment(boolean id3v1SaveComment) {
         this.id3v1SaveComment = id3v1SaveComment;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveComment()
-    {
+    public boolean isId3v1SaveComment() {
         return id3v1SaveComment;
     }
 
     /**
      * @param id3v1SaveGenre
      */
-    public void setId3v1SaveGenre(boolean id3v1SaveGenre)
-    {
+    public void setId3v1SaveGenre(boolean id3v1SaveGenre) {
         this.id3v1SaveGenre = id3v1SaveGenre;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveGenre()
-    {
+    public boolean isId3v1SaveGenre() {
         return id3v1SaveGenre;
     }
 
     /**
      * @param id3v1SaveTitle
      */
-    public void setId3v1SaveTitle(boolean id3v1SaveTitle)
-    {
+    public void setId3v1SaveTitle(boolean id3v1SaveTitle) {
         this.id3v1SaveTitle = id3v1SaveTitle;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveTitle()
-    {
+    public boolean isId3v1SaveTitle() {
         return id3v1SaveTitle;
     }
 
     /**
      * @param id3v1SaveTrack
      */
-    public void setId3v1SaveTrack(boolean id3v1SaveTrack)
-    {
+    public void setId3v1SaveTrack(boolean id3v1SaveTrack) {
         this.id3v1SaveTrack = id3v1SaveTrack;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveTrack()
-    {
+    public boolean isId3v1SaveTrack() {
         return id3v1SaveTrack;
     }
 
     /**
      * @param id3v1SaveYear
      */
-    public void setId3v1SaveYear(boolean id3v1SaveYear)
-    {
+    public void setId3v1SaveYear(boolean id3v1SaveYear) {
         this.id3v1SaveYear = id3v1SaveYear;
     }
 
     /**
      * @return
      */
-    public boolean isId3v1SaveYear()
-    {
+    public boolean isId3v1SaveYear() {
         return id3v1SaveYear;
     }
 
@@ -601,16 +567,14 @@ public class TagOptionSingleton
     /**
      * @param id3v2PaddingCopyTag
      */
-    public void setId3v2PaddingCopyTag(boolean id3v2PaddingCopyTag)
-    {
+    public void setId3v2PaddingCopyTag(boolean id3v2PaddingCopyTag) {
         this.id3v2PaddingCopyTag = id3v2PaddingCopyTag;
     }
 
     /**
      * @return
      */
-    public boolean isId3v2PaddingCopyTag()
-    {
+    public boolean isId3v2PaddingCopyTag() {
         return id3v2PaddingCopyTag;
     }
 
@@ -618,69 +582,36 @@ public class TagOptionSingleton
     /**
      * @param id3v2PaddingWillShorten
      */
-    public void setId3v2PaddingWillShorten(boolean id3v2PaddingWillShorten)
-    {
+    public void setId3v2PaddingWillShorten(boolean id3v2PaddingWillShorten) {
         this.id3v2PaddingWillShorten = id3v2PaddingWillShorten;
     }
 
     /**
      * @return
      */
-    public boolean isId3v2PaddingWillShorten()
-    {
+    public boolean isId3v2PaddingWillShorten() {
         return id3v2PaddingWillShorten;
     }
 
     /**
      * @param id3v2Save
      */
-    public void setId3v2Save(boolean id3v2Save)
-    {
+    public void setId3v2Save(boolean id3v2Save) {
         this.id3v2Save = id3v2Save;
     }
 
     /**
      * @return
      */
-    public boolean isId3v2Save()
-    {
+    public boolean isId3v2Save() {
         return id3v2Save;
     }
 
-    public boolean isId3v2ITunes12_6WorkGroupingMode() {
-        return id3v2ITunes12_6WorkGroupingMode;
-    }
-
-    /**
-     * <p>Special work/grouping mode for iTunes 12.6.</p>
-     *
-     * <p>If {@code true}, map
-     * {@link FieldKey#WORK} to {@link org.jaudiotagger.tag.id3.framebody.FrameBodyTIT1}
-     * and {@link FieldKey#GROUPING} to {@link org.jaudiotagger.tag.id3.framebody.FrameBodyGRP1}.</p>
-     *
-     * <p>If {@code false}, map
-     * {@link FieldKey#WORK} to special {@link org.jaudiotagger.tag.id3.framebody.FrameBodyTXXX}
-     * and {@link FieldKey#GROUPING} to {@link org.jaudiotagger.tag.id3.framebody.FrameBodyTIT1}.</p>
-     *
-     * <p>The latter used to be the default behavior before iTunes 12.6.</p>
-     *
-     * @param id3v2ITunes12_6WorkGroupingMode {@code true} or {@code false}.
-     */
-    public void setId3v2ITunes12_6WorkGroupingMode(final boolean id3v2ITunes12_6WorkGroupingMode) {
-        final boolean oldMode = this.id3v2ITunes12_6WorkGroupingMode;
-        if (oldMode != id3v2ITunes12_6WorkGroupingMode) {
-            ID3v22Frames.getInstanceOf().setITunes12_6WorkGroupingMode(id3v2ITunes12_6WorkGroupingMode);
-            ID3v23Frames.getInstanceOf().setITunes12_6WorkGroupingMode(id3v2ITunes12_6WorkGroupingMode);
-            ID3v24Frames.getInstanceOf().setITunes12_6WorkGroupingMode(id3v2ITunes12_6WorkGroupingMode);
-            this.id3v2ITunes12_6WorkGroupingMode = id3v2ITunes12_6WorkGroupingMode;
-        }
-    }
 
     /**
      * @return
      */
-    public Iterator<Class<? extends ID3v24FrameBody>> getKeywordIterator()
-    {
+    public Iterator<Class<? extends ID3v24FrameBody>> getKeywordIterator() {
         return keywordMap.keySet().iterator();
     }
 
@@ -688,8 +619,7 @@ public class TagOptionSingleton
      * @param id3v2_4FrameBody
      * @return
      */
-    public Iterator<String> getKeywordListIterator(Class<? extends ID3v24FrameBody> id3v2_4FrameBody)
-    {
+    public Iterator<String> getKeywordListIterator(Class<? extends ID3v24FrameBody> id3v2_4FrameBody) {
         return keywordMap.get(id3v2_4FrameBody).iterator();
     }
 
@@ -700,10 +630,8 @@ public class TagOptionSingleton
      *
      * @param lang language ID, [ISO-639-2] ISO/FDIS 639-2 definition
      */
-    public void setLanguage(String lang)
-    {
-        if (Languages.getInstanceOf().getIdToValueMap().containsKey(lang))
-        {
+    public void setLanguage(String lang) {
+        if (Languages.getInstanceOf().getIdToValueMap().containsKey(lang)) {
             language = lang;
         }
     }
@@ -713,56 +641,49 @@ public class TagOptionSingleton
      *
      * @return language ID, [ISO-639-2] ISO/FDIS 639-2 definition
      */
-    public String getLanguage()
-    {
+    public String getLanguage() {
         return language;
     }
 
     /**
      * @param lyrics3KeepEmptyFieldIfRead
      */
-    public void setLyrics3KeepEmptyFieldIfRead(boolean lyrics3KeepEmptyFieldIfRead)
-    {
+    public void setLyrics3KeepEmptyFieldIfRead(boolean lyrics3KeepEmptyFieldIfRead) {
         this.lyrics3KeepEmptyFieldIfRead = lyrics3KeepEmptyFieldIfRead;
     }
 
     /**
      * @return
      */
-    public boolean isLyrics3KeepEmptyFieldIfRead()
-    {
+    public boolean isLyrics3KeepEmptyFieldIfRead() {
         return lyrics3KeepEmptyFieldIfRead;
     }
 
     /**
      * @param lyrics3Save
      */
-    public void setLyrics3Save(boolean lyrics3Save)
-    {
+    public void setLyrics3Save(boolean lyrics3Save) {
         this.lyrics3Save = lyrics3Save;
     }
 
     /**
      * @return
      */
-    public boolean isLyrics3Save()
-    {
+    public boolean isLyrics3Save() {
         return lyrics3Save;
     }
 
     /**
      * @param lyrics3SaveEmptyField
      */
-    public void setLyrics3SaveEmptyField(boolean lyrics3SaveEmptyField)
-    {
+    public void setLyrics3SaveEmptyField(boolean lyrics3SaveEmptyField) {
         this.lyrics3SaveEmptyField = lyrics3SaveEmptyField;
     }
 
     /**
      * @return
      */
-    public boolean isLyrics3SaveEmptyField()
-    {
+    public boolean isLyrics3SaveEmptyField() {
         return lyrics3SaveEmptyField;
     }
 
@@ -772,8 +693,7 @@ public class TagOptionSingleton
      * @param id   Lyrics3 id string
      * @param save true if you want to save this specific Lyrics3 field.
      */
-    public void setLyrics3SaveField(String id, boolean save)
-    {
+    public void setLyrics3SaveField(String id, boolean save) {
         this.lyrics3SaveFieldMap.put(id, save);
     }
 
@@ -784,16 +704,14 @@ public class TagOptionSingleton
      * @param id Lyrics3 id string
      * @return true if we should save the Lyrics3 field.
      */
-    public boolean getLyrics3SaveField(String id)
-    {
+    public boolean getLyrics3SaveField(String id) {
         return lyrics3SaveFieldMap.get(id);
     }
 
     /**
      * @return
      */
-    public HashMap<String, Boolean> getLyrics3SaveFieldMap()
-    {
+    public HashMap<String, Boolean> getLyrics3SaveFieldMap() {
         return lyrics3SaveFieldMap;
     }
 
@@ -801,8 +719,7 @@ public class TagOptionSingleton
      * @param oldWord
      * @return
      */
-    public String getNewReplaceWord(String oldWord)
-    {
+    public String getNewReplaceWord(String oldWord) {
         return replaceWordMap.get(oldWord);
     }
 
@@ -814,8 +731,7 @@ public class TagOptionSingleton
      *
      * @param numberMP3SyncFrame number of MP3 frames to sync
      */
-    public void setNumberMP3SyncFrame(int numberMP3SyncFrame)
-    {
+    public void setNumberMP3SyncFrame(int numberMP3SyncFrame) {
         this.numberMP3SyncFrame = numberMP3SyncFrame;
     }
 
@@ -827,16 +743,14 @@ public class TagOptionSingleton
      *
      * @return number of MP3 frames to sync
      */
-    public int getNumberMP3SyncFrame()
-    {
+    public int getNumberMP3SyncFrame() {
         return numberMP3SyncFrame;
     }
 
     /**
      * @return
      */
-    public Iterator<String> getOldReplaceWordIterator()
-    {
+    public Iterator<String> getOldReplaceWordIterator() {
         return replaceWordMap.keySet().iterator();
     }
 
@@ -844,33 +758,28 @@ public class TagOptionSingleton
      * @param open
      * @return
      */
-    public boolean isOpenParenthesis(String open)
-    {
+    public boolean isOpenParenthesis(String open) {
         return parenthesisMap.containsKey(open);
     }
 
     /**
      * @return
      */
-    public Iterator<String> getOpenParenthesisIterator()
-    {
+    public Iterator<String> getOpenParenthesisIterator() {
         return parenthesisMap.keySet().iterator();
     }
 
     /**
      * @param originalSavedAfterAdjustingID3v2Padding
-     *
      */
-    public void setOriginalSavedAfterAdjustingID3v2Padding(boolean originalSavedAfterAdjustingID3v2Padding)
-    {
+    public void setOriginalSavedAfterAdjustingID3v2Padding(boolean originalSavedAfterAdjustingID3v2Padding) {
         this.originalSavedAfterAdjustingID3v2Padding = originalSavedAfterAdjustingID3v2Padding;
     }
 
     /**
      * @return
      */
-    public boolean isOriginalSavedAfterAdjustingID3v2Padding()
-    {
+    public boolean isOriginalSavedAfterAdjustingID3v2Padding() {
         return originalSavedAfterAdjustingID3v2Padding;
     }
 
@@ -879,42 +788,36 @@ public class TagOptionSingleton
      * Sets the default time stamp format for ID3v2 tags which require it.
      * While the value will already exist when reading from a file, this value
      * will be used when a new ID3v2 Frame is created from scratch.
-     *
-     *
+     * <p>
+     * <p>
      * $01  Absolute time, 32 bit sized, using MPEG frames as unit<br>
      * $02  Absolute time, 32 bit sized, using milliseconds as unit<br>
      *
-     *
      * @param tsf the new default time stamp format
      */
-    public void setTimeStampFormat(byte tsf)
-    {
-        if ((tsf == 1) || (tsf == 2))
-        {
+    public void setTimeStampFormat(byte tsf) {
+        if ((tsf == 1) || (tsf == 2)) {
             timeStampFormat = tsf;
         }
     }
 
     /**
      * Returns the default time stamp format for ID3v2 tags which require it.
-     *
-     *
+     * <p>
+     * <p>
      * $01  Absolute time, 32 bit sized, using MPEG frames as unit<br>
      * $02  Absolute time, 32 bit sized, using milliseconds as unit<br>
      *
-     *
      * @return the default time stamp format
      */
-    public byte getTimeStampFormat()
-    {
+    public byte getTimeStampFormat() {
         return timeStampFormat;
     }
 
     /**
      *
      */
-    public void setToDefault()
-    {
+    public void setToDefault() {
         isWriteWavForTwonky = false;
         wavOptions = WavOptions.READ_ID3_UNLESS_ONLY_INFO;
         wavSaveOptions = WavSaveOptions.SAVE_BOTH;
@@ -948,28 +851,26 @@ public class TagOptionSingleton
         resetTextEncodingForExistingFrames = false;
         truncateTextWithoutErrors = false;
         padNumbers = false;
-        isAPICDescriptionITunesCompatible=false;
+        isAPICDescriptionITunesCompatible = false;
         isAndroid = false;
         isEncodeUTF16BomAsLittleEndian = true;
-        writeChunkSize=5000000;
-        isWriteMp4GenresAsText=false;
+        writeChunkSize = 5000000;
+        isWriteMp4GenresAsText = false;
         padNumberTotalLength = PadNumberOption.PAD_ONE_ZERO;
         id3v2Version = ID3V2Version.ID3_V23;
         checkIsWritable = false;
-        preserveFileIdentity = true;
+        preserveFileIdentity = false;
         //default all lyrics3 fields to save. id3v1 fields are individual
         // settings. id3v2 fields are always looked at to save.
         Iterator<String> iterator = Lyrics3v2Fields.getInstanceOf().getIdToValueMap().keySet().iterator();
         String fieldId;
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             fieldId = iterator.next();
             lyrics3SaveFieldMap.put(fieldId, true);
         }
 
-        try
-        {
+        try {
             addKeyword(FrameBodyCOMM.class, "ultimix");
             addKeyword(FrameBodyCOMM.class, "dance");
             addKeyword(FrameBodyCOMM.class, "mix");
@@ -1010,13 +911,10 @@ public class TagOptionSingleton
 
             iterator = GenreTypes.getInstanceOf().getValueToIdMap().keySet().iterator();
 
-            while (iterator.hasNext())
-            {
+            while (iterator.hasNext()) {
                 addKeyword(FrameBodyCOMM.class, iterator.next());
             }
-        }
-        catch (TagException ex)
-        {
+        } catch (TagException ex) {
             // this shouldn't happen, indicates coding error
             throw new RuntimeException(ex);
         }
@@ -1049,24 +947,18 @@ public class TagOptionSingleton
      * @param keyword
      * @throws TagException
      */
-    public void addKeyword(Class<? extends ID3v24FrameBody> id3v2FrameBodyClass, String keyword) throws TagException
-    {
-        if (!AbstractID3v2FrameBody.class.isAssignableFrom(id3v2FrameBodyClass))
-        {
+    public void addKeyword(Class<? extends ID3v24FrameBody> id3v2FrameBodyClass, String keyword) throws TagException {
+        if (!AbstractID3v2FrameBody.class.isAssignableFrom(id3v2FrameBodyClass)) {
             throw new TagException("Invalid class type. Must be AbstractId3v2FrameBody " + id3v2FrameBodyClass);
         }
 
-        if ((keyword != null) && (keyword.length() > 0))
-        {
+        if ((keyword != null) && (keyword.length() > 0)) {
             LinkedList<String> keywordList;
 
-            if (!keywordMap.containsKey(id3v2FrameBodyClass))
-            {
+            if (!keywordMap.containsKey(id3v2FrameBodyClass)) {
                 keywordList = new LinkedList<String>();
                 keywordMap.put(id3v2FrameBodyClass, keywordList);
-            }
-            else
-            {
+            } else {
                 keywordList = keywordMap.get(id3v2FrameBodyClass);
             }
 
@@ -1078,8 +970,7 @@ public class TagOptionSingleton
      * @param open
      * @param close
      */
-    public void addParenthesis(String open, String close)
-    {
+    public void addParenthesis(String open, String close) {
         parenthesisMap.put(open, close);
     }
 
@@ -1087,16 +978,14 @@ public class TagOptionSingleton
      * @param oldWord
      * @param newWord
      */
-    public void addReplaceWord(String oldWord, String newWord)
-    {
+    public void addReplaceWord(String oldWord, String newWord) {
         replaceWordMap.put(oldWord, newWord);
     }
 
     /**
      * @return are tags unsynchronized when written if contain bit pattern that could be mistaken for audio marker
      */
-    public boolean isUnsyncTags()
-    {
+    public boolean isUnsyncTags() {
         return unsyncTags;
     }
 
@@ -1106,8 +995,7 @@ public class TagOptionSingleton
      * @param unsyncTags set whether tags are  unsynchronized when written if contain bit pattern that could
      *                   be mistaken for audio marker
      */
-    public void setUnsyncTags(boolean unsyncTags)
-    {
+    public void setUnsyncTags(boolean unsyncTags) {
         this.unsyncTags = unsyncTags;
     }
 
@@ -1116,8 +1004,7 @@ public class TagOptionSingleton
      *
      * @return true if we remove unnecessary trailing null characters on write
      */
-    public boolean isRemoveTrailingTerminatorOnWrite()
-    {
+    public boolean isRemoveTrailingTerminatorOnWrite() {
         return removeTrailingTerminatorOnWrite;
     }
 
@@ -1125,10 +1012,8 @@ public class TagOptionSingleton
      * Remove unnecessary trailing null characters on write
      *
      * @param removeTrailingTerminatorOnWrite
-     *
      */
-    public void setRemoveTrailingTerminatorOnWrite(boolean removeTrailingTerminatorOnWrite)
-    {
+    public void setRemoveTrailingTerminatorOnWrite(boolean removeTrailingTerminatorOnWrite) {
         this.removeTrailingTerminatorOnWrite = removeTrailingTerminatorOnWrite;
     }
 
@@ -1138,8 +1023,7 @@ public class TagOptionSingleton
      *
      * @return
      */
-    public byte getId3v23DefaultTextEncoding()
-    {
+    public byte getId3v23DefaultTextEncoding() {
         return id3v23DefaultTextEncoding;
     }
 
@@ -1149,10 +1033,8 @@ public class TagOptionSingleton
      *
      * @param id3v23DefaultTextEncoding
      */
-    public void setId3v23DefaultTextEncoding(byte id3v23DefaultTextEncoding)
-    {
-        if ((id3v23DefaultTextEncoding == TextEncoding.ISO_8859_1) || (id3v23DefaultTextEncoding == TextEncoding.UTF_16))
-        {
+    public void setId3v23DefaultTextEncoding(byte id3v23DefaultTextEncoding) {
+        if ((id3v23DefaultTextEncoding == TextEncoding.ISO_8859_1) || (id3v23DefaultTextEncoding == TextEncoding.UTF_16)) {
             this.id3v23DefaultTextEncoding = id3v23DefaultTextEncoding;
         }
     }
@@ -1163,8 +1045,7 @@ public class TagOptionSingleton
      *
      * @return
      */
-    public byte getId3v24DefaultTextEncoding()
-    {
+    public byte getId3v24DefaultTextEncoding() {
         return id3v24DefaultTextEncoding;
     }
 
@@ -1174,10 +1055,8 @@ public class TagOptionSingleton
      *
      * @param id3v24DefaultTextEncoding
      */
-    public void setId3v24DefaultTextEncoding(byte id3v24DefaultTextEncoding)
-    {
-        if ((id3v24DefaultTextEncoding == TextEncoding.ISO_8859_1) || (id3v24DefaultTextEncoding == TextEncoding.UTF_16) || (id3v24DefaultTextEncoding == TextEncoding.UTF_16BE) || (id3v24DefaultTextEncoding == TextEncoding.UTF_8))
-        {
+    public void setId3v24DefaultTextEncoding(byte id3v24DefaultTextEncoding) {
+        if ((id3v24DefaultTextEncoding == TextEncoding.ISO_8859_1) || (id3v24DefaultTextEncoding == TextEncoding.UTF_16) || (id3v24DefaultTextEncoding == TextEncoding.UTF_16BE) || (id3v24DefaultTextEncoding == TextEncoding.UTF_8)) {
             this.id3v24DefaultTextEncoding = id3v24DefaultTextEncoding;
         }
 
@@ -1189,8 +1068,7 @@ public class TagOptionSingleton
      *
      * @return
      */
-    public byte getId3v24UnicodeTextEncoding()
-    {
+    public byte getId3v24UnicodeTextEncoding() {
         return id3v24UnicodeTextEncoding;
     }
 
@@ -1200,10 +1078,8 @@ public class TagOptionSingleton
      *
      * @param id3v24UnicodeTextEncoding
      */
-    public void setId3v24UnicodeTextEncoding(byte id3v24UnicodeTextEncoding)
-    {
-        if ((id3v24UnicodeTextEncoding == TextEncoding.UTF_16) || (id3v24UnicodeTextEncoding == TextEncoding.UTF_16BE) || (id3v24UnicodeTextEncoding == TextEncoding.UTF_8))
-        {
+    public void setId3v24UnicodeTextEncoding(byte id3v24UnicodeTextEncoding) {
+        if ((id3v24UnicodeTextEncoding == TextEncoding.UTF_16) || (id3v24UnicodeTextEncoding == TextEncoding.UTF_16BE) || (id3v24UnicodeTextEncoding == TextEncoding.UTF_8)) {
             this.id3v24UnicodeTextEncoding = id3v24UnicodeTextEncoding;
         }
     }
@@ -1215,8 +1091,7 @@ public class TagOptionSingleton
      *
      * @return
      */
-    public boolean isResetTextEncodingForExistingFrames()
-    {
+    public boolean isResetTextEncodingForExistingFrames() {
         return resetTextEncodingForExistingFrames;
     }
 
@@ -1226,19 +1101,15 @@ public class TagOptionSingleton
      * the frame.
      *
      * @param resetTextEncodingForExistingFrames
-     *
      */
-    public void setResetTextEncodingForExistingFrames(boolean resetTextEncodingForExistingFrames)
-    {
+    public void setResetTextEncodingForExistingFrames(boolean resetTextEncodingForExistingFrames) {
         this.resetTextEncodingForExistingFrames = resetTextEncodingForExistingFrames;
     }
 
     /**
-     *
      * @return truncate without errors
      */
-    public boolean isTruncateTextWithoutErrors()
-    {
+    public boolean isTruncateTextWithoutErrors() {
         return truncateTextWithoutErrors;
     }
 
@@ -1247,43 +1118,35 @@ public class TagOptionSingleton
      *
      * @param truncateTextWithoutErrors
      */
-    public void setTruncateTextWithoutErrors(boolean truncateTextWithoutErrors)
-    {
+    public void setTruncateTextWithoutErrors(boolean truncateTextWithoutErrors) {
         this.truncateTextWithoutErrors = truncateTextWithoutErrors;
     }
 
-    public boolean isPadNumbers()
-    {
+    public boolean isPadNumbers() {
         return padNumbers;
     }
 
-    public void setPadNumbers(boolean padNumbers)
-    {
+    public void setPadNumbers(boolean padNumbers) {
         this.padNumbers = padNumbers;
     }
 
-    public boolean isAndroid()
-    {
+    public boolean isAndroid() {
         return isAndroid;
     }
 
-    public void setAndroid(boolean android)
-    {
+    public void setAndroid(boolean android) {
         isAndroid = android;
     }
 
     /**
      * When this is set and using the generic interface jaudiotagger will make some adjustmensts
      * when saving field sso they work best with the specified Tagger
-     *
      */
-    public int getPlayerCompatability()
-    {
+    public int getPlayerCompatability() {
         return playerCompatability;
     }
 
-    public void setPlayerCompatability(int playerCompatability)
-    {
+    public void setPlayerCompatability(int playerCompatability) {
         this.playerCompatability = playerCompatability;
     }
 
@@ -1291,13 +1154,11 @@ public class TagOptionSingleton
      * When you specify a field should be stored as UTF16 in ID3 this means write with BOM indicating whether
      * written as Little Endian or Big Endian, its defaults to little Endian
      */
-    public boolean isEncodeUTF16BomAsLittleEndian()
-    {
+    public boolean isEncodeUTF16BomAsLittleEndian() {
         return isEncodeUTF16BomAsLittleEndian;
     }
 
-    public void setEncodeUTF16BomAsLittleEndian(boolean encodeUTF16BomAsLittleEndian)
-    {
+    public void setEncodeUTF16BomAsLittleEndian(boolean encodeUTF16BomAsLittleEndian) {
         isEncodeUTF16BomAsLittleEndian = encodeUTF16BomAsLittleEndian;
     }
 
@@ -1306,13 +1167,11 @@ public class TagOptionSingleton
      * set the maximum amount in bytes that can be transferred in one call, this is to protect against
      * various OutOfMemoryExceptions that cna occur, especially on networked filesystems.
      */
-    public long getWriteChunkSize()
-    {
+    public long getWriteChunkSize() {
         return writeChunkSize;
     }
 
-    public void setWriteChunkSize(long writeChunkSize)
-    {
+    public void setWriteChunkSize(long writeChunkSize) {
         this.writeChunkSize = writeChunkSize;
     }
 
@@ -1320,13 +1179,11 @@ public class TagOptionSingleton
      * If enabled we always use the ©gen atom rather than the gnre atom when writing genres to mp4s
      * This is known to help some android apps
      */
-    public boolean isWriteMp4GenresAsText()
-    {
+    public boolean isWriteMp4GenresAsText() {
         return isWriteMp4GenresAsText;
     }
 
-    public void setWriteMp4GenresAsText(boolean writeMp4GenresAsText)
-    {
+    public void setWriteMp4GenresAsText(boolean writeMp4GenresAsText) {
         isWriteMp4GenresAsText = writeMp4GenresAsText;
     }
 
@@ -1334,63 +1191,57 @@ public class TagOptionSingleton
      * If enabled we always use the ©gen atom rather than the gnre atom when writing genres to mp4s
      * This is known to help some android apps
      */
-    public boolean isWriteMp3GenresAsText()
-    {
+    public boolean isWriteMp3GenresAsText() {
         return isWriteMp3GenresAsText;
     }
 
-    public void setWriteMp3GenresAsText(boolean writeMp3GenresAsText)
-    {
+    public void setWriteMp3GenresAsText(boolean writeMp3GenresAsText) {
         isWriteMp3GenresAsText = writeMp3GenresAsText;
     }
 
     /**
      * Total length of number, i.e if set to 2 the value 1 would be stored as 01, if set to 3 would bs stored as 001
      */
-    public PadNumberOption getPadNumberTotalLength()
-    {
+    public PadNumberOption getPadNumberTotalLength() {
         return padNumberTotalLength;
     }
 
-    public void setPadNumberTotalLength(PadNumberOption padNumberTotalLength)
-    {
+    public void setPadNumberTotalLength(PadNumberOption padNumberTotalLength) {
         this.padNumberTotalLength = padNumberTotalLength;
     }
 
     /**
      * Itunes expects APIC description to be encoded as ISO-8859-1 even if text encoding is set to 1 (UTF16)
      */
-    public boolean isAPICDescriptionITunesCompatible()
-    {
+    public boolean isAPICDescriptionITunesCompatible() {
         return isAPICDescriptionITunesCompatible;
     }
 
-    public void setAPICDescriptionITunesCompatible(boolean APICDescriptionITunesCompatible)
-    {
+    public void setAPICDescriptionITunesCompatible(boolean APICDescriptionITunesCompatible) {
         isAPICDescriptionITunesCompatible = APICDescriptionITunesCompatible;
     }
 
     /**
      * Whether Files.isWritable should be used to check if a file can be written. In some
-     * cases, isWritable can return false negatives. 
+     * cases, isWritable can return false negatives.
      */
-	public boolean isCheckIsWritable() {
-		return checkIsWritable;
-	}
+    public boolean isCheckIsWritable() {
+        return checkIsWritable;
+    }
 
-	public void setCheckIsWritable(boolean checkIsWritable) {
-		this.checkIsWritable = checkIsWritable;
-	}
+    public void setCheckIsWritable(boolean checkIsWritable) {
+        this.checkIsWritable = checkIsWritable;
+    }
 
     /**
      * <p>
-     *     If set to {@code true}, when writing, make an attempt to overwrite the existing file in-place
-     *     instead of first moving it out of the way and moving a temp file into its place.
+     * If set to {@code true}, when writing, make an attempt to overwrite the existing file in-place
+     * instead of first moving it out of the way and moving a temp file into its place.
      * </p>
      * <p>
-     *     Preserving the file identity has the advantage of preserving the creation time
-     *     as well as the Unix inode or Windows
-     *     <a href="https://msdn.microsoft.com/en-us/library/aa363788(v=vs.85).aspx">fileIndex</a>.
+     * Preserving the file identity has the advantage of preserving the creation time
+     * as well as the Unix inode or Windows
+     * <a href="https://msdn.microsoft.com/en-us/library/aa363788(v=vs.85).aspx">fileIndex</a>.
      * </p>
      *
      * @return {@code true} or {@code false}. Default is {@code false}.
@@ -1409,13 +1260,11 @@ public class TagOptionSingleton
         this.preserveFileIdentity = preserveFileIdentity;
     }
 
-    public boolean isWriteWavForTwonky()
-    {
+    public boolean isWriteWavForTwonky() {
         return isWriteWavForTwonky;
     }
 
-    public void setWriteWavForTwonky(boolean isWriteWavForTwonky)
-    {
+    public void setWriteWavForTwonky(boolean isWriteWavForTwonky) {
         this.isWriteWavForTwonky = isWriteWavForTwonky;
     }
 }

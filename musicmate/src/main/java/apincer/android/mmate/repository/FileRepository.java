@@ -14,15 +14,12 @@ import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.codec.FFMPegReader;
 import apincer.android.mmate.codec.JustDSDReader;
 import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.codec.TagWriter;
@@ -43,61 +40,6 @@ public class FileRepository {
 
     public static FileRepository newInstance(Context application) {
         return new FileRepository(application);
-    }
-
-    @Deprecated
-    public static void extractCoverArt(String path, File targetFile) {
-        try {
-           // Log.d(TAG, "extractCoverArt: "+path);
-            FileUtils.createParentDirs(targetFile);
-            File coverArtFile = getFolderCoverArt(path);
-            if(coverArtFile!=null) {
-                // check directory images
-                FileSystem.copy(coverArtFile, targetFile);
-            }else {
-                // extract from media file
-                // if path is folder, extract from first music file in folder
-                File pathFile = new File(path);
-                if(pathFile.isDirectory()) {
-                    // find first music file in path
-                    File[] files = pathFile.listFiles();
-                    if(files!=null) {
-                        for (File file : files) {
-                            if (FFMPegReader.isSupportedFileFormat(file.getAbsolutePath())) {
-                                path = file.getAbsolutePath();
-                                break;
-                            }
-                        }
-                    }
-                }
-                FFMpegHelper.extractCoverArt(path, targetFile);
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "extractCoverArt",e);
-        }
-    }
-
-    public static InputStream getCoverArt(Context context, MusicTag tag) {
-        if(tag == null) return null;
-        try {
-            String path = tag.getPath();
-            File coverArtFile = getFolderCoverArt(path);
-            if(coverArtFile!=null) {
-                return new FileInputStream(coverArtFile);
-            }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
-                String coverFile = COVER_ARTS +tag.getAlbumUniqueKey()+".png";
-                File dir =  context.getExternalCacheDir();
-                File pathFile = new File(dir, coverFile);
-                if(!pathFile.exists()) {
-                    FileUtils.createParentDirs(pathFile);
-                    FFMpegHelper.extractCoverArt(path, pathFile);
-                }
-                return new FileInputStream(pathFile);
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "getCoverArt",e);
-        }
-        return null;
     }
 
     public File extractCoverArt(MusicTag tag) {
@@ -122,13 +64,13 @@ public class FileRepository {
             // Log.d(TAG, "extractCoverArt: "+path);
             String path = tag.getPath();
             FileUtils.createParentDirs(targetFile);
-            File coverArtFile = getFolderCoverArt(path);
-            if(coverArtFile!=null) {
+            //File coverArtFile = getFolderCoverArt(path);
+            //if(coverArtFile!=null) {
                 // check directory images
-                FileSystem.copy(coverArtFile, targetFile);
-            }else if(!StringUtils.isEmpty(tag.getCoverartMime())){
-                FFMpegHelper.extractCoverArt(path, targetFile);
-            }
+            //    FileSystem.copy(coverArtFile, targetFile);
+            //}else if(!StringUtils.isEmpty(tag.getCoverartMime())){
+            FFMpegHelper.extractCoverArt(path, targetFile);
+            //}
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);
         }
@@ -154,27 +96,18 @@ public class FileRepository {
         return StorageId.PRIMARY;
     }
 
-    @Deprecated
-    public static File getFolderCoverArt(MusicTag mediaItem) {
-        // try loading from folder
-        // front.png, front.jpg
-        // cover.png, cover.jpg
-
-        File mediaFile = new File(mediaItem.getPath());
-        File coverFile = null;
-        File coverDir = mediaFile.getParentFile();
-
-        for (String f : Constants.IMAGE_COVERS) {
-            File cover = new File(coverDir, f);
-            if(cover.exists())  {
-                coverFile = cover;
-                break;
-            }
+    public static File getCoverArt(MusicTag music) {
+        File cover = getFolderCoverArt(music.getPath());
+        if(cover == null) {
+            String coverFile = COVER_ARTS +music.getAlbumUniqueKey()+".png";
+            File dir =  MusixMateApp.getInstance().getExternalCacheDir();
+            cover = new File(dir, coverFile);
+            if(!cover.exists()) cover = null;
         }
-        return coverFile;
+        return cover;
     }
 
-    public static File getFolderCoverArt(String musicPath) {
+    private static File getFolderCoverArt(String musicPath) {
         // try loading from folder
         // front.png, front.jpg
         // cover.png, cover.jpg
@@ -295,10 +228,9 @@ public class FileRepository {
                 return; // skip file less than 1 Mb
             }
             if(forceRead) {
-               // lastModified = System.currentTimeMillis()+2000;
                 lastModified = -1;
             }
-           // TagReader reader = TagReader.readTagFull(context, mediaPath);
+
             // if timestamp is outdated
             if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
               //  Log.i(TAG, "scanMusicFile: file - "+mediaPath);
@@ -309,7 +241,11 @@ public class FileRepository {
                         TagRepository.saveTag(tag);
 
                         // extract cover art
-                        extractCoverArt(tag);
+                        File folderCover = getFolderCoverArt(tag.getPath());
+                        if(folderCover==null) {
+                            // extract only do not have folder cover art
+                            extractCoverArt(tag);
+                        }
                     }
                 }
             }

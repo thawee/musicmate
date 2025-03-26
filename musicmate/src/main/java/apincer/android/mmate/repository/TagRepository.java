@@ -363,9 +363,9 @@ public class TagRepository {
                         name = musicDir.substring(indx+1);
                     }
                     if(musicDir.contains("/emulated/")) {
-                        name = name +" (Memory)";
+                        name = "Built-in/"+ name;
                     }else {
-                        name = name +" (SD Card)";
+                        name = "SD Card/"+name;
                     }
                     MusicFolder dir = new MusicFolder(name);
                     dir.setUniqueKey(musicDir);

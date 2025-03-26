@@ -3,6 +3,7 @@ package apincer.android.mmate.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -47,6 +48,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
@@ -64,6 +66,7 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -77,6 +80,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.ui.TagsActivity;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 
 /**
@@ -580,6 +584,12 @@ public class UIUtils  {
             vStoragesLayout.addView(inf);
         }
         vStoragesLayout.setVisibility(View.VISIBLE);
+    }
+
+    public static void showErrorToast(Context context, String errorLoadingTagData) {
+        // With this instead:
+        Log.e(TAG, errorLoadingTagData);
+        Toast.makeText(context, errorLoadingTagData, Toast.LENGTH_SHORT).show();
     }
 
     /**

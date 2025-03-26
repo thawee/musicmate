@@ -21,7 +21,7 @@ import apincer.android.mmate.repository.FileRepository;
 
 public class ImportAudioFileWorker extends Worker {
     private static final String TAG = ImportAudioFileWorker.class.getName();
-    FileRepository repos;
+    private final FileRepository repos;
 
     private ImportAudioFileWorker(
             @NonNull Context context,
@@ -34,7 +34,20 @@ public class ImportAudioFileWorker extends Worker {
     @Override
     public Result doWork() {
         List<MusicTag> list = list();
-        list.parallelStream().forEach(this::importFile);
+       // list.parallelStream().forEach(this::importFile);
+        list.forEach(tag -> {
+            try {
+                boolean status = importFile(tag);
+
+                AudioTagEditResultEvent message = new AudioTagEditResultEvent(
+                        AudioTagEditResultEvent.ACTION_MOVE,
+                        status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
+                        tag);
+                EventBus.getDefault().postSticky(message);
+            } catch (Exception e) {
+                Log.e(TAG, "importFile", e);
+            }
+        });
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
@@ -51,14 +64,18 @@ public class ImportAudioFileWorker extends Worker {
         return MusixMateApp.getPendingItems("Import");
     }
 
-    private void importFile(MusicTag tag) {
-        try {
+    private boolean importFile(MusicTag tag) {
+       /* try {
             boolean status = repos.importAudioFile(tag);
 
             AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_MOVE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
             EventBus.getDefault().postSticky(message);
         } catch (Exception e) {
             Log.e(TAG,"importFile",e);
+        }
+        return false; */
+        synchronized(repos) {
+            return repos.importAudioFile(tag);
         }
     }
 }

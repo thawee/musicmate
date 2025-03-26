@@ -48,15 +48,14 @@ This delightful journey through the world's musical landscape offers something f
 
 **Classical Music** isn't just Western orchestras! Dive into the mesmerizing complexity of Indian ragas, the ethereal sounds of Japanese koto, the expressive Chinese guzheng, and the elegant Thai piphat traditions.
 
-### Jazz Music - Dynamic and Influential
+### Lounge Music - Relaxed and Sophisticated
 
-**Jazz Music** charts the thrilling evolution of America's great art form—from the jubilant improvisations of Louis Armstrong's Dixieland to the mind-bending explorations of Coltrane's free jazz. Each era reveals new dimensions of musical freedom.
+**Lounge Music** invites you into a world of refined relaxation—from the sultry bossa nova rhythms of 1960s hotel lounges to the downtempo electronic beats of modern chill-out spaces. This genre creates the perfect atmosphere for conversation, contemplation, and unwinding with its smooth instrumentation and understated elegance.
 
 ### Traditional Music - Cultural and Evolving
 
 **Traditional Music** celebrates humanity's cultural heartbeat through African rhythms that move the soul, haunting Asian melodies that transcend time, passionate European folk traditions, vibrant Latin American expressions, and the distinctive sounds of Thai regional music.
 
-### Popular Music - Modern and Accessible
+### Contemporary Music - Innovative and Boundary-Pushing
 
-**Popular Music** showcases the soundtrack of modern life—from the revolutionary sounds of The Beatles to the innovative productions of today's electronic artists—reflecting our changing world through accessible yet powerful musical statements.
-
+**Contemporary Music** embraces the cutting edge of musical expression—from the minimalist compositions of Philip Glass to the genre-defying works of modern composers and experimental artists. This category constantly challenges conventions, incorporating electronic elements, unconventional instruments, and diverse global influences to create sound experiences that reflect our complex modern world.

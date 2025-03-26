@@ -31,6 +31,9 @@ import apincer.android.mmate.utils.LogHelper;
 public class ScanAudioFileWorker extends Worker {
     private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
     private static final String WORKER_TAG = "apincer.android.mmate.work.ScanAudioFileWorker";
+    private static final int MAX_THREADS = 2; // Limit to 2 working threads
+    private static final int BATCH_SIZE = 30; // Smaller batch size to reduce memory pressure
+    private static final int PAUSE_BETWEEN_BATCHES_MS = 100; // Reduce CPU pressure
 
     static final long SCAN_SCHEDULE_TIME = 5;
     private final FileRepository repos;
@@ -51,14 +54,15 @@ public class ScanAudioFileWorker extends Worker {
             TagRepository.cleanMusicMate();
 
             List<File> list = pathList(getApplicationContext());
+            List<Path> allPaths = new ArrayList<>();
 
+            // First gather all paths
             for (File file : list) {
-                List<Path> paths = search(file.getAbsolutePath());
-                for (Path path : paths) {
-                    MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile(), false));
-                    processedFiles++;
-                }
+                allPaths.addAll(search(file.getAbsolutePath()));
             }
+
+            // Then process in batches
+            processedFiles = processPaths(allPaths);
 
             Data outputData = new Data.Builder()
                     .putInt("processedFiles", processedFiles)
@@ -70,42 +74,51 @@ public class ScanAudioFileWorker extends Worker {
         }
     }
 
-    private void processPaths(List<Path> paths) {
-        int batchSize = 50;
-        for (int i = 0; i < paths.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, paths.size());
+    private int processPaths(List<Path> paths) {
+        int processedCount = 0;
+
+        // Process in smaller batches to reduce memory pressure
+        for (int i = 0; i < paths.size(); i += BATCH_SIZE) {
+            int end = Math.min(i + BATCH_SIZE, paths.size());
             List<Path> batch = paths.subList(i, end);
 
-            batch.parallelStream().forEach(path ->
-                    MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile(), false))
-            );
+            // Sequential processing within the batch to reduce CPU load
+            for (Path path : batch) {
+                MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile(), false));
+                processedCount++;
+            }
 
+            // Report progress
+           /* setProgressAsync(new Data.Builder()
+                    .putInt("progress", end)
+                    .putInt("total", paths.size())
+                    .build()); */
+
+            // Add a small delay between batches to prevent CPU overload
             try {
-                Thread.sleep(100);
+                Thread.sleep(PAUSE_BETWEEN_BATCHES_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-
-            batch.clear();
-
-            setProgressAsync(new Data.Builder()
-                    .putInt("progress", end)
-                    .putInt("total", paths.size())
-                    .build());
         }
+
+        return processedCount;
     }
 
     private List<Path> search(String pathname) {
         List<Path> result = new ArrayList<>();
         try {
-            int availableProcessors = Runtime.getRuntime().availableProcessors();
-            ForkJoinPool customThreadPool = new ForkJoinPool(Math.max(1, availableProcessors / 4));
+            // Limit to exactly 2 threads for file searching
+            ForkJoinPool customThreadPool = new ForkJoinPool(MAX_THREADS);
 
             customThreadPool.submit(() -> {
                 try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
                     pathStream.filter(this::filter).forEach(result::add);
                 } catch (IOException ignored) {}
             }).get();
+
+            // Explicitly shutdown the pool to free resources
+            customThreadPool.shutdown();
         } catch (Exception e) {
             Log.e(TAG, "Error searching path: " + pathname, e);
         }
@@ -141,7 +154,7 @@ public class ScanAudioFileWorker extends Worker {
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
                 .setRequiresStorageNotLow(true)
-               //  .setRequiresDeviceIdle(true)
+                // .setRequiresDeviceIdle(true)
                 .build();
 
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)

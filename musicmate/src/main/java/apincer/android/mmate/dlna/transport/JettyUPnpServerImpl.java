@@ -241,15 +241,6 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 // Empty response
                 resp.write(true, ByteBuffer.allocate(0), callback);
             }
-           /* int contentLength = responseBody != null ? responseBody.length : -1;
-
-            if (contentLength > 0) {
-                // Declare response status code
-                resp.setStatus(statusCode);
-                // Write back response
-                resp.write(true, ByteBuffer.wrap(responseBody), callback);
-              //  Log.d(TAG, new String(responseBody));
-            } */
         }
 
         private StreamRequestMessage readRequestMessage(Request req) throws IOException {
@@ -323,7 +314,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                     String albumUniqueKey = uri.substring("/coverart/".length(), uri.indexOf(".png"));
                     MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
                     if (tag != null) {
-                        File covertFile = FileRepository.getFolderCoverArt(tag.getPath());
+                        File covertFile = FileRepository.getCoverArt(tag);
                         if(covertFile !=null) {
                             content = getResourceService().getContent(covertFile.getAbsolutePath(), request);
                         }

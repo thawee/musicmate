@@ -32,7 +32,7 @@ public abstract class TagWriter {
         /**
          * File Suffix
          */
-        private final String filesuffix;
+        private final String fileSuffix;
 
         /**
          * User Friendly Name
@@ -43,16 +43,16 @@ public abstract class TagWriter {
          */
         SupportedFileFormat(String filesuffix, String displayName)
         {
-            this.filesuffix = filesuffix;
+            this.fileSuffix = filesuffix;
             this.displayName = displayName;
         }
 
         /**
          *  Returns the file suffix (lower case without initial .) associated with the format.
          */
-        public String getFilesuffix()
+        public String getFileSuffix()
         {
-            return filesuffix;
+            return fileSuffix;
         }
 
 

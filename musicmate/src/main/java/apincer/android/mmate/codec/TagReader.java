@@ -73,31 +73,12 @@ public abstract class TagReader {
         }
     }
 
-   // protected static final String KEY_MM_TRACK_DR_SCORE = "ZDRS";
-   // protected static final String KEY_MM_TRACK_DR = "ZDR";
-   // protected static final String KEY_MM_TRACK_UPSCALED = "ZUSC";
-   // protected static final String KEY_MM_TRACK_RESAMPLED = "ZRSP";
-    protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
-   // protected static final String KEY_TAG_TRACK_GAIN = "REPLAYGAIN_TRACK_GAIN";
-   // protected static final String KEY_TAG_TRACK_PEAK = "REPLAYGAIN_TRACK_PEAK"; // added by thawee
-   // protected static final String KEY_TAG_ALBUM_GAIN = "REPLAYGAIN_ALBUM_GAIN";
-   // protected static final String KEY_TAG_ALBUM_PEAK = "REPLAYGAIN_ALBUM_PEAK"; // added by thawee
-   // protected static final String KEY_TAG_TRACK_LOUDNESS = "REPLAYGAIN_REFERENCE_LOUDNESS"; // for reset existing value
+   protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
 
     protected static final String KEY_TAG_QUALITY = "QUALITY";
     protected static final String KEY_TAG_MEDIA = "MEDIA";
 
     protected static TagReader getReader(Context context, String path) {
-       /* try {
-            String ext = StringUtils.trimToEmpty(FileUtils.getExtension(path));
-            if("flac".equalsIgnoreCase(ext)) {
-                return new JustFLACReader();
-            }else {
-                return new FFMPeg();
-            }
-        }catch(Exception ex) {
-            return null;
-        } */
         return new JThinkReader(context);
     }
 
