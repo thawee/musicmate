@@ -29,14 +29,17 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyGRP1 extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
+public class FrameBodyGRP1 extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyTBPM datatype.
      */
-    public FrameBodyGRP1() {
+    public FrameBodyGRP1()
+    {
     }
 
-    public FrameBodyGRP1(FrameBodyGRP1 body) {
+    public FrameBodyGRP1(FrameBodyGRP1 body)
+    {
         super(body);
     }
 
@@ -46,7 +49,8 @@ public class FrameBodyGRP1 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyGRP1(byte textEncoding, String text) {
+    public FrameBodyGRP1(byte textEncoding, String text)
+    {
         super(textEncoding, text);
     }
 
@@ -57,7 +61,8 @@ public class FrameBodyGRP1 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws org.jaudiotagger.tag.InvalidTagException
      */
-    public FrameBodyGRP1(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyGRP1(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -67,7 +72,8 @@ public class FrameBodyGRP1 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v24Frames.FRAME_ID_ITUNES_GROUPING;
     }
 }

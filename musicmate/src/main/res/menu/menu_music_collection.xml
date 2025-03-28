@@ -24,9 +24,9 @@
         app:showAsAction="always" />
 
     <item
-        android:icon="@drawable/round_file_present_24"
+        android:icon="@drawable/rounded_equalizer_24"
         android:id="@+id/menu_encodings"
-        android:title="@string/label_encodings"
+        android:title="@string/label_resolutions"
         app:showAsAction="always" />
 
     <item

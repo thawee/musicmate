@@ -18,11 +18,10 @@ package org.jaudiotagger.tag.datatype;
 
 import org.jaudiotagger.tag.InvalidDataTypeException;
 import org.jaudiotagger.tag.id3.AbstractTagFrameBody;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Represents a list of {@link Cloneable}(!!) {@link AbstractDataType}s, continuing until the end of the buffer.
@@ -30,10 +29,11 @@ import java.util.List;
  * @author <a href="mailto:hs@tagtraum.com">Hendrik Schreiber</a>
  * @version $Id:$
  */
-public abstract class AbstractDataTypeList<T extends AbstractDataType> extends AbstractDataType {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractDataTypeList.class);
+public abstract class AbstractDataTypeList<T extends AbstractDataType> extends AbstractDataType
+{
 
-    public AbstractDataTypeList(final String identifier, final AbstractTagFrameBody frameBody) {
+    public AbstractDataTypeList(final String identifier, final AbstractTagFrameBody frameBody)
+    {
         super(identifier, frameBody);
         setValue(new ArrayList<T>());
     }
@@ -46,15 +46,19 @@ public abstract class AbstractDataTypeList<T extends AbstractDataType> extends A
      *
      * @param copy instance
      */
-    protected AbstractDataTypeList(final AbstractDataTypeList<T> copy) {
+    protected AbstractDataTypeList(final AbstractDataTypeList<T> copy)
+    {
         super(copy);
     }
 
-    public List<T> getValue() {
-        return (List<T>) super.getValue();
+    @SuppressWarnings("unchecked")
+	public List<T> getValue()
+    {
+        return (List<T>)super.getValue();
     }
 
-    public void setValue(final List<T> list) {
+    public void setValue(final List<T> list)
+    {
         super.setValue(list == null ? new ArrayList<T>() : new ArrayList<T>(list));
     }
 
@@ -63,10 +67,11 @@ public abstract class AbstractDataTypeList<T extends AbstractDataType> extends A
      *
      * @return the size in bytes
      */
-    public int getSize() {
+    public int getSize()
+    {
         int size = 0;
         for (final T t : getValue()) {
-            size += t.getSize();
+            size+=t.getSize();
         }
         return size;
     }
@@ -79,26 +84,30 @@ public abstract class AbstractDataTypeList<T extends AbstractDataType> extends A
      * @throws NullPointerException
      * @throws IndexOutOfBoundsException
      */
-    public void readByteArray(final byte[] buffer, final int offset) throws InvalidDataTypeException {
-        if (buffer == null) {
+    public void readByteArray(final byte[] buffer, final int offset) throws InvalidDataTypeException
+    {
+        if (buffer == null)
+        {
             throw new NullPointerException("Byte array is null");
         }
 
-        if (offset < 0) {
+        if (offset < 0)
+        {
             throw new IndexOutOfBoundsException("Offset to byte array is out of bounds: offset = " + offset + ", array.length = " + buffer.length);
         }
 
         // no events
-        if (offset >= buffer.length) {
+        if (offset >= buffer.length)
+        {
             getValue().clear();
             return;
         }
-        for (int currentOffset = offset; currentOffset < buffer.length; ) {
+        for (int currentOffset = offset; currentOffset<buffer.length;) {
             final T data = createListElement();
             data.readByteArray(buffer, currentOffset);
             data.setBody(frameBody);
             getValue().add(data);
-            currentOffset += data.getSize();
+            currentOffset+=data.getSize();
         }
     }
 
@@ -115,14 +124,18 @@ public abstract class AbstractDataTypeList<T extends AbstractDataType> extends A
      *
      * @return a byte array that that contains the data that should be persisted to file
      */
-    public byte[] writeByteArray() {
-        logger.debug("Writing DataTypeList " + this.getIdentifier());
+    public byte[] writeByteArray()
+    {
+        if(logger.isLoggable(Level.CONFIG))
+        {
+            logger.config("Writing DataTypeList " + this.getIdentifier());
+        }
         final byte[] buffer = new byte[getSize()];
         int offset = 0;
         for (final AbstractDataType data : getValue()) {
             final byte[] bytes = data.writeByteArray();
             System.arraycopy(bytes, 0, buffer, offset, bytes.length);
-            offset += bytes.length;
+            offset+=bytes.length;
         }
 
         return buffer;

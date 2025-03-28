@@ -28,11 +28,18 @@ package org.jaudiotagger.tag;
  * @author Eric Farng
  * @version $Revision$
  */
-public class TagException extends Exception {
+public class TagException extends Exception
+{
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5226319371974235699L;
+
+	/**
      * Creates a new TagException datatype.
      */
-    public TagException() {
+    public TagException()
+    {
     }
 
     /**
@@ -40,7 +47,8 @@ public class TagException extends Exception {
      *
      * @param ex the cause.
      */
-    public TagException(Throwable ex) {
+    public TagException(Throwable ex)
+    {
         super(ex);
     }
 
@@ -49,7 +57,8 @@ public class TagException extends Exception {
      *
      * @param msg the detail message.
      */
-    public TagException(String msg) {
+    public TagException(String msg)
+    {
         super(msg);
     }
 
@@ -59,7 +68,8 @@ public class TagException extends Exception {
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public TagException(String msg, Throwable ex) {
+    public TagException(String msg, Throwable ex)
+    {
         super(msg, ex);
     }
 }

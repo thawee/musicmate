@@ -10,7 +10,6 @@ import org.jupnp.support.model.item.Item;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -37,9 +36,28 @@ public class SourcesBrowser extends AbstractContentBrowser {
     }
 
     public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
+       // Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
+        // return rootDIRs.size(); // +1; // +1 for Downloads folder
+        List<Container> result = new ArrayList<>();
         Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
 
-        return rootDIRs.size(); // +1; // +1 for Downloads folder
+        List<MusicTag> songs = TagRepository.getAllMusics();
+        for(MusicTag tag: songs) {
+            for(MusicFolder dir: rootDIRs) {
+                if(tag.getPath().startsWith(dir.getUniqueKey())) {
+                    dir.setChildCount(dir.getChildCount()+1);
+                }
+            }
+        }
+
+        for(MusicFolder dir: rootDIRs) {
+            if(dir.getChildCount() > 0) {
+                StorageFolder musicDir = new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId() + dir.getUniqueKey(), ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), dir.getName(), "", 0, null);
+                musicDir.setChildCount((int) dir.getChildCount());
+                result.add(musicDir);
+            }
+        }
+        return result.size();
     }
 
     @Override

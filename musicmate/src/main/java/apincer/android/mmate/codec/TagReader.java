@@ -1,5 +1,6 @@
 package apincer.android.mmate.codec;
 
+import static org.jaudiotagger.audio.mp4.EncoderType.*;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -7,6 +8,8 @@ import android.content.Context;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 
 import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.audio.mp4.EncoderType;
 
 import java.io.File;
 import java.util.List;
@@ -18,58 +21,19 @@ import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 public abstract class TagReader {
-    public enum SupportedFileFormat
-    {
-        // OGG("ogg", "Ogg"),
-        // OGA("oga", "Oga"),
-        MP3("mp3", "Mp3"),
-        FLAC("flac", "Flac"),
-        //MP4("mp4", "Mp4"),
-        M4A("m4a", "Mp4"),
-        // M4P("m4p", "M4p"),
-        // WMA("wma", "Wma"),
-        WAV("wav", "Wav"),
-        //  RA("ra", "Ra"),
-        //  RM("rm", "Rm"),
-        //  M4B("m4b", "Mp4"),
-        AIF("aif", "Aif"),
-
-        // APE("ape", "Ape"),
-        AIFF("aiff", "Aif"),
-        //  AIFC("aifc", "Aif Compressed"),
-        DSF("dsf", "Dsf");
+    public enum SupportedFileFormat {
+        MP3,
+        FLAC,
+        M4A,
+        WAV,
+        AIF,
+        AIFF,
+        DSF;
        // DFF("dff", "Dff");
-
-        /**
-         * File Suffix
-         */
-        private final String filesuffix;
-
-        /**
-         * User Friendly Name
-         */
-        private final String displayName;
 
         /** Constructor for internal use by this enum.
          */
-        SupportedFileFormat(String filesuffix, String displayName)
-        {
-            this.filesuffix = filesuffix;
-            this.displayName = displayName;
-        }
-
-        /**
-         *  Returns the file suffix (lower case without initial .) associated with the format.
-         */
-        public String getFilesuffix()
-        {
-            return filesuffix;
-        }
-
-
-        public String getDisplayName()
-        {
-            return displayName;
+        SupportedFileFormat()  {
         }
     }
 
@@ -92,16 +56,14 @@ public abstract class TagReader {
         }
     }
 
-    protected String detectAudioEncoding(AudioFile read, boolean isLossless) {
+    protected String detectAudioEncoding(AudioFile read, AudioHeader header) {
         String encType = read.getExt();
         if(StringUtils.isEmpty(encType)) return "";
 
-        if("m4a".equalsIgnoreCase(encType)) {
-            if(isLossless) {
-                encType = Constants.MEDIA_ENC_ALAC;
-            }else {
-                encType = Constants.MEDIA_ENC_AAC;
-            }
+        if(APPLE_LOSSLESS.getDescription().equals(header.getEncodingType())) {
+            encType = Constants.MEDIA_ENC_ALAC;
+        }else if("m4a".equalsIgnoreCase(encType)) {
+            encType = Constants.MEDIA_ENC_AAC;
         }else if("wav".equalsIgnoreCase(encType)) {
             encType = Constants.MEDIA_ENC_WAVE;
         }else if("aif".equalsIgnoreCase(encType)) {
@@ -125,13 +87,13 @@ public abstract class TagReader {
         File file = new File(tag.getPath());
         tag.setFileLastModified(file.lastModified());
         tag.setFileSize(file.length());
-        tag.setFileFormat(FileUtils.getExtension(file).toLowerCase(Locale.US));
+        tag.setFileType(FileUtils.getExtension(file).toLowerCase(Locale.US));
 
         tag.setSimpleName(DocumentFileCompat.getBasePath(context, tag.getPath()));
         tag.setStorageId(DocumentFileCompat.getStorageId(context, tag.getPath()));
 
         //set default, will be override by reader
-        tag.setAudioEncoding(tag.getFileFormat());
+        tag.setAudioEncoding(tag.getFileType());
         tag.setTitle(file.getName());
     }
 

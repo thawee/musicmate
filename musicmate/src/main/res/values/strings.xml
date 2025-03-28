@@ -234,6 +234,15 @@
     <string name="label_audio_quality">Sound Quality</string>
     <string name="cancel">Cancel</string>
     <string name="ok">Ok</string>
+    <string name="label_audio_resolutions">Audio Resolution</string>
+    <string name="groupings_header_content">This delightful journey through the world\'s musical landscape offers something for every passionate listener</string>
+    <string name="groupings_contemporary_content">Contemporary Music embraces the cutting edge of musical expression—from the minimalist compositions of Philip Glass to the genre-defying works of modern composers and experimental artists. This category constantly challenges conventions, incorporating electronic elements, unconventional instruments, and diverse global influences to create sound experiences that reflect our complex modern world.</string>
+    <string name="groupings_lounge_content" >Lounge Music invites you into a world of refined relaxation—from the sultry bossa nova rhythms of 1960s hotel lounges to the downtempo electronic beats of modern chill-out spaces. This genre creates the perfect atmosphere for conversation, contemplation, and unwinding with its smooth instrumentation and understated elegance.</string>
+    <string name="groupings_classical_content" >Classical Music isn\'t just Western orchestras! Dive into the mesmerizing complexity of Indian ragas, the ethereal sounds of Japanese koto, the expressive Chinese guzheng, and the elegant Thai piphat traditions.</string>
+    <string name="groupings_traditional_content" >Traditional Music celebrates humanity\'s cultural heartbeat through African rhythms that move the soul, haunting Asian melodies that transcend time, passionate European folk traditions, vibrant Latin American expressions, and the distinctive sounds of Thai regional music.</string>
+    <string name="storage_internal">Internal</string>
+    <string name="storage_secondary">Secondary</string>
+    <string name="label_version">Version</string>
     <!-- new editor -->
     <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>

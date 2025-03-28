@@ -4,28 +4,28 @@ import org.jaudiotagger.audio.asf.data.AsfHeader;
 import org.jaudiotagger.audio.asf.data.MetadataDescriptor;
 import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.util.logging.Logger;
 
 /**
  * Encapsulates the WM/Pictures provides some convenience methods for decoding
  * the binary data it contains
- * <p>
+ *
  * The value of a WM/Pictures metadata descriptor is as follows:
- * <p>
+ *
  * byte0 Picture Type byte1-4 Length of the image data mime type encoded as
  * UTF-16LE null byte null byte description encoded as UTF-16LE (optional) null
  * byte null byte image data
  */
-public class AsfTagCoverField extends AbstractAsfTagImageField {
+public class AsfTagCoverField extends AbstractAsfTagImageField
+{
     /**
      * Logger Object
      */
-    public final static Logger logger = LoggerFactory.getLogger("org.jaudiotagger.audio.asf.tag");
+    public final static Logger LOGGER = Logger
+            .getLogger("org.jaudiotagger.audio.asf.tag");
 
     /**
      * Description
@@ -54,14 +54,14 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
 
     /**
      * Create New Image Field
-     *
+     * 
      * @param imageData
      * @param pictureType
      * @param description
      * @param mimeType
      */
     public AsfTagCoverField(final byte[] imageData, final int pictureType,
-                            final String description, final String mimeType) {
+            final String description, final String mimeType) {
         super(new MetadataDescriptor(AsfFieldKey.COVER_ART.getFieldName(),
                 MetadataDescriptor.TYPE_BINARY));
         this.getDescriptor()
@@ -72,8 +72,9 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
 
     /**
      * Creates an instance from a metadata descriptor
-     *
-     * @param source The metadata descriptor, whose content is published.<br>
+     * 
+     * @param source
+     *            The metadata descriptor, whose content is published.<br>
      */
     public AsfTagCoverField(final MetadataDescriptor source) {
         super(source);
@@ -95,7 +96,7 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
     }
 
     private byte[] createRawContent(final byte[] data, final int pictureType,
-                                    final String description, String mimeType) { // NOPMD by Christian Laireiter on 5/9/09 5:46 PM
+            final String description, String mimeType) { // NOPMD by Christian Laireiter on 5/9/09 5:46 PM
         this.description = description;
         this.imageDataSize = data.length;
         this.pictureType = pictureType;
@@ -108,7 +109,7 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
             // code because not 100% sure how to identify
             // formats
             if (mimeType == null) {
-                logger.warn(ErrorMessage.GENERAL_UNIDENITIFED_IMAGE_FORMAT
+                LOGGER.warning(ErrorMessage.GENERAL_UNIDENITIFED_IMAGE_FORMAT
                         .getMsg());
                 mimeType = ImageFormats.MIME_TYPE_PNG;
             }
@@ -125,7 +126,13 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
 
         // mimetype
         byte[] mimeTypeData;
-        mimeTypeData = mimeType.getBytes(AsfHeader.ASF_CHARSET);
+        try {
+            mimeTypeData = mimeType.getBytes(AsfHeader.ASF_CHARSET.name());
+        } catch (final UnsupportedEncodingException uee) {
+            // Should never happen
+            throw new RuntimeException("Unable to find encoding:" // NOPMD by Christian Laireiter on 5/9/09 5:45 PM
+                    + AsfHeader.ASF_CHARSET.name());
+        }
         baos.write(mimeTypeData, 0, mimeTypeData.length);
 
         // Seperator
@@ -135,7 +142,14 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
         // description
         if (description != null && description.length() > 0) {
             byte[] descriptionData;
-            descriptionData = description.getBytes(AsfHeader.ASF_CHARSET);
+            try {
+                descriptionData = description.getBytes(AsfHeader.ASF_CHARSET
+                        .name());
+            } catch (final UnsupportedEncodingException uee) {
+                // Should never happen
+                throw new RuntimeException("Unable to find encoding:" // NOPMD by Christian Laireiter on 5/9/09 5:45 PM
+                        + AsfHeader.ASF_CHARSET.name());
+            }
             baos.write(descriptionData, 0, descriptionData.length);
         }
 
@@ -196,11 +210,11 @@ public class AsfTagCoverField extends AbstractAsfTagImageField {
             if (getRawContent()[count] == 0 && getRawContent()[count + 1] == 0) {
                 if (this.mimeType == null) {
                     this.mimeType = new String(getRawContent(), 5, (count) - 5,
-                            StandardCharsets.UTF_16LE);
+                            "UTF-16LE");
                     endOfMimeType = count + 2;
                 } else if (this.description == null) {
                     this.description = new String(getRawContent(),
-                            endOfMimeType, count - endOfMimeType, StandardCharsets.UTF_16LE);
+                            endOfMimeType, count - endOfMimeType, "UTF-16LE");
                     this.endOfName = count + 2;
                     break;
                 }

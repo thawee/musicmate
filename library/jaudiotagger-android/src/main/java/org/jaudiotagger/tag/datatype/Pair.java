@@ -2,35 +2,42 @@ package org.jaudiotagger.tag.datatype;
 
 /**
  * A pair of values
- * <p>
+ *
  * USed by TIPL, TMCL and IPLS frames that store pairs of values
  */
-public class Pair<K, V> {
-    private K key;
-    private V value;
+public class Pair
+{
+    private String key;
+    private String value;
 
-    public Pair(K key, V value) {
+    public Pair(String key,String value)
+    {
         setKey(key);
         setValue(value);
     }
 
-    public K getKey() {
+    public String getKey()
+    {
         return key;
     }
 
-    public void setKey(K key) {
+    public void setKey(String key)
+    {
         this.key = key;
     }
 
-    public V getValue() {
+    public String getValue()
+    {
         return value;
     }
 
-    public void setValue(V value) {
+    public void setValue(String value)
+    {
         this.value = value;
     }
 
-    public String getPairValue() {
-        return getKey() + "\0" + getValue();
+    public String getPairValue()
+    {
+        return getKey() + '\0' + getValue();
     }
 }

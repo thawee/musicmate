@@ -39,7 +39,6 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -274,25 +273,6 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
-    public void onMessageEvent2(AudioTagEditEvent event) {
-        // call from EventBus on preview/edit selected tags from main screen
-        try {
-            criteria = event.getSearchCriteria();
-            editItems.clear();
-            editItems.addAll(event.getItems());
-            displayTag = buildDisplayTag();
-            if(displayTag != null){
-                runOnUiThread(() -> {
-                    updateTitlePanel();
-                    setUpPageViewer();
-                    stopProgressBar();
-                });
-            }
-        }catch (Exception e) {
-            Log.e(TAG, "onMessageEvent", e);
-        }
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagPlayingEvent event) {
         finishOnTimeout = false;
@@ -433,22 +413,7 @@ public class TagsActivity extends AppCompatActivity {
         // load resolution, quality, coverArt
         loadImages(displayTag);
 
-        /*ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
-        ImageRequest request = new ImageRequest.Builder(getApplicationContext())
-                .data(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
-                //.crossfade(false)
-                .target(new ImageViewTarget(resolutionView))
-                .build();
-        imageLoader.enqueue(request); */
-
-         /*   qualityView.setVisibility(View.VISIBLE);
-                 request = new ImageRequest.Builder(getApplicationContext())
-                    .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
-                   // .crossfade(false)
-                    .target(new ImageViewTarget(qualityView))
-                    .build();
-            imageLoader.enqueue(request); */
-      //  qualityView.setImageBitmap(IconProviders.createQualityIcon(getApplicationContext(), displayTag));
+        //  qualityView.setImageBitmap(IconProviders.createQualityIcon(getApplicationContext(), displayTag));
 
         if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
             hiresView.setVisibility(View.VISIBLE);
@@ -492,14 +457,6 @@ public class TagsActivity extends AppCompatActivity {
 
         genreView.setText(mediaTypeAndPublisher);
 
-       /* request = CoverartFetcher.builder(getApplicationContext(), displayTag)
-                .size(Size.ORIGINAL)
-                .data(displayTag)
-                .target(new ImageViewTarget(coverArtView))
-                .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
-                .build();
-        imageLoader.enqueue(request); */
-
         // Tag
         int linkNorTextColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
         int linkPressBgColor = ContextCompat.getColor(getApplicationContext(), R.color.grey200);
@@ -515,7 +472,7 @@ public class TagsActivity extends AppCompatActivity {
                         doOpenMainActivity(criteria);
                     }
                 }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN_GENRE:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
+                new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
@@ -543,9 +500,6 @@ public class TagsActivity extends AppCompatActivity {
             pathInfoLine.setBackgroundColor(getColor(R.color.warn_not_in_managed_dir));
         }
         pathInfo.setText(simplePath);
-       // SpannableString content = new SpannableString(simplePath);// + mateInd);
-       // content.setSpan(new UnderlineSpan(), 0, simplePath.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-       // pathInfo.setText(content);
 
         pathInfo.setOnClickListener(view -> {
             if (criteria != null && displayTag.getPath() != null) {
@@ -572,13 +526,6 @@ public class TagsActivity extends AppCompatActivity {
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
-
-            // DR
-           // if(MusicTagUtils.isMQA(displayTag) || MusicTagUtils.isHiRes(displayTag) || MusicTagUtils.isLossless(displayTag)) {
-          /*  if(!MusicTagUtils.isDSD(displayTag) && !MusicTagUtils.isLossy(displayTag)) {
-                spannableEnc.append(new SpecialTextUnit(MusicTagUtils.getDynamicRangeAsString(displayTag), encColor).setTextSize(metaInfoTextSize));
-                spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
-            } */
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
@@ -972,53 +919,6 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
-    class OffSetChangeListener2 implements AppBarLayout.OnOffsetChangedListener {
-        double prevScrollOffset = -1;
-
-        @Override
-        public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-            double vScrollOffset = Math.abs(verticalOffset);
-            double scale = (1 - (1.0 / appBarLayout.getTotalScrollRange() * (vScrollOffset) * 0.2));
-            coverArtView.setScaleX((float) scale);
-            coverArtView.setScaleY((float) scale);
-            fadeToolbarTitle((1.0 / appBarLayout.getTotalScrollRange() * (vScrollOffset)));
-
-            if(vScrollOffset == prevScrollOffset) return;
-            prevScrollOffset = vScrollOffset;
-            if (verticalOffset == 0) {
-                // fully EXPANDED, on preview screen
-                previewState = true;
-                setupMenuToolbar();
-                buildDisplayTag();
-                updateTitlePanel();
-            } else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange()) {
-                // fully COLLAPSED, on editing screen
-                previewState = false;
-                setupMenuToolbar();
-            }else if (Math.abs(1.0 / appBarLayout.getTotalScrollRange() * vScrollOffset) >= 0.8) {
-                // should display menus
-               ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
-                        "backgroundColor", /*view attribute name*/
-                        new ArgbEvaluator(),
-                        toolbar_from_color, /*from color*/
-                        toolbar_to_color /*to color*/);
-                colorFade.setDuration(2000);
-                colorFade.start();
-            } else {
-                // preview mode
-               ObjectAnimator colorFade = ObjectAnimator.ofObject(tabLayout,
-                        "backgroundColor", /*view attribute name*/
-                        new ArgbEvaluator(),
-                        ContextCompat.getColor(getApplicationContext(),R.color.bgColor), /*from color*/
-                        ContextCompat.getColor(getApplicationContext(),R.color.bgColor) /*to color*/);
-                colorFade.setDuration(2000);
-                colorFade.start();
-                buildDisplayTag();
-                updateTitlePanel();
-            }
-        }
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
@@ -1173,47 +1073,6 @@ public class TagsActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                         progressDialog = null;
                     }
-                } catch (Exception ignored) {}
-            });
-        }
-    }
-
-    public void startProgressBar2() {
-        runOnUiThread(() -> {
-            try {
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
-                View v = getLayoutInflater().inflate(R.layout.progress_dialog_layout, null);
-                progressLabel = v.findViewById(R.id.process_label);
-                dialogBuilder.setView(v);
-                // dialogBuilder.setView(R.layout.progress_dialog_layout);
-                dialogBuilder.setCancelable(true);
-                progressDialog = dialogBuilder.create();
-                progressDialog.setCanceledOnTouchOutside(true);
-                if(progressDialog.getWindow() != null) {
-                    progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                }
-                progressDialog.show();
-            }catch (Exception ex) {
-                Log.e(TAG, "startProgressBar",ex);
-            }
-        });
-    }
-
-
-    private void updateProgressBar2(final String label) {
-        runOnUiThread(() -> {
-            if(progressDialog!=null && progressLabel!= null) {
-                progressLabel.setText(label);
-            }
-        });
-    }
-
-    public void stopProgressBar2() {
-        if(progressDialog!=null) {
-            runOnUiThread(() -> {
-                try {
-                    progressDialog.dismiss();
-                    progressDialog = null;
                 } catch (Exception ignored) {}
             });
         }

@@ -181,8 +181,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     return Constants.QUALITY_GOOD;
                 }
             }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-                if(isEmpty(criteria.getKeyword()) || Constants.UNKNOWN_PUBLISHER.equals(criteria.getKeyword())) {
-                    return Constants.UNKNOWN_PUBLISHER;
+                if(isEmpty(criteria.getKeyword()) || Constants.UNKNOWN.equals(criteria.getKeyword())) {
+                    return Constants.UNKNOWN;
                 }else {
                     return criteria.getKeyword();
                 }

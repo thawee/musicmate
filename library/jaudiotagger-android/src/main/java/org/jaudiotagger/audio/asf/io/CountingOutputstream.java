@@ -11,7 +11,8 @@ import java.io.OutputStream;
  *
  * @author Christian Laireiter
  */
-public class CountingOutputstream extends OutputStream {
+public class CountingOutputstream extends OutputStream
+{
 
     /**
      * Stores the amount of bytes written.
@@ -29,7 +30,8 @@ public class CountingOutputstream extends OutputStream {
      *
      * @param outputStream stream to wrap.
      */
-    public CountingOutputstream(final OutputStream outputStream) {
+    public CountingOutputstream(final OutputStream outputStream)
+    {
         super();
         assert outputStream != null;
         this.wrapped = outputStream;
@@ -39,7 +41,8 @@ public class CountingOutputstream extends OutputStream {
      * {@inheritDoc}
      */
     @Override
-    public void close() throws IOException {
+    public void close() throws IOException
+    {
         this.wrapped.close();
     }
 
@@ -47,14 +50,16 @@ public class CountingOutputstream extends OutputStream {
      * {@inheritDoc}
      */
     @Override
-    public void flush() throws IOException {
+    public void flush() throws IOException
+    {
         this.wrapped.flush();
     }
 
     /**
      * @return the count
      */
-    public long getCount() {
+    public long getCount()
+    {
         return this.count;
     }
 
@@ -62,7 +67,8 @@ public class CountingOutputstream extends OutputStream {
      * {@inheritDoc}
      */
     @Override
-    public void write(final byte[] bytes) throws IOException {
+    public void write(final byte[] bytes) throws IOException
+    {
         this.wrapped.write(bytes);
         this.count += bytes.length;
     }
@@ -71,7 +77,8 @@ public class CountingOutputstream extends OutputStream {
      * {@inheritDoc}
      */
     @Override
-    public void write(final byte[] bytes, final int off, final int len) throws IOException {
+    public void write(final byte[] bytes, final int off, final int len) throws IOException
+    {
         this.wrapped.write(bytes, off, len);
         this.count += len;
     }
@@ -80,7 +87,8 @@ public class CountingOutputstream extends OutputStream {
      * {@inheritDoc}
      */
     @Override
-    public void write(final int toWrite) throws IOException {
+    public void write(final int toWrite) throws IOException
+    {
         this.wrapped.write(toWrite);
         this.count++;
     }

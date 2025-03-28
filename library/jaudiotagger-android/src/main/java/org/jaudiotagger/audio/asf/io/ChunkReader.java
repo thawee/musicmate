@@ -11,7 +11,8 @@ import java.io.InputStream;
  *
  * @author Christian Laireiter
  */
-public interface ChunkReader {
+public interface ChunkReader
+{
 
     /**
      * Tells whether the reader can fail to return a valid chunk.<br>

@@ -36,7 +36,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 9;
+    private static final int DATABASE_VERSION = 10;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -340,7 +340,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            if (isEmpty(keyword) || Constants.UNKNOWN_PUBLISHER.equals(keyword)) {
+            if (isEmpty(keyword) || Constants.UNKNOWN.equals(keyword)) {
                 builder.where().raw("publisher is null order by title, artist");
                 return builder.query();
             } else {

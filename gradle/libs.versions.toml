@@ -55,8 +55,8 @@ slf4j-api = {module = "org.slf4j:slf4j-api", version="2.0.17"}
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.3"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.3"}
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.0.alpha1"}
-jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0.alpha1"}
+#jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.0.alpha1"}
+#jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0.alpha1"}
 #jetty-server10 = {module = "org.eclipse.jetty:jetty-server", version="10.0.24"}
 #jetty-client10 = {module = "org.eclipse.jetty:jetty-client", version="10.0.24"}
 

@@ -22,19 +22,22 @@ import java.nio.ByteBuffer;
 
 /**
  * Apple defined Movement No/Total frame works the same way as the TRCK frame
- * <p>
+ *
  * This is not an official standard frame, but Apple makes its own rules !
  *
  * @author : Paul Taylor
  */
-public class FrameBodyMVIN extends AbstractFrameBodyNumberTotal implements ID3v24FrameBody, ID3v23FrameBody {
+public class FrameBodyMVIN extends AbstractFrameBodyNumberTotal implements ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyTALB datatype.
      */
-    public FrameBodyMVIN() {
+    public FrameBodyMVIN()
+    {
     }
 
-    public FrameBodyMVIN(FrameBodyMVIN body) {
+    public FrameBodyMVIN(FrameBodyMVIN body)
+    {
         super(body);
     }
 
@@ -44,7 +47,8 @@ public class FrameBodyMVIN extends AbstractFrameBodyNumberTotal implements ID3v2
      * @param textEncoding
      * @param text
      */
-    public FrameBodyMVIN(byte textEncoding, String text) {
+    public FrameBodyMVIN(byte textEncoding, String text)
+    {
         super(textEncoding, text);
     }
 
@@ -55,11 +59,13 @@ public class FrameBodyMVIN extends AbstractFrameBodyNumberTotal implements ID3v2
      * @param frameSize
      * @throws org.jaudiotagger.tag.InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyMVIN(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyMVIN(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
-    public FrameBodyMVIN(byte textEncoding, Integer movementNo, Integer movementTotal) {
+    public FrameBodyMVIN(byte textEncoding, Integer movementNo, Integer movementTotal)
+    {
         super(textEncoding, movementNo, movementTotal);
     }
 
@@ -69,7 +75,8 @@ public class FrameBodyMVIN extends AbstractFrameBodyNumberTotal implements ID3v2
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v24Frames.FRAME_ID_MOVEMENT_NO;
     }
 

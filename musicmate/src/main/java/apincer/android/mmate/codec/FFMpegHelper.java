@@ -235,7 +235,7 @@ public class FFMpegHelper {
         // if (ReturnCode.isSuccess(session.getReturnCode())) {
         String data = session.getOutput();
         //    String data = getFFmpegOutputData(session);
-        parseReplayGain(tag, data);
+        //parseReplayGain(tag, data);
         parseOverallDRMeter(tag, data);
        // parseVolume(tag, data);
         parseASTATS(tag, data);
@@ -265,6 +265,7 @@ public class FFMpegHelper {
         }
     }
 
+    /*
     private static void parseReplayGain(MusicTag tag, String data) {
         try {
             //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_gain = -0.37 dB
@@ -289,7 +290,7 @@ public class FFMpegHelper {
         }catch (Exception ex) {
             Log.e(TAG, "parseReplayGain", ex);
         }
-    }
+    } */
 
     private static void parseOverallDRMeter(MusicTag tag, String data) {
         try {

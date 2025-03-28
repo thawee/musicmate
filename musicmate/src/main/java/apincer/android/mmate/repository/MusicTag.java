@@ -2,9 +2,6 @@ package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.repository.MusicAnalyser.NOT_SCAN;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -16,7 +13,7 @@ import java.util.Objects;
 import apincer.android.mmate.Constants;
 
 @DatabaseTable(tableName = "musictag")
-public class MusicTag implements Cloneable, Parcelable {
+public class MusicTag implements Cloneable {
     @Override
     public int hashCode() {
         return Objects.hash(id);
@@ -55,7 +52,7 @@ public class MusicTag implements Cloneable, Parcelable {
     @DatabaseField
     protected String path = "";
    @DatabaseField
-   protected String fileFormat;
+   protected String fileType;
     @DatabaseField
     protected long fileLastModified = 0;
     @DatabaseField
@@ -127,10 +124,10 @@ public class MusicTag implements Cloneable, Parcelable {
     protected String coverartMime = "";
 
     // loudness and gain
-    @DatabaseField
-    protected double gainTrackTP; // unit of dB
-    @DatabaseField
-    protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
+   // @DatabaseField
+   // protected double gainTrackTP; // unit of dB
+   // @DatabaseField
+   // protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
     @DatabaseField
     protected double drScore = 0; //gainTrackDR; // Dynamic Range
    @DatabaseField
@@ -187,6 +184,7 @@ public class MusicTag implements Cloneable, Parcelable {
         this.rating = rating;
     } */
 
+    /*
     protected MusicTag(Parcel in) {
         originTag = in.readParcelable(MusicTag.class.getClassLoader(), MusicTag.class);
         id = in.readLong();
@@ -232,8 +230,9 @@ public class MusicTag implements Cloneable, Parcelable {
         upscaledScore = in.readDouble();
         resampledScore = in.readDouble();
         dynamicRange = in.readDouble();
-    }
+    } */
 
+    /*
     public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<>() {
         @Override
         public MusicTag createFromParcel(Parcel in) {
@@ -244,7 +243,7 @@ public class MusicTag implements Cloneable, Parcelable {
         public MusicTag[] newArray(int size) {
             return new MusicTag[size];
         }
-    };
+    }; */
 
     public long getId() {
         return id;
@@ -406,12 +405,12 @@ public class MusicTag implements Cloneable, Parcelable {
         this.fileLastModified = lastModified;
     }
 
-    public String getFileFormat() {
-        return fileFormat;
+    public String getFileType() {
+        return fileType;
     }
 
-    public void setFileFormat(String fileExtension) {
-        this.fileFormat = fileExtension;
+    public void setFileType(String fileExtension) {
+        this.fileType = fileExtension;
     }
 
     public void setAudioDuration(double audioDuration) {
@@ -449,7 +448,7 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.storageId = storageId;
         tag.simpleName = simpleName;
         tag.fileSize = fileSize;
-        tag.fileFormat = fileFormat;
+        tag.fileType = fileType;
         tag.fileLastModified = fileLastModified;
 
         tag.audioBitsDepth = audioBitsDepth;
@@ -459,8 +458,8 @@ public class MusicTag implements Cloneable, Parcelable {
         tag.audioEncoding = audioEncoding;
         tag.audioChannels = audioChannels;
 
-        tag.gainTrackRG = gainTrackRG;
-        tag.gainTrackTP = gainTrackTP;
+      //  tag.gainTrackRG = gainTrackRG;
+      //  tag.gainTrackTP = gainTrackTP;
         tag.drScore = drScore;
         tag.upscaledScore = upscaledScore;
         tag.resampledScore = resampledScore;
@@ -499,7 +498,7 @@ public class MusicTag implements Cloneable, Parcelable {
         this.albumUniqueKey = tag.albumUniqueKey;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
-        this.fileFormat = tag.fileFormat;
+        this.fileType = tag.fileType;
         this.fileLastModified = tag.fileLastModified;
 
         this.audioBitsDepth = tag.audioBitsDepth;
@@ -533,8 +532,8 @@ public class MusicTag implements Cloneable, Parcelable {
         this.mqaInd = tag.mqaInd;
         this.mqaSampleRate = tag.mqaSampleRate;
 
-        this.gainTrackTP = tag.gainTrackTP;
-        this.gainTrackRG = tag.gainTrackRG;
+       // this.gainTrackTP = tag.gainTrackTP;
+       // this.gainTrackRG = tag.gainTrackRG;
         this.drScore = tag.drScore;
         this.upscaledScore = tag.upscaledScore;
         this.resampledScore = tag.resampledScore;
@@ -545,11 +544,13 @@ public class MusicTag implements Cloneable, Parcelable {
         this.audioStartTime = tag.audioStartTime;
     }
 
+    /*
     @Override
     public int describeContents() {
         return 0;
-    }
+    } */
 
+    /*
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeParcelable(originTag, i);
@@ -594,7 +595,7 @@ public class MusicTag implements Cloneable, Parcelable {
         parcel.writeDouble(upscaledScore);
         parcel.writeDouble(resampledScore);
         parcel.writeDouble(dynamicRange);
-    }
+    } */
 
     public MusicTag getOriginTag() {
         return originTag;
@@ -660,6 +661,7 @@ public class MusicTag implements Cloneable, Parcelable {
         this.coverartMime = embedCoverArt;
     }
 
+    /*
     public double getTrackTP() {
         return gainTrackTP;
     }
@@ -674,7 +676,7 @@ public class MusicTag implements Cloneable, Parcelable {
 
     public void setTrackRG(double trackGain) {
         this.gainTrackRG = trackGain;
-    }
+    } */
 
     public String getPublisher() {
         return publisher;

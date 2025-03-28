@@ -8,14 +8,17 @@ import java.nio.ByteBuffer;
 /**
  * Album Artist Sort name  ( iTunes Only)
  */
-public class FrameBodyTSO2 extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
+public class FrameBodyTSO2 extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyTSOA datatype.
      */
-    public FrameBodyTSO2() {
+    public FrameBodyTSO2()
+    {
     }
 
-    public FrameBodyTSO2(FrameBodyTSO2 body) {
+    public FrameBodyTSO2(FrameBodyTSO2 body)
+    {
         super(body);
     }
 
@@ -25,7 +28,8 @@ public class FrameBodyTSO2 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTSO2(byte textEncoding, String text) {
+    public FrameBodyTSO2(byte textEncoding, String text)
+    {
         super(textEncoding, text);
     }
 
@@ -36,7 +40,8 @@ public class FrameBodyTSO2 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTSO2(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyTSO2(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -45,7 +50,8 @@ public class FrameBodyTSO2 extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v24Frames.FRAME_ID_ALBUM_ARTIST_SORT_ORDER_ITUNES;
     }
 }

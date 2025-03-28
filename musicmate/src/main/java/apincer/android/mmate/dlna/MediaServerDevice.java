@@ -46,9 +46,8 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class MediaServerDevice extends LocalDevice {
-    public static final int LOCK_TIMEOUT = 5000;
 
-    private final Context context;
+    //private final Context context;
     private final DeviceDetailsProvider deviceDetailsProvider;
 
     public MediaServerDevice(Context context) throws ValidationException {
@@ -60,11 +59,11 @@ public class MediaServerDevice extends LocalDevice {
                 createMediaServerServices(context),
                 null
         );
-        this.context = context;
+       // this.context = context;
         this.deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
         ContentDirectory contentDirectoryService = getServiceImplementation(ContentDirectory.class);
         ConnectionManagerService connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
-    //    this.mediaReceiverRegistrarService = getServiceImplementation(UmsMediaReceiverRegistrarService.class);
+       // this.mediaReceiverRegistrarService = getServiceImplementation(UmsMediaReceiverRegistrarService.class);
     }
 
     @Override
@@ -211,59 +210,54 @@ public class MediaServerDevice extends LocalDevice {
         return null;
     }
 
-    private static class MediaDeviceDetailsProvider implements DeviceDetailsProvider {
-        private final Context context;
-        private static final String MANUFACTURER_NAME = "Thawee";
-        private static final String MANUFACTURER_URL = "https://github.com/thawee/musicmate";
-        private static final ManufacturerDetails MANUFACTURER_DETAILS = new ManufacturerDetails(MANUFACTURER_NAME, MANUFACTURER_URL);
-        private	static final DLNADoc[] DLNA_DOCS = new DLNADoc[] {new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
-        // Replace the empty DLNA_CAPS with these capabilities
-        private static final DLNACaps DLNA_CAPS = new DLNACaps(new String[] {
-                "image-upload", "audio-upload", "connection-stalling", "time-seek",
-                "range", "limited-operations", "rw", "search"
-        });
-        private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
-        private static final DLNACaps SEC_CAP = new DLNACaps(new String[] {"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
-
-        private MediaDeviceDetailsProvider(Context context) {
-            this.context = context;
-        }
+    private record MediaDeviceDetailsProvider(Context context) implements DeviceDetailsProvider {
+            private static final String MANUFACTURER_NAME = "Thawee";
+            private static final String MANUFACTURER_URL = "https://github.com/thawee/musicmate";
+            private static final ManufacturerDetails MANUFACTURER_DETAILS = new ManufacturerDetails(MANUFACTURER_NAME, MANUFACTURER_URL);
+            private static final DLNADoc[] DLNA_DOCS = new DLNADoc[]{new DLNADoc("DMS", DLNADoc.Version.V1_5), new DLNADoc("M-DMS", DLNADoc.Version.V1_5)};
+            // Replace the empty DLNA_CAPS with these capabilities
+            private static final DLNACaps DLNA_CAPS = new DLNACaps(new String[]{
+                    "image-upload", "audio-upload", "connection-stalling", "time-seek",
+                    "range", "limited-operations", "rw", "search"
+            });
+            private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
+            private static final DLNACaps SEC_CAP = new DLNACaps(new String[]{"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
 
         @Override
-        public DeviceDetails provide(RemoteClientInfo info) {
-            String modelNumber = ApplicationUtils.getVersionNumber(context);
-            String modelName = "MusicMate Server";
-            String modelDescription = "DLNA (UPnP/AV 1.0) Media Server - "+ApplicationUtils.getDeviceDetails();
+            public DeviceDetails provide(RemoteClientInfo info) {
+                String modelNumber = ApplicationUtils.getVersionNumber(context);
+                String modelName = "MusicMate Server";
+                String modelDescription = "DLNA (UPnP/AV 1.0) Media Server - " + ApplicationUtils.getDeviceDetails();
 
-            // For better display in mConnectHD, include the device model in brackets
-            String friendlyName = "MusicMate Server ["+ApplicationUtils.getDeviceModel()+"]";
+                // For better display in mConnectHD, include the device model in brackets
+                String friendlyName = "MusicMate Server [" + ApplicationUtils.getDeviceModel() + "]";
 
-            // Add serialNumber for better device identification
-            String serialNumber = getUuid(context).substring(0, 12).toUpperCase();
+                // Add serialNumber for better device identification
+                String serialNumber = getUuid(context).substring(0, 12).toUpperCase();
 
-            ModelDetails modelDetails = new ModelDetails(modelName,
+                ModelDetails modelDetails = new ModelDetails(modelName,
                         modelDescription,
                         modelNumber,
-                    "https://github.com/thawee/musicmate"  // Add modelURL for more information
-            );
+                        "https://github.com/thawee/musicmate"  // Add modelURL for more information
+                );
 
-            URI presentationURI = null;
-                if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
-                    String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + CONTENT_SERVER_PORT +"/musicmate.html";
-                    presentationURI = URI.create(webInterfaceUrl);
-                }
-                return new DeviceDetails(
-                        null,
-                        friendlyName,
-                        MANUFACTURER_DETAILS,
-                        modelDetails,
-                        serialNumber,
-                        null,
-                        presentationURI,
-                        DLNA_DOCS,
-                        DLNA_CAPS,
-                        SEC_CAP);
+                URI presentationURI = null;
+            if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
+                String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + CONTENT_SERVER_PORT + "/musicmate.html";
+                presentationURI = URI.create(webInterfaceUrl);
+            }
+            return new DeviceDetails(
+                    null,
+                    friendlyName,
+                    MANUFACTURER_DETAILS,
+                    modelDetails,
+                    serialNumber,
+                    null,
+                    presentationURI,
+                    DLNA_DOCS,
+                    DLNA_CAPS,
+                    SEC_CAP);
+            }
         }
-    }
 
 }

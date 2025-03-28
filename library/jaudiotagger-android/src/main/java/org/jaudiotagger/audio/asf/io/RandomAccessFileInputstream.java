@@ -9,7 +9,8 @@ import java.io.RandomAccessFile;
  *
  * @author Christian Laireiter
  */
-public final class RandomAccessFileInputstream extends InputStream {
+public final class RandomAccessFileInputstream extends InputStream
+{
 
     /**
      * The file access to read from.<br>
@@ -22,9 +23,11 @@ public final class RandomAccessFileInputstream extends InputStream {
      *
      * @param file The file to read.
      */
-    public RandomAccessFileInputstream(final RandomAccessFile file) {
+    public RandomAccessFileInputstream(final RandomAccessFile file)
+    {
         super();
-        if (file == null) {
+        if (file == null)
+        {
             throw new IllegalArgumentException("null");
         }
         this.source = file;
@@ -34,7 +37,8 @@ public final class RandomAccessFileInputstream extends InputStream {
      * {@inheritDoc}
      */
     @Override
-    public int read() throws IOException {
+    public int read() throws IOException
+    {
         return this.source.read();
     }
 
@@ -42,7 +46,8 @@ public final class RandomAccessFileInputstream extends InputStream {
      * {@inheritDoc}
      */
     @Override
-    public int read(final byte[] buffer, final int off, final int len) throws IOException {
+    public int read(final byte[] buffer, final int off, final int len) throws IOException
+    {
         return this.source.read(buffer, off, len);
     }
 
@@ -50,12 +55,15 @@ public final class RandomAccessFileInputstream extends InputStream {
      * {@inheritDoc}
      */
     @Override
-    public long skip(final long amount) throws IOException {
-        if (amount < 0) {
+    public long skip(final long amount) throws IOException
+    {
+        if (amount < 0)
+        {
             throw new IllegalArgumentException("invalid negative value");
         }
         long left = amount;
-        while (left > Integer.MAX_VALUE) {
+        while (left > Integer.MAX_VALUE)
+        {
             this.source.skipBytes(Integer.MAX_VALUE);
             left -= Integer.MAX_VALUE;
         }

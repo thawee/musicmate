@@ -153,47 +153,6 @@ public class MusicTagUtils {
         }
     }
 
-    @Deprecated
-    public static String getTrackDRandGainString(MusicTag tag) {
-        String text;
-        if(tag.getDynamicRangeScore()==0.00) {
-            text = " - ";
-        }else {
-            text = String.format(Locale.US, "DR%.0f", tag.getDynamicRangeScore());
-        }
-        text = text + "/";
-
-        double gain = tag.getTrackRG();
-       // double gain = tag.getTrackLoudness();
-
-        if(gain ==0.00) {
-            text = text + " - ";
-        }else if (gain > 0.00){
-            text = text + String.format(Locale.US, "+%.2f", gain);
-        }else {
-            text = text + String.format(Locale.US, "%.2f", gain);
-        }
-
-        return text;
-    }
-
-    @Deprecated
-    public static String getTrackReplayGainString(MusicTag tag) {
-        String text = "";
-        double gain = tag.getTrackRG();
-        // double gain = tag.getTrackLoudness();
-
-        if(gain ==0.00) {
-            text = text + " - ";
-        }else if (gain > 0.00){
-            text = text + String.format(Locale.US, "+%.2f", gain);
-        }else {
-            text = text + String.format(Locale.US, "%.2f", gain);
-        }
-
-        return text;
-    }
-
     public static String getDynamicRangeScore(MusicTag tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {
@@ -342,8 +301,9 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_FLAC.equalsIgnoreCase(musicTag.getAudioEncoding()));
     }
 
-    public static boolean isDSDFile(String path) {
-        return (path.endsWith("."+Constants.FILE_EXT_DSF));
+    public static boolean isDSDFile(MusicTag tag) {
+        return (Constants.MEDIA_ENC_DSF.equalsIgnoreCase(tag.getAudioEncoding()) ||
+                Constants.MEDIA_ENC_DFF.equalsIgnoreCase(tag.getAudioEncoding()) );
     }
 
     public static boolean isMp4File(MusicTag tag) {
@@ -368,7 +328,7 @@ public class MusicTagUtils {
     }
 
     public static String getExtension(MusicTag tag) {
-        String ext = tag.getFileFormat();
+       /* String ext = tag.getFileFormat();
         if("wave".equals(ext)) {
             ext = "wav";
         } else if("mpeg".equals(ext)) {
@@ -380,7 +340,8 @@ public class MusicTagUtils {
         } else if("alac".equals(ext)) {
             ext = "m4a";
         }
-        return ext;
+        return ext; */
+        return tag.getFileType();
     }
 
     public static boolean isISaanPlaylist(MusicTag tag) {
@@ -446,7 +407,7 @@ public class MusicTagUtils {
 
     // Helper to determine if a format is lossless (for audiophile renderers)
     public static boolean isLosslessFormat(MusicTag tag) {
-        String format = tag.getFileFormat() != null ? tag.getFileFormat().toLowerCase() : "";
+        String format = tag.getFileType() != null ? tag.getFileType().toLowerCase() : "";
         String codec = tag.getAudioEncoding() != null ? tag.getAudioEncoding().toLowerCase() : "";
         String path = tag.getPath().toLowerCase();
 

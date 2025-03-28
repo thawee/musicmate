@@ -1,10 +1,7 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.QUALITY_GOOD;
-import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.utils.StringUtils.toLowerCase;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
@@ -18,7 +15,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,9 +36,6 @@ import com.skydoves.powermenu.CircularEffect;
 import com.skydoves.powermenu.MenuAnimation;
 import com.skydoves.powermenu.PowerMenu;
 import com.skydoves.powermenu.PowerMenuItem;
-import com.skydoves.powerspinner.IconSpinnerAdapter;
-import com.skydoves.powerspinner.IconSpinnerItem;
-import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -52,14 +49,12 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.provider.CoverartFetcher;
-import apincer.android.mmate.provider.IconProviders;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
@@ -72,8 +67,6 @@ public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
-    //private AlertDialog progressDialog;
-    //private TextView progressLabel;
     private TextView previewTitle;
     private TextView previewArtist;
     private TextView previewAlbum;
@@ -86,12 +79,14 @@ public class TagsEditorFragment extends Fragment {
     private TextInputEditText txtDisc;
     private TextInputEditText txtTrack;
     private TextInputEditText txtYear;
-    private TextInputEditText txtGenre;
-    private TextInputEditText txtGrouping;
+    private AutoCompleteTextView txtGenre;
+    // private TextInputEditText txtGrouping;
+    private AutoCompleteTextView txtGrouping;
     private TextInputEditText txtMediaType;
     private TextInputEditText txtPublisher;
     private FloatingActionButton fabSav;
-   private PowerSpinnerView fileQuality;
+    private AutoCompleteTextView qualityDropdown;
+   //private PowerSpinnerView fileQuality;
     private PowerMenu powerMenu;
     private volatile boolean bypassChange = false;
 
@@ -122,43 +117,148 @@ public class TagsEditorFragment extends Fragment {
         txtGrouping = v.findViewById(R.id.input_grouping);
         txtMediaType = v.findViewById(R.id.input_media_type);
         txtPublisher = v.findViewById(R.id.input_publisher);
-        fileQuality = v.findViewById(R.id.mediaFileQuality);
+        qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
+        //fileQuality = v.findViewById(R.id.mediaFileQuality);
         fabSav = v.findViewById(R.id.fab_save);
 
-        setupFileQualityList(fileQuality);
+        setupFileQualityList();
         //fabSav.setVisibility(View.GONE);
         fabSav.setOnClickListener(view -> doSaveMediaItem());
 
         // popup list
         setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
         setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1, false);
-        setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),2, true);
-        setupListValuePopup(txtGrouping, TagRepository.getDefaultGroupingList(getContext()),1, true);
+       // setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),2, true);
+        setupGenreDropdown();
+       // setupListValuePopup(txtGrouping, TagRepository.getDefaultGroupingList(getContext()),1, true);
+        setupGroupingDropdown();
         setupListValuePopup(txtPublisher, TagRepository.getDefaultPublisherList(getContext()),3, false);
         setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1, true);
 
         return v;
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private void setupFileQualityList(PowerSpinnerView fileQuality) {
-        List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),Constants.QUALITY_AUDIOPHILE));
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),QUALITY_RECOMMENDED));
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),QUALITY_GOOD));
-        iconSpinnerItems.add(createIconSpinnerItem(getContext(),Constants.QUALITY_BAD));
-        IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(fileQuality);
-        fileQuality.setSpinnerAdapter(iconSpinnerAdapter);
-        fileQuality.setArrowAnimate(true);
-        fileQuality.setDividerSize(1);
-        fileQuality.setSpinnerPopupBackground(context.getDrawable(R.drawable.shape_border_back));
-        fileQuality.setItems(iconSpinnerItems);
-        fileQuality.setLifecycleOwner(this);
+    private void setupGenreDropdown() {
+        // Get the default genre list from TagRepository
+        List<String> genreOptions = TagRepository.getDefaultGenreList(getContext());
+
+        // Create a non-filtering adapter that always shows all items
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                getContext(),
+                R.layout.dropdown_item,
+                genreOptions
+        ) {
+            @NonNull
+            @Override
+            public Filter getFilter() {
+                return new Filter() {
+                    @Override
+                    protected FilterResults performFiltering(CharSequence constraint) {
+                        FilterResults results = new FilterResults();
+                        // Always return all items regardless of constraint
+                        results.values = genreOptions;
+                        results.count = genreOptions.size();
+                        return results;
+                    }
+
+                    @Override
+                    protected void publishResults(CharSequence constraint, FilterResults results) {
+                        if (results.count > 0) {
+                            notifyDataSetChanged();
+                        } else {
+                            notifyDataSetInvalidated();
+                        }
+                    }
+                };
+            }
+        };
+
+        txtGenre.setAdapter(adapter);
+
+        // Set threshold to 0 so dropdown shows immediately on focus
+        txtGenre.setThreshold(0);
+
+        // Make the dropdown appear when clicked
+        txtGenre.setOnClickListener(v -> txtGenre.showDropDown());
+
+        // Set the click listener for item selection
+        txtGenre.setOnItemClickListener((parent, view, position, id) -> {
+            String selection = (String) parent.getItemAtPosition(position);
+            txtGenre.setText(selection);
+            txtGenre.dismissDropDown();
+        });
+
+        txtGenre.setAdapter(adapter);
+
+        // Enable free text entry while still showing suggestions
+       // txtGenre.setThreshold(1);
     }
 
-    private IconSpinnerItem createIconSpinnerItem(Context context, String title) {
-        return new IconSpinnerItem("", UIUtils.toDrawable(context, IconProviders.createSourceQualityIcon(context, title)));
-       // return new IconSpinnerItem(title, UIUtils.toDrawable(context, MusicTagUtils.createSourceQualityIcon(context, title)));
+    private void setupGroupingDropdown() {
+        // Get the default grouping list from TagRepository
+        List<String> groupingOptions = TagRepository.getGroupingList(getContext());
+
+        // Create a non-filtering adapter that always shows all items
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                getContext(),
+                R.layout.dropdown_item,
+                groupingOptions
+        ) {
+            @NonNull
+            @Override
+            public Filter getFilter() {
+                return new Filter() {
+                    @Override
+                    protected FilterResults performFiltering(CharSequence constraint) {
+                        FilterResults results = new FilterResults();
+                        // Always return all items regardless of constraint
+                        results.values = groupingOptions;
+                        results.count = groupingOptions.size();
+                        return results;
+                    }
+
+                    @Override
+                    protected void publishResults(CharSequence constraint, FilterResults results) {
+                        if (results.count > 0) {
+                            notifyDataSetChanged();
+                        } else {
+                            notifyDataSetInvalidated();
+                        }
+                    }
+                };
+            }
+        };
+
+        txtGrouping.setAdapter(adapter);
+
+        // Set threshold to 0 so dropdown shows immediately on focus
+        txtGrouping.setThreshold(0);
+
+        // Make the dropdown appear when clicked
+        txtGrouping.setOnClickListener(v -> txtGrouping.showDropDown());
+
+        // Set the click listener for item selection
+        txtGrouping.setOnItemClickListener((parent, view, position, id) -> {
+            String selection = (String) parent.getItemAtPosition(position);
+            txtGrouping.setText(selection);
+            txtGrouping.dismissDropDown();
+        });
+
+        txtGrouping.setAdapter(adapter);
+
+        // Enable free text entry while still showing suggestions
+        // groupingDropdown.setThreshold(1);
+    }
+
+    private void setupFileQualityList() {
+
+        String[] qualityOptions = getResources().getStringArray(R.array.file_qualities);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                getContext(),
+                R.layout.dropdown_item, // Create this layout with a simple TextView
+                qualityOptions
+        );
+        qualityDropdown.setAdapter(adapter);
     }
 
     private void setupListValuePopup(TextInputEditText textInput, @NonNull List<String> defaultList, int minChar, boolean autoSelect) {
@@ -403,13 +503,6 @@ public class TagsEditorFragment extends Fragment {
         });
     }
 
-    private void bindViews2() {
-        MusicTag tag = tagsActivity.buildDisplayTag();
-        doPreviewMusicInfo(tag);
-        initEditorInputs(tag);
-        tagsActivity.updateTitlePanel();
-    }
-
     private void doSaveMediaItem() {
         tagsActivity.startProgressBar();
 
@@ -438,11 +531,11 @@ public class TagsEditorFragment extends Fragment {
                         tagsActivity.updateProgressBar(current + "/" + totalItems);
 
                         // Post events one at a time
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(
+                       /* AudioTagEditResultEvent message = new AudioTagEditResultEvent(
                                 AudioTagEditResultEvent.ACTION_UPDATE,
                                 status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
                                 tag);
-                        EventBus.getDefault().postSticky(message);
+                        EventBus.getDefault().postSticky(message); */
                     } catch (Exception e) {
                         Log.e(TAG, "doSaveMediaItem", e);
                     }
@@ -542,20 +635,18 @@ public class TagsEditorFragment extends Fragment {
     }
 
     private String buildQualityTag() {
-        int indx = fileQuality.getSelectedIndex();
-        if(indx ==0) {
-            return Constants.QUALITY_AUDIOPHILE;
-        }else  if(indx ==1) {
-            return Constants.QUALITY_RECOMMENDED;
-        }else  if(indx ==2) {
-            return Constants.QUALITY_GOOD;
-        }else  if(indx ==3) {
-            return Constants.QUALITY_BAD;
-        }
-        return "";
+        return qualityDropdown.getText().toString();
     }
 
     private String buildTag(TextInputEditText txt, String oldVal) {
+        String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
+        if(StringUtils.MULTI_VALUES.equalsIgnoreCase(text) ) {
+            return oldVal;
+        }
+        return text;
+    }
+
+    private String buildTag(TextView txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
         if(StringUtils.MULTI_VALUES.equalsIgnoreCase(text) ) {
             return oldVal;
@@ -626,15 +717,7 @@ public class TagsEditorFragment extends Fragment {
         txtAlbumArtist.invalidate();
 
         // quality
-        if(Constants.QUALITY_AUDIOPHILE.equals(tag.getMediaQuality())) {
-            fileQuality.selectItemByIndex(0);
-        }else if(Constants.QUALITY_RECOMMENDED.equals(tag.getMediaQuality())) {
-            fileQuality.selectItemByIndex(1);
-        }else if(Constants.QUALITY_GOOD.equals(tag.getMediaQuality())) {
-            fileQuality.selectItemByIndex(2);
-        }else if(Constants.QUALITY_BAD.equals(tag.getMediaQuality())) {
-            fileQuality.selectItemByIndex(3);
-        }
+        qualityDropdown.setText(tag.getMediaQuality());
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {
@@ -650,95 +733,5 @@ public class TagsEditorFragment extends Fragment {
         previewArtist.setText(tag.getArtist());
         previewAlbum.setText(tag.getAlbum());
         previewPath.setText(tag.getSimpleName());
-
     }
-
-    /*
-    private void startProgressBar() {
-        if (!isAdded() || getActivity() == null) return;
-
-        try {
-            Activity activity = getActivity();
-            if (activity == null) return;
-
-            activity.runOnUiThread(() -> {
-                try {
-                    if (!isAdded() || getActivity() == null) return;
-
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
-                    View v = getLayoutInflater().inflate(R.layout.animated_progress_dialog_layout, null);
-                    progressLabel = v.findViewById(R.id.process_label);
-                    dialogBuilder.setView(v);
-                    dialogBuilder.setCancelable(false);
-                    progressDialog = dialogBuilder.create();
-
-                    if(progressDialog.getWindow() != null) {
-                        progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                        progressDialog.getWindow().setWindowAnimations(R.style.DialogAnimation);
-                    }
-
-                    progressDialog.show();
-
-                    // Add additional entrance animation
-                    View dialogContent = v.findViewById(R.id.lottie_animation);
-                    if (dialogContent != null) {
-                        dialogContent.setAlpha(0f);
-                        dialogContent.animate()
-                                .alpha(1f)
-                                .setDuration(400)
-                                .setInterpolator(new AccelerateDecelerateInterpolator())
-                                .start();
-                    }
-                } catch (Exception e) {
-                    Log.e("TagsEditorFragment", "Error in startProgressBar UI thread", e);
-                }
-            });
-        } catch (Exception e) {
-            Log.e("TagsEditorFragment", "Error in startProgressBar", e);
-        }
-    }
-
-
-    private void startProgressBar2() {
-        if (!isAdded() || getActivity() == null) return;
-
-        try {
-            Activity activity = getActivity();
-            if (activity == null) return;
-
-            activity.runOnUiThread(() -> {
-                try {
-                    if (!isAdded() || getActivity() == null) return;
-
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme);
-                    dialogBuilder.setView(R.layout.progress_dialog_layout);
-                    dialogBuilder.setCancelable(false);
-                    progressDialog = dialogBuilder.create();
-                    progressDialog.show();
-                } catch (Exception e) {
-                    Log.e("TagsTechnicalFragment", "Error in startProgressBar UI thread", e);
-                }
-            });
-        } catch (Exception e) {
-            Log.e("TagsTechnicalFragment", "Error in startProgressBar", e);
-        }
-    }
-
-    private void stopProgressBar() {
-        tagsActivity.runOnUiThread(() -> {
-            if(progressDialog!=null) {
-                try {
-                    progressDialog.dismiss();
-                    progressDialog = null;
-                } catch (Exception ignored) {  }
-            }
-        });
-    }
-    private void updateProgressBar(final String label) {
-        tagsActivity.runOnUiThread(() -> {
-            if(progressDialog!=null && progressLabel!= null) {
-                progressLabel.setText(label);
-            }
-        });
-    } */
 }

@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
 
 /**
  * Chapter frame.
- * <p>
- * <p>
+ *
+ *
  * The purpose of this frame is to describe a single chapter within an
  * audio file. There may be more than one frame of this type in a tag
  * but each must have an Element ID that is unique with respect to any
@@ -78,11 +78,13 @@ import java.nio.ByteBuffer;
  * @author Marc Gimpel, Horizon Wimba S.A.
  * @version $Id$
  */
-public class FrameBodyCHAP extends AbstractID3v2FrameBody implements ID3v2ChapterFrameBody {
+public class FrameBodyCHAP extends AbstractID3v2FrameBody implements ID3v2ChapterFrameBody, ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyCHAP datatype.
      */
-    public FrameBodyCHAP() {
+    public FrameBodyCHAP()
+    {
     }
 
     /**
@@ -90,7 +92,8 @@ public class FrameBodyCHAP extends AbstractID3v2FrameBody implements ID3v2Chapte
      *
      * @param body
      */
-    public FrameBodyCHAP(FrameBodyCHAP body) {
+    public FrameBodyCHAP(FrameBodyCHAP body)
+    {
         super(body);
     }
 
@@ -103,7 +106,8 @@ public class FrameBodyCHAP extends AbstractID3v2FrameBody implements ID3v2Chapte
      * @param startOffset
      * @param endOffset
      */
-    public FrameBodyCHAP(String elementId, int startTime, int endTime, int startOffset, int endOffset) {
+    public FrameBodyCHAP(String elementId, int startTime, int endTime, int startOffset, int endOffset)
+    {
         this.setObjectValue(DataTypes.OBJ_ELEMENT_ID, elementId);
         this.setObjectValue(DataTypes.OBJ_START_TIME, startTime);
         this.setObjectValue(DataTypes.OBJ_END_TIME, endTime);
@@ -118,7 +122,8 @@ public class FrameBodyCHAP extends AbstractID3v2FrameBody implements ID3v2Chapte
      * @param frameSize
      * @throws InvalidTagException if unable to create framebody from buffer
      */
-    public FrameBodyCHAP(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyCHAP(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -127,14 +132,16 @@ public class FrameBodyCHAP extends AbstractID3v2FrameBody implements ID3v2Chapte
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v2ChapterFrames.FRAME_ID_CHAPTER;
     }
 
     /**
      *
      */
-    protected void setupObjectList() {
+    protected void setupObjectList()
+    {
         objectList.add(new StringNullTerminated(DataTypes.OBJ_ELEMENT_ID, this));
         objectList.add(new NumberFixedLength(DataTypes.OBJ_START_TIME, this, 4));
         objectList.add(new NumberFixedLength(DataTypes.OBJ_END_TIME, this, 4));

@@ -8,7 +8,8 @@ import java.util.Map;
  *
  * @see org.jaudiotagger.audio.iff.Chunk
  */
-public enum AiffChunkType {
+public enum AiffChunkType
+{
     FORMAT_VERSION("FVER"),
     APPLICATION("APPL"),
     SOUND("SSND"),
@@ -23,13 +24,14 @@ public enum AiffChunkType {
     CORRUPT_TAG_EARLY("\u0000ID3");
 
     private static final Map<String, AiffChunkType> CODE_TYPE_MAP = new HashMap<String, AiffChunkType>();
-    private final String code;
+    private String code;
 
     /**
      * @param code 4 char string
      */
-    AiffChunkType(final String code) {
-        this.code = code;
+    AiffChunkType(final String code)
+    {
+        this.code=code;
     }
 
     /**
@@ -52,7 +54,8 @@ public enum AiffChunkType {
      *
      * @return 4 char type code, e.g. "SSND" for the sound chunk.
      */
-    public String getCode() {
+    public String getCode()
+    {
         return code;
     }
 }

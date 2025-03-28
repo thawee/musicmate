@@ -59,18 +59,11 @@ public abstract class AbstractContentBrowser {
 
     public String extractName(String id, ContentDirectoryIDs prefix) {
         String name = id.substring(prefix.getId().length());
-        //if(Constants.NONE.equalsIgnoreCase(name) ||
-       //         Constants.UNKNOWN.equalsIgnoreCase(name) ) {
-       //     name = null; //"";
-       // }
         return name;
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
-     /*  if(MediaServerSession.isTransCoded(tag)) {
-            return "http://" + MediaServerSession.getIpAddress() + ":" + HCContentServer.SERVER_PORT + "/res/" + tag.getId() + "/file.raw";
-        }*/
-        return "http://" + StreamServerImpl.streamServerHost + ":" +CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
+        return "http://" + StreamServerImpl.streamServerHost + ":" +CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileType();
 
      //   return "http://" + MediaServerSession.getIpAddress() + ":" +MediaServerConfiguration.STREAM_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
@@ -180,18 +173,8 @@ public abstract class AbstractContentBrowser {
         // DLNA parameters for streaming optimization - enabling seeking and other features
         String formatSuffix = ";DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
 
-        // Transcoded content - PCM streaming
-        if(StreamServerImpl.isTransCoded(tag)) {
-            return new ProtocolInfo(
-                    Protocol.HTTP_GET,
-                    ProtocolInfo.WILDCARD,
-                    "audio/L16;rate=44100;channels=2",
-                    "DLNA.ORG_PN=LPCM" + formatSuffix
-            );
-        }
-
         // AIFF files
-        else if(MusicTagUtils.isAIFFile(tag)) {
+        if(MusicTagUtils.isAIFFile(tag)) {
             return new ProtocolInfo(
                     Protocol.HTTP_GET,
                     ProtocolInfo.WILDCARD,
@@ -261,7 +244,7 @@ public abstract class AbstractContentBrowser {
         }
 
         // DSD/DSF high-res audio - added for completeness
-        else if(MusicTagUtils.isDSDFile(tag.getPath())) {
+        else if(MusicTagUtils.isDSDFile(tag)) {
             return new ProtocolInfo(
                     Protocol.HTTP_GET,
                     ProtocolInfo.WILDCARD,

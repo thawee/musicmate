@@ -10,12 +10,13 @@ package org.jaudiotagger.utils.tree;
 import java.util.EventObject;
 
 
+
 /**
  * Encapsulates information describing changes to a tree model, and
  * used to notify tree model listeners of the change.
  * For more information and examples see
  * <a
- * href="http://java.sun.com/docs/books/tutorial/uiswing/events/treemodellistener.html">How to Write a Tree Model Listener</a>,
+ href="http://java.sun.com/docs/books/tutorial/uiswing/events/treemodellistener.html">How to Write a Tree Model Listener</a>,
  * a section in <em>The Java Tutorial.</em>
  * <p>
  * <strong>Warning:</strong>
@@ -27,24 +28,22 @@ import java.util.EventObject;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
+ * @version 1.35 03/23/10
  * @author Rob Davis
  * @author Ray Ryan
  * @author Scott Violet
- * @version 1.35 03/23/10
  */
-public class TreeModelEvent extends EventObject {
+public class TreeModelEvent<T> extends EventObject {
     /**
-     * Path to the parent of the nodes that have changed.
-     */
-    protected TreePath path;
-    /**
-     * Indices identifying the position of where the children were.
-     */
-    protected int[] childIndices;
-    /**
-     * Children that have been removed.
-     */
-    protected Object[] children;
+	 * 
+	 */
+	private static final long serialVersionUID = 1135112176859241636L;
+	/** Path to the parent of the nodes that have changed. */
+    protected TreePath<T>	path;
+    /** Indices identifying the position of where the children were. */
+    protected int[]	childIndices;
+    /** Children that have been removed. */
+    protected TreeNode<T>[]  children;
 
     /**
      * Used to create an event when nodes have been changed, inserted, or
@@ -91,31 +90,32 @@ public class TreeModelEvent extends EventObject {
      * <p>
      * <b>Notes:</b><ul>
      * <li>Like the <code>insertNodeInto</code> method in the
-     * <code>DefaultTreeModel</code> class, <code>insertElementAt</code>
-     * appends to the <code>Vector</code> when the index matches the size
-     * of the vector. So you can use <code>insertElementAt(Integer, 0)</code>
-     * even when the vector is empty.
+     *    <code>DefaultTreeModel</code> class, <code>insertElementAt</code>
+     *    appends to the <code>Vector</code> when the index matches the size
+     *    of the vector. So you can use <code>insertElementAt(Integer, 0)</code>
+     *    even when the vector is empty.
      * <ul>To create a node changed event for the root node, specify the parent
-     * and the child indices as <code>null</code>.
+     *     and the child indices as <code>null</code>.
      * </ul>
      *
-     * @param source       the Object responsible for generating the event (typically
-     *                     the creator of the event object passes <code>this</code>
-     *                     for its value)
-     * @param path         an array of Object identifying the path to the
-     *                     parent of the modified item(s), where the first element
-     *                     of the array is the Object stored at the root node and
-     *                     the last element is the Object stored at the parent node
+     * @param source the Object responsible for generating the event (typically
+     *               the creator of the event object passes <code>this</code>
+     *               for its value)
+     * @param path   an array of Object identifying the path to the
+     *               parent of the modified item(s), where the first element
+     *               of the array is the Object stored at the root node and
+     *               the last element is the Object stored at the parent node
      * @param childIndices an array of <code>int</code> that specifies the
-     *                     index values of the removed items. The indices must be
-     *                     in sorted order, from lowest to highest
-     * @param children     an array of Object containing the inserted, removed, or
-     *                     changed objects
+     *               index values of the removed items. The indices must be
+     *               in sorted order, from lowest to highest
+     * @param children an array of Object containing the inserted, removed, or
+     *                 changed objects
      * @see TreePath
      */
-    public TreeModelEvent(Object source, Object[] path, int[] childIndices,
-                          Object[] children) {
-        this(source, new TreePath(path), childIndices, children);
+    public TreeModelEvent(Object source, TreeNode<T>[] path, int[] childIndices,
+    		TreeNode<T>[] children)
+    {
+	this(source, new TreePath<>(path), childIndices, children);
     }
 
     /**
@@ -125,23 +125,25 @@ public class TreeModelEvent extends EventObject {
      * and objects, see
      * <code>TreeModelEvent(Object,Object[],int[],Object[])</code>.
      *
-     * @param source       the Object responsible for generating the event (typically
-     *                     the creator of the event object passes <code>this</code>
-     *                     for its value)
-     * @param path         a TreePath object that identifies the path to the
-     *                     parent of the modified item(s)
+     * @param source the Object responsible for generating the event (typically
+     *               the creator of the event object passes <code>this</code>
+     *               for its value)
+     * @param path   a TreePath object that identifies the path to the
+     *               parent of the modified item(s)
      * @param childIndices an array of <code>int</code> that specifies the
-     *                     index values of the modified items
-     * @param children     an array of Object containing the inserted, removed, or
-     *                     changed objects
-     * @see #TreeModelEvent(Object, Object[], int[], Object[])
+     *               index values of the modified items
+     * @param children an array of Object containing the inserted, removed, or
+     *                 changed objects
+     *
+     * @see #TreeModelEvent(Object,Object[],int[],Object[])
      */
-    public TreeModelEvent(Object source, TreePath path, int[] childIndices,
-                          Object[] children) {
-        super(source);
-        this.path = path;
-        this.childIndices = childIndices;
-        this.children = children;
+    public TreeModelEvent(Object source, TreePath<T> path, int[] childIndices,
+    		TreeNode<T>[] children)
+    {
+	super(source);
+	this.path = path;
+	this.childIndices = childIndices;
+	this.children = children;
     }
 
     /**
@@ -152,9 +154,9 @@ public class TreeModelEvent extends EventObject {
      * subtree stemming from the node, where the changes may have taken place at
      * different levels of the subtree.
      * <blockquote>
-     * <b>Note:</b><br>
-     * JTree collapses all nodes under the specified node, so that only its
-     * immediate children are visible.
+     *   <b>Note:</b><br>
+     *   JTree collapses all nodes under the specified node, so that only its
+     *   immediate children are visible.
      * </blockquote>
      *
      * @param source the Object responsible for generating the event (typically
@@ -166,8 +168,9 @@ public class TreeModelEvent extends EventObject {
      *               is the object stored at the changed node
      * @see TreePath
      */
-    public TreeModelEvent(Object source, Object[] path) {
-        this(source, new TreePath(path));
+    public TreeModelEvent(Object source, TreeNode<T>[] path)
+    {
+	this(source, new TreePath<>(path));
     }
 
     /**
@@ -184,12 +187,14 @@ public class TreeModelEvent extends EventObject {
      *               this object contains an array of user-data objects,
      *               but a subclass of TreePath could use some totally
      *               different mechanism -- for example, a node ID number
-     * @see #TreeModelEvent(Object, Object[])
+     *
+     * @see #TreeModelEvent(Object,Object[])
      */
-    public TreeModelEvent(Object source, TreePath path) {
-        super(source);
-        this.path = path;
-        this.childIndices = new int[0];
+    public TreeModelEvent(Object source, TreePath<T> path)
+    {
+	super(source);
+	this.path = path;
+	this.childIndices = new int[0];
     }
 
     /**
@@ -207,22 +212,20 @@ public class TreeModelEvent extends EventObject {
      * @return the TreePath used in identifying the changed nodes.
      * @see TreePath#getLastPathComponent
      */
-    public TreePath getTreePath() {
-        return path;
-    }
+    public TreePath<T> getTreePath() { return path; }
 
     /**
      * Convenience method to get the array of objects from the TreePath
      * instance that this event wraps.
      *
      * @return an array of Objects, where the first Object is the one
-     * stored at the root and the last object is the one
-     * stored at the node identified by the path
+     *         stored at the root and the last object is the one
+     *         stored at the node identified by the path
      */
-    public Object[] getPath() {
-        if (path != null)
-            return path.getPath();
-        return null;
+    public TreeNode<T>[] getPath() {
+	if(path != null)
+	    return path.getPath();
+	return null;
     }
 
     /**
@@ -232,19 +235,20 @@ public class TreeModelEvent extends EventObject {
      * returned objects are no longer children of the parent node.
      *
      * @return an array of Object containing the children specified by
-     * the event
+     *         the event
      * @see #getPath
      * @see #getChildIndices
      */
-    public Object[] getChildren() {
-        if (children != null) {
-            int cCount = children.length;
-            Object[] retChildren = new Object[cCount];
+    public TreeNode<T>[] getChildren() {
+	if(children != null) {
+	    int            cCount = children.length;
+	    @SuppressWarnings("unchecked")
+		TreeNode<T>[]       retChildren = new TreeNode[cCount];
 
-            System.arraycopy(children, 0, retChildren, 0, cCount);
-            return retChildren;
-        }
-        return null;
+	    System.arraycopy(children, 0, retChildren, 0, cCount);
+	    return retChildren;
+	}
+	return null;
     }
 
     /**
@@ -255,17 +259,17 @@ public class TreeModelEvent extends EventObject {
      * the indices point to the locations of the modified nodes.
      *
      * @return an array of <code>int</code> containing index locations for
-     * the children specified by the event
+     *         the children specified by the event
      */
     public int[] getChildIndices() {
-        if (childIndices != null) {
-            int cCount = childIndices.length;
-            int[] retArray = new int[cCount];
+	if(childIndices != null) {
+	    int            cCount = childIndices.length;
+	    int[]          retArray = new int[cCount];
 
-            System.arraycopy(childIndices, 0, retArray, 0, cCount);
-            return retArray;
-        }
-        return null;
+	    System.arraycopy(childIndices, 0, retArray, 0, cCount);
+	    return retArray;
+	}
+	return null;
     }
 
     /**
@@ -275,24 +279,24 @@ public class TreeModelEvent extends EventObject {
      * @return a String representation of this object
      */
     public String toString() {
-        StringBuffer retBuffer = new StringBuffer();
+	StringBuffer   retBuffer = new StringBuffer();
 
-        retBuffer.append(getClass().getName() + " " +
-                hashCode());
-        if (path != null)
-            retBuffer.append(" path " + path);
-        if (childIndices != null) {
-            retBuffer.append(" indices [ ");
-            for (int counter = 0; counter < childIndices.length; counter++)
-                retBuffer.append(childIndices[counter] + " ");
-            retBuffer.append("]");
-        }
-        if (children != null) {
-            retBuffer.append(" children [ ");
-            for (int counter = 0; counter < children.length; counter++)
-                retBuffer.append(children[counter] + " ");
-            retBuffer.append("]");
-        }
-        return retBuffer.toString();
+	retBuffer.append(getClass().getName() + " " +
+			 Integer.toString(hashCode()));
+	if(path != null)
+	    retBuffer.append(" path " + path);
+	if(childIndices != null) {
+	    retBuffer.append(" indices [ ");
+	    for(int counter = 0; counter < childIndices.length; counter++)
+		retBuffer.append(Integer.toString(childIndices[counter])+ " ");
+	    retBuffer.append("]");
+	}
+	if(children != null) {
+	    retBuffer.append(" children [ ");
+	    for(int counter = 0; counter < children.length; counter++)
+		retBuffer.append(children[counter] + " ");
+	    retBuffer.append("]");
+	}
+	return retBuffer.toString();
     }
 }

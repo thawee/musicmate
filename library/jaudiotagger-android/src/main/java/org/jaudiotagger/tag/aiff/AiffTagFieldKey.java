@@ -1,18 +1,20 @@
 package org.jaudiotagger.tag.aiff;
 
 /**
- * Enum for AIFF fields that don't have obvious matches in FieldKey
+ *   Enum for AIFF fields that don't have obvious matches in FieldKey 
  */
 public enum AiffTagFieldKey {
     TIMESTAMP("TIMESTAMP");
+    
+    private String fieldName;
 
-    private final String fieldName;
-
-    AiffTagFieldKey(String fieldName) {
+    AiffTagFieldKey(String fieldName)
+    {
         this.fieldName = fieldName;
     }
-
-    public String getFieldName() {
+    
+    public String getFieldName()
+    {
         return fieldName;
     }
 }

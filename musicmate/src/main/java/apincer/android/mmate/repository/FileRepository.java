@@ -355,13 +355,13 @@ public class FileRepository {
        // }else if (MusicTagUtils.isHiRes(metadata)) {
        //     return STORAGE_PRIMARY;
        // }else
-        if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping()) ||
-                Constants.GROUPING_THAI_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
+        if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) { // ||
+            //    Constants.GROUPING_THAI_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
        // }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
        //     return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
-                Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
+        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {// ||
+             //   Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
             return STORAGE_PRIMARY;
 
       /*  }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||

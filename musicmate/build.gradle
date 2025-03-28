@@ -150,7 +150,7 @@ dependencies {
     implementation libs.greenrobot.eventbus
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio
-    implementation libs.jcodec
+    //implementation libs.jcodec
 
     implementation libs.commons.codec
     implementation libs.commons.io
@@ -166,10 +166,8 @@ dependencies {
     implementation libs.slf4j.api
     implementation libs.jupnp.android
     implementation libs.jupnp.support
-     implementation libs.jetty.server12
-     implementation libs.jetty.client12
-    //implementation libs.jetty.server10
-    //implementation libs.jetty.client10
+    // implementation libs.jetty.server12
+    // implementation libs.jetty.client12
     implementation libs.netty.codec.http
     implementation libs.coilkt.coil3
 

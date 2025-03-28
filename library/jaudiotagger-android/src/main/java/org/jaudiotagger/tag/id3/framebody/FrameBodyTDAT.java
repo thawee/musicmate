@@ -34,7 +34,8 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTDAT extends AbstractFrameBodyTextInfo implements ID3v23FrameBody {
+public class FrameBodyTDAT extends AbstractFrameBodyTextInfo implements ID3v23FrameBody
+{
     public static final int DATA_SIZE = 4;
     public static final int DAY_START = 0;
     public static final int DAY_END = 2;
@@ -47,10 +48,12 @@ public class FrameBodyTDAT extends AbstractFrameBodyTextInfo implements ID3v23Fr
     /**
      * Creates a new FrameBodyTDAT datatype.
      */
-    public FrameBodyTDAT() {
+    public FrameBodyTDAT()
+    {
     }
 
-    public FrameBodyTDAT(FrameBodyTDAT body) {
+    public FrameBodyTDAT(FrameBodyTDAT body)
+    {
         super(body);
     }
 
@@ -60,7 +63,8 @@ public class FrameBodyTDAT extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTDAT(byte textEncoding, String text) {
+    public FrameBodyTDAT(byte textEncoding, String text)
+    {
         super(textEncoding, text);
     }
 
@@ -71,7 +75,8 @@ public class FrameBodyTDAT extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTDAT(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyTDAT(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -80,15 +85,18 @@ public class FrameBodyTDAT extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v23Frames.FRAME_ID_V3_TDAT;
     }
 
-    public boolean isMonthOnly() {
+    public boolean isMonthOnly()
+    {
         return monthOnly;
     }
 
-    public void setMonthOnly(boolean monthOnly) {
+    public void setMonthOnly(boolean monthOnly)
+    {
         this.monthOnly = monthOnly;
     }
 }

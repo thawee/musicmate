@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -30,7 +31,6 @@ import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.vanniktech.textbuilder.TextBuilder;
@@ -113,12 +113,64 @@ public class AboutActivity extends AppCompatActivity {
 
             TextView encodingHeader = v.findViewById(R.id.encoding_header);
             TextView encodingDetail = v.findViewById(R.id.encoding_details);
+
+            TextView groupingsHeader = v.findViewById(R.id.groupings_header);
+            TextView groupingsDetail = v.findViewById(R.id.groupings_details);
+
             v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings(TITLE_HQ, encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings("Hi-FI", encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_hires).setOnClickListener(view -> updateEncodings("Hi-Res", encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(TITLE_DSD, encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(TITLE_MQA, encodingHeader, encodingDetail));
             updateEncodings(TITLE_HQ, encodingHeader, encodingDetail);
+
+            // groupings description
+            LinearLayout groupingBtnPanel = v.findViewById(R.id.groupingBtnPanel);
+            List<String> groupList = TagRepository.getDefaultGroupingList(getContext());
+            for(String name: groupList) {
+                TextView btn = new TextView(getContext());
+                btn.setText(name);
+                btn.setTextColor(Color.BLACK);
+                btn.setTypeface(null, Typeface.BOLD);
+                btn.setPadding(16, 8, 16, 8);
+                // Set margin
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.setMargins(16, 8, 16, 8);
+                btn.setLayoutParams(params);
+                if(Constants.GROUPING_CONTEMPORARY.equals(name)) {
+                    btn.setBackgroundResource(R.drawable.shape_background_contemporary);
+                }else if(Constants.GROUPING_LOUNGE.equals(name)) {
+                    btn.setBackgroundResource(R.drawable.shape_background_lounge);
+                }else if(Constants.GROUPING_CLASSICAL.equals(name)) {
+                    btn.setBackgroundResource(R.drawable.shape_background_classical);
+                }else if(Constants.GROUPING_TRADITIONAL.equals(name)) {
+                    btn.setBackgroundResource(R.drawable.shape_background_traditional);
+                }else {
+                    btn.setBackgroundResource(R.drawable.shape_background_unkown);
+                }
+                btn.setOnClickListener(view -> {
+                    if(Constants.GROUPING_CONTEMPORARY.equals(name)) {
+                        groupingsHeader.setText(Constants.GROUPING_CONTEMPORARY);
+                        groupingsDetail.setText(R.string.groupings_contemporary_content);
+                    }else if(Constants.GROUPING_LOUNGE.equals(name)) {
+                        groupingsHeader.setText(Constants.GROUPING_LOUNGE);
+                        groupingsDetail.setText(R.string.groupings_lounge_content);
+                    }else if(Constants.GROUPING_CLASSICAL.equals(name)) {
+                        groupingsHeader.setText(Constants.GROUPING_CLASSICAL);
+                        groupingsDetail.setText(R.string.groupings_classical_content);
+                    }else if(Constants.GROUPING_TRADITIONAL.equals(name)) {
+                        groupingsHeader.setText(Constants.GROUPING_TRADITIONAL);
+                        groupingsDetail.setText(R.string.groupings_traditional_content);
+                    }
+                });
+                groupingBtnPanel.addView(btn);
+            }
+
+            groupingsHeader.setText(Constants.GROUPING_CLASSICAL);
+            groupingsDetail.setText(R.string.groupings_classical_content);
 
             TextView qualityDetail = v.findViewById(R.id.quality_details);
             String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.md");
@@ -158,7 +210,7 @@ public class AboutActivity extends AppCompatActivity {
 
                     // grouping
                     String grp = tag.getGrouping();
-                    if(StringUtils.isEmpty(grp)) grp = Constants.UNKNOWN_GROUP;
+                    if(StringUtils.isEmpty(grp)) grp = Constants.UNKNOWN;
                     if(grpList.containsKey(grp)) {
                         Integer cnt = grpList.get(grp);
                         grpList.put(grp, cnt + 1);
@@ -172,7 +224,8 @@ public class AboutActivity extends AppCompatActivity {
                     UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
 
                     // file type piechart
-                    setupEncodingChart(v, encList, "");
+                    setupResolutionChart(v, encList, "");
+                    setupGroupingChart(v, grpList, "");
 
                     // setup digital music details
                 });
@@ -302,8 +355,8 @@ public class AboutActivity extends AppCompatActivity {
             return null;
         }
 
-        private void setupEncodingChart(View v, Map<String, Integer> encList, String title) {
-            PieChart chart = v.findViewById(R.id.chart1);
+        private void setupResolutionChart(View v, Map<String, Integer> encList, String title) {
+            PieChart chart = v.findViewById(R.id.chartResolutions);
             chart.setUsePercentValues(false);
             //chart.setUsePercentValues(true);
             chart.getDescription().setEnabled(false);
@@ -340,7 +393,45 @@ public class AboutActivity extends AppCompatActivity {
             setDataForEncodings(chart, encList, title);
         }
 
-        private void setDataForGroupings(PieChart chart, Map<String, Integer> encList, String title) {
+        private void setupGroupingChart(View v, Map<String, Integer> encList, String title) {
+            PieChart chart = v.findViewById(R.id.chartGroupings);
+            chart.setUsePercentValues(false);
+            //chart.setUsePercentValues(true);
+            chart.getDescription().setEnabled(false);
+            chart.setExtraOffsets(0, 4, 0, 0);
+
+            chart.setDragDecelerationFrictionCoef(0.95f);
+
+            chart.setDrawRoundedSlices(true);
+            chart.setDrawHoleEnabled(true);
+            chart.setHoleColor(Color.TRANSPARENT);
+
+            //chart.setHoleRadius(42f);
+            chart.setHoleRadius(32f);
+            chart.setTransparentCircleRadius(56f);
+
+            chart.setDrawCenterText(false);
+            chart.setCenterText("Songs");
+            chart.setCenterTextColor(Color.WHITE);
+
+            chart.setRotationAngle(0);
+            // disable rotation of the chart by touch
+            chart.setRotationEnabled(true);
+            chart.setHighlightPerTapEnabled(false);
+
+            Legend l = chart.getLegend();
+            l.setTextColor(Color.WHITE);
+            l.setWordWrapEnabled(true);
+
+            // entry label styling
+            chart.setEntryLabelColor(Color.WHITE);
+            chart.setDrawEntryLabels(false);
+            //  chart.setEntryLabelTypeface(tfRegular);
+            chart.setEntryLabelTextSize(10f);
+            setDataForGroupings(chart, encList, title);
+        }
+
+        private void setDataForGroupings(PieChart chart, Map<String, Integer> list, String title) {
             ArrayList<PieEntry> entries = new ArrayList<>();
 
             // NOTE: The order of the entries when being added to the entries array determines their position around the center of
@@ -349,18 +440,19 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
-            mappedColors.put("Lounge", ContextCompat.getColor(getContext(), R.color.material_color_green_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
-            mappedColors.put("Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_400));//ColorTemplate.rgb("#a8aa41"));
-            mappedColors.put("Live", ContextCompat.getColor(getContext(), R.color.material_color_yellow_100)); //ColorTemplate.rgb("#a8aa41"));
-            mappedColors.put("English", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_600)); //ColorTemplate.rgb("#488f31"));
-            mappedColors.put(Constants.UNKNOWN_GROUP, ContextCompat.getColor(getContext(), R.color.material_color_red_900)); //ColorTemplate.rgb("#de425b"));
-            mappedColors.put("Thai", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_200)); //ColorTemplate.rgb("#de425b"));
-            mappedColors.put("Thai Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_800)); //ColorTemplate.rgb("#488f31"));
-            mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
-            mappedColors.put("Thai Lounge", ContextCompat.getColor(getContext(), R.color.material_color_green_800)); //ColorTemplate.rgb("#dcb85a"));
-            mappedColors.put("World", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_900)); //ColorTemplate.rgb("#f48558"));
-            for(String enc: encList.keySet()) {
-                entries.add(new PieEntry(encList.get(enc), enc));
+            mappedColors.put(Constants.GROUPING_TRADITIONAL, ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
+            mappedColors.put(Constants.GROUPING_LOUNGE, ContextCompat.getColor(getContext(), R.color.material_color_green_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
+           // mappedColors.put("Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_400));//ColorTemplate.rgb("#a8aa41"));
+          //  mappedColors.put("Live", ContextCompat.getColor(getContext(), R.color.material_color_yellow_100)); //ColorTemplate.rgb("#a8aa41"));
+            mappedColors.put(Constants.UNKNOWN, ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_800)); //ColorTemplate.rgb("#488f31"));
+          //  mappedColors.put(Constants.UNKNOWN, ContextCompat.getColor(getContext(), R.color.material_color_red_900)); //ColorTemplate.rgb("#de425b"));
+           // mappedColors.put("Thai", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_200)); //ColorTemplate.rgb("#de425b"));
+            mappedColors.put(Constants.GROUPING_CLASSICAL, ContextCompat.getColor(getContext(), R.color.material_color_lime_400)); //ColorTemplate.rgb("#488f31"));
+           // mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
+            mappedColors.put(Constants.GROUPING_CONTEMPORARY, ContextCompat.getColor(getContext(), R.color.material_color_green_800)); //ColorTemplate.rgb("#dcb85a"));
+           // mappedColors.put("World", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_900)); //ColorTemplate.rgb("#f48558"));
+            for(String enc: list.keySet()) {
+                entries.add(new PieEntry(list.get(enc), enc));
                 if(mappedColors.containsKey(enc)) {
                     colors.add(mappedColors.get(enc));
                 }else {
@@ -374,6 +466,16 @@ public class AboutActivity extends AppCompatActivity {
             dataSet.setValueLinePart1Length(1f);
             dataSet.setValueLinePart2Length(0.4f);
 
+            dataSet.setValueFormatter(new ValueFormatter() {
+                private final DecimalFormat mFormat = new DecimalFormat("#,###");
+                @SuppressLint("DefaultLocale")
+                @Override
+                public String getFormattedValue(float value) {
+                    // return String.format("%.1f", value); // Format to one decimal place
+                    return mFormat.format(value);
+                }
+            });
+
             dataSet.setDrawIcons(false);
             dataSet.setSliceSpace(2f); //space between each slice
             dataSet.setValueLineColor(Color.WHITE);
@@ -386,7 +488,7 @@ public class AboutActivity extends AppCompatActivity {
             dataSet.setColors(colors);
 
             PieData data = new PieData(dataSet);
-            data.setValueFormatter(new PercentFormatter());
+           // data.setValueFormatter(new PercentFormatter());
             data.setValueTextSize(10f);
             data.setValueTextColor(Color.BLACK);
             chart.setData(data);

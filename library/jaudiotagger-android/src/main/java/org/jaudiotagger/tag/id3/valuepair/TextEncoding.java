@@ -1,22 +1,22 @@
 /**
- * @author : Paul Taylor
- * <p>
- * Version @version:$Id$
- * <p>
- * MusicTag Copyright (C)2003,2004
- * <p>
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
- * General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
- * or (at your option) any later version.
- * <p>
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- * <p>
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not,
- * you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- * <p>
+ *  @author : Paul Taylor
+ *
+ *  Version @version:$Id$
+ *
+ *  MusicTag Copyright (C)2003,2004
+ *
+ *  This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser
+ *  General Public  License as published by the Free Software Foundation; either version 2.1 of the License,
+ *  or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ *  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License along with this library; if not,
+ *  you can get a copy from http://www.opensource.org/licenses/lgpl-license.php or write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ *
  * Description:
  * Valid Text Encodings
  */
@@ -34,30 +34,22 @@ import java.util.Map;
  * Text Encoding supported by ID3v24, the id is recognised by ID3
  * whereas the value maps to a java java.nio.charset.Charset, all the
  * charsets defined below are guaranteed on every Java platform.
- * <p>
+ *
  * Note in ID3 UTF_16 can be implemented as either UTF16BE or UTF16LE with byte ordering
  * marks, in JAudioTagger we always implement it as UTF16LE because only this order
  * is understood in Windows, OSX seem to understand both.
  */
-public class TextEncoding extends AbstractIntStringValuePair {
-
-    //Supported Java charsets
-    public static final String CHARSET_ISO_8859_1 = "ISO-8859-1";
-    public static final String CHARSET_UTF_16 = "UTF-16";        //Want to use x-UTF-16LE-BOM but not always available
-    public static final String CHARSET_UTF_16BE = "UTF-16BE";
-    public static final String CHARSET_UTF_8 = "UTF-8";
-    public static final String CHARSET_US_ASCII = "US-ASCII";
+public class TextEncoding extends AbstractIntStringValuePair
+{
 
     //Supported ID3 charset ids
     public static final byte ISO_8859_1 = 0;
     public static final byte UTF_16 = 1;               //We use UTF-16 with LE byte-ordering and byte order mark by default
-    //but can also use BOM with BE byte ordering
+                                                       //but can also use BOM with BE byte ordering
     public static final byte UTF_16BE = 2;
     public static final byte UTF_8 = 3;
 
-    /**
-     * The number of bytes used to hold the text encoding field size.
-     */
+    /** The number of bytes used to hold the text encoding field size. */
     public static final int TEXT_ENCODING_FIELD_SIZE = 1;
 
     private static TextEncoding textEncodings;
@@ -69,14 +61,17 @@ public class TextEncoding extends AbstractIntStringValuePair {
      *
      * @return singleton
      */
-    public static synchronized TextEncoding getInstanceOf() {
-        if (textEncodings == null) {
+    public static synchronized TextEncoding getInstanceOf()
+    {
+        if (textEncodings == null)
+        {
             textEncodings = new TextEncoding();
         }
         return textEncodings;
     }
 
-    private TextEncoding() {
+    private TextEncoding()
+    {
         idToCharset.put((int) ISO_8859_1, StandardCharsets.ISO_8859_1);
         idToCharset.put((int) UTF_16, StandardCharsets.UTF_16);
         idToCharset.put((int) UTF_16BE, StandardCharsets.UTF_16BE);
@@ -95,7 +90,8 @@ public class TextEncoding extends AbstractIntStringValuePair {
      * @param charset charset
      * @return id, e.g. {@link #ISO_8859_1}, or {@code null}, if not found
      */
-    public Integer getIdForCharset(final Charset charset) {
+    public Integer getIdForCharset(final Charset charset)
+    {
         return valueToId.get(charset.name());
     }
 
@@ -105,7 +101,8 @@ public class TextEncoding extends AbstractIntStringValuePair {
      * @param id id, e.g. {@link #ISO_8859_1}
      * @return charset or {@code null}, if not found
      */
-    public Charset getCharsetForId(final int id) {
+    public Charset getCharsetForId(final int id)
+    {
         return idToCharset.get(id);
     }
 }

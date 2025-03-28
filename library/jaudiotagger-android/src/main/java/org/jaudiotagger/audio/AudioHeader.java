@@ -5,101 +5,109 @@ package org.jaudiotagger.audio;
  *
  * <p>Contains info about the Audio Header
  */
-public interface AudioHeader {
+public interface AudioHeader
+{
     /**
      * @return the audio file type
      */
-    String getEncodingType();
+    public abstract String getEncodingType();
 
     /**
      * @return the ByteRate of the Audio, this is the total average amount of bytes of data sampled per second
      */
-    Integer getByteRate();
+    public Integer getByteRate();
+
 
 
     /**
      * @return the BitRate of the Audio, this is the amount of kilobits of data sampled per second
      */
-    String getBitRate();
+    public String getBitRate();
 
     /**
      * @return bitRate as a number, this is the amount of kilobits of data sampled per second
      */
-    long getBitRateAsNumber();
+    public long getBitRateAsNumber();
 
 
     /**
+     *
      * @return length of the audio data in bytes, exactly what this means depends on the audio format
-     * <p>
+     *
      * TODO currently only used by Wav/Aiff/Flac/Mp4
      */
-    Long getAudioDataLength();
+    public Long getAudioDataLength();
 
 
     /**
+     *
      * @return the location in the file where the audio samples start
-     * <p>
+     *
      * TODO currently only used by Wav/Aiff/Flac/Mp4
      */
-    Long getAudioDataStartPosition();
+    public Long getAudioDataStartPosition();
 
 
     /**
+     *
      * @return the location in the file where the audio samples end
-     * <p>
+     *
      * TODO currently only used by Wav/Aiff/Flac/Mp4
      */
-    Long getAudioDataEndPosition();
+    public Long getAudioDataEndPosition();
 
 
     /**
      * @return the Sampling rate, the number of samples taken per second
      */
-    String getSampleRate();
+    public String getSampleRate();
 
     /**
      * @return he Sampling rate, the number of samples taken per second
      */
-    int getSampleRateAsNumber();
+    public int getSampleRateAsNumber();
 
     /**
      * @return the format
      */
-    String getFormat();
+    public String getFormat();
 
     /**
      * @return the number of channels (i.e 1 = Mono, 2 = Stereo)
      */
-    String getChannels();
+    public String getChannels();
 
     /**
      * @return if the sampling bitRate is variable or constant
      */
-    boolean isVariableBitRate();
+    public boolean isVariableBitRate();
 
     /**
      * @return track length in seconds
      */
-    int getTrackLength();
+    public int getTrackLength();
 
     /**
+     *
      * @return track length as float
      */
-    double getPreciseTrackLength();
+    public double getPreciseTrackLength();
 
     /**
      * @return the number of bits in each sample
      */
-    int getBitsPerSample();
+    public int getBitsPerSample();
 
     /**
+     *
      * @return if the audio codec is lossless or lossy
      */
-    boolean isLossless();
+    public boolean isLossless();
 
     /**
+     *
      * @return the total number of samples, this can usually be used in conjunction with the
      * sample rate to determine the track duration
      */
-    Long getNoOfSamples();
+    public Long getNoOfSamples();
 }

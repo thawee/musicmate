@@ -30,7 +30,8 @@ android {
 
 dependencies {
     implementation libs.slf4j.api
-    implementation(libs.square.okio)
+    implementation libs.square.okio
+    //implementation libs.jcodec
 }
 
 tasks.register('testClasses') {

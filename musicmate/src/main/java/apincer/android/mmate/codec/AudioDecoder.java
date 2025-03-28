@@ -1,19 +1,11 @@
 package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.Constants.MEDIA_ENC_AIFF;
-import static apincer.android.mmate.Constants.MEDIA_ENC_ALAC;
 import static apincer.android.mmate.Constants.MEDIA_ENC_FLAC;
 
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-
-import org.jcodec.codecs.wav.WavDemuxer;
-import org.jcodec.common.AudioFormat;
-import org.jcodec.common.DemuxerTrack;
-import org.jcodec.common.io.NIOUtils;
-import org.jcodec.common.io.SeekableByteChannel;
-import org.jcodec.common.model.Packet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -23,6 +15,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.utils.StringUtils;
 import io.nayuki.flac.common.StreamInfo;
 import io.nayuki.flac.decode.FlacDecoder;
 
@@ -38,84 +31,22 @@ public class AudioDecoder {
      * @throws IOException if decoding fails
      */
     public static byte[] decodeAudio(MusicTag tag, int maxDurationSeconds) throws IOException {
-        String extension = tag.getAudioEncoding().toUpperCase();
         String filePath = tag.getPath();
-
+        String enc = StringUtils.toUpperCase(tag.getAudioEncoding());
         try {
-            return switch (extension) {
-                // case MEDIA_ENC_WAVE -> decodeWav(filePath, maxDurationSeconds);
-                case MEDIA_ENC_ALAC -> decodeAlac(filePath, maxDurationSeconds);
+            return switch (enc) {
+                //case MEDIA_ENC_ALAC -> decodeAlac(tag, maxDurationSeconds);
                 case MEDIA_ENC_FLAC -> decodeFlac(filePath, maxDurationSeconds);
                 case MEDIA_ENC_AIFF -> decodeAiff(filePath, maxDurationSeconds);
                 default -> decodeAndroid(filePath, maxDurationSeconds);
             };
         } catch (Exception e) {
             // Log the exception
-            android.util.Log.w(TAG, "Failed to decode with specialized decoder for " + extension +
+            android.util.Log.w(TAG, "Failed to decode with specialized decoder for " + enc +
                     ": " + e.getMessage() + ". Falling back to Android decoder.");
 
             // Fallback to Android decoder
             return decodeAndroid(filePath, maxDurationSeconds);
-        }
-    }
-
-    public static byte[] decodeAlac(String filePath, int maxDurationSeconds) throws IOException {
-        // Create JCodec demuxer for ALAC decoding
-        File file = new File(filePath);
-        if (!file.exists()) {
-            throw new IOException("File not found: " + filePath);
-        }
-
-        DemuxerTrack audioTrack;
-        org.jcodec.containers.mp4.demuxer.MP4Demuxer demuxer = null;
-
-        try {
-            // Get MP4 demuxer for ALAC (ALAC is typically in MP4/M4A container)
-            demuxer = org.jcodec.containers.mp4.demuxer.MP4Demuxer.createMP4Demuxer(
-                    org.jcodec.common.io.NIOUtils.readableChannel(file));
-
-            // Find audio track
-            audioTrack = demuxer.getAudioTracks().get(0);
-            if (audioTrack == null) {
-                throw new IOException("No audio track found in file.");
-            }
-
-            // Get audio format information
-            org.jcodec.common.AudioFormat format = audioTrack.getMeta().getAudioCodecMeta().getFormat();
-            int sampleRate = format.getSampleRate();
-            int channels = format.getChannels();
-            int bytesPerSample = (format.getSampleSizeInBits() + 7) / 8;
-
-            // Calculate buffer size based on duration
-            int bufferSize = sampleRate * channels * bytesPerSample * maxDurationSeconds;
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bufferSize);
-
-            // Decode frames
-            Packet packet;
-            int totalBytesRead = 0;
-            while ((packet = audioTrack.nextFrame()) != null && totalBytesRead < bufferSize) {
-                ByteBuffer frame = packet.getData();
-                int frameSize = frame.remaining();
-
-                if (frameSize > 0) {
-                    byte[] frameData = new byte[frameSize];
-                    frame.get(frameData);
-                    outputStream.write(frameData);
-                    totalBytesRead += frameSize;
-                }
-
-                // Stop if we've decoded enough audio data
-                if (totalBytesRead >= bufferSize) {
-                    break;
-                }
-            }
-
-            return outputStream.toByteArray();
-        } finally {
-            // Close resources
-            if (demuxer != null) {
-                org.jcodec.common.io.NIOUtils.closeQuietly(demuxer);
-            }
         }
     }
 
@@ -189,6 +120,7 @@ public class AudioDecoder {
     }
 
 
+    /*
     private static byte[] decodeWav(String filePath, int maxDurationSeconds) throws IOException {
         SeekableByteChannel ch = null;
         try {
@@ -222,7 +154,7 @@ public class AudioDecoder {
         } finally {
             NIOUtils.closeQuietly(ch);
         }
-    }
+    } */
 
     public static byte[] decodeFlac(String filePath, int maxDurationSeconds) throws IOException {
         File file = new File(filePath);

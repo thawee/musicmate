@@ -1,38 +1,32 @@
-/*
- * Entagged Audio Tag library
- * Copyright (c) 2003-2005 Raphaël Slinckx <raphael@slinckx.net>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
 package org.jaudiotagger.audio;
 
+import org.jaudiotagger.audio.dsf.Dsf;
 import org.jaudiotagger.audio.exceptions.*;
+import org.jaudiotagger.audio.flac.metadatablock.MetadataBlockDataPicture;
+import org.jaudiotagger.audio.generic.Permissions;
+import org.jaudiotagger.audio.real.RealTag;
 import org.jaudiotagger.logging.ErrorMessage;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.aiff.AiffTag;
+import org.jaudiotagger.tag.asf.AsfTag;
+import org.jaudiotagger.tag.flac.FlacTag;
 import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
 import org.jaudiotagger.tag.id3.ID3v23Tag;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
+import org.jaudiotagger.tag.mp4.Mp4Tag;
 import org.jaudiotagger.tag.reference.ID3V2Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
+import org.jaudiotagger.tag.wav.WavTag;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * <p>This is the main object manipulated by the user representing an audiofile, its properties and its tag.
@@ -46,11 +40,13 @@ import java.io.RandomAccessFile;
  * @see Tag
  * @since v0.01
  */
-public class AudioFile {
+public class AudioFile
+{
     //Logger
-    private static final Logger logger = LoggerFactory.getLogger("org.jaudiotagger.audio");
+    public static Logger logger = Logger.getLogger("org.jaudiotagger.audio");
 
     /**
+     *
      * The physical file that this instance represents.
      */
     protected File file;
@@ -64,13 +60,14 @@ public class AudioFile {
      * The tag
      */
     protected Tag tag;
-
+    
     /**
      * The tag
      */
     protected String extension;
 
-    public AudioFile() {
+    public AudioFile()
+    {
 
     }
 
@@ -82,7 +79,8 @@ public class AudioFile {
      * @param audioHeader the encoding audioHeaders over this file
      * @param tag         the tag contained in this file or null if no tag exists
      */
-    public AudioFile(File f, AudioHeader audioHeader, Tag tag) {
+    public AudioFile(File f, AudioHeader audioHeader, Tag tag)
+    {
         this.file = f;
         this.audioHeader = audioHeader;
         this.tag = tag;
@@ -97,7 +95,8 @@ public class AudioFile {
      * @param audioHeader the encoding audioHeaders over this file
      * @param tag         the tag contained in this file
      */
-    public AudioFile(String s, AudioHeader audioHeader, Tag tag) {
+    public AudioFile(String s, AudioHeader audioHeader, Tag tag)
+    {
         this.file = new File(s);
         this.audioHeader = audioHeader;
         this.tag = tag;
@@ -107,10 +106,11 @@ public class AudioFile {
      * <p>Write the tag contained in this AudioFile in the actual file on the disk, this is the same as calling the <code>AudioFileIO.write(this)</code> method.
      *
      * @throws NoWritePermissionsException if the file could not be written to due to file permissions
-     * @throws CannotWriteException        If the file could not be written/accessed, the extension wasn't recognized, or other IO error occured.
+     * @throws CannotWriteException If the file could not be written/accessed, the extension wasn't recognized, or other IO error occured.
      * @see AudioFileIO
      */
-    public void commit() throws CannotWriteException {
+    public void commit() throws CannotWriteException
+    {
         AudioFileIO.write(this);
     }
 
@@ -120,7 +120,8 @@ public class AudioFile {
      * @throws CannotWriteException If the file could not be written/accessed, the extension wasn't recognized, or other IO error occured.
      * @see AudioFileIO
      */
-    public void delete() throws CannotReadException, CannotWriteException {
+    public void delete() throws CannotReadException, CannotWriteException
+    {
         AudioFileIO.delete(this);
     }
 
@@ -129,7 +130,8 @@ public class AudioFile {
      *
      * @param file
      */
-    public void setFile(File file) {
+    public void setFile(File file)
+    {
         this.file = file;
     }
 
@@ -138,7 +140,8 @@ public class AudioFile {
      *
      * @return
      */
-    public File getFile() {
+    public File getFile()
+    {
         return file;
     }
 
@@ -147,7 +150,8 @@ public class AudioFile {
      *
      * @param ext
      */
-    public void setExt(String ext) {
+    public void setExt(String ext)
+    {
         this.extension = ext;
     }
 
@@ -156,25 +160,27 @@ public class AudioFile {
      *
      * @return
      */
-    public String getExt() {
+    public String getExt()
+    {
         return extension;
     }
 
     /**
-     * Assign a tag to this audio file
-     *
-     * @param tag Tag to be assigned
+     *  Assign a tag to this audio file
+     *  
+     *  @param tag   Tag to be assigned
      */
-    public void setTag(Tag tag) {
+    public void setTag(Tag tag)
+    {
         this.tag = tag;
     }
 
     /**
      * Return audio header information
-     *
      * @return
      */
-    public AudioHeader getAudioHeader() {
+    public AudioHeader getAudioHeader()
+    {
         return audioHeader;
     }
 
@@ -186,7 +192,8 @@ public class AudioFile {
      *
      * @return Returns the tag contained in this AudioFile, or null if no tag exists.
      */
-    public Tag getTag() {
+    public Tag getTag()
+    {
         return tag;
     }
 
@@ -194,9 +201,10 @@ public class AudioFile {
      * <p>Returns a multi-line string with the file path, the encoding audioHeader, and the tag contents.
      *
      * @return A multi-line string with the file path, the encoding audioHeader, and the tag contents.
-     * TODO Maybe this can be changed ?
+     *         TODO Maybe this can be changed ?
      */
-    public String toString() {
+    public String toString()
+    {
         return "AudioFile " + getFile().getAbsolutePath()
                 + "  --------\n" + audioHeader.toString() + "\n" + ((tag == null) ? "" : tag.toString()) + "\n-------------------";
     }
@@ -205,12 +213,14 @@ public class AudioFile {
      * Check does file exist
      *
      * @param file
-     * @throws FileNotFoundException if file not found
+     * @throws FileNotFoundException  if file not found
      */
-    public void checkFileExists(File file) throws FileNotFoundException {
-        logger.debug("Reading file:" + "path" + file.getPath() + ":abs:" + file.getAbsolutePath());
-        if (!file.exists()) {
-            logger.error("Unable to find:" + file.getPath());
+    public void checkFileExists(File file)throws FileNotFoundException
+    {
+        logger.config("Reading file:" + "path" + file.getPath() + ":abs:" + file.getAbsolutePath());
+        if (!file.exists())
+        {
+            logger.severe("Unable to find:" + file.getPath());
             throw new FileNotFoundException(ErrorMessage.UNABLE_TO_FIND_FILE.getMsg(file.getPath()));
         }
     }
@@ -220,28 +230,35 @@ public class AudioFile {
      *
      * @param file
      * @param readOnly
-     * @return
      * @throws ReadOnlyFileException
      * @throws FileNotFoundException
+     * @return
      */
-    protected RandomAccessFile checkFilePermissions(File file, boolean readOnly) throws ReadOnlyFileException, FileNotFoundException, CannotReadException {
+    protected RandomAccessFile checkFilePermissions(File file, boolean readOnly) throws ReadOnlyFileException, FileNotFoundException, CannotReadException
+    {
+        Path path = file.toPath();
         RandomAccessFile newFile;
-
-        // These exists(), can read, can write checks are sprinkled around the code. Are these necessary? Why not just treat them as
-        // exceptional conditions. They have to be handled anyway.
         checkFileExists(file);
-        if (readOnly) {
-            if (!file.canRead()) {
-                logger.error("Unable to read file:" + file);
-//                    logger.error(Permissions.displayPermissions(path));
-                throw new NoReadPermissionsException(ErrorMessage.GENERAL_READ_FAILED_DO_NOT_HAVE_PERMISSION_TO_READ_FILE.getMsg(file));
+
+        // Unless opened as readonly the file must be writable
+        if (readOnly)
+        {
+            //May not even be readable
+            if(!Files.isReadable(path))
+            {
+                logger.severe("Unable to read file:" + path);
+                logger.severe(Permissions.displayPermissions(path));
+                throw new NoReadPermissionsException(ErrorMessage.GENERAL_READ_FAILED_DO_NOT_HAVE_PERMISSION_TO_READ_FILE.getMsg(path));
             }
             newFile = new RandomAccessFile(file, "r");
-        } else {
-            if (TagOptionSingleton.getInstance().isCheckIsWritable() && file.canWrite()) {
-                logger.error("Unable to write file:" + file);
-//                    logger.error(Permissions.displayPermissions(path));
-                throw new ReadOnlyFileException(ErrorMessage.NO_PERMISSIONS_TO_WRITE_TO_FILE.getMsg(file));
+        }
+        else
+        {
+            if (TagOptionSingleton.getInstance().isCheckIsWritable() && !Files.isWritable(path))
+            {
+                logger.severe(Permissions.displayPermissions(file.toPath()));
+                logger.severe(Permissions.displayPermissions(path));
+                throw new ReadOnlyFileException(ErrorMessage.NO_PERMISSIONS_TO_WRITE_TO_FILE.getMsg(path));
             }
             newFile = new RandomAccessFile(file, "rw");
         }
@@ -251,9 +268,10 @@ public class AudioFile {
     /**
      * Optional debugging method. Must override to do anything interesting.
      *
-     * @return Empty string.
+     * @return  Empty string. 
      */
-    public String displayStructureAsXML() {
+    public String displayStructureAsXML()
+    {
         return "";
     }
 
@@ -262,23 +280,86 @@ public class AudioFile {
      *
      * @return
      */
-    public String displayStructureAsPlainText() {
+    public String displayStructureAsPlainText()
+    {
         return "";
     }
 
 
-    /**
-     * Create Default Tag
+    /** Create Default Tag
      *
      * @return
      */
-    public Tag createDefaultTag() {
-        final String fileName = this.file.getName();
-        final int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-            return SupportedFileFormat.fromExtension(fileName.substring(dotIndex + 1)).createDefaultTag();
+    public Tag createDefaultTag()
+    {
+        String extension = getExt();
+        if(extension == null)
+        {
+            String fileName = file.getName();
+            extension = fileName.substring(fileName.lastIndexOf('.') + 1);
+            setExt(extension);
         }
-        throw new RuntimeException("Unable to create default tag for this file format. No File extension found.");
+        if(SupportedFileFormat.FLAC.getFilesuffix().equals(extension))
+        {
+            return new FlacTag(VorbisCommentTag.createNewTag(), new ArrayList< MetadataBlockDataPicture >());
+        }
+        else if(SupportedFileFormat.OGG.getFilesuffix().equals(extension))
+        {
+            return VorbisCommentTag.createNewTag();
+        }
+        else if(SupportedFileFormat.OGA.getFilesuffix().equals(extension))
+        {
+            return VorbisCommentTag.createNewTag();
+        }
+        else if(SupportedFileFormat.MP4.getFilesuffix().equals(extension))
+        {
+            return new Mp4Tag();
+        }
+        else if(SupportedFileFormat.M4A.getFilesuffix().equals(extension))
+        {
+            return new Mp4Tag();
+        }
+        else if(SupportedFileFormat.M4P.getFilesuffix().equals(extension))
+        {
+            return new Mp4Tag();
+        }
+        else if(SupportedFileFormat.WMA.getFilesuffix().equals(extension))
+        {
+            return new AsfTag();
+        }
+        else if(SupportedFileFormat.WAV.getFilesuffix().equals(extension))
+        {
+            return new WavTag(TagOptionSingleton.getInstance().getWavOptions());
+        }
+        else if(SupportedFileFormat.RA.getFilesuffix().equals(extension))
+        {
+            return new RealTag();
+        }
+        else if(SupportedFileFormat.RM.getFilesuffix().equals(extension))
+        {
+            return new RealTag();
+        }
+        else if(SupportedFileFormat.AIF.getFilesuffix().equals(extension))
+        {
+            return new AiffTag();
+        }
+        else if(SupportedFileFormat.AIFC.getFilesuffix().equals(extension))
+        {
+            return new AiffTag();
+        }
+        else if(SupportedFileFormat.AIFF.getFilesuffix().equals(extension))
+        {
+            return new AiffTag();
+        }
+        else if(SupportedFileFormat.DSF.getFilesuffix().equals(extension))
+        {
+            return Dsf.createDefaultTag();
+        }
+        else
+        {
+            throw new RuntimeException("Unable to create default tag for this file format");
+        }
+
     }
 
     /**
@@ -286,57 +367,87 @@ public class AudioFile {
      *
      * @return
      */
-    public Tag getTagOrCreateDefault() {
+    public Tag getTagOrCreateDefault()
+    {
         Tag tag = getTag();
-        if (tag == null) {
+        if(tag==null)
+        {
             return createDefaultTag();
         }
         return tag;
     }
 
-    /**
+     /**
      * Get the tag or if the file doesn't have one at all, create a default tag and set it
      * as the tag of this file
      *
      * @return
      */
-    public Tag getTagOrCreateAndSetDefault() {
+    public Tag getTagOrCreateAndSetDefault()
+    {
         Tag tag = getTagOrCreateDefault();
         setTag(tag);
         return tag;
     }
 
     /**
-     * Get the tag and convert to the default tag version or if the file doesn't have one at all, create a default tag
-     * set as tag for this file
-     * <p>
-     * Conversions are currently only necessary/available for formats that support ID3
+     *  Get the tag and convert to the default tag version or if the file doesn't have one at all, create a default tag
+     *
+     *  Conversions are currently only necessary/available for some formats that support ID3- Dsf, Mp3
      *
      * @return
      */
-    public Tag getTagAndConvertOrCreateAndSetDefault() {
-        /* TODO Currently only works for Dsf We need additional check here for Wav and Aif because they wrap the ID3 tag so never return
-         * null for getTag() and the wrapper stores the location of the existing tag, would that be broken if tag set to something else
-         * // TODO: 1/7/17 this comment may be outdated
-         */
+    public Tag getTagAndConvertOrCreateDefault()
+    {
         Tag tag = getTagOrCreateDefault();
 
-        if (tag instanceof AbstractID3v2Tag) {
-            setTag(convertID3Tag((AbstractID3v2Tag) tag, TagOptionSingleton.getInstance().getID3V2Version()));
-        } else {
-            setTag(tag);
+        /* TODO Currently only works for Dsf We need additional check here for Wav and Aif because they wrap the ID3 tag so never return
+         * null for getTag() and the wrapper stores the location of the existing tag, would that be broken if tag set to something else
+         */
+        if(tag instanceof AbstractID3v2Tag)
+        {
+            Tag convertedTag = convertID3Tag((AbstractID3v2Tag)tag, TagOptionSingleton.getInstance().getID3V2Version());
+            if(convertedTag!=null)
+            {
+                return convertedTag;
+            }
+            else
+            {
+                return tag;
+            }
         }
+        else
+        {
+           return tag;
+        }
+    }
+
+    /**
+     * Get the tag and convert to the default tag version or if the file doesn't have one at all, create a default tag
+     * set as tag for this file
+     *
+     * Conversions are currently only necessary/available for some formats that support ID3- Dsf, Mp3
+     *
+     * @return
+     */
+    public Tag getTagAndConvertOrCreateAndSetDefault()
+    {
+        Tag tag = getTagAndConvertOrCreateDefault();
+        setTag(tag);
         return getTag();
     }
 
     /**
+     *
      * @param file
      * @return filename with audioFormat separator stripped off.
      */
-    public static String getBaseFilename(File file) {
-        int index = file.getName().toLowerCase().lastIndexOf(".");
-        if (index > 0) {
-            return file.getName().substring(0, index);
+    public static String getBaseFilename(File file)
+    {
+        int index=file.getName().toLowerCase().lastIndexOf(".");
+        if(index>0)
+        {
+            return file.getName().substring(0,index);
         }
         return file.getName();
     }
@@ -344,35 +455,44 @@ public class AudioFile {
     /**
      * If using ID3 format convert tag from current version to another as specified by id3V2Version,
      *
-     * @return the converted tag or the original if no conversion necessary
+     * @return null if no conversion necessary
      */
-    public AbstractID3v2Tag convertID3Tag(AbstractID3v2Tag tag, ID3V2Version id3V2Version) {
-        if (tag instanceof ID3v24Tag) {
-            switch (id3V2Version) {
+    public AbstractID3v2Tag convertID3Tag(AbstractID3v2Tag tag, ID3V2Version id3V2Version)
+    {
+        if(tag instanceof ID3v24Tag)
+        {
+            switch(id3V2Version)
+            {
                 case ID3_V22:
-                    return new ID3v22Tag(tag);
+                    return new ID3v22Tag((ID3v24Tag)tag);
                 case ID3_V23:
-                    return new ID3v23Tag(tag);
+                    return new ID3v23Tag((ID3v24Tag)tag);
                 case ID3_V24:
-                    return tag;
+                    return null;
             }
-        } else if (tag instanceof ID3v23Tag) {
-            switch (id3V2Version) {
+        }
+        else if(tag instanceof ID3v23Tag)
+        {
+            switch(id3V2Version)
+            {
                 case ID3_V22:
-                    return new ID3v22Tag(tag);
+                    return new ID3v22Tag((ID3v23Tag)tag);
                 case ID3_V23:
-                    return tag;
+                    return null;
                 case ID3_V24:
-                    return new ID3v24Tag(tag);
+                    return new ID3v24Tag((ID3v23Tag)tag);
             }
-        } else if (tag instanceof ID3v22Tag) {
-            switch (id3V2Version) {
+        }
+        else if(tag instanceof ID3v22Tag)
+        {
+            switch(id3V2Version)
+            {
                 case ID3_V22:
-                    return tag;
+                    return null;
                 case ID3_V23:
-                    return new ID3v23Tag(tag);
+                    return new ID3v23Tag((ID3v22Tag)tag);
                 case ID3_V24:
-                    return new ID3v24Tag(tag);
+                    return new ID3v24Tag((ID3v22Tag)tag);
             }
         }
         return null;

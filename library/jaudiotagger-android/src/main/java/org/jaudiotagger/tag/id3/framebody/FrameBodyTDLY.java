@@ -33,14 +33,17 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTDLY extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody {
+public class FrameBodyTDLY extends AbstractFrameBodyTextInfo implements ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyTDLY datatype.
      */
-    public FrameBodyTDLY() {
+    public FrameBodyTDLY()
+    {
     }
 
-    public FrameBodyTDLY(FrameBodyTDLY body) {
+    public FrameBodyTDLY(FrameBodyTDLY body)
+    {
         super(body);
     }
 
@@ -50,7 +53,8 @@ public class FrameBodyTDLY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTDLY(byte textEncoding, String text) {
+    public FrameBodyTDLY(byte textEncoding, String text)
+    {
         super(textEncoding, text);
     }
 
@@ -61,7 +65,8 @@ public class FrameBodyTDLY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTDLY(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyTDLY(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -70,7 +75,8 @@ public class FrameBodyTDLY extends AbstractFrameBodyTextInfo implements ID3v24Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v24Frames.FRAME_ID_PLAYLIST_DELAY;
     }
 }

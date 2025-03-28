@@ -150,6 +150,19 @@ public class TagRepository {
         return list;
     }
 
+    public static List<String> getGroupingList(Context context) {
+        List<String> list = getActualGroupingList(context);
+        String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
+        for(String grouping: groupings) {
+            if(!list.contains(grouping)) {
+                list.add(grouping);
+            }
+        }
+
+        Collections.sort(list);
+        return list;
+    }
+
     public static List<String> getArtistList() {
         List<String> list = MusixMateApp.getInstance().getOrmLite().getArtists();
         List<String> artistList = new ArrayList<>();

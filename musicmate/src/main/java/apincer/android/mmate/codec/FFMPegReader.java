@@ -51,12 +51,10 @@ import com.arthenica.ffmpegkit.ReturnCode;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -156,7 +154,7 @@ public static class Loudness {
             tag.setPath(path);
             readFileInfo(context,tag);
             parseStreamInfo(tag,output);
-            detectFileFormat(tag);
+           // detectFileFormat(tag);
             parseDurationInfo(tag, output);
 
             parseTagsInfo(tag);
@@ -171,7 +169,7 @@ public static class Loudness {
             tag.setPath(path);
             readFileInfo(context,tag);
             parseStreamInfo(tag,output);
-            detectFileFormat(tag);
+            //detectFileFormat(tag);
             parseDurationInfo(tag,output);
             parseTagsInfo(tag);
             session.cancel();
@@ -179,14 +177,15 @@ public static class Loudness {
         }
     }
 
+    /*
     private static void detectFileFormat(MusicTag tag) {
         String encoding = trimToEmpty(tag.getAudioEncoding());
         String ext = FileUtils.getExtension(tag.getPath()).toLowerCase(Locale.US);
         if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_AAC)) {
-            tag.setFileFormat(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
+            //tag.setFileFormat(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
             tag.setAudioEncoding(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
         }else if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_ALAC)) {
-                tag.setFileFormat(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
+                //tag.setFileFormat(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
                 tag.setAudioEncoding(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
         } else if(Constants.FILE_EXT_AIF.equalsIgnoreCase(ext)||Constants.FILE_EXT_AIFF.equalsIgnoreCase(ext)){
             tag.setFileFormat(Constants.MEDIA_ENC_AIFF.toLowerCase(Locale.US));
@@ -197,7 +196,7 @@ public static class Loudness {
         }else {
             tag.setFileFormat(ext);
         }
-    }
+    } */
 
     private static void parseDurationInfo(MusicTag tag, String data) {
         try {
@@ -350,7 +349,7 @@ public static class Loudness {
             parseMMComment(tag);
         }else if(MusicTagUtils.isMPegFile(tag)) {
             parseMMComment(tag);
-        }else if(MusicTagUtils.isDSDFile(tag.getPath())) {
+        }else if(MusicTagUtils.isDSDFile(tag)) {
             tag.setAudioBitsDepth(1);
         }
     }
@@ -383,20 +382,20 @@ public static class Loudness {
             readFileInfo(context, tag);
             parseStreamInfo(tag,data);
             parseFormatInfo(tag);
-            detectFileFormat(tag);
+            //detectFileFormat(tag);
 
             parseDurationInfo(tag, session.getOutput());
             parseTagsInfo(tag);
             // parseReplayGain(tag);
             parseOverallDRMeter(tag, data);
-            detectFileFormat(tag);
+           // detectFileFormat(tag);
             return tag;
         }else {
             // try to get from file name
             MusicTag tag = new MusicTag();
             tag.setData(session.getOutput());
             tag.setPath(path);
-            detectFileFormat(tag);
+           // detectFileFormat(tag);
             session.cancel();
             Log.d(TAG, session.getOutput());
             return tag;

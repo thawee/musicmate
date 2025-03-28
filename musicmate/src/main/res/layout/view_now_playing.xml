@@ -2,6 +2,7 @@
 <LinearLayout xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/now_playing_panel_inner"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="@dimen/dimen_1_dp"
@@ -23,7 +24,7 @@
             android:paddingBottom="@dimen/dimen_1_dp"
             android:background="@drawable/shape_border_playing_black"
             tools:ignore="RtlHardcoded,RtlSymmetry">
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/now_playing_coverart"
                 android:layout_width="@dimen/dimen_64_dp"
                 android:layout_height="@dimen/dimen_48_dp"
@@ -35,6 +36,7 @@
                 android:padding="@dimen/dimen_2_dp"
                 android:src="@drawable/ic_album_black_24dp"
                 android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/roundedImageView"
                 tools:ignore="ContentDescription" />
 
             <RelativeLayout

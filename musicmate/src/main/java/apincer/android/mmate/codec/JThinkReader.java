@@ -8,6 +8,7 @@ import static apincer.android.mmate.utils.StringUtils.toDouble;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
+import android.os.Looper;
 import android.util.Log;
 
 import org.jaudiotagger.audio.AudioFile;
@@ -89,6 +90,11 @@ public class JThinkReader extends TagReader{
 
     @Override
     protected List<MusicTag> readFully(String mediaPath) {
+        // Ensure this method is called from a background thread
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            Log.w(TAG, "Tag reading should not be done on the main thread");
+        }
+
         Log.i(TAG, "readFully: path - " + mediaPath);
         MusicTag tag = new MusicTag();
         tag.setPath(mediaPath);
@@ -110,7 +116,7 @@ public class JThinkReader extends TagReader{
             AudioHeader header = read.getAudioHeader();
             if(header != null) {
                 // Batch set properties to reduce method calls
-                metadata.setAudioEncoding(detectAudioEncoding(read, header.isLossless()));
+                metadata.setAudioEncoding(detectAudioEncoding(read, header));
                 metadata.setAudioSampleRate(header.getSampleRateAsNumber());
                 metadata.setAudioBitsDepth(header.getBitsPerSample());
                 metadata.setAudioBitRate(header.getBitRateAsNumber() * 1000);
@@ -157,7 +163,12 @@ public class JThinkReader extends TagReader{
         instance.setId3v24UnicodeTextEncoding(TextEncoding.UTF_16);
     }
 
-    private MusicTag readTags(AudioFile audioFile, MusicTag metadata) {
+    private void readTags(AudioFile audioFile, MusicTag metadata) {
+        // Ensure this method is called from a background thread
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            Log.w(TAG, "Tag reading should not be done on the main thread");
+        }
+
         Tag tag = audioFile.getTag();
         if (tag != null && !tag.isEmpty()) {
             try {
@@ -186,7 +197,6 @@ public class JThinkReader extends TagReader{
                 Log.e(TAG, "Error reading tags: ", e);
             }
         }
-        return metadata;
     }
 
     private void processFormatSpecificTags(Tag tag, MusicTag metadata) {

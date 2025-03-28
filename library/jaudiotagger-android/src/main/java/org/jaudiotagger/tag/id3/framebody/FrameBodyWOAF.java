@@ -33,11 +33,13 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyWOAF extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody {
+public class FrameBodyWOAF extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyWOAF datatype.
      */
-    public FrameBodyWOAF() {
+    public FrameBodyWOAF()
+    {
     }
 
     /**
@@ -45,11 +47,13 @@ public class FrameBodyWOAF extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @param urlLink
      */
-    public FrameBodyWOAF(String urlLink) {
+    public FrameBodyWOAF(String urlLink)
+    {
         super(urlLink);
     }
 
-    public FrameBodyWOAF(FrameBodyWOAF body) {
+    public FrameBodyWOAF(FrameBodyWOAF body)
+    {
         super(body);
     }
 
@@ -60,7 +64,8 @@ public class FrameBodyWOAF extends AbstractFrameBodyUrlLink implements ID3v24Fra
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyWOAF(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyWOAF(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -69,7 +74,8 @@ public class FrameBodyWOAF extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v24Frames.FRAME_ID_URL_FILE_WEB;
     }
 }

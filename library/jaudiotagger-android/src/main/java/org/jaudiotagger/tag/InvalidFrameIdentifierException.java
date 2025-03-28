@@ -27,11 +27,18 @@ package org.jaudiotagger.tag;
  * @author Eric Farng
  * @version $Revision$
  */
-public class InvalidFrameIdentifierException extends InvalidFrameException {
+public class InvalidFrameIdentifierException extends InvalidFrameException
+{
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6459527941265009134L;
+
+	/**
      * Creates a new InvalidFrameIdentifierException datatype.
      */
-    public InvalidFrameIdentifierException() {
+    public InvalidFrameIdentifierException()
+    {
     }
 
     /**
@@ -39,7 +46,8 @@ public class InvalidFrameIdentifierException extends InvalidFrameException {
      *
      * @param ex the cause.
      */
-    public InvalidFrameIdentifierException(Throwable ex) {
+    public InvalidFrameIdentifierException(Throwable ex)
+    {
         super(ex);
     }
 
@@ -48,7 +56,8 @@ public class InvalidFrameIdentifierException extends InvalidFrameException {
      *
      * @param msg the detail message.
      */
-    public InvalidFrameIdentifierException(String msg) {
+    public InvalidFrameIdentifierException(String msg)
+    {
         super(msg);
     }
 
@@ -58,7 +67,8 @@ public class InvalidFrameIdentifierException extends InvalidFrameException {
      * @param msg the detail message.
      * @param ex  the cause.
      */
-    public InvalidFrameIdentifierException(String msg, Throwable ex) {
+    public InvalidFrameIdentifierException(String msg, Throwable ex)
+    {
         super(msg, ex);
     }
 

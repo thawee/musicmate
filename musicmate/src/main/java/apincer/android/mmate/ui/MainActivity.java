@@ -2,11 +2,10 @@ package apincer.android.mmate.ui;
 
 import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
-import static apincer.android.mmate.Constants.TITLE_DSD;
 import static apincer.android.mmate.Constants.TITLE_GENRE;
 import static apincer.android.mmate.Constants.TITLE_GROUPING;
 import static apincer.android.mmate.Constants.TITLE_LIBRARY;
-import static apincer.android.mmate.Constants.TITLE_PCM;
+import static apincer.android.mmate.Constants.TITLE_RESOLUTION;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.animation.Animator;
@@ -374,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup RecyclerView
         mRecyclerView = findViewById(R.id.recycler_view);
-        mRecyclerView.setItemViewCacheSize(0);
+        mRecyclerView.setItemViewCacheSize(20);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setHasFixedSize(true);
@@ -499,10 +498,8 @@ public class MainActivity extends AppCompatActivity {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_style_24);
         } else if (TITLE_GROUPING.equals(label)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_local_play_24);
-        } else if (TITLE_PCM.equals(label)) {
-            icon = UIUtils.getTintedDrawable(getBaseContext(), R.drawable.ic_sound_wave, Color.WHITE);
-        } else if (TITLE_DSD.equals(label)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_format_dsd_white);
+        } else if (TITLE_RESOLUTION.equals(label)) {
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_equalizer_24);
         }
 
         titleLabel.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
@@ -925,7 +922,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 new MaterialAlertDialogBuilder(MainActivity.this, R.style.AlertDialogTheme)
                         .setTitle("Problem")
-                        .setMessage(getString(R.string.alert_invalid_media_file, tag.getPath()))
+                        .setMessage(getString(R.string.alert_invalid_media_file, tag==null?" - ":tag.getPath()))
                         .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                             repos.deleteMediaItem(tag);
                            // adapter.loadDataSets();

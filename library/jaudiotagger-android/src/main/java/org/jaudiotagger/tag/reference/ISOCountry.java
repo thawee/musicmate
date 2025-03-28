@@ -8,23 +8,27 @@ import java.util.Map;
 
 /**
  * Represents the ISO 3166-1 Country List with ISO 3166-1-alpha-2 code
- * <p>
+ *
  * Contains an enum  of countries, their two letter code and description
  * with additional method to allow an enum to be found by its two letter code or its description.
  * More details at http://www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm#c
  */
-public class ISOCountry {
-    private static final Map<String, Country> codeMap;
-    private static final Map<String, Country> descriptionMap;
+public class ISOCountry
+{
+    private static Map<String, Country> codeMap;
+    private static Map<String, Country> descriptionMap;
 
-    static {
+    static
+    {
         codeMap = new HashMap<String, Country>();
-        for (Country country : Country.values()) {
+        for (Country country : Country.values())
+        {
             codeMap.put(country.code, country);
         }
 
         descriptionMap = new HashMap<String, Country>();
-        for (Country country : Country.values()) {
+        for (Country country : Country.values())
+        {
             descriptionMap.put(country.description, country);
         }
 
@@ -34,7 +38,8 @@ public class ISOCountry {
      * @param code
      * @return enum with this two letter code
      */
-    public static Country getCountryByCode(String code) {
+    public static Country getCountryByCode(String code)
+    {
         return codeMap.get(code);
     }
 
@@ -42,14 +47,16 @@ public class ISOCountry {
      * @param description
      * @return enum with this description
      */
-    public static Country getCountryByDescription(String description) {
+    public static Country getCountryByDescription(String description)
+    {
         return descriptionMap.get(description);
     }
 
     /**
      * List of valid Iso Country, shows 2 letter abbreviation and country human readable name
      */
-    public enum Country {
+    public static enum Country
+    {
         AFGHANISTAN(" AF", "Afghanistan"),
         ALAND_ISLANDS("AX", "Åland Islands"),
         ALBANIA("AL", "Albania"),
@@ -298,30 +305,36 @@ public class ISOCountry {
         ZIMBABWE("ZW", "Zimbabwe");
 
 
-        private final String code;
-        private final String description;
+        private String code;
+        private String description;
 
-        Country(String code, String description) {
+        Country(String code, String description)
+        {
             this.code = code;
             this.description = description;
         }
 
-        public String getCode() {
+        public String getCode()
+        {
             return code;
         }
 
-        public String getDescription() {
+        public String getDescription()
+        {
             return description;
         }
 
-        public String toString() {
+        public String toString()
+        {
             return getDescription();
         }
     }
 
-    public static String[] getDescriptionsAsArray() {
+    public static String[] getDescriptionsAsArray()
+    {
         List<String> descriptions = new ArrayList<String>();
-        for (Country country : Country.values()) {
+        for (Country country : Country.values())
+        {
             descriptions.add(country.description);
         }
         return descriptions.toArray(new String[0]);

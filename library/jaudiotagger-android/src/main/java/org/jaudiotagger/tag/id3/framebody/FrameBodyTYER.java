@@ -36,23 +36,26 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyTYER extends AbstractFrameBodyTextInfo implements ID3v23FrameBody {
+public class FrameBodyTYER extends AbstractFrameBodyTextInfo implements ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyTYER datatype.
      */
-    public FrameBodyTYER() {
+    public FrameBodyTYER()
+    {
     }
 
-    public FrameBodyTYER(FrameBodyTYER body) {
+    public FrameBodyTYER(FrameBodyTYER body)
+    {
         super(body);
     }
 
     /**
      * When converting v4 TDRC frame to v3 TYER
-     *
      * @param body
      */
-    public FrameBodyTYER(FrameBodyTDRC body) {
+    public FrameBodyTYER(FrameBodyTDRC body)
+    {
         setObjectValue(DataTypes.OBJ_TEXT_ENCODING, TextEncoding.ISO_8859_1);
         setObjectValue(DataTypes.OBJ_TEXT, body.getText());
     }
@@ -63,7 +66,8 @@ public class FrameBodyTYER extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param textEncoding
      * @param text
      */
-    public FrameBodyTYER(byte textEncoding, String text) {
+    public FrameBodyTYER(byte textEncoding, String text)
+    {
         super(textEncoding, text);
     }
 
@@ -74,7 +78,8 @@ public class FrameBodyTYER extends AbstractFrameBodyTextInfo implements ID3v23Fr
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyTYER(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyTYER(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -83,7 +88,8 @@ public class FrameBodyTYER extends AbstractFrameBodyTextInfo implements ID3v23Fr
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v23Frames.FRAME_ID_V3_TYER;
     }
 }

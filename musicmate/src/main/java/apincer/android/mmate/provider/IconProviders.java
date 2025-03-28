@@ -164,7 +164,7 @@ public class IconProviders {
             path = String.format("%s%s_%s_%s.png", path, "PCM", tag.getAudioBitsDepth(), tag.getAudioSampleRate());
         }else {
             //path = path + tag.getFileFormat()+sep+tag.getAudioBitsDepth()+sep+ tag.getAudioBitRate();
-            path = String.format("%s%s_%s_%s.png", path, tag.getFileFormat(), tag.getAudioBitsDepth(), tag.getAudioSampleRate());
+            path = String.format("%s%s_%s_%s.png", path, tag.getFileType(), tag.getAudioBitsDepth(), tag.getAudioSampleRate());
         }
         File pathFile = new File(dir, path);
         if(!pathFile.exists()) {
@@ -404,7 +404,7 @@ public class IconProviders {
             label = "MP3";
         }else {
             // any others format i.e. mpeg, aac
-            label = StringUtils.trim(tag.getAudioEncoding(), tag.getFileFormat()).toUpperCase(Locale.US);
+            label = StringUtils.trim(tag.getAudioEncoding(), tag.getFileType()).toUpperCase(Locale.US);
         }
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);

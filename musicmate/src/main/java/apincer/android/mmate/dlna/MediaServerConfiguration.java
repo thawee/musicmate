@@ -14,7 +14,6 @@ import org.jupnp.transport.spi.StreamServer;
 
 import java.net.URI;
 
-import apincer.android.mmate.dlna.transport.JettyStreamingClientImpl;
 import apincer.android.mmate.dlna.transport.NettyStreamingClientImpl;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;

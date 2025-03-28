@@ -33,11 +33,13 @@ import java.nio.ByteBuffer;
  * @author : Eric Farng
  * @version $Id$
  */
-public class FrameBodyWPAY extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody {
+public class FrameBodyWPAY extends AbstractFrameBodyUrlLink implements ID3v24FrameBody, ID3v23FrameBody
+{
     /**
      * Creates a new FrameBodyWPAY datatype.
      */
-    public FrameBodyWPAY() {
+    public FrameBodyWPAY()
+    {
     }
 
     /**
@@ -45,11 +47,13 @@ public class FrameBodyWPAY extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @param urlLink
      */
-    public FrameBodyWPAY(String urlLink) {
+    public FrameBodyWPAY(String urlLink)
+    {
         super(urlLink);
     }
 
-    public FrameBodyWPAY(FrameBodyWPAY body) {
+    public FrameBodyWPAY(FrameBodyWPAY body)
+    {
         super(body);
     }
 
@@ -60,7 +64,8 @@ public class FrameBodyWPAY extends AbstractFrameBodyUrlLink implements ID3v24Fra
      * @param frameSize
      * @throws InvalidTagException
      */
-    public FrameBodyWPAY(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException {
+    public FrameBodyWPAY(ByteBuffer byteBuffer, int frameSize) throws InvalidTagException
+    {
         super(byteBuffer, frameSize);
     }
 
@@ -69,7 +74,8 @@ public class FrameBodyWPAY extends AbstractFrameBodyUrlLink implements ID3v24Fra
      *
      * @return the ID3v2 frame identifier  for this frame type
      */
-    public String getIdentifier() {
+    public String getIdentifier()
+    {
         return ID3v24Frames.FRAME_ID_URL_PAYMENT;
     }
 }

@@ -8,7 +8,8 @@ import java.math.BigInteger;
  *
  * @author Christian Laireiter
  */
-public final class AsfExtendedHeader extends ChunkContainer {
+public final class AsfExtendedHeader extends ChunkContainer
+{
 
     /**
      * Creates an instance.<br>
@@ -16,21 +17,24 @@ public final class AsfExtendedHeader extends ChunkContainer {
      * @param pos    Position within the stream.<br>
      * @param length the length of the extended header object.
      */
-    public AsfExtendedHeader(final long pos, final BigInteger length) {
+    public AsfExtendedHeader(final long pos, final BigInteger length)
+    {
         super(GUID.GUID_HEADER_EXTENSION, pos, length);
     }
 
     /**
      * @return Returns the contentDescription.
      */
-    public ContentDescription getContentDescription() {
+    public ContentDescription getContentDescription()
+    {
         return (ContentDescription) getFirst(GUID.GUID_CONTENTDESCRIPTION, ContentDescription.class);
     }
 
     /**
      * @return Returns the tagHeader.
      */
-    public MetadataContainer getExtendedContentDescription() {
+    public MetadataContainer getExtendedContentDescription()
+    {
         return (MetadataContainer) getFirst(GUID.GUID_EXTENDED_CONTENT_DESCRIPTION, MetadataContainer.class);
     }
 
@@ -39,7 +43,8 @@ public final class AsfExtendedHeader extends ChunkContainer {
      *
      * @return a language list object.
      */
-    public LanguageList getLanguageList() {
+    public LanguageList getLanguageList()
+    {
         return (LanguageList) getFirst(GUID.GUID_LANGUAGE_LIST, LanguageList.class);
     }
 
@@ -48,7 +53,8 @@ public final class AsfExtendedHeader extends ChunkContainer {
      *
      * @return metadata library objet
      */
-    public MetadataContainer getMetadataLibraryObject() {
+    public MetadataContainer getMetadataLibraryObject()
+    {
         return (MetadataContainer) getFirst(GUID.GUID_METADATA_LIBRARY, MetadataContainer.class);
     }
 
@@ -57,7 +63,8 @@ public final class AsfExtendedHeader extends ChunkContainer {
      *
      * @return metadata object
      */
-    public MetadataContainer getMetadataObject() {
+    public MetadataContainer getMetadataObject()
+    {
         return (MetadataContainer) getFirst(GUID.GUID_METADATA, MetadataContainer.class);
     }
 

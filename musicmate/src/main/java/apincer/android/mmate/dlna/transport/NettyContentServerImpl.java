@@ -975,8 +975,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 }
 
                 // Add format/codec info if available
-                if (tag.getFileFormat() != null) {
-                    response.headers().set("X-Audio-Format", tag.getFileFormat());
+                if (tag.getFileType() != null) {
+                    response.headers().set("X-Audio-Format", tag.getFileType());
                 }
                 if (tag.getAudioEncoding() != null) {
                     response.headers().set("X-Audio-Codec", tag.getAudioEncoding());

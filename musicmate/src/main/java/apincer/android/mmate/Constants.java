@@ -7,10 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by e1022387 on 3/12/2018.
- */
-
 public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
@@ -37,18 +33,8 @@ public final class Constants {
   //  public static final int QUALITY_BIT_CD = 16;
     public static final int QUALITY_BIT_DEPTH_DSD = 1;
 
-    public static final String FILE_EXT_WAVE = "wav";
-    public static final String FILE_EXT_AIF = "aif";
-    public static final String FILE_EXT_AIFF = "aiff";
-    public static final String FILE_EXT_DSF="dsf";
-    public static final String FILE_EXT_MP3="mp3";
-   // public static final int MIN_FILE_SIZE_RATIO = 42;
-    public static final String UNKNOWN_PUBLISHER = "Unknown Publisher";
-    public static final String UNKNOWN_GENRE = "Unknown Genre";
-  //  public static final String UNKNOWN_MEDIA_TYPE = "Unknown Media Type";
-    public static final String UNKNOWN_GROUP = "Unknown";
-    public static final String UNKNOWN = "Unknown";
-    public static final String NONE = "None";
+   public static final String UNKNOWN = "Unknown";
+    public static final String NONE = "Unknown";
     public static final String EMPTY = "";
     public static final String ARTIST_SEP = ",";
     public static final String ARTIST_SEP_SPACE = ", ";
@@ -56,8 +42,7 @@ public final class Constants {
     public static final String GROUPING_CLASSICAL = "Classical";
     public static final String GROUPING_TRADITIONAL = "Traditional";
     public static final String GROUPING_LOUNGE = "Lounge";
-    public static final String GROUPING_THAI_LOUNGE = "Thai Lounge";
-    public static final String GROUPING_THAI_CLASSICAL = "Thai Classical";
+    public static final String GROUPING_CONTEMPORARY = "Contemporary";
 
     public static final String TITLE_LIBRARY = "Collections";
     public static final String TITLE_RESOLUTION = "Resolutions";
@@ -138,9 +123,6 @@ public final class Constants {
 
     public static final String AUDIO_SQ_DSD = "DSD"; // DSD
     public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
-  //  public static final String AUDIO_SQ_PCM = "PCM";
-   // public static final String AUDIO_SQ_RESOLUTION = "Resolutions";
-  //  public static final String AUDIO_SQ_ENCODINGS = "Encodings";
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";

@@ -60,7 +60,7 @@ public class JustDSDReader extends TagReader{
                 for (int t = 0; t < tracks.length; t++) {
                     mList[t] = new MusicTag();
                     mList[t].setPath(path);
-                    mList[t].setFileFormat(fileExtension);
+                    mList[t].setFileType(fileExtension);
                     mList[t].setSimpleName(simpleName);
                     mList[t].setStorageId(storageId);
                     // mList[t].setLossless(true);
@@ -93,7 +93,7 @@ public class JustDSDReader extends TagReader{
                 mList = new MusicTag[1];
                 MusicTag metadata = new MusicTag();
 
-                metadata.setFileFormat(fileExtension);
+                metadata.setFileType(fileExtension);
                 metadata.setSimpleName(simpleName);
                 metadata.setStorageId(storageId);
                 metadata.setFileLastModified(lastModified);
@@ -164,44 +164,6 @@ public class JustDSDReader extends TagReader{
             return true;
         }catch(Exception ex) {
             return false;
-        }
-    }
-
-    public enum SupportedFileFormat
-    {
-
-        FLAC("iso", "ISO");
-
-        /**
-         * File Suffix
-         */
-        private final String filesuffix;
-
-        /**
-         * User Friendly Name
-         */
-        private String displayName;
-
-        /** Constructor for internal use by this enum.
-         */
-        SupportedFileFormat(String filesuffix, String displayName)
-        {
-            this.filesuffix = filesuffix;
-            this.displayName = displayName;
-        }
-
-        /**
-         *  Returns the file suffix (lower case without initial .) associated with the format.
-         */
-        public String getFilesuffix()
-        {
-            return filesuffix;
-        }
-
-
-        public String getDisplayName()
-        {
-            return displayName;
         }
     }
 }

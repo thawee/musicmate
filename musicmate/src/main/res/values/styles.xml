@@ -375,5 +375,10 @@ M2
         <item name="android:windowExitAnimation">@anim/dialog_fade_out</item>
     </style>
 
+        <style name="roundedImageView" parent="">
+            <item name="cornerFamily">rounded</item>
+            <item name="cornerSize">8dp</item>
+        </style>
+
 
 </resources>

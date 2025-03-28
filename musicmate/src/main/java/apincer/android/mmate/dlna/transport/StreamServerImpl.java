@@ -12,28 +12,24 @@ import org.jupnp.transport.spi.StreamServer;
 import java.io.File;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.StringUtils;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
-    public static boolean isTransCoded(MusicTag tag) {
+    /*public static boolean isTransCoded(MusicTag tag) {
         String enc = tag.getAudioEncoding();
         if(!StringUtils.isEmpty(enc)) {
             enc = enc.toUpperCase(Locale.US);
             return transCodeList.contains(enc);
         }
         return false;
-    }
+    } */
 
     abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
-        public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0.2";
+        public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0.3";
         private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
         static final SimpleDateFormat dateFormatter = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
         static {
@@ -91,12 +87,12 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     private final Context context;
 
     public static String streamServerHost = "";
-    private static final List<String> transCodeList = new ArrayList<>();
+   // private static final List<String> transCodeList = new ArrayList<>();
 
     public StreamServerImpl(Context context, StreamServerConfigurationImpl configuration) {
         this.configuration = configuration;
         this.context = context;
-        transCodeList.add("AAC");
+       // transCodeList.add("AAC");
     }
 
     public StreamServerConfigurationImpl getConfiguration() {
