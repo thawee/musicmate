@@ -15,9 +15,9 @@ import android.webkit.MimeTypeMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -80,10 +80,10 @@ public class ApplicationUtils {
 
     }
 
-    public static InputStream getAssetsAsStream(Context activity, String inFile) {
+    public static InputStream getAssetsAsStream(Context context, String inFile) {
 
         try {
-            return activity.getAssets().open(inFile);
+            return context.getAssets().open(inFile);
         } catch (IOException e) {
             // Handle exceptions here
         }
@@ -123,7 +123,12 @@ public class ApplicationUtils {
         if(!StringUtils.isEmpty(item.getArtist())) {
             text = text+" "+item.getArtist();
         }
-        String search= URLEncoder.encode(text, StandardCharsets.UTF_8);
+        String search= text; //StandardCharsets.UTF_8);
+        try {
+            search = URLEncoder.encode(text, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         //Uri uri = Uri.parse("http://www.google.com/#q=" + search);
         Uri uri = Uri.parse("http://www.google.com/search?q=" + search);
         Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
@@ -237,9 +242,17 @@ public class ApplicationUtils {
         return "1.0.0";
     }
 
+    public static long getVersionCode(Context context) {
+        try {
+            return context.getPackageManager().getPackageInfo(context.getPackageName(),0).getLongVersionCode();
+        } catch (PackageManager.NameNotFoundException ignored) {
 
+        }
+        return 0;
+    }
 
     public static String getDeviceModel() {
         return StringUtils.trimToEmpty(Build.MODEL);
     }
+
 }

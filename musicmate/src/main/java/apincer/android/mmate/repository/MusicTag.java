@@ -13,7 +13,7 @@ import java.util.Objects;
 import apincer.android.mmate.Constants;
 
 @DatabaseTable(tableName = "musictag")
-public class MusicTag implements Cloneable {
+public class MusicTag {
     @Override
     public int hashCode() {
         return Objects.hash(id);
@@ -438,8 +438,7 @@ public class MusicTag implements Cloneable {
     }
 
     @NonNull
-    @Override
-    public MusicTag clone() {
+    public MusicTag copy() {
         MusicTag tag = new MusicTag();
         tag.id = id;
         tag.uniqueKey = uniqueKey;

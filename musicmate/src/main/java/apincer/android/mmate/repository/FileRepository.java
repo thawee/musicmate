@@ -2,31 +2,29 @@ package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.Constants.COVER_ARTS;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.Utils.runGcIfNeeded;
 
 import android.content.Context;
 import android.util.Log;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.codec.JustDSDReader;
 import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.codec.FFMpegHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.utils.FileUtils;
 
 /**
@@ -70,7 +68,9 @@ public class FileRepository {
             //    FileSystem.copy(coverArtFile, targetFile);
             //}else if(!StringUtils.isEmpty(tag.getCoverartMime())){
             FFMpegHelper.extractCoverArt(path, targetFile);
-            //}
+
+            // Only run GC if memory usage is high
+            runGcIfNeeded();
         } catch (Exception e) {
             Log.d(TAG, "extractCoverArt",e);
         }
@@ -173,7 +173,7 @@ public class FileRepository {
                 }
             }
             if (matchedMeta != null) {
-                return matchedMeta.clone();
+                return matchedMeta.copy();
             }
         }catch (Exception e) {
             Log.e(TAG, "findMediaItem",e);
@@ -202,7 +202,7 @@ public class FileRepository {
             item.setOriginTag(null); // reset pending tag
             TagRepository.saveTag(item);
             return true;
-        }else if (JustDSDReader.isSupportedFileFormat(item.getPath())) {
+       /* }else if (JustDSDReader.isSupportedFileFormat(item.getPath())) {
             // write to somewhere else
             Gson gson = new GsonBuilder()
                     .setPrettyPrinting()
@@ -212,45 +212,70 @@ public class FileRepository {
             String fileName = f.getParentFile().getAbsolutePath()+"/"+item.getTrack()+".json";
             org.apache.commons.io.FileUtils.write(new File(fileName), json, StandardCharsets.UTF_8);
             TagRepository.saveTag(item);
-            return true;
+            return true; */
         }
 
         return false;
 
     }
 
+    // Modify scanMusicFile to defer cover art extraction
     public void scanMusicFile(File file, boolean forceRead) {
         try {
             String mediaPath = file.getAbsolutePath();
             long lastModified = file.lastModified();
-            if(file.length() == 0) { //< 1024) {
-                Log.i(TAG, "scanFile: skip zero byte file - "+mediaPath);
-                return; // skip file less than 1 Mb
+            if(file.length() == 0) {
+                Log.i(TAG, "scanFile: skip zero byte file - " + mediaPath);
+                return;
             }
             if(forceRead) {
                 lastModified = -1;
             }
 
             // if timestamp is outdated
-            if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
-              //  Log.i(TAG, "scanMusicFile: file - "+mediaPath);
-                List<MusicTag> tags = TagReader.readTagFully(context, mediaPath); //reader.readFullTagsFromFile(mediaPath);
-                if (tags != null ) {
-                    for (MusicTag tag : tags) {
-                        tag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), tag));
-                        TagRepository.saveTag(tag);
+           // if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
+            MusicTag tag = TagRepository.getByPath(mediaPath);
+            if(TagRepository.isOutdated(tag, lastModified)) {
+                // Read minimal tag data first
+                MusicTag basicTag = TagReader.readBasicTag(context, mediaPath);
+                if(tag != null) {
+                    // maintain id
+                    basicTag.setId(tag.getId());
+                }
 
-                        // extract cover art
-                        File folderCover = getFolderCoverArt(tag.getPath());
-                        if(folderCover==null) {
-                            // extract only do not have folder cover art
-                            extractCoverArt(tag);
+                if(basicTag != null) {
+                    // Save basic tag immediately
+                    basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), basicTag));
+                    TagRepository.saveTag(basicTag);
+
+                    // Schedule full tag reading for later (if needed)
+                    MusicMateExecutors.lowPriority(() -> {
+                        try {
+                          // if(TagReader.readFullTag(context, basicTag)) {
+                            if(TagReader.readExtras(context, basicTag)) {
+                               basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), basicTag));
+                               TagRepository.saveTag(basicTag);
+                            }
+                        } catch(Exception e) {
+                            Log.e(TAG, "Error reading full tags", e);
                         }
-                    }
+                    });
+
+                    // Defer cover art extraction completely
+                    MusicMateExecutors.lowPriority(() -> {
+                        try {
+                            File folderCover = getFolderCoverArt(basicTag.getPath());
+                            if(folderCover == null) {
+                                extractCoverArt(basicTag);
+                            }
+                        } catch(Exception e) {
+                            Log.e(TAG, "Error extracting cover art", e);
+                        }
+                    });
                 }
             }
-        }catch (Exception ex) {
-            Log.e(TAG, "scanMusicFile",ex);
+        } catch (Exception ex) {
+            Log.e(TAG, "scanMusicFile", ex);
         }
     }
 

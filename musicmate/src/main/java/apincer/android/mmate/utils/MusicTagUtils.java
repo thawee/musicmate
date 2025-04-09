@@ -1,11 +1,19 @@
 package apincer.android.mmate.utils;
 
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
+import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
@@ -15,6 +23,56 @@ import apincer.android.mmate.repository.MusicTag;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
+    private static final Map<String,String> top50Audiophile = new HashMap<>();
+
+    public static void initPlaylist(Context context) {
+        if(top50Audiophile.isEmpty()) {
+            // load from resources
+            InputStream in = ApplicationUtils.getAssetsAsStream(context, "playlist_top50_audiophile.txt");
+
+            // while each line, not start with # and not empty
+            // put to top50Audiophile with "album|artist|year" as key
+            if (in != null) {
+                try {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    String line;
+
+                    // while each line, not start with # and not empty
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+                        if (!line.isEmpty() && !line.startsWith("#")) {
+                            // Parse the line
+                            String[] parts = line.split("\\|");
+                            if (parts.length >= 4) {
+                                String album = parts[0].trim();
+                                String artist = parts[1].trim();
+                                String year = parts[2].trim();
+                                String description = parts[3].trim();
+
+                                // Create the key in format "album|artist|year"
+                                String key = album + "|" + artist + "|" + year;
+
+                                // Put to top50Audiophile with "album|artist|year" as key
+                                top50Audiophile.put(key, description);
+                            }
+                        }
+                    }
+                    reader.close();
+                    Log.d("PlaylistManager", "Loaded " + top50Audiophile.size() + " audiophile albums");
+                } catch (IOException e) {
+                    Log.e("PlaylistManager", "Error reading playlist file", e);
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        Log.e("PlaylistManager", "Error closing input stream", e);
+                    }
+                }
+            } else {
+                Log.e("PlaylistManager", "Could not find playlist_top50_audiophile.txt in assets");
+            }
+        }
+    }
 
     public static String getBPSAndSampleRate(MusicTag tag) {
         long sampleRate = tag.getAudioSampleRate();
@@ -109,7 +167,7 @@ public class MusicTagUtils {
             if(track.indexOf("/")>0) {
                 track = track.substring(0,track.indexOf("/"));
             }
-            if(!StringUtils.isEmpty(track)) {
+            if(!isEmpty(track)) {
                 title = track + StringUtils.SEP_TITLE + title;
             }
         }
@@ -119,14 +177,14 @@ public class MusicTagUtils {
     public static String getFormattedSubtitle(MusicTag tag) {
         String album = StringUtils.trimTitle(tag.getAlbum());
         String artist = StringUtils.trimTitle(tag.getArtist());
-        if (StringUtils.isEmpty(artist)) {
+        if (isEmpty(artist)) {
             artist = StringUtils.trimTitle(tag.getAlbumArtist());
         }
-        if (StringUtils.isEmpty(album) && StringUtils.isEmpty(artist)) {
+        if (isEmpty(album) && isEmpty(artist)) {
             return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + StringUtils.UNKNOWN_CAP;
-        } else if (StringUtils.isEmpty(album)) {
+        } else if (isEmpty(album)) {
             return artist;
-        } else if (StringUtils.isEmpty(artist)) {
+        } else if (isEmpty(artist)) {
             return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + album;
         }
         return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
@@ -138,19 +196,6 @@ public class MusicTagUtils {
 
     public static boolean isLossy(MusicTag tag) {
         return isMPegFile(tag) || isAACFile(tag);
-    }
-
-    @Deprecated
-    public static String getAlbumArtistOrArtist(MusicTag tag) {
-        String albumArtist = StringUtils.trimTitle(tag.getAlbumArtist());
-        if (StringUtils.isEmpty(albumArtist)) {
-            albumArtist = StringUtils.trimTitle("["+tag.getArtist()+"]");
-        }
-        if (StringUtils.isEmpty(albumArtist)) {
-            return "N/A";
-        } {
-            return albumArtist;
-        }
     }
 
     public static String getDynamicRangeScore(MusicTag tag) {
@@ -217,48 +262,10 @@ public class MusicTagUtils {
        // return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
-    @Deprecated
-    public static String getTrackQuality(MusicTag tag) {
-        if(tag.isDSD()) {
-            return Constants.TITLE_DSD_AUDIO;
-        }else if(isMQAStudio(tag)) {
-            return Constants.TITLE_MASTER_STUDIO_AUDIO;
-        }else if(isMQA(tag)) {
-            return Constants.TITLE_MASTER_AUDIO;
-        }else if(isHiRes(tag)) {
-            return Constants.TITLE_HIRES;
-        }else if(isLossless(tag)) {
-            return Constants.TITLE_HIFI_LOSSLESS;
-        }else {
-            return Constants.TITLE_HIGH_QUALITY;
-        }
-        //Hi-Res Audio
-        //Lossless Audio
-        //High Quality
-        //DSD
-    }
-
-    @Deprecated
-    public static String getTrackQualityDetails(MusicTag tag) {
-        if(tag.isDSD()) {
-            return "Enjoy rich music which the detail and wide range of the music, its warm tone is very enjoyable.";
-        }else if(isMQAStudio(tag)) {
-            return "Enjoy the original recordings, directly from mastering engineers, producers or artists to their listeners.";
-        }else if(isMQA(tag)) {
-            return "Enjoy the original recordings, directly from the master recordings, in the highest quality.";
-        }else if(isHiRes(tag)) {
-            return "Enjoy rich music which reproduces fine details of musical instruments.";
-        }else if(isLossless(tag)) {
-            return "Enjoy music which reproduce details of music smooth as CD quality that you can hear.";
-        }else {
-            return "Enjoy music which compromise between data usage and sound fidelity.";
-        }
-    }
-
     public static String getDefaultAlbum(MusicTag tag) {
         // if album empty, add single
         String defaultAlbum;
-        if(StringUtils.isEmpty(tag.getAlbum()) && !StringUtils.isEmpty(tag.getArtist())) {
+        if(isEmpty(tag.getAlbum()) && !isEmpty(tag.getArtist())) {
             defaultAlbum = getFirstArtist(tag.getArtist())+" - "+Constants.DEFAULT_ALBUM_TEXT; //getFirstArtist(tag.getArtist())+" - Single";
         }else {
             defaultAlbum = trimToEmpty(tag.getAlbum());
@@ -279,17 +286,17 @@ public class MusicTagUtils {
         return artist;
     }
 
-    public static String getEncodingType(MusicTag tag) {
+    public static String getEncodingTypeShort(MusicTag tag) {
         if(tag.isDSD()) {
-            return Constants.TITLE_DSD;
+            return Constants.TITLE_DSD_SHORT;
         }else if(isMQA(tag)) {
-                  return Constants.TITLE_MQA;
+            return Constants.TITLE_MQA_SHORT;
         }else if(isHiRes(tag)) {
-            return Constants.TITLE_HIRES;
+            return Constants.TITLE_HIRES_SHORT;
         }else if(isLossless(tag)) {
-            return Constants.TITLE_HIFI_LOSSLESS;
+            return Constants.TITLE_HIFI_LOSSLESS_SHORT;
         }else {
-            return Constants.TITLE_HIGH_QUALITY;
+            return Constants.TITLE_HIGH_QUALITY_SHORT;
         }
     }
 
@@ -325,23 +332,6 @@ public class MusicTagUtils {
     public static boolean isAIFFile(MusicTag tag) {
         // aif, aiff
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()));
-    }
-
-    public static String getExtension(MusicTag tag) {
-       /* String ext = tag.getFileFormat();
-        if("wave".equals(ext)) {
-            ext = "wav";
-        } else if("mpeg".equals(ext)) {
-            ext = "mp3";
-        } else if("aac".equals(ext)) {
-            ext = "m4a";
-        } else if("aiff".equals(ext)) {
-            ext = "aif";
-        } else if("alac".equals(ext)) {
-            ext = "m4a";
-        }
-        return ext; */
-        return tag.getFileType();
     }
 
     public static boolean isISaanPlaylist(MusicTag tag) {
@@ -417,5 +407,48 @@ public class MusicTagUtils {
                 path.endsWith(".flac") || path.endsWith(".alac") || path.endsWith(".aiff") ||
                 path.endsWith(".wav") || path.endsWith(".dsd") || path.endsWith(".dff") ||
                 path.endsWith(".dsf");
+    }
+
+    public static boolean isTOP50Audiophile(MusicTag tag) {
+        if (tag == null) {
+            return false;
+        }
+
+        // Extract relevant information from the tag
+        String album = tag.getAlbum();
+        String artist = tag.getArtist();
+        String year = tag.getYear();
+
+        // Check if any of the required fields are missing
+        if (isEmpty(album) || isEmpty(artist)) {
+            return false;
+        }
+
+        // Normalize the data (optional but recommended)
+        album = album.trim();
+        artist = artist.trim();
+
+        // Create the key in the format "album|artist|year"
+        String key = album + "|" + artist + "|" + year;
+
+        // Check if the key exists in the top50Audiophile map
+        boolean isInTop50 = top50Audiophile.containsKey(key);
+
+        // If not found, try a less strict match (without year)
+        if (!isInTop50 && !isEmpty(year)) {
+            // Try matching without the year
+            String keyWithoutYear = album + "|" + artist + "|";
+
+            // Check for any key that starts with this prefix
+            for (String existingKey : top50Audiophile.keySet()) {
+                if (existingKey.startsWith(keyWithoutYear)) {
+                    isInTop50 = true;
+                    break;
+                }
+            }
+        }
+
+        // Return the result
+        return isInTop50;
     }
 }

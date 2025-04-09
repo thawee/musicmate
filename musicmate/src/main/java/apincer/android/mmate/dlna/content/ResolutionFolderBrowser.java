@@ -47,7 +47,7 @@ public class ResolutionFolderBrowser extends AbstractContentBrowser {
         if(Constants.TITLE_HIGH_QUALITY.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findHighQuality(firstResult, maxResults);
         }
-        if(Constants.TITLE_DSD_AUDIO.equals(name)) {
+        if(Constants.TITLE_DSD.equals(name)) {
             return MusixMateApp.getInstance().getOrmLite().findDSDSongs(firstResult, maxResults);
         }
         return new ArrayList<>();

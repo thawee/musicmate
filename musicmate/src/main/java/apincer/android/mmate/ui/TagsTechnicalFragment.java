@@ -111,11 +111,11 @@ public class TagsTechnicalFragment extends Fragment {
         String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag, true);
         filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
-        MusicTag tt = TagReader.readTag(context, tag.getPath()).get(0); // .readMusicTag(getContext(), tag.getPath()).get(0);
+        MusicTag tt = tag.copy();
+        TagReader.readFullTag(context, tt);
 
         MusicTag ffmpegTag = (new FFMPegReader(getContext())).extractTagFromFile(tag.getPath());
         metada.setText(ffmpegTag.getData());
-       // metada.setText(ffmpegTag.getData() +"\r\n"+ MusicTagUtils.getEncResolutionIcon(context, tag));
 
         TableRow tbrow0 = new TableRow(getContext());
         TextView tv0 = new TextView(getContext());

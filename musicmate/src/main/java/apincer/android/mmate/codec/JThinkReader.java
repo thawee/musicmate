@@ -1,7 +1,7 @@
 package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
-import static apincer.android.mmate.repository.MusicAnalyser.process;
+import static apincer.android.mmate.repository.MusicAnalyser.analyse;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
@@ -73,9 +73,11 @@ public class JThinkReader extends TagReader{
     }
 
     @Override
-    protected List<MusicTag> read(String mediaPath) {
-        Log.i(TAG, "read: path - " + mediaPath);
+    protected MusicTag readBasicTag(String mediaPath) {
+        Log.i(TAG, "readBasicTag: " + mediaPath);
         MusicTag tag = new MusicTag();
+
+        // Only read file info, skip audio processing
         tag.setPath(mediaPath);
         readFileInfo(context, tag);
         tag.setAudioStartTime(0);
@@ -85,30 +87,54 @@ public class JThinkReader extends TagReader{
             readHeader(audioFile, tag);
             readTags(audioFile, tag);
         }
-        return Collections.singletonList(tag);
+
+        return tag;
     }
 
     @Override
-    protected List<MusicTag> readFully(String mediaPath) {
+    protected boolean readFullTag(MusicTag tag) {
+        Log.i(TAG, "readFullTag: " + tag.getPath());
+
         // Ensure this method is called from a background thread
         if (Looper.myLooper() == Looper.getMainLooper()) {
             Log.w(TAG, "Tag reading should not be done on the main thread");
+            return false;
+        }
+        try {
+
+            // tag.setPath(mediaPath);
+            readFileInfo(context, tag);
+            tag.setAudioStartTime(0);
+
+            AudioFile audioFile = getAudioFile(tag.getPath());
+            if (audioFile != null) {
+                readHeader(audioFile, tag);
+                readTags(audioFile, tag);
+            }
+            analyse(tag);
+            return true;
+        }catch (Exception ex) {
+            Log.d("readFullTag", ex.getMessage());
         }
 
-        Log.i(TAG, "readFully: path - " + mediaPath);
-        MusicTag tag = new MusicTag();
-        tag.setPath(mediaPath);
-        readFileInfo(context, tag);
-        tag.setAudioStartTime(0);
+        return false;
+    }
 
-        AudioFile audioFile = getAudioFile(mediaPath);
-        if (audioFile != null) {
-            readHeader(audioFile, tag);
-            readTags(audioFile, tag);
-            process(tag);
+    @Override
+    protected boolean readExtras(MusicTag tag) {
+        Log.i(TAG, "readExtras: " + tag.getPath());
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            Log.w(TAG, "Tag reading should not be done on the main thread");
+            return false;
         }
 
-        return Collections.singletonList(tag);
+        try {
+            return analyse(tag);
+        }catch (Exception ex) {
+            Log.d("readFullTag", ex.getMessage());
+        }
+
+        return false;
     }
 
     private void readHeader(AudioFile read, MusicTag metadata) {
@@ -167,6 +193,7 @@ public class JThinkReader extends TagReader{
         // Ensure this method is called from a background thread
         if (Looper.myLooper() == Looper.getMainLooper()) {
             Log.w(TAG, "Tag reading should not be done on the main thread");
+            return;
         }
 
         Tag tag = audioFile.getTag();
@@ -187,9 +214,9 @@ public class JThinkReader extends TagReader{
                 metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
 
                 // Check for artwork
-                if (tag.getFirstArtwork() != null) {
-                    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
-                }
+                //if (tag.getFirstArtwork() != null) {
+                //    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
+                //}
 
                 // Process format-specific tags
                 processFormatSpecificTags(tag, metadata);

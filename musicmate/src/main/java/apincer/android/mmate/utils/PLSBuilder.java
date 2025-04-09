@@ -6,7 +6,6 @@ import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_C
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_FINFIN_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_ISAAN_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_VOCAL_SONGS;
-import static apincer.android.mmate.utils.MusicTagUtils.getExtension;
 
 import android.content.Context;
 
@@ -33,7 +32,7 @@ import apincer.android.mmate.repository.TagRepository;
 
 public class PLSBuilder {
     public static String build(String baseUri, List<MusicTag> tags) {
-        StringBuffer buff = new StringBuffer();
+        StringBuilder buff = new StringBuilder();
         buff.append("[playlist]").append("\n");
         int fileCnt =1;
         baseUri = buildUri(baseUri);
@@ -68,7 +67,7 @@ public class PLSBuilder {
     }
 
     private static String getFilename(MusicTag tag) {
-      return tag.getId()+ "." + getExtension(tag);
+      return tag.getId()+ "." + tag.getFileType();
     }
 
     public static void exportPlaylists(Context context) {
@@ -90,9 +89,6 @@ public class PLSBuilder {
             if(MusicTagUtils.isISaanPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_ISAAN_SONGS)).add(tag);
             }
-            //if(MusicTagUtils.isRelaxedThaiPlaylist(tag)) {
-            //    Objects.requireNonNull(mapped.get(SMART_LIST_RELAXED_TH_SONGS)).add(tag);
-           // }
             if(MusicTagUtils.isVocalPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_VOCAL_SONGS)).add(tag);
             }

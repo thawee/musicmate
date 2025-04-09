@@ -129,7 +129,7 @@ public class MusicPathTagParser {
 
     private String subString(String text, int i, int nextTagIndex, int offset) {
         if(isEmpty(text)) return "";
-        if((nextTagIndex-offset)<=text.length()) {
+        if((nextTagIndex-offset)<=text.length() && nextTagIndex - offset >0) {
             return trimToEmpty(text.substring(i, nextTagIndex - offset));
         }else {
             return trimToEmpty(text.substring(i));
@@ -169,7 +169,7 @@ public class MusicPathTagParser {
             return false;
         }
 
-        MusicTag tag = item.clone();
+        MusicTag tag = item.copy();
         String text = FileUtils.removeExtension(file);
         if (mode == READ_MODE.SIMPLE) {
             // filename

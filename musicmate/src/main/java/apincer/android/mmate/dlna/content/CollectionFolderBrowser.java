@@ -36,9 +36,9 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
     }
 
     private List<MusicTag> getItems(ContentDirectory contentDirectory, String name) {
-        if(CollectionsBrowser.MY_SONGS.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findMySongs();
-        }
+       // if(CollectionsBrowser.MY_SONGS.equals(name)) {
+       //     return MusixMateApp.getInstance().getOrmLite().findMySongs();
+       // }
         List<MusicTag> results = new ArrayList<>();
         List<MusicTag> list = MusixMateApp.getInstance().getOrmLite().findMySongs();
         for(MusicTag tag: list) {
@@ -59,6 +59,8 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
             }else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
                 results.add(tag);
             }else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
+                results.add(tag);
+            }else if (CollectionsBrowser.TOP50_AUDIOPHILE_ALBUMS.equals(name) && MusicTagUtils.isTOP50Audiophile(tag)) {
                 results.add(tag);
             }
         }

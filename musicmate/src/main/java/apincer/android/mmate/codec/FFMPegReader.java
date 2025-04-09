@@ -127,17 +127,23 @@ public static class Loudness {
         return null;
     } */
 
-    protected List<MusicTag> read(String path) {
+    protected MusicTag readBasicTag(String path) {
         Log.d(TAG, "read: "+path);
-        MusicTag tag = extractTagFromFile(path);
-        return List.of(tag);
+        return extractTagFromFile(path);
+       // return List.of(tag);
     }
 
-    protected List<MusicTag> readFully(String path) {
-        Log.d(TAG, "readFully: "+path);
-        MusicTag tag = extractTagFromFile(path);
+    protected boolean readFullTag(MusicTag tag) {
+       // Log.d(TAG, "readFully: "+path);
+        //return extractTagFromFile(path);
         //detectMQA(tag,50000); // timeout 50 seconds
-        return List.of(tag);
+       // return List.of(tag);
+        return true;
+    }
+
+    @Override
+    protected boolean readExtras(MusicTag tag) {
+        return false;
     }
 
     public MusicTag extractTagFromFile(String path) {

@@ -33,7 +33,7 @@ public class ResolutionsBrowser extends AbstractContentBrowser {
         playlists.add(Constants.TITLE_HIFI_LOSSLESS);
         playlists.add(Constants.TITLE_HIGH_QUALITY);
         playlists.add(Constants.TITLE_MASTER_AUDIO);
-        playlists.add(Constants.TITLE_DSD_AUDIO);
+        playlists.add(Constants.TITLE_DSD);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ResolutionsBrowser extends AbstractContentBrowser {
                 mapped.get(Constants.TITLE_HIGH_QUALITY).addChildCount();
             }
             if(MusicTagUtils.isDSD(tag)) {
-                mapped.get(Constants.TITLE_DSD_AUDIO).addChildCount();
+                mapped.get(Constants.TITLE_DSD).addChildCount();
             }
         }
 

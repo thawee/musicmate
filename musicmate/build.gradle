@@ -181,7 +181,7 @@ dependencies {
     //ksp libs.glide.compiler
 
     // Local Library
-    implementation project(':library:justdsd')
+    //implementation project(':library:justdsd')
     implementation project(':library:JustFLAC')
     implementation project(':library:library')
     implementation project(':library:androidtagview')

@@ -33,8 +33,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -143,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String AIFF = "AIFF";
 
     // Activity result launcher
-    ActivityResultLauncher<Intent> permissionResultLauncher;
+   // ActivityResultLauncher<Intent> permissionResultLauncher;
 
     // ViewModel and Repository
     private MainViewModel viewModel;
@@ -209,9 +207,6 @@ public class MainActivity extends AppCompatActivity {
         // Initialize ViewModel
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        // Setup Activity Result Launchers
-        setupActivityResultLaunchers();
-
         // Setup UI components
         setUpHeaderPanel();
         setUpNowPlayingView();
@@ -227,13 +222,6 @@ public class MainActivity extends AppCompatActivity {
         mExitSnackbar = Snackbar.make(mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
-    }
-
-    private void setupActivityResultLaunchers() {
-        permissionResultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> ScanAudioFileWorker.startScan(getApplicationContext())
-        );
     }
 
     private void observeViewModel() {
@@ -352,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUpRecycleView(SearchCriteria searchCriteria) {
         if (searchCriteria == null) {
-            searchCriteria = new SearchCriteria(SearchCriteria.TYPE.MY_SONGS);
+            searchCriteria = new SearchCriteria(SearchCriteria.TYPE.LIBRARY);
         }
 
         // Initialize adapter
@@ -384,8 +372,14 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setPreserveFocusAfterLayout(true);
 
         // Setup item click listener
-        MusicTagAdapter.OnListItemClick onListItemClick = (view, position) ->
-                doShowEditActivity(Collections.singletonList(adapter.getMusicTag(position)));
+        MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
+            MusicTag tag = adapter.getMusicTag(position);
+            if("PLS".equals(tag.getAudioEncoding())) {
+                doStartRefresh(SearchCriteria.TYPE.COLLECTIONS, tag.getUniqueKey());
+            }else {
+                doShowEditActivity(Collections.singletonList(tag));
+            }
+        };
         adapter.setClickListener(onListItemClick);
 
         // Setup selection tracker
@@ -724,7 +718,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void doHideSearch() {
         adapter.setSearchString("");
-        refreshLayout.autoRefresh();
+       // refreshLayout.autoRefresh();
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
@@ -740,11 +734,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if (item.getItemId() == R.id.menu_all_music) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.MY_SONGS, null);
+            doStartRefresh(SearchCriteria.TYPE.LIBRARY, null);
             return true;
         } else if (item.getItemId() == R.id.menu_encodings) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
+            return true;
+        } else if (item.getItemId() == R.id.menu_collection) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.COLLECTIONS, null);
             return true;
         } else if (item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
@@ -802,7 +800,8 @@ public class MainActivity extends AppCompatActivity {
     private void doSetDirectories() {
         if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
             Intent intent = new Intent(MainActivity.this, PermissionActivity.class);
-            permissionResultLauncher.launch(intent);
+           // permissionResultLauncher.launch(intent);
+            startActivity(intent);
             return;
         }
 
@@ -906,6 +905,9 @@ public class MainActivity extends AppCompatActivity {
 
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
+            // start scan after setting dirs
+            Log.i(TAG, "Starting scan music file for first time.");
+            ScanAudioFileWorker.startScan(getApplicationContext(), false);
             alert.dismiss();
         });
 

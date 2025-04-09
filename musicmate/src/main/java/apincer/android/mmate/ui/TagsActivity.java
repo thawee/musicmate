@@ -48,10 +48,8 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -151,7 +149,7 @@ public class TagsActivity extends AppCompatActivity {
                     startProgressBar();
                     for(MusicTag tag:this.getEditItems()) {
                         try {
-                            if (MusicAnalyser.process(tag)) {
+                            if (MusicAnalyser.analyse(tag)) {
                                 TagWriter.writeTagToFile(getApplicationContext(), tag);
                                 TagRepository.saveTag(tag);
                             }
@@ -294,7 +292,7 @@ public class TagsActivity extends AppCompatActivity {
         try {
             if (playingSong == null) return;
 
-            MusicTag tagCopy = playingSong.clone(); // Work with a copy
+            MusicTag tagCopy = playingSong.copy(); // Work with a copy
 
             synchronized (editItemsLock) {
                 editItems.clear();
@@ -551,71 +549,6 @@ public class TagsActivity extends AppCompatActivity {
         finish();
     }
 
-    protected MusicTag buildDisplayTag() {
-        synchronized (editItemsLock) {
-            if(editItems.isEmpty()) return null;
-
-            // Cache the display tag and only rebuild when needed
-            if (displayTag != null && !displayTagDirty) {
-                return displayTag;
-            }
-
-            MusicTag firstTag = editItems.get(0);
-            if(editItems.size()==1) {
-                displayTag = firstTag.clone();
-                displayTagDirty = false;
-                return displayTag;
-            }
-
-            displayTag = firstTag.clone();
-            // Use a Set to track which fields are different
-            Set<String> multiValueFields = new HashSet<>();
-
-            // Compare first tag with all others to find differences
-            for (int i=1; i<editItems.size(); i++) {
-                MusicTag item = editItems.get(i);
-                checkAndMarkMultiValue(displayTag.getTitle(), item.getTitle(), "title", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getTrack(), item.getTrack(), "track", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getAlbum(), item.getAlbum(), "album", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getArtist(), item.getArtist(), "artist", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getAlbumArtist(), item.getAlbumArtist(), "albumArtist", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getGenre(), item.getGenre(), "genre", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getYear(), item.getYear(), "year", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getDisc(), item.getDisc(), "disc", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getComment(), item.getComment(), "comment", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getComposer(), item.getComposer(), "composer", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getGrouping(), item.getGrouping(), "grouping", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getMediaType(), item.getMediaType(), "mediaType", multiValueFields);
-                checkAndMarkMultiValue(displayTag.getPublisher(), item.getPublisher(), "publisher", multiValueFields);
-            }
-
-            // Apply multi-value markers to fields that differ
-            if (multiValueFields.contains("title")) displayTag.setTitle(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("track")) displayTag.setTrack(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("album")) displayTag.setAlbum(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("artist")) displayTag.setArtist(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("albumArtist")) displayTag.setAlbumArtist(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("genre")) displayTag.setGenre(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("year")) displayTag.setYear(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("disc")) displayTag.setDisc(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("comment")) displayTag.setComment(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("composer")) displayTag.setComposer(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("grouping")) displayTag.setGrouping(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("mediaType")) displayTag.setMediaType(StringUtils.MULTI_VALUES);
-            if (multiValueFields.contains("publisher")) displayTag.setPublisher(StringUtils.MULTI_VALUES);
-
-            displayTagDirty = false;
-            return displayTag;
-        }
-    }
-
-    // Helper method to check if values are equal and mark them for multi-value if not
-    private void checkAndMarkMultiValue(String val1, String val2, String fieldName, Set<String> multiValueFields) {
-        if (!StringUtils.equals(val1, val2)) {
-            multiValueFields.add(fieldName);
-        }
-    }
-
     // Add this field to track when display tag needs rebuilding
     private volatile boolean displayTagDirty = true;
 
@@ -658,15 +591,15 @@ public class TagsActivity extends AppCompatActivity {
         imageLoader.enqueue(coverRequest);
     }
 
-    protected MusicTag buildDisplayTag2() {
+    protected MusicTag buildDisplayTag() {
         if(editItems.isEmpty()) return null;
 
         MusicTag displayTag = editItems.get(0);
         if(editItems.size()==1) {
-            return displayTag.clone();
+            return displayTag.copy();
         }
 
-        displayTag = displayTag.clone();
+        displayTag = displayTag.copy();
         for (int i=1;i<editItems.size();i++) {
             MusicTag item = editItems.get(i);
             if(!StringUtils.equals(displayTag.getTitle(), item.getTitle())) {

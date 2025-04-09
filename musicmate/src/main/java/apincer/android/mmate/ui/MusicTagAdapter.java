@@ -118,7 +118,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public List<String> getHeaderTitles(Context context) {
         List<String> titles = new ArrayList<>();
-        if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
+        if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
@@ -137,8 +137,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_HIGH_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
-            titles.add(Constants.AUDIO_SQ_PCM_MQA);
-            titles.add(Constants.AUDIO_SQ_DSD);
+            titles.add(Constants.TITLE_MASTER_AUDIO);
+            titles.add(Constants.TITLE_DSD);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
             List<String> tabs = TagRepository.getActualGroupingList(context);
             titles.addAll(tabs);
@@ -157,7 +157,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public String getHeaderTitle() {
         if(criteria!=null) {
-            if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
+            if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
                 /*if(Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
                     return Constants.TITLE_INCOMING_SONGS;
                 }else if(Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
@@ -251,11 +251,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public String getHeaderLabel() {
         if(criteria!=null) {
-            if(criteria.getType() == SearchCriteria.TYPE.MY_SONGS) {
+            if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
                 return Constants.TITLE_LIBRARY;
-                // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
-                //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
-                //     return Constants.TITLE_DSD;
             }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 return Constants.TITLE_QUALITY;
             }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
@@ -266,6 +263,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 return Constants.TITLE_GENRE;
             }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
                 return Constants.TITLE_PUBLISHER;
+            }else if(criteria.getType() == SearchCriteria.TYPE.COLLECTIONS) {
+                return Constants.TITLE_COLLECTIONS;
             }else {
                 return Constants.TITLE_LIBRARY;
             }

@@ -21,6 +21,7 @@ import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
 public abstract class TagReader {
+
     public enum SupportedFileFormat {
         MP3,
         FLAC,
@@ -94,7 +95,7 @@ public abstract class TagReader {
 
         //set default, will be override by reader
         tag.setAudioEncoding(tag.getFileType());
-        tag.setTitle(file.getName());
+        tag.setTitle(FileUtils.removeExtension(file.getName()));
     }
 
     protected static String extractField(String[] tags, int i) {
@@ -104,15 +105,21 @@ public abstract class TagReader {
         return "";
     }
 
-    public static List<MusicTag> readTag(Context context, String mediaPath) {
-        return getReader(context, mediaPath).read(mediaPath);
+    public static MusicTag readBasicTag(Context context, String mediaPath) {
+        return getReader(context, mediaPath).readBasicTag(mediaPath);
     }
 
-    public static List<MusicTag> readTagFully(Context context, String mediaPath) {
-        return getReader(context, mediaPath).readFully(mediaPath);
+    public static boolean readFullTag(Context context, MusicTag tag) {
+        return getReader(context, tag.getPath()).readFullTag(tag);
     }
 
-    protected abstract List<MusicTag> read(String mediaPath);
+    public static boolean readExtras(Context context, MusicTag tag) {
+        return getReader(context, tag.getPath()).readExtras(tag);
+    }
 
-    protected abstract List<MusicTag> readFully(String mediaPath);
+    protected abstract MusicTag readBasicTag(String mediaPath);
+
+    protected abstract boolean readFullTag(MusicTag tag);
+
+    protected abstract boolean readExtras(MusicTag tag);
 }

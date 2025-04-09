@@ -1,8 +1,10 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.TITLE_DSD;
-import static apincer.android.mmate.Constants.TITLE_HQ;
-import static apincer.android.mmate.Constants.TITLE_MQA;
+import static apincer.android.mmate.Constants.TITLE_DSD_SHORT;
+import static apincer.android.mmate.Constants.TITLE_HIFI_LOSSLESS_SHORT;
+import static apincer.android.mmate.Constants.TITLE_HIGH_QUALITY_SHORT;
+import static apincer.android.mmate.Constants.TITLE_HIRES_SHORT;
+import static apincer.android.mmate.Constants.TITLE_MQA_SHORT;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -117,12 +119,12 @@ public class AboutActivity extends AppCompatActivity {
             TextView groupingsHeader = v.findViewById(R.id.groupings_header);
             TextView groupingsDetail = v.findViewById(R.id.groupings_details);
 
-            v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings(TITLE_HQ, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings("Hi-FI", encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_hires).setOnClickListener(view -> updateEncodings("Hi-Res", encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(TITLE_DSD, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(TITLE_MQA, encodingHeader, encodingDetail));
-            updateEncodings(TITLE_HQ, encodingHeader, encodingDetail);
+            v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings(TITLE_HIFI_LOSSLESS_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_hires).setOnClickListener(view -> updateEncodings(TITLE_HIRES_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(TITLE_DSD_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(TITLE_MQA_SHORT, encodingHeader, encodingDetail));
+            updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail);
 
             // groupings description
             LinearLayout groupingBtnPanel = v.findViewById(R.id.groupingBtnPanel);
@@ -200,7 +202,7 @@ public class AboutActivity extends AppCompatActivity {
                         actualSize.put(asid, tag.getFileSize());
                     }
 
-                    String enc = MusicTagUtils.getEncodingType(tag);
+                    String enc = MusicTagUtils.getEncodingTypeShort(tag);
                     if(encList.containsKey(enc)) {
                         Integer cnt = encList.get(enc);
                         encList.put(enc, cnt + 1);
@@ -251,16 +253,16 @@ public class AboutActivity extends AppCompatActivity {
         }
 
         private String getEncodingHeader(String btn) {
-            if(TITLE_HQ.equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
-            if("Hi-FI".equalsIgnoreCase(btn)) return getString(R.string.encoding_lossless_header);
-            if("Hi-Res".equalsIgnoreCase(btn)) return getString(R.string.encoding_hires_header);
-            if(TITLE_DSD.equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
-            if(TITLE_MQA.equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
+            if(TITLE_HIGH_QUALITY_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_hq_header);
+            if(TITLE_HIFI_LOSSLESS_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_lossless_header);
+            if(TITLE_HIRES_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_hires_header);
+            if(TITLE_DSD_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_dsd_header);
+            if(TITLE_MQA_SHORT.equalsIgnoreCase(btn)) return getString(R.string.encoding_mqa_header);
             return btn;
         }
 
         private TextBuilder getEncodingDetailBuilder(String btn) {
-            if(TITLE_HQ.equalsIgnoreCase(btn)) {
+            if(TITLE_HIGH_QUALITY_SHORT.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_hq_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -277,7 +279,7 @@ public class AboutActivity extends AppCompatActivity {
                        // .addWhiteSpace()
                       //  .addColoredTextRes(R.string.encoding_hq_recommended, R.color.encoding_desc);
             }
-            if("Hi-FI".equalsIgnoreCase(btn)) {
+            if(TITLE_HIFI_LOSSLESS_SHORT.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_lossless_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -294,7 +296,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_lossless_recommended, R.color.encoding_detail);
             }
-            if("Hi-Res".equalsIgnoreCase(btn)) {
+            if(TITLE_HIRES_SHORT.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_hires_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -311,7 +313,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_hires_recommended, R.color.encoding_detail);
             }
-            if(TITLE_DSD.equalsIgnoreCase(btn)) {
+            if(TITLE_DSD_SHORT.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_dsd_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -328,7 +330,7 @@ public class AboutActivity extends AppCompatActivity {
                         .addWhiteSpace()
                         .addColoredTextRes(R.string.encoding_dsd_recommended, R.color.encoding_detail);
             }
-            if(TITLE_MQA.equalsIgnoreCase(btn)) {
+            if(TITLE_MQA_SHORT.equalsIgnoreCase(btn)) {
                 return new TextBuilder(getContext())
                         .addColoredTextRes(R.string.encoding_mqa_desc, R.color.encoding_desc)
                         .addNewLine()
@@ -508,11 +510,11 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
-            mappedColors.put(Constants.TITLE_DSD, ContextCompat.getColor(getContext(), R.color.resolution_dsd));
-            mappedColors.put(Constants.TITLE_MQA, ContextCompat.getColor(getContext(), R.color.resolution_mqa_studio));
-            mappedColors.put(Constants.TITLE_HIRES, ContextCompat.getColor(getContext(), R.color.resolution_hires));
-            mappedColors.put(Constants.TITLE_HIFI_LOSSLESS, ContextCompat.getColor(getContext(), R.color.resolution_lossless));
-            mappedColors.put(Constants.TITLE_HIGH_QUALITY, ContextCompat.getColor(getContext(), R.color.resolution_lossy));
+            mappedColors.put(TITLE_DSD_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_dsd));
+            mappedColors.put(Constants.TITLE_MQA_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_mqa_studio));
+            mappedColors.put(TITLE_HIRES_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_hires));
+            mappedColors.put(TITLE_HIFI_LOSSLESS_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_lossless));
+            mappedColors.put(TITLE_HIGH_QUALITY_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_lossy));
 
              for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));

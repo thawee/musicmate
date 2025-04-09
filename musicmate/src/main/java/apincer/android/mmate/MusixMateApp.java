@@ -9,6 +9,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import apincer.android.mmate.notification.NotificationId;
 import apincer.android.mmate.player.PlayerControl;
@@ -40,7 +42,9 @@ import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.MainActivity;
+import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
+import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.utils.FileUtils;
@@ -52,7 +56,6 @@ public class MusixMateApp extends Application {
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
     private boolean isMediaServerRunning = false;
-    private boolean isFirstStart = true;
 
     private static MusixMateApp INSTANCE;
     private SearchCriteria criteria;
@@ -72,7 +75,7 @@ public class MusixMateApp extends Application {
         List<MusicTag> list = new ArrayList<>();
         synchronized (pendingQueue) {
             if (pendingQueue.get(name) != null) {
-                list.addAll(pendingQueue.get(name));
+                list.addAll(Objects.requireNonNull(pendingQueue.get(name)));
                 pendingQueue.remove(name);
             }
         }
@@ -124,10 +127,11 @@ public class MusixMateApp extends Application {
     private void setupNetworkMonitoring() {
         connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
-        // Create a network request that specifically looks for WiFi with Internet
+        // Create a network request that looks for WiFi without requiring internet
+        // This allows both client WiFi and hotspot modes
         NetworkRequest networkRequest = new NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                // Don't require internet capability to support hotspot mode
                 .build();
 
         // Create the callback only once to prevent memory leaks
@@ -135,14 +139,6 @@ public class MusixMateApp extends Application {
             @Override
             public void onAvailable(@NonNull Network network) {
                 Log.d(TAG, "WiFi network became available");
-
-                // Check if the network has the capabilities we need
-                NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-                if (capabilities == null ||
-                        !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                    Log.d(TAG, "Network lacks required capabilities");
-                    return;
-                }
 
                 // Check media server settings before starting
                 if (Settings.isEnableMediaServer(getApplicationContext())) {
@@ -163,8 +159,7 @@ public class MusixMateApp extends Application {
             public void onLost(@NonNull Network network) {
                 Log.d(TAG, "WiFi network lost");
 
-                // Let the service handle its own shutdown in response to network events
-                // Just update our tracking state
+                MediaServerService.stopMediaServer(MusixMateApp.this);
                 isMediaServerRunning = false;
             }
         };
@@ -178,7 +173,6 @@ public class MusixMateApp extends Application {
 
         if (capabilities != null &&
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 Settings.isEnableMediaServer(getApplicationContext())) {
             // Network is already available - start service directly
             MediaServerService.startMediaServer(this);
@@ -209,6 +203,8 @@ public class MusixMateApp extends Application {
         // Set up network monitoring
         setupNetworkMonitoring();
 
+        MusicTagUtils.initPlaylist(this);
+
         StateViewsBuilder
                 .init(this)
                 .setIconColor(Color.parseColor("#D2D5DA"))
@@ -236,13 +232,30 @@ public class MusixMateApp extends Application {
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
-            if (isFirstStart) {
-                Log.i(TAG, "Starting initial music scan");
-                isFirstStart = false;
+            // Get preferences to check first run or app upgrade
+            SharedPreferences prefs = Settings.getPreferences(getApplicationContext());
+            boolean isFirstRun = prefs.getBoolean("is_first_run", true);
+            long previousVersion = prefs.getLong("app_version", 0);
+            long currentVersion = ApplicationUtils.getVersionCode(getApplicationContext());
+
+            // Schedule regular incremental scans for ongoing maintenance
+            ScanAudioFileWorker.scheduleRegularScans(this);
+
+            if (isFirstRun || previousVersion < currentVersion) {
+                // Perform a full scan on first run or app upgrade
+                Log.i(TAG, "First run or app upgrade, performing full music scan");
+                ScanAudioFileWorker.startScan(getApplicationContext(), true);
+
+                // Update preferences
+                prefs.edit()
+                        .putBoolean("is_first_run", false)
+                        .putLong("app_version", currentVersion)
+                        .apply();
             } else {
-                Log.i(TAG, "Starting music scan on app restart");
+                // On normal startup, do a quick incremental scan
+                Log.i(TAG, "Normal startup, performing incremental music scan");
+                ScanAudioFileWorker.startScan(getApplicationContext(), false);
             }
-            ScanAudioFileWorker.startScan(getApplicationContext());
         } else {
             Log.w(TAG, "Music scan skipped - no directories configured");
         }
@@ -317,8 +330,7 @@ public class MusixMateApp extends Application {
             NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
 
             if (capabilities != null &&
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                 MediaServerService.startMediaServer(this);
                 isMediaServerRunning = true;
             } else {

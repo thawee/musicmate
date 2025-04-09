@@ -21,6 +21,12 @@ public class MusicMateExecutors {
     private final ExecutorService mScanThread; // for file scanning
     private final ExecutorService mMainThread; // for main page
     private final Executor mUIThread; // for ui
+    // Alternatively, if you're using an ExecutorService approach:
+    private static final ExecutorService LOW_PRIORITY_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r);
+        t.setPriority(Thread.MIN_PRIORITY);
+        return t;
+    });
 
     // Use NUMBER_OF_CORES more effectively
     private static final int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
@@ -77,6 +83,10 @@ public class MusicMateExecutors {
                 });
     }
 
+    public static void lowPriority(Runnable command) {
+        LOW_PRIORITY_EXECUTOR.execute(command);
+    }
+
     public static void executeUI(@NonNull Runnable command) {
         getInstance().mUIThread.execute(command);
     }
@@ -119,6 +129,7 @@ public class MusicMateExecutors {
             this.mScheduleThread.shutdown();
             this.mFastThread.shutdown();
             this.mMainThread.shutdown();
+            LOW_PRIORITY_EXECUTOR.shutdown();
 
             // Wait a reasonable time for tasks to complete
             if (!this.mScanThread.awaitTermination(2, TimeUnit.SECONDS)) {

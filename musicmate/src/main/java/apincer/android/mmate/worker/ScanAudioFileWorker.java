@@ -6,7 +6,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
 import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.Settings;
@@ -31,18 +34,39 @@ import apincer.android.mmate.utils.LogHelper;
 public class ScanAudioFileWorker extends Worker {
     private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
     private static final String WORKER_TAG = "apincer.android.mmate.work.ScanAudioFileWorker";
-    private static final int MAX_THREADS = 2; // Limit to 2 working threads
-    private static final int BATCH_SIZE = 30; // Smaller batch size to reduce memory pressure
-    private static final int PAUSE_BETWEEN_BATCHES_MS = 100; // Reduce CPU pressure
+    private static final String LAST_SCAN_TIME_PREF = "last_music_scan_time";
+
+    //private static final int MAX_THREADS = 2; // Limit to 2 working threads
+    //private static final int BATCH_SIZE = 30; // Smaller batch size to reduce memory pressure
+    //private static final int PAUSE_BETWEEN_BATCHES_MS = 100; // Reduce CPU pressure
+
+    // These values will be determined dynamically
+    private int optimalThreadCount;
+    private int optimalBatchSize;
+    private int pauseBetweenBatchesMs;
 
     static final long SCAN_SCHEDULE_TIME = 5;
     private final FileRepository repos;
+
+    private boolean isFullScan;
+    private long lastScanTime = 0;
 
     public ScanAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
         super(context, parameters);
         repos = FileRepository.newInstance(getApplicationContext());
+
+        // Get dynamic configuration based on device capabilities
+        optimalThreadCount = getOptimalThreadCount();
+        optimalBatchSize = getOptimalBatchSize();
+        pauseBetweenBatchesMs = getOptimalPauseTime();
+
+        // Get scan mode (full or incremental)
+        isFullScan = parameters.getInputData().getBoolean("fullScan", false);
+
+        // Get last scan time for incremental scan
+        lastScanTime = Settings.getLastScanTime(context);
     }
 
     @NonNull
@@ -51,7 +75,10 @@ public class ScanAudioFileWorker extends Worker {
         int processedFiles = 0;
 
         try {
-            TagRepository.cleanMusicMate();
+            // Only clean database on full scan
+            if (isFullScan) {
+                TagRepository.cleanMusicMate();
+            }
 
             List<File> list = pathList(getApplicationContext());
             List<Path> allPaths = new ArrayList<>();
@@ -63,6 +90,9 @@ public class ScanAudioFileWorker extends Worker {
 
             // Then process in batches
             processedFiles = processPaths(allPaths);
+
+            // Save current time as last scan time
+            Settings.setLastScanTime(getApplicationContext(), System.currentTimeMillis());
 
             Data outputData = new Data.Builder()
                     .putInt("processedFiles", processedFiles)
@@ -78,8 +108,8 @@ public class ScanAudioFileWorker extends Worker {
         int processedCount = 0;
 
         // Process in smaller batches to reduce memory pressure
-        for (int i = 0; i < paths.size(); i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, paths.size());
+        for (int i = 0; i < paths.size(); i += optimalBatchSize) {
+            int end = Math.min(i + optimalBatchSize, paths.size());
             List<Path> batch = paths.subList(i, end);
 
             // Sequential processing within the batch to reduce CPU load
@@ -89,14 +119,14 @@ public class ScanAudioFileWorker extends Worker {
             }
 
             // Report progress
-           /* setProgressAsync(new Data.Builder()
+            setProgressAsync(new Data.Builder()
                     .putInt("progress", end)
                     .putInt("total", paths.size())
-                    .build()); */
+                    .build());
 
             // Add a small delay between batches to prevent CPU overload
             try {
-                Thread.sleep(PAUSE_BETWEEN_BATCHES_MS);
+                Thread.sleep(pauseBetweenBatchesMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -108,12 +138,17 @@ public class ScanAudioFileWorker extends Worker {
     private List<Path> search(String pathname) {
         List<Path> result = new ArrayList<>();
         try {
-            // Limit to exactly 2 threads for file searching
-            ForkJoinPool customThreadPool = new ForkJoinPool(MAX_THREADS);
+            // Use optimal thread count for file searching
+            ForkJoinPool customThreadPool = new ForkJoinPool(optimalThreadCount);
 
             customThreadPool.submit(() -> {
-                try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
-                    pathStream.filter(this::filter).forEach(result::add);
+                try {
+                    // First do a quick filter by extension to improve performance
+                    try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
+                        pathStream
+                                .filter(this::filter)
+                                .forEach(result::add);
+                    }
                 } catch (IOException ignored) {}
             }).get();
 
@@ -125,10 +160,17 @@ public class ScanAudioFileWorker extends Worker {
         return result;
     }
 
+    // Only scan new or modified files
     private boolean filter(Path path) {
         try {
             String pathString = path.toString();
-            return TagReader.isSupportedFileFormat(pathString);
+            if (!TagReader.isSupportedFileFormat(pathString)) {
+                return false;
+            }
+
+            // Skip files that haven't changed since last scan
+            File file = path.toFile();
+            return file.lastModified() > lastScanTime;
         } catch (Exception e) {
             Log.e(TAG, "filter", e);
         }
@@ -144,17 +186,17 @@ public class ScanAudioFileWorker extends Worker {
         return files;
     }
 
-    public static void startScan(Context context) {
+    // One-time scan (can be full)
+    public static void startScan(Context context, boolean fullScan) {
         WorkManager.getInstance(context).cancelAllWorkByTag(WORKER_TAG);
 
         Data inputData = new Data.Builder()
-                .putBoolean("fullScan", true)
+                .putBoolean("fullScan", fullScan)
                 .build();
 
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
                 .setRequiresStorageNotLow(true)
-                // .setRequiresDeviceIdle(true)
                 .build();
 
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
@@ -164,5 +206,60 @@ public class ScanAudioFileWorker extends Worker {
                 .addTag(WORKER_TAG)
                 .build();
         WorkManager.getInstance(context).enqueue(workRequest);
+    }
+
+    // Schedule regular incremental scans
+    public static void scheduleRegularScans(Context context) {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiresStorageNotLow(true)
+                .setRequiresDeviceIdle(true)  // Only when device is idle
+                .build();
+
+        Data inputData = new Data.Builder()
+                .putBoolean("fullScan", false) // Always incremental for periodic
+                .build();
+
+        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(
+                ScanAudioFileWorker.class,
+                24, TimeUnit.HOURS)  // Run once per day
+                .setInputData(inputData)
+                .setConstraints(constraints)
+                .addTag(WORKER_TAG + "_PERIODIC")
+                .build();
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                "PERIODIC_MUSIC_SCAN",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                periodicWorkRequest);
+    }
+
+    // Dynamically adjust based on device capabilities
+    private int getOptimalThreadCount() {
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        // Use at most half of available processors, between 1-4 threads
+        return Math.max(1, Math.min(4, availableProcessors / 2));
+    }
+
+    // Adjust batch size based on available memory
+    private int getOptimalBatchSize() {
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory() / (1024 * 1024); // MB
+
+        // Scale batch size based on available memory
+        if (maxMemory > 512) return 50;
+        if (maxMemory > 256) return 30;
+        return 15;
+    }
+
+    // Determine optimal pause time based on device performance
+    private int getOptimalPauseTime() {
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory() / (1024 * 1024); // MB
+
+        // Lower-end devices need more time to recover
+        if (maxMemory < 256) return 200;
+        if (maxMemory < 512) return 150;
+        return 100;
     }
 }

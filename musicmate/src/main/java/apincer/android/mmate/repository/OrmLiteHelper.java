@@ -133,14 +133,64 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public void save(MusicTag tag)   {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            //if(dao.queryForEq("uniqueKey", tag.getUniqueKey()).isEmpty()) {
-            if(tag.id ==0) {
+            dao.createOrUpdate(tag);
+           /* if(tag.id ==0) {
                 dao.create(tag);
             }else {
                 dao.update(tag);
-            }
+            } */
         } catch (SQLException e) {
             Log.e(TAG,"save", e);
+        }
+    }
+
+    public MusicTag getByPath(String path) {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+
+            // Escape single quotes by replacing ' with ''
+            String escapedPath = escapeString(path);
+
+            // Use a direct query that only fetches lastModified
+            QueryBuilder<MusicTag, ?> qb = dao.queryBuilder();
+            qb.where().eq("path", escapedPath);
+
+            return qb.queryForFirst();
+
+           // return dao.queryForFirst(qb.prepare());
+
+
+        } catch (SQLException e) {
+            Log.e(TAG, "getByPath", e);
+            return null; // Assume outdated if we can't check
+        }
+    }
+
+    public boolean isOutdated(MusicTag tag, long lastModified) {
+        return tag == null || tag.getFileLastModified() < lastModified;
+    }
+
+    // Add batch save method
+    public void saveTagsBatch(List<MusicTag> tags) {
+        if (tags == null || tags.isEmpty()) return;
+
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+
+            // Use transaction for better performance
+            dao.callBatchTasks(() -> {
+                for (MusicTag tag : tags) {
+                    /*if (tag.id == 0) {
+                        dao.create(tag);
+                    } else {
+                        dao.update(tag);
+                    } */
+                    dao.createOrUpdate(tag);
+                }
+                return null;
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "saveTagsBatch", e);
         }
     }
 
@@ -407,44 +457,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             return builder.query();
         } catch (SQLException e) {
             Log.e(TAG, "findDuplicateSong: " + e.getMessage());
-            return EMPTY_LIST;
-        }
-    }
-
-    public List<MusicTag> findDuplicateSongOld() {
-        try {
-            List<MusicTag> list = new ArrayList<>();
-            List<MusicTag> audioTags = findMySongs(); // getAllMusicTag();
-            String title = "";
-            String artist = "";
-            MusicTag prvTag = null;
-            for (MusicTag tag : audioTags) {
-                if (StringUtils.isEmpty(title)) {
-                    title = tag.getTitle();
-                } else if ((StringUtils.similarity(title, tag.getTitle()) > Constants.MIN_TITLE)) {// ||
-                    // found similar title
-                    // check artist
-                    if ((StringUtils.similarity(artist, tag.getArtist()) > Constants.MIN_ARTIST) ||
-                            StringUtils.contains(artist, tag.getArtist())) {
-                        if (prvTag != null && !list.contains(prvTag)) {
-                            list.add(prvTag);
-                        }
-                        list.add(tag);
-                    } else {
-                        // found different artist
-                        title = tag.getTitle();
-                        artist = tag.getArtist();
-                    }
-                } else {
-                    // found different title
-                    title = tag.getTitle();
-                    artist = tag.getArtist();
-                }
-                prvTag = tag;
-            }
-            return list;
-        } catch (Exception e) {
-            Log.e(TAG,"findDuplicateSong: "+e.getMessage());
             return EMPTY_LIST;
         }
     }

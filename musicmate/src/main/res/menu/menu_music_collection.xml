@@ -20,20 +20,26 @@
     <item
         android:icon="@drawable/ic_round_library_music_24"
         android:id="@+id/menu_all_music"
-        android:title="@string/label_collections"
+        android:title="@string/label_library"
         app:showAsAction="always" />
+
+    <item
+        android:icon="@drawable/round_featured_play_list_24"
+        android:id="@+id/menu_collection"
+        android:title="@string/label_collections"
+        app:showAsAction="ifRoom" />
 
     <item
         android:icon="@drawable/rounded_equalizer_24"
         android:id="@+id/menu_encodings"
         android:title="@string/label_resolutions"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:icon="@drawable/ic_round_local_play_24"
         android:id="@+id/menu_groupings"
         android:title="@string/label_groupings"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 <!--
     <item
         android:icon="@drawable/ic_round_copyright_24"
@@ -75,11 +81,6 @@
         android:title="Media Format"
         app:showAsAction="always" />
 -->
-    <!--
-    <item
-        android:icon="@drawable/round_playlist_play_24"
-        android:id="@+id/menu_playlist"
-        android:title="Playlist"
-        app:showAsAction="always" />
--->
+
+
 </menu>

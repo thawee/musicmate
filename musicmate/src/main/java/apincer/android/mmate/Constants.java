@@ -44,7 +44,8 @@ public final class Constants {
     public static final String GROUPING_LOUNGE = "Lounge";
     public static final String GROUPING_CONTEMPORARY = "Contemporary";
 
-    public static final String TITLE_LIBRARY = "Collections";
+    public static final String TITLE_LIBRARY = "Library"; //""Collections";
+    public static final String TITLE_COLLECTIONS = "Collections";
     public static final String TITLE_RESOLUTION = "Resolutions";
     public static final String TITLE_GROUPING = "Grouping";
     public static final String TITLE_GENRE = "Genre";
@@ -52,23 +53,24 @@ public final class Constants {
     public static final String TITLE_QUALITY = "File Quality";
     public static final String TITLE_NO_COVERART = "No Embed Coverart";
 
-    public static final String TITLE_DUPLICATE = "Duplicate Song";
-    public static final String TITLE_BROKEN = "Unsatisfactory";
- //   public static final String TITLE_NO_DR_METER = "No DRMeter";
-    public static final String TITLE_TO_ANALYST_DR = "To Analyst DR";
-    public static final String TITLE_INCOMING_SONGS = "Download Songs";
-    public static final String TITLE_ALL_SONGS = "My Songs";
-    public static final String TITLE_DSD_AUDIO = "Direct Stream Digital";
+    public static final String TITLE_DUPLICATE = "Duplicates";
+    public static final String TITLE_BROKEN = "Quality Issues"; //	"Unsatisfactory"	"Needs Attention" or "Quality Issues"
+    public static final String TITLE_TO_ANALYST_DR = "Pending Analysis";
+    public static final String TITLE_INCOMING_SONGS = "Recently Added";
+    public static final String TITLE_ALL_SONGS = "All Music";
+    public static final String TITLE_DSD = "DSD Audio"; //""Direct Stream Digital";
     public static final String TITLE_HIRES = "Hi-Res Lossless";
     public static final String TITLE_HIFI_LOSSLESS = "Hi-Fi Lossless";
-    public static final String TITLE_HIGH_QUALITY = "High Quality";
-    public static final String TITLE_MASTER_AUDIO = "Master Recordings";
-    public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
+    public static final String TITLE_HIGH_QUALITY = "HQ Compressed"; //""High Quality";
+    public static final String TITLE_MASTER_AUDIO = "Studio Masters";  // Industry standard term //"Master Recordings";
+    //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
-    public static final String TITLE_PCM = "PCM";
-    public static final String TITLE_DSD = "DSD";
-    public static final String TITLE_MQA = "MQA";
-    public static final String TITLE_HQ = "HQ";
+   // public static final String TITLE_PCM = "PCM";
+   public static final String TITLE_HIRES_SHORT = "Hi-Res";
+    public static final String TITLE_HIFI_LOSSLESS_SHORT = "Hi-Fi";
+    public static final String TITLE_DSD_SHORT = "DSD";
+    public static final String TITLE_MQA_SHORT = "MQA";
+    public static final String TITLE_HIGH_QUALITY_SHORT = "HQ";
 
  //   public static final String FIELD_SEP = ";";
     public static final double MIN_TITLE = 0.80;
@@ -77,6 +79,7 @@ public final class Constants {
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
     public static final String PREF_CLEAR_CACHED = "preference_clear_cached";
+    public static final String PREF_LAST_SCAN_TIME = "LAST_SCAN_TIME_PREF";
 
     static {
         IMAGE_COVERS.add("front.png");
@@ -121,8 +124,8 @@ public final class Constants {
     public static final String MEDIA_PATH_HIFI = "Hi-Fi";
     public static final String MEDIA_PATH_HIGH_QUALITY = "HQ";
 
-    public static final String AUDIO_SQ_DSD = "DSD"; // DSD
-    public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
+    //public static final String AUDIO_SQ_DSD = "DSD"; // DSD
+    //public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
@@ -148,7 +151,7 @@ public final class Constants {
 
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
-    public static final String DEFAULT_COVERART_RES = "no_cover4.png";
+    //public static final String DEFAULT_COVERART_RES = "no_cover4.png";
     //public static final String DEFAULT_COVERART_DLNA_RES = "no_cover4.png";
     public static final String DEFAULT_COVERART_DLNA_RES = "no_cover.png";
 

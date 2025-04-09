@@ -1,5 +1,7 @@
 package apincer.android.mmate.repository;
 
+import static apincer.android.mmate.utils.Utils.runGcIfNeeded;
+
 import android.util.Log;
 
 import org.apache.commons.math3.complex.Complex;
@@ -67,7 +69,7 @@ public class MusicAnalyser {
     private boolean isMQAStudio = false;
     private long originalSampleRate;
 
-    public static boolean process(MusicTag tag) {
+    public static boolean analyse(MusicTag tag) {
         MusicAnalyser analyser = new MusicAnalyser();
         analyser.doAnalyst(tag);
         tag.setDynamicRange(analyser.getDynamicRange());
@@ -101,8 +103,11 @@ public class MusicAnalyser {
                 if (MusicTagUtils.isFLACFile(tag)) {
                     enhancedMQADetection(audioData);
                 }
-                System.out.println(tag.getPath());
-                System.out.println("DR: " + getDynamicRange() + "dB, DRS: " + getDynamicRangeScore() + ", UpScaledScore: "+getUpScaledScore()+", ReSampledScore: "+getReSampledScore()+", MQA: " + isMQA() + ", MQA Studio: " + isMQAStudio() + ", OriginalSampleRate: " + getOriginalSampleRate());
+                Log.i(TAG, tag.getPath());
+                Log.i(TAG, "DR: " + getDynamicRange() + "dB, DRS: " + getDynamicRangeScore() + ", UpScaledScore: "+getUpScaledScore()+", ReSampledScore: "+getReSampledScore()+", MQA: " + isMQA() + ", MQA Studio: " + isMQAStudio() + ", OriginalSampleRate: " + getOriginalSampleRate());
+
+                // Only run GC if memory usage is high
+                runGcIfNeeded();
             } catch (IllegalArgumentException e) {
                 Log.w(TAG, "analyst: " + e.getMessage());
             } catch (OutOfMemoryError e) {
@@ -261,7 +266,10 @@ public class MusicAnalyser {
         }
 
         // Average the DR across all channels
-        return channelCount > 0 ? totalDR / channelCount : 0.0;
+       // return channelCount > 0 ? totalDR / channelCount : 0.0;
+        double drs = channelCount > 0 ? totalDR / channelCount : 0.0;
+        // Round to 2 decimal places
+        return Math.round(drs * 100.0) / 100.0;
     }
 
     public static double calculateDynamicRange(byte[] audioData, int bitDepth) {
@@ -316,7 +324,9 @@ public class MusicAnalyser {
             dynamicRange = 20 * Math.log10(peakLevel / noiseFloor);
         }
 
-        return dynamicRange;
+       // return dynamicRange;
+        // Round to 2 decimal places
+       return Math.round(dynamicRange * 100.0) / 100.0;
     }
 
     /**
@@ -706,7 +716,9 @@ public class MusicAnalyser {
 
        // System.out.println("Upscaling detection confidence: " + upscalingConfidence);
 
-        return upscalingConfidence;
+       // return upscalingConfidence;
+        // Round to 2 decimal places
+        return Math.round(upscalingConfidence * 100.0) / 100.0;
     }
 
     private double getHighFrequencyEnergy(double[] avgSpectrum) {
@@ -929,7 +941,10 @@ public class MusicAnalyser {
 
         // A simplistic heuristic - resampled files often lack high frequency energy
 
-        return Math.max(0, 1.0 - (highFreqRatio * 8.0));
+        //return Math.max(0, 1.0 - (highFreqRatio * 8.0));
+        // Round to 2 decimal places
+        double score = Math.max(0, 1.0 - (highFreqRatio * 8.0));
+        return Math.round(score * 100.0) / 100.0;
     }
 
     // Helper method to ensure FFT input is a power of 2 length

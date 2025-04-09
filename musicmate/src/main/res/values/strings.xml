@@ -41,6 +41,16 @@
     <string name="editor_hint_disc">Disc No.</string>
 
     <!-- alert -->
+    <!-- Alert message templates -->
+    <string name="alert_template_success">"%1$s is completed successfully."</string>
+    <string name="alert_template_inprogress">"%1$s in progress…"</string>
+    <string name="alert_template_fail">"%1$s failed."</string>
+
+    <!-- Use with String.format() and R.string resources -->
+    <string name="operation_delete">Deleting \"%1$s\"</string>
+    <string name="operation_write_tag">Saving tags on \"%1$s\"</string>
+    <string name="operation_organize">Importing \"%1$s\"</string>
+
     <string name="alert_delete_success">\"%1$s\" is removed from storage.</string>
     <string name="alert_delete_inprogress">Deleting \"%1$s\"</string>
     <string name="alert_delete_fail">Cannot delete \"%1$s\"</string>
@@ -107,7 +117,7 @@
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
     <string name="import_songs_label">Import</string>
-    <string name="measure_dr_label">DRM</string>
+    <string name="measure_dr_label">DRS</string>
     <string name="edit_tags_label">TAG</string>
     <string name="delete_song_label">Delete</string>
     <string name="aspect_label">Aspect</string>
@@ -170,7 +180,7 @@
     <string name="channel_name">MusicMate</string>
     <string name="channel_description">MusicMate Notifications</string>
 
-    <string name="media_server_name">DLNA Media Server (UPnP/AV 1.0)</string>
+    <string name="media_server_name">Media Server (DLNA/UPnP-AV 1.0)</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
@@ -198,7 +208,7 @@
     <string name="label_file_resolution">Resolution:</string>
     <string name="label_file_recommended">Recommended Genre:</string>
 
-    <string name="encoding_hq_header">High Quality</string>
+    <string name="encoding_hq_header">HQ Premium Compressed</string>
     <string name="encoding_hq_desc">Optimal Balance of Data Usage and Sound Fidelity.</string>
     <string name="encoding_hq_format">MP3, AAC(M4A)</string>
     <string name="encoding_hq_resolution">16bit/44.1kHz, bitrate 256kbps or higher</string>
@@ -216,13 +226,13 @@
     <string name="encoding_hires_resolution">24bit/96kHz or Higher</string>
     <string name="encoding_hires_recommended">Classic, Jazz, Vocal, Soundtrack, Ballad</string>
 
-    <string name="encoding_dsd_header">Direct Stream Digital</string>
+    <string name="encoding_dsd_header">DSD Audio</string>
     <string name="encoding_dsd_desc">Enjoy Detailed, Wide-Range Music with a Warm Tone.</string>
     <string name="encoding_dsd_format">DSF, DFF</string>
     <string name="encoding_dsd_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
     <string name="encoding_dsd_recommended">Classic, Jazz, Vocal</string>
 
-    <string name="encoding_mqa_header">MQA Authentication</string>
+    <string name="encoding_mqa_header">MQA Studio Masters</string>
     <string name="encoding_mqa_desc">High-Quality Recordings with Studio Sound and Archival Classics.</string>
     <string name="encoding_mqa_format">FLAC</string>
     <string name="encoding_mqa_resolution">DSD 64, DSD 128, DSD 256 or Higher</string>
@@ -243,15 +253,6 @@
     <string name="storage_internal">Internal</string>
     <string name="storage_secondary">Secondary</string>
     <string name="label_version">Version</string>
-    <!-- new editor -->
-    <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
-        <item name="cornerFamily">cut</item>
-        <item name="cornerSize">12dp</item>
-    </style>
-
-    <style name="Rounded" parent="ShapeAppearance.MaterialComponents.SmallComponent">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">12dp</item>
-    </style>
+    <string name="label_library">Library</string>
 
 </resources>

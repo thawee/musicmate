@@ -217,7 +217,7 @@ public class FileOperationTask {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Evaluating");
 
-                    boolean success = MusicAnalyser.process(tag);
+                    boolean success = MusicAnalyser.analyse(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (success) {

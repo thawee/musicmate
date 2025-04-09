@@ -443,7 +443,7 @@ public class TagsEditorFragment extends Fragment {
                 List<String> list = mTagListLayout.getTags();// that will return TagModel List
                 MusicPathTagParser parser = new MusicPathTagParser();
                 MusicTag item = tagsActivity.getEditItems().get(0);
-                MusicTag mdata = item.clone();
+                MusicTag mdata = item.copy();
                 parser.parse(mdata, list);
                 title.setText(StringUtils.trimToEmpty(mdata.getTitle()));
                 artist.setText(StringUtils.trimToEmpty(mdata.getArtist()));
@@ -616,7 +616,7 @@ public class TagsEditorFragment extends Fragment {
     private void buildPendingTags(MusicTag tagUpdate) {
         if(tagUpdate.getOriginTag()==null) {
             // save original tag
-            tagUpdate.setOriginTag(tagUpdate.clone());
+            tagUpdate.setOriginTag(tagUpdate.copy());
         }
         MusicTag originTag = tagUpdate.getOriginTag();
 
@@ -660,7 +660,7 @@ public class TagsEditorFragment extends Fragment {
         CompletableFuture.runAsync(
                 () -> {
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        MusicTag mItem = tag.clone();
+                        MusicTag mItem = tag.copy();
                         tag.setOriginTag(mItem);
                         tag.setTitle(StringUtils.formatTitle(tag.getTitle()));
                         tag.setArtist(StringUtils.formatArtists(tag.getArtist()));
