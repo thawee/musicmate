@@ -22,8 +22,8 @@ import apincer.android.mmate.utils.MusicTagUtils;
 
 public class MusicAnalyser {
     private static final String TAG = "MusicAnalyser";
-    public static final String NOT_FOUND = "NF";
-    public static final String NOT_SCAN = "NS";
+    //public static final String NOT_FOUND = "NF";
+    //public static final String NOT_SCAN = "NS";
     //Scores > 0.65 strongly indicate upscaled audio (artificially increased from lower resolution)
     public static final double THRESHOLD_UPSCALED = 0.65;
     //A score of 0.70 or higher strongly indicates resampling has occurred
@@ -75,12 +75,16 @@ public class MusicAnalyser {
         tag.setDynamicRange(analyser.getDynamicRange());
         tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
         tag.setMqaSampleRate(analyser.getOriginalSampleRate());
+        tag.setResampledScore(analyser.getReSampledScore());
+        tag.setUpscaledScore(analyser.getUpScaledScore());
         if(analyser.isMQAStudio) {
             tag.setMqaInd("MQA Studio");
         }else if(analyser.isMQA) {
             tag.setMqaInd("MQA");
+        }else if (MusicTagUtils.isHiRes(tag)) {
+            tag.setMqaInd("HR");
         }else {
-            tag.setMqaInd(NOT_FOUND);
+            tag.setMqaInd("SQ");
         }
 
         return true;

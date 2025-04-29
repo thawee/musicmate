@@ -19,6 +19,7 @@ import java.util.Objects;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
 
@@ -28,8 +29,8 @@ import apincer.android.mmate.utils.MusicTagUtils;
 public class CollectionsBrowser extends AbstractContentBrowser {
   //  public static final String MY_SONGS = "All Songs";
     public static final String DOWNLOADS_SONGS = "Recently Added";
-    public static final String AUDIOPHILE_SONGS = "All Audiophile";
-    public static final String TOP50_AUDIOPHILE_ALBUMS = "Top 50 Audiophile Albums";
+    public static final String AUDIOPHILE_SONGS = "Audiophile";
+    //public static final String TOP50_AUDIOPHILE_ALBUMS = "Top50 Audiophile Albums";
 
     public static final String SMART_LIST_FINFIN_SONGS = "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป";  //"เพลงฟินๆ รินเบียร์เย็นๆ";
    // public static final String SMART_LIST_FINFIN_EN_SONGS = "ฟังเพลงสากลฟินๆ รินเบียร์เย็นๆ";
@@ -48,7 +49,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
        // playlists.add(MY_SONGS);
         playlists.add(DOWNLOADS_SONGS);
         playlists.add(AUDIOPHILE_SONGS);
-        playlists.add(TOP50_AUDIOPHILE_ALBUMS);
+      //  playlists.add(TOP50_AUDIOPHILE_ALBUMS);
         playlists.add(SMART_LIST_FINFIN_SONGS);
         playlists.add(SMART_LIST_VOCAL_SONGS);
         playlists.add(SMART_LIST_BAANTHUNG_SONGS);
@@ -56,6 +57,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
         playlists.add(SMART_LIST_ISAAN_SONGS);
         playlists.add(SMART_LIST_CLASSIC_SONGS);
         playlists.add(SMART_LIST_LOUNGE_SONGS);
+        playlists.addAll(PlaylistRepository.getPlaylistNames());
     }
     public CollectionsBrowser(Context context) {
         super(context);
@@ -83,15 +85,22 @@ public class CollectionsBrowser extends AbstractContentBrowser {
             mapped.put(pls, dir);
         }
         List<MusicTag> songs = TagRepository.getAllMusics();
-        MusicTagUtils.initPlaylist(getContext());
+        PlaylistRepository.initPlaylist(getContext());
         for(MusicTag tag: songs) {
            // Objects.requireNonNull(mapped.get(MY_SONGS)).addChildCount();
-           if(MusicTagUtils.isOnDownloadDir(tag)) {
+            if(MusicTagUtils.isOnDownloadDir(tag)) {
                Objects.requireNonNull(mapped.get(DOWNLOADS_SONGS)).addChildCount();
-           }
-            if(MusicTagUtils.isTOP50Audiophile(tag)) {
-                Objects.requireNonNull(mapped.get(TOP50_AUDIOPHILE_ALBUMS)).addChildCount();
             }
+            for (String name : PlaylistRepository.getPlaylistNames()) {
+                if(PlaylistRepository.isInAlbumPlaylist(tag, name)) {
+                    Objects.requireNonNull(mapped.get(name)).addChildCount();
+                }else if(PlaylistRepository.isInTitlePlaylist(tag, name)) {
+                    Objects.requireNonNull(mapped.get(name)).addChildCount();
+                }
+            }
+          //  if(PlaylistRepository.isInAlbumPlaylist(tag, TOP50_AUDIOPHILE_ALBUMS)) {
+          //      Objects.requireNonNull(mapped.get(TOP50_AUDIOPHILE_ALBUMS)).addChildCount();
+          //  }
             if(MusicTagUtils.isISaanPlaylist(tag)) {
                 Objects.requireNonNull(mapped.get(SMART_LIST_ISAAN_SONGS)).addChildCount();
             }

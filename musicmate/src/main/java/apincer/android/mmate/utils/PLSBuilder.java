@@ -71,7 +71,7 @@ public class PLSBuilder {
     }
 
     public static void exportPlaylists(Context context) {
-        List<MusicTag> songs = TagRepository.getAllMusics();
+        List<MusicTag> songs = TagRepository.getAllMusicsForPlaylist();
         Map<String,List<MusicTag>> mapped = new HashMap<>();
         mapped.put(DOWNLOADS_SONGS, new ArrayList<>());
         mapped.put(SMART_LIST_ISAAN_SONGS, new ArrayList<>());

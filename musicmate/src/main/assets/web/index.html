@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MusicMate Tag Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Vue.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <header>
+        <h1>MusicMate Tag Editor</h1>
+        <div class="search-container">
+            <input type="text" v-model="searchQuery" placeholder="Search music...">
+            <select v-model="searchType">
+                <option value="all">All</option>
+                <option value="title">Title</option>
+                <option value="artist">Artist</option>
+                <option value="album">Album</option>
+            </select>
+            <button @click="searchMusic">Search</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="music-list" v-if="!editMode">
+            <h2>Music Library</h2>
+            <div class="music-item" v-for="music in musicList" :key="music.id" @click="selectMusic(music)">
+                <div class="album-art">
+                    <img :src="music.albumArtUrl" alt="Album Art">
+                </div>
+                <div class="music-info">
+                    <h3>{{ music.title }}</h3>
+                    <p>{{ music.artist }}</p>
+                    <p>{{ music.album }}</p>
+                </div>
+                <div class="music-details">
+                    <p>{{ music.sampleRate }} / {{ music.bitDepth }}</p>
+                    <p v-if="music.mqaInfo">MQA: {{ music.mqaInfo }}</p>
+                    <p v-if="music.dr">DR: {{ music.dr }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="music-editor" v-if="editMode">
+            <div class="editor-header">
+                <button @click="cancelEdit">Back</button>
+                <h2>Edit Tags</h2>
+                <button @click="saveChanges" class="save-btn">Save</button>
+            </div>
+
+            <div class="editor-content">
+                <div class="album-art-large">
+                    <img :src="selectedMusic.albumArtUrl" alt="Album Art">
+                </div>
+
+                <div class="tag-editor">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" v-model="editedMusic.title">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="artist">Artist</label>
+                        <input type="text" id="artist" v-model="editedMusic.artist">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="album">Album</label>
+                        <input type="text" id="album" v-model="editedMusic.album">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genre">Genre</label>
+                        <input type="text" id="genre" v-model="editedMusic.genre">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="grouping">Grouping</label>
+                        <input type="text" id="grouping" v-model="editedMusic.grouping">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="path">File Path</label>
+                        <input type="text" id="path" v-model="editedMusic.path" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPath">Move to Directory</label>
+                        <select id="newPath" v-model="targetDirectory">
+                            <option value="">-- Select Directory --</option>
+                            <option value="music">Music</option>
+                            <option value="downloads">Downloads</option>
+                            <!-- Add more directories as needed -->
+                        </select>
+                        <button @click="moveFile" class="move-btn" :disabled="!targetDirectory">Move File</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="audio-details">
+                <h3>Audio Information</h3>
+                <p>Sample Rate: {{ selectedMusic.sampleRate }}</p>
+                <p>Bit Depth: {{ selectedMusic.bitDepth }}</p>
+                <p v-if="selectedMusic.mqaInfo">MQA: {{ selectedMusic.mqaInfo }}</p>
+                <p v-if="selectedMusic.dr">Dynamic Range: {{ selectedMusic.dr }}</p>
+                <p v-if="selectedMusic.drScore">DR Score: {{ selectedMusic.drScore }}</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" v-if="toast.visible">{{ toast.message }}</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

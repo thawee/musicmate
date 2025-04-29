@@ -28,9 +28,6 @@ public class SourcesBrowser extends AbstractContentBrowser {
 
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory, String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        // /English
-        // /Download
-        // /IMDP
         return new StorageFolder(ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), ContentDirectoryIDs.MUSIC_FOLDER.getId(), getContext().getString(R.string.directory), "mmate", getTotalMatches(contentDirectory, myId),
                 null);
     }
@@ -41,7 +38,7 @@ public class SourcesBrowser extends AbstractContentBrowser {
         List<Container> result = new ArrayList<>();
         Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
 
-        List<MusicTag> songs = TagRepository.getAllMusics();
+        List<MusicTag> songs = TagRepository.getAllMusicsForPlaylist();
         for(MusicTag tag: songs) {
             for(MusicFolder dir: rootDIRs) {
                 if(tag.getPath().startsWith(dir.getUniqueKey())) {
@@ -65,7 +62,7 @@ public class SourcesBrowser extends AbstractContentBrowser {
         List<Container> result = new ArrayList<>();
         Collection<MusicFolder> rootDIRs = TagRepository.getRootDIRs(getContext());
 
-        List<MusicTag> songs = TagRepository.getAllMusics();
+        List<MusicTag> songs = TagRepository.getAllMusicsForPlaylist();
         for(MusicTag tag: songs) {
                 for(MusicFolder dir: rootDIRs) {
                     if(tag.getPath().startsWith(dir.getUniqueKey())) {

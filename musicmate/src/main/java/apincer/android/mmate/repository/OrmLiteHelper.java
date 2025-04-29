@@ -32,6 +32,7 @@ import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.StringUtils;
 
 public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
+    public enum ORDERED_BY {ALBUM, ARTIST,TITLE}
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
@@ -79,6 +80,28 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
         } catch (java.sql.SQLException e) {
             Log.e(TAG,"onUpgrade", e);
+        }
+    }
+
+    public List<MusicTag> findMySongs(ORDERED_BY[] orderedByList)  {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            if(orderedByList != null) {
+                for(ORDERED_BY orderBy: orderedByList) {
+                    if (orderBy == ORDERED_BY.TITLE) {
+                        builder.orderByNullsFirst("title", true);
+                    }else if (orderBy == ORDERED_BY.ARTIST) {
+                        builder.orderByNullsFirst("artist", true);
+                    }else if (orderBy == ORDERED_BY.ALBUM) {
+                        builder.orderByNullsFirst("album", true);
+                    }
+                }
+            }
+          //  return dao.queryBuilder().orderBy("title", true).orderByNullsFirst("artist", true).query();
+            return builder.query();
+        } catch (SQLException e) {
+            return EMPTY_LIST;
         }
     }
 
@@ -134,11 +157,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             dao.createOrUpdate(tag);
-           /* if(tag.id ==0) {
-                dao.create(tag);
-            }else {
-                dao.update(tag);
-            } */
         } catch (SQLException e) {
             Log.e(TAG,"save", e);
         }
@@ -180,11 +198,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             // Use transaction for better performance
             dao.callBatchTasks(() -> {
                 for (MusicTag tag : tags) {
-                    /*if (tag.id == 0) {
-                        dao.create(tag);
-                    } else {
-                        dao.update(tag);
-                    } */
                     dao.createOrUpdate(tag);
                 }
                 return null;
@@ -229,11 +242,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("drScore",0)
                     .or().eq("dynamicRange", 0);
-           /* builder.where().eq("upscaledInd", IND_UPSCALED_INVALID).or()
-                    .isNull("upscaledInd").or()
-                    .eq("resampledInd", IND_RESAMPLED_INVALID).or()
-                    .isNull("resampledInd"); */
-                   // .and.notIn("audioEncoding", "aac", "mpeg");
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
@@ -245,18 +253,12 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getDao(MusicTag.class);
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-           /* builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
-                    .eq("upscaledInd", IND_UPSCALED_BAD).or()
-                    .eq("resampledInd", IND_RESAMPLED_BAD).or()
-                    .in("audioEncoding", "aac", "mpeg"); */
             builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
                     .lt("drScore", 2).or()
                     .gt("upscaledScore", THRESHOLD_UPSCALED).or()
                     .gt("resampledScore", THRESHOLD_RESAMPLED).or()
                     .in("audioEncoding", "AAC", "MPEG");
-            //  String bad = "mediaQuality = '"+Constants.QUALITY_BAD+"' ";
-         //   builder.where().raw(bad+" OR (fileSize < 5120 or (dynamicRange>0 AND (dynamicRange <= "+MIN_SPL_16BIT_IN_DB+" AND audioBitsDepth<=16) OR (dynamicRange <= "+MIN_SPL_24BIT_IN_DB+" AND audioBitsDepth >= 24))) order by title");
-           return builder.orderBy("title", true).query();
+            return builder.orderBy("title", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
@@ -616,22 +618,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public long getMaxId() {
-        long id= 0;
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.selectRaw("max(id)");
-            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            for(String[] vals : results.getResults()) {
-                id = StringUtils.toLong(vals[0]);
-            }
-        } catch (SQLException e) {
-            id =0;
-        }
-        return id;
-    }
-
     public List<MusicTag> findByIdRanges(long idRange1, long idRange2) {
         // 1000 - 1100
         try {
@@ -642,22 +628,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
-    }
-
-    public long getMinId() {
-        long id= 0;
-        try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.selectRaw("min(id)");
-            GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
-            for(String[] vals : results.getResults()) {
-                id = StringUtils.toLong(vals[0]);
-            }
-        } catch (SQLException e) {
-            id =0;
-        }
-        return id;
     }
 
     public List<MusicTag> findNoEmbedCoverArtSong() {

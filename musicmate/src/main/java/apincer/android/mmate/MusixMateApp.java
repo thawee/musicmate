@@ -40,11 +40,11 @@ import apincer.android.mmate.player.PlayerControl;
 import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
-import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.utils.FileUtils;
@@ -203,7 +203,7 @@ public class MusixMateApp extends Application {
         // Set up network monitoring
         setupNetworkMonitoring();
 
-        MusicTagUtils.initPlaylist(this);
+        PlaylistRepository.initPlaylist(this);
 
         StateViewsBuilder
                 .init(this)

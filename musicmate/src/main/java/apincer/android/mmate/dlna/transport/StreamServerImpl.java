@@ -18,14 +18,6 @@ import java.util.TimeZone;
 import apincer.android.mmate.utils.ApplicationUtils;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
-    /*public static boolean isTransCoded(MusicTag tag) {
-        String enc = tag.getAudioEncoding();
-        if(!StringUtils.isEmpty(enc)) {
-            enc = enc.toUpperCase(Locale.US);
-            return transCodeList.contains(enc);
-        }
-        return false;
-    } */
 
     abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
@@ -112,12 +104,12 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         streamServerHost = bindAddress.getHostAddress();
 
-        //this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
-        this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
+        this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
+        //this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
         this.upnpServer.initServer(bindAddress);
 
-        //this.contentServer = new JettyContentServerImpl(context, router, configuration);
-        this.contentServer = new NettyContentServerImpl(context, router, configuration);
+        this.contentServer = new JettyContentServerImpl(context, router, configuration);
+        //this.contentServer = new NettyContentServerImpl(context, router, configuration);
         this.contentServer.initServer(bindAddress);
     }
 

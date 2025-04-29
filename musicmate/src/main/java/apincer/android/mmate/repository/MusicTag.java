@@ -1,7 +1,5 @@
 package apincer.android.mmate.repository;
 
-import static apincer.android.mmate.repository.MusicAnalyser.NOT_SCAN;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -74,7 +72,7 @@ public class MusicTag {
     @DatabaseField
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
    @DatabaseField(index = true)
-   protected String mqaInd = NOT_SCAN;
+   protected String mqaInd = "SQ";
     @DatabaseField
     protected long mqaSampleRate;
     @DatabaseField

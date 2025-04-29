@@ -1,8 +1,16 @@
 package apincer.android.mmate.repository;
 
-public class MusicFolder {
+public class MusicFolder extends MusicTag {
     public MusicFolder(String name) {
+       this("FLD", name);
+    }
+
+    public MusicFolder(String type, String name) {
         this.name = name;
+        this.title = name;
+        this.uniqueKey = name;
+        this.fileType = type;
+        this.audioEncoding = type;
     }
 
     public String getName() {

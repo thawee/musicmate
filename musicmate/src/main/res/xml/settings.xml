@@ -10,11 +10,13 @@
     </PreferenceCategory>
     <PreferenceCategory
         android:summary="User Interface">
+        <!--
         <SwitchPreferenceCompat
             android:key="preference_night_mode_only"
             android:summary="Display Night mode only."
             android:title="Always on Night Mode"
             android:defaultValue="false"/>
+            -->
         <SwitchPreferenceCompat
             android:key="preference_show_storage_space"
             android:summary="Show Storage space on left menu."

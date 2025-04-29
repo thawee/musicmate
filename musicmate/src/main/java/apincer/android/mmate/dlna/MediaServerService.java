@@ -74,7 +74,6 @@ public class MediaServerService extends Service {
     // Network monitoring
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
-    private boolean isNetworkAvailable = false;
 
     // Wake lock to keep CPU running for stable streaming
     private PowerManager.WakeLock wakeLock;
@@ -83,8 +82,6 @@ public class MediaServerService extends Service {
     private ScheduledExecutorService healthChecker;
 
     public static void startMediaServer(Application application) {
-       // Intent intent = new Intent(application, MediaServerService.class);
-       // application.startForegroundService(intent);
         Log.d(TAG, "Start media server requested");
         if (INSTANCE != null && INSTANCE.isInitialized()) {
             Log.d(TAG, "Media server already running");
@@ -172,7 +169,6 @@ public class MediaServerService extends Service {
             @Override
             public void onAvailable(@NonNull Network network) {
                 //Log.d(TAG, "Network available in media server service");
-                isNetworkAvailable = true;
 
                 // Don't re-initialize if already running
                 if (!initialized || upnpService == null || mediaServerDevice == null) {
@@ -204,7 +200,6 @@ public class MediaServerService extends Service {
             @Override
             public void onLost(@NonNull Network network) {
               //  Log.d(TAG, "Network lost in media server service");
-                isNetworkAvailable = false;
 
                 // Send byebye notification when network is lost
                 if (initialized && upnpService != null && mediaServerDevice != null) {
@@ -223,9 +218,6 @@ public class MediaServerService extends Service {
         Network activeNetwork = connectivityManager.getActiveNetwork();
         if (activeNetwork != null) {
             NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
-            isNetworkAvailable = capabilities != null &&
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         }
     }
 
@@ -280,15 +272,18 @@ public class MediaServerService extends Service {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         String deviceModel = ApplicationUtils.getDeviceModel();
-        String notificationTitle = "MusicMate [" + deviceModel + "]";
+        //String notificationTitle = "MusicMate [" + deviceModel + "]";
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, MusixMateApp.NOTIFICATION_CHANNEL_ID)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle(notificationTitle)
+                //.setContentTitle(notificationTitle)
+                .setContentTitle(getApplicationContext().getString(R.string.media_server_name))
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
-                .setContentText(getApplicationContext().getString(R.string.media_server_name));
+                .setSubText(deviceModel)
+                //.setContentText(getApplicationContext().getString(R.string.media_server_name));
+                .setContentText("http://"+getIpAddress()+":"+MediaServerConfiguration.UPNP_SERVER_PORT+"/music/");
 
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
@@ -405,7 +400,7 @@ public class MediaServerService extends Service {
      *
      * @return the address or null if anything went wrong
      */
-    @Deprecated
+    @NonNull
     public static String getIpAddress() {
         String hostAddress = null;
         try {

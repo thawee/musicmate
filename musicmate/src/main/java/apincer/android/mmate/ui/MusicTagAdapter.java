@@ -124,10 +124,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_TO_ANALYST_DR);
             titles.add(Constants.TITLE_BROKEN);
-            // titles.add(Constants.TITLE_NO_COVERART);
-            // }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_SQ &&
-            //         Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
-            //    titles.add(Constants.TITLE_DSD_AUDIO);
         }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             titles.add(Constants.QUALITY_AUDIOPHILE);
             titles.add(Constants.QUALITY_RECOMMENDED);
@@ -158,17 +154,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     public String getHeaderTitle() {
         if(criteria!=null) {
             if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
-                /*if(Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_INCOMING_SONGS;
-                }else if(Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_DUPLICATE;
-                }else if(Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_BROKEN;
-                }else if(Constants.TITLE_NOT_DR.equals(criteria.getKeyword())) {
-                    return Constants.TITLE_NOT_DR;
-                }else {
-                    return Constants.TITLE_ALL_SONGS;
-                }*/
                 return isEmpty(criteria.getKeyword())?Constants.TITLE_ALL_SONGS:criteria.getKeyword();
             } else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 if (Constants.QUALITY_AUDIOPHILE.equals(criteria.getKeyword())) {
@@ -187,11 +172,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     return criteria.getKeyword();
                 }
             } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
-                //  if(Constants.AUDIO_SQ_DSD.equals(criteria.getKeyword())) {
-                //      return Constants.TITLE_DSD_AUDIO;
-                //  }else {
                 return criteria.getKeyword();
-                //  }
             } else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
                 String keyword = criteria.getKeyword();
                 if("SMART_LIST_FINFIN_SONGS".equals(keyword)) {
@@ -239,7 +220,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     }
 
     public boolean isSearchMode() {
-        //return criteria.getType() == SearchCriteria.TYPE.SEARCH;
         return criteria.isSearchMode();
     }
 
@@ -340,8 +320,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
             this.mDurationView = view.findViewById(R.id.item_duration);
-            //  this.mDynamicRange = view.findViewById(R.id.item_dr_icon);
-            // this.mDynamicRangePanel = view.findViewById(R.id.item_dr_icon_panel);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
             this.mAudioResolutionView = view.findViewById(R.id.item_resolution_icon);
@@ -450,7 +428,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // Background, when bound the first time
         MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
         boolean isListening = tag.equals(listeningItem);
-        // if(MusicTagUtils.isFLACFile(tag)) {
         holder.mAudioQuality.setVisibility(View.VISIBLE);
         ImageRequest request = new ImageRequest.Builder(holder.mContext)
                 .data(IconProviders.getTrackQualityIcon(holder.mContext, tag))
@@ -488,22 +465,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         request = CoverartFetcher.builder(holder.mContext, tag)
                 .data(tag)
                 .size(240, 240)
-                //.size(Size.ORIGINAL)
-                //.scale(Scale.FILL) // Set the scale type
-                //.crossfade(false)
                 .target(new ImageViewTarget(holder.mCoverArtView))
                 .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
-                //.placeholder(R.drawable.progress)
-                //.error(getDefaultNoCover(tag))
-                //.error(R.drawable.no_cover2)
-                //(new RoundedCornersTransformation(8, 8, 8, 8))
                 .build();
         imageLoader.enqueue(request);
 
         // show enc i.e. PCM, MQA, DSD
         request = new ImageRequest.Builder(holder.mContext)
                 .data(IconProviders.getResolutionIcon(holder.mContext, tag))
-                // .crossfade(false)
                 .target(new ImageViewTarget(holder.mAudioResolutionView))
                 .build();
         imageLoader.enqueue(request);

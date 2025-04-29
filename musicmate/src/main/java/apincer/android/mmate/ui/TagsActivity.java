@@ -195,11 +195,13 @@ public class TagsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        /*
         if(Settings.isOnNightModeOnly(getApplicationContext())) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
-        }
+        } */
         super.onCreate(savedInstanceState);
 
         // set status bar color to black
@@ -914,9 +916,9 @@ public class TagsActivity extends AppCompatActivity {
                 progressLabel = v.findViewById(R.id.process_label);
 
                 // Get the animation view
-                LottieAnimationView animationView = v.findViewById(R.id.lottie_animation);
+                //LottieAnimationView animationView = v.findViewById(R.id.lottie_animation);
                 // Ensure animation is playing
-                animationView.playAnimation();
+               // animationView.playAnimation();
 
                 dialogBuilder.setView(v);
                 dialogBuilder.setCancelable(true);

@@ -5,15 +5,8 @@ import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
-import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
@@ -23,56 +16,6 @@ import apincer.android.mmate.repository.MusicTag;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
-    private static final Map<String,String> top50Audiophile = new HashMap<>();
-
-    public static void initPlaylist(Context context) {
-        if(top50Audiophile.isEmpty()) {
-            // load from resources
-            InputStream in = ApplicationUtils.getAssetsAsStream(context, "playlist_top50_audiophile.txt");
-
-            // while each line, not start with # and not empty
-            // put to top50Audiophile with "album|artist|year" as key
-            if (in != null) {
-                try {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                    String line;
-
-                    // while each line, not start with # and not empty
-                    while ((line = reader.readLine()) != null) {
-                        line = line.trim();
-                        if (!line.isEmpty() && !line.startsWith("#")) {
-                            // Parse the line
-                            String[] parts = line.split("\\|");
-                            if (parts.length >= 4) {
-                                String album = parts[0].trim();
-                                String artist = parts[1].trim();
-                                String year = parts[2].trim();
-                                String description = parts[3].trim();
-
-                                // Create the key in format "album|artist|year"
-                                String key = album + "|" + artist + "|" + year;
-
-                                // Put to top50Audiophile with "album|artist|year" as key
-                                top50Audiophile.put(key, description);
-                            }
-                        }
-                    }
-                    reader.close();
-                    Log.d("PlaylistManager", "Loaded " + top50Audiophile.size() + " audiophile albums");
-                } catch (IOException e) {
-                    Log.e("PlaylistManager", "Error reading playlist file", e);
-                } finally {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        Log.e("PlaylistManager", "Error closing input stream", e);
-                    }
-                }
-            } else {
-                Log.e("PlaylistManager", "Could not find playlist_top50_audiophile.txt in assets");
-            }
-        }
-    }
 
     public static String getBPSAndSampleRate(MusicTag tag) {
         long sampleRate = tag.getAudioSampleRate();
@@ -136,6 +79,10 @@ public class MusicTagUtils {
 
     public static boolean isPCM24Bits(MusicTag tag) {
         return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD));
+    }
+
+    public static boolean isPCM(MusicTag tag) {
+        return ( !isLossy(tag) && (tag.getAudioBitsDepth() >= 16));
     }
 
     public static boolean isDSD(MusicTag tag) {
@@ -407,48 +354,5 @@ public class MusicTagUtils {
                 path.endsWith(".flac") || path.endsWith(".alac") || path.endsWith(".aiff") ||
                 path.endsWith(".wav") || path.endsWith(".dsd") || path.endsWith(".dff") ||
                 path.endsWith(".dsf");
-    }
-
-    public static boolean isTOP50Audiophile(MusicTag tag) {
-        if (tag == null) {
-            return false;
-        }
-
-        // Extract relevant information from the tag
-        String album = tag.getAlbum();
-        String artist = tag.getArtist();
-        String year = tag.getYear();
-
-        // Check if any of the required fields are missing
-        if (isEmpty(album) || isEmpty(artist)) {
-            return false;
-        }
-
-        // Normalize the data (optional but recommended)
-        album = album.trim();
-        artist = artist.trim();
-
-        // Create the key in the format "album|artist|year"
-        String key = album + "|" + artist + "|" + year;
-
-        // Check if the key exists in the top50Audiophile map
-        boolean isInTop50 = top50Audiophile.containsKey(key);
-
-        // If not found, try a less strict match (without year)
-        if (!isInTop50 && !isEmpty(year)) {
-            // Try matching without the year
-            String keyWithoutYear = album + "|" + artist + "|";
-
-            // Check for any key that starts with this prefix
-            for (String existingKey : top50Audiophile.keySet()) {
-                if (existingKey.startsWith(keyWithoutYear)) {
-                    isInTop50 = true;
-                    break;
-                }
-            }
-        }
-
-        // Return the result
-        return isInTop50;
     }
 }

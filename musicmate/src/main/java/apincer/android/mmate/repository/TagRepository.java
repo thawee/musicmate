@@ -9,7 +9,6 @@ import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_I
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_LOUNGE_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS;
 import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_VOCAL_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.TOP50_AUDIOPHILE_ALBUMS;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -227,7 +226,7 @@ public class TagRepository {
         if(criteria.getType() == SearchCriteria.TYPE.COLLECTIONS) {
             List<MusicTag> results = new ArrayList<>();
             if(criteria.keyword != null) {
-                List<MusicTag> list = MusixMateApp.getInstance().getOrmLite().findMySongs();
+                List<MusicTag> list =  TagRepository.getAllMusicsForPlaylist(); //MusixMateApp.getInstance().getOrmLite().findMySongs();
                 String name = criteria.keyword;
                 for(MusicTag tag: list) {
                     if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
@@ -248,23 +247,27 @@ public class TagRepository {
                         results.add(tag);
                     }else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
                         results.add(tag);
-                    }else if (CollectionsBrowser.TOP50_AUDIOPHILE_ALBUMS.equals(name) && MusicTagUtils.isTOP50Audiophile(tag)) {
+                    }else if(PlaylistRepository.isInAlbumPlaylist(tag, name)) {
                         results.add(tag);
-                   // }else {
-                   //     results.add(tag);
+                    }else if(PlaylistRepository.isInTitlePlaylist(tag, name)) {
+                        results.add(tag);
                     }
                 }
             }else {
-                results.add(buildMusicTagPlaylist(AUDIOPHILE_SONGS, "All Audiophile Songs"));
-                results.add(buildMusicTagPlaylist(TOP50_AUDIOPHILE_ALBUMS, "Top 50 Audiophile Albums"));
-                results.add(buildMusicTagPlaylist(SMART_LIST_FINFIN_SONGS, "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป"));  //"เพลงฟินๆ รินเบียร์เย็นๆ";
-                results.add(buildMusicTagPlaylist(SMART_LIST_VOCAL_SONGS, "เสียงใสๆ สกิดใจวัยรุ่น"));
-                results.add(buildMusicTagPlaylist(SMART_LIST_ISAAN_SONGS, "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ")); //"สะออนแฮง สำเนียงเสียงลำ";
-                results.add(buildMusicTagPlaylist(SMART_LIST_BAANTHUNG_SONGS, "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง")); // "คิดถึง บ้านทุ่งท้องนา";
-                results.add(buildMusicTagPlaylist(SMART_LIST_TRADITIONAL_SONGS, "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ"));
-                results.add(buildMusicTagPlaylist(SMART_LIST_CLASSIC_SONGS, "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ")); //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
-                results.add(buildMusicTagPlaylist(SMART_LIST_LOUNGE_SONGS, "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์"));
+                int index = 1;
+                results.add(buildMusicTagPlaylist(index++, AUDIOPHILE_SONGS, "Audiophile Songs"));
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_FINFIN_SONGS, "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป"));  //"เพลงฟินๆ รินเบียร์เย็นๆ";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_VOCAL_SONGS, "เสียงใสๆ สกิดใจวัยรุ่น"));
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_ISAAN_SONGS, "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ")); //"สะออนแฮง สำเนียงเสียงลำ";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_BAANTHUNG_SONGS, "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง")); // "คิดถึง บ้านทุ่งท้องนา";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_TRADITIONAL_SONGS, "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ"));
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_CLASSIC_SONGS, "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ")); //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_LOUNGE_SONGS, "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์"));
 
+                for(String name: PlaylistRepository.getPlaylistNames()) {
+                    results.add(buildMusicTagPlaylist(index++, name, name));
+                }
+                Collections.sort(results, (musicTag, t1) -> musicTag.getTitle().compareTo(t1.getTitle()));
             }
             return results;
         }else {
@@ -277,14 +280,9 @@ public class TagRepository {
         }
     }
 
-    private static MusicTag buildMusicTagPlaylist(String key, String title) {
-        MusicTag tag = new MusicTag();
-        tag.setId(-1);
-        tag.setMusicManaged(true);
-        tag.setAudioEncoding("PLS");
-        tag.setFileType("PLS");
-        tag.setTitle(title);
-        tag.setUniqueKey(key);
+    private static MusicFolder buildMusicTagPlaylist(int index, String key, String title) {
+        MusicFolder tag = new MusicFolder("PLS", title);
+        tag.setId(10000+index);
         return tag;
     }
 
@@ -362,6 +360,11 @@ public class TagRepository {
         return MusixMateApp.getInstance().getOrmLite().findMySongs();
     }
 
+    public static List<MusicTag> getAllMusicsForPlaylist() {
+        OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.ARTIST, OrmLiteHelper.ORDERED_BY.ALBUM};
+        return MusixMateApp.getInstance().getOrmLite().findMySongs(aristAlbum);
+    }
+
     public static List<String> getDefaultPublisherList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = MusixMateApp.getInstance().getOrmLite().getPublishers();
@@ -398,20 +401,6 @@ public class TagRepository {
         return list;
     }
 
-    public static boolean cleanOutdatedMusicTag(String mediaPath, long lastModified) {
-        // clean all existing outdated tag in database
-        List<MusicTag> tags = findByPath(mediaPath);
-        if(tags ==null || tags.isEmpty()) return true;
-        boolean toRead = false;
-        for (MusicTag tag : tags) {
-            if((lastModified < 0) || tag.getFileLastModified() < lastModified) {
-                removeTag(tag);
-                toRead = true;
-            }
-        }
-        return toRead;
-    }
-
     public static void load(MusicTag tag) {
         MusicTag newTag = MusixMateApp.getInstance().getOrmLite().findById(tag.getId());
         if(newTag !=null) {
@@ -422,14 +411,6 @@ public class TagRepository {
     @Deprecated
     public static List<MusicTag> getMusicTags(Context context, String grouping, String artist) {
         return MusixMateApp.getInstance().getOrmLite().findByGroupingAndArtist(grouping, artist);
-    }
-
-    public static long getMaxId() {
-        return MusixMateApp.getInstance().getOrmLite().getMaxId();
-    }
-
-    public static long getMinId() {
-        return MusixMateApp.getInstance().getOrmLite().getMinId();
     }
 
     @Deprecated

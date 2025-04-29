@@ -164,11 +164,16 @@
         <item>Thai Pop, Dance</item>
         <item>Thai Pop, Vocal</item>
         <item>Thai Rock</item>
+        <!--
         <item>Thai Folk</item>
+        -->
         <item>Thai Jazz</item>
         <item>Kantrum</item>
+        <item>Kam Mueang</item>
         <item>Luk Thung</item>
+        <item>Luk Krung</item>
         <item>Mor Lum</item>
+        <item>Phuea Chiwit</item>
 
         <item>Indonesia</item>
     </string-array>

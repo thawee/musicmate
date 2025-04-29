@@ -10,11 +10,11 @@ import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.PlaylistRepository;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
 
 public class CollectionFolderBrowser extends AbstractContentBrowser {
@@ -40,7 +40,7 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
        //     return MusixMateApp.getInstance().getOrmLite().findMySongs();
        // }
         List<MusicTag> results = new ArrayList<>();
-        List<MusicTag> list = MusixMateApp.getInstance().getOrmLite().findMySongs();
+        List<MusicTag> list = TagRepository.getAllMusicsForPlaylist(); // MusixMateApp.getInstance().getOrmLite().findMySongs();
         for(MusicTag tag: list) {
             if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
                 results.add(tag);
@@ -60,7 +60,9 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
                 results.add(tag);
             }else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
                 results.add(tag);
-            }else if (CollectionsBrowser.TOP50_AUDIOPHILE_ALBUMS.equals(name) && MusicTagUtils.isTOP50Audiophile(tag)) {
+            }else if (PlaylistRepository.isInAlbumPlaylist(tag,name)) {
+                results.add(tag);
+            }else if (PlaylistRepository.isInTitlePlaylist(tag,name)) {
                 results.add(tag);
             }
         }
@@ -80,7 +82,7 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         List<MusicTrack> result = new ArrayList<>();
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
         List<MusicTag> tags = getItems(contentDirectory, name);
-        int currentCount = 0;
+        //int currentCount = 0;
         for(MusicTag tag: tags) {
            // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
@@ -89,7 +91,7 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
             //if(!forceFullContent)  currentCount++;
             //currentCount++;
         }
-        result.sort(Comparator.comparing(DIDLObject::getTitle));
+        //result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
     }
 }

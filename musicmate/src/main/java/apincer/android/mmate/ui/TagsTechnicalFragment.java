@@ -58,7 +58,7 @@ public class TagsTechnicalFragment extends Fragment {
             if(item.getItemId() == R.id.menu_editor_tech_refresh) {
                // doReloadTagFromFile();
                 doResetTagFromFile();
-                getActivity().finish();
+                //getActivity().finish();
             }else if(item.getItemId() == R.id.menu_editor_tech_extract_coverart) {
                 doExtractEmbedCoverart();
             }if(item.getItemId() == R.id.menu_editor_tech_remove_coverart) {
@@ -69,36 +69,6 @@ public class TagsTechnicalFragment extends Fragment {
             return false;
         };
     }
-
-    /*
-    private void doUpdateReplayGain() {
-        // calculate RG
-        // update RG on files
-        startProgressBar();
-        CompletableFuture.runAsync(
-                () -> {
-                   for(MusicTag tag:tagsActivity.getEditItems()) {
-                        //calculate track RG
-                        FFMPeg.detectQuality(tag);
-                    }
-
-                    // save RG to media file
-                    for(MusicTag tag:tagsActivity.getEditItems()) {
-                        //write RG to file
-                        FFMPeg.writeTagQualityToFile(getActivity(), tag);
-                        // update MusicMate Library
-                        MusicTagRepository.saveTag(tag);
-                    }
-                }
-        ).thenAccept(
-                unused -> stopProgressBar()
-        ).exceptionally(
-                throwable -> {
-                    stopProgressBar();
-                    return null;
-                }
-        );
-    } */
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -192,7 +162,7 @@ public class TagsTechnicalFragment extends Fragment {
             t1v.setText(field.getName());
             //t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
             t1v.setTextColor(StringUtils.equals(stdVal, ffmpegVal)?Color.WHITE:Color.RED);
-            t1v.setGravity(Gravity.LEFT);
+            t1v.setGravity(Gravity.START);
             t1v.setPadding(24,0,0,0);
             cell.addView(t1v);
             tr.addView(cell);
@@ -263,27 +233,6 @@ public class TagsTechnicalFragment extends Fragment {
                             coverArtPath = path.substring(0, path.lastIndexOf("."))+"."+coverArtPath;
                             FFMpegHelper.extractCoverArt(tag, new File(coverArtPath));
                        // }
-                    }
-                }
-        ).thenAccept(
-                unused -> stopProgressBar()
-        ).exceptionally(
-                throwable -> {
-                    stopProgressBar();
-                    return null;
-                }
-        );
-    }
-
-
-    private void doReloadTagFromFile() {
-        startProgressBar();
-        CompletableFuture.runAsync(
-                () -> {
-                    FileRepository repos = FileRepository.newInstance(getContext());
-                    for(MusicTag tag:tagsActivity.getEditItems()) {
-                        repos.cleanCacheCover(getContext(), tag);
-                        repos.scanMusicFile(new File(tag.getPath()), true);
                     }
                 }
         ).thenAccept(

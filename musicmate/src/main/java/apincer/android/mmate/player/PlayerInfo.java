@@ -4,10 +4,19 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
 public class PlayerInfo {
+    public void setClientAddress(String clientIp) {
+    }
+
     public enum TYPE{LOCAL,DLNA}
     private final TYPE playerType;
      public String playerPackage;
      public String playerName;
+     String clientIp;
+
+    public String setClientAddress() {
+        return clientIp;
+    }
+
     private final long time;
 
     public static PlayerInfo buildStreamPlayer(String playerName, Drawable playerIconDrawable) {
