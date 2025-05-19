@@ -397,9 +397,9 @@ public class JThinkReader extends TagReader{
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
                 metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
-                if(tag.getFirstArtwork() != null) {
-                    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
-                }
+                //if(tag.getFirstArtwork() != null) {
+                //    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
+                //}
 
                 // read replay gain fields
                 Map<String, String> tags = parseCustomTagFields(tag);

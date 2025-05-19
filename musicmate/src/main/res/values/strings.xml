@@ -161,7 +161,7 @@
     <string name="label_genres">Genres</string>
     <string name="label_groupings">Groupings</string>
     <string name="downloaded">Downloads</string>
-    <string name="directory">Music Sources</string>
+    <string name="directory">Sources</string>
 
     <string name="music">Music</string>
     <string name="playerNameAvTransport">remote</string>
@@ -190,8 +190,8 @@
     <string name="label_encodings">Encodings</string>
     <string name="label_quality_indicator">Quality Indicator</string>
     <string name="label_server">Media Server</string>
-    <string name="label_collections">Collections</string>
-    <string name="label_dlna_collections">Music Collections</string>
+    <string name="label_collections">Playlists</string>
+    <string name="label_dlna_collections">Playlists</string>
     <string name="label_field">Field</string>
     <string name="label_current">Current</string>
     <string name="label_default_reader">Default Reader</string>
@@ -203,7 +203,7 @@
     <string name="label_hi_res">Hi-Res</string>
     <string name="label_dsd">DSD</string>
     <string name="label_mqa">MQA</string>
-    <string name="label_audio_encoding_format">Music Encodings</string>
+    <string name="label_audio_encoding_format">Resolutions</string>
     <string name="label_file_format">File Format:</string>
     <string name="label_file_resolution">Resolution:</string>
     <string name="label_file_recommended">Recommended Genre:</string>
@@ -254,5 +254,6 @@
     <string name="storage_secondary">Secondary</string>
     <string name="label_version">Version</string>
     <string name="label_library">Library</string>
+    <string name="enter_custom_text">Enter custom text</string>
 
 </resources>

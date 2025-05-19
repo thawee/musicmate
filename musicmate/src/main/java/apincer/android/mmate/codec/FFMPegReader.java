@@ -576,7 +576,7 @@ public static class Loudness {
         // Stream #0:0[0x1](eng): Audio:
         // Stream #0:1[0x0]: Video:
         Pattern audioPattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Audio):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
-        Pattern videoPattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Video):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
+       // Pattern videoPattern = Pattern.compile("(?m)^\\s*Stream.*?(?:Video):\\s*([\\s\\S]*?)(?=^\\s*Metadata:|\\Z)");
         Matcher matcher = audioPattern.matcher(output) ;//tag.getData());
         if (matcher.find()) {
             String info = matcher.group(1);
@@ -588,6 +588,7 @@ public static class Loudness {
             tag.setAudioBitsDepth(parseBitDepth(tags));
         }
 
+        /*
         matcher = videoPattern.matcher(output); //tag.getData());
         if (matcher.find()) {
             String info = matcher.group(1);
@@ -596,7 +597,7 @@ public static class Loudness {
             tag.setCoverartMime(getWord(info,",",0));
         }else {
             tag.setCoverartMime("");
-        }
+        } */
     }
 
     private static int parseBitDepth(String[] tags) {

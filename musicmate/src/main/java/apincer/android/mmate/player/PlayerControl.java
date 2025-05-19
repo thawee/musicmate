@@ -34,9 +34,9 @@ public class PlayerControl {
         public static final String NE_PLAYER_LITE_PACK_NAME = "jp.co.radius.neplayer_lite_an";
         public static final String NEUTRON_MUSIC_PACK_NAME = "com.neutroncode.mp";
         public static final String UAPP_PACK_NAME = "com.extreamsd.usbaudioplayerpro";
-        public static final String EDDICTPLAYER_PACK_NAME = "com.shanling.eddictplayer";
+       // public static final String EDDICTPLAYER_PACK_NAME = "com.shanling.eddictplayer";
         public static final String FOOBAR2000="com.foobar2000.foobar2000";
-        public static final String POWERAMP = "com.maxmpz.audioplayer";
+        public static final String POWERAMP_PACK_NAME = "com.maxmpz.audioplayer";
         //public static final String SONY_MUSIC = "com.sonyericson.music";
     }
 
@@ -169,7 +169,7 @@ public class PlayerControl {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             audioManager.dispatchMediaKeyEvent(event);
-        }else if(PlayerPackageNames.POWERAMP.equals(playerInfo.playerPackage)) {
+        }else if(PlayerPackageNames.POWERAMP_PACK_NAME.equals(playerInfo.playerPackage)) {
             // call PowerAmp API
             //PowerampAPIHelper.startPAService(this, new Intent(PowerampAPI.ACTION_API_COMMAND).putExtra(PowerampAPI.COMMAND, PowerampAPI.Commands.NEXT));
             Intent intent = new Intent(PAAPI_ACTION_API_COMMAND).putExtra(PAAPI_COMMAND, PAAPI_COMMAND_NEXT);
@@ -188,11 +188,11 @@ public class PlayerControl {
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (PlayerPackageNames.EDDICTPLAYER_PACK_NAME.equals(playerInfo.playerPackage)) {
+       /* }else if (PlayerPackageNames.EDDICTPLAYER_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-            audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
+            audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0)); */
         }else if (PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);

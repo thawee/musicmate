@@ -35,7 +35,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -55,7 +54,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.notification.AudioTagEditEvent;
@@ -196,12 +194,6 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        /*
-        if(Settings.isOnNightModeOnly(getApplicationContext())) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
-        } */
         super.onCreate(savedInstanceState);
 
         // set status bar color to black

@@ -47,7 +47,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
     public static final List<String> playlists = new ArrayList<>();
     static {
        // playlists.add(MY_SONGS);
-        playlists.add(DOWNLOADS_SONGS);
+       // playlists.add(DOWNLOADS_SONGS);
         playlists.add(AUDIOPHILE_SONGS);
       //  playlists.add(TOP50_AUDIOPHILE_ALBUMS);
         playlists.add(SMART_LIST_FINFIN_SONGS);
@@ -88,9 +88,9 @@ public class CollectionsBrowser extends AbstractContentBrowser {
         PlaylistRepository.initPlaylist(getContext());
         for(MusicTag tag: songs) {
            // Objects.requireNonNull(mapped.get(MY_SONGS)).addChildCount();
-            if(MusicTagUtils.isOnDownloadDir(tag)) {
-               Objects.requireNonNull(mapped.get(DOWNLOADS_SONGS)).addChildCount();
-            }
+           // if(MusicTagUtils.isOnDownloadDir(tag)) {
+           //    Objects.requireNonNull(mapped.get(DOWNLOADS_SONGS)).addChildCount();
+           // }
             for (String name : PlaylistRepository.getPlaylistNames()) {
                 if(PlaylistRepository.isInAlbumPlaylist(tag, name)) {
                     Objects.requireNonNull(mapped.get(name)).addChildCount();

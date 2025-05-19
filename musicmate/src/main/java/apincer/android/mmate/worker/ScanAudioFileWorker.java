@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.Settings;
@@ -36,19 +35,15 @@ public class ScanAudioFileWorker extends Worker {
     private static final String WORKER_TAG = "apincer.android.mmate.work.ScanAudioFileWorker";
     private static final String LAST_SCAN_TIME_PREF = "last_music_scan_time";
 
-    //private static final int MAX_THREADS = 2; // Limit to 2 working threads
-    //private static final int BATCH_SIZE = 30; // Smaller batch size to reduce memory pressure
-    //private static final int PAUSE_BETWEEN_BATCHES_MS = 100; // Reduce CPU pressure
-
     // These values will be determined dynamically
-    private int optimalThreadCount;
-    private int optimalBatchSize;
-    private int pauseBetweenBatchesMs;
+    private final int optimalThreadCount;
+    private final int optimalBatchSize;
+    private final int pauseBetweenBatchesMs;
 
     static final long SCAN_SCHEDULE_TIME = 5;
     private final FileRepository repos;
 
-    private boolean isFullScan;
+   // private boolean isFullScan;
     private long lastScanTime = 0;
 
     public ScanAudioFileWorker(
@@ -63,7 +58,7 @@ public class ScanAudioFileWorker extends Worker {
         pauseBetweenBatchesMs = getOptimalPauseTime();
 
         // Get scan mode (full or incremental)
-        isFullScan = parameters.getInputData().getBoolean("fullScan", false);
+       // isFullScan = parameters.getInputData().getBoolean("fullScan", false);
 
         // Get last scan time for incremental scan
         lastScanTime = Settings.getLastScanTime(context);
@@ -72,13 +67,13 @@ public class ScanAudioFileWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        int processedFiles = 0;
+        int processedFiles;
 
         try {
             // Only clean database on full scan
-            if (isFullScan) {
+           // if (isFullScan) {
                 TagRepository.cleanMusicMate();
-            }
+           // }
 
             List<File> list = pathList(getApplicationContext());
             List<Path> allPaths = new ArrayList<>();
@@ -187,12 +182,8 @@ public class ScanAudioFileWorker extends Worker {
     }
 
     // One-time scan (can be full)
-    public static void startScan(Context context, boolean fullScan) {
+    public static void startScan(Context context) {
         WorkManager.getInstance(context).cancelAllWorkByTag(WORKER_TAG);
-
-        Data inputData = new Data.Builder()
-                .putBoolean("fullScan", fullScan)
-                .build();
 
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
@@ -200,7 +191,7 @@ public class ScanAudioFileWorker extends Worker {
                 .build();
 
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ScanAudioFileWorker.class)
-                .setInputData(inputData)
+               // .setInputData(inputData)
                 .setInitialDelay(SCAN_SCHEDULE_TIME, TimeUnit.SECONDS)
                 .setConstraints(constraints)
                 .addTag(WORKER_TAG)
@@ -216,14 +207,10 @@ public class ScanAudioFileWorker extends Worker {
                 .setRequiresDeviceIdle(true)  // Only when device is idle
                 .build();
 
-        Data inputData = new Data.Builder()
-                .putBoolean("fullScan", false) // Always incremental for periodic
-                .build();
-
         PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(
                 ScanAudioFileWorker.class,
                 24, TimeUnit.HOURS)  // Run once per day
-                .setInputData(inputData)
+               // .setInputData(inputData)
                 .setConstraints(constraints)
                 .addTag(WORKER_TAG + "_PERIODIC")
                 .build();

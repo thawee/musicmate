@@ -26,7 +26,7 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
     @Override
     public DIDLObject browseMeta(ContentDirectory contentDirectory,
                                  String myId, long firstResult, long maxResults, SortCriterion[] orderby) {
-        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), myId, "mmate", getTotalMatches(
+        return new StorageFolder(myId, ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX), "mmate", getTotalMatches(
                 contentDirectory, myId), null);
     }
 

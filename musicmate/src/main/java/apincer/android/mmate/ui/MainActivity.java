@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui;
 
+import static android.view.View.VISIBLE;
 import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.TITLE_GENRE;
@@ -177,11 +178,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-       /* if (Settings.isOnNightModeOnly(getApplicationContext())) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        } */
         super.onCreate(savedInstanceState);
 
         // Start music scan
@@ -906,9 +902,10 @@ public class MainActivity extends AppCompatActivity {
 
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
+            Settings.setLastScanTime(getApplicationContext(), 0);
             // start scan after setting dirs
             Log.i(TAG, "Starting scan music file for first time.");
-            ScanAudioFileWorker.startScan(getApplicationContext(), false);
+            ScanAudioFileWorker.startScan(getApplicationContext());
             alert.dismiss();
         });
 
@@ -1397,7 +1394,6 @@ public class MainActivity extends AppCompatActivity {
             IconSpinnerItem item = iconSpinnerItems.get(encodingList.getSelectedIndex());
             if (FLAC_OPTIMAL.contentEquals(item.getText())) {
                 targetExt = FILE_FLAC;
-                compressionLevel = FLAC_OPTIMAL_COMPRESS_LEVEL;
             } else if (FLAC_LEVEL_0.contentEquals(item.getText())) {
                 targetExt = FILE_FLAC;
                 compressionLevel = FLAC_NO_COMPRESS_LEVEL;
@@ -1497,7 +1493,7 @@ public class MainActivity extends AppCompatActivity {
         public void onDestroyActionMode(ActionMode mode) {
             mTracker.clearSelection();
             actionMode = null;
-            mHeaderPanel.setVisibility(View.VISIBLE);
+            mHeaderPanel.setVisibility(VISIBLE);
         }
 
         private List<MusicTag> getSelections() {
@@ -1581,6 +1577,10 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            if(nowPlayingView.getVisibility() == VISIBLE && song.equals(currentlyPlaying)) {
+                return;
+            }
+
             currentlyPlaying = song;
 
             // Load cover art
@@ -1603,18 +1603,19 @@ public class MainActivity extends AppCompatActivity {
             MusicMateExecutors.executeUI(() -> {
                 if (player != null) {
                     if (player.isStreamPlayer()) {
-                        outputDeviceImageView.setVisibility(View.VISIBLE);
+                        outputDeviceImageView.setVisibility(VISIBLE);
                         outputDeviceImageView.setImageBitmap(
                                 AudioOutputHelper.getOutputDeviceIcon(
                                         context,
+                                        true,
                                         AudioOutputHelper.getDLNADevice(song)
                                 )
                         );
                     } else {
-                        outputDeviceImageView.setVisibility(View.VISIBLE);
+                        outputDeviceImageView.setVisibility(VISIBLE);
                         AudioOutputHelper.getOutputDevice(context, device ->
                                 outputDeviceImageView.setImageBitmap(
-                                        AudioOutputHelper.getOutputDeviceIcon(context, device)
+                                        AudioOutputHelper.getOutputDeviceIcon(context, false,device)
                                 )
                         );
                     }
@@ -1629,12 +1630,12 @@ public class MainActivity extends AppCompatActivity {
                                 .setListener(new Animator.AnimatorListener() {
                                     @Override
                                     public void onAnimationStart(@NonNull Animator animator) {
-                                        nowPlayingView.setVisibility(View.VISIBLE);
+                                        nowPlayingView.setVisibility(VISIBLE);
                                     }
 
                                     @Override
                                     public void onAnimationEnd(@NonNull Animator animator) {
-                                        nowPlayingView.setVisibility(View.VISIBLE);
+                                        nowPlayingView.setVisibility(VISIBLE);
                                     }
 
                                     @Override

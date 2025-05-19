@@ -44,7 +44,7 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyContentServer";
 
     // Optimized server configuration for audiophile streaming
-    private static final int OUTPUT_BUFFER_SIZE = 262144; // 256KB for better high-res streaming
+    private static final int OUTPUT_BUFFER_SIZE = 262144; // 262144 - 256KB for better high-res streaming
     private static final int MAX_THREADS = 8; //30;
     private static final int MIN_THREADS = 2; //6;
     private static final int IDLE_TIMEOUT = 120000; // 2 minutes
@@ -215,7 +215,7 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                         MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
 
                         // Adjust buffer size based on audio format before preparing content
-                        adjustBufferSizeForContent(tag);
+                       // adjustBufferSizeForContent(tag);
 
                         // Prepare content
                         content = getResourceService().getContent(tag.getPath(), request);
@@ -276,31 +276,6 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
         }
 
         /**
-         * Adjust the server's buffer size based on the content being streamed
-         */
-        private void adjustBufferSizeForContent(MusicTag tag) {
-            // Get optimal buffer size for this content
-            int optimalSize = calculateOptimalBufferSize(tag);
-
-            // Get the HTTP configuration from the connector
-            if (server != null && server.getConnectors() != null && server.getConnectors().length > 0) {
-                ServerConnector connector = (ServerConnector) server.getConnectors()[0];
-                HttpConnectionFactory connectionFactory = connector.getConnectionFactory(HttpConnectionFactory.class);
-
-                if (connectionFactory != null) {
-                    HttpConfiguration httpConfig = connectionFactory.getHttpConfiguration();
-
-                    // Only adjust if needed
-                    if (httpConfig.getOutputBufferSize() != optimalSize) {
-                        httpConfig.setOutputBufferSize(optimalSize);
-                        Log.d(TAG, "Adjusted buffer size to " + optimalSize + " bytes for " +
-                                formatAudioQuality(tag));
-                    }
-                }
-            }
-        }
-
-        /**
          * Add DLNA-specific headers for optimal client compatibility
          */
         private void addDlnaHeaders(Response response, MusicTag tag) {
@@ -340,7 +315,7 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
             response.getHeaders().put("X-Audio-Format", tag.getFileType());
 
             // Add quality indicator
-            response.getHeaders().put("X-Audio-Quality", formatAudioQuality(tag));
+          //  response.getHeaders().put("X-Audio-Quality", formatAudioQuality(tag));
         }
 
         /**
@@ -379,20 +354,6 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
             }
 
             return quality.toString();
-        }
-    }
-
-    /**
-     * Adaptive buffer size management for different audio formats
-     */
-    private int calculateOptimalBufferSize(MusicTag tag) {
-        // For high-resolution audio, use larger buffers
-        if (tag.getAudioSampleRate() >= 88200 || tag.getAudioBitsDepth() >= 24) {
-            return 524288; // 512KB for hi-res audio
-        } else if (tag.getAudioSampleRate() >= 44100 && tag.getAudioBitsDepth() >= 16) {
-            return 262144; // 256KB for CD quality
-        } else {
-            return OUTPUT_BUFFER_SIZE; // Default buffer size
         }
     }
 

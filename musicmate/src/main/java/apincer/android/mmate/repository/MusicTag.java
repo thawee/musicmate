@@ -118,14 +118,8 @@ public class MusicTag {
   //  @Index
   @DatabaseField(index = true)
   protected String publisher = "";
-    @DatabaseField
-    protected String coverartMime = "";
 
     // loudness and gain
-   // @DatabaseField
-   // protected double gainTrackTP; // unit of dB
-   // @DatabaseField
-   // protected double gainTrackRG; // replay gain V2, references LI -18.00 LUFS
     @DatabaseField
     protected double drScore = 0; //gainTrackDR; // Dynamic Range
    @DatabaseField
@@ -173,75 +167,6 @@ public class MusicTag {
 
     public MusicTag() {
     }
-/*
-    public int getRating() {
-        return rating;
-    }
-
-    public void setRating(int rating) {
-        this.rating = rating;
-    } */
-
-    /*
-    protected MusicTag(Parcel in) {
-        originTag = in.readParcelable(MusicTag.class.getClassLoader(), MusicTag.class);
-        id = in.readLong();
-        uniqueKey = in.readString();
-        albumUniqueKey = in.readString();
-        path = in.readString();
-        fileLastModified = in.readLong();
-        fileSize = in.readLong();
-        fileFormat = in.readString();
-        audioEncoding = in.readString();
-        //mqaScanned = in.readByte() != 0;
-        mqaInd = in.readString();
-        mqaSampleRate = in.readLong();
-        audioBitsDepth = in.readInt();
-        audioSampleRate = in.readLong();
-        audioBitRate = in.readLong();
-        audioDuration = in.readDouble();
-        title = in.readString();
-        artist = in.readString();
-        album = in.readString();
-        year = in.readString();
-        genre = in.readString();
-        track = in.readString();
-        disc = in.readString();
-        comment = in.readString();
-        grouping = in.readString();
-        composer = in.readString();
-        albumArtist = in.readString();
-        //rating = in.readInt();
-        mmManaged = in.readByte() != 0;
-        storageId = in.readString();
-        simpleName = in.readString();
-        mediaType = in.readString();
-        mediaQuality = in.readString();
-        gainTrackTP = in.readDouble();
-        gainTrackRG = in.readDouble();
-        compilation = in.readByte() != 0;
-        publisher = in.readString();
-        coverartMime = in.readString();
-        audioStartTime = in.readDouble();
-        //mmReadError = in.readByte() != 0;
-        drScore = in.readDouble();
-        upscaledScore = in.readDouble();
-        resampledScore = in.readDouble();
-        dynamicRange = in.readDouble();
-    } */
-
-    /*
-    public static final Parcelable.Creator<MusicTag> CREATOR = new Creator<>() {
-        @Override
-        public MusicTag createFromParcel(Parcel in) {
-            return new MusicTag(in);
-        }
-
-        @Override
-        public MusicTag[] newArray(int size) {
-            return new MusicTag[size];
-        }
-    }; */
 
     public long getId() {
         return id;
@@ -455,8 +380,6 @@ public class MusicTag {
         tag.audioEncoding = audioEncoding;
         tag.audioChannels = audioChannels;
 
-      //  tag.gainTrackRG = gainTrackRG;
-      //  tag.gainTrackTP = gainTrackTP;
         tag.drScore = drScore;
         tag.upscaledScore = upscaledScore;
         tag.resampledScore = resampledScore;
@@ -485,7 +408,7 @@ public class MusicTag {
         tag.mqaSampleRate = mqaSampleRate;
        // tag.language = language;
         tag.audioStartTime = audioStartTime;
-        tag.coverartMime = coverartMime;
+        //tag.coverartMime = coverartMime;
         return tag;
     }
 
@@ -529,70 +452,15 @@ public class MusicTag {
         this.mqaInd = tag.mqaInd;
         this.mqaSampleRate = tag.mqaSampleRate;
 
-       // this.gainTrackTP = tag.gainTrackTP;
-       // this.gainTrackRG = tag.gainTrackRG;
         this.drScore = tag.drScore;
         this.upscaledScore = tag.upscaledScore;
         this.resampledScore = tag.resampledScore;
         this.dynamicRange = tag.dynamicRange;
 
         this.publisher = tag.publisher;
-        this.coverartMime = tag.coverartMime;
+        //this.coverartMime = tag.coverartMime;
         this.audioStartTime = tag.audioStartTime;
     }
-
-    /*
-    @Override
-    public int describeContents() {
-        return 0;
-    } */
-
-    /*
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeParcelable(originTag, i);
-        parcel.writeLong(id);
-        parcel.writeString(uniqueKey);
-        parcel.writeString(albumUniqueKey);
-        parcel.writeString(path);
-        parcel.writeLong(fileLastModified);
-        parcel.writeLong(fileSize);
-        parcel.writeString(fileFormat);
-        parcel.writeString(audioEncoding);
-        parcel.writeString(mqaInd);
-        parcel.writeLong(mqaSampleRate);
-        parcel.writeInt(audioBitsDepth);
-        parcel.writeLong(audioSampleRate);
-        parcel.writeLong(audioBitRate);
-        parcel.writeDouble(audioDuration);
-        parcel.writeString(title);
-        parcel.writeString(artist);
-        parcel.writeString(album);
-        parcel.writeString(year);
-        parcel.writeString(genre);
-        parcel.writeString(track);
-        parcel.writeString(disc);
-        parcel.writeString(comment);
-        parcel.writeString(grouping);
-        parcel.writeString(composer);
-        parcel.writeString(albumArtist);
-       // parcel.writeInt(rating);
-        parcel.writeByte((byte) (mmManaged ? 1 : 0));
-        parcel.writeString(storageId);
-        parcel.writeString(simpleName);
-        parcel.writeString(mediaType);
-        parcel.writeString(mediaQuality);
-        parcel.writeDouble(gainTrackTP);
-        parcel.writeDouble(gainTrackRG);
-        parcel.writeByte((byte) (compilation ? 1 : 0));
-        parcel.writeString(publisher);
-        parcel.writeString(coverartMime);
-        parcel.writeDouble(audioStartTime);
-        parcel.writeDouble(drScore);
-        parcel.writeDouble(upscaledScore);
-        parcel.writeDouble(resampledScore);
-        parcel.writeDouble(dynamicRange);
-    } */
 
     public MusicTag getOriginTag() {
         return originTag;
@@ -649,31 +517,6 @@ public class MusicTag {
     public void setCompilation(boolean compilation) {
         this.compilation = compilation;
     }
-
-    public String getCoverartMime() {
-        return coverartMime;
-    }
-
-    public void setCoverartMime(String embedCoverArt) {
-        this.coverartMime = embedCoverArt;
-    }
-
-    /*
-    public double getTrackTP() {
-        return gainTrackTP;
-    }
-
-    public void setTrackTP(double trackTruePeek) {
-        this.gainTrackTP = trackTruePeek;
-    }
-
-    public double getTrackRG() {
-        return gainTrackRG;
-    }
-
-    public void setTrackRG(double trackGain) {
-        this.gainTrackRG = trackGain;
-    } */
 
     public String getPublisher() {
         return publisher;

@@ -15,19 +15,12 @@ import androidx.preference.PreferenceManager;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 
 public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        /*
-        if(Settings.isOnNightModeOnly(getApplicationContext())) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
-        } */
         super.onCreate(savedInstanceState);
 
         // set status bar color to black
@@ -66,11 +59,6 @@ public class SettingsActivity extends AppCompatActivity {
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String s) {
             if(Constants.PREF_ENABLE_MEDIA_SERVER.equals(s)) {
                 boolean enableMediaServer = sharedPreferences.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER, false);
-                /*if (enableMediaServer) {
-                    MediaServerService.startMediaServer(MusixMateApp.getInstance());
-                } else {
-                    MediaServerService.stopMediaServer(MusixMateApp.getInstance());
-                }*/
                 // Notify the application of the change
                 if (getActivity()!=null && getActivity().getApplication() instanceof MusixMateApp) {
                     ((MusixMateApp) getActivity().getApplication()).onMediaServerSettingChanged(enableMediaServer);

@@ -29,6 +29,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.provider.IconProviders;
+import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.SearchCriteria;
@@ -89,7 +90,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     public int getMusicTagPosition(MusicTag selectedSong) {
         int i =0;
         for(MusicTag tag : localDataSet) {
-            if(tag.equals(selectedSong)) return i;
+            if(tag != null && tag.equals(selectedSong)) return i;
             i++;
         }
         return RecyclerView.NO_POSITION;
@@ -420,6 +421,51 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // contents of the view with that element
         MusicTag tag = localDataSet.get(position);
         holder.id = position;
+        if(tag instanceof MusicFolder folder) {
+            onBindViewHolderFolder(holder, position, folder);
+        }else {
+            onBindViewHolderSong(holder, position, tag);
+        }
+    }
+
+    public void onBindViewHolderFolder(ViewHolder holder, @SuppressLint("RecyclerView") final int position, MusicFolder tag) {
+        // When user scrolls, this line binds the correct selection status
+        holder.rootView.setActivated(mTracker.isSelected((long) position));
+        holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
+        ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
+
+        holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD);
+
+        // remove download label
+        holder.mNewLabelView.setVisibility(View.GONE);
+        holder.mAudioQuality.setVisibility(View.GONE);
+        holder.mPlayerView.setVisibility(View.GONE);
+        holder.mAudioResolutionView.setVisibility(View.GONE);
+       // holder.mFileTypeView.setVisibility(View.GONE);
+
+        ImageRequest request = CoverartFetcher.builder(holder.mContext, tag)
+                .data(tag)
+                .size(240, 240)
+                .target(new ImageViewTarget(holder.mCoverArtView))
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
+                .build();
+        imageLoader.enqueue(request);
+
+        holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
+        holder.mSubtitle.setText(String.format(Locale.getDefault(), "%,d Songs", tag.getChildCount()));
+
+        // file encoding format
+        Drawable resolutionBackground = IconProviders.getPlaylistBackground(holder.mContext); //MusicTagUtils.getResolutionBackground(holder.mContext, tag);
+        holder.mFileTypeView.setText(tag.getFileType()); // String.valueOf(tag.getChildCount()));
+        holder.mFileTypeView.setBackground(resolutionBackground);
+        // duration
+        holder.mDurationView.setText(StringUtils.formatDuration(tag.getAudioDuration(), false));
+
+        // file size
+        holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
+    }
+
+    public void onBindViewHolderSong(ViewHolder holder, @SuppressLint("RecyclerView") final int position, MusicTag tag) {
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));

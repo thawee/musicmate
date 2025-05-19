@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
@@ -67,12 +66,6 @@ public class AboutActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        /*
-        if(Settings.isOnNightModeOnly(getApplicationContext())) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
-        } */
         super.onCreate(savedInstanceState);
 
         // set status bar color to black
@@ -446,11 +439,7 @@ public class AboutActivity extends AppCompatActivity {
 
             mappedColors.put(Constants.GROUPING_TRADITIONAL, ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
             mappedColors.put(Constants.GROUPING_LOUNGE, ContextCompat.getColor(getContext(), R.color.material_color_green_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
-           // mappedColors.put("Acoustic", ContextCompat.getColor(getContext(), R.color.material_color_lime_400));//ColorTemplate.rgb("#a8aa41"));
-          //  mappedColors.put("Live", ContextCompat.getColor(getContext(), R.color.material_color_yellow_100)); //ColorTemplate.rgb("#a8aa41"));
             mappedColors.put(Constants.UNKNOWN, ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_800)); //ColorTemplate.rgb("#488f31"));
-          //  mappedColors.put(Constants.UNKNOWN, ContextCompat.getColor(getContext(), R.color.material_color_red_900)); //ColorTemplate.rgb("#de425b"));
-           // mappedColors.put("Thai", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_200)); //ColorTemplate.rgb("#de425b"));
             mappedColors.put(Constants.GROUPING_CLASSICAL, ContextCompat.getColor(getContext(), R.color.material_color_lime_400)); //ColorTemplate.rgb("#488f31"));
            // mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
             mappedColors.put(Constants.GROUPING_CONTEMPORARY, ContextCompat.getColor(getContext(), R.color.material_color_green_800)); //ColorTemplate.rgb("#dcb85a"));

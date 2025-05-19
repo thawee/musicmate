@@ -3,7 +3,6 @@ package apincer.android.mmate.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -66,7 +65,6 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -80,7 +78,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.ui.TagsActivity;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 
 /**
@@ -467,8 +464,8 @@ public class UIUtils  {
 
             long free = DocumentFileCompat.getFreeSpace(application.getApplicationContext(), sid);
             long total = DocumentFileCompat.getStorageCapacity(application.getApplicationContext(), sid);
-            long actual = actualSize.get(sid);
-            long estimateSpace = (total - actual) + estimatedSize.get(sid);
+            long actual = actualSize.containsKey(sid)?actualSize.get(sid):0;
+            long estimateSpace = (total - actual) + (estimatedSize.containsKey(sid)?estimatedSize.get(sid):0);
 
             float pcnt = (((total - free) * 100) / total);
             float estimatePcnt = (((estimateSpace-free) * 100) / total);

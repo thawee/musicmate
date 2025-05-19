@@ -31,7 +31,7 @@ public class FFMpegHelper {
     private static final String TAG = "FFMpegHelper";
 
     public static void extractCoverArt(MusicTag tag, File pathFile) {
-        if(!isEmpty(tag.getCoverartMime())) {
+        //if(!isEmpty(tag.getCoverartMime())) {
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -39,7 +39,7 @@ public class FFMpegHelper {
             String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + targetPath + "\"";
 
             FFmpegKit.execute(cmd); // do not clear the result
-        }
+       // }
     }
 
     public static void extractCoverArt(String path, File pathFile) {
@@ -58,7 +58,7 @@ public class FFMpegHelper {
     }
 
     public static void removeCoverArt(Context context, MusicTag tag) {
-        if(!isEmpty(tag.getCoverartMime())) {
+       // if(!isEmpty(tag.getCoverartMime())) {
             String pathFile = tag.getPath();
             String ext = FileUtils.getExtension(pathFile);
             pathFile = pathFile.replace("."+ext, "no_embed."+ext);
@@ -73,7 +73,7 @@ public class FFMpegHelper {
             }else {
                 FileSystem.delete(context, pathFile);
             }
-        }
+       // }
     }
 
     public static final String KEY_BIT_RATE = "bit_rate";

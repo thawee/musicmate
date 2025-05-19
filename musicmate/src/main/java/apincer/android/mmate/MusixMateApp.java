@@ -9,7 +9,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -43,7 +42,6 @@ import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.MainActivity;
-import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
@@ -233,29 +231,29 @@ public class MusixMateApp extends Application {
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
             // Get preferences to check first run or app upgrade
-            SharedPreferences prefs = Settings.getPreferences(getApplicationContext());
-            boolean isFirstRun = prefs.getBoolean("is_first_run", true);
-            long previousVersion = prefs.getLong("app_version", 0);
-            long currentVersion = ApplicationUtils.getVersionCode(getApplicationContext());
+           // SharedPreferences prefs = Settings.getPreferences(getApplicationContext());
+           // boolean isFirstRun = prefs.getBoolean("is_first_run", true);
+           // long previousVersion = prefs.getLong("app_version", 0);
+           // long currentVersion = ApplicationUtils.getVersionCode(getApplicationContext());
 
             // Schedule regular incremental scans for ongoing maintenance
-            ScanAudioFileWorker.scheduleRegularScans(this);
+           // ScanAudioFileWorker.scheduleRegularScans(this);
 
-            if (isFirstRun || previousVersion < currentVersion) {
+           /* if (isFirstRun || previousVersion < currentVersion) {
                 // Perform a full scan on first run or app upgrade
                 Log.i(TAG, "First run or app upgrade, performing full music scan");
-                ScanAudioFileWorker.startScan(getApplicationContext(), true);
+                ScanAudioFileWorker.startScan(getApplicationContext());
 
                 // Update preferences
                 prefs.edit()
                         .putBoolean("is_first_run", false)
                         .putLong("app_version", currentVersion)
                         .apply();
-            } else {
+            } else { */
                 // On normal startup, do a quick incremental scan
                 Log.i(TAG, "Normal startup, performing incremental music scan");
-                ScanAudioFileWorker.startScan(getApplicationContext(), false);
-            }
+                ScanAudioFileWorker.startScan(getApplicationContext());
+          //  }
         } else {
             Log.w(TAG, "Music scan skipped - no directories configured");
         }

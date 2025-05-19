@@ -2046,4 +2046,7 @@ public class IconProviders {
         canvas.drawPath(path, paint);
     }
 
+    public static Drawable getPlaylistBackground(Context mContext) {
+        return AppCompatResources.getDrawable( mContext, R.drawable.shape_background_uncompress);
+    }
 }

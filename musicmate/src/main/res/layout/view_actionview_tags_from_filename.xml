@@ -189,7 +189,7 @@
                         android:padding="@dimen/dimen_2_dp"
                         android:text="-"
                         android:textColor="@color/grey500" />
-
+<!--
                     <TextView
                         android:id="@+id/btn_add_uscore"
                         android:layout_width="@dimen/dimen_32_dp"
@@ -204,7 +204,7 @@
                         android:padding="@dimen/dimen_2_dp"
                         android:text="_"
                         android:textColor="@color/grey500" />
-
+-->
                     <TextView
                         android:id="@+id/btn_add_dot"
                         android:layout_width="@dimen/dimen_32_dp"
@@ -213,7 +213,7 @@
                         android:layout_gravity="center_horizontal|center_vertical"
                         android:layout_marginLeft="@dimen/spacing_small"
                         android:layout_marginRight="@dimen/spacing_small"
-                        android:layout_toRightOf="@+id/btn_add_uscore"
+                        android:layout_toRightOf="@+id/btn_add_dash"
                         android:background="@drawable/shape_border_grey"
                         android:gravity="center"
                         android:padding="@dimen/dimen_2_dp"

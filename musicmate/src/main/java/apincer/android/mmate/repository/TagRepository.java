@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
@@ -224,52 +226,7 @@ public class TagRepository {
 
     public static List<MusicTag> findMediaTag(SearchCriteria criteria) {
         if(criteria.getType() == SearchCriteria.TYPE.COLLECTIONS) {
-            List<MusicTag> results = new ArrayList<>();
-            if(criteria.keyword != null) {
-                List<MusicTag> list =  TagRepository.getAllMusicsForPlaylist(); //MusixMateApp.getInstance().getOrmLite().findMySongs();
-                String name = criteria.keyword;
-                for(MusicTag tag: list) {
-                    if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_ISAAN_SONGS.equals(name) && MusicTagUtils.isISaanPlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS.equals(name) && MusicTagUtils.isBaanThungPlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_LOUNGE_SONGS.equals(name) && MusicTagUtils.isLoungePlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_VOCAL_SONGS.equals(name) && MusicTagUtils.isVocalPlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
-                        results.add(tag);
-                    }else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
-                        results.add(tag);
-                    }else if(PlaylistRepository.isInAlbumPlaylist(tag, name)) {
-                        results.add(tag);
-                    }else if(PlaylistRepository.isInTitlePlaylist(tag, name)) {
-                        results.add(tag);
-                    }
-                }
-            }else {
-                int index = 1;
-                results.add(buildMusicTagPlaylist(index++, AUDIOPHILE_SONGS, "Audiophile Songs"));
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_FINFIN_SONGS, "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป"));  //"เพลงฟินๆ รินเบียร์เย็นๆ";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_VOCAL_SONGS, "เสียงใสๆ สกิดใจวัยรุ่น"));
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_ISAAN_SONGS, "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ")); //"สะออนแฮง สำเนียงเสียงลำ";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_BAANTHUNG_SONGS, "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง")); // "คิดถึง บ้านทุ่งท้องนา";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_TRADITIONAL_SONGS, "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ"));
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_CLASSIC_SONGS, "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ")); //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_LOUNGE_SONGS, "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์"));
-
-                for(String name: PlaylistRepository.getPlaylistNames()) {
-                    results.add(buildMusicTagPlaylist(index++, name, name));
-                }
-                Collections.sort(results, (musicTag, t1) -> musicTag.getTitle().compareTo(t1.getTitle()));
-            }
-            return results;
+            return findMediaCollection(criteria);
         }else {
             List<MusicTag> results = findMediaTagOrEmpty(criteria);
             if (results == null || results.isEmpty()) {
@@ -280,8 +237,111 @@ public class TagRepository {
         }
     }
 
+    public static List<MusicTag> findMediaCollection(SearchCriteria criteria) {
+        List<MusicTag> results = new ArrayList<>();
+        if (criteria.getType() == SearchCriteria.TYPE.COLLECTIONS) {
+            if (criteria.keyword != null) {
+                List<MusicTag> list = TagRepository.getAllMusicsForPlaylist(); //MusixMateApp.getInstance().getOrmLite().findMySongs();
+                String name = criteria.keyword;
+                for (MusicTag tag : list) {
+                    if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_ISAAN_SONGS.equals(name) && MusicTagUtils.isISaanPlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS.equals(name) && MusicTagUtils.isBaanThungPlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_LOUNGE_SONGS.equals(name) && MusicTagUtils.isLoungePlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_VOCAL_SONGS.equals(name) && MusicTagUtils.isVocalPlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
+                        results.add(tag);
+                    } else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
+                        results.add(tag);
+                    } else if (PlaylistRepository.isInAlbumPlaylist(tag, name)) {
+                        results.add(tag);
+                    } else if (PlaylistRepository.isInTitlePlaylist(tag, name)) {
+                        results.add(tag);
+                    }
+                }
+            } else {
+                int index = 1;
+                results.add(buildMusicTagPlaylist(index++, AUDIOPHILE_SONGS, "Audiophile Songs"));
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_FINFIN_SONGS, "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป"));  //"เพลงฟินๆ รินเบียร์เย็นๆ";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_VOCAL_SONGS, "เสียงใสๆ สกิดใจวัยรุ่น"));
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_ISAAN_SONGS, "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ")); //"สะออนแฮง สำเนียงเสียงลำ";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_BAANTHUNG_SONGS, "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง")); // "คิดถึง บ้านทุ่งท้องนา";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_TRADITIONAL_SONGS, "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ"));
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_CLASSIC_SONGS, "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ")); //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
+                results.add(buildMusicTagPlaylist(index++, SMART_LIST_LOUNGE_SONGS, "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์"));
+
+                for (String name : PlaylistRepository.getPlaylistNames()) {
+                    results.add(buildMusicTagPlaylist(index++, name, name));
+                }
+                results.sort((musicTag, t1) -> musicTag.getTitle().compareTo(t1.getTitle()));
+
+                // Create a map of playlist containers if not already done
+                Map<String, MusicTag> playlistMap = new HashMap<>();
+                for (MusicTag item : results) {
+                    if (item instanceof MusicFolder) {
+                        playlistMap.put(item.getUniqueKey(), item);
+                    }
+                }
+                List<MusicTag> list = TagRepository.getAllMusicsForPlaylist(); //MusixMateApp.getInstance().getOrmLite().findMySongs();
+                for(MusicTag tag: list) {
+                    if (MusicTagUtils.isISaanPlaylist(tag)){
+                        updateMusicFolder(playlistMap,SMART_LIST_ISAAN_SONGS, tag);
+                    }
+                    if (MusicTagUtils.isBaanThungPlaylist(tag)) {
+                        updateMusicFolder(playlistMap,SMART_LIST_BAANTHUNG_SONGS, tag);
+                    }
+                    if (MusicTagUtils.isFinFinPlaylist(tag)) {
+                        updateMusicFolder(playlistMap,SMART_LIST_FINFIN_SONGS, tag);
+                    }
+                    if (MusicTagUtils.isClassicPlaylist(tag)) {
+                        updateMusicFolder(playlistMap,SMART_LIST_CLASSIC_SONGS, tag);
+                    }
+                    if (MusicTagUtils.isLoungePlaylist(tag)) {
+                        updateMusicFolder(playlistMap,SMART_LIST_LOUNGE_SONGS, tag);
+                    }
+                    if (MusicTagUtils.isVocalPlaylist(tag)) {
+                        updateMusicFolder(playlistMap,SMART_LIST_VOCAL_SONGS, tag);
+                    } else if (MusicTagUtils.isTraditionalPlaylist(tag)) {
+                        updateMusicFolder(playlistMap,SMART_LIST_TRADITIONAL_SONGS, tag);
+                    } else if (MusicTagUtils.isAudiophile(tag)) {
+                        updateMusicFolder(playlistMap,AUDIOPHILE_SONGS, tag);
+                    }
+
+                    for (String name : PlaylistRepository.getPlaylistNames()) {
+                        if (PlaylistRepository.isInAlbumPlaylist(tag, name)) {
+                            updateMusicFolder(playlistMap,name, tag);
+                        }
+                        if (PlaylistRepository.isInTitlePlaylist(tag, name)) {
+                            updateMusicFolder(playlistMap, name, tag);
+                        }
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    public static void updateMusicFolder(Map<String, MusicTag> playlistMap, String key, MusicTag tag) {
+        if(playlistMap.containsKey(key)) {
+            MusicFolder folder = (MusicFolder) playlistMap.get(key);
+            folder.addChildCount();
+            folder.setFileSize(folder.getFileSize() + tag.getFileSize());
+            folder.setAudioDuration(folder.getAudioDuration() + tag.getAudioDuration());
+        }
+    }
+
     private static MusicFolder buildMusicTagPlaylist(int index, String key, String title) {
         MusicFolder tag = new MusicFolder("PLS", title);
+        tag.setUniqueKey(key);
         tag.setId(10000+index);
         return tag;
     }
@@ -361,7 +421,7 @@ public class TagRepository {
     }
 
     public static List<MusicTag> getAllMusicsForPlaylist() {
-        OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.ARTIST, OrmLiteHelper.ORDERED_BY.ALBUM};
+        OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.ARTIST, OrmLiteHelper.ORDERED_BY.TITLE};
         return MusixMateApp.getInstance().getOrmLite().findMySongs(aristAlbum);
     }
 

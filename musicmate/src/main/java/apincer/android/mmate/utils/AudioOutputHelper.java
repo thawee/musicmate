@@ -1,5 +1,6 @@
 package apincer.android.mmate.utils;
 
+import static android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
@@ -56,10 +57,6 @@ public class AudioOutputHelper {
             this.name = name;
         }
 
-        public String getDescription() {
-            return description;
-        }
-
         public void setDescription(String description) {
             this.description = description;
         }
@@ -100,10 +97,6 @@ public class AudioOutputHelper {
 
         String codec = "";
 
-        public String getAddress() {
-            return address;
-        }
-
         public void setAddress(String address) {
             this.address = address;
         }
@@ -121,7 +114,6 @@ public class AudioOutputHelper {
         Device outputDevice = new Device();
         MediaRouter mr = (MediaRouter) context.getSystemService(Context.MEDIA_ROUTER_SERVICE);
         MediaRouter.RouteInfo ri = mr.getSelectedRoute(MediaRouter.ROUTE_TYPE_LIVE_AUDIO);
-        // text = text+"\nRoute ; name :" + ri.getName() + " & Desc : "+ri.getDescription()+"& type: " + ri.getSupportedTypes();
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
         int devicetype = ri.getDeviceType();
@@ -130,74 +122,95 @@ public class AudioOutputHelper {
         String deviceDesc = desc.toLowerCase();
 
         AudioDeviceInfo[] adi = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
-        //  text = text+"\nAudio Devices:";
-        for (AudioDeviceInfo a : adi) {
-            boolean foundDevice = false;
-            if (isUSBDevice(devicetype, deviceName) || isHDMIDevice(devicetype, deviceName)) {
-                // USB
-                setResolutions(outputDevice, a, desc);
-                outputDevice.setResId(R.drawable.ic_baseline_usb_24);
-                outputDevice.setAddress(a.getAddress());
-                UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-                HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
-                outputDevice.setCodec("Direct");
-               // outputDevice.setCodec("DAC");
-                for (UsbDevice device : deviceList.values()) {
-                    outputDevice.setName(device.getProductName());
-                    foundDevice = true;
-                }
-            }else  if (isBluetoothDevice(devicetype, deviceName,deviceDesc)) {
-                // bluetooth
-                outputDevice.setAddress(a.getAddress());
-                outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
-                getA2DP(context, outputDevice, callback, desc);
-                foundDevice = true;
-        /*    }else if (isHDMIDevice(devicetype, deviceName)) {
-                 outputDevice.setName(String.valueOf(ri.getName()));
-                // outputDevice.setCodec("HDMI");
-                 setResolutions(outputDevice, a, desc);
-                 outputDevice.setResId(R.drawable.ic_baseline_usb_24);
-                 foundDevice = true; */
-             }
+       // boolean foundDevice = false;
 
-            if(!foundDevice) {
-                // built-in and others
-                //AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
-                //AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
-                //AudioDeviceInfo.TYPE_WIRED_HEADPHONES
-                //AudioDeviceInfo.TYPE_WIRED_HEADSET
-                setResolutions(outputDevice, a, desc);
-                outputDevice.setCodec("SRC");
-                outputDevice.setName(Build.MODEL);
-                outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+        for (AudioDeviceInfo a : adi) {
+            // Check if this is the active output device
+            if (a.isSink()) {
+                if (isUSBDevice(devicetype, deviceName) || isHDMIDevice(devicetype, deviceName)) {
+                    // USB or HDMI device
+                    setResolutions(outputDevice, a, desc);
+                    outputDevice.setResId(R.drawable.ic_baseline_usb_24);
+                    outputDevice.setAddress(a.getAddress());
+                    UsbManager usb_manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+                    HashMap<String, UsbDevice> deviceList = usb_manager.getDeviceList();
+                    outputDevice.setCodec("Direct");
+
+                    for (UsbDevice device : deviceList.values()) {
+                        outputDevice.setName(device.getProductName());
+                        break; // Use the first USB device found
+                    }
+
+                    callback.onReady(outputDevice);
+                    return; // Exit after finding USB device
+                } else if (isBluetoothDevice(devicetype, deviceName, deviceDesc)) {
+                    // Bluetooth device
+                    outputDevice.setAddress(a.getAddress());
+                    outputDevice.setResId(R.drawable.ic_round_bluetooth_audio_24);
+                    getA2DP(context, outputDevice, callback, desc);
+                    callback.onReady(outputDevice);
+                    return; // A2DP callback will handle the response
+                } else if (isWiredDevice(devicetype)) {
+                    // Wired headphones/headset
+                    setResolutions(outputDevice, a, desc);
+                    outputDevice.setCodec("SRC");
+                    outputDevice.setName(Build.MODEL);
+                    outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+                    callback.onReady(outputDevice);
+                    return;
+                }
             }
-            callback.onReady(outputDevice);
         }
+
+        // If no specific device was found, use the default device
+            // Find the first available output device
+            for (AudioDeviceInfo a : adi) {
+                if (a.isSink()) {
+                    setResolutions(outputDevice, a, desc);
+                    outputDevice.setCodec("SRC*");
+                    outputDevice.setName(Build.MODEL);
+                    outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+                    callback.onReady(outputDevice);
+                    return;
+                }
+            }
+
+        // If we get here, no output device was found at all
+        // Create a default device with basic information
+        outputDevice.setCodec("SRC**");
+        outputDevice.setName(Build.MODEL);
+        outputDevice.setBitPerSampling(16);
+        outputDevice.setSamplingRate(48000);
+        outputDevice.setResId(R.drawable.ic_baseline_volume_up_24);
+        outputDevice.setDescription(desc);
+        callback.onReady(outputDevice);
     }
 
     private static boolean isHDMIDevice(int devicetype, String deviceName) {
         return (devicetype == AudioDeviceInfo.TYPE_HDMI ||
                 devicetype == AudioDeviceInfo.TYPE_HDMI_ARC) ||
-                ((devicetype == AudioDeviceInfo.TYPE_UNKNOWN || isWriredDevice(devicetype)) &&
+                ((isWiredDevice(devicetype)) &&
                         deviceName.contains("hdmi"));
     }
 
     private static boolean isUSBDevice(int devicetype, String deviceName) {
         return (devicetype == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
                 devicetype == AudioDeviceInfo.TYPE_USB_DEVICE) ||
-                ((devicetype == AudioDeviceInfo.TYPE_UNKNOWN || isWriredDevice(devicetype)) &&
+                ((isWiredDevice(devicetype)) &&
                         deviceName.contains("usb"));
     }
 
-    private static boolean isWriredDevice(int devicetype) {
+    private static boolean isWiredDevice(int devicetype) {
         return devicetype == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
-                devicetype == AudioDeviceInfo.TYPE_WIRED_HEADSET;
+                devicetype == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                devicetype == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER ||
+                devicetype ==AudioDeviceInfo.TYPE_UNKNOWN;
     }
 
     private static boolean isBluetoothDevice(int devicetype, String name, String deviceName) {
         return (devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
                 devicetype == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) ||
-                ((devicetype == AudioDeviceInfo.TYPE_UNKNOWN || isWriredDevice(devicetype)) && (deviceName.contains("bluetooth")) || name.contains("bluetooth"));
+                ((isWiredDevice(devicetype)) && (deviceName.contains("bluetooth")) || name.contains("bluetooth"));
     }
 
     /**
@@ -250,7 +263,7 @@ public class AudioOutputHelper {
             case AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth device w/ telephony";
             case AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "built-in earphone speaker";
             case AudioDeviceInfo.TYPE_BUILTIN_MIC -> "built-in microphone";
-            case AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "built-in speaker";
+            case TYPE_BUILTIN_SPEAKER -> "built-in speaker";
             case AudioDeviceInfo.TYPE_BUS -> "BUS";
             case AudioDeviceInfo.TYPE_DOCK -> "DOCK";
             case AudioDeviceInfo.TYPE_FM -> "FM";
@@ -279,12 +292,25 @@ public class AudioOutputHelper {
         };
         outputDevice.setBitPerSampling(bps);
         device.getChannelCounts();
-        int rate = intArrayLastIndex(device.getSampleRates());
+        // Get the highest supported sample rate instead of just the last one
+        int[] sampleRates = device.getSampleRates();
+        int rate = 0;
+        // Find the highest sample rate (usually better quality)
+        for (int sampleRate : sampleRates) {
+            if (sampleRate > rate) {
+                rate = sampleRate;
+            }
+        }
+
+        // If no sample rate found, use a default value
+        if (rate == 0) {
+            rate = 48000; // Default to 48kHz if no sample rate information available
+        }
         outputDevice.setSamplingRate(rate);
         outputDevice.setDescription(desc);
     }
 
-    public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
+    public static Bitmap getOutputDeviceIcon(Context context, boolean streaming, Device dev) {
         int width = 128;  // 16x21, 24x32
         int height = 96;
 
@@ -299,9 +325,13 @@ public class AudioOutputHelper {
         if(isEmpty(codec)) {
             codec = "-";
         }
-        //String rate =  dev.getBitPerSampling()+"/"+StringUtils.formatAudioSampleRate(dev.getSamplingRate(),false);
-        long bitRate  = dev.bitRate>0?dev.bitRate:dev.getBitPerSampling()*dev.getSamplingRate();
-        String rate  = StringUtils.formatAudioBitRateShortUnit(bitRate);
+
+        String rate =  StringUtils.formatAudioSampleRate(dev.getSamplingRate(),true);
+        if(streaming) {
+            long bitRate  = dev.bitRate>0?dev.bitRate:dev.getBitPerSampling()*dev.getSamplingRate();
+            rate  = StringUtils.formatAudioBitRateShortUnit(bitRate);
+        }
+
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);
         int padding = 2;

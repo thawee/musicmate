@@ -27,9 +27,10 @@ public class NotificationListener extends NotificationListenerService {
     private static final Set<String> SUPPORTED_PLAYERS = new HashSet<>(Arrays.asList(
             PlayerControl.PlayerPackageNames.HIBY_MUSIC_PACK_NAME,
             PlayerControl.PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME,
-            PlayerControl.PlayerPackageNames.EDDICTPLAYER_PACK_NAME,
+            //PlayerControl.PlayerPackageNames.EDDICTPLAYER_PACK_NAME,
             PlayerControl.PlayerPackageNames.NEUTRON_MUSIC_PACK_NAME,
-            PlayerControl.PlayerPackageNames.UAPP_PACK_NAME
+            PlayerControl.PlayerPackageNames.UAPP_PACK_NAME,
+            PlayerControl.PlayerPackageNames.POWERAMP_PACK_NAME
             // Add new player packages here
     ));
 

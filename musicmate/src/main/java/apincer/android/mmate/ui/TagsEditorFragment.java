@@ -37,8 +37,6 @@ import com.skydoves.powermenu.MenuAnimation;
 import com.skydoves.powermenu.PowerMenu;
 import com.skydoves.powermenu.PowerMenuItem;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +45,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicTag;
@@ -378,7 +375,7 @@ public class TagsEditorFragment extends Fragment {
         TextView trackLabel = cview.findViewById(R.id.track_label);
         TextView sepLabel = cview.findViewById(R.id.btn_add_sep);
         TextView dashLabel = cview.findViewById(R.id.btn_add_dash);
-        TextView uscLabel = cview.findViewById(R.id.btn_add_uscore);
+        //TextView uscLabel = cview.findViewById(R.id.btn_add_uscore);
         TextView dotLabel = cview.findViewById(R.id.btn_add_dot);
         TextView spaceLabel = cview.findViewById(R.id.btn_add_space);
         TextView freeTextLabel = cview.findViewById(R.id.btn_add_free_text);
@@ -426,10 +423,38 @@ public class TagsEditorFragment extends Fragment {
         trackLabel.setOnClickListener(v -> mTagListLayout.addTag("track"));
         sepLabel.setOnClickListener(v -> mTagListLayout.addTag("/"));
         dashLabel.setOnClickListener(v -> mTagListLayout.addTag("-"));
-        uscLabel.setOnClickListener(v -> mTagListLayout.addTag("_"));
+        //uscLabel.setOnClickListener(v -> mTagListLayout.addTag("_"));
         dotLabel.setOnClickListener(v -> mTagListLayout.addTag("."));
         spaceLabel.setOnClickListener(v -> mTagListLayout.addTag("sp"));
-        freeTextLabel.setOnClickListener(v -> mTagListLayout.addTag("?"));
+       // freeTextLabel.setOnClickListener(v -> mTagListLayout.addTag("?"));
+        freeTextLabel.setOnClickListener(v -> {
+            // Create an AlertDialog with an EditText for input
+            AlertDialog.Builder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme);
+            View inputView = getLayoutInflater().inflate(R.layout.dialog_text_input, null);
+            EditText editText = inputView.findViewById(R.id.input_text);
+
+            builder.setTitle(R.string.enter_custom_text)
+                    .setView(inputView)
+                    .setPositiveButton(R.string.ok, (dialog, which) -> {
+                        String customText = editText.getText().toString().trim();
+                        if (!customText.isEmpty()) {
+                            mTagListLayout.addTag(customText);
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, null);
+
+            AlertDialog dialog = builder.create();
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            dialog.show();
+
+            // Show keyboard automatically
+            editText.requestFocus();
+            editText.post(() -> {
+                android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager)
+                        requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(editText, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            });
+        });
 
         View btnPreview = cview.findViewById(R.id.btn_preview_bar);
         View btnOK = cview.findViewById(R.id.btn_ok);
@@ -481,6 +506,7 @@ public class TagsEditorFragment extends Fragment {
         alert.show();
     }
 
+
     private void bindViews() {
         if (!isAdded() || getActivity() == null) return;
 
@@ -531,11 +557,6 @@ public class TagsEditorFragment extends Fragment {
                         tagsActivity.updateProgressBar(current + "/" + totalItems);
 
                         // Post events one at a time
-                       /* AudioTagEditResultEvent message = new AudioTagEditResultEvent(
-                                AudioTagEditResultEvent.ACTION_UPDATE,
-                                status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
-                                tag);
-                        EventBus.getDefault().postSticky(message); */
                     } catch (Exception e) {
                         Log.e(TAG, "doSaveMediaItem", e);
                     }
@@ -567,51 +588,6 @@ public class TagsEditorFragment extends Fragment {
             }
         });
     }
-
-    private void doSaveMediaItem2() {
-        tagsActivity.startProgressBar();
-        CompletableFuture.runAsync(
-                () -> {
-                    for(MusicTag item:tagsActivity.getEditItems()) {
-                            buildPendingTags(item);
-                    }
-                    FileRepository repos = FileRepository.newInstance(tagsActivity.getApplicationContext());
-
-                    List<MusicTag> list = tagsActivity.getEditItems();
-                    final int len = list.size();
-                    AtomicInteger count = new AtomicInteger(0);
-                    for (MusicTag tag: list) {
-                        MusicMateExecutors.executeParallel(() -> {
-                            try {
-                                int currentCount = count.incrementAndGet();
-                                boolean status = repos.setMusicTag(tag);
-                                tagsActivity.updateProgressBar(currentCount + "/" + len);
-                                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_UPDATE, status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL, tag);
-                                EventBus.getDefault().postSticky(message);
-                            } catch (Exception e) {
-                                Log.e(TAG, "doSaveMediaItem", e);
-                            }
-                        });
-                    }
-                }
-        ).thenAccept(
-                unused -> {
-                    // set updated item on main activity
-                    tagsActivity.runOnUiThread(() -> {
-                        bypassChange = true;
-                        bindViews();
-                        bypassChange = false;
-                    });
-                    tagsActivity.stopProgressBar();
-                }
-        ).exceptionally(
-                throwable -> {
-                    tagsActivity.stopProgressBar();
-                    return null;
-                }
-        );
-    }
-
 
     private void buildPendingTags(MusicTag tagUpdate) {
         if(tagUpdate.getOriginTag()==null) {

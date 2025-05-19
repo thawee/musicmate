@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.PermissionUtils;
 
@@ -35,12 +34,6 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        /*
-        if(Settings.isOnNightModeOnly(getApplicationContext())) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM); //must place before super.onCreate();
-        } */
         super.onCreate(savedInstanceState);
         // set status bar color to black
         Window window = getWindow();
@@ -93,9 +86,6 @@ public class PermissionActivity extends AppCompatActivity {
 
         panel.addView(getPermissionView(layoutInflater,null, "Access Audio Files", "(Required)", "Read audio media files on device."));
         panel.addView(getPermissionView(layoutInflater,null, "Full Storage Access", "(Required)", "Read/Write music files on device to manage music collection."));
-      //  panel.addView(getPermissionView(layoutInflater,null, "Read External Storage", "(Required)", "Read photos, media, and files on device."));
-       // panel.addView(getPermissionView(layoutInflater,null, "Write External Storage", "(Required)", "Write media, and files on device to manage music collection."));
-        //  panel.addView(getPermissionView(layoutInflater,null, "Internet", "(Optional)", "Access Internet for coverart and MusicBrainz services"));
     }
 
     private View getPermissionView(LayoutInflater layoutInflater, Drawable icon, String title, String required, String desc) {
