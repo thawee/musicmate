@@ -42,7 +42,7 @@
     <dimen name="dimen_info_sample_rate_dp">96dp</dimen>
 
     <dimen name="activity_horizontal_margin">8dp</dimen>
-    <dimen name="activity_vertical_margin">8dp</dimen>
+    <dimen name="activity_vertical_margin">32dp</dimen>
 
     <!-- Component -->
 
@@ -94,4 +94,11 @@
     <dimen name="dimen_105_dp">105dp</dimen>
     <dimen name="dimen_50_dp">50dp</dimen>
     <dimen name="dimen_14_dp">14dp</dimen>
+    <dimen name="_5sdp">5dp</dimen>
+    <dimen name="_30sdp">30dp</dimen>
+
+    <dimen name="active_carousel_item_elevation">8dp</dimen>
+    <dimen name="inactive_carousel_item_elevation">2dp</dimen>
+    <dimen name="highlight_border_width">2dp</dimen>
+    <dimen name="your_extra_large_corner_radius">16dp</dimen> <!-- Match your shapeAppearance -->
 </resources>

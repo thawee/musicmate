@@ -1,4 +1,3 @@
-//apply plugin: 'com.android.library'
 plugins {
     alias(libs.plugins.android.library)
 }
@@ -32,7 +31,10 @@ dependencies {
     implementation libs.slf4j.api
     implementation libs.square.okio
     implementation libs.jetbrains.annotations
+    implementation libs.kotlin.stdlib
     //implementation libs.jcodec
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
 }
 
 tasks.register('testClasses') {

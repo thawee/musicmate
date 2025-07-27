@@ -417,55 +417,6 @@ public class ContentDirectory {
         return null;
     }
 
-    private AbstractContentBrowser findBrowserForOld(String objectID) {
-        AbstractContentBrowser result = null;
-        if (objectID == null || objectID.isEmpty() || ContentDirectoryIDs.MUSIC_FOLDER.getId().equals(objectID)) {
-            result = new LibraryBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId().equals(objectID)) {
-            result = new SourcesBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_SOURCE_PREFIX.getId())) {
-            result = new SourceFolderBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId().equals(objectID)) {
-            result = new GenresBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId().equals(objectID)) {
-            result = new AlbumsBrowser(getContext());
-        } else if (ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId().equals(objectID)) {
-            result = new ArtistsBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId())) {
-            result = new AlbumFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId())) {
-            result = new ArtistFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId())) {
-            result = new GenreFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId(),ContentDirectoryIDs.MUSIC_GENRE_ITEM_PREFIX.getId());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(),ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId())) {
-            result = new GroupingsBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId())) {
-            result = new GroupingFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
-        }else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId())) {
-            result = new CollectionsBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId())) {
-            result = new CollectionFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
-        }else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId())) {
-            result = new ResolutionsBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId())) {
-            result = new ResolutionFolderBrowser(getContext());
-        } else if (objectID.startsWith(ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId())) {
-            result = new MusicItemBrowser(getContext(), ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId());
-        }
-
-        return result;
-    }
-
     /**
      * Generates a cache key for a browse request
      */

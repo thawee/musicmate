@@ -203,9 +203,9 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                         }
 
                         // Create PlayerInfo for tracking
-                        PlayerInfo player = PlayerInfo.buildStreamPlayer(
+                        PlayerInfo player = PlayerInfo.buildStreamPlayer(getContext(),
                                 userAgent,
-                                ContextCompat.getDrawable(getContext(), R.drawable.img_upnp_white)
+                                clientIp //, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp_white)
                         );
 
                         // Add client IP to player info for better tracking

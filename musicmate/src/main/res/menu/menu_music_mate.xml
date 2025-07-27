@@ -38,21 +38,38 @@
 -->
 	<item
         android:id="@+id/menu_settings"
-        android:icon="@drawable/ic_round_settings_24"
+        android:icon="@drawable/rounded_display_settings_24"
         android:title="Settings"
         app:showAsAction="always" />
 
 	<item
 		android:id="@+id/menu_directories"
-		android:icon="@drawable/round_snippet_folder_24"
-		android:title="Directories"
+		android:icon="@drawable/rounded_folder_24"
+		android:title="Source Folders"
 		app:showAsAction="always" />
+
+	<!--
+	<item
+		android:id="@+id/menu_dlna_server"
+		android:icon="@drawable/rounded_music_cast_24"
+		android:title="Stream Server"
+		app:showAsAction="always" />
+	-->
+	<!--
+	<item
+		android:id="@+id/menu_output"
+		android:icon="@drawable/ic_action_cast"
+		android:title="Output"
+		app:showAsAction="always" />
+-->
+
+	<!--
 	<item
 		android:id="@+id/menu_export_playlists"
 		android:icon="@drawable/ic_baseline_playlist_play_24"
 		android:title="Export Playlists"
 		app:showAsAction="always" />
-<!--
+
 	<item
 		android:id="@+id/menu_sd_permission"
 		android:icon="@drawable/ic_round_perm_data_setting_24"
@@ -61,7 +78,7 @@
 -->
 	<item
 		android:id="@+id/menu_notification_access"
-		android:icon="@drawable/ic_round_admin_panel_settings_24"
+		android:icon="@drawable/rounded_admin_panel_settings_24"
 		android:title="Notification Access"
 		app:showAsAction="always" />
 
@@ -79,19 +96,19 @@
 		android:title="Third-Party Libraries"
 		app:showAsAction="always" />
 -->
-	<item
-		android:id="@+id/menu_about_crash"
-		android:icon="@drawable/ic_round_report_gmailerrorred_24"
-		android:title="Crash Report"
-		app:showAsAction="always" />
+
 
 	<item
 		android:id="@+id/menu_about_music_mate"
-		android:icon="@drawable/ic_round_copyright_24"
+		android:icon="@drawable/rounded_info_24"
 		android:title="About"
 		app:showAsAction="always" />
 
-
+	<item
+		android:id="@+id/menu_about_crash"
+		android:icon="@drawable/rounded_data_info_alert_24"
+		android:title="Crash Report"
+		app:showAsAction="always" />
 <!--
 	<item
 		android:id="@+id/menu_about_log"

@@ -250,10 +250,11 @@
     <!--
     <color name="quality_bad">#EF2350</color>
     <color name="quality_good">#ef7350</color>
+     <color name="quality_recommended">#FFCC80</color>
     -->
     <color name="quality_label">@color/white</color>
     <color name="quality_audiophile">#FF9800</color>
-    <color name="quality_recommended">#FFCC80</color>
+    <color name="quality_recommended">#FF9800</color>
     <color name="quality_good">#FFCC80</color>
     <color name="quality_bad">#B71C1C</color>
     <color name="quality_no_rating">#E0E0E0</color>
@@ -435,9 +436,10 @@
     <color name="grays_slate">#708090</color>
 
     <!-- Dynamic Range Color Scheme - Main Tiers -->
-    <color name="dr_low">#FF4500</color>            <!-- 1-6 dB - Bright Orange-Red -->
-    <color name="dr_medium">#32CD32</color>         <!-- 7-12 dB - Lime Green -->
-    <color name="dr_high">#1E90FF</color>           <!-- 13-18 dB - Dodger Blue -->
+    <color name="dr_none">@color/transparent</color>
+    <color name="dr_low">#9333ea</color>            <!-- <8 dB - Purple -->
+    <color name="dr_medium">#16a34a</color>         <!-- 9-13 dB - Green -->
+    <color name="dr_high">#3b82f6</color>           <!-- 14+ dB - Blue -->
     <color name="dr_very_high">#9370DB</color>      <!-- 19+ dB - Medium Purple -->
 
     <!-- Dynamic Range - Detailed Gradient -->
@@ -449,6 +451,7 @@
     <color name="dr_21_plus">#9933CC</color>        <!-- 21+ dB - Purple -->
 
     <!-- Transparent Versions for Overlays (50% opacity) -->
+    <color name="dr_no_trans">#80708090</color>
     <color name="dr_low_trans">#80FF4500</color>
     <color name="dr_medium_trans">#8032CD32</color>
     <color name="dr_high_trans">#801E90FF</color>
@@ -460,6 +463,16 @@
 
     <!-- Light Text Colors for Dark Backgrounds -->
     <color name="text_on_dark">#FFFFFF</color>
-    <color name="text_on_dark_secondary">#B3FFFFFF</color> <!-- 70% white -->
+    <color name="text_on_dark_secondary">#B3FFFFFF</color>
+
+
+    <color name="your_highlight_color">#4CAF50</color> <!-- Green example -->
+    <color name="your_highlight_border_color">#FFC107</color> <!-- Amber example -->
+    <color name="highlighted_text_color">#FFFFFF</color>
+    <color name="original_text_color_for_title">#CCCCCC</color>
+    <color name="search_bar_bg_color">#F0F0F0</color> <!-- Light grey background -->
+    <color name="search_bar_stroke_color">#CCCCCC</color> <!-- Slightly darker grey for border -->
+    <color name="search_bar_hint_color">#999999</color> <!-- Hint text color -->
+    <color name="search_bar_text_color">#F0F0F0</color> <!-- Input text color -->
 
 </resources>

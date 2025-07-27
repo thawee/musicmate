@@ -32,6 +32,18 @@ import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.StringUtils;
 
 public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
+    public MusicTag findByUniqueKey(String uniqueKey) {
+        try {
+            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
+            builder.where().eq("uniqueKey", uniqueKey);
+            return dao.queryForFirst(builder.prepare());
+        } catch (SQLException ex) {
+            Log.e(TAG,"findByUniqueKey", ex);
+        }
+        return null;
+    }
+
     public enum ORDERED_BY {ALBUM, ARTIST,TITLE}
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";

@@ -15,12 +15,22 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.UpnpServiceImpl;
 import org.jupnp.model.meta.LocalDevice;
+import org.jupnp.model.meta.RemoteDevice;
+import org.jupnp.model.types.DeviceType;
+import org.jupnp.model.types.ServiceType;
+import org.jupnp.model.types.UDADeviceType;
+import org.jupnp.model.types.UDAServiceType;
+import org.jupnp.registry.DefaultRegistryListener;
+import org.jupnp.registry.Registry;
+import org.jupnp.registry.RegistryListener;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -63,12 +73,37 @@ public class MediaServerService extends Service {
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
+    // Standard DLNA Service Types
+    public static final ServiceType CONTENT_DIRECTORY_SERVICE = new UDAServiceType("ContentDirectory", 1);
+    public static final ServiceType AV_TRANSPORT_SERVICE = new UDAServiceType("AVTransport", 1);
+    public static final ServiceType RENDERING_CONTROL_SERVICE = new UDAServiceType("RenderingControl", 1);
+    public static final ServiceType CONNECTION_MANAGER_SERVICE = new UDAServiceType("ConnectionManager", 1);
+
+    // Standard DLNA Device Types
+    public static final DeviceType MEDIA_SERVER_DEVICE_TYPE = new UDADeviceType("MediaServer", 1);
+    public static final DeviceType MEDIA_RENDERER_DEVICE_TYPE = new UDADeviceType("MediaRenderer", 1);
+
+    // --- Add these constants for Broadcasts ---
+    public static final String ACTION_STATUS_CHANGED = "apincer.android.mmate.dlna.STATUS_CHANGED";
+    public static final String EXTRA_STATUS = "extra_status";
+    public static final String EXTRA_ADDRESS = "extra_address";
+
+    public enum ServerStatus { // You might already have this or a similar concept
+        RUNNING,
+        STOPPED,
+        STARTING, // When onCreate/onStartCommand begins initialization
+        INITIALIZED, // After successful initialization but before fully running (optional refinement)
+        ERROR
+    }
+    // --- End of new constants ---
+
     // Service components
     protected UpnpService upnpService;
+    private RegistryListener registryListener;
     protected LocalDevice mediaServerDevice;
     protected UpnpServiceConfiguration upnpServiceCfg;
     protected IBinder binder = new MediaServerServiceBinder();
-    protected static MediaServerService INSTANCE;
+    public static MediaServerService INSTANCE;
     private boolean initialized;
 
     // Network monitoring
@@ -128,6 +163,8 @@ public class MediaServerService extends Service {
                 "MusixMate:MediaServerWakeLock");
         wakeLock.acquire(10*60*1000L /*10 minutes*/);
 
+        broadcastStatus(ServerStatus.STARTING, null);
+
         // Set up network monitoring
         setupNetworkMonitoring();
     }
@@ -142,7 +179,20 @@ public class MediaServerService extends Service {
             showNotification();
 
             // Initialize asynchronously to avoid ANR
-            Thread initializationThread = new Thread(this::initialize);
+            //Thread initializationThread = new Thread(this::initialize);
+            // Broadcast STARTING explicitly if not done in onCreate,
+            // or if re-attempting start.
+            broadcastStatus(ServerStatus.STARTING, null);
+
+            Thread initializationThread = new Thread(() -> {
+                initialize(); // Your existing initialize method
+                // After initialize() completes:
+                if (isInitialized()) {
+                    broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.UPNP_SERVER_PORT);
+                } else {
+                    broadcastStatus(ServerStatus.ERROR, null); // If initialize failed
+                }
+            });
             initializationThread.setName("DLNA-Init");
             initializationThread.start();
 
@@ -150,6 +200,9 @@ public class MediaServerService extends Service {
             startHealthChecker();
 
             Log.d(TAG, "DLNA server startup initiated: " + (System.currentTimeMillis() - start) + "ms");
+        }else {
+            // If already initialized and running, just broadcast current status
+            broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.UPNP_SERVER_PORT);
         }
         return START_STICKY;
     }
@@ -245,12 +298,22 @@ public class MediaServerService extends Service {
                 // Start UPnP service
                 upnpService.startup();
 
+                //
+                this.registryListener = new MyRegistryListener();
+
                 // Create and register media server device
                 mediaServerDevice = MediaServerDevice.createMediaServerDevice(getApplicationContext());
                 upnpService.getRegistry().addDevice(mediaServerDevice);
 
+                this.upnpService.getRegistry().addListener(registryListener);
+
                 // Send alive notification
                 upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
+                // Initial search for all devices
+                this.upnpService.getControlPoint().search();
+                // Or search for specific types:
+                // this.upnpService.getControlPoint().search(MEDIA_SERVER_DEVICE_TYPE);
+                //this.upnpService.getControlPoint().search(MEDIA_RENDERER_DEVICE_TYPE);
 
                 // Mark as initialized
                 MediaServerService.this.initialized = true;
@@ -334,7 +397,6 @@ public class MediaServerService extends Service {
         }
     }
 
-
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
@@ -366,7 +428,56 @@ public class MediaServerService extends Service {
         }
 
         cancelNotification();
+        broadcastStatus(ServerStatus.STOPPED, null);
         super.onDestroy();
+    }
+
+    // --- Add this method to broadcast status ---
+    public void broadcastStatus(ServerStatus status, @Nullable String address) {
+        Intent intent = new Intent(ACTION_STATUS_CHANGED);
+        intent.putExtra(EXTRA_STATUS, status.name()); // Send enum name as String
+        if (address != null) {
+            intent.putExtra(EXTRA_ADDRESS, address);
+        }
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Log.d(TAG, "Broadcasted status: " + status + (address != null ? " Address: " + address : ""));
+
+        // Also update notification if running or error
+        if (status == ServerStatus.RUNNING && address != null) {
+            updateNotificationText("Running at http://" + address);
+        } else if (status == ServerStatus.ERROR) {
+            updateNotificationText("Error starting server");
+        } else if (status == ServerStatus.STOPPED) {
+            // Notification is removed by stopForeground(true) in onDestroy
+            // Or update to "Stopped" if you keep a persistent notification for the app
+        }
+    }
+
+    private void updateNotificationText(String text) {
+        // Your existing showNotification logic creates the initial notification.
+        // This method updates its content text.
+        // You'll need to make your NotificationCompat.Builder accessible or rebuild part of it.
+
+        Intent notificationIntent = new Intent(this, MainActivity.class); // Assuming MainActivity
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+
+        String deviceModel = ApplicationUtils.getDeviceModel();
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, MusixMateApp.NOTIFICATION_CHANNEL_ID)
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_notification_default)
+                .setSilent(true)
+                .setContentTitle(getApplicationContext().getString(R.string.media_server_name))
+                .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
+                .setSubText(deviceModel)
+                .setContentText(text); // Key change here
+
+        mBuilder.setContentIntent(contentIntent);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
+        }
     }
 
     private void shutdown() {
@@ -376,6 +487,7 @@ public class MediaServerService extends Service {
                 upnpService.getProtocolFactory().createSendingNotificationByebye(mediaServerDevice).run();
             }
             if(upnpService != null) {
+                upnpService.getRegistry().removeAllRemoteDevices(); // Optional: clear devices before shutdown
                 upnpService.shutdown();
                 upnpService = null;
             }
@@ -439,4 +551,71 @@ public class MediaServerService extends Service {
         }
     }
 
+    public static class MyRegistryListener extends DefaultRegistryListener {
+
+        @Override
+        public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device) {
+            Log.d(TAG, "Discovery started for: " + device.getDisplayString());
+        }
+
+        @Override
+        public void remoteDeviceDiscoveryFailed(Registry registry, RemoteDevice device, Exception ex) {
+            Log.e(TAG, "Discovery failed for: " + device.getDisplayString() + " => " + ex.getMessage(), ex);
+        }
+
+        @Override
+        public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
+            Log.i(TAG, "Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
+
+            // You would typically update a UI list here or store the device
+            // Example: Check for MediaServer or MediaRenderer
+            //if (device.getType().equals(MEDIA_SERVER_DEVICE_TYPE)) {
+           //     Log.i(TAG, "Found MediaServer: " + device.getDetails().getFriendlyName());
+                // deviceFoundListener.onMediaServerFound(device);
+           // } else
+            if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
+                Log.i(TAG, "Found MediaRenderer: " + device.getDetails().getFriendlyName());
+                // deviceFoundListener.onMediaRendererFound(device);
+                MusixMateApp.getInstance().addRenderer(device);
+            }
+
+            // You can also check for specific services
+           /* Service cdService = device.findService(CONTENT_DIRECTORY_SERVICE);
+            if (cdService != null) {
+                Log.d(TAG, device.getDetails().getFriendlyName() + " has ContentDirectory service.");
+            }
+
+            Service avtService = device.findService(AV_TRANSPORT_SERVICE);
+            if (avtService != null) {
+                Log.d(TAG, device.getDetails().getFriendlyName() + " has AVTransport service.");
+            } */
+        }
+
+        @Override
+        public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
+            Log.i(TAG, "Remote device removed: " + device.getDisplayString());
+            // Update your UI or remove from stored list
+            // deviceFoundListener.onDeviceRemoved(device);
+        }
+
+        @Override
+        public void localDeviceAdded(Registry registry, LocalDevice device) {
+            Log.i(TAG, "Local device added: " + device.getDisplayString());
+        }
+
+        @Override
+        public void localDeviceRemoved(Registry registry, LocalDevice device) {
+            Log.i(TAG, "Local device removed: " + device.getDisplayString());
+        }
+
+        @Override
+        public void beforeShutdown(Registry registry) {
+            Log.i(TAG, "Registry about to shut down.");
+        }
+
+        @Override
+        public void afterShutdown() {
+            Log.i(TAG, "Registry has shut down.");
+        }
+    }
 }

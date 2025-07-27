@@ -1,14 +1,6 @@
 package apincer.android.mmate.repository;
 
 import static apincer.android.mmate.Constants.ARTIST_SEP;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.AUDIOPHILE_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_CLASSIC_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_FINFIN_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_ISAAN_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_LOUNGE_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS;
-import static apincer.android.mmate.dlna.content.CollectionsBrowser.SMART_LIST_VOCAL_SONGS;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -21,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +22,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.content.CollectionsBrowser;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
@@ -78,6 +70,19 @@ public class TagRepository {
             tag.setAlbumArtist(tag.getArtist());
         }
 
+        // update id is unique key is valid
+        if(tag.getId() == 0) {
+            MusicTag existingTag = MusixMateApp.getInstance().getOrmLite().findByUniqueKey(tag.getUniqueKey());
+            if(existingTag != null) {
+                tag.setId(existingTag.getId());
+                tag.setDynamicRange(existingTag.getDynamicRange());
+                tag.setMqaInd(existingTag.getMqaInd());
+                tag.setMqaSampleRate(existingTag.getMqaSampleRate());
+                tag.setMediaQuality(existingTag.getMediaQuality());
+                tag.setResampledScore(existingTag.getResampledScore());
+                tag.setUpscaledScore(existingTag.getUpscaledScore());
+            }
+        }
         MusixMateApp.getInstance().getOrmLite().save(tag);
     }
 
@@ -93,12 +98,6 @@ public class TagRepository {
     public static MusicTag getByPath(String path) {
         OrmLiteHelper helper = MusixMateApp.getInstance().getOrmLite();
         return helper.getByPath(path);
-    }
-
-    // Add this method
-    public static void saveTagsBatch(List<MusicTag> tags) {
-        OrmLiteHelper helper = MusixMateApp.getInstance().getOrmLite();
-        helper.saveTagsBatch(tags);
     }
 
     public static void cleanMusicMate() {
@@ -225,7 +224,7 @@ public class TagRepository {
     }
 
     public static List<MusicTag> findMediaTag(SearchCriteria criteria) {
-        if(criteria.getType() == SearchCriteria.TYPE.COLLECTIONS) {
+        if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
             return findMediaCollection(criteria);
         }else {
             List<MusicTag> results = findMediaTagOrEmpty(criteria);
@@ -239,50 +238,27 @@ public class TagRepository {
 
     public static List<MusicTag> findMediaCollection(SearchCriteria criteria) {
         List<MusicTag> results = new ArrayList<>();
-        if (criteria.getType() == SearchCriteria.TYPE.COLLECTIONS) {
-            if (criteria.keyword != null) {
+        if (criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
+            if (criteria.getKeyword() != null) {
                 List<MusicTag> list = TagRepository.getAllMusicsForPlaylist(); //MusixMateApp.getInstance().getOrmLite().findMySongs();
-                String name = criteria.keyword;
+                String name = criteria.getKeyword();
                 for (MusicTag tag : list) {
-                    if (CollectionsBrowser.DOWNLOADS_SONGS.equals(name) && MusicTagUtils.isOnDownloadDir(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_ISAAN_SONGS.equals(name) && MusicTagUtils.isISaanPlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS.equals(name) && MusicTagUtils.isBaanThungPlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_LOUNGE_SONGS.equals(name) && MusicTagUtils.isLoungePlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_VOCAL_SONGS.equals(name) && MusicTagUtils.isVocalPlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
-                        results.add(tag);
-                    } else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
-                        results.add(tag);
-                    } else if (PlaylistRepository.isInAlbumPlaylist(tag, name)) {
-                        results.add(tag);
-                    } else if (PlaylistRepository.isInTitlePlaylist(tag, name)) {
+                    if(PlaylistRepository.isSongInPlaylistName(tag, name)) {
                         results.add(tag);
                     }
                 }
+                if(PlaylistRepository.isTitlePlaylist(name)) {
+                    // add missing titles
+                    List<MusicTag> missingList = PlaylistRepository.getMissingSongsForPlaylist(name, results);
+                    missingList.sort(Comparator.comparing(MusicTag::getTitle));
+                    results.addAll(missingList);
+                }
             } else {
                 int index = 1;
-                results.add(buildMusicTagPlaylist(index++, AUDIOPHILE_SONGS, "Audiophile Songs"));
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_FINFIN_SONGS, "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป"));  //"เพลงฟินๆ รินเบียร์เย็นๆ";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_VOCAL_SONGS, "เสียงใสๆ สกิดใจวัยรุ่น"));
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_ISAAN_SONGS, "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ")); //"สะออนแฮง สำเนียงเสียงลำ";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_BAANTHUNG_SONGS, "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง")); // "คิดถึง บ้านทุ่งท้องนา";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_TRADITIONAL_SONGS, "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ"));
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_CLASSIC_SONGS, "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ")); //"คลาสสิคกล่อมโลก ฟังแล้วอารมณ์ดี";
-                results.add(buildMusicTagPlaylist(index++, SMART_LIST_LOUNGE_SONGS, "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์"));
-
                 for (String name : PlaylistRepository.getPlaylistNames()) {
                     results.add(buildMusicTagPlaylist(index++, name, name));
                 }
-                results.sort((musicTag, t1) -> musicTag.getTitle().compareTo(t1.getTitle()));
+                results.sort(Comparator.comparing(MusicTag::getTitle));
 
                 // Create a map of playlist containers if not already done
                 Map<String, MusicTag> playlistMap = new HashMap<>();
@@ -293,35 +269,10 @@ public class TagRepository {
                 }
                 List<MusicTag> list = TagRepository.getAllMusicsForPlaylist(); //MusixMateApp.getInstance().getOrmLite().findMySongs();
                 for(MusicTag tag: list) {
-                    if (MusicTagUtils.isISaanPlaylist(tag)){
-                        updateMusicFolder(playlistMap,SMART_LIST_ISAAN_SONGS, tag);
-                    }
-                    if (MusicTagUtils.isBaanThungPlaylist(tag)) {
-                        updateMusicFolder(playlistMap,SMART_LIST_BAANTHUNG_SONGS, tag);
-                    }
-                    if (MusicTagUtils.isFinFinPlaylist(tag)) {
-                        updateMusicFolder(playlistMap,SMART_LIST_FINFIN_SONGS, tag);
-                    }
-                    if (MusicTagUtils.isClassicPlaylist(tag)) {
-                        updateMusicFolder(playlistMap,SMART_LIST_CLASSIC_SONGS, tag);
-                    }
-                    if (MusicTagUtils.isLoungePlaylist(tag)) {
-                        updateMusicFolder(playlistMap,SMART_LIST_LOUNGE_SONGS, tag);
-                    }
-                    if (MusicTagUtils.isVocalPlaylist(tag)) {
-                        updateMusicFolder(playlistMap,SMART_LIST_VOCAL_SONGS, tag);
-                    } else if (MusicTagUtils.isTraditionalPlaylist(tag)) {
-                        updateMusicFolder(playlistMap,SMART_LIST_TRADITIONAL_SONGS, tag);
-                    } else if (MusicTagUtils.isAudiophile(tag)) {
-                        updateMusicFolder(playlistMap,AUDIOPHILE_SONGS, tag);
-                    }
 
                     for (String name : PlaylistRepository.getPlaylistNames()) {
-                        if (PlaylistRepository.isInAlbumPlaylist(tag, name)) {
+                        if (PlaylistRepository.isSongInPlaylistName(tag, name)) {
                             updateMusicFolder(playlistMap,name, tag);
-                        }
-                        if (PlaylistRepository.isInTitlePlaylist(tag, name)) {
-                            updateMusicFolder(playlistMap, name, tag);
                         }
                     }
                 }
@@ -378,15 +329,15 @@ public class TagRepository {
                 list = MusixMateApp.getInstance().getOrmLite().findByPublisher(criteria.getKeyword());
             } else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 list = MusixMateApp.getInstance().getOrmLite().findByMediaQuality(criteria.getKeyword());
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_DSD.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
                 list = MusixMateApp.getInstance().getOrmLite().findDSDSongs(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_MASTER_AUDIO.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_MASTER_AUDIO.equals(criteria.getKeyword())) {
                 list = MusixMateApp.getInstance().getOrmLite().findMQASongs(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIGH_QUALITY.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
                 list = MusixMateApp.getInstance().getOrmLite().findHighQuality(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.getKeyword())) {
                 list = MusixMateApp.getInstance().getOrmLite().findLosslessSong(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIRES.equals(criteria.keyword)) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIRES.equals(criteria.getKeyword())) {
                 list = MusixMateApp.getInstance().getOrmLite().findHiRes(0, 0);
             } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 String val = criteria.getKeyword();

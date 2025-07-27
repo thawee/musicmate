@@ -44,5 +44,5 @@ public class MusicFolder extends MusicTag {
     }
 
     private String uniqueKey;
-    private long childCount;
+    private long childCount = 0;
 }

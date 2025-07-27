@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:parentTag="android.widget.RelativeLayout">
+
+    <!-- The 'parentTag' attribute helps the IDE provide correct lint checks and layout previews -->
+
+    <TextView
+        android:id="@+id/file_encoding"
+        android:layout_width="@dimen/dimen_36_dp"
+        android:layout_height="@dimen/dimen_18_dp"
+        android:gravity="start|center_vertical"
+        android:paddingStart="@dimen/dimen_4_dp"
+        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        tools:text="FLAC"
+        android:textStyle="italic|bold"
+        tools:ignore="RtlSymmetry" />
+
+    <TextView
+        android:id="@+id/file_resolution"
+        android:layout_width="@dimen/dimen_56_dp"
+        android:layout_height="@dimen/dimen_18_dp"
+        android:layout_toEndOf="@+id/file_encoding"
+        android:paddingStart="@dimen/dimen_12_dp"
+        android:gravity="start|center_vertical"
+        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        android:background="@drawable/backgound_resolution_hd"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        tools:text="24/192"
+        tools:ignore="RtlSymmetry" />
+
+</merge>

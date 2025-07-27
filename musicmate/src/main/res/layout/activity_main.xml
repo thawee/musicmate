@@ -24,11 +24,6 @@
     android:layout_above="@+id/bottom_app_bar"
     tools:context=".ui.MainActivity">
 
-    <!-- changed from match parent to 0 dp -->
-	<!--
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"> -->
        <LinearLayout
            android:layout_width="match_parent"
            android:layout_height="match_parent"
@@ -42,44 +37,6 @@
                android:layout_height="wrap_content"
                android:background="@color/colorPrimary_light"
                app:layout_constraintTop_toTopOf="parent">
-			   <!--
-			   <LinearLayout
-				   android:id="@+id/searchBar"
-				   android:layout_width="match_parent"
-				   android:layout_height="wrap_content"
-				   android:orientation="horizontal">
-			   <ImageView
-				   android:id="@+id/searchViewSwitch"
-				   android:layout_width="@dimen/dimen_24_dp"
-				   android:layout_height="@dimen/dimen_24_dp"
-				   android:padding="4dp"
-				   android:layout_marginLeft="@dimen/dimen_24_dp"
-				   android:layout_gravity="center_vertical|left"
-				   android:src="@drawable/ic_backspace_white_24dp"
-				   />
-			   <androidx.appcompat.widget.SearchView
-				   android:id="@+id/searchView"
-				   android:layout_width="match_parent"
-				   android:layout_height="@dimen/dimen_32_dp"
-				   android:layout_marginLeft="@dimen/dimen_8_dp"
-				   android:layout_marginRight="@dimen/dimen_24_dp"
-				   android:padding="4dp"
-				   app:iconifiedByDefault="false"
-				   app:queryHint="@string/search_view_query_input_hint"
-				   app:closeIcon="@drawable/ic_clear_white_24dp"
-				   app:searchIcon="@drawable/ic_search_white_24dp"
-				   />
-			   </LinearLayout> -->
-			   <!-- Simple MaterialToolbar extension -->
-
-			   <!--
-			   <androidx.appcompat.widget.Toolbar
-				   android:id="@+id/toolBar"
-				   android:layout_width="match_parent"
-				   android:layout_height="?attr/actionBarSize"
-				   app:logo="@drawable/ic_launcher_background"
-				   app:layout_scrollFlags="scroll|enterAlways|snap"/>
--->
 			   <LinearLayout
 				   android:id="@+id/header_panel"
 				   android:layout_width="match_parent"
@@ -87,57 +44,10 @@
 				   android:orientation="vertical"
 				   android:background="@drawable/shape_header_panel">
 
-				   <!--
-				   <com.heaven7.android.trapezoid.TrapezoidPartsView
-					   android:id="@+id/header_tpv"
-					   android:layout_width="match_parent"
-					   android:layout_height="@dimen/tab_height"
-					   android:paddingStart="@dimen/dimen_2_dp"
-					   android:paddingEnd="@dimen/dimen_2_dp"
-					   android:fillViewport="true"
-					   app:layout_constraintEnd_toEndOf="parent"
-					   app:layout_constraintStart_toStartOf="parent"
-					   app:layout_constraintTop_toTopOf="parent"
-					   app:tpv_angle="68"
-					   app:tpv_image_aspect_ratio="2"
-					   app:tpv_text_color="@android:color/white"
-					   app:tpv_text_margin_top="24dp"
-					   app:tpv_text_margin_bottom="5dp"
-					   app:tpv_space="8dp"
-					   app:tpv_text_size="14sp"
-					   app:tpv_touch_alpha="0.7"
-					   app:tpv_debug="false"
-					   app:tpv_all_parallelogram="false"
-					   /> -->
-				   <!--
-				    app:tpv_image_aspect_ratio="1.848485"
-				   -->
 				   <RelativeLayout
 					   android:layout_width="match_parent"
-					   android:layout_height="@dimen/dimen_48_dp"
+					   android:layout_height="@dimen/dimen_40_dp"
 					   android:background="@color/transparent">
-					   <!--
-					   <com.skydoves.elasticviews.ElasticLayout
-						   android:id="@+id/title_panel"
-						   android:gravity="start"
-						   android:orientation="vertical"
-						   android:layout_width="@dimen/dimen_150_dp"
-						   android:layout_height="match_parent"
-						   android:background="@drawable/tab_start_bg">
-						   <TextView
-							   android:id="@+id/title_label"
-							   android:layout_width="match_parent"
-							   android:layout_height="match_parent"
-							   android:textAppearance="@style/TitleTextStyle"
-							   android:textColor="@color/material_color_grey_400"
-							   android:textStyle="bold|italic"
-							   android:gravity="center_vertical"
-							   android:paddingStart="@dimen/dimen_8_dp"
-							   android:paddingBottom="@dimen/dimen_8_dp"
-							   android:drawablePadding="@dimen/dimen_4_dp"
-							   android:text="MusicMate"/>
-					   </com.skydoves.elasticviews.ElasticLayout>
-					   -->
 					   <LinearLayout
 						   android:id="@+id/title_panel"
 						   android:gravity="start"
@@ -155,55 +65,98 @@
 							   android:gravity="center_vertical"
 							   android:layout_marginEnd="@dimen/dimen_32_dp"
 							   android:paddingStart="@dimen/dimen_16_dp"
-							   android:paddingBottom="@dimen/dimen_8_dp"
+							   android:paddingBottom="@dimen/dimen_4_dp"
 							   android:drawablePadding="@dimen/dimen_4_dp"
 							   android:text="MusicMate"
 							   tools:ignore="HardcodedText,RtlSymmetry" />
 					   </LinearLayout>
-					   <TextView
-							android:id="@+id/title_text"
-							android:layout_toEndOf="@id/title_panel"
-							android:layout_width="wrap_content"
-							android:layout_height="match_parent"
-							android:textAppearance="@style/TitleTextStyle"
-							android:textColor="@color/white"
-							android:gravity="center_vertical"
-							android:paddingStart="@dimen/dimen_16_dp"
-						    android:drawablePadding="@dimen/dimen_4_dp"
-						   android:text=""
-						   app:drawableRightCompat="@drawable/rounded_arrow_drop_down_24"
-						   tools:ignore="RtlSymmetry" />
-				   </RelativeLayout>
-<!--
-				   <com.google.android.material.tabs.TabLayout
-					   app:tabTextAppearance="@style/TabTextAppearance"
-					   android:id="@+id/header_tab"
-					   android:layout_width="match_parent"
-					   android:layout_height="@dimen/tab_height"
-					   android:layout_marginTop="@dimen/dimen_1_dp"
-					   app:tabSelectedTextColor="@color/white"
-					   app:tabTextColor="@color/grey600"
-					   app:tabBackground="@color/transparent"
-					   app:tabIndicatorColor="@color/colorPrimary_light"
-					   app:tabPaddingStart="@dimen/dimen_1_dp"
-					   app:tabPaddingEnd="@dimen/dimen_1_dp"
-					   android:elevation="2dp"
-					   app:tabMaxWidth="0dp"
-					   app:tabGravity="fill"
-					   app:tabMode="auto"
-					   app:layout_constraintEnd_toEndOf="parent"
-					   app:layout_constraintStart_toStartOf="parent"
-					   app:layout_constraintTop_toTopOf="parent"
-					   app:tabIndicatorAnimationMode="elastic"
-					   android:contentDescription="labels header"
-					   tools:ignore="HardcodedText" />
-					   -->
-				   <!--
-				    app:tabPaddingStart="@dimen/dimen_16_dp"
-					   app:tabPaddingEnd="@dimen/dimen_16_dp"
-				   		app:tabMode="scrollable"
-				   -->
 
+					   <RelativeLayout
+						   android:id="@+id/custom_search_container"
+						   android:layout_width="match_parent"
+						   android:layout_height="wrap_content"
+						   android:layout_toEndOf="@+id/title_panel"
+						   android:background="@drawable/search_bar_background"
+						   android:paddingStart="12dp"
+						   android:paddingEnd="12dp"
+						   android:paddingTop="8dp"
+						   android:paddingBottom="8dp">
+
+						   <EditText
+							   android:id="@+id/search_edit_text"
+							   android:layout_width="match_parent"
+							   android:layout_height="wrap_content"
+							   android:layout_centerVertical="true"
+							   android:layout_toStartOf="@+id/search_clear_icon"
+							   android:background="@null"
+						   android:hint=""
+						   android:textColorHint="@color/search_bar_hint_color"
+						   android:textColor="@color/search_bar_text_color"
+						   android:inputType="text"
+						   android:imeOptions="actionSearch"
+						   android:paddingEnd="8dp"
+						   android:singleLine="true"/>
+
+						   <ImageView
+							   android:id="@+id/search_clear_icon"
+							   android:layout_width="wrap_content"
+							   android:layout_height="wrap_content"
+							   android:layout_centerVertical="true"
+							   android:layout_toStartOf="@+id/search_icon"
+						   android:src="@drawable/ic_clear_24dp"
+						   android:contentDescription="Clear Search Text"
+						   android:clickable="true"
+						   android:focusable="true"
+						   android:background="?attr/selectableItemBackgroundBorderless"
+						   android:padding="4dp"
+						   android:visibility="gone"
+						   android:layout_marginEnd="4dp"/>
+
+						   <ImageView
+							   android:id="@+id/search_icon"
+							   android:layout_width="wrap_content"
+							   android:layout_height="wrap_content"
+							   android:layout_alignParentEnd="true"
+							   android:layout_centerVertical="true"
+							   android:src="@drawable/ic_search_24dp"
+							   android:contentDescription="Search Icon"
+							   android:clickable="true"
+							   android:focusable="true"
+							   android:background="?attr/selectableItemBackgroundBorderless"
+							   android:padding="4dp"/>
+					   </RelativeLayout>
+					   <!--
+					   <androidx.appcompat.widget.SearchView
+						   android:id="@+id/searchView"
+						   android:layout_width="match_parent"
+						   android:layout_height="wrap_content"
+						   android:layout_marginStart="@dimen/dimen_1_dp"
+						   android:layout_marginEnd="@dimen/dimen_2_dp"
+						   android:gravity="center"
+						   android:padding="4dp"
+						   android:layout_toEndOf="@+id/title_panel"
+						   app:closeIcon="@drawable/ic_clear_white_24dp"
+						   app:iconifiedByDefault="true"
+						   app:queryHint="@string/search_view_query_input_hint"
+						   app:searchIcon="@drawable/ic_search_white_24dp" />
+					   -->
+				   </RelativeLayout>
+
+				   <LinearLayout
+					   android:layout_width="match_parent"
+					   android:layout_height="match_parent"
+                       android:orientation="vertical">
+				   <androidx.recyclerview.widget.RecyclerView
+					   android:id="@+id/carousel_recycler_view"
+					   app:layoutManager="com.google.android.material.carousel.CarouselLayoutManager"
+					   android:layout_width="match_parent"
+					   tools:listitem="@layout/view_list_item_carousel"
+					   android:background="@drawable/shape_black_round_corner"
+					   android:layout_height="100dp"
+					   android:layout_gravity="center"
+					   android:clipChildren="false"
+					   android:clipToPadding="false"
+					   app:carousel_alignment="center"/>
 					   <TextView
 						   android:id="@+id/header_subtitle"
 						   android:layout_width="match_parent"
@@ -219,6 +172,7 @@
 					   android:layout_width="match_parent"
 					   android:layout_height="2dp"
 					   android:background="@drawable/divider_header_horizontal" />
+				   </LinearLayout>
 			   </LinearLayout>
 
                <View
@@ -230,7 +184,6 @@
 			   <RelativeLayout
 				   android:layout_width="match_parent"
                    android:layout_height="match_parent">
-
 					   <com.scwang.smart.refresh.layout.SmartRefreshLayout
 						   android:id="@+id/refreshLayout"
 						   android:layout_width="match_parent"
@@ -281,31 +234,14 @@
 					   android:padding="@dimen/dimen_1_dp">
 					   <include layout="@layout/view_now_playing"/>
 				   </com.skydoves.elasticviews.ElasticLayout>
-				   <!--
-
-				   <LinearLayout
-					   android:id="@+id/now_playing_panel"
-					   android:layout_width="wrap_content"
-					   android:layout_height="wrap_content"
-					   android:layout_alignParentBottom="true"
-					   android:layout_alignParentEnd="true"
-					   android:layout_marginEnd="@dimen/dimen_48_dp"
-					   android:layout_marginBottom="@dimen/dimen_96_dp"
-					   android:padding="@dimen/dimen_1_dp"
-					   android:background="@drawable/shape_now_playing_background_l1">
-					   <include layout="@layout/view_now_playing"/>
-				   </LinearLayout>
-				   -->
    			</RelativeLayout>
 
        </LinearLayout>
-<!--
-    </RelativeLayout> -->
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/dimen_48_dp"
         android:layout_gravity="bottom"
         app:backgroundTint="@color/colorPrimary_light"
         app:fabAlignmentMode="center"
@@ -325,60 +261,34 @@
             android:layout_height="wrap_content"
             android:background="@drawable/shape_bottom_background">
 
+			<LinearLayout
+				android:id="@+id/navigation_collections"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:layout_alignParentStart="true"
+				android:layout_centerInParent="true"
+				android:layout_centerVertical="true"
+				android:gravity="center"
+				android:layout_marginStart="@dimen/dimen_16_dp"
+				android:layout_marginEnd="@dimen/dimen_12_dp"
+                tools:ignore="UseCompoundDrawables">
             <ImageView
-                android:id="@+id/navigation_collections"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerInParent="true"
-                android:layout_marginStart="@dimen/dimen_16_dp"
-                android:layout_marginEnd="@dimen/dimen_12_dp"
                 android:paddingStart="@dimen/dimen_8_dp"
                 android:contentDescription="@string/app_name"
                 android:src="@drawable/round_subscriptions_24"
 				tools:ignore="RtlSymmetry" />
-<!--
-            <TextView
-                style="?android:attr/borderlessButtonStyle"
-                android:id="@+id/navigation_collections_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerInParent="true"
-                android:layout_marginLeft="50dp"
-                android:layout_toEndOf="@id/navigation_collections"
-                android:background="?android:attr/selectableItemBackground"
-                android:gravity="center"
-                android:text="Collection"
-                android:textColor="#FFFFFF" /> -->
-            <!--
-                        <TextView
-                            style="?android:attr/borderlessButtonStyle"
-                            android:id="@+id/navigation_settings_label"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerInParent="true"
-                            android:layout_marginRight="50dp"
-                            android:layout_toStartOf="@id/navigation_settings"
-                            android:background="?android:attr/selectableItemBackground"
-                            android:gravity="center"
-                            android:text="@string/app_name"
-                            android:textColor="#FFFFFF" />
-                            -->
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:paddingStart="@dimen/dimen_8_dp"
+				android:gravity="center"
+				android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+				android:text="Collections"
+                tools:ignore="RtlSymmetry" />
+			</LinearLayout>
 			<!--
-            <ImageView
-                android:id="@+id/navigation_search"
-                android:layout_width="@dimen/dimen_24_dp"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerInParent="true"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="@dimen/dimen_96_dp"
-                android:contentDescription="@string/app_name"
-                android:layout_toLeftOf="@id/navigation_settings"
-                android:src="@drawable/ic_search_white_24dp" />
-                -->
 			<androidx.appcompat.widget.SearchView
 				android:id="@+id/searchView"
 				android:layout_width="match_parent"
@@ -390,6 +300,19 @@
 				app:iconifiedByDefault="true"
 				app:queryHint="@string/search_view_query_input_hint"
 				app:searchIcon="@drawable/ic_search_white_24dp" />
+-->
+			<ImageView
+				android:id="@+id/navigation_server"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_alignParentEnd="true"
+				android:layout_centerInParent="true"
+				android:layout_marginStart="@dimen/dimen_12_dp"
+				android:layout_marginEnd="@dimen/dimen_60_dp"
+				android:contentDescription="@string/app_name"
+				android:paddingEnd="@dimen/dimen_8_dp"
+				android:src="@drawable/rounded_music_cast_24"
+				tools:ignore="RtlSymmetry" />
 
 			<ImageView
 				android:id="@+id/navigation_settings"

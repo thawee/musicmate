@@ -1,5 +1,8 @@
 package apincer.android.mmate.ui;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static apincer.android.mmate.utils.MusicTagUtils.getRating;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -13,16 +16,16 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -33,39 +36,34 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.vanniktech.textbuilder.TextBuilder;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.notification.AudioTagEditEvent;
-import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
-import apincer.android.mmate.provider.IconProviders;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicAnalyser;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.provider.CoverartFetcher;
+import apincer.android.mmate.ui.view.ResolutionView;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -87,11 +85,9 @@ import sakout.mehdi.StateViews.StateView;
 public class TagsActivity extends AppCompatActivity {
     private static final String TAG = "TagsActivity";
 
-    private static final Object editItemsLock = new Object();
-    private static final ArrayList<MusicTag> editItems = new ArrayList<>();
-    private volatile MusicTag displayTag;
+    private TagsViewModel viewModel;
+
     private ImageView coverArtView;
-   // private ImageView reflectionView;
     private TabLayout tabLayout;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
@@ -103,21 +99,19 @@ public class TagsActivity extends AppCompatActivity {
     private TextView encInfo;
     private TextView pathInfo;
     private View pathInfoLine;
-   // private TextView drView;
-    private TextView fileTypeView;
-    private ImageView hiresView;
-   // private ImageView audiophileView;
-    private ImageView resolutionView;
-    private ImageView qualityView;
+   private View hiresView;
+   private ResolutionView resolutionView;
+    private TextView ratingView;
 
     private int toolbar_from_color;
     private int toolbar_to_color;
-    FileRepository repos;
+   // FileRepository repos;
     private Fragment activeFragment;
 
     private ImageView playerBtn;
     private View playerPanel;
-    private boolean closePreview = true;
+    private TextView playerName;
+   // private boolean closePreview = true;
 
     private boolean previewState = true;
 
@@ -138,58 +132,27 @@ public class TagsActivity extends AppCompatActivity {
     public void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
-        stopProgressBar();
+       // stopProgressBar();
+        dismissProgressDialog(); // Ensure progress dialog is dismissed
     }
 
     private void doMeasureDR() {
-        CompletableFuture.runAsync(
-                () -> {
-                    startProgressBar();
-                    for(MusicTag tag:this.getEditItems()) {
-                        try {
-                            if (MusicAnalyser.analyse(tag)) {
-                                TagWriter.writeTagToFile(getApplicationContext(), tag);
-                                TagRepository.saveTag(tag);
-                            }
-                        }catch (Exception ex) {
-                            Log.e(TAG, "doMeasureDR", ex);
-                        }
-                    }
-
-                    displayTag = buildDisplayTag();
-                    runOnUiThread(this::updateTitlePanel);
-                    stopProgressBar();
-                }
-        );
+        viewModel.measureDynamicRange(getApplicationContext());
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        dismissProgressDialog();
         stopProgressBar();
     }
     @Override
     protected void onResume() {
         super.onResume();
-        if(getEditItems()==null) {
-            Intent myIntent = new Intent(TagsActivity.this, MainActivity.class);
-            startActivity(myIntent);
-        }
-        if(MusixMateApp.getPlayerControl().isPlaying() && getEditItems().size() == 1) {
-            if(MusixMateApp.getPlayerControl().getPlayingSong().equals(getEditItems().get(0))) {
-                closePreview = false;
-            }
-        }
     }
 
     private TextView tagInfo;
-    private SearchCriteria criteria;
-
-    public List<MusicTag> getEditItems() {
-        synchronized (editItemsLock) {
-            return new ArrayList<>(editItems); // Return a copy to prevent concurrent modification
-        }
-    }
+    //private SearchCriteria criteria;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,6 +165,11 @@ public class TagsActivity extends AppCompatActivity {
         window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
 
         setContentView(R.layout.activity_tags);
+
+        ExecutorService executor = MusicMateExecutors.getExecutorService(); // Get your executor
+        TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory(executor /*, getApplicationContext() if needed and handled carefully */);
+        viewModel = new ViewModelProvider(this, factory).get(TagsViewModel.class);
+
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -210,8 +178,6 @@ public class TagsActivity extends AppCompatActivity {
         // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
-
-        repos = FileRepository.newInstance(getApplicationContext());
 
         coverArtView = findViewById(R.id.panel_cover_art);
         CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
@@ -222,7 +188,22 @@ public class TagsActivity extends AppCompatActivity {
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         StateView mStateView = findViewById(R.id.status_page);
         mStateView.hideStates();
-        setUpTitlePanel();
+
+        setupTitlePanelViews(); // Method to findViewById all title panel views
+        setupActionButtons();   // Method to setOnClickListener for buttons like btnDelete, btnMDR etc.
+
+        // --- Observe LiveData from ViewModel ---
+        observeViewModel();
+
+        // If you need to re-process an event on configuration change,
+        // the ViewModel might need to hold the raw event data or re-trigger.
+        // For simplicity, assuming EventBus delivers sticky events if the Activity is recreated.
+
+        // Initial setup for ViewPager might depend on data, or can be done once
+        // Consider if setupPageViewer() needs data from ViewModel before being called
+        // If data is ready, call it. If not, observe some "dataReady" LiveData.
+        // For now, let's assume it can be setup and fragments will observe ViewModel.
+        setupPageViewer();
     }
 
     @Override
@@ -234,78 +215,33 @@ public class TagsActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagEditEvent event) {
-        // call from EventBus on preview/edit selected tags from main screen
-        try {
-            criteria = event.getSearchCriteria();
-
-            // Process data on a background thread
-            CompletableFuture.runAsync(() -> {
-                synchronized (editItemsLock) {
-                    editItems.clear();
-                    editItems.addAll(event.getItems());
-                    displayTagDirty = true;
-                    displayTag = buildDisplayTag();
-                }
-
-                if(displayTag != null) {
-                    runOnUiThread(() -> {
-                        updateTitlePanel();
-                        setUpPageViewer();
-                        stopProgressBar();
-                    });
-                }
-            }, MusicMateExecutors.getExecutorService()).exceptionally(ex -> {
-                Log.e(TAG, "Error processing event", ex);
-                stopProgressBar();
-                return null;
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "onMessageEvent", e);
-            stopProgressBar();
+        if (event != null && event.getItems() != null && !event.getItems().isEmpty()) {
+            viewModel.processAudioTagEditEvent((Collection<MusicTag>) event.getItems(), event.getSearchCriteria());
+            // No need to stopProgressBar here, ViewModel's status LiveData will handle UI
+            EventBus.getDefault().removeStickyEvent(event); // Consume the event
         }
+
+        // call from EventBus on preview/edit selected tags from main screen
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     public void onMessageEvent(AudioTagPlayingEvent event) {
-        finishOnTimeout = false;
-        // call from now playing listener
-        if(MusixMateApp.getPlayerControl().isPlaying()) {
-            playerBtn.setVisibility(View.VISIBLE);
-            if (!closePreview) {
-                MusicTag tag = event.getPlayingSong();
-                if(tag != null) {
-                    TagRepository.load(tag);
-                    updatePreview(tag);
-                    stopProgressBar();
-                }
+        if (MusixMateApp.getPlayerControl().isPlaying()) {
+            playerBtn.setVisibility(VISIBLE);
+            MusicTag tag = event.getPlayingSong();
+            if (tag != null) {
+                // Check if the current view should be updated by the playing song
+                // This logic might depend on user preferences or current state (closePreview)
+                // For now, let's assume you want to update if a song is playing
+                viewModel.updateWithPlayingSong(tag);
+                // No need to stopProgressBar, ViewModel's status LiveData will handle UI
             }
         }
+        EventBus.getDefault().removeStickyEvent(event); // Optional: if you want to consume it
+
     }
 
-    private void updatePreview(MusicTag playingSong) {
-        try {
-            if (playingSong == null) return;
-
-            MusicTag tagCopy = playingSong.copy(); // Work with a copy
-
-            synchronized (editItemsLock) {
-                editItems.clear();
-                editItems.add(tagCopy);
-                displayTag = buildDisplayTag();
-            }
-
-            if (displayTag != null) {
-                runOnUiThread(() -> {
-                    updateTitlePanel();
-                    setUpPageViewer();
-                });
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "updatePreview", e);
-        }
-    }
-
-    private void setUpPageViewer() {
+    private void setupPageViewer() {
         //final AppBarLayout appBarLayout = findViewById(R.id.appbar);
         appBarLayout = findViewById(R.id.appbar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
@@ -313,7 +249,7 @@ public class TagsActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
-       // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
+        // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
         adapter.addNewTab(new TagsEditorFragment(), "TAGs");
         adapter.addNewTab(new TagsTechnicalFragment(), "for Nerd");
         viewPager.setAdapter(adapter);
@@ -337,15 +273,18 @@ public class TagsActivity extends AppCompatActivity {
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
 
         findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
-        findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItem());
+        findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItems());
         findViewById(R.id.btnMDR).setOnClickListener(v -> doMeasureDR());
-        findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItem());
-        findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, displayTag));
-        findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this,displayTag));
-        findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this,displayTag));
+        findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItems());
+        if (viewModel.displayTag != null && viewModel.displayTag.getValue()!= null) {
+            findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, viewModel.displayTag.getValue()));
+            findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this, viewModel.displayTag.getValue()));
+            findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue()));
+
+        }
     }
 
-    private void setUpTitlePanel() {
+    private void setupTitlePanelViews() {
         titleView = findViewById(R.id.panel_title);
         artistView = findViewById(R.id.panel_artist);
         albumView = findViewById(R.id.panel_album);
@@ -355,94 +294,116 @@ public class TagsActivity extends AppCompatActivity {
         pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
         hiresView = findViewById(R.id.icon_hires);
-      //  audiophileView = findViewById(R.id.icon_audiophile);
         resolutionView = findViewById(R.id.icon_resolution);
-       // drView = findViewById(R.id.icon_dr);
-        qualityView = findViewById(R.id.icon_quality);
+        ratingView = findViewById(R.id.rating);
 
-        fileTypeView = findViewById(R.id.icon_file_type);
+        playerName = findViewById(R.id.music_player_name);
         playerBtn = findViewById(R.id.music_player);
         playerPanel = findViewById(R.id.music_player_panel);
-        playerPanel.setOnClickListener(view -> {
-            startProgressBar();
-           // closePreview = false;
-            playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
-            MusixMateApp.getPlayerControl().playNextSong(getApplicationContext());
-        });
-        playerPanel.setOnLongClickListener(view -> {
-            closePreview = !closePreview;
-            if(closePreview) {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), apincer.android.library.R.drawable.bg_transparent));
-            }else {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
-            }
-            return true;
-        });
     }
 
-    protected void updateTitlePanel() {
+    private void setupActionButtons() {
+        findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
+        findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItems()); // This method would now likely call a ViewModel method
+        findViewById(R.id.btnMDR).setOnClickListener(v -> {
+            // Pass context carefully if needed by lower layers called by ViewModel
+            viewModel.measureDynamicRange(getApplicationContext());
+        });
+        findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItems()); // Call ViewModel
+        findViewById(R.id.btnWebSearch).setOnClickListener(v -> ApplicationUtils.webSearch(this, viewModel.displayTag.getValue()));
+        findViewById(R.id.btnExplorer).setOnClickListener(v -> ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue()));
+        findViewById(R.id.btnAspect).setOnClickListener(v -> ApplicationUtils.startAspect(this, viewModel.displayTag.getValue()));
+    }
+
+    private void observeViewModel() {
+
+        viewModel.displayTag.observe(this, musicTag -> {
+            // This is your new 'displayTag'
+            updateTitlePanel(musicTag); // Pass the new displayTag to the update method
+            // Update cover art using Coil based on this new displayTag
+            loadImages(musicTag);
+            updateViewPagers(musicTag);
+            dismissProgressDialog();
+        });
+
+        viewModel.drMeasurementStatus.observe(this, this::handleOperationStatus);
+    }
+
+    private void updateViewPagers(MusicTag musicTag) {
+        if (activeFragment instanceof TagsEditorFragment) {
+            ((TagsEditorFragment) activeFragment).initEditorInputs(musicTag);
+        }
+    }
+
+    protected void updateTitlePanel(MusicTag currentDisplayTag) {
         if(MusixMateApp.getPlayerControl().isPlaying()) {
-            playerBtn.setVisibility(View.VISIBLE);
-            playerPanel.setVisibility(View.VISIBLE);
+            playerBtn.setVisibility(VISIBLE);
+            playerPanel.setVisibility(VISIBLE);
+            playerName.setVisibility(VISIBLE);
+            playerName.setText(StringUtils.truncate(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerName(), 20));
             playerBtn.setBackground(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
-            if(closePreview) {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), apincer.android.library.R.drawable.bg_transparent));
-            }else {
-                playerPanel.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.shape_play_next_background_refresh));
-            }
         }else {
-            playerBtn.setVisibility(View.GONE);
-            playerPanel.setVisibility(View.GONE);
+            playerBtn.setVisibility(GONE);
+            playerPanel.setVisibility(GONE);
+            playerName.setVisibility(GONE);
         }
-        if(getEditItems().size()>1) {
-            String title = getString(R.string.title_many, getEditItems().size());
-            titleView.setText(title);
-        }else {
-            titleView.setText(trim(displayTag.getTitle(), " - "));
+
+        if (currentDisplayTag == null) {
+            // Handle null case, maybe clear fields or show placeholder
+            titleView.setText("");
+            artistView.setText("");
+            // ... clear other fields ...
+            return;
         }
-        artistView.setText(trim(displayTag.getArtist(), " - "));
+
+        titleView.setText(trim(currentDisplayTag.getTitle(), " - "));
+        artistView.setText(trim(currentDisplayTag.getArtist(), " - "));
 
         // load resolution, quality, coverArt
-        loadImages(displayTag);
+        loadImages(currentDisplayTag);
+        resolutionView.setMusicItem(currentDisplayTag);
 
+        TextBuilder builder = new TextBuilder(getApplicationContext());
+        int ratingColor = getColor(R.color.audiophile_background); // getDRScoreColor(holder.mContext, (int) tag.getDynamicRangeScore());
+        int rating = getRating(currentDisplayTag);
+        int i=0;
+        for(;i<rating;i++) {
+            //builder.addColoredText("*", ratingColor);
+            builder.addColoredText("\u272D", ratingColor);
+        }
+        while(i <5) {
+           // builder.addText("*");
+            builder.addText("\u2729");
+            i++;
+        }
+        builder.into(ratingView);
         //  qualityView.setImageBitmap(IconProviders.createQualityIcon(getApplicationContext(), displayTag));
 
-        if(MusicTagUtils.isDSD(displayTag) || MusicTagUtils.isHiRes(displayTag)) {
-            hiresView.setVisibility(View.VISIBLE);
+        if(MusicTagUtils.isDSD(currentDisplayTag) || MusicTagUtils.isHiRes(currentDisplayTag)) {
+            hiresView.setVisibility(VISIBLE);
         }else {
-            hiresView.setVisibility(View.GONE);
+            hiresView.setVisibility(GONE);
         }
-
-        Drawable resolutionBackground = IconProviders.getFileFormatBackground(getApplicationContext(), displayTag);
-        fileTypeView.setBackground(resolutionBackground);
-        fileTypeView.setText(trimToEmpty(displayTag.getAudioEncoding()).toUpperCase(Locale.US));
 
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
             //filter by artist
-            if(criteria!=null) {
-                criteria.setFilterType(Constants.FILTER_TYPE_ARTIST);
-                criteria.setFilterText(displayTag.getArtist());
-            }
-            doOpenMainActivity(criteria);
+            doBackToMainActivity(Constants.FILTER_TYPE_ARTIST, currentDisplayTag.getArtist());
+
         });
-        if(isEmpty(displayTag.getAlbum())) {
-            albumView.setText(String.format("[%s]", MusicTagUtils.getDefaultAlbum(displayTag)));
+        if(isEmpty(currentDisplayTag.getAlbum())) {
+            albumView.setText(String.format("[%s]", MusicTagUtils.getDefaultAlbum(currentDisplayTag)));
         }else {
-            albumView.setText(displayTag.getAlbum());
+            albumView.setText(currentDisplayTag.getAlbum());
             albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             albumView.setOnClickListener(view -> {
                 // filter by album
-                if (criteria != null) {
-                    criteria.setFilterType(Constants.FILTER_TYPE_ALBUM);
-                    criteria.setFilterText(displayTag.getAlbum());
-                }
-                doOpenMainActivity(criteria);
+                doBackToMainActivity(Constants.FILTER_TYPE_ALBUM, currentDisplayTag.getAlbum());
             });
         }
         String mediaTypeAndPublisher;
-        if((!isEmpty(displayTag.getAlbumArtist()))) {
-            mediaTypeAndPublisher = " " +displayTag.getAlbumArtist()+" ";
+        if((!isEmpty(currentDisplayTag.getAlbumArtist()))) {
+            mediaTypeAndPublisher = " " +currentDisplayTag.getAlbumArtist()+" ";
         }else {
             mediaTypeAndPublisher = " " +StringUtils.SYMBOL_SEP+" ";
         }
@@ -456,36 +417,26 @@ public class TagsActivity extends AppCompatActivity {
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
 
         tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                    if(!isEmpty(displayTag.getGenre())) {
-                        if (criteria != null) {
-                            criteria.setFilterType(Constants.FILTER_TYPE_GENRE);
-                            criteria.setFilterText(trimToEmpty(displayTag.getGenre()));
-                        }
-                        doOpenMainActivity(criteria);
-                    }
+                    doBackToMainActivity(Constants.FILTER_TYPE_GENRE, currentDisplayTag.getGenre());
                 }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(isEmpty(displayTag.getGenre())?Constants.UNKNOWN:displayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
+                new SpecialTextUnit(isEmpty(currentDisplayTag.getGenre())?Constants.UNKNOWN:currentDisplayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                    if(criteria!=null) {
-                        criteria.setFilterType(Constants.FILTER_TYPE_GROUPING);
-                        criteria.setFilterText(trimToEmpty(displayTag.getGrouping()));
-                    }
-                    doOpenMainActivity(criteria);
+                    doBackToMainActivity(Constants.FILTER_TYPE_GROUPING, currentDisplayTag.getGrouping());
                 }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(isEmpty(displayTag.getGrouping())?" - ":displayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
+                new SpecialTextUnit(isEmpty(currentDisplayTag.getGrouping())?" - ":currentDisplayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagInfo.setText(tagSpan.build());
 
         // Path Info
-        String simplePath = displayTag.getSimpleName();
+        String simplePath = currentDisplayTag.getSimpleName();
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
-        boolean inLibrary = MusicTagUtils.isManagedInLibrary(getApplicationContext(), displayTag);
-       // String matePath = repos.buildCollectionPath(displayTag, true);
+        boolean inLibrary = MusicTagUtils.isManagedInLibrary(getApplicationContext(), currentDisplayTag);
+        // String matePath = repos.buildCollectionPath(displayTag, true);
         if(inLibrary) {
             pathInfoLine.setBackgroundColor(getColor(R.color.grey400));
         }else {
@@ -494,16 +445,12 @@ public class TagsActivity extends AppCompatActivity {
         pathInfo.setText(simplePath);
 
         pathInfo.setOnClickListener(view -> {
-            if (criteria != null && displayTag.getPath() != null) {
-                criteria.setFilterType(Constants.FILTER_TYPE_PATH);
-                File file = new File(displayTag.getPath());
-                if (!file.isDirectory()) {
-                    file = file.getParentFile();
-                }
-                String filterPath = file.getAbsolutePath() + File.separator;
-                criteria.setFilterText(filterPath);
-                doOpenMainActivity(criteria);
+            File file = new File(currentDisplayTag.getPath());
+            if (!file.isDirectory()) {
+                file = file.getParentFile();
             }
+            String filterPath = file.getAbsolutePath() + File.separator;
+            doBackToMainActivity(Constants.FILTER_TYPE_PATH, filterPath);
         });
 
         // ENC info
@@ -511,64 +458,81 @@ public class TagsActivity extends AppCompatActivity {
             int metaInfoTextSize = 12; //10
             int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
             SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-           // spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
+            // spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
 
             // bps
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(displayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(displayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
+           // spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
+           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
+          //  spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
+           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(displayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+
+            String labelDr = trim(MusicTagUtils.getDynamicRangeScore(currentDisplayTag), "--");
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                   // .append(new SpecialTextUnit(StringUtils.formatDuration(displayTag.getAudioDuration(), true), encColor).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(displayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize))
+                    .append(new SpecialTextUnit("DR"+labelDr, encColor).setTextSize(metaInfoTextSize));
 
-                    .append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(displayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
-                   // .append(new SpecialTextUnit(StringUtils.SEP_RIGHT, encColor));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+                    .append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
+
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
+
             encInfo.setText(spannableEnc.build());
         }catch (Exception ex) {
             Log.e(TAG, "updateTitlePanel", ex);
         }
     }
 
-    private void doOpenMainActivity(SearchCriteria criteria) {
-      //  Intent myIntent = new Intent(this, MainActivity.class);
-        if(criteria!=null) {
-            MusixMateApp.getInstance().setSearchCriteria(criteria);
-           // ApplicationUtils.setSearchCriteria(myIntent, criteria);
+    private void handleOperationStatus(OperationStatus status) {
+        if (status instanceof Idle) {
+            dismissProgressDialog();
+        } else if (status instanceof Loading) {
+            showProgressDialog(((Loading) status).message, -1, null);
+        } else if (status instanceof ProgressUpdate) {
+            ProgressUpdate pu = (ProgressUpdate) status;
+            showProgressDialog("Processing...", pu.progress, pu.currentStep);
+        } else if (status instanceof Success) {
+            dismissProgressDialog();
+            // Show a Toast or Snackbar with ((Success) status).message
+            //ApplicationUtils.showToast(this, ((ListenableWorker.Result.Success) status).message);
+            viewModel.resetDrMeasurementStatus(); // Go back to Idle
+        } else if (status instanceof Error) {
+            dismissProgressDialog();
+            // Show a Toast or Snackbar with ((Error) status).errorMessage
+           // ApplicationUtils.showErrorToast(this, ((Error) status).errorMessage);
+            viewModel.resetDrMeasurementStatus(); // Go back to Idle
         }
-        //startActivity(myIntent);
-        finish();
     }
 
-    // Add this field to track when display tag needs rebuilding
-    private volatile boolean displayTagDirty = true;
+    private void showProgressDialog(String title, int progress, String currentStep) {
 
-    // Mark display tag as dirty whenever edit items change
-    public void markDisplayTagDirty() {
-        displayTagDirty = true;
+        // If you have a ProgressBar
+    }
+
+    private void dismissProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressDialog = null; // Allow it to be recreated
+    }
+
+    private void doBackToMainActivity(String filterType, String filterText) {
+
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(Constants.KEY_FILTER_TYPE, filterType);
+        resultIntent.putExtra(Constants.KEY_FILTER_KEYWORD, trimToEmpty(filterText));
+
+        // Set the result to RESULT_OK and pass the intent containing the data
+        setResult(AppCompatActivity.RESULT_OK, resultIntent);
+
+        finish();
     }
 
     // Create a separate method for image loading to reduce clutter
     private void loadImages(MusicTag displayTag) {
         // Load all images in parallel
         ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
-
-        // Resolution icon
-        ImageRequest resolutionRequest = new ImageRequest.Builder(getApplicationContext())
-                .data(IconProviders.getResolutionIcon(getApplicationContext(), displayTag))
-                .target(new ImageViewTarget(resolutionView))
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .build();
-
-        // Quality icon
-        ImageRequest qualityRequest = new ImageRequest.Builder(getApplicationContext())
-                .data(IconProviders.getTrackQualityIcon(getApplicationContext(), displayTag))
-                .target(new ImageViewTarget(qualityView))
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .build();
 
         // Cover art with higher priority
         ImageRequest coverRequest = CoverartFetcher.builder(getApplicationContext(), displayTag)
@@ -580,63 +544,7 @@ public class TagsActivity extends AppCompatActivity {
                 .build();
 
         // Enqueue all requests
-        imageLoader.enqueue(resolutionRequest);
-        imageLoader.enqueue(qualityRequest);
         imageLoader.enqueue(coverRequest);
-    }
-
-    protected MusicTag buildDisplayTag() {
-        if(editItems.isEmpty()) return null;
-
-        MusicTag displayTag = editItems.get(0);
-        if(editItems.size()==1) {
-            return displayTag.copy();
-        }
-
-        displayTag = displayTag.copy();
-        for (int i=1;i<editItems.size();i++) {
-            MusicTag item = editItems.get(i);
-            if(!StringUtils.equals(displayTag.getTitle(), item.getTitle())) {
-                displayTag.setTitle(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getTrack(), item.getTrack())) {
-                displayTag.setTrack(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getAlbum(), item.getAlbum())) {
-                displayTag.setAlbum(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getArtist(), item.getArtist())) {
-                displayTag.setArtist(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getAlbumArtist(), item.getAlbumArtist())) {
-                displayTag.setAlbumArtist(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getGenre(), item.getGenre())) {
-                displayTag.setGenre(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getYear(), item.getYear())) {
-                displayTag.setYear(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getDisc(), item.getDisc())) {
-                displayTag.setDisc(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getComment(), item.getComment())) {
-                displayTag.setComment(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getComposer(), item.getComposer())) {
-                displayTag.setComposer(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getGrouping(), item.getGrouping())) {
-                displayTag.setGrouping(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getMediaType(), item.getMediaType())) {
-                displayTag.setMediaType(StringUtils.MULTI_VALUES);
-            }
-            if(!StringUtils.equals(displayTag.getPublisher(), item.getPublisher())) {
-                displayTag.setPublisher(StringUtils.MULTI_VALUES);
-            }
-        }
-        return displayTag;
     }
 
     public int getStatusBarHeight() {
@@ -648,73 +556,56 @@ public class TagsActivity extends AppCompatActivity {
         return result;
     }
 
-    public void doDeleteMediaItem() {
-        String text = "Delete ";
+    public void doDeleteMediaItems() {
+        String text = "";
+        List<MusicTag> editItems = getEditItems();
         if(editItems.size()>1) {
-            text = text + editItems.size() + " songs?";
+            text = "Move songs to the Trash?";
         }else {
-            text = text + "'"+editItems.get(0).getTitle()+"' song?";
+            text = "Move this song to the Trash?";
         }
 
-        MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(TagsActivity.this, R.style.AlertDialogTheme)
-                .setIcon(R.drawable.ic_round_delete_forever_24)
-                .setTitle("Delete Songs")
-                .setMessage(text)
-                .setPositiveButton("DELETE", (dialogInterface, i) -> {
-                    startProgressBar();
-                    if(getEditItems().size()==1) {
-                        MusicMateExecutors.executeParallel(() -> {
-                            try {
-                                boolean status = repos.deleteMediaItem(getEditItems().get(0));
-                                AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, getEditItems().get(0));
-                                EventBus.getDefault().postSticky(message);
-                            } catch (Exception e) {
-                                Log.e(TAG, "doDeleteMediaItem", e);
-                            }
-                        });
-                    }else {
-                        DeleteAudioFileWorker.startWorker(getApplicationContext(), editItems);
-                        dialogInterface.dismiss();
-                        Intent resultIntent = new Intent();
-                        if (criteria != null) {
-                            ApplicationUtils.setSearchCriteria(resultIntent, criteria); //resultIntent.putExtra(Constants.KEY_SEARCH_CRITERIA, criteria);
-                        }
-                        setResult(RESULT_OK, resultIntent);
-                    }
+        final BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this); // Or pass 'context'
+        View sheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_trash_dialog, null);
+        bottomSheetDialog.setContentView(sheetView);
 
+        Button cancelButton = sheetView.findViewById(R.id.button_cancel);
+        Button moveToTrashButton = sheetView.findViewById(R.id.button_move_to_trash);
+        TextView title = sheetView.findViewById(R.id.bottom_sheet_title);
 
-                    // set timeout to finish, 3 seconds
-                    finishOnTimeout = true;
-                    MusicMateExecutors.schedule(() -> {
-                        if(finishOnTimeout) {
-                            finish(); // back to prev activity
-                        }
-                        }, 3);
-                })
-                .setNeutralButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
-        AlertDialog alertDialog = builder.create();
-        if(alertDialog.getWindow() != null) {
-            alertDialog.getWindow().setGravity(Gravity.BOTTOM);
-        }
-        alertDialog.show();
-    }
+        title.setText(text);
+        cancelButton.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-    public void doMoveMediaItem() {
-        startProgressBar();
-        ImportAudioFileWorker.startWorker(getApplicationContext(), editItems);
-        Intent resultIntent = new Intent();
-        if(criteria!=null) {
-            ApplicationUtils.setSearchCriteria(resultIntent,criteria);
-        }
-        setResult(RESULT_OK, resultIntent);
+        moveToTrashButton.setOnClickListener(v -> {
+            startProgressBar();
+            DeleteAudioFileWorker.startWorker(getApplicationContext(), editItems);
 
-            // set timeout to finish, 5 seconds
+            // set timeout to finish, 3 seconds
             finishOnTimeout = true;
             MusicMateExecutors.schedule(() -> {
                 if(finishOnTimeout) {
                     finish(); // back to prev activity
                 }
-            }, 5);
+            }, 3);
+            bottomSheetDialog.dismiss();
+        });
+
+        bottomSheetDialog.show();
+    }
+
+    public void doMoveMediaItems() {
+        startProgressBar();
+        ImportAudioFileWorker.startWorker(getApplicationContext(), getEditItems());
+
+        // set timeout to finish, 5 seconds
+        finishOnTimeout = true;
+        MusicMateExecutors.schedule(() -> {
+            if(finishOnTimeout) {
+                viewModel.refreshDisplayTag();
+                //finish(); // back to prev activity
+            }
+        }, 5);
+
     }
 
     public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {
@@ -732,6 +623,18 @@ public class TagsActivity extends AppCompatActivity {
         toolbar.getMenu().clear();
     }
 
+    public List<MusicTag> getEditItems() {
+        return viewModel.editItems.getValue();
+    }
+
+    public MusicTag getDisplayTag() {
+        return viewModel.displayTag.getValue();
+    }
+
+    public void refreshDisplayTag() {
+        viewModel.refreshDisplayTag();
+    }
+
     private class BackPressedCallback extends OnBackPressedCallback {
         public BackPressedCallback(boolean enabled) {
             super(enabled);
@@ -741,20 +644,13 @@ public class TagsActivity extends AppCompatActivity {
         public void handleOnBackPressed() {
             if (previewState) {
                 // In preview mode, return to main activity
-                if (criteria != null) {
-                    Intent resultIntent = new Intent();
-                    ApplicationUtils.setSearchCriteria(resultIntent, criteria);
-                    setResult(RESULT_OK, resultIntent);
-                }
                 finish();
             } else {
                 // In edit mode, return to preview mode
                 appBarLayout.setExpanded(true, true);
 
                 // Refresh display tag to show any changes
-                markDisplayTagDirty();
-                displayTag = buildDisplayTag();
-                updateTitlePanel();
+                viewModel.refreshDisplayTag();
             }
         }
     }
@@ -795,10 +691,7 @@ public class TagsActivity extends AppCompatActivity {
                 setupMenuToolbar();
 
                 // No need to rebuild the display tag if it's not dirty
-                if (displayTagDirty) {
-                    displayTag = buildDisplayTag();
-                }
-                updateTitlePanel();
+                viewModel.refreshDisplayTag();
             }
             // Fully collapsed state
             else if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange() && !wasFullyCollapsed) {
@@ -850,11 +743,6 @@ public class TagsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             // Handle the back button click
-            if (criteria != null) {
-                Intent resultIntent = new Intent();
-                ApplicationUtils.setSearchCriteria(resultIntent, criteria);
-                setResult(RESULT_OK, resultIntent);
-            }
             finish();
             return true;
         }

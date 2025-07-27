@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.repository.model.SearchCriteria;
 
 public class AudioTagEditEvent {
     public final String message;

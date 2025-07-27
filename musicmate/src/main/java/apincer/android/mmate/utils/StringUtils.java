@@ -34,7 +34,7 @@ public class StringUtils {
     // ⟣ \u27E3
     // ⟢ \
     // Ⓖ \u24BC
-    //
+    // u1f552
 
     //public static final String ARTIST_SEP = " \u00bb "; //"" -/- "; ·
     public static final String SEP_SUBTITLE = " \u25C8 "; //"" \u266A\u266A "; //"" \u2022\u266A\u2022 ";

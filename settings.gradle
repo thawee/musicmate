@@ -19,9 +19,9 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url='https://jitpack.io' }
-        maven { url='https://dl.bintray.com/tsubasap91/maven' }
-        maven { url='https://mvnrepository.com/artifact/'}
-        maven { url='https://repo1.maven.org/maven2/'}
+        //maven { url='https://dl.bintray.com/tsubasap91/maven' }
+        //maven { url='https://mvnrepository.com/artifact/'}
+       // maven { url='https://repo1.maven.org/maven2/'}
        // maven { url="https://objectbox.net/beta-repo/"}
         }
 }
@@ -39,7 +39,6 @@ include ':library:androidtagview'
 //include ':library:AnimatedExpandableListView'
 //include ':library:paralloid'
 //include ':library:slideDateTimePicker'
-include ':library:androidtagview'
 include ':library:crashreporter'
 //include ':library:coroutines'
 //include ':library:objectrelations'

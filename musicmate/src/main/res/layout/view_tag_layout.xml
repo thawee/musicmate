@@ -600,7 +600,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/dimen_12_dp"
                     android:layout_marginBottom="@dimen/dimen_12_dp"
-                    android:background="@drawable/shape_border_others_app"
+                    android:background="@drawable/shape_border_function"
                     tools:ignore="TouchTargetSizeCheck">
 
                     <TextView
@@ -608,13 +608,14 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:gravity="center"
-                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingLeft="@dimen/dimen_6_dp"
                         android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingRight="@dimen/dimen_6_dp"
                         android:paddingBottom="@dimen/dimen_4_dp"
                         android:text="@string/websearch_label"
                         android:textColor="@android:color/white"
-                        android:textStyle="bold" />
+                        android:drawablePadding="@dimen/dimen_2_dp"
+                        app:drawableEndCompat="@drawable/rounded_open_in_new_12" />
                 </com.skydoves.elasticviews.ElasticLayout>
 
                 <com.skydoves.elasticviews.ElasticLayout
@@ -623,7 +624,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/dimen_12_dp"
                     android:layout_marginBottom="@dimen/dimen_4_dp"
-                    android:background="@drawable/shape_border_others_app"
+                    android:background="@drawable/shape_border_function"
                     tools:ignore="TouchTargetSizeCheck">
 
                     <TextView
@@ -631,22 +632,23 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:gravity="center"
-                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingLeft="@dimen/dimen_6_dp"
                         android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingRight="@dimen/dimen_6_dp"
                         android:paddingBottom="@dimen/dimen_4_dp"
                         android:text="@string/aspect_label"
                         android:textColor="@android:color/white"
-                        android:textStyle="bold" />
+                        android:drawablePadding="@dimen/dimen_2_dp"
+                        app:drawableEndCompat="@drawable/rounded_open_in_new_12" />
                 </com.skydoves.elasticviews.ElasticLayout>
 
                 <com.skydoves.elasticviews.ElasticLayout
                     android:id="@+id/btnExplorer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/dimen_12_dp"
+                    android:layout_marginEnd="@dimen/dimen_6_dp"
                     android:layout_marginBottom="@dimen/dimen_4_dp"
-                    android:background="@drawable/shape_border_others_app"
+                    android:background="@drawable/shape_border_function"
                     tools:ignore="TouchTargetSizeCheck">
 
                     <TextView
@@ -654,13 +656,14 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:gravity="center"
-                        android:paddingLeft="@dimen/dimen_12_dp"
+                        android:paddingLeft="@dimen/dimen_6_dp"
                         android:paddingTop="@dimen/dimen_4_dp"
-                        android:paddingRight="@dimen/dimen_12_dp"
+                        android:paddingRight="@dimen/dimen_6_dp"
                         android:paddingBottom="@dimen/dimen_4_dp"
                         android:text="@string/file_explorer_label"
                         android:textColor="@android:color/white"
-                        android:textStyle="bold" />
+                        android:drawablePadding="@dimen/dimen_2_dp"
+                        app:drawableEndCompat="@drawable/rounded_open_in_new_12"/>
                 </com.skydoves.elasticviews.ElasticLayout>
             </LinearLayout>
         </RelativeLayout>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:background="@drawable/shape_icon_border_back"> <!-- Outer background -->
+
+    <TextView
+        android:id="@+id/dynamic_range_db_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/dimen_1_dp"
+        android:background="@drawable/backgound_drdb_normal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/dimen_4_dp"
+        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        android:textColor="@color/white"/>
+</merge>

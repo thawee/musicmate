@@ -1,16 +1,12 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.utils.StringUtils.toLowerCase;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,19 +22,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
-import com.skydoves.powermenu.CircularEffect;
-import com.skydoves.powermenu.MenuAnimation;
-import com.skydoves.powermenu.PowerMenu;
-import com.skydoves.powermenu.PowerMenuItem;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,27 +56,28 @@ public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
+    private View previewPanel;
     private TextView previewTitle;
     private TextView previewArtist;
     private TextView previewAlbum;
     private TextView previewPath;
     private ImageView previewCoverart;
     private TextInputEditText txtTitle;
-    private TextInputEditText txtArtist;
+   // private TextInputEditText txtArtist;
+    private AutoCompleteTextView txtArtist;
     private TextInputEditText txtAlbum;
-    private TextInputEditText txtAlbumArtist;
+    private AutoCompleteTextView txtAlbumArtist;
     private TextInputEditText txtDisc;
     private TextInputEditText txtTrack;
     private TextInputEditText txtYear;
     private AutoCompleteTextView txtGenre;
     // private TextInputEditText txtGrouping;
     private AutoCompleteTextView txtGrouping;
-    private TextInputEditText txtMediaType;
-    private TextInputEditText txtPublisher;
+    private AutoCompleteTextView txtMediaType;
+    private AutoCompleteTextView txtPublisher;
     private FloatingActionButton fabSav;
     private AutoCompleteTextView qualityDropdown;
    //private PowerSpinnerView fileQuality;
-    private PowerMenu powerMenu;
     private volatile boolean bypassChange = false;
 
     @Override
@@ -97,6 +90,7 @@ public class TagsEditorFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.view_music_info_editor, container, false);
+        previewPanel = v.findViewById(R.id.preview_panel);
         previewTitle = v.findViewById(R.id.preview_title);
         previewArtist = v.findViewById(R.id.preview_artist);
         previewAlbum = v.findViewById(R.id.preview_album);
@@ -104,6 +98,7 @@ public class TagsEditorFragment extends Fragment {
         previewCoverart = v.findViewById(R.id.preview_coverart);
         // input fields
         txtTitle = v.findViewById(R.id.input_title);
+       // txtArtist = v.findViewById(R.id.input_artist);
         txtArtist = v.findViewById(R.id.input_artist);
         txtAlbum = v.findViewById(R.id.input_album);
         txtAlbumArtist = v.findViewById(R.id.input_album_artist);
@@ -118,133 +113,34 @@ public class TagsEditorFragment extends Fragment {
         //fileQuality = v.findViewById(R.id.mediaFileQuality);
         fabSav = v.findViewById(R.id.fab_save);
 
-        setupFileQualityList();
-        //fabSav.setVisibility(View.GONE);
         fabSav.setOnClickListener(view -> doSaveMediaItem());
 
         // popup list
-        setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
-        setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1, false);
-       // setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),2, true);
-        setupGenreDropdown();
-       // setupListValuePopup(txtGrouping, TagRepository.getDefaultGroupingList(getContext()),1, true);
-        setupGroupingDropdown();
-        setupListValuePopup(txtPublisher, TagRepository.getDefaultPublisherList(getContext()),3, false);
-        setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1, true);
+        String[] qualityList = getResources().getStringArray(R.array.file_qualities);
+        setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
+       // setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
+        setupListValuePopup(txtArtist, TagRepository.getArtistList(), 1);
+        setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
+        setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
+        //TagRepository.getDefaultGenreList(getContext());
+        setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
+        // setupListValuePopup(txtGrouping, TagRepository.getGroupingList(getContext()),1);
+        setupListValuePopup(txtPublisher, TagRepository.getDefaultPublisherList(getContext()),3);
+        setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1);
 
         return v;
     }
 
-    private void setupGenreDropdown() {
-        // Get the default genre list from TagRepository
-        List<String> genreOptions = TagRepository.getDefaultGenreList(getContext());
-
-        // Create a non-filtering adapter that always shows all items
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                getContext(),
-                R.layout.dropdown_item,
-                genreOptions
-        ) {
-            @NonNull
-            @Override
-            public Filter getFilter() {
-                return new Filter() {
-                    @Override
-                    protected FilterResults performFiltering(CharSequence constraint) {
-                        FilterResults results = new FilterResults();
-                        // Always return all items regardless of constraint
-                        results.values = genreOptions;
-                        results.count = genreOptions.size();
-                        return results;
-                    }
-
-                    @Override
-                    protected void publishResults(CharSequence constraint, FilterResults results) {
-                        if (results.count > 0) {
-                            notifyDataSetChanged();
-                        } else {
-                            notifyDataSetInvalidated();
-                        }
-                    }
-                };
-            }
-        };
-
-        txtGenre.setAdapter(adapter);
-
-        // Set threshold to 0 so dropdown shows immediately on focus
-        txtGenre.setThreshold(0);
-
-        // Make the dropdown appear when clicked
-        txtGenre.setOnClickListener(v -> txtGenre.showDropDown());
-
-        // Set the click listener for item selection
-        txtGenre.setOnItemClickListener((parent, view, position, id) -> {
-            String selection = (String) parent.getItemAtPosition(position);
-            txtGenre.setText(selection);
-            txtGenre.dismissDropDown();
-        });
-
-        txtGenre.setAdapter(adapter);
-
-        // Enable free text entry while still showing suggestions
-       // txtGenre.setThreshold(1);
+    private void setupListValuePopup(AutoCompleteTextView input, List<String> dropdownList, int minChar) {
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, dropdownList);
+        input.setAdapter(arrayAdapter);
+        input.setThreshold(minChar);
     }
 
-    private void setupGroupingDropdown() {
-        // Get the default grouping list from TagRepository
-        List<String> groupingOptions = TagRepository.getGroupingList(getContext());
-
-        // Create a non-filtering adapter that always shows all items
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                getContext(),
-                R.layout.dropdown_item,
-                groupingOptions
-        ) {
-            @NonNull
-            @Override
-            public Filter getFilter() {
-                return new Filter() {
-                    @Override
-                    protected FilterResults performFiltering(CharSequence constraint) {
-                        FilterResults results = new FilterResults();
-                        // Always return all items regardless of constraint
-                        results.values = groupingOptions;
-                        results.count = groupingOptions.size();
-                        return results;
-                    }
-
-                    @Override
-                    protected void publishResults(CharSequence constraint, FilterResults results) {
-                        if (results.count > 0) {
-                            notifyDataSetChanged();
-                        } else {
-                            notifyDataSetInvalidated();
-                        }
-                    }
-                };
-            }
-        };
-
-        txtGrouping.setAdapter(adapter);
-
-        // Set threshold to 0 so dropdown shows immediately on focus
-        txtGrouping.setThreshold(0);
-
-        // Make the dropdown appear when clicked
-        txtGrouping.setOnClickListener(v -> txtGrouping.showDropDown());
-
-        // Set the click listener for item selection
-        txtGrouping.setOnItemClickListener((parent, view, position, id) -> {
-            String selection = (String) parent.getItemAtPosition(position);
-            txtGrouping.setText(selection);
-            txtGrouping.dismissDropDown();
-        });
-
-        txtGrouping.setAdapter(adapter);
-
-        // Enable free text entry while still showing suggestions
-        // groupingDropdown.setThreshold(1);
+    private void setupListValuePopupFullList(AutoCompleteTextView input, List<String> dropdownList) {
+        ArrayAdapter<String> arrayAdapter = new NoFilterArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, dropdownList);
+        input.setAdapter(arrayAdapter);
+        input.setThreshold(0);
     }
 
     private void setupFileQualityList() {
@@ -258,94 +154,34 @@ public class TagsEditorFragment extends Fragment {
         qualityDropdown.setAdapter(adapter);
     }
 
-    private void setupListValuePopup(TextInputEditText textInput, @NonNull List<String> defaultList, int minChar, boolean autoSelect) {
-        textInput.addTextChangedListener(new TextWatcher() {
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if(bypassChange) return;
-                String txt = toLowerCase(charSequence.toString());
-                dismissPowerMenu(); // Use the method to safely dismiss
-
-                if(txt.length()>=minChar) {
-                    // popup list
-                    List<PowerMenuItem> items = new ArrayList<>();
-                    defaultList.stream()
-                            .filter(rValue -> toLowerCase(rValue).contains(txt))
-                            .limit(10)
-                            .forEach(s -> items.add(new PowerMenuItem(s)));
-                    if((!autoSelect) || !items.isEmpty()) {
-                        powerMenu = new PowerMenu.Builder(context)
-                                .setWidth(textInput.getWidth()+24)
-                                .setLifecycleOwner(getViewLifecycleOwner())
-                                .addItemList(items) // list has "Novel", "Poetry", "Art"
-                                .setAnimation(MenuAnimation.SHOW_UP_CENTER) // Animation start point (TOP | LEFT).
-                                .setMenuRadius(8f) // sets the corner radius.
-                                .setMenuShadow(8f) // sets the shadow.
-                                .setTextColor(ContextCompat.getColor(context, R.color.grey800))
-                                .setTextGravity(Gravity.START)
-                                .setTextSize(12)
-                                .setCircularEffect(CircularEffect.INNER) // Shows circular revealed effects for the content view of the popup menu.
-                                .setSelectedTextColor(Color.WHITE)
-                                .setMenuColor(ContextCompat.getColor(context, R.color.material_color_blue_grey_100))
-                                .setSelectedMenuColor(ContextCompat.getColor(context, apincer.android.library.R.color.colorPrimary))
-                                .setAutoDismiss(true)
-                                .setOnMenuItemClickListener((position, item) -> {
-                                    bypassChange = true;
-                                    textInput.setText(item.title);
-                                    powerMenu = null;
-                                    bypassChange = false;
-                                })
-                                .build();
-                        powerMenu.setShowBackground(false); // do not showing background.
-                        int height = powerMenu.getContentViewHeight();
-                        powerMenu.showAsDropDown(textInput,0, (-1)*height*(items.size()+1)); // view is an anchor
-                    }else if(autoSelect && items.size()==1) {
-                        bypassChange = true;
-                        textInput.setText(items.get(0).title);
-                        bypassChange = false;
-                    }
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-    }
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        MusicTag musicTag = tagsActivity.buildDisplayTag();
-        doPreviewMusicInfo(musicTag);
-        initEditorInputs(musicTag);
+        MusicTag musicTag = tagsActivity.getDisplayTag();
+        if(musicTag != null) {
+            doPreviewMusicInfo(musicTag);
+            initEditorInputs(musicTag);
+        }
     }
 
     @Override
     public void onDestroyView() {
-        dismissPowerMenu();
+        //dismissPowerMenu();
         super.onDestroyView();
     }
 
     @Override
     public void onPause() {
-        dismissPowerMenu();
+       // dismissPowerMenu();
         super.onPause();
     }
 
-    private void dismissPowerMenu() {
+   /*private void dismissPowerMenu() {
         if (powerMenu != null) {
             powerMenu.dismiss();
             powerMenu = null;
         }
-    }
+    }*/
 
     public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
         return item -> {if (item.getItemId() == R.id.menu_editor_read_tag) {
@@ -491,42 +327,18 @@ public class TagsEditorFragment extends Fragment {
         btnOK.setOnClickListener(v -> {
             List<String> list = mTagListLayout.getTags();
             MusicPathTagParser parser = new MusicPathTagParser();
-            for(MusicTag item:tagsActivity.getEditItems()) {
+            List<MusicTag> items = tagsActivity.getEditItems();
+            for(MusicTag item:items) {
                 String mediaPath =  item.getPath();
                 File file = new File(mediaPath);
                 if(!file.exists()) continue;
                 parser.parse(item, list);
             }
-            bypassChange = true;
-            bindViews();
-            bypassChange = false;
+            tagsActivity.refreshDisplayTag();
             alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());
         alert.show();
-    }
-
-
-    private void bindViews() {
-        if (!isAdded() || getActivity() == null) return;
-
-        MusicTag tag = tagsActivity.buildDisplayTag();
-        if (tag == null) return;
-
-        // Update display first for better UX
-        doPreviewMusicInfo(tag);
-
-        // Bulk UI update to reduce layout passes
-        getActivity().runOnUiThread(() -> {
-            // Temporarily disable text watchers to prevent cascading updates
-            bypassChange = true;
-            try {
-                initEditorInputs(tag);
-                tagsActivity.updateTitlePanel();
-            } finally {
-                bypassChange = false;
-            }
-        });
     }
 
     private void doSaveMediaItem() {
@@ -555,7 +367,7 @@ public class TagsEditorFragment extends Fragment {
                         boolean status = repos.setMusicTag(tag);
                         int current = completedCount.incrementAndGet();
                         tagsActivity.updateProgressBar(current + "/" + totalItems);
-
+                        tagsActivity.refreshDisplayTag();
                         // Post events one at a time
                     } catch (Exception e) {
                         Log.e(TAG, "doSaveMediaItem", e);
@@ -575,23 +387,14 @@ public class TagsEditorFragment extends Fragment {
             }
 
             // Update UI
-            Activity activity = getActivity();
-            if (activity != null && isAdded()) {
-                activity.runOnUiThread(() -> {
-                    bypassChange = true;
-                    bindViews();
-                    bypassChange = false;
-                    tagsActivity.stopProgressBar();
-                });
-            } else {
-                tagsActivity.stopProgressBar();
-            }
+            tagsActivity.refreshDisplayTag();
+
         });
     }
 
     private void buildPendingTags(MusicTag tagUpdate) {
         if(tagUpdate.getOriginTag()==null) {
-            // save original tag
+            // save original tag, the first copy is actual original
             tagUpdate.setOriginTag(tagUpdate.copy());
         }
         MusicTag originTag = tagUpdate.getOriginTag();
@@ -616,7 +419,7 @@ public class TagsEditorFragment extends Fragment {
 
     private String buildTag(TextInputEditText txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(StringUtils.MULTI_VALUES.equalsIgnoreCase(text) ) {
+        if(isEmpty(text) || isMultiValuesMarker(text)) {
             return oldVal;
         }
         return text;
@@ -624,10 +427,15 @@ public class TagsEditorFragment extends Fragment {
 
     private String buildTag(TextView txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
-        if(StringUtils.MULTI_VALUES.equalsIgnoreCase(text) ) {
+        if(isEmpty(text) || isMultiValuesMarker(text)) {
             return oldVal;
         }
         return text;
+    }
+
+    private boolean isMultiValuesMarker(String text) {
+        if(text == null) return true;
+        return text.startsWith("[") && text.endsWith("]");
     }
 
 
@@ -658,23 +466,27 @@ public class TagsEditorFragment extends Fragment {
                 }
         ).thenAccept(
                 unused -> {
+                    tagsActivity.refreshDisplayTag();
                     tagsActivity.stopProgressBar();
                     // set updated item on main activity
-                    tagsActivity.runOnUiThread(() -> {
-                        bypassChange = true;
-                        bindViews();
-                        bypassChange = false;
-                    });
+                   // tagsActivity.runOnUiThread(() -> {
+                       // bypassChange = true;
+                       // bindViews();
+                       // bypassChange = false;
+                   // });
                 }
         ).exceptionally(
                 throwable -> {
+                    tagsActivity.refreshDisplayTag();
                     tagsActivity.stopProgressBar();
                     return null;
                 }
         );
     }
 
-    private void initEditorInputs(MusicTag tag) {
+    void initEditorInputs(MusicTag tag) {
+        doPreviewMusicInfo(tag);
+
         txtTitle.setText(tag.getTitle());
         txtArtist.setText(tag.getArtist());
         txtAlbum.setText(tag.getAlbum());
@@ -683,7 +495,9 @@ public class TagsEditorFragment extends Fragment {
         txtTrack.setText(tag.getTrack());
         txtYear.setText(tag.getYear());
         txtGenre.setText(tag.getGenre());
-        txtGrouping.setText(tag.getGrouping());
+        if(TagRepository.getDefaultGroupingList(getContext()).contains(tag.getGrouping())) {
+            txtGrouping.setText(tag.getGrouping());
+        }
         txtMediaType.setText(tag.getMediaType());
         txtPublisher.setText(tag.getPublisher());
 
@@ -709,5 +523,36 @@ public class TagsEditorFragment extends Fragment {
         previewArtist.setText(tag.getArtist());
         previewAlbum.setText(tag.getAlbum());
         previewPath.setText(tag.getSimpleName());
+    }
+
+    static class NoFilterArrayAdapter<T> extends ArrayAdapter<T> {
+
+        private final List<T> items;
+        private final Filter disabledFilter;
+
+        public NoFilterArrayAdapter(@NonNull Context context, int resource, @NonNull List<T> items) {
+            super(context, resource, items);
+            this.items = items;
+            this.disabledFilter = new Filter() {
+                @Override
+                protected FilterResults performFiltering(CharSequence constraint) {
+                    FilterResults results = new FilterResults();
+                    results.values = NoFilterArrayAdapter.this.items; // Always return the full list
+                    results.count = NoFilterArrayAdapter.this.items.size();
+                    return results;
+                }
+
+                @Override
+                protected void publishResults(CharSequence constraint, FilterResults results) {
+                    notifyDataSetChanged();
+                }
+            };
+        }
+
+        @NonNull
+        @Override
+        public Filter getFilter() {
+            return disabledFilter;
+        }
     }
 }

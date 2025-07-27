@@ -36,6 +36,15 @@
                 android:background="@color/black_transparent_80"/>
 
 
+            <TextView
+                android:id="@+id/music_player_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_gravity="end"
+                android:layout_marginEnd="@dimen/dimen_48_dp"
+                android:layout_marginTop="@dimen/dimen_48_dp"/>
+
             <com.skydoves.elasticviews.ElasticLayout
                 android:id="@+id/music_player_panel"
                 android:layout_width="wrap_content"
@@ -43,7 +52,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginEnd="@dimen/dimen_8_dp"
                 android:layout_marginTop="@dimen/dimen_8_dp"
-                android:background="@drawable/shape_play_next_background"
+                android:background="@drawable/shape_round_background_playing"
                 android:minWidth="@dimen/dimen_32_dp"
                 android:minHeight="@dimen/dimen_32_dp"
                 android:layout_gravity="end"
@@ -104,6 +113,7 @@
                             app:widthRatio="1"/>
 
                     </com.jackandphantom.carouselrecyclerview.view.ReflectionViewContainer>
+
                 </LinearLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -236,6 +246,7 @@
                         <!--
                         android:background="@drawable/shape_btn_background">
                         -->
+                        <!--
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="@dimen/dimen_32_dp"
@@ -258,10 +269,17 @@
                                 android:textStyle="bold"
                                 tools:ignore="TextSizeCheck" />
                         </LinearLayout>
-
-                        <ImageView
+                        -->
+                        <apincer.android.mmate.ui.view.ResolutionView
                             android:id="@+id/icon_resolution"
-                            android:layout_width="@dimen/dimen_120_dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:encodingText="FLAC"
+                            app:resolutionText="16/48" />
+<!--
+                        <ImageView
+                            android:id="@+id/icon_resolution2"
+                            android:layout_width="@dimen/dimen_105_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
@@ -271,6 +289,7 @@
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_audiophile"
                             tools:ignore="ImageContrastCheck" />
+                            -->
 <!--
                         <ImageView
                             android:id="@+id/icon_audiophile"
@@ -320,19 +339,29 @@
                                 tools:ignore="TextSizeCheck" />
                         </LinearLayout> -->
 
+                        <apincer.android.mmate.ui.view.DynamicRangeDbView
+                            android:id="@+id/dynamic_range_db_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_marginStart="@dimen/dimen_6_dp"
+                            android:background="@drawable/shape_icon_border_back"
+                            app:drDbText="90/96 dB" />
+
+                        <!--
                         <ImageView
                             android:id="@+id/icon_quality"
-                            android:layout_width="@dimen/dimen_72_dp"
+                            android:layout_width="@dimen/dimen_105_dp"
                             android:layout_height="@dimen/dimen_32_dp"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="@dimen/dimen_4_dp"
                             android:contentDescription="@string/editor_musicmate_info"
                             android:gravity="center"
+                            android:paddingStart="@dimen/dimen_4_dp"
                             android:padding="@dimen/dimen_1_dp"
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_audiophile"
                             tools:ignore="ImageContrastCheck" />
-
+                        -->
                         <!--
                         <ImageView
                             android:id="@+id/icon_audiophile"
@@ -363,17 +392,42 @@
                             tools:ignore="ImageContrastCheck" />
                             -->
 
-                        <ImageView
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:paddingEnd="@dimen/dimen_8_dp"
+                            android:layout_marginStart="@dimen/dimen_6_dp"
+                            android:background="@drawable/shape_icon_border_back"
+                            android:orientation="horizontal"
+                            tools:ignore="RtlHardcoded">
+                            <TextView
+                                android:id="@+id/rating"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="@dimen/dimen_6_dp"
+                                android:padding="@dimen/dimen_4_dp"
+                                android:gravity="center_vertical"
+                                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                                android:text="*****"/>
+                        </LinearLayout>
+
+                        <LinearLayout
                             android:id="@+id/icon_hires"
-                            android:layout_width="@dimen/dimen_48_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
+                            android:layout_width="@dimen/dimen_42_dp"
+                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_marginStart="@dimen/dimen_6_dp"
+                            android:background="@drawable/shape_icon_border_back">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
                             android:layout_gravity="end|center_vertical"
                             android:contentDescription="@string/editor_musicmate_info"
+                            android:layout_margin="@dimen/dimen_1_dp"
                             android:gravity="center"
                             android:scaleType="fitXY"
-                            android:padding="@dimen/dimen_2_dp"
-                            android:src="@drawable/ic_format_hires"
-                            android:background="@drawable/shape_background_dr"/>
+                            android:src="@drawable/ic_format_hires" />
+                        </LinearLayout>
 <!--
                         <LinearLayout
                             android:id="@+id/icon_new_panel"

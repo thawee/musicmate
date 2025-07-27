@@ -5,10 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.media.AudioManager;
-import android.os.CombinedVibration;
 import android.os.SystemClock;
-import android.os.VibrationEffect;
-import android.os.VibratorManager;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -97,13 +94,7 @@ public class PlayerControl {
             try {
                 MusicTag newPlayingSong = provider.findMediaItem(currentTitle, currentArtist, currentAlbum);
                 if(newPlayingSong!=null && !newPlayingSong.equals(playingSong)) {
-                    //playingSong = newPlayingSong;
-                    //playerInfo = player;
-                   // callback.onPlaying(context, playingSong);
-                   // AudioTagPlayingEvent.publishPlayingSong(playingSong);
                     publishPlayingSong(player, newPlayingSong);
-               // }else {
-                //    playingSong = null;
                 }
             } catch (Exception ex) {
                 Log.e(TAG,"setPlayingSong", ex);
@@ -118,13 +109,16 @@ public class PlayerControl {
         }
 
         try {
+
             if(tag!=null && !tag.equals(playingSong)) {
-                playerInfo = player;
                 playingSong = tag;
+                playerInfo = player;
                 AudioTagPlayingEvent.publishPlayingSong(playingSong);
-            }//else {
-            //    playingSong = null;
-            //}
+            } else if(playerInfo != null && tag!=null && !playerInfo.equals(player)) {
+                playingSong = tag;
+                playerInfo = player;
+                AudioTagPlayingEvent.publishPlayingSong(playingSong);
+            }
         } catch (Exception ex) {
             Log.e(TAG,"setPlayingSong", ex);
         }
@@ -141,24 +135,6 @@ public class PlayerControl {
     }
 
     public  void playNextSong(Context context) {
-        if(Settings.isVibrateOnNextSong(context)) {
-            try {
-
-                VibratorManager vibrator = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-                long[] pattern = {10, 40, 10, 40,10 };
-                // Vibrate for 500 milliseconds
-                // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
-                vibrator.vibrate(CombinedVibration.createParallel(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE)));
-                // } else {
-                //deprecated in API 26
-                //vibrator.vibrate(100);
-                //		vibrator.vibrate(pattern, -1);
-                //  }
-            } catch (Exception ex) {
-                Log.e(TAG,"playNextSong",ex);
-            }
-        }
         if(playerInfo == null || playerInfo.getPlayerPackage()==null) {
             // skip control for streaming renderer/controller
             return;
@@ -168,7 +144,7 @@ public class PlayerControl {
             // Neutron MP use
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
-            audioManager.dispatchMediaKeyEvent(event);
+            dispatchMediaKeyEvent(audioManager, event);
         }else if(PlayerPackageNames.POWERAMP_PACK_NAME.equals(playerInfo.playerPackage)) {
             // call PowerAmp API
             //PowerampAPIHelper.startPAService(this, new Intent(PowerampAPI.ACTION_API_COMMAND).putExtra(PowerampAPI.COMMAND, PowerampAPI.Commands.NEXT));
@@ -179,15 +155,15 @@ public class PlayerControl {
                 PlayerPackageNames.FOOBAR2000.equals(playerInfo.playerPackage) ) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
-            audioManager.dispatchMediaKeyEvent(event);
+            dispatchMediaKeyEvent(audioManager, event);
            //long eventTime = SystemClock.uptimeMillis();
            // audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
           //  audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
         }else if (PlayerPackageNames.HIBY_MUSIC_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
-            audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-            audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
+            dispatchMediaKeyEvent(audioManager, new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
+            dispatchMediaKeyEvent(audioManager, new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
        /* }else if (PlayerPackageNames.EDDICTPLAYER_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
@@ -196,7 +172,7 @@ public class PlayerControl {
         }else if (PlayerPackageNames.NE_PLAYER_LITE_PACK_NAME.equals(playerInfo.playerPackage)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
-            audioManager.dispatchMediaKeyEvent(event);
+            dispatchMediaKeyEvent(audioManager, event);
 
             Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
             i.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT));
@@ -217,6 +193,12 @@ public class PlayerControl {
             // used for most player
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
+            dispatchMediaKeyEvent(audioManager, event);
+        }
+    }
+
+    private void dispatchMediaKeyEvent(AudioManager audioManager, KeyEvent event) {
+        if(audioManager != null && event != null) {
             audioManager.dispatchMediaKeyEvent(event);
         }
     }

@@ -260,9 +260,12 @@ public class TagsTechnicalFragment extends Fragment {
                     }
                 }
         ).thenAccept(
-                unused -> stopProgressBar()
+                unused -> {
+                    tagsActivity.refreshDisplayTag();
+                    stopProgressBar();}
         ).exceptionally(
                 throwable -> {
+                    tagsActivity.refreshDisplayTag();
                     stopProgressBar();
                     return null;
                 }

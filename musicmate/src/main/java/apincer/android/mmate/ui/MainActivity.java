@@ -3,11 +3,12 @@ package apincer.android.mmate.ui;
 import static android.view.View.VISIBLE;
 import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
+import static apincer.android.mmate.Constants.KEY_FILTER_KEYWORD;
+import static apincer.android.mmate.Constants.KEY_FILTER_TYPE;
 import static apincer.android.mmate.Constants.TITLE_GENRE;
 import static apincer.android.mmate.Constants.TITLE_GROUPING;
 import static apincer.android.mmate.Constants.TITLE_LIBRARY;
 import static apincer.android.mmate.Constants.TITLE_RESOLUTION;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
@@ -17,16 +18,20 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -34,12 +39,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.view.ActionMode;
-import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.SelectionPredicates;
@@ -54,12 +60,12 @@ import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.carousel.CarouselLayoutManager;
+import com.google.android.material.carousel.CarouselSnapHelper;
+import com.google.android.material.carousel.MaskableFrameLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.skydoves.powermenu.MenuAnimation;
-import com.skydoves.powermenu.PowerMenu;
-import com.skydoves.powermenu.PowerMenuItem;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
@@ -90,28 +96,25 @@ import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.SearchCriteria;
+import apincer.android.mmate.repository.PlaylistRepository;
+import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
-import apincer.android.mmate.ui.viewmodel.MainViewModel;
+import apincer.android.mmate.ui.view.DLNAServerManagementSheet;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.PLSBuilder;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.worker.FileOperationTask;
-import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
-import cn.iwgang.simplifyspan.other.SpecialGravity;
-import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
-import cn.iwgang.simplifyspan.unit.SpecialLabelUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
@@ -143,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Activity result launcher
    // ActivityResultLauncher<Intent> permissionResultLauncher;
+    ActivityResultLauncher<Intent> tagViewResultLauncher;
 
     // ViewModel and Repository
     private MainViewModel viewModel;
@@ -151,20 +155,27 @@ public class MainActivity extends AppCompatActivity {
     // UI components
     private ResideMenu mResideMenu;
     private MusicTagAdapter adapter;
+    private MusicFolderAdapter folderAdapter;
     private SelectionTracker<Long> mTracker;
     private final List<MusicTag> selections = new ArrayList<>();
     private Snackbar mExitSnackbar;
     private View mHeaderPanel;
     private TextView titleLabel;
-    private TextView titleText;
-    private SearchView mSearchView;
+   private EditText mSearchView;
+    private ImageView customSearchIcon;
+    private ImageView customClearIcon;
+
     private RefreshLayout refreshLayout;
     private StateView mStateView;
     private RecyclerView mRecyclerView;
     private TextView headerSubtitle;
+    private int currentlyActiveFolderPosition = RecyclerView.NO_POSITION;
+    private View currentlyHighlightedView = null; // To keep track of the previously highlighted view
+    private RecyclerView folderRecyclerView;
+    private CarouselSnapHelper carouselSnapHelper;
 
     // Now playing components
-    private NowPlayingManager nowPlayingManager;
+    private NowPlayingViewHolder nowPlayingHolder;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -182,6 +193,23 @@ public class MainActivity extends AppCompatActivity {
 
         // Start music scan
         MusixMateApp.getInstance().startMusicScan();
+
+        tagViewResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == AppCompatActivity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null && data.hasExtra(KEY_FILTER_TYPE)) {
+                            String filterType = data.getStringExtra(KEY_FILTER_TYPE);
+                            String filterText = data.getStringExtra(KEY_FILTER_KEYWORD);
+                            if (adapter.getCriteria() != null) {
+                                adapter.getCriteria().setFilterType(filterType);
+                                adapter.getCriteria().setFilterText(filterText);
+                            }
+                        }
+                    }
+                    viewModel.loadMusicItems(adapter.getCriteria());
+                });
 
         // Setup status bar
         Window window = getWindow();
@@ -202,18 +230,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Initialize ViewModel
-        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+       // viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        MainViewModel.MusicViewModelFactory factory = new MainViewModel.MusicViewModelFactory(getApplication());
+        viewModel = new ViewModelProvider(this, factory).get(MainViewModel.class);
 
         // Setup UI components
-        setUpHeaderPanel();
-        setUpNowPlayingView();
-        setUpBottomAppBar();
-        setUpRecycleView(searchCriteria);
-        setUpSwipeToRefresh();
-        setUpResideMenus();
+        setupHeaderPanel();
+        setupNowPlayingView();
+        setupBottomAppBar();
+        setupRecycleView(searchCriteria);
+        setupSwipeToRefresh();
+        setupResideMenus();
 
         // Observe ViewModel LiveData
-        observeViewModel();
+        setupObserveViewModel();
+
+        // load music items
+        viewModel.loadMusicItems(adapter.getCriteria());
 
         // Setup exit snackbar
         mExitSnackbar = Snackbar.make(mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
@@ -221,8 +254,8 @@ public class MainActivity extends AppCompatActivity {
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
     }
 
-    private void observeViewModel() {
-        viewModel.getMusicTags().observe(this, musicTags -> {
+    private void setupObserveViewModel() {
+        viewModel.musicItems.observe(this, musicTags -> {
             adapter.setMusicTags(musicTags);
             refreshLayout.finishRefresh();
             updateHeaderPanel();
@@ -233,29 +266,127 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.getIsLoading().observe(this, isLoading -> {
+        viewModel.musicItemsLoading.observe(this, isLoading -> {
             if (isLoading) {
                 refreshLayout.autoRefresh();
             } else {
                 refreshLayout.finishRefresh();
             }
         });
+
+        // 2. Observe Now Playing Song
+        viewModel.nowPlayingSong.observe(this, song -> {
+            if (song != null) {
+                if(!song.equals(nowPlayingHolder.currentlyPlaying)) {
+                    if (Settings.isListFollowNowPlaying(getBaseContext())) {
+                        // only scrolled on first event for each song
+                        if (timer != null) {
+                            timer.cancel();
+                        }
+                        timer = new Timer();
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                if (!busy) {
+                                    runOnUiThread(() -> scrollToListening());
+                                }
+                            }
+                        }, 500); // 0.5 seconds
+                    }
+                }
+
+                // refresh music list
+                adapter.notifyItemChanged(nowPlayingHolder.currentlyPlaying);
+                adapter.notifyItemChanged(song);
+                nowPlayingHolder.showNowPlaying(song);
+            } else {
+                nowPlayingHolder.hideNowPlaying();
+            }
+        });
     }
 
-    private void setUpHeaderPanel() {
+    private void setupHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
         titleLabel = findViewById(R.id.title_label);
-        titleText = findViewById(R.id.title_text);
-        titleText.setOnClickListener(v -> {
-            adapter.resetFilter();
-            adapter.setKeyword(titleText.getText().toString());
-            refreshLayout.autoRefresh();
-        });
 
         headerSubtitle = findViewById(R.id.header_subtitle);
+
+        mSearchView = findViewById(R.id.search_edit_text);
+        customSearchIcon = findViewById(R.id.search_icon);
+        customClearIcon = findViewById(R.id.search_clear_icon);
+
+        // Listener for the search icon click
+        mSearchView.setOnClickListener(v -> {
+            String query = mSearchView.getText().toString().trim();
+
+            adapter.setSearchString(query);
+            viewModel.loadMusicItems(adapter.getCriteria());
+            hideKeyboard();
+        });
+
+        // Listener for the "Search" action on the keyboard
+        mSearchView.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                String query = mSearchView.getText().toString().trim();
+                adapter.setSearchString(query);
+                viewModel.loadMusicItems(adapter.getCriteria());
+                hideKeyboard();
+                return true;
+            }
+            return false;
+        });
+
+        customSearchIcon.setOnClickListener(v -> {
+            String query = mSearchView.getText().toString().trim();
+            adapter.setSearchString(query);
+            viewModel.loadMusicItems(adapter.getCriteria());
+            hideKeyboard();
+        });
+
+        customClearIcon.setOnClickListener(v -> {
+            mSearchView.setText(""); // Clear the text
+            // Keyboard will likely stay open, which is often desired.
+            // If you want to hide it: hideKeyboard();
+            adapter.setSearchString("");
+            viewModel.loadMusicItems(adapter.getCriteria());
+        });
+
+        // TextWatcher to show/hide the clear icon
+        mSearchView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Not needed
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!s.isEmpty()) {
+                    customClearIcon.setVisibility(View.VISIBLE);
+                } else {
+                    customClearIcon.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Not needed
+            }
+        });
+
     }
 
-    private void setUpNowPlayingView() {
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+        mSearchView.clearFocus(); // Optional: remove focus from EditText
+    }
+
+    private void setupNowPlayingView() {
         // Initialize components
         View nowPlayingView = findViewById(R.id.now_playing_panel);
         ImageView nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
@@ -263,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
         ImageView nowPlayingOutputDevice = findViewById(R.id.now_playing_device);
 
         // Create manager
-        nowPlayingManager = new NowPlayingManager(
+        nowPlayingHolder = new NowPlayingViewHolder(
                 getApplicationContext(),
                 nowPlayingView,
                 nowPlayingCoverArt,
@@ -282,64 +413,102 @@ public class MainActivity extends AppCompatActivity {
         nowPlayingView.setVisibility(View.GONE);
     }
 
-    private void setUpBottomAppBar() {
+    private void setupBottomAppBar() {
         // Find components
         BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
         setSupportActionBar(bottomAppBar);
 
-        ImageView leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
-        UIUtils.getTintedDrawable(leftMenu.getDrawable(), Color.WHITE);
+        View leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
 
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
-        UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
+       // UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
-        mSearchView = bottomAppBar.findViewById(R.id.searchView);
-
-        // Setup search listener
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                adapter.setSearchString(query);
-                refreshLayout.autoRefresh();
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (isEmpty(newText) || newText.length() >= 3) {
-                    adapter.setSearchString(newText);
-                    refreshLayout.autoRefresh();
-                }
-                return false;
-            }
-        });
-
-        mSearchView.setOnSearchClickListener(v -> {
-            adapter.setSearchString(String.valueOf(mSearchView.getQuery()));
-            refreshLayout.autoRefresh();
-        });
-
-        mSearchView.setOnCloseListener(() -> {
-            doHideSearch();
-            refreshLayout.autoRefresh();
-            return false;
-        });
+        View dlnsServer = bottomAppBar.findViewById(R.id.navigation_server);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
+        dlnsServer.setOnClickListener(v -> doManageDLNAServer());
     }
 
-    private void setUpSwipeToRefresh() {
+    private void setupSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
-        refreshLayout.setOnRefreshListener(refreshlayout -> viewModel.loadMusicTags(adapter.getCriteria()));
+        //refreshLayout.setOnRefreshListener(refreshlayout -> viewModel.loadMusicTags(adapter.getCriteria()));
+        refreshLayout.setOnRefreshListener(refreshlayout -> viewModel.loadMusicItems(adapter.getCriteria()));
     }
 
-    private void setUpRecycleView(SearchCriteria searchCriteria) {
+    private void setupRecycleView(SearchCriteria searchCriteria) {
         if (searchCriteria == null) {
             searchCriteria = new SearchCriteria(SearchCriteria.TYPE.LIBRARY);
         }
 
+        ///  Music Folder List
+        // Initialize adapter
+        folderAdapter = new MusicFolderAdapter(this, searchCriteria);
+
+        // Setup RecyclerView
+        folderRecyclerView = findViewById(R.id.carousel_recycler_view);
+        folderRecyclerView.setAdapter(folderAdapter);
+        CarouselLayoutManager carouselLayoutManager = new CarouselLayoutManager();
+        folderRecyclerView.setLayoutManager(carouselLayoutManager);
+        carouselSnapHelper = new CarouselSnapHelper();
+        carouselSnapHelper.attachToRecyclerView(folderRecyclerView);
+
+        // ---- START: Listener for Snap Selection ----
+        folderRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    View centerView = carouselSnapHelper.findSnapView(carouselLayoutManager);
+                    if (centerView != null) {
+                        int newActivePosition = carouselLayoutManager.getPosition(centerView);
+
+                        if (newActivePosition != RecyclerView.NO_POSITION && newActivePosition != currentlyActiveFolderPosition) {
+                            Log.d("FolderCarousel", "New active folder snapped: position " + newActivePosition);
+
+                            // 1. Update highlighted state (optional, but good for UX)
+                            //    You might need to notify the adapter for previous and new item to rebind
+                            //    if your highlighting is complex and done within onBindViewHolder.
+                            currentlyActiveFolderPosition = newActivePosition;
+
+                            // Unhighlight the previously highlighted view
+                            if (currentlyHighlightedView != null && currentlyHighlightedView != centerView) {
+                                folderAdapter.unhighlightFolder((MaskableFrameLayout) currentlyHighlightedView);
+                            }
+
+                            // Highlight the new center view
+                            if (currentlyHighlightedView != centerView) { // Avoid re-highlighting if it's the same
+                                folderAdapter.highlightFolder((MaskableFrameLayout) centerView);
+                                currentlyHighlightedView = centerView;
+                            }
+
+                            MusicFolder selectedFolder = folderAdapter.getItem(newActivePosition); // You'll need an getItem method
+
+                                String name = selectedFolder.getName(); // Or unique key
+
+                                Log.d("FolderCarousel", "Selected name: " + name);
+
+                                if (adapter != null) { // 'adapter' is your MusicTagAdapter instance
+                                    adapter.setKeyword(name); // Set the keyword/criteria
+                                    if (viewModel != null) {
+                                        viewModel.loadMusicItems(adapter.getCriteria());
+                                        // Make sure adapter.getCriteria() now reflects the new selectedFolderPath
+                                    } else {
+                                        // If no ViewModel, and if refreshLayout is for the main list
+                                        if(refreshLayout != null) {
+                                            refreshLayout.autoRefresh();
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        });
+        // ---- END: Listener for Snap Selection ----
+
+        ///  Music Items List
         // Initialize adapter
         adapter = new MusicTagAdapter(searchCriteria);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -371,8 +540,10 @@ public class MainActivity extends AppCompatActivity {
         // Setup item click listener
         MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
             MusicTag tag = adapter.getMusicTag(position);
+            if(tag == null) return;
+
             if("PLS".equals(tag.getAudioEncoding())) {
-                doStartRefresh(SearchCriteria.TYPE.COLLECTIONS, tag.getUniqueKey());
+                doStartRefresh(SearchCriteria.TYPE.PLAYLIST, tag.getUniqueKey());
             }else {
                 doShowEditActivity(Collections.singletonList(tag));
             }
@@ -427,10 +598,12 @@ public class MainActivity extends AppCompatActivity {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     MusicTag currentlyPlaying = MusixMateApp.getPlayerControl().getPlayingSong();
                     if (currentlyPlaying != null) {
-                        nowPlayingManager.showNowPlaying(currentlyPlaying);
+                        // just show player popup on scrolling
+                        nowPlayingHolder.showNowPlaying(currentlyPlaying);
                     }
                 } else {
-                    nowPlayingManager.hideNowPlaying();
+                    // just hide player popup on scrolling
+                    nowPlayingHolder.hideNowPlaying();
                 }
             }
         });
@@ -443,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
         mStateView.hideStates();
     }
 
-    private void setUpResideMenus() {
+    private void setupResideMenus() {
         // Attach to current activity
         mResideMenu = new ResideMenu(this);
         mResideMenu.setBackground(R.drawable.bg);
@@ -476,8 +649,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderPanel() {
-        List<String> titles = adapter.getHeaderTitles(getApplicationContext());
-        String headerTitle = adapter.getHeaderTitle();
 
         String label = adapter.getHeaderLabel();
         Drawable icon = null;
@@ -495,44 +666,6 @@ public class MainActivity extends AppCompatActivity {
 
         titleLabel.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
         titleLabel.setText(label);
-        titleText.setText(headerTitle);
-
-        // Set click listener for title
-        titleText.setOnClickListener(v -> {
-            List<PowerMenuItem> items = new ArrayList<>();
-            titles.forEach(s -> items.add(new PowerMenuItem(s)));
-            int height = UIUtils.getScreenHeight(this) / 2;
-            int width = UIUtils.getScreenWidth(this) / 2;
-
-            PowerMenu powerMenu = new PowerMenu.Builder(this)
-                    .setWidth(width)
-                    .setHeight(height)
-                    .setLifecycleOwner(MainActivity.this)
-                    .addItemList(items)
-                    .setAnimation(MenuAnimation.SHOWUP_TOP_LEFT)
-                    .setMenuRadius(16f)
-                    .setMenuShadow(8f)
-                    .setTextColor(ContextCompat.getColor(getBaseContext(), R.color.grey200))
-                    .setTextGravity(Gravity.START)
-                    .setPadding(1)
-                    .setMenuRadius(8)
-                    .setShowBackground(true)
-                    .setTextSize(16)
-                    .setSelectedTextColor(Color.WHITE)
-                    .setMenuColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary_light))
-                    .setSelectedMenuColor(ContextCompat.getColor(getBaseContext(), apincer.android.library.R.color.colorPrimary))
-                    .setAutoDismiss(true)
-                    .setDividerHeight(1)
-                    .setSelectedEffect(false)
-                    .setOnMenuItemClickListener((position, item) -> {
-                        adapter.resetFilter();
-                        adapter.setKeyword(String.valueOf(item.title));
-                        refreshLayout.autoRefresh();
-                    })
-                    .build();
-
-            powerMenu.showAsDropDown(titleText, -96, 0);
-        });
 
         // Build statistics text
         int count = adapter.getTotalSongs();
@@ -541,29 +674,30 @@ public class MainActivity extends AppCompatActivity {
 
         SimplifySpanBuild spannable = new SimplifySpanBuild("");
         if (count > 0) {
-            SearchCriteria criteria = adapter.getCriteria();
-            if (!isEmpty(criteria.getFilterType())) {
+           // SearchCriteria criteria = adapter.getCriteria();
+            /*if (!isEmpty(criteria.getFilterType())) {
                 String filterType = criteria.getFilterType();
                 spannable.appendMultiClickable(
                         new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> adapter.resetFilter())
                                 .setNormalTextColor(getColor(R.color.grey200)),
                         new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10)
                 );
-            }
+            } */
 
-            spannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
-                    .append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP,
+            spannable.append("# ").append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
+                    .append(new SpecialTextUnit(" Songs").setTextSize(12))
+                    /*.append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP,
                             ContextCompat.getColor(getApplicationContext(), R.color.grey100),
                             UIUtils.sp2px(getApplication(), 10),
                             Color.TRANSPARENT)
-                            .setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold())
-                    .append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP,
+                            .setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER)) */
+                    .append("  \uD83D\uDCBD ").append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold())
+                    /*.append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP,
                             ContextCompat.getColor(getApplicationContext(), R.color.grey100),
                             UIUtils.sp2px(getApplication(), 10),
                             Color.TRANSPARENT)
-                            .setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER))
-                    .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
+                            .setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER)) */
+                    .append("  \uD83D\uDD52 ").append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
         } else {
             if (adapter.hasFilter()) {
                 spannable.append(new SpecialTextUnit("No Results for filter: " +
@@ -585,17 +719,10 @@ public class MainActivity extends AppCompatActivity {
             mResideMenu.closeMenu();
         }
 
-        // Load music items consistently through ViewModel
-        if (MusixMateApp.getInstance().getCriteria() != null) {
-            viewModel.loadMusicTags(MusixMateApp.getInstance().getCriteria());
-        } else {
-            viewModel.loadMusicTags(adapter.getCriteria());
-        }
-
         // Show now playing panel
         MusicTag currentlyPlaying = MusixMateApp.getPlayerControl().getPlayingSong();
         if (currentlyPlaying != null) {
-            nowPlayingManager.showNowPlaying(currentlyPlaying);
+            viewModel.setNowPlaying(currentlyPlaying);
         }
     }
 
@@ -622,6 +749,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMessageEvent(AudioTagPlayingEvent event) {
+        viewModel.setNowPlaying(event.getPlayingSong());
+        EventBus.getDefault().removeStickyEvent(event);
+        /*
         MusicMateExecutors.executeUI(() -> {
             MusicTag newPlayingSong = event.getPlayingSong();
             MusicTag previousPlayingSong = nowPlayingManager.getCurrentlyPlaying();
@@ -644,51 +774,17 @@ public class MainActivity extends AppCompatActivity {
 
             // Then proceed with the current implementation
             onPlaying(newPlayingSong);
-        });
+        }); */
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMessageEvent(AudioTagEditResultEvent event) {
-        try {
-            MusicMateExecutors.executeUI(() -> {
-                if (event.getItem() != null) {
-                    int position = adapter.getMusicTagPosition(event.getItem());
-                    if (AudioTagEditResultEvent.ACTION_DELETE.equals(event.getAction())) {
-                        adapter.removeMusicTag(position, event.getItem());
-                    } else if (adapter.isMatchFilter(event.getItem())) {
-                        //adapter.loadDataSets();
-                        viewModel.loadMusicTags(adapter.getCriteria());
-                    }
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "onMessageEvent", e);
-        }
-    }
-
-    public void onPlaying(MusicTag song) {
-        if (song != null) {
-            runOnUiThread(() -> nowPlayingManager.showNowPlaying(song));
-
-            if (Settings.isListFollowNowPlaying(getBaseContext())) {
-                if (timer != null) {
-                    timer.cancel();
-                }
-                timer = new Timer();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (!busy) {
-                            runOnUiThread(() -> scrollToListening());
-                        }
-                    }
-                }, 500); // 0.5 seconds
-            }
-        }
+        viewModel.loadMusicItems(adapter.getCriteria());
+        EventBus.getDefault().removeStickyEvent(event);
     }
 
     private void scrollToListening() {
-        MusicTag currentlyPlaying = nowPlayingManager.getCurrentlyPlaying();
+        MusicTag currentlyPlaying = nowPlayingHolder.getCurrentlyPlaying();
         if (currentlyPlaying == null) return;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
@@ -715,13 +811,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void doHideSearch() {
         adapter.setSearchString("");
-       // refreshLayout.autoRefresh();
+        viewModel.loadMusicItems(adapter.getCriteria());
     }
 
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
         adapter.setType(type);
         adapter.setKeyword(keyword);
-        refreshLayout.autoRefresh();
+        folderAdapter.refresh();
+        viewModel.loadMusicItems(adapter.getCriteria());
     }
 
     @Override
@@ -739,7 +836,9 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if (item.getItemId() == R.id.menu_collection) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.COLLECTIONS, null);
+            PlaylistRepository.initPlaylist(getApplicationContext());
+            String playlist = PlaylistRepository.getPlaylistNames().get(0);
+            doStartRefresh(SearchCriteria.TYPE.PLAYLIST, playlist);
             return true;
         } else if (item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
@@ -766,9 +865,15 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.menu_directories) {
             doSetDirectories();
             return true;
-        } else if (item.getItemId() == R.id.menu_export_playlists) {
-            doExportPlaylists();
-            return true;
+       // } else if (item.getItemId() == R.id.menu_export_playlists) {
+       //     doExportPlaylists();
+       //     return true;
+       // } else if (item.getItemId() == R.id.navigation_server) {
+       //      doManageDLNAServer();
+       //      return true;
+       // } else if (item.getItemId() == R.id.menu_output) {
+       //     doSelectOutput();
+        //    return true;
         } else if (item.getItemId() == R.id.menu_about_crash) {
             Intent intent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(intent);
@@ -777,21 +882,14 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void doShowAboutApp() {
-        Intent intent = new Intent(MainActivity.this, AboutActivity.class);
-        startActivity(intent);
+    private void doManageDLNAServer() {
+        // TODO add buttomsheet to display dlna server status, and buttons to start/stop server
+        DLNAServerManagementSheet sheet = DLNAServerManagementSheet.newInstance();
+        sheet.show(getSupportFragmentManager(), DLNAServerManagementSheet.TAG);
     }
 
-    private void doExportPlaylists() {
-        MusicMateExecutors.execute(() -> {
-            PLSBuilder.exportPlaylists(getApplicationContext());
-            runOnUiThread(() -> {
-                Snackbar snackbar = Snackbar.make(mSearchView, "Playlists exported successfully", Snackbar.LENGTH_SHORT);
-                snackbar.setAction("Dismiss", view -> snackbar.dismiss());
-                snackbar.setActionTextColor(Color.BLUE);
-                snackbar.show();
-            });
-        });
+    private void doShowAboutApp() {
+        AboutActivity.showAbout(this);
     }
 
     private void doSetDirectories() {
@@ -925,8 +1023,7 @@ public class MainActivity extends AppCompatActivity {
                         .setMessage(getString(R.string.alert_invalid_media_file, tag==null?" - ":tag.getPath()))
                         .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                             repos.deleteMediaItem(tag);
-                           // adapter.loadDataSets();
-                            viewModel.loadMusicTags(adapter.getCriteria());
+                            viewModel.loadMusicItems(adapter.getCriteria());
                             dialogInterface.dismiss();
                         })
                         .show();
@@ -937,7 +1034,8 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, TagsActivity.class);
             AudioTagEditEvent message = new AudioTagEditEvent("edit", adapter.getCriteria(), tagList);
             EventBus.getDefault().postSticky(message);
-            startActivity(intent);
+            //startActivity(intent);
+            tagViewResultLauncher.launch(intent);
         }
     }
 
@@ -1000,7 +1098,7 @@ public class MainActivity extends AppCompatActivity {
             valueList.add((long) sizeInBlock);
         }
 
-        final double rate = 100.00 / selections.size();
+      //  final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
@@ -1112,7 +1210,7 @@ public class MainActivity extends AppCompatActivity {
             valueList.add((long) sizeInBlock);
         }
 
-        final double rate = 100.00 / selections.size();
+      //  final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
@@ -1225,7 +1323,7 @@ public class MainActivity extends AppCompatActivity {
             valueList.add((long) sizeInBlock);
         }
 
-        final double rate = 100.00 / selections.size();
+       // final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
@@ -1365,7 +1463,7 @@ public class MainActivity extends AppCompatActivity {
             valueList.add((long) sizeInBlock);
         }
 
-        final double rate = 100.00 / selections.size();
+       // final double rate = 100.00 / selections.size();
         int barColor = getColor(R.color.material_color_green_400);
         progressBar.setProgressDrawable(new RatioSegmentedProgressBarDrawable(barColor, Color.GRAY, valueList, 8f));
         progressBar.setMax((int) MAX_PROGRESS);
@@ -1521,22 +1619,25 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            if (adapter != null && adapter.isSearchMode()) {
-                doHideSearch();
-                refreshLayout.autoRefresh();
+            if (adapter != null && adapter.hasFilter()) {
+                adapter.resetFilter();
+                viewModel.loadMusicItems(adapter.getCriteria());
+                //refreshLayout.autoRefresh();
                 return;
             }
 
-            if (adapter != null && adapter.hasFilter()) {
-                adapter.resetFilter();
-                refreshLayout.autoRefresh();
+            if (adapter != null && adapter.isSearchMode()) {
+                doHideSearch();
+               // refreshLayout.autoRefresh();
+                viewModel.loadMusicItems(adapter.getCriteria());
                 return;
             }
 
             // If not on first item in library
             if (adapter != null && !adapter.isFirstItem(getApplicationContext())) {
                 adapter.resetSelectedItem();
-                refreshLayout.autoRefresh();
+                viewModel.loadMusicItems(adapter.getCriteria());
+               // refreshLayout.autoRefresh();
                 return;
             }
 
@@ -1544,7 +1645,7 @@ public class MainActivity extends AppCompatActivity {
                 mExitSnackbar.show();
             } else {
                 mExitSnackbar.dismiss();
-                finishAndRemoveTask();
+                finish();
             }
         }
     }
@@ -1552,7 +1653,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * NowPlayingManager class abstraction implementation
      */
-    public class NowPlayingManager {
+    public static class NowPlayingViewHolder {
         private final Context context;
         private final View nowPlayingView;
         private final ImageView coverArtImageView;
@@ -1560,7 +1661,7 @@ public class MainActivity extends AppCompatActivity {
         private final ImageView outputDeviceImageView;
         private MusicTag currentlyPlaying;
 
-        public NowPlayingManager(Context context, View nowPlayingView,
+        public NowPlayingViewHolder(Context context, View nowPlayingView,
                                  ImageView coverArtImageView,
                                  ImageView playerImageView,
                                  ImageView outputDeviceImageView) {
@@ -1572,16 +1673,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void showNowPlaying(MusicTag song) {
+            currentlyPlaying = song;
             if (song == null) {
                 hideNowPlaying();
                 return;
             }
 
-            if(nowPlayingView.getVisibility() == VISIBLE && song.equals(currentlyPlaying)) {
-                return;
-            }
-
-            currentlyPlaying = song;
+         //   currentlyPlaying = song;
 
             // Load cover art
             ImageLoader imageLoader = SingletonImageLoader.get(context);
@@ -1600,29 +1698,28 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Set output device icon
-            MusicMateExecutors.executeUI(() -> {
+          //  MusicMateExecutors.executeUI(() -> {
                 if (player != null) {
                     if (player.isStreamPlayer()) {
                         outputDeviceImageView.setVisibility(VISIBLE);
                         outputDeviceImageView.setImageBitmap(
                                 AudioOutputHelper.getOutputDeviceIcon(
                                         context,
-                                        true,
-                                        AudioOutputHelper.getDLNADevice(song)
+                                        AudioOutputHelper.getDMSDevice(song, player)
                                 )
                         );
                     } else {
                         outputDeviceImageView.setVisibility(VISIBLE);
                         AudioOutputHelper.getOutputDevice(context, device ->
                                 outputDeviceImageView.setImageBitmap(
-                                        AudioOutputHelper.getOutputDeviceIcon(context, false,device)
+                                        AudioOutputHelper.getOutputDeviceIcon(context,device)
                                 )
                         );
                     }
                 }
 
                 // Animate view to show
-                MainActivity.this.runOnUiThread(() ->
+               // MainActivity.this.runOnUiThread(() ->
                         nowPlayingView.animate()
                                 .scaleX(1f).scaleY(1f)
                                 .alpha(1f).setDuration(250)
@@ -1646,14 +1743,14 @@ public class MainActivity extends AppCompatActivity {
                                     public void onAnimationRepeat(@NonNull Animator animator) {
                                     }
                                 })
-                                .start()
-                );
-            });
+                                .start();
+               // );
+          //  });
         }
 
         public void hideNowPlaying() {
             currentlyPlaying = null;
-            MainActivity.this.runOnUiThread(() ->
+           // MainActivity.this.runOnUiThread(() ->
                     nowPlayingView.animate()
                             .scaleX(0f).scaleY(0f)
                             .alpha(0f).setDuration(100)
@@ -1676,8 +1773,8 @@ public class MainActivity extends AppCompatActivity {
                                 public void onAnimationRepeat(@NonNull Animator animator) {
                                 }
                             })
-                            .start()
-            );
+                            .start();
+            //);
         }
 
         public MusicTag getCurrentlyPlaying() {

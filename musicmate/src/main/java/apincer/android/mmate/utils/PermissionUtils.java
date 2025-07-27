@@ -2,20 +2,12 @@ package apincer.android.mmate.utils;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Environment;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 import androidx.core.content.ContextCompat;
-import androidx.documentfile.provider.DocumentFile;
-import androidx.preference.PreferenceManager;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class PermissionUtils {
     private static final String TAG = PermissionUtils.class.getName();
@@ -58,27 +50,6 @@ public class PermissionUtils {
         }
 
         return true;
-    }
-
-
-    public static boolean setPersistableUriPermission(Context context, String rootPath, Uri uri) {
-        DocumentFile file = DocumentFile.fromTreeUri(context, uri);
-        if (file != null && file.canWrite()) {
-            SharedPreferences perf = PreferenceManager.getDefaultSharedPreferences(context);
-            String pathMap =perf.getString("PersistableUriPermissions", "{}");
-            try {
-                JSONObject json = new JSONObject(pathMap);
-                json.put(rootPath, uri.getPath());
-                perf.edit().putString("PersistableUriPermissions", json.toString()).apply();
-
-            } catch (JSONException e) {
-                Log.e(TAG, "", e);
-            }
-            return true;
-        } else {
-            Log.i(TAG, "no write permission: "+rootPath);
-        }
-        return false;
     }
 
 

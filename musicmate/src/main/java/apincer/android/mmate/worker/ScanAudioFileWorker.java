@@ -29,6 +29,7 @@ import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.LogHelper;
+import apincer.android.mmate.utils.MusicTagUtils;
 
 public class ScanAudioFileWorker extends Worker {
     private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
@@ -159,13 +160,26 @@ public class ScanAudioFileWorker extends Worker {
     private boolean filter(Path path) {
         try {
             String pathString = path.toString();
+           // System.out.println("Filter: "+pathString);
             if (!TagReader.isSupportedFileFormat(pathString)) {
+               // System.out.println("  NOT SUPPORT!, "+pathString);
                 return false;
             }
 
+            if(pathString.toLowerCase().contains("download")) {
+                // always re-scan in-comming songs
+                return true;
+            }
+
+            /*
             // Skip files that haven't changed since last scan
             File file = path.toFile();
-            return file.lastModified() > lastScanTime;
+            if(file.lastModified() <= lastScanTime) {
+                System.out.println("  NOT MODIFIED!, "+pathString +", "+file.lastModified()+"<="+lastScanTime);
+            }
+            return file.lastModified() > lastScanTime; */
+
+            return true;
         } catch (Exception e) {
             Log.e(TAG, "filter", e);
         }

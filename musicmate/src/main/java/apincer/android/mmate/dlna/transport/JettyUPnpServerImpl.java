@@ -82,7 +82,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 threadPool.setMaxThreads(MAX_THREADS);
                 threadPool.setMinThreads(MIN_THREADS);
                 threadPool.setIdleTimeout(IDLE_TIMEOUT);
-                threadPool.setName("dlna-server");
+                threadPool.setName("upnp-server");
 
                 server = new Server(threadPool);
 
@@ -145,7 +145,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 server.setHandler(contexts);
                 server.start();
             } catch (Exception e) {
-                Log.e(TAG, "Failed to start DLNA server", e);
+                Log.e(TAG, "Failed to start UPnP server", e);
                 throw new RuntimeException(e);
             }
         });
@@ -157,12 +157,12 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     public void stopServer() {
         // Stop the server.
         try {
-            Log.i(TAG, "  Stop UPNP Server (Jetty)");
+            Log.i(TAG, "  Stop UPnP Server (Jetty)");
             if (server != null && server.isRunning()) {
                 server.stop();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error stopping DLNA server", e);
+            Log.e(TAG, "Error stopping UPnP server", e);
             throw new RuntimeException(e);
         }
     }

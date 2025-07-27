@@ -117,11 +117,11 @@
     <string name="websearch_underline"><u>Web Search</u></string>
     <string name="convert_underline"><u>2 Flac</u></string>
     <string name="import_songs_label">Import</string>
-    <string name="measure_dr_label">DRS</string>
+    <string name="measure_dr_label">DR</string>
     <string name="edit_tags_label">TAG</string>
     <string name="delete_song_label">Delete</string>
-    <string name="aspect_label">Aspect</string>
-    <string name="websearch_label">WWW</string>
+    <string name="aspect_label">View Spectrum</string>
+    <string name="websearch_label">Web Search</string>
     <string name="convert_label">Convert</string>
     <string name="editor_label_collection">Collection</string>
     <string name="preferences_sub_collection">Collections</string>
@@ -188,7 +188,7 @@
     <string name="title_import_to_music_directory">Add to Music Directory</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>
-    <string name="label_quality_indicator">Quality Indicator</string>
+    <string name="label_quality_indicator">File Quality</string>
     <string name="label_server">Media Server</string>
     <string name="label_collections">Playlists</string>
     <string name="label_dlna_collections">Playlists</string>
@@ -255,5 +255,6 @@
     <string name="label_version">Version</string>
     <string name="label_library">Library</string>
     <string name="enter_custom_text">Enter custom text</string>
+    <string name="title_select_output">Select Output</string>
 
 </resources>

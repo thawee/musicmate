@@ -1,10 +1,15 @@
 package apincer.android.mmate.utils;
 
+import static apincer.android.mmate.Constants.QUALITY_GOOD;
+import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+
+import androidx.core.content.ContextCompat;
 
 import java.util.Locale;
 
@@ -51,6 +56,38 @@ public class MusicTagUtils {
         }
     }
 
+    public static Drawable getResolutionBackground(Context context, MusicTag tag) {
+        // DSD - DSD
+        // Hi-Res Lossless - >= 24 bits and >= 48 kHz
+        // Lossless - >= 24 bits and >= 48 kHz
+        // High Quality - compress
+        if(isDSD(tag) || isHiRes(tag)) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_hd);
+        }else if(isPCM24Bits(tag)) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_24bits);
+        }else if(isLossless(tag) || isMQA(tag)){
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_sd);
+        }else {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_resolution_unknown);
+        }
+    }
+
+    public static Drawable getDynamicRangeDbBackground(Context context, MusicTag tag) {
+        double drDb = tag.getDynamicRange();
+        boolean perfect = false;
+        if(tag.getAudioBitsDepth()==16) {
+            perfect = (drDb>=96.00);
+        }else if(tag.getAudioBitsDepth()==24) {
+            perfect = (drDb>=144.00);
+        }
+        if(perfect) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_perfect);
+        }else {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_normal);
+        }
+    }
+
+
     public static int getEncodingColor(Context context, MusicTag tag) {
         /* IFI DAC v2
         yellow - pcm 44.1/48
@@ -74,6 +111,31 @@ public class MusicTagUtils {
         }else {
             // 44.1 - 48
             return context.getColor(R.color.resolution_pcm_44_48);
+        }
+    }
+
+    public static int getFileEncodingColor(Context context, MusicTag tag) {
+        /* IFI DAC v2
+        yellow - pcm 44.1/48
+        white  - pcm >= 88.2
+
+        cyan   - lossy
+        red    - lossless
+        green  - MQA
+        blue   - MQA Studio
+        */
+
+        if(isMQAStudio(tag)){
+            return context.getColor(R.color.resolution_mqa_studio);
+        }else if(isMQA(tag)){
+            return context.getColor(R.color.resolution_mqa);
+        }else if(isDSD64(tag) || isDSD256(tag)) {
+            return context.getColor(R.color.resolution_dsd);
+        } else if(isLossless(tag) || isHiRes(tag)) {
+            return context.getColor(R.color.resolution_pcm_96);
+        }else {
+            // 44.1 - 48
+            return context.getColor(R.color.resolution_lossy);
         }
     }
 
@@ -159,7 +221,7 @@ public class MusicTagUtils {
     public static String getDynamicRange(MusicTag tag) {
         String text;
         if(tag.getDynamicRange()==0.00) {
-            text = "00";
+            text = "--";
         }else {
             text = String.format(Locale.US, "%.0f", tag.getDynamicRange());
         }
@@ -177,6 +239,23 @@ public class MusicTagUtils {
         }
 
         return text;
+    }
+
+    public static int getDRScoreColor(Context context, int drValue) {
+        if (drValue == 0) return ContextCompat.getColor(context, R.color.grey600);
+        else return ContextCompat.getColor(context, R.color.grey200);
+       /* if (drValue == 0) return ContextCompat.getColor(context, R.color.dr_no_trans);
+        else if (drValue < 7) return ContextCompat.getColor(context, R.color.red_light);
+        else if (drValue < 10) return ContextCompat.getColor(context, R.color.oranges_salmon);
+        else if (drValue < 13) return ContextCompat.getColor(context, R.color.greens_lime);
+        else return ContextCompat.getColor(context, R.color.purples_magenta); */
+    }
+
+    public static Drawable getDRScoreBackgroundColor(Context context, int drValue) {
+        if (drValue == 0) return ContextCompat.getDrawable(context, R.drawable.shape_background_dr);
+        else if (drValue < 8) return ContextCompat.getDrawable(context, R.drawable.shape_background_dr_low);
+        else if (drValue < 13) return ContextCompat.getDrawable(context, R.drawable.shape_background_dr_medium);
+        else return ContextCompat.getDrawable(context, R.drawable.shape_background_dr_high);
     }
 
     public static int getSourceRescId(String letter) {
@@ -202,6 +281,21 @@ public class MusicTagUtils {
         }
 
         return -1;
+    }
+
+    public static int getRating(MusicTag tag) {
+        String label1 = tag.getMediaQuality();
+        if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
+            return 5;
+        }else if(QUALITY_RECOMMENDED.equals(label1)) {
+            return 4;
+        }else if (QUALITY_GOOD.equals(label1)) {
+            return 3;
+        }else if(Constants.QUALITY_BAD.equals(label1)) {
+            return 1;
+        }else {
+            return 0;
+        }
     }
 
     public static boolean isOnDownloadDir(MusicTag tag) {
@@ -276,52 +370,15 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_ALAC.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
+
     public static boolean isAIFFile(MusicTag tag) {
         // aif, aiff
-        return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()));
-    }
-
-    public static boolean isISaanPlaylist(MusicTag tag) {
-        return ("Mor Lum".equalsIgnoreCase(tag.getGenre()));
-    }
-
-    public static boolean isBaanThungPlaylist(MusicTag tag) {
-        return ("Luk Thung".equalsIgnoreCase(tag.getGenre()));
-    }
-
-    public static boolean isVocalPlaylist(MusicTag tag) {
-        //String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-        String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (!isClassicPlaylist(tag)) &&
-                (genre.contains("ACOUSTIC") ||
-                        genre.contains("VOCAL")); // ||
-               // grouping.equalsIgnoreCase("Jazz") ||
-               // grouping.equalsIgnoreCase("Thai Jazz"));
-    }
-
-    public static boolean isLoungePlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping()).toUpperCase();
-       // String genre = StringUtils.trimToEmpty(tag.getGenre()).toUpperCase();
-        return (
-            grouping.equalsIgnoreCase("Lounge"));
+        return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()) || Constants.MEDIA_ENC_AIFF_ALT.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
     public static boolean isManagedInLibrary(Context context, MusicTag tag) {
         String path = FileRepository.newInstance(context).buildCollectionPath(tag, true);
         return StringUtils.compare(path, tag.getPath());
-    }
-
-    public static boolean isClassicPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return (grouping.equalsIgnoreCase("Classical"));
-    }
-
-    public static boolean isFinFinPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return ((grouping.equalsIgnoreCase("Contemporary")) &&
-                !(isISaanPlaylist(tag) ||
-                  isBaanThungPlaylist(tag))
-        );
     }
 
     public static boolean isAACFile(MusicTag musicTag) {
@@ -331,15 +388,6 @@ public class MusicTagUtils {
     public static int getChannels(MusicTag tag) {
         String chStr = tag.getAudioChannels();
         return 2;
-    }
-
-    public static boolean isTraditionalPlaylist(MusicTag tag) {
-        String grouping = StringUtils.trimToEmpty(tag.getGrouping());
-        return grouping.equalsIgnoreCase("Traditional");
-    }
-
-    public static boolean isAudiophile(MusicTag tag) {
-        return Constants.QUALITY_AUDIOPHILE.equalsIgnoreCase(tag.getMediaQuality());
     }
 
     // Helper to determine if a format is lossless (for audiophile renderers)

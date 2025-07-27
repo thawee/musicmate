@@ -54,7 +54,7 @@
     </style>
     -->
 
-    <style name="AppTheme.Material3" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="AppTheme.Material3" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_theme_dark_primary</item>
         <item name="colorOnPrimary">@color/md_theme_dark_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_dark_primaryContainer</item>
@@ -81,6 +81,8 @@
         <item name="colorSurfaceInverse">@color/md_theme_dark_inverseSurface</item>
         <item name="colorOnSurfaceInverse">@color/md_theme_dark_inverseOnSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_dark_inversePrimary</item>
+
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
     </style>
 
     <style name="BlackActionBar" parent="Widget.Material3.ActionBar.Solid">
@@ -406,20 +408,37 @@ M2
         <item name="android:windowExitAnimation">@anim/dialog_fade_out</item>
     </style>
 
-        <style name="roundedImageView" parent="">
-            <item name="cornerFamily">rounded</item>
-            <item name="cornerSize">8dp</item>
-        </style>
+
+    <!--
+        use with com.google.android.material.imageview.ShapeableImageView
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.App.CircleImageView"
+    -->
 
     <!-- new editor -->
-    <style name="Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+    <style name="ShapeAppearance.Cut" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>
         <item name="cornerSize">12dp</item>
     </style>
 
-    <style name="Rounded" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+    <style name="ShapeAppearance.Rounded" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.RoundedImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.CircleImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <!-- You can customize bottom sheet specific attributes here if needed,
+             e.g., backgroundDimAmount for more control, though default should work -->
+         <item name="android:backgroundDimAmount">0.6</item>  <!-- Default is often around 0.32 or 0.5 -->
     </style>
 
 </resources>

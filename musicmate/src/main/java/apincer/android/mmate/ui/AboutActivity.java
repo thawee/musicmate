@@ -46,7 +46,6 @@ import java.util.Map;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -74,9 +73,11 @@ public class AboutActivity extends AppCompatActivity {
         window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
 
         setContentView(R.layout.activity_fragement);
-        getSupportActionBar().setTitle(R.string.app_name);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(R.string.app_name);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.main_content, new AboutFragment())
@@ -129,16 +130,18 @@ public class AboutActivity extends AppCompatActivity {
                 btn.setText(name);
                 btn.setTextColor(Color.BLACK);
                 btn.setTypeface(null, Typeface.BOLD);
-                btn.setPadding(16, 8, 16, 8);
+                btn.setPadding(12, 6, 12, 6);
                 // Set margin
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-                params.setMargins(16, 8, 16, 8);
+                params.setMargins(8, 6, 8, 6);
                 btn.setLayoutParams(params);
                 if(Constants.GROUPING_CONTEMPORARY.equals(name)) {
                     btn.setBackgroundResource(R.drawable.shape_background_contemporary);
+                }else if(Constants.GROUPING_OLDEIS.equals(name)) {
+                    btn.setBackgroundResource(R.drawable.shape_background_oldies);
                 }else if(Constants.GROUPING_LOUNGE.equals(name)) {
                     btn.setBackgroundResource(R.drawable.shape_background_lounge);
                 }else if(Constants.GROUPING_CLASSICAL.equals(name)) {
@@ -178,11 +181,11 @@ public class AboutActivity extends AppCompatActivity {
                 List<MusicTag> tags = TagRepository.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
                 Map<String, Integer> grpList = new HashMap<>();
-                Map<String, Long> estimatedSize = new HashMap<>();
-                Map<String, Long> actualSize = new HashMap<>();
-                FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
+               // Map<String, Long> estimatedSize = new HashMap<>();
+              //  Map<String, Long> actualSize = new HashMap<>();
+              //  FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
                 for(MusicTag tag: tags) {
-                    String sid = repos.getStorageIdFor(tag);
+                  /*  String sid = repos.getStorageIdFor(tag);
                     String asid = tag.getStorageId();
                     if(estimatedSize.containsKey(sid)) {
                         Long s = estimatedSize.get(sid);
@@ -195,7 +198,7 @@ public class AboutActivity extends AppCompatActivity {
                         actualSize.put(asid, s+tag.getFileSize());
                     }else {
                         actualSize.put(asid, tag.getFileSize());
-                    }
+                    } */
 
                     String enc = MusicTagUtils.getEncodingTypeShort(tag);
                     if(encList.containsKey(enc)) {
@@ -218,7 +221,8 @@ public class AboutActivity extends AppCompatActivity {
                 getActivity().runOnUiThread(() -> {
                     // storage
                     LinearLayout panel = v.findViewById(R.id.storage_bar);
-                    UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
+                    UIUtils.buildStoragesStatus(requireActivity().getApplication(), panel);
+                   // UIUtils.buildStoragesUsed(requireActivity().getApplication(), panel, actualSize, estimatedSize);
 
                     // file type piechart
                     setupResolutionChart(v, encList, "");
@@ -441,7 +445,7 @@ public class AboutActivity extends AppCompatActivity {
             mappedColors.put(Constants.GROUPING_LOUNGE, ContextCompat.getColor(getContext(), R.color.material_color_green_400));// ColorTemplate.rgb("#4b7a9b")); //""#f48558"));
             mappedColors.put(Constants.UNKNOWN, ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_800)); //ColorTemplate.rgb("#488f31"));
             mappedColors.put(Constants.GROUPING_CLASSICAL, ContextCompat.getColor(getContext(), R.color.material_color_lime_400)); //ColorTemplate.rgb("#488f31"));
-           // mappedColors.put("Thai Country", ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
+            mappedColors.put(Constants.GROUPING_OLDEIS, ContextCompat.getColor(getContext(), R.color.material_color_teal_900)); //ColorTemplate.rgb("#dcb85a"));
             mappedColors.put(Constants.GROUPING_CONTEMPORARY, ContextCompat.getColor(getContext(), R.color.material_color_green_800)); //ColorTemplate.rgb("#dcb85a"));
            // mappedColors.put("World", ContextCompat.getColor(getContext(), R.color.material_color_blue_grey_900)); //ColorTemplate.rgb("#f48558"));
             for(String enc: list.keySet()) {
@@ -501,8 +505,8 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
+            mappedColors.put(TITLE_MQA_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_mqa_studio));
             mappedColors.put(TITLE_DSD_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_dsd));
-            mappedColors.put(Constants.TITLE_MQA_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_mqa_studio));
             mappedColors.put(TITLE_HIRES_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_hires));
             mappedColors.put(TITLE_HIFI_LOSSLESS_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_lossless));
             mappedColors.put(TITLE_HIGH_QUALITY_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_lossy));

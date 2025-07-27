@@ -45,8 +45,8 @@ public final class Constants {
     public static final String GROUPING_CONTEMPORARY = "Contemporary";
 
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
-    public static final String TITLE_COLLECTIONS = "Collections";
-    public static final String TITLE_RESOLUTION = "Resolutions";
+    public static final String TITLE_PLAYLIST = "Playlist";
+    public static final String TITLE_RESOLUTION = "Resolution";
     public static final String TITLE_GROUPING = "Grouping";
     public static final String TITLE_GENRE = "Genre";
     public static final String TITLE_PUBLISHER = "Publisher";
@@ -80,6 +80,7 @@ public final class Constants {
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
     public static final String PREF_CLEAR_CACHED = "preference_clear_cached";
     public static final String PREF_LAST_SCAN_TIME = "LAST_SCAN_TIME_PREF";
+    public static final String GROUPING_OLDEIS = "Oldies";
 
     static {
         IMAGE_COVERS.add("front.png");
@@ -115,6 +116,7 @@ public final class Constants {
     public static final String MEDIA_ENC_DSF = "DSF";
     public static final String MEDIA_ENC_DFF = "DFF";
     public static final String MEDIA_ENC_AIFF = "AIFF";
+    public static final String MEDIA_ENC_AIFF_ALT = "AIF";
     public static final String MEDIA_ENC_SACD = "SACD";
 
     public static final String MEDIA_PATH_DSD = "DSD"; // DSD
@@ -123,9 +125,6 @@ public final class Constants {
     public static final String MEDIA_PATH_SACD = "SACD";
     public static final String MEDIA_PATH_HIFI = "Hi-Fi";
     public static final String MEDIA_PATH_HIGH_QUALITY = "HQ";
-
-    //public static final String AUDIO_SQ_DSD = "DSD"; // DSD
-    //public static final String AUDIO_SQ_PCM_MQA = "MQA"; //MQA
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
     public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
@@ -137,6 +136,7 @@ public final class Constants {
     //public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
     public static final String PREF_ENABLE_MEDIA_SERVER = "preference_dlna_media_server";
     public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
+    public static final String PREF_NETTY_MEDIA_SERVER = "preference_netty_media_server";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";
@@ -151,8 +151,6 @@ public final class Constants {
 
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
-    //public static final String DEFAULT_COVERART_RES = "no_cover4.png";
-    //public static final String DEFAULT_COVERART_DLNA_RES = "no_cover4.png";
     public static final String DEFAULT_COVERART_DLNA_RES = "no_cover.png";
 
     public static List<String> getSourceList(Context context) {

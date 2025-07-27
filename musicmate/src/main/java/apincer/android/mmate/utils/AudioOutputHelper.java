@@ -32,14 +32,15 @@ import java.util.HashMap;
 import java.util.List;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.player.PlayerInfo;
 import apincer.android.mmate.repository.MusicTag;
 
 public class AudioOutputHelper {
     private static final String TAG = AudioOutputHelper.class.getName();
 
-    public static Device getDLNADevice(MusicTag tag) {
+    public static Device getDMSDevice(MusicTag tag, PlayerInfo player) {
         Device device = new Device();
-        device.setCodec("DLNA");
+        device.setCodec(player.getPlayerType().name());
         if(tag != null) {
             device.setBitPerSampling(tag.getAudioBitsDepth());
             device.setSamplingRate(tag.getAudioSampleRate());
@@ -310,7 +311,7 @@ public class AudioOutputHelper {
         outputDevice.setDescription(desc);
     }
 
-    public static Bitmap getOutputDeviceIcon(Context context, boolean streaming, Device dev) {
+    public static Bitmap getOutputDeviceIcon(Context context, Device dev) {
         int width = 128;  // 16x21, 24x32
         int height = 96;
 
@@ -327,10 +328,10 @@ public class AudioOutputHelper {
         }
 
         String rate =  StringUtils.formatAudioSampleRate(dev.getSamplingRate(),true);
-        if(streaming) {
+       /* if(streaming) {
             long bitRate  = dev.bitRate>0?dev.bitRate:dev.getBitPerSampling()*dev.getSamplingRate();
             rate  = StringUtils.formatAudioBitRateShortUnit(bitRate);
-        }
+        } */
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);

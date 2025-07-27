@@ -27,7 +27,10 @@ import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
+import org.jupnp.model.meta.RemoteDevice;
+
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +43,6 @@ import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.PlaylistRepository;
-import apincer.android.mmate.repository.SearchCriteria;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.worker.MusicMateExecutors;
@@ -56,7 +58,8 @@ public class MusixMateApp extends Application {
     private boolean isMediaServerRunning = false;
 
     private static MusixMateApp INSTANCE;
-    private SearchCriteria criteria;
+    //private SearchCriteria criteria;
+    private List<RemoteDevice> renderers = new ArrayList();
 
     public static MusixMateApp getInstance() {
         return INSTANCE;
@@ -139,7 +142,7 @@ public class MusixMateApp extends Application {
                 Log.d(TAG, "WiFi network became available");
 
                 // Check media server settings before starting
-                if (Settings.isEnableMediaServer(getApplicationContext())) {
+                if (Settings.isAutoStartMediaServer(getApplicationContext())) {
                     // Use a slight delay to allow network to stabilize
                     MusicMateExecutors.schedule(() -> {
                         try {
@@ -171,7 +174,7 @@ public class MusixMateApp extends Application {
 
         if (capabilities != null &&
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                Settings.isEnableMediaServer(getApplicationContext())) {
+                Settings.isAutoStartMediaServer(getApplicationContext())) {
             // Network is already available - start service directly
             MediaServerService.startMediaServer(this);
             isMediaServerRunning = true;
@@ -186,7 +189,7 @@ public class MusixMateApp extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         LogHelper.initial();
         LogHelper.setSLF4JOn();
-        CrashReporter.initialize(this);
+        CrashReporter.initialize(getApplicationContext());
 
         reconnectNotificationListener(this);
 
@@ -303,13 +306,13 @@ public class MusixMateApp extends Application {
         }
     }
 
-    public void setSearchCriteria(SearchCriteria criteria) {
+   /* public void setSearchCriteria(SearchCriteria criteria) {
         this.criteria = criteria;
     }
 
     public SearchCriteria getCriteria() {
         return criteria;
-    }
+    } */
 
     public void clearCaches() {
         File dir = getApplicationContext().getExternalCacheDir();
@@ -339,4 +342,24 @@ public class MusixMateApp extends Application {
             isMediaServerRunning = false;
         }
     }
+
+    public RemoteDevice getRenderer(String ipAddress) {
+        for(RemoteDevice dev: renderers) {
+            String ip = getDeviceIpAddress(dev);
+            if(ip != null && ipAddress.equals(ip)) {
+                return dev;
+            }
+        }
+        return null;
+    }
+
+    public void addRenderer(RemoteDevice device) {
+        renderers.add(device);
+    }
+
+    public static String getDeviceIpAddress(RemoteDevice device) {
+        URL descriptorURL = device.getIdentity().getDescriptorURL();
+        return descriptorURL.getHost();
+    }
+
 }

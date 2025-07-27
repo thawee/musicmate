@@ -39,9 +39,8 @@ public class MusicTag {
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == null) return false;
-        if (obj instanceof MusicTag) {
-           // return id == ((MusicTag) obj).getId();
-            return uniqueKey.equals(((MusicTag) obj).uniqueKey);
+        if (obj instanceof MusicTag tag) {
+            return uniqueKey != null && tag.uniqueKey != null && uniqueKey.equals(tag.uniqueKey);
         }
         return false;
     }

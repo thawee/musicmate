@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.utils.ApplicationUtils;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
@@ -104,13 +105,20 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
 
         streamServerHost = bindAddress.getHostAddress();
 
-        this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
-        //this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
-        this.upnpServer.initServer(bindAddress);
+        if(Settings.isUseNettyLibrary(context)) {
+            this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
+            this.upnpServer.initServer(bindAddress);
 
-        this.contentServer = new JettyContentServerImpl(context, router, configuration);
-        //this.contentServer = new NettyContentServerImpl(context, router, configuration);
-        this.contentServer.initServer(bindAddress);
+            this.contentServer = new NettyContentServerImpl(context, router, configuration);
+            this.contentServer.initServer(bindAddress);
+
+        }else {
+            this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
+            this.upnpServer.initServer(bindAddress);
+
+            this.contentServer = new JettyContentServerImpl(context, router, configuration);
+            this.contentServer.initServer(bindAddress);
+        }
     }
 
     synchronized public int getPort() {

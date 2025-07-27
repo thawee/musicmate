@@ -106,4 +106,14 @@
 		<attr name="heightRatio" format="integer" />
 	</declare-styleable>
 
+	<declare-styleable name="ResolutionView">
+		<attr name="encodingText" format="string" />
+		<attr name="resolutionText" format="string" />
+	</declare-styleable>
+
+	<declare-styleable name="DynamicRangeDbView">
+		<attr name="drDbText" format="string" />
+		<!-- You could add more attributes for colors, text appearances, etc. if needed -->
+	</declare-styleable>
+
 </resources>

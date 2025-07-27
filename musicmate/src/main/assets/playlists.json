@@ -1,0 +1,918 @@
+{
+  "playlists": [
+    {
+      "name": "Best Songs to Test Speakers",
+      "uuid": "BSTSPK",
+      "type": "song",
+      "songs": [
+        {
+          "title": "Flight of the Cosmic Hippo",
+          "artist": "Béla Fleck and the Flecktones",
+          "album": "Flight of the Cosmic Hippo",
+          "notes": "A masterclass in bass clarity, with rich, resonant low-end notes."
+        },
+        {
+          "title": "Angel",
+          "artist": "Massive Attack",
+          "album": "Mezzanine",
+          "notes": "Deep, rolling basslines that test both extension and control."
+        },
+        {
+          "title": "Limit to Your Love",
+          "artist": "James Blake",
+          "album": "James Blake",
+          "notes": "Features sub-bass that reaches deep into the lowest frequencies, great for testing a system’s low-end reach."
+        },
+        {
+          "title": "Hysteria",
+          "artist": "Muse",
+          "album": "Absolution",
+          "notes": "A rapid, punchy bassline that reveals how well your system handles fast, complex low-end frequencies."
+        },
+        {
+          "title": "When the Levee Breaks",
+          "artist": "Led Zeppelin",
+          "album": "Led Zeppelin IV",
+          "notes": "Deep, resonant kick drum that can expose speaker flaws in low frequencies."
+        },
+        {
+          "title": "Summer Madness",
+          "artist": "Kool & The Gang",
+          "album": "Light Of Worlds",
+          "notes": "A smooth bassline that should sound warm and well-articulated, not bloated."
+        },
+        {
+          "title": "Mookid",
+          "artist": "Aphex Twin",
+          "album": "...I Care Because You Do",
+          "notes": "Electronic bass with dynamic range and intricate textures, testing how well your system keeps up."
+        },
+        {
+          "title": "Bad Guy",
+          "artist": "Billie Eilish",
+          "album": "When We All Fall Asleep, Where Do We Go?",
+          "notes": "A modern, well-produced bass-heavy track that can expose inconsistencies in low-frequency reproduction."
+        },
+        {
+          "title": "Doin' It Right",
+          "artist": "Daft Punk",
+          "album": "Random Access Memories",
+          "notes": "Recognized for its deep bass and layering, good for testing clarity in low frequencies."
+        },
+        {
+          "title": "Hallelujah",
+          "artist": "Jeff Buckley",
+          "album": "Grace",
+          "notes": "An intimate vocal recording with incredible depth and emotion—listen for breath control and delicate vibrato."
+        },
+        {
+          "title": "Strange Fruit",
+          "artist": "Nina Simone",
+          "album": "Pastel Blues",
+          "notes": "Haunting vocals with raw emotion; a great test for tonal accuracy and presence."
+        },
+        {
+          "title": "Fast Car",
+          "artist": "Tracy Chapman",
+          "album": "Tracy Chapman",
+          "notes": "Her voice should sound warm, clear, and natural, with no sharpness or excessive sibilance."
+        },
+        {
+          "title": "The Chain",
+          "artist": "Fleetwood Mac",
+          "album": "Rumours",
+          "notes": "Rich harmonies and intricate instrumentation make this a great test of midrange balance and separation."
+        },
+        {
+          "title": "Caislean Óir",
+          "artist": "Clannad",
+          "album": "Macalla",
+          "notes": "A lush, layered vocal performance that tests midrange openness and depth."
+        },
+        {
+          "title": "Tears in Heaven",
+          "artist": "Eric Clapton",
+          "album": "Unplugged",
+          "notes": "Acoustic guitar and vocals should sound warm and lifelike, with every string pluck and breath clearly defined."
+        },
+        {
+          "title": "It Was a Very Good Year",
+          "artist": "Frank Sinatra",
+          "album": "September Of My Years",
+          "notes": "Sinatra’s baritone should have richness and depth, with no nasal or hollow overtones."
+        },
+        {
+          "title": "Diamonds on the Soles of Her Shoes",
+          "artist": "Paul Simon",
+          "album": "Graceland",
+          "notes": "Layered vocal harmonies and intricate midrange details demand clarity and separation."
+        },
+        {
+          "title": "Ain't No Sunshine",
+          "artist": "Bill Withers",
+          "album": "Just As I Am",
+          "notes": "Withers' deep, textured vocals and the sparse arrangement make this a great test for midrange presence and separation."
+        },
+        {
+          "title": "Sketch for Summer",
+          "artist": "The Durutti Column",
+          "album": "The Return Of The Durutti Column",
+          "notes": "Clean, shimmering guitar tones make this a great treble test."
+        },
+        {
+          "title": "Born, Never Asked",
+          "artist": "Laurie Anderson",
+          "album": "Big Science",
+          "notes": "Listen to the keening violin’s treble speed and articulation."
+        },
+        {
+          "title": "Concierto de Aranjuez (Adagio)",
+          "artist": "Miles Davis",
+          "album": "Sketches of Spain",
+          "notes": "The trumpet’s high frequencies should sound clear, not piercing or overly aggressive."
+        },
+        {
+          "title": "Humming",
+          "artist": "Portishead",
+          "album": "Portishead",
+          "notes": "The hi-hat and theremin-like synth should be detailed but not overly sharp."
+        },
+        {
+          "title": "Do It Again",
+          "artist": "Steely Dan",
+          "album": "Can't Buy a Thrill",
+          "notes": "A mix of congas, ride cymbals, and electric piano tests treble separation and refinement."
+        },
+        {
+          "title": "I'm 9 Today",
+          "artist": "Múm",
+          "album": "Yesterday Was Dramatic – Today Is OK",
+          "notes": "A dreamy electronic track that should sound airy and spacious with controlled treble."
+        },
+        {
+          "title": "Clair de Lune",
+          "artist": "Kamasi Washington",
+          "album": "The Epic",
+          "notes": "Brass instruments and strings should extend naturally without sounding brittle."
+        },
+        {
+          "title": "Night and Day",
+          "artist": "Sergio Mendes & Brasil '66",
+          "album": "Equinox",
+          "notes": "The light percussion should sound crisp and well-separated."
+        },
+        {
+          "title": "A Thousand Details",
+          "artist": "Trent Reznor & Atticus Ross",
+          "album": "The Girl With the Dragon Tattoo",
+          "notes": "The high-pitched synth textures should be crystal clear without distortion."
+        },
+        {
+          "title": "B.Y.O.B.",
+          "artist": "System of a Down",
+          "album": "Mezmerize",
+          "notes": "Extreme soft-loud contrasts and fast-paced drumwork."
+        },
+        {
+          "title": "Tame",
+          "artist": "Pixies",
+          "album": "Doolittle",
+          "notes": "A textbook example of quiet verses exploding into loud, aggressive choruses."
+        },
+        {
+          "title": "Take the Veil Cerpin Taxt",
+          "artist": "The Mars Volta",
+          "album": "Deloused in the Comatorium",
+          "notes": "An unorthodox track with sudden, chaotic shifts in volume and intensity."
+        },
+        {
+          "title": "Ripley's Rescue",
+          "artist": "James Horner",
+          "album": "Aliens",
+          "notes": "Dramatic orchestral swells test both subtlety and large-scale dynamics."
+        },
+        {
+          "title": "Sea of Love",
+          "artist": "The National",
+          "album": "Trouble Will Find Me",
+          "notes": "Rolling drum fills and shifting vocal intensity provide a great dynamic workout."
+        },
+        {
+          "title": "Pockets of Light",
+          "artist": "Lubomyr Melnyk",
+          "album": "Corollaries",
+          "notes": "Melnyk’s continuous piano playing demands speed and precision from speakers."
+        },
+        {
+          "title": "Sketches of Spain – Concierto de Aranjuez (Adagio)",
+          "artist": "Miles Davis",
+          "album": "Sketches of Spain",
+          "notes": "Captures soft, intimate moments as well as bold, brassy climaxes."
+        },
+        {
+          "title": "Is It Always Binary",
+          "artist": "Soulwax",
+          "album": "From Deewee",
+          "notes": "Percussive energy and sharp synth bursts highlight transient speed."
+        },
+        {
+          "title": "Watching You Without Me",
+          "artist": "Kate Bush",
+          "album": "Hounds Of Love",
+          "notes": "A wide dynamic range with whispered vocals and sudden, dramatic swells."
+        },
+        {
+          "title": "Bubbles",
+          "artist": "Yosi Horikawa",
+          "album": "Wandering EP",
+          "notes": "This track features sound effects that seem to bounce around the room, making it a fantastic spatial test."
+        },
+        {
+          "title": "Blue Train",
+          "artist": "John Coltrane",
+          "album": "Blue Train",
+          "notes": "A masterclass in instrument separation, depth, and jazz club ambiance."
+        },
+        {
+          "title": "No Sanctuary Here",
+          "artist": "Chris Jones",
+          "album": "Roadhouses & Automobiles",
+          "notes": "Rich spatial layering in both the vocals and deep, textured bass."
+        },
+        {
+          "title": "Royals",
+          "artist": "Lorde",
+          "album": "Pure Heroine",
+          "notes": "A minimalist mix with deep, resonant bass and a vocal that should sound centered and intimate."
+        },
+        {
+          "title": "Take Five",
+          "artist": "The Dave Brubeck Quartet",
+          "album": "Time Out",
+          "notes": "Jazz recordings often have excellent instrument separation, and this one is a prime example."
+        },
+        {
+          "title": "Bird on a Wire",
+          "artist": "Jennifer Warnes",
+          "album": "Famous Blue Raincoat",
+          "notes": "Immaculate vocal positioning and a natural sense of space."
+        },
+        {
+          "title": "Hotel California (Live)",
+          "artist": "Eagles",
+          "album": "MTV Unplugged",
+          "notes": "The live audience and layered instrumentation should place you in the middle of the performance."
+        },
+        {
+          "title": "Private Investigations",
+          "artist": "Dire Straits",
+          "album": "Love over Gold",
+          "notes": "A beautifully mixed track with deep bass, sharp imaging, and an immersive soundstage."
+        },
+        {
+          "title": "New York Minute",
+          "artist": "Eagles",
+          "album": "Hell Freezes Over",
+          "notes": "This live recording delivers a fantastic sense of air and space."
+        },
+        {
+          "title": "On Every Street",
+          "artist": "Dire Straits",
+          "album": "On Every Street",
+          "notes": "Brilliant use of depth and stereo imaging."
+        }
+      ]
+    },
+    {
+      "name": "Gabster's Recommended",
+      "uuid": "GABSTER",
+      "type": "song",
+      "songs": [
+        {
+          "title": "Fireproof",
+          "artist": "Heather Nova",
+          "album": "Other Shores",
+          "notes": "notes"
+        },
+        {
+          "title": "Vessel (Album Version)",
+          "artist": "Nine Inch Nails",
+          "album": "Year Zero",
+          "notes": "notes"
+        },
+        {
+          "title": "Born To Be Loved",
+          "artist": "Lucinda Williams",
+          "album": "Blessed",
+          "notes": "notes"
+        },
+        {
+          "title": "Lost Without You (Live At St Pancras Old Church)",
+          "artist": "Freya Ridings",
+          "album": "Live At St Pancras Old Church",
+          "notes": "notes"
+        },
+        {
+          "title": "Portal Spillage",
+          "artist": "Tipper",
+          "album": "Forward Escape",
+          "notes": "notes"
+        },
+        {
+          "title": "Wang Dang Doodle (Live)",
+          "artist": "Koko Taylor & Her Blues Machine",
+          "album": "Live From Chicago - An Audience with The Queen",
+          "notes": "notes"
+        },
+        {
+          "title": "Dim (Recorded Live at St. Mark's Cathedral, Seattle)",
+          "artist": "SYML",
+          "album": "Sacred Spaces",
+          "notes": "notes"
+        },
+        {
+          "title": "Locus",
+          "artist": "Be'lakor",
+          "album": "Coherence",
+          "notes": "notes"
+        },
+        {
+          "title": "Smash It Up (Pts. 1 & 2)",
+          "artist": "The Damned",
+          "album": "Machine Gun Etiquette",
+          "notes": "notes"
+        },
+        {
+          "title": "T.N.T.",
+          "artist": "AC/DC",
+          "album": "High Voltage",
+          "notes": "notes"
+        },
+        {
+          "title": "Without You",
+          "artist": "Lapalux, Kerry Leatham",
+          "album": "Nostalchic",
+          "notes": "notes"
+        },
+        {
+          "title": "Medication",
+          "artist": "Damian \"Jr. Gong\" Marley, Stephen Marley",
+          "album": "Stone Hill",
+          "notes": "notes"
+        },
+        {
+          "title": "Onia",
+          "artist": "Flughand",
+          "album": "1000",
+          "notes": "notes"
+        },
+        {
+          "title": "Lady of Silence - In Love With You",
+          "artist": "Deepak Chopra, Adriana Castelazo",
+          "album": "A Gift of Love Vol.2 - Ocean Of Ecstay",
+          "notes": "notes"
+        },
+        {
+          "title": "Let Me Guide You",
+          "artist": "AJMW",
+          "album": "Let Me Guide You",
+          "notes": "notes"
+        },
+        {
+          "title": "Silence",
+          "artist": "Park Heart, Neubauer",
+          "album": "Silence",
+          "notes": "notes"
+        },
+        {
+          "title": "I Like the Way You Kiss Me",
+          "artist": "Artemas",
+          "album": "I Like the Way You Kiss Me",
+          "notes": "notes"
+        },
+        {
+          "title": "Look Of Love",
+          "artist": "The Cancel",
+          "album": "Look Of Love",
+          "notes": "notes"
+        },
+        {
+          "title": "Lose Control",
+          "artist": "Teddy Swims",
+          "album": "Lose Control",
+          "notes": "notes"
+        },
+        {
+          "title": "Water Flow",
+          "artist": "Klyne, Fedous Dehzed, Nick Klein",
+          "album": "Klyne",
+          "notes": "notes"
+        },
+        {
+          "title": "Blackout",
+          "artist": "Freya Ridings",
+          "album": "Freya Ridings",
+          "notes": "notes"
+        },
+        {
+          "title": "I Can't Stand The Rain",
+          "artist": "Woong San",
+          "album": "I'm Alright",
+          "notes": "notes"
+        },
+        {
+          "title": "Big In Japan",
+          "artist": "Ane Brun",
+          "album": "Big In Japan",
+          "notes": "notes"
+        },
+        {
+          "title": "Two More Days",
+          "artist": "Christel Alsos",
+          "album": "At That Time Of The Night",
+          "notes": "notes"
+        },
+        {
+          "title": "Yesterday (Live)",
+          "artist": "Tom Jones",
+          "album": "Live In Las Vegas",
+          "notes": "notes"
+        },
+        {
+          "title": "Love Me Fast",
+          "artist": "SRFR, Sadé Anaise",
+          "album": "Love Me Fast",
+          "notes": "notes"
+        },
+        {
+          "title": "Du är nog den",
+          "artist": "Melissa Horn",
+          "album": "Innan Jag Kände Dig",
+          "notes": "notes"
+        },
+        {
+          "title": "Hypnotised",
+          "artist": "Years & Years",
+          "album": "Palo Santo",
+          "notes": "notes"
+        },
+        {
+          "title": "Goin' Back to Harlen (Alternate Version)",
+          "artist": "Emmylou Harris",
+          "album": "Wrecking Ball",
+          "notes": "notes"
+        },
+        {
+          "title": "Speed of the Sound of Loneliness",
+          "artist": "Nanci Griffith",
+          "album": "Other Voices, Other Rooms",
+          "notes": "notes"
+        },
+        {
+          "title": "Blackbird",
+          "artist": "Andrea Schroeder",
+          "album": "Blackbird",
+          "notes": "notes"
+        },
+        {
+          "title": "Ruiner",
+          "artist": "Nine Inch Nails",
+          "album": "The Downward Spiral",
+          "notes": "notes"
+        },
+        {
+          "title": "No Man's Dub",
+          "artist": "Sumac Dub",
+          "album": "Le jardin de Lucy",
+          "notes": "notes"
+        },
+        {
+          "title": "Way Down in the Mines",
+          "artist": "Carl Cleves, Parissa Bouas",
+          "album": "Out Of Australia",
+          "notes": "notes"
+        },
+        {
+          "title": "Ebe",
+          "artist": "Captain Hook",
+          "album": "E.b.e",
+          "notes": "notes"
+        },
+        {
+          "title": "Break My Heart Again",
+          "artist": "Rebekka Bakken",
+          "album": "Always On My Mind",
+          "notes": "notes"
+        },
+        {
+          "title": "Comme un tango",
+          "artist": "Vincent Belanger, Anne Bisson",
+          "album": "Conversation (XLO 25th Anniversary Edition)",
+          "notes": "notes"
+        },
+        {
+          "title": "True North",
+          "artist": "Rebekka Bakken",
+          "album": "Things You Leave Behind",
+          "notes": "notes"
+        },
+        {
+          "title": "Hero",
+          "artist": "Lissie",
+          "album": "My Wild West",
+          "notes": "notes"
+        },
+        {
+          "title": "All The Way To Rio (Live)",
+          "artist": "Anna Ternheim",
+          "album": "The Winter Tapes (Live)",
+          "notes": "notes"
+        },
+        {
+          "title": "My Heart Still Beats For You (Live)",
+          "artist": "Anna Ternheim",
+          "album": "The Winter Tapes (Live)",
+          "notes": "notes"
+        },
+        {
+          "title": "Love Only Knows",
+          "artist": "Josh Groban",
+          "album": "Illuminations",
+          "notes": "notes"
+        },
+        {
+          "title": "Home",
+          "artist": "Josh Groban",
+          "album": "Illuminations",
+          "notes": "notes"
+        },
+        {
+          "title": "Chocolate Chip Trip",
+          "artist": "Tool",
+          "album": "Fear Inoculum",
+          "notes": "notes"
+        },
+        {
+          "title": "I Am the Sea",
+          "artist": "Anette Askvik",
+          "album": "I Am the Sea",
+          "notes": "notes"
+        },
+        {
+          "title": "Passelig dose",
+          "artist": "Kari Bremnes",
+          "album": "Passelig dose",
+          "notes": "notes"
+        },
+        {
+          "title": "Wicked Game",
+          "artist": "Daisy Gray",
+          "album": "Wicked Game",
+          "notes": "notes"
+        },
+        {
+          "title": "Anxious Angel",
+          "artist": "Maja Francis",
+          "album": "A Pink Soft Mess",
+          "notes": "notes"
+        },
+        {
+          "title": "Serenade to a Cuckoo",
+          "artist": "Nestor Torres",
+          "album": "Jazz Flute Traditions",
+          "notes": "notes"
+        },
+        {
+          "title": "Paradis Perdus",
+          "artist": "Christine and the Queens",
+          "album": "Chaleur Humaine",
+          "notes": "notes"
+        },
+        {
+          "title": "Christos Anesti",
+          "artist": "Nenad Vasilic",
+          "album": "Bass Room",
+          "notes": "notes"
+        },
+        {
+          "title": "Surrender",
+          "artist": "Eivør Pálsdóttir",
+          "album": "Slør",
+          "notes": "notes"
+        },
+        {
+          "title": "Don't You Touch Me",
+          "artist": "SoKo",
+          "album": "I Thought I Was an Alian",
+          "notes": "notes"
+        },
+        {
+          "title": "Take Care",
+          "artist": "Imany",
+          "album": "The Shape of a Broken Heart",
+          "notes": "notes"
+        },
+        {
+          "title": "Fat Cry",
+          "artist": "Yello",
+          "album": "Zebra",
+          "notes": "notes"
+        },
+        {
+          "title": "If You Knew Me Now",
+          "artist": "Christel Alsos",
+          "album": "At That Time Of The Night",
+          "notes": "notes"
+        },
+        {
+          "title": "After Midnight",
+          "artist": "Hanne Boel",
+          "album": "Outtakes",
+          "notes": "notes"
+        },
+        {
+          "title": "Good Morning Little Schoolgirl",
+          "artist": "Muddy Waters, Buddy Guy, Clifton James, Willie Dixon",
+          "album": "The Anthology",
+          "notes": "notes"
+        },
+        {
+          "title": "Jazz Variants",
+          "artist": "The O-Zone Percussion Group",
+          "album": "O-Zone Percussion Group: Bamba (La)",
+          "notes": "notes"
+        },
+        {
+          "title": "Crystal Ball",
+          "artist": "Carolin No",
+          "album": "Carolin No",
+          "notes": "notes"
+        },
+        {
+          "title": "I Would Rather Go Blind",
+          "artist": "Pete Alderton",
+          "album": "Mystery Lady",
+          "notes": "notes"
+        },
+        {
+          "title": "Another Life",
+          "artist": "Nadine Khouri",
+          "album": "Another Life",
+          "notes": "notes"
+        },
+        {
+          "title": "Dry My Tears",
+          "artist": "Anne Bisson",
+          "album": "Tales from the Treetops",
+          "notes": "notes"
+        },
+        {
+          "title": "Trouble's What You're In",
+          "artist": "Fink",
+          "album": "Wheels Turn Beneath My Feet",
+          "notes": "notes"
+        },
+        {
+          "title": "The Curse",
+          "artist": "Agnes Obel",
+          "album": "Aventine",
+          "notes": "notes"
+        },
+        {
+          "title": "Everything Is Free",
+          "artist": "Gillian Welch",
+          "album": "Time (The Revelator)",
+          "notes": "notes"
+        }
+      ]
+    },
+    {
+      "name": "Top Audiophile Albums",
+      "uuid": "TAUDIOPHILE",
+      "type": "album",
+      "songs": [
+        {
+          "album": "The Nightfly",
+          "artist": "Donald Fagen",
+          "year": "1982",
+          "notes": "Known for its pristine digital recording and meticulous production. The clean, detailed sound and excellent dynamics test system transparency."
+        },
+        {
+          "album": "…Nothing Like the Sun",
+          "artist": "Sting",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Random Access Memories",
+          "artist": "Daft Punk",
+          "year": "2013",
+          "notes": "A modern audiophile benchmark with exceptional analog warmth, detail, and dynamics. Its varied instrumentation highlights system versatility across bass, mids, and treble."
+        },
+        {
+          "album": "Rumours",
+          "artist": "Fleetwood Mac",
+          "year": "1977",
+          "notes": "Noted for its pristine vocal reproduction, instrument separation, and overall tonal balance. The acoustic elements reveal a system's ability to handle subtle details."
+        },
+        {
+          "album": "Brothers in Arms",
+          "artist": "Dire Straits",
+          "year": "1985",
+          "notes": "Engineered with extreme precision, featuring analytical sound quality, perfect instrument placement, and subtle details that reveal a system's resolution capabilities."
+        },
+        {
+          "album": "Hope",
+          "artist": "Hugh Masekela",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Tracy Chapman",
+          "artist": "Tracy Chapman",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Come Away With Me",
+          "artist": "Norah Jones",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Café Blue",
+          "artist": "Patricia Barber",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "4",
+          "artist": "Foreigner",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Dark Side of the Moon",
+          "artist": "Pink Floyd",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "This Left Feels Right",
+          "artist": "Bon Jovi",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Toto IV",
+          "artist": "Toto",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Famous Blue Raincoat",
+          "artist": "Jennifer Warnes",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "What’s Going On",
+          "artist": "Marvin Gaye",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Thriller",
+          "artist": "Michael Jackson",
+          "year": "1982",
+          "notes": "Featuring Quincy Jones' immaculate production, this album offers extraordinary dynamics, clarity, and balance across all frequencies, making it ideal for testing audio systems."
+        },
+        {
+          "album": "Sweet Baby James",
+          "artist": "James Taylor",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Heart of the Congos",
+          "artist": "The Congos",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "MTV Unplugged in New York",
+          "artist": "Nirvana",
+          "year": "",
+          "notes": ""
+        },
+        {
+          "album": "Pet Sounds",
+          "artist": "Beach Boys",
+          "year": "",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "ลูกทุ่งบ้านนา ฟังเพลินเหมือนเดินกลางทุ่ง",
+      "uuid": "LukThung",
+      "type": "genre",
+      "songs": [
+        {
+          "genre": "Luk Thung"
+        },
+        {
+          "genre": "Thai, Luk Thung"
+        }
+      ]
+    },
+    {
+      "name": "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ",
+      "uuid": "Traditional",
+      "type": "grouping",
+      "songs": [
+        {
+          "grouping": "Traditional"
+        }
+      ]
+    },
+    {
+      "name": "วาทะศิลป์ ถิ่นอีสาน ตำนานหมอลำ",
+      "uuid": "ISAN",
+      "type": "genre",
+      "songs": [
+        {
+          "genre": "Mor Lum"
+        },
+        {
+          "genre": "Thai, Mor Lum"
+        }
+      ]
+    },
+    {
+      "name": "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ",
+      "uuid": "CLASSICAL",
+      "type": "grouping",
+      "songs": [
+        {
+          "grouping": "Classical"
+        }
+      ]
+    },
+    {
+      "name": "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์",
+      "uuid": "LOUNGE",
+      "type": "grouping",
+      "songs": [
+        {
+          "grouping": "Lounge"
+        }
+      ]
+    },
+    {
+      "name": "เสียงใสๆ สกิดใจวัยรุ่น",
+      "uuid": "VOCAL",
+      "type": "genre",
+      "songs": [
+        {
+          "genre": "Acoustic"
+        },
+        {
+          "genre": "Vocal"
+        },
+        {
+          "genre": "Instrument, Vocal"
+        },
+        {
+          "genre": "Jazz, Vocal"
+        },
+        {
+          "genre": "Pop, Vocal"
+        },
+        {
+          "genre": "Thai, Acoustic"
+        },
+        {
+          "genre": "Thai, Instrument Vocal"
+        },
+        {
+          "genre": "Thai, Pop Vocal"
+        }
+      ]
+    },
+    {
+      "name": "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป",
+      "uuid": "Contemporary",
+      "type": "grouping",
+      "songs": [
+        {
+          "grouping": "Contemporary"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "description": "Predefined MusicMate playlists."
+  }
+}

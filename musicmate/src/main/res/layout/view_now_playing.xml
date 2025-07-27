@@ -36,7 +36,7 @@
                 android:padding="@dimen/dimen_2_dp"
                 android:src="@drawable/ic_album_black_24dp"
                 android:scaleType="centerCrop"
-                app:shapeAppearanceOverlay="@style/roundedImageView"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"
                 tools:ignore="ContentDescription" />
 
             <RelativeLayout
@@ -45,7 +45,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="@dimen/dimen_1_dp"
                 android:layout_marginBottom="@dimen/dimen_2_dp"
-                android:background="@drawable/shape_device_background"
+                android:background="@drawable/shape_background_playing"
                 android:gravity="center">
 
                 <ImageView

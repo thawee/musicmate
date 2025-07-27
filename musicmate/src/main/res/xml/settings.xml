@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory
-        android:summary="Streaming">
+        android:summary="DLNA Media Server">
     <SwitchPreferenceCompat
         android:key="preference_dlna_media_server"
-        android:summary="Enable DLNA MediaServer, expose music library to others streaming devices."
-        android:title="DLNA MediaServer"
+        android:summary="Auto start DLNA MediaServer, share music library to streaming devices."
+        android:title="Auto Start DLNA MediaServer"
         android:defaultValue="false"/>
+        <SwitchPreferenceCompat
+            android:key="preference_netty_media_server"
+            android:summary="Use Netty as server engine, defaults is jetty."
+            android:title="Use Netty for server"
+            android:defaultValue="false"/>
     </PreferenceCategory>
     <PreferenceCategory
         android:summary="User Interface">
@@ -50,11 +55,12 @@
             android:summary="Simulate media buttons to play next song on Music Player."
             android:title="Media Buttons"
             android:defaultValue="true"/>
+        <!--
         <SwitchPreferenceCompat
             android:key="preference_vibrate_on_next_song"
             android:summary="Vibrate when trigger next song for Music Player."
             android:title="Vibrate"
-            android:defaultValue="false"/>
+            android:defaultValue="false"/> -->
         <!--
 <SwitchPreferenceCompat
     android:key="preference_notification"

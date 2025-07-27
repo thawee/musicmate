@@ -118,7 +118,7 @@ public class MusicMateExecutors {
         }
     }
 
-    public static Executor getExecutorService() {
+    public static ExecutorService getExecutorService() {
         return getInstance().mMainThread;
     }
 

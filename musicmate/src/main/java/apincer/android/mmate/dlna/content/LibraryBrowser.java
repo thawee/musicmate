@@ -9,6 +9,7 @@ import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.Item;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import apincer.android.mmate.R;
@@ -51,7 +52,7 @@ public class LibraryBrowser extends AbstractContentBrowser {
         result.add((Container) new SourcesBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), firstResult, maxResults, orderby));
 
 
-       // result.sort(Comparator.comparing(DIDLObject::getTitle));
+        result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
     }
 
