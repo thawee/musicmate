@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="DLNA Server Management"
+        android:text="DLNA Server"
         android:textAppearance="?attr/textAppearanceTitleLarge"
         android:layout_marginBottom="16dp"/>
 
@@ -37,7 +37,7 @@
         android:id="@+id/tv_server_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Address: N/A"
+        android:text="Location: N/A"
         android:textAppearance="?attr/textAppearanceBodySmall"
         android:layout_marginBottom="24dp"
         android:visibility="gone"/>

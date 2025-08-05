@@ -55,16 +55,18 @@
                 android:background="@drawable/shape_round_background_playing"
                 android:minWidth="@dimen/dimen_32_dp"
                 android:minHeight="@dimen/dimen_32_dp"
+                android:padding="@dimen/dimen_4_dp"
                 android:layout_gravity="end"
                 tools:ignore="TouchTargetSizeCheck">
 
                 <ImageView
                     android:id="@+id/music_player"
-                    android:layout_width="@dimen/dimen_32_dp"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    android:layout_margin="@dimen/dimen_2_dp"
+                    android:layout_width="@dimen/dimen_24_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
                     android:contentDescription="TODO"
+                    android:padding="@dimen/dimen_2_dp"
                     android:src="@drawable/bg_transparent"
+                    android:scaleType="fitXY"
                     android:visibility="visible"
                     tools:ignore="ContentDescription,HardcodedText" />
             </com.skydoves.elasticviews.ElasticLayout>
@@ -83,21 +85,6 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constrainedHeight="true"
                     app:layout_constraintDimensionRatio="2:4">
-                    <!--
-                    <apincer.android.mmate.ui.view.AspectRatioPhotoView
-                        android:id="@+id/panel_cover_art"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:heightRatio="1"
-                        app:widthRatio="1"/>
-                    <ImageView
-                        android:id="@+id/panel_cover_reflection"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:rotationX="180"
-                        android:scaleType="fitCenter"
-                        tools:ignore="ContentDescription" />
-                        -->
                     <com.jackandphantom.carouselrecyclerview.view.ReflectionViewContainer
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -118,29 +105,6 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!--
-            <RelativeLayout
-                android:id="@+id/panel_cover_art_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_1_dp"
-                android:layout_gravity="top"
-                android:gravity="top"
-                android:translationY="50dp"
-                app:layout_collapseMode="parallax"
-                android:background="@color/bgColor">
-
-                <apincer.android.mmate.ui.view.AspectRatioPhotoView
-                    android:id="@+id/panel_cover_art"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:paddingTop="1dp"
-                    android:src="@drawable/ic_broken_image_black_24dp"
-                    app:heightRatio="2"
-                    app:widthRatio="1" />
-            </RelativeLayout>
-            -->
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -156,30 +120,6 @@
                     android:gravity="top|center_horizontal"
                     android:orientation="vertical">
 
-                    <!--
-                    <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/music_player_panel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_marginEnd="@dimen/dimen_8_dp"
-                        android:layout_marginTop="@dimen/dimen_8_dp"
-                        android:background="@drawable/shape_play_next_background"
-                        android:minWidth="@dimen/dimen_32_dp"
-                        android:minHeight="@dimen/dimen_32_dp"
-                        tools:ignore="TouchTargetSizeCheck">
-
-                        <ImageView
-                            android:id="@+id/music_player"
-                            android:layout_width="@dimen/dimen_32_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:layout_margin="@dimen/dimen_2_dp"
-                            android:contentDescription="TODO"
-                            android:src="@drawable/bg_transparent"
-                            android:visibility="visible"
-                            tools:ignore="ContentDescription,HardcodedText" />
-                    </com.skydoves.elasticviews.ElasticLayout>
-                    -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -189,27 +129,7 @@
                         android:layout_marginBottom="@dimen/dimen_4_dp"
                         android:background="@drawable/shape_title_background"
                         android:orientation="vertical">
-                        <!--
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:layout_marginStart="@dimen/dimen_2_dp"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_4_dp"
-                        android:background="@drawable/shape_title_panel_background"
-                        android:orientation="vertical"> -->
-                        <!--
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/shape_btn_background"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="@dimen/dimen_2_dp"
-                        android:layout_marginEnd="@dimen/dimen_2_dp"
-                        android:layout_marginBottom="@dimen/dimen_2_dp"
-                        android:layout_gravity="center"
-                        android:gravity="center"> -->
+
                         <TextView
                             android:id="@+id/panel_title"
                             android:layout_width="match_parent"
@@ -222,16 +142,12 @@
                             android:fontFamily="@font/sfthonburi_regular"
                             android:textColor="@color/material_color_grey_100"
                             android:textStyle="bold"
-                            android:textSize="16sp"
+                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                             android:layout_marginStart="@dimen/dimen_12_dp"
                             android:layout_marginEnd="@dimen/dimen_12_dp"
                             android:paddingStart="@dimen/dimen_4_dp"
                             android:paddingEnd="@dimen/dimen_4_dp"
                             tools:ignore="HardcodedText" />
-                        <!--
-                    </LinearLayout>
-                    -->
-
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
@@ -243,155 +159,21 @@
                         android:paddingRight="@dimen/dimen_8_dp"
                         android:paddingLeft="@dimen/dimen_8_dp"
                         android:layout_marginBottom="@dimen/dimen_4_dp" >
-                        <!--
-                        android:background="@drawable/shape_btn_background">
-                        -->
-                        <!--
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:gravity="center"
-                            android:background="@drawable/shape_background_dr"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:padding="@dimen/dimen_2_dp">
 
-                            <TextView
-                                android:id="@+id/icon_file_type"
-                                android:layout_width="@dimen/dimen_36_dp"
-                                android:layout_height="match_parent"
-                                android:layout_gravity="center"
-                                android:background="@drawable/shape_background_unknown"
-                                android:fontFamily="@font/oswald_bold"
-                                android:gravity="center"
-                                android:text="@string/sample_file_type"
-                                android:textColor="@color/black"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                tools:ignore="TextSizeCheck" />
-                        </LinearLayout>
-                        -->
                         <apincer.android.mmate.ui.view.ResolutionView
                             android:id="@+id/icon_resolution"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             app:encodingText="FLAC"
                             app:resolutionText="16/48" />
-<!--
-                        <ImageView
-                            android:id="@+id/icon_resolution2"
-                            android:layout_width="@dimen/dimen_105_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:layout_gravity="end|center_vertical"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:contentDescription="@string/editor_musicmate_info"
-                            android:gravity="center"
-                            android:padding="@dimen/dimen_1_dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/ic_audiophile"
-                            tools:ignore="ImageContrastCheck" />
-                            -->
-<!--
-                        <ImageView
-                            android:id="@+id/icon_audiophile"
-                            android:layout_width="@dimen/dimen_72_dp"
-                            android:layout_height="@dimen/dimen_24_dp"
-                            android:layout_gravity="end|center_vertical"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:contentDescription="@string/editor_musicmate_info"
-                            android:gravity="end|center_vertical"
-                            android:padding="@dimen/dimen_2_dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/ic_audiophile"
-                            android:background="@drawable/shape_background_dr"/>
--->
-                        <!--
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:padding="@dimen/dimen_2_dp"
-                            android:background="@drawable/shape_background_dr"
-                            android:gravity="center"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="@dimen/dimen_32_dp"
-                                android:layout_height="@dimen/dimen_20_dp"
-                                android:layout_gravity="start|center_vertical"
-                                android:gravity="center"
-                                android:scaleType="fitXY"
-                                android:src="@drawable/dynamic_range"
-                                tools:ignore="ContentDescription" />
-
-                            <TextView
-                                android:id="@+id/icon_dr"
-                                android:layout_width="@dimen/dimen_24_dp"
-                                android:layout_height="@dimen/dimen_20_dp"
-                                android:layout_gravity="end|center_vertical"
-                                android:background="@drawable/shape_background_unknown"
-                                android:fontFamily="@font/oswald_bold"
-                                android:gravity="center"
-                                android:text="@string/sample_dr"
-                                android:textColor="@color/black"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                tools:ignore="TextSizeCheck" />
-                        </LinearLayout> -->
 
                         <apincer.android.mmate.ui.view.DynamicRangeDbView
                             android:id="@+id/dynamic_range_db_view"
                             android:layout_width="wrap_content"
-                            android:layout_height="@dimen/dimen_24_dp"
+                            android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/dimen_6_dp"
                             android:background="@drawable/shape_icon_border_back"
                             app:drDbText="90/96 dB" />
-
-                        <!--
-                        <ImageView
-                            android:id="@+id/icon_quality"
-                            android:layout_width="@dimen/dimen_105_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:layout_gravity="end|center_vertical"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:contentDescription="@string/editor_musicmate_info"
-                            android:gravity="center"
-                            android:paddingStart="@dimen/dimen_4_dp"
-                            android:padding="@dimen/dimen_1_dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/ic_audiophile"
-                            tools:ignore="ImageContrastCheck" />
-                        -->
-                        <!--
-                        <ImageView
-                            android:id="@+id/icon_audiophile"
-                            android:layout_width="@dimen/dimen_68_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:layout_gravity="end|center_vertical"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:contentDescription="@string/editor_musicmate_info"
-                            android:gravity="end|center_vertical"
-                            android:padding="@dimen/dimen_2_dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/ic_audiophile"
-                            tools:ignore="ImageContrastCheck" />
-                            -->
-                        <!--
-                        <ImageView
-                            android:id="@+id/icon_audiophile"
-                            android:layout_width="@dimen/dimen_68_dp"
-                            android:layout_height="@dimen/dimen_32_dp"
-                            android:layout_gravity="end|center_vertical"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:background="@drawable/shape_background_dr"
-                            android:contentDescription="@string/editor_musicmate_info"
-                            android:gravity="end|center_vertical"
-                            android:padding="@dimen/dimen_2_dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/ic_audiophile"
-                            tools:ignore="ImageContrastCheck" />
-                            -->
-
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -428,29 +210,6 @@
                             android:scaleType="fitXY"
                             android:src="@drawable/ic_format_hires" />
                         </LinearLayout>
-<!--
-                        <LinearLayout
-                            android:id="@+id/icon_new_panel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:background="@drawable/shape_background_dr"
-                            android:layout_marginEnd="@dimen/dimen_4_dp"
-                            android:padding="@dimen/dimen_2_dp">
-                            <TextView
-                                android:id="@+id/icon_new"
-                                android:layout_width="@dimen/dimen_36_dp"
-                                android:layout_height="@dimen/dimen_20_dp"
-                                android:layout_gravity="center"
-                                android:background="@drawable/shape_background_unknown"
-                                android:fontFamily="@font/oswald_bold"
-                                android:gravity="center"
-                                android:text="@string/file_status_new"
-                                android:textColor="@color/black"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                        -->
                     </LinearLayout>
                     </LinearLayout>
                 </RelativeLayout>

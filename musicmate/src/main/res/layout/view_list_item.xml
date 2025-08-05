@@ -134,10 +134,15 @@
                 android:layout_height="match_parent"
                 android:layout_toEndOf="@id/dynamic_range_db_view"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                android:padding="@dimen/dimen_4_dp"
+                android:paddingStart="@dimen/dimen_4_dp"
+                android:paddingEnd="@dimen/dimen_4_dp"
+                android:paddingTop="@dimen/dimen_2_dp"
+                android:paddingBottom="@dimen/dimen_2_dp"
                 android:gravity="center_vertical"
                 android:background="@drawable/shape_icon_border_back"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:fontFamily="@font/oswald_bold"
+                android:textColor="#FFFFFF"
                 android:text="10.00 Mb"/>
 
             <!--

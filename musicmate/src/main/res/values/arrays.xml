@@ -193,7 +193,7 @@
     <string-array name="file_qualities">
         <item>Audiophile</item>
         <item>Recommended</item>
-        <item>Good</item>
+        <item>Favorite</item>
         <item>Bad</item>
         <item>Not Rated</item>
     </string-array>

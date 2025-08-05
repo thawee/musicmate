@@ -5,7 +5,6 @@ import static apincer.android.mmate.utils.MusicTagUtils.getResolutionBackground;
 import static apincer.android.mmate.utils.MusicTagUtils.isMQA;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -51,45 +50,12 @@ public class ResolutionView extends RelativeLayout {
         // Set padding
         int padding = (int) getResources().getDimension(R.dimen.dimen_2_dp);
         setPadding(padding, padding, padding, padding);
-
-        // If attributes were provided in the XML, read and apply them
-        if (attrs != null) {
-            TypedArray a = context.getTheme().obtainStyledAttributes(
-                    attrs,
-                    R.styleable.ResolutionView,
-                    0, 0
-            );
-
-            try {
-                String encoding = a.getString(R.styleable.ResolutionView_encodingText);
-                String resolution = a.getString(R.styleable.ResolutionView_resolutionText);
-                setEncodingText(encoding);
-                setResolutionText(resolution);
-            } finally {
-                // Always recycle the TypedArray
-                a.recycle();
-            }
-        }
-    }
-
-    // Public method to set the encoding text (e.g., "FLAC")
-    public void setEncodingText(String text) {
-        if (text != null) {
-            encodingTextView.setText(text);
-        }
-    }
-
-    // Public method to set the resolution text (e.g., "24/192")
-    public void setResolutionText(String text) {
-        if (text != null) {
-            resolutionTextView.setText(text);
-        }
     }
 
     public void setMusicItem(MusicTag tag) {
         if(tag == null) {
-            setEncodingText("");
-            setResolutionText("");
+            encodingTextView.setText("");
+            resolutionTextView.setText("");
         }else {
             String label;
             String samplingRate = getBPSAndSampleRate(tag);
@@ -105,9 +71,9 @@ public class ResolutionView extends RelativeLayout {
                 label = StringUtils.trim(tag.getAudioEncoding(), tag.getFileType()).toUpperCase(Locale.US);
             }
             int labelColor = getFileEncodingColor(getContext(), tag);
-            setEncodingText(label);
+            encodingTextView.setText(label);
             encodingTextView.setTextColor(labelColor);
-            setResolutionText(samplingRate);
+            resolutionTextView.setText(samplingRate);
             Drawable background = getResolutionBackground(getContext(), tag);
             resolutionTextView.setBackground(background);
         }

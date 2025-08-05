@@ -2,43 +2,35 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/rounded_dialog_background"
-    android:padding="24dp">
+    android:layout_height="match_parent"
+    android:layout_gravity="center">
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/lottie_animation"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+    <LinearLayout
+        android:layout_width="@dimen/dimen_256_dp"
+        android:layout_height="@dimen/dimen_256_dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:lottie_autoPlay="true"
-        app:lottie_loop="true"
-        app:lottie_rawRes="@raw/loading_animation" />
-
-    <TextView
-        android:id="@+id/process_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Processing..."
-        android:textColor="@color/white"
-        android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@id/lottie_animation"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <ProgressBar
-        android:id="@+id/progress_circular"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:indeterminate="true"
-        android:indeterminateTint="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/process_label"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+        app:layout_constraintTop_toTopOf="parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="@drawable/rounded_progress_dialog_background">
+    <LinearLayout
+        android:layout_width="@dimen/dimen_164_dp"
+        android:layout_height="@dimen/dimen_164_dp"
+        android:gravity="center"
+        android:padding="@dimen/dimen_12_dp"
+        android:orientation="vertical"
+        android:background="@drawable/rounded_progress_dialog_background_level1">
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/rounded_progress_dialog_background_level2"
+            app:indicatorColor="@color/material_color_green_400"
+            app:trackColor="@color/white"
+            app:indicatorSize="96dp"
+            app:trackThickness="12dp"
+            app:trackCornerRadius="12dp"
+            android:indeterminate="true" />
+    </LinearLayout>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

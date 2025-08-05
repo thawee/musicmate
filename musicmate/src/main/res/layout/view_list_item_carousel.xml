@@ -39,6 +39,7 @@
             app:layout_constraintStart_toStartOf="parent"
             android:gravity="center"
             android:text="TEST ands TEST"
+            android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
             android:background="@drawable/shape_border_back"
             tools:ignore="MissingConstraints" />
 

@@ -1,6 +1,6 @@
 package apincer.android.mmate.provider;
 
-import static apincer.android.mmate.Constants.QUALITY_GOOD;
+import static apincer.android.mmate.Constants.QUALITY_FAVORITE;
 import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_RESAMPLED;
 import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_UPSCALED;
@@ -537,63 +537,6 @@ public class IconProviders {
                 mLetterTop, //top
                 mLetterPaint);
 
-        /*
-        // draw quality,up-scaled, up-sampled indicator
-        float y = (float) (myCanvas.getHeight() / 2) + 30;
-        // float startx = (float) (myCanvas.getWidth() * 0.56)+8;
-        float startx = blackBGStartPos+36;
-        int barHigh = 12;
-        int barWidth = 32; //40;
-        int barSpace = 8;
-        //quality
-        startx = startx - paddingx2;
-        float endx = startx+barWidth;
-        paint = new Paint();
-        // paint.setColor(qualityColor);
-        paint.setColor(labelColor);
-        paint.setStrokeWidth(barHigh);
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setStyle(Paint.Style.STROKE);
-
-        path = new Path();
-        //path.moveTo(startx +2, y + 4);
-        path.moveTo(startx, y);
-        path.lineTo(endx, y);
-        myCanvas.drawPath(path, paint);
-
-        //upscale
-        startx = endx+barSpace;
-        endx = startx+barWidth;
-        paint = new Paint();
-        //paint.setColor(upscaleColor);
-        paint.setColor(labelColor);
-        paint.setStrokeWidth(barHigh);
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setStyle(Paint.Style.STROKE);
-
-        path = new Path();
-        path.moveTo(startx, y);
-        path.lineTo(endx, y);
-        myCanvas.drawPath(path, paint);
-
-        //upsampled
-        startx = endx+barSpace;
-        endx = startx+barWidth;
-        paint = new Paint();
-        // paint.setColor(resampledColor);
-        paint.setColor(labelColor);
-        paint.setStrokeWidth(barHigh);
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setStyle(Paint.Style.STROKE);
-
-        path = new Path();
-        path.moveTo(startx, y);
-        path.lineTo(endx, y);
-        myCanvas.drawPath(path, paint); */
-
         // draw sampling rate, black color
         font =  ResourcesCompat.getFont(context, R.font.oswald_bold);
         letterTextSize = 62; //82;
@@ -951,7 +894,7 @@ public class IconProviders {
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
             letterTextSize = 30; //82;
             qualityColor = context.getColor(R.color.quality_recommended);
-        }else if (QUALITY_GOOD.equals(label1)) {
+        }else if (QUALITY_FAVORITE.equals(label1)) {
             letterTextSize = 30; //82;
             qualityColor = context.getColor(R.color.quality_good);
         }else if(Constants.QUALITY_BAD.equals(label1)) {
@@ -1280,7 +1223,7 @@ public class IconProviders {
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
             //  letterTextSize = 30; //82;
             qualityColor = context.getColor(R.color.quality_recommended);
-        }else if (QUALITY_GOOD.equals(label1)) {
+        }else if (QUALITY_FAVORITE.equals(label1)) {
             // letterTextSize = 30; //82;
             qualityColor = context.getColor(R.color.quality_good);
         }else if(Constants.QUALITY_BAD.equals(label1)) {
@@ -1609,7 +1552,7 @@ public class IconProviders {
             case QUALITY_RECOMMENDED ->
                 //  letterTextSize = 30; //82;
                     context.getColor(R.color.quality_recommended);
-            case QUALITY_GOOD ->
+            case QUALITY_FAVORITE ->
                 // letterTextSize = 30; //82;
                     context.getColor(R.color.quality_good);
             case Constants.QUALITY_BAD ->

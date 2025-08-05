@@ -45,11 +45,12 @@
 				   android:background="@drawable/shape_header_panel">
 
 				   <RelativeLayout
+					   android:id="@+id/title_panel"
 					   android:layout_width="match_parent"
 					   android:layout_height="@dimen/dimen_40_dp"
 					   android:background="@color/transparent">
 					   <LinearLayout
-						   android:id="@+id/title_panel"
+						   android:id="@+id/title_label_panel"
 						   android:gravity="start"
 						   android:orientation="vertical"
 						   android:layout_width="wrap_content"
@@ -75,7 +76,7 @@
 						   android:id="@+id/custom_search_container"
 						   android:layout_width="match_parent"
 						   android:layout_height="wrap_content"
-						   android:layout_toEndOf="@+id/title_panel"
+						   android:layout_toEndOf="@+id/title_label_panel"
 						   android:background="@drawable/search_bar_background"
 						   android:paddingStart="12dp"
 						   android:paddingEnd="12dp"
@@ -125,21 +126,6 @@
 							   android:background="?attr/selectableItemBackgroundBorderless"
 							   android:padding="4dp"/>
 					   </RelativeLayout>
-					   <!--
-					   <androidx.appcompat.widget.SearchView
-						   android:id="@+id/searchView"
-						   android:layout_width="match_parent"
-						   android:layout_height="wrap_content"
-						   android:layout_marginStart="@dimen/dimen_1_dp"
-						   android:layout_marginEnd="@dimen/dimen_2_dp"
-						   android:gravity="center"
-						   android:padding="4dp"
-						   android:layout_toEndOf="@+id/title_panel"
-						   app:closeIcon="@drawable/ic_clear_white_24dp"
-						   app:iconifiedByDefault="true"
-						   app:queryHint="@string/search_view_query_input_hint"
-						   app:searchIcon="@drawable/ic_search_white_24dp" />
-					   -->
 				   </RelativeLayout>
 
 				   <LinearLayout
@@ -222,18 +208,6 @@
 						   android:text="" />
 
 				   </sakout.mehdi.StateViews.StateView>
-
-				   <com.skydoves.elasticviews.ElasticLayout
-					   android:id="@+id/now_playing_panel"
-					   android:layout_width="wrap_content"
-					   android:layout_height="wrap_content"
-					   android:layout_alignParentBottom="true"
-					   android:layout_alignParentEnd="true"
-					   android:layout_marginEnd="@dimen/dimen_8_dp"
-					   android:layout_marginBottom="@dimen/dimen_120_dp"
-					   android:padding="@dimen/dimen_1_dp">
-					   <include layout="@layout/view_now_playing"/>
-				   </com.skydoves.elasticviews.ElasticLayout>
    			</RelativeLayout>
 
        </LinearLayout>
@@ -256,6 +230,7 @@
         android:layout_alignParentBottom="true"
         android:outlineAmbientShadowColor="@android:color/black"
         android:outlineSpotShadowColor="@android:color/black">
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -288,19 +263,20 @@
 				android:text="Collections"
                 tools:ignore="RtlSymmetry" />
 			</LinearLayout>
-			<!--
-			<androidx.appcompat.widget.SearchView
-				android:id="@+id/searchView"
-				android:layout_width="match_parent"
+			<ImageView
+				android:id="@+id/navigation_song_playing"
+				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginStart="@dimen/dimen_56_dp"
-				android:layout_marginEnd="@dimen/dimen_48_dp"
-				android:padding="4dp"
-				app:closeIcon="@drawable/ic_clear_white_24dp"
-				app:iconifiedByDefault="true"
-				app:queryHint="@string/search_view_query_input_hint"
-				app:searchIcon="@drawable/ic_search_white_24dp" />
--->
+				android:layout_alignParentEnd="true"
+				android:layout_centerInParent="true"
+				android:layout_marginStart="@dimen/dimen_12_dp"
+				android:layout_marginEnd="@dimen/dimen_120_dp"
+				android:contentDescription="@string/app_name"
+				android:paddingEnd="@dimen/dimen_8_dp"
+				android:visibility="gone"
+				android:src="@drawable/rounded_auto_read_play_24"
+				tools:ignore="RtlSymmetry" />
+
 			<ImageView
 				android:id="@+id/navigation_server"
 				android:layout_width="wrap_content"
@@ -308,7 +284,7 @@
 				android:layout_alignParentEnd="true"
 				android:layout_centerInParent="true"
 				android:layout_marginStart="@dimen/dimen_12_dp"
-				android:layout_marginEnd="@dimen/dimen_60_dp"
+				android:layout_marginEnd="@dimen/dimen_68_dp"
 				android:contentDescription="@string/app_name"
 				android:paddingEnd="@dimen/dimen_8_dp"
 				android:src="@drawable/rounded_music_cast_24"

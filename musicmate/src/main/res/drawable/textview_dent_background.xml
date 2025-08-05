@@ -2,20 +2,23 @@
     <item>
         <shape>
             <solid android:color="@color/black"/>
-            <corners android:radius="8dp"/>
-            <padding android:left="4dp" android:top="4dp" android:right="4dp" android:bottom="4dp"/>
+            <corners android:radius="6dp"/>
+            <padding android:left="2dp"
+                android:top="2dp"
+                android:right="2dp"
+                android:bottom="2dp"/>
         </shape>
     </item>
-    <item android:bottom="2dp" android:right="2dp">
+    <item android:bottom="1dp" android:right="1dp">
         <shape>
             <solid android:color="@color/grey900"/>
-            <corners android:radius="8dp"/>
+            <corners android:radius="6dp"/>
         </shape>
     </item>
-    <item android:top="2dp" android:left="2dp">
+    <item android:top="1dp" android:left="1dp">
         <shape>
             <solid android:color="@color/grey900_transparent"/>
-            <corners android:radius="8dp"/>
+            <corners android:radius="6dp"/>
         </shape>
     </item>
 </layer-list>

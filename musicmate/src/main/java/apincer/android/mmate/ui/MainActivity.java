@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui;
 
+import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
@@ -10,7 +11,6 @@ import static apincer.android.mmate.Constants.TITLE_GROUPING;
 import static apincer.android.mmate.Constants.TITLE_LIBRARY;
 import static apincer.android.mmate.Constants.TITLE_RESOLUTION;
 
-import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -60,6 +60,7 @@ import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.carousel.CarouselLayoutManager;
 import com.google.android.material.carousel.CarouselSnapHelper;
 import com.google.android.material.carousel.MaskableFrameLayout;
@@ -70,6 +71,7 @@ import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
+import org.apache.commons.text.WordUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -93,8 +95,6 @@ import apincer.android.mmate.Settings;
 import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagEditResultEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
-import apincer.android.mmate.player.PlayerInfo;
-import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.MusicFolder;
 import apincer.android.mmate.repository.MusicTag;
@@ -105,7 +105,6 @@ import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.view.DLNAServerManagementSheet;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.AudioOutputHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -116,10 +115,6 @@ import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
-import coil3.ImageLoader;
-import coil3.SingletonImageLoader;
-import coil3.request.ImageRequest;
-import coil3.target.ImageViewTarget;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -160,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<MusicTag> selections = new ArrayList<>();
     private Snackbar mExitSnackbar;
     private View mHeaderPanel;
+    private View mTitlePanel;
     private TextView titleLabel;
    private EditText mSearchView;
     private ImageView customSearchIcon;
@@ -175,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
     private CarouselSnapHelper carouselSnapHelper;
 
     // Now playing components
-    private NowPlayingViewHolder nowPlayingHolder;
+   // private NowPlayingViewHolder nowPlayingHolder;
+    private View navigationSongPlaying;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -184,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
     // State variables
     private Timer timer;
     private volatile boolean busy;
+    private MusicTag previouslyPlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -236,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup UI components
         setupHeaderPanel();
-        setupNowPlayingView();
+        //setupNowPlayingView();
         setupBottomAppBar();
         setupRecycleView(searchCriteria);
         setupSwipeToRefresh();
@@ -276,8 +274,10 @@ public class MainActivity extends AppCompatActivity {
 
         // 2. Observe Now Playing Song
         viewModel.nowPlayingSong.observe(this, song -> {
+            navigationSongPlaying.setVisibility(VISIBLE);
+
             if (song != null) {
-                if(!song.equals(nowPlayingHolder.currentlyPlaying)) {
+                if(!song.equals(previouslyPlaying)) {
                     if (Settings.isListFollowNowPlaying(getBaseContext())) {
                         // only scrolled on first event for each song
                         if (timer != null) {
@@ -296,17 +296,20 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // refresh music list
-                adapter.notifyItemChanged(nowPlayingHolder.currentlyPlaying);
+                adapter.notifyItemChanged(previouslyPlaying);
                 adapter.notifyItemChanged(song);
-                nowPlayingHolder.showNowPlaying(song);
+               // nowPlayingHolder.showNowPlaying(song);
             } else {
-                nowPlayingHolder.hideNowPlaying();
+               // nowPlayingHolder.hideNowPlaying();
+                navigationSongPlaying.setVisibility(GONE);
             }
+            previouslyPlaying = song;
         });
     }
 
     private void setupHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
+        mTitlePanel = findViewById(R.id.title_panel);
         titleLabel = findViewById(R.id.title_label);
 
         headerSubtitle = findViewById(R.id.header_subtitle);
@@ -363,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!s.isEmpty()) {
                     customClearIcon.setVisibility(View.VISIBLE);
                 } else {
-                    customClearIcon.setVisibility(View.GONE);
+                    customClearIcon.setVisibility(GONE);
                 }
             }
 
@@ -386,6 +389,7 @@ public class MainActivity extends AppCompatActivity {
         mSearchView.clearFocus(); // Optional: remove focus from EditText
     }
 
+    /*
     private void setupNowPlayingView() {
         // Initialize components
         View nowPlayingView = findViewById(R.id.now_playing_panel);
@@ -400,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
                 nowPlayingCoverArt,
                 nowPlayingPlayer,
                 nowPlayingOutputDevice
-        );
+       // );
 
         // Setup click listeners
         nowPlayingView.setOnClickListener(view1 -> scrollToListening());
@@ -410,8 +414,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Hide initially
-        nowPlayingView.setVisibility(View.GONE);
-    }
+        nowPlayingView.setVisibility(GONE);
+    } */
 
     private void setupBottomAppBar() {
         // Find components
@@ -423,17 +427,19 @@ public class MainActivity extends AppCompatActivity {
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
        // UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
-        View dlnsServer = bottomAppBar.findViewById(R.id.navigation_server);
+        View dlnaServer = bottomAppBar.findViewById(R.id.navigation_server);
+
+        navigationSongPlaying = bottomAppBar.findViewById(R.id.navigation_song_playing);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
-        dlnsServer.setOnClickListener(v -> doManageDLNAServer());
+        dlnaServer.setOnClickListener(v -> doManageDLNAServer());
+        navigationSongPlaying.setOnClickListener(v -> scrollToListening());
     }
 
     private void setupSwipeToRefresh() {
         refreshLayout = findViewById(R.id.refreshLayout);
-        //refreshLayout.setOnRefreshListener(refreshlayout -> viewModel.loadMusicTags(adapter.getCriteria()));
         refreshLayout.setOnRefreshListener(refreshlayout -> viewModel.loadMusicItems(adapter.getCriteria()));
     }
 
@@ -591,7 +597,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         // Setup scroll listener
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        /*mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
@@ -606,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
                     nowPlayingHolder.hideNowPlaying();
                 }
             }
-        });
+        }); */
 
         // Initialize action mode callback
         actionModeCallback = new ActionModeCallback();
@@ -649,7 +655,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderPanel() {
-
         String label = adapter.getHeaderLabel();
         Drawable icon = null;
 
@@ -674,41 +679,21 @@ public class MainActivity extends AppCompatActivity {
 
         SimplifySpanBuild spannable = new SimplifySpanBuild("");
         if (count > 0) {
-           // SearchCriteria criteria = adapter.getCriteria();
-            /*if (!isEmpty(criteria.getFilterType())) {
-                String filterType = criteria.getFilterType();
-                spannable.appendMultiClickable(
-                        new SpecialClickableUnit(headerSubtitle, (tv, clickableSpan) -> adapter.resetFilter())
-                                .setNormalTextColor(getColor(R.color.grey200)),
-                        new SpecialTextUnit("[" + filterType + "]  ").setTextSize(10)
-                );
-            } */
-
-            spannable.append("# ").append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
-                    .append(new SpecialTextUnit(" Songs").setTextSize(12))
-                    /*.append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP,
-                            ContextCompat.getColor(getApplicationContext(), R.color.grey100),
-                            UIUtils.sp2px(getApplication(), 10),
-                            Color.TRANSPARENT)
-                            .setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER)) */
+            spannable.append(new SpecialTextUnit("# ").setTextColor(Color.GRAY).useTextBold()).append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
+                    .append(new SpecialTextUnit(" Songs").setTextSize(12).useTextBold())
                     .append("  \uD83D\uDCBD ").append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold())
-                    /*.append(new SpecialLabelUnit(StringUtils.SYMBOL_HEADER_SEP,
-                            ContextCompat.getColor(getApplicationContext(), R.color.grey100),
-                            UIUtils.sp2px(getApplication(), 10),
-                            Color.TRANSPARENT)
-                            .setPadding(5).setPaddingLeft(10).setPaddingRight(10).setGravity(SpecialGravity.CENTER)) */
                     .append("  \uD83D\uDD52 ").append(new SpecialTextUnit(duration).setTextSize(12).useTextBold());
         } else {
-            if (adapter.hasFilter()) {
-                spannable.append(new SpecialTextUnit("No Results for filter: " +
-                        StringUtils.trimToEmpty(adapter.getCriteria().getFilterText()))
-                        .setTextSize(12).useTextBold());
-            } else {
-                spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
-            }
+            spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
         }
 
         headerSubtitle.setText(spannable.build());
+
+        if(viewModel.nowPlayingSong.getValue() != null) {
+            navigationSongPlaying.setVisibility(VISIBLE);
+        }else {
+            navigationSongPlaying.setVisibility(GONE);
+        }
     }
 
     @Override
@@ -720,9 +705,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Show now playing panel
-        MusicTag currentlyPlaying = MusixMateApp.getPlayerControl().getPlayingSong();
-        if (currentlyPlaying != null) {
-            viewModel.setNowPlaying(currentlyPlaying);
+       // MusicTag currentlyPlaying = MusixMateApp.getPlayerControl().getPlayingSong();
+        if (viewModel.nowPlayingSong.getValue() != null) {
+           // viewModel.setNowPlaying(currentlyPlaying);
+            navigationSongPlaying.setVisibility(VISIBLE);
         }
     }
 
@@ -751,30 +737,6 @@ public class MainActivity extends AppCompatActivity {
     public void onMessageEvent(AudioTagPlayingEvent event) {
         viewModel.setNowPlaying(event.getPlayingSong());
         EventBus.getDefault().removeStickyEvent(event);
-        /*
-        MusicMateExecutors.executeUI(() -> {
-            MusicTag newPlayingSong = event.getPlayingSong();
-            MusicTag previousPlayingSong = nowPlayingManager.getCurrentlyPlaying();
-
-            // Update UI for previous playing song if it exists and is different
-            if (previousPlayingSong != null && !previousPlayingSong.equals(newPlayingSong)) {
-                int previousPosition = adapter.getMusicTagPosition(previousPlayingSong);
-                if (previousPosition != RecyclerView.NO_POSITION) {
-                    adapter.notifyItemChanged(previousPosition);
-                }
-            }
-
-            // Update UI for new playing song
-            if (newPlayingSong != null) {
-                int newPosition = adapter.getMusicTagPosition(newPlayingSong);
-                if (newPosition != RecyclerView.NO_POSITION) {
-                    adapter.notifyItemChanged(newPosition);
-                }
-            }
-
-            // Then proceed with the current implementation
-            onPlaying(newPlayingSong);
-        }); */
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -784,7 +746,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scrollToListening() {
-        MusicTag currentlyPlaying = nowPlayingHolder.getCurrentlyPlaying();
+       // MusicTag currentlyPlaying = nowPlayingHolder.getCurrentlyPlaying();
+        MusicTag currentlyPlaying = viewModel.nowPlayingSong.getValue();
         if (currentlyPlaying == null) return;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
@@ -865,15 +828,6 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.menu_directories) {
             doSetDirectories();
             return true;
-       // } else if (item.getItemId() == R.id.menu_export_playlists) {
-       //     doExportPlaylists();
-       //     return true;
-       // } else if (item.getItemId() == R.id.navigation_server) {
-       //      doManageDLNAServer();
-       //      return true;
-       // } else if (item.getItemId() == R.id.menu_output) {
-       //     doSelectOutput();
-        //    return true;
         } else if (item.getItemId() == R.id.menu_about_crash) {
             Intent intent = new Intent(MainActivity.this, CrashReporterActivity.class);
             startActivity(intent);
@@ -883,7 +837,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doManageDLNAServer() {
-        // TODO add buttomsheet to display dlna server status, and buttons to start/stop server
+        // bottom sheet to display dlna server status, and buttons to start/stop server
         DLNAServerManagementSheet sheet = DLNAServerManagementSheet.newInstance();
         sheet.show(getSupportFragmentManager(), DLNAServerManagementSheet.TAG);
     }
@@ -904,8 +858,8 @@ public class MainActivity extends AppCompatActivity {
 
         ListView itemsView = cview.findViewById(R.id.itemListView);
         LinearLayout btnAddPanel = cview.findViewById(R.id.btn_add_panel);
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        View btnOK = cview.findViewById(R.id.button_ok);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
 
         List<String> defaultPaths = FileRepository.newInstance(getApplicationContext()).getDefaultMusicPaths();
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
@@ -975,7 +929,8 @@ public class MainActivity extends AppCompatActivity {
 
         for (String sid : storageIds) {
             Button btn = new Button(getApplicationContext());
-            btn.setText(sid);
+            btn.setText("+"+ WordUtils.capitalize(sid));
+            btn.setAllCaps(false);
             btnAddPanel.addView(btn);
 
             btn.setOnClickListener(view -> {
@@ -987,7 +942,7 @@ public class MainActivity extends AppCompatActivity {
                 properties.show_hidden_files = false;
 
                 FilePickerDialog dialog = new FilePickerDialog(MainActivity.this, properties);
-                dialog.setTitle("Select Directory");
+                dialog.setTitle("Select music Directory");
                 dialog.setPositiveBtnName("Add");
                 dialog.setNegativeBtnName("Cancel");
                 dialog.setDialogSelectionListener(files -> {
@@ -1003,6 +958,7 @@ public class MainActivity extends AppCompatActivity {
             Settings.setLastScanTime(getApplicationContext(), 0);
             // start scan after setting dirs
             Log.i(TAG, "Starting scan music file for first time.");
+            ScanAudioFileWorker.startScan(getApplicationContext());
             ScanAudioFileWorker.startScan(getApplicationContext());
             alert.dismiss();
         });
@@ -1085,10 +1041,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        MaterialButton btnOK = cview.findViewById(R.id.button_ok);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
+        btnOK.setText("Move to Trash");
 
         double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         double sizeInBlock = MAX_PROGRESS / block;
@@ -1119,7 +1076,7 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             busy = true;
             btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
+            btnOK.setVisibility(GONE);
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
@@ -1197,8 +1154,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        View btnOK = cview.findViewById(R.id.button_ok);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
 
@@ -1231,7 +1188,7 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             busy = true;
             btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
+            btnOK.setVisibility(GONE);
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
@@ -1310,10 +1267,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        MaterialButton btnOK = cview.findViewById(R.id.button_ok);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
         btnOK.setEnabled(true);
+        btnOK.setText("Analyst");
 
         double block = Math.min(selections.size(), MAX_PROGRESS_BLOCK);
         double sizeInBlock = MAX_PROGRESS / block;
@@ -1344,7 +1302,7 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             busy = true;
             btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
+            btnOK.setVisibility(GONE);
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
@@ -1383,9 +1341,11 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         PowerSpinnerView encodingList = cview.findViewById(R.id.audioEncoding);
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
+
+        btnOK.setText("Encode");
 
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
 
@@ -1484,7 +1444,7 @@ public class MainActivity extends AppCompatActivity {
         btnOK.setOnClickListener(v -> {
             busy = true;
             btnOK.setEnabled(false);
-            btnOK.setVisibility(View.GONE);
+            btnOK.setVisibility(GONE);
 
             int compressionLevel = FLAC_OPTIMAL_COMPRESS_LEVEL;
             String targetExt = FILE_FLAC;
@@ -1545,7 +1505,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            mHeaderPanel.setVisibility(View.GONE);
+           // mHeaderPanel.setVisibility(View.GONE);
+           // headerSubtitle.setVisibility(GONE);
+            mTitlePanel.setVisibility(GONE);
             return false;
         }
 
@@ -1591,7 +1553,8 @@ public class MainActivity extends AppCompatActivity {
         public void onDestroyActionMode(ActionMode mode) {
             mTracker.clearSelection();
             actionMode = null;
-            mHeaderPanel.setVisibility(VISIBLE);
+           // mHeaderPanel.setVisibility(VISIBLE);
+            mTitlePanel.setVisibility(VISIBLE);
         }
 
         private List<MusicTag> getSelections() {
@@ -1653,6 +1616,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * NowPlayingManager class abstraction implementation
      */
+    /*
     public static class NowPlayingViewHolder {
         private final Context context;
         private final View nowPlayingView;
@@ -1762,7 +1726,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAnimationEnd(@NonNull Animator animator) {
-                                    nowPlayingView.setVisibility(View.GONE);
+                                    nowPlayingView.setVisibility(GONE);
                                 }
 
                                 @Override
@@ -1780,5 +1744,5 @@ public class MainActivity extends AppCompatActivity {
         public MusicTag getCurrentlyPlaying() {
             return currentlyPlaying;
         }
-    }
+    } */
 }

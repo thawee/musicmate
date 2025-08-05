@@ -1,293 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
-        <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/shape_round_actionview_black">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/dimen_24_dp"
+    android:background="@drawable/shape_round_actionview_black"
+    android:orientation="vertical">
 
-     <TextView
-        android:id="@+id/full_filename"
+    <TextView
+        android:id="@+id/dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/dimen_4_dp"
-        android:layout_marginTop="@dimen/dimen_8_dp"
-        android:layout_marginLeft="@dimen/dimen_8_dp"
-        android:layout_marginRight="@dimen/dimen_8_dp"
-         android:paddingRight="@dimen/spacing_medium"
-         android:paddingLeft="@dimen/spacing_medium"
-        android:maxLines="3"
-        android:textSize="10sp"
-        android:gravity="left"
+        android:textSize="14sp"
+        android:text="Create TAGs from filename"
+        android:gravity="center_horizontal"
         android:textColor="@color/grey200"
-         android:background="@drawable/shape_rounded_edittext"
-        tools:text="directory/track - title"/>
+        android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+        android:background="@drawable/bg_transparent"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/full_filename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dimen_8_dp"
+        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:layout_marginRight="@dimen/dimen_8_dp"
+        android:background="@drawable/shape_background_filename"
+        android:gravity="left"
+        android:maxLines="3"
+        android:padding="@dimen/dimen_4_dp"
+        android:paddingLeft="@dimen/spacing_medium"
+        android:paddingRight="@dimen/spacing_medium"
+        android:textColor="@color/grey200"
+        android:fontFamily="@font/sfthonburi_regular"
+        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+        android:textSize="10sp"
+        tools:text="directory/track - title"
+        tools:ignore="RtlHardcoded" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen_4_dp"
+        android:background="@drawable/border_back_label"
+        android:orientation="vertical"
+        android:padding="@dimen/dimen_4_dp">
+
+        <co.lujun.androidtagview.TagContainerLayout
+            android:id="@+id/tagcontainerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:padding="4dp"
+            android:background="@drawable/shape_round_format_black"
+            app:container_background_color="@color/grey400"
+            app:container_border_color="#33666666"
+            app:container_border_radius="0dp"
+            app:container_enable_drag="true"
+            app:container_gravity="left"
+            app:horizontal_interval="10dp"
+            app:tag_background_color="#FFFFFFFF"
+            app:tag_border_color="#330000ff"
+            app:tag_border_width="1dp"
+            app:tag_clickable="true"
+            app:tag_corner_radius="6dp"
+            app:tag_enable_cross="true"
+            app:tag_horizontal_padding="10dp"
+            app:tag_max_length="18"
+            app:tag_text_color="#ff666666"
+            app:tag_theme="none"
+            app:vertical_interval="10dp" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dimen_24_dp"
+            android:layout_marginTop="@dimen/dimen_6_dp"
+            android:background="@drawable/shape_round_format_black"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btn_add_sep"
+                android:layout_width="@dimen/dimen_32_dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/dimen_4_dp"
-                android:layout_margin="@dimen/dimen_4_dp"
-                android:background="@drawable/border_back_label">
-<!--
-                <TextView
-                    android:id="@+id/full_filename"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/dimen_4_dp"
-                    android:layout_marginTop="@dimen/dimen_4_dp"
-                    android:layout_marginLeft="@dimen/dimen_4_dp"
-                    android:layout_marginRight="@dimen/dimen_4_dp"
-                    android:maxLines="2"
-                    android:textSize="11sp"
-                    android:textColor="@color/grey800"
-                    android:background="@drawable/border_back_label"
-                    tools:text="directory/track - title"/>
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:background="@drawable/shape_border_grey"
+                android:gravity="center"
+                android:padding="@dimen/dimen_2_dp"
+                android:text="/"
+                android:textColor="@color/grey500" />
+
+            <TextView
+                android:id="@+id/btn_add_dash"
+                android:layout_width="@dimen/dimen_32_dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="@dimen/dimen_6_dp"
+                android:layout_toEndOf="@+id/btn_add_sep"
+                android:background="@drawable/shape_border_grey"
+                android:gravity="center"
+                android:padding="@dimen/dimen_2_dp"
+                android:text="-"
+                android:textColor="@color/grey500" />
+
+            <TextView
+                android:id="@+id/btn_add_dot"
+                android:layout_width="@dimen/dimen_32_dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="@dimen/dimen_6_dp"
+                android:layout_toEndOf="@+id/btn_add_dash"
+                android:background="@drawable/shape_border_grey"
+                android:gravity="center"
+                android:padding="@dimen/dimen_2_dp"
+                android:text="."
+                android:textColor="@color/grey500" />
+
+            <TextView
+                android:id="@+id/btn_add_space"
+                android:layout_width="@dimen/dimen_48_dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="@dimen/dimen_6_dp"
+                android:layout_toEndOf="@+id/btn_add_dot"
+                android:background="@drawable/shape_border_grey"
+                android:gravity="center"
+                android:padding="@dimen/dimen_2_dp"
+                android:text="sp"
+                android:textColor="@color/grey500" />
+
+            <TextView
+                android:id="@+id/btn_add_free_text"
+                android:layout_width="@dimen/dimen_32_dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="@dimen/dimen_6_dp"
+                android:layout_toEndOf="@+id/btn_add_space"
+                android:background="@drawable/shape_border_grey"
+                android:gravity="center"
+                android:padding="@dimen/dimen_2_dp"
+                android:text=" ? "
+                android:textColor="@color/grey500" />
+
+            <com.skydoves.elasticviews.ElasticLayout
+                android:id="@+id/btn_preview_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="center"
+                android:background="@drawable/shape_border_back">
 
                 <TextView
-                    android:id="@+id/line"
-                    style="?android:attr/listSeparatorTextViewStyle"
-                    android:paddingTop="5dip"
-                    android:gravity="center_horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#000" />
-                    -->
-<!--
-                <com.skyhope.materialtagview.TagView
-                    android:id="@+id/tagsSelected"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/dimen_4_dp"
-                    android:layout_marginLeft="@dimen/dimen_4_dp"
-                    android:layout_marginTop="@dimen/dimen_4_dp"
-                    android:layout_marginEnd="@dimen/dimen_4_dp"
-                    android:layout_marginRight="@dimen/dimen_4_dp"
-                    android:textColor="@color/black"
-                    app:tag_text_color="@color/black"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tag_separator="SPACE_SEPARATOR" />
+                    android:id="@+id/btn_preview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_horizontal|center_vertical"
+                    android:layout_marginLeft="@dimen/spacing_small"
+                    android:layout_marginRight="@dimen/spacing_small"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:text="Preview"
+                    android:textColor="@color/white" />
+            </com.skydoves.elasticviews.ElasticLayout>
+        </RelativeLayout>
+    </LinearLayout>
 
-                <TextView
-                    android:id="@+id/line2"
-                    style="?android:attr/listSeparatorTextViewStyle"
-                    android:paddingTop="5dip"
-                    android:gravity="center_horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#000" />
-                    -->
-                <co.lujun.androidtagview.TagContainerLayout
-                    android:id="@+id/tagcontainerLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="0dp"
-                    android:padding="4dp"
-                    app:container_background_color="@color/grey400"
-                    app:container_border_color="#33666666"
-                    app:container_border_radius="0dp"
-                    app:container_gravity="left"
-                    app:tag_background_color="#FFFFFFFF"
-                    app:tag_border_color="#330000ff"
-                    app:tag_border_width="1dp"
-                    app:tag_corner_radius="6dp"
-                    app:tag_enable_cross="true"
-                    app:tag_horizontal_padding="10dp"
-                    app:tag_max_length="18"
-                    app:tag_text_color="#ff666666"
-                    app:container_enable_drag="true"
-                    app:horizontal_interval="10dp"
-                    app:vertical_interval="10dp"
-                    app:tag_clickable="true"
-                    app:tag_theme="none" />
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_marginTop="@dimen/dimen_4_dp"
-                    android:orientation="horizontal"
-                    android:background="@drawable/shape_round_format_black">
-<!--
-                    <EditText
-                        android:id="@+id/text_tag"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:singleLine="true" /> -->
-                    <!--
-                    <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
-                        android:id="@+id/text_tag"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:imeOptions="actionNext"
-                        android:layout_weight="1"
-                        android:drawableLeft="@drawable/ic_tag_outline_black_24dp"
-                        android:maxLines="1"
-                        android:inputType="text"
-                        android:textSize="12sp"
-                        android:layout_alignParentLeft="true"
-                        android:layout_marginLeft="@dimen/spacing_xsmall"
-                        app:met_floatingLabel="none"
-                        app:met_clearButton="false"
-                        app:met_hideUnderline="true"
-                        app:met_baseColor="?android:attr/textColorHint"
-                        app:met_textColorHint="?android:attr/textColorHint"
-                        app:met_textColor="@color/white"
-                        android:hint="@string/editor_hint_tag"/>
-                        -->
-                    <!--
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="@dimen/spacing_small"
-                            android:layout_alignParentRight="true"
-                            android:layout_gravity="center"
-                            android:background="@drawable/shape_border_back">
-                        <TextView
-                            android:id="@+id/btn_add"
-                            android:layout_width="wrap_content"
-                            android:layout_height="24dp"
-                            android:text="Add"
-                            android:layout_weight="1"
-                            android:layout_marginRight="@dimen/spacing_small"
-                            android:layout_marginLeft="@dimen/spacing_small"
-                            android:textColor="@color/white"
-                            android:layout_gravity="center_horizontal|center_vertical"
-                            />
-                        </LinearLayout>
-                        -->
-                    <TextView
-                        android:id="@+id/btn_add_sep"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_gravity="center_horizontal|center_vertical"
-                        android:layout_marginLeft="@dimen/spacing_medium"
-                        android:layout_marginRight="@dimen/spacing_medium"
-                        android:background="@drawable/shape_border_grey"
-                        android:gravity="center"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:text="/"
-                        android:textColor="@color/grey500" />
-
-                    <TextView
-                        android:id="@+id/btn_add_dash"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_gravity="center_horizontal|center_vertical"
-                        android:layout_marginLeft="@dimen/spacing_small"
-                        android:layout_marginRight="@dimen/spacing_small"
-                        android:layout_toRightOf="@+id/btn_add_sep"
-                        android:background="@drawable/shape_border_grey"
-                        android:gravity="center"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:text="-"
-                        android:textColor="@color/grey500" />
-<!--
-                    <TextView
-                        android:id="@+id/btn_add_uscore"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_gravity="center_horizontal|center_vertical"
-                        android:layout_marginLeft="@dimen/spacing_small"
-                        android:layout_marginRight="@dimen/spacing_small"
-                        android:layout_toRightOf="@+id/btn_add_dash"
-                        android:background="@drawable/shape_border_grey"
-                        android:gravity="center"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:text="_"
-                        android:textColor="@color/grey500" />
--->
-                    <TextView
-                        android:id="@+id/btn_add_dot"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_gravity="center_horizontal|center_vertical"
-                        android:layout_marginLeft="@dimen/spacing_small"
-                        android:layout_marginRight="@dimen/spacing_small"
-                        android:layout_toRightOf="@+id/btn_add_dash"
-                        android:background="@drawable/shape_border_grey"
-                        android:gravity="center"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:text="."
-                        android:textColor="@color/grey500" />
-
-                    <TextView
-                        android:id="@+id/btn_add_space"
-                        android:layout_width="@dimen/dimen_48_dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_gravity="center_horizontal|center_vertical"
-                        android:layout_marginLeft="@dimen/dimen_2_dp"
-                        android:layout_marginRight="@dimen/dimen_2_dp"
-                        android:layout_toRightOf="@+id/btn_add_dot"
-                        android:background="@drawable/shape_border_grey"
-                        android:gravity="center"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:text="sp"
-                        android:textColor="@color/grey500" />
-
-                    <TextView
-                        android:id="@+id/btn_add_free_text"
-                        android:layout_width="@dimen/dimen_32_dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginLeft="@dimen/spacing_small"
-                        android:layout_toRightOf="@+id/btn_add_space"
-                        android:background="@drawable/shape_border_grey"
-                        android:gravity="center"
-                        android:padding="@dimen/dimen_2_dp"
-                        android:text=" ? "
-                        android:textColor="@color/grey500" />
-                    <com.skydoves.elasticviews.ElasticLayout
-                        android:id="@+id/btn_preview_bar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginLeft="@dimen/spacing_medium"
-                        android:layout_gravity="center"
-                        android:background="@drawable/shape_border_back">
-                    <TextView
-                        android:id="@+id/btn_preview"
-                        android:layout_width="wrap_content"
-                        android:layout_height="24dp"
-                        android:text="Preview"
-                        android:gravity="center"
-                        android:paddingLeft="@dimen/dimen_8_dp"
-                        android:paddingRight="@dimen/dimen_8_dp"
-                        android:layout_weight="1"
-                        android:layout_marginRight="@dimen/spacing_small"
-                        android:layout_marginLeft="@dimen/spacing_small"
-                        android:textColor="@color/white"
-                        android:layout_gravity="center_horizontal|center_vertical"
-                        />
-                    </com.skydoves.elasticviews.ElasticLayout>
-                    <!--
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_add_tag"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="add tag"
-                        android:background="@drawable/shape_border_back"/>
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_preview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="preview"
-                        android:background="@drawable/shape_border_back"/> -->
-                </RelativeLayout>
-            </LinearLayout>
     <androidx.cardview.widget.CardView
         android:id="@+id/editorCardview"
         android:layout_width="match_parent"
@@ -295,263 +180,173 @@
         app:cardCornerRadius="10dp"
         app:cardElevation="@dimen/spacing_xsmall"
         app:cardUseCompatPadding="true">
-    <LinearLayout
-        android:id="@+id/editorPanel"
-        android:orientation="vertical"
-        android:focusableInTouchMode="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
 
         <LinearLayout
+            android:id="@+id/editorPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_medium"
-            android:layout_marginLeft="@dimen/spacing_medium"
-            android:layout_marginRight="@dimen/spacing_medium"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/title_label"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:text="@string/editor_label_title"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/shape_border_grey"
-                />
+            android:focusableInTouchMode="true"
+            android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/title"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="left"
-                android:textSize="12sp"
-                android:layout_weight="1"
-                android:textColor="@color/grey300"
-                android:hint="@string/editor_label_title"
-                android:imeOptions="actionNext"
-                android:singleLine="true"
-                android:enabled="false"
-                />
-        </LinearLayout>
-        <!--
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
-            android:id="@+id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionNext"
-            android:nextFocusDown="@+id/artist"
-            android:maxLines="1"
-            android:inputType="text"
-            android:textSize="12sp"
-            android:layout_marginTop="@dimen/spacing_xsmall"
-            android:layout_marginLeft="@dimen/spacing_large"
-            app:met_floatingLabel="normal"
-            app:met_clearButton="true"
-            app:met_hideUnderline="true"
-            app:met_baseColor="?android:attr/textColorPrimary"
-            app:met_textColorHint="?android:attr/textColorHint"
-            app:met_textColor="?android:attr/textColorPrimary"
-            app:met_floatingLabelTextColor="?android:attr/textColorHint"
-            app:met_floatingLabelAlwaysShown="true"
-            app:met_floatingLabelText="@string/editor_label_title"
-            android:hint="@string/editor_hint_title"/>
-            -->
+                android:layout_marginTop="@dimen/spacing_medium"
+                android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_medium"
-            android:layout_marginLeft="@dimen/spacing_medium"
-            android:layout_marginRight="@dimen/spacing_medium"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/artist_label"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:text="@string/editor_label_artist"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/shape_border_grey"
-                />
+                <TextView
+                    android:id="@+id/title_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/shape_border_grey"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:text="@string/editor_label_title" />
 
-            <EditText
-                android:id="@+id/artist"
-                android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:gravity="left"
+                    android:hint="@string/editor_label_title"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/grey300"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="left"
-                android:textSize="12sp"
-                android:layout_weight="1"
-                android:textColor="@color/grey300"
-                android:hint="@string/editor_label_artist"
-                android:imeOptions="actionNext"
-                android:singleLine="true"
-                android:enabled="false"
-                />
-        </LinearLayout>
-        <!--
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
-            android:id="@+id/artist"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionNext"
-            android:nextFocusDown="@+id/album"
-            android:maxLines="1"
-            android:inputType="text"
-            android:textSize="12sp"
-            android:layout_marginLeft="@dimen/spacing_large"
-            app:met_floatingLabel="normal"
-            app:met_hideUnderline="true"
-            app:met_baseColor="?android:attr/textColorPrimary"
-            app:met_textColorHint="?android:attr/textColorHint"
-            app:met_textColor="?android:attr/textColorPrimary"
-            app:met_floatingLabelTextColor="?android:attr/textColorHint"
-            app:met_floatingLabelAlwaysShown="true"
-            app:met_floatingLabelText="@string/editor_label_artist"
-            android:hint="@string/editor_hint_artist"/>
-            -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_medium"
-            android:layout_marginLeft="@dimen/spacing_medium"
-            android:layout_marginRight="@dimen/spacing_medium"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/album_label"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:text="@string/editor_label_album"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/shape_border_grey"
-                />
+                android:layout_marginLeft="@dimen/spacing_medium"
+                android:layout_marginTop="@dimen/spacing_medium"
+                android:layout_marginRight="@dimen/spacing_medium"
+                android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/album"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/artist_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/shape_border_grey"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:text="@string/editor_label_artist" />
+
+                <EditText
+                    android:id="@+id/artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:gravity="left"
+                    android:hint="@string/editor_label_artist"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/grey300"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="left"
-                android:textSize="12sp"
-                android:layout_weight="1"
-                android:textColor="@color/grey300"
-                android:hint="@string/editor_label_album"
-                android:imeOptions="actionNext"
-                android:singleLine="true"
-                android:enabled="false"
-                />
-        </LinearLayout>
-        <!--
-        <com.rengwuxian.materialedittext.MaterialAutoCompleteTextView
-            android:id="@+id/album"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionNext"
-            android:nextFocusDown="@+id/album_arist"
-            android:maxLines="1"
-            android:inputType="text"
-            android:textSize="12sp"
-            android:layout_marginLeft="@dimen/spacing_large"
-            app:met_floatingLabel="highlight"
-            app:met_hideUnderline="true"
-            app:met_floatingLabelAlwaysShown="true"
-            app:met_baseColor="?android:attr/textColorPrimary"
-            app:met_textColorHint="?android:attr/textColorHint"
-            app:met_textColor="?android:attr/textColorPrimary"
-            app:met_floatingLabelTextColor="?android:attr/textColorHint"
-            app:met_floatingLabelText="@string/editor_label_album"
-            android:hint="@string/editor_hint_album"/>
-            -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_medium"
-            android:layout_marginLeft="@dimen/spacing_medium"
-            android:layout_marginRight="@dimen/spacing_medium"
-            android:layout_marginBottom="@dimen/spacing_large"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/track_label"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:text="@string/editor_label_track"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/shape_border_grey"
-                />
+                android:layout_marginLeft="@dimen/spacing_medium"
+                android:layout_marginTop="@dimen/spacing_medium"
+                android:layout_marginRight="@dimen/spacing_medium"
+                android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/track"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/album_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/shape_border_grey"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:text="@string/editor_label_album" />
+
+                <EditText
+                    android:id="@+id/album"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:gravity="left"
+                    android:hint="@string/editor_label_album"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/grey300"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="left"
-                android:textSize="12sp"
-                android:layout_weight="1"
-                android:textColor="@color/grey300"
-                android:imeOptions="actionNext"
-                android:singleLine="true"
-                android:enabled="false"
-                />
-        </LinearLayout>
+                android:layout_marginLeft="@dimen/spacing_medium"
+                android:layout_marginTop="@dimen/spacing_medium"
+                android:layout_marginRight="@dimen/spacing_medium"
+                android:layout_marginBottom="@dimen/spacing_large"
+                android:orientation="horizontal">
 
-    </LinearLayout>
+                <TextView
+                    android:id="@+id/track_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/shape_border_grey"
+                    android:paddingLeft="@dimen/dimen_8_dp"
+                    android:paddingRight="@dimen/dimen_8_dp"
+                    android:text="@string/editor_label_track" />
+
+                <EditText
+                    android:id="@+id/track"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:gravity="left"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textColor="@color/grey300"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/dimen_32_dp"
-        android:layout_marginTop="@dimen/dimen_8_dp"
-        android:layout_marginLeft="@dimen/dimen_32_dp"
-        android:layout_marginRight="@dimen/dimen_32_dp"
-        android:layout_marginBottom="@dimen/dimen_12_dp">
-        <com.skydoves.elasticviews.ElasticLayout
-            android:id="@+id/btn_cancel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginLeft="@dimen/spacing_medium"
-            android:layout_gravity="center"
-            android:background="@drawable/shape_border_back">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:text="@string/cancel"
-                android:gravity="center"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_weight="1"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:layout_marginLeft="@dimen/spacing_small"
-                android:textColor="@color/white"
-                android:layout_gravity="center_horizontal|center_vertical"
-                />
-        </com.skydoves.elasticviews.ElasticLayout>
 
-        <com.skydoves.elasticviews.ElasticLayout
-            android:id="@+id/btn_ok"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="@dimen/dimen_24_dp"
+        android:gravity="end">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_cancel"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="@dimen/spacing_medium"
-            android:layout_gravity="center"
-            android:background="@drawable/shape_border_back">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:text="@string/ok"
-                android:gravity="center"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:layout_weight="1"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:layout_marginLeft="@dimen/spacing_small"
-                android:textColor="@color/white"
-                android:layout_gravity="center_horizontal|center_vertical"
-                />
-        </com.skydoves.elasticviews.ElasticLayout>
-    </RelativeLayout>
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/colorOutline" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_ok"
+            style="@style/Widget.Material3.Button"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accept"/>
+    </LinearLayout>
 </LinearLayout>

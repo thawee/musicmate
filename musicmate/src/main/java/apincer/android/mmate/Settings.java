@@ -21,13 +21,6 @@ public class Settings {
         return prefs.getBoolean(Constants.PREF_SHOW_STORAGE_SPACE,true);
     }
 
-    /*
-    public static boolean isOnNightModeOnly(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_NIGHT_MODE_ONLY,true);
-    } */
-
     public static boolean isListFollowNowPlaying(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
@@ -39,13 +32,6 @@ public class Settings {
                 PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_PREFIX_TRACK_NUMBER_ON_TITLE,false);
     }
-
-    /*
-    public static boolean isVibrateOnNextSong(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_VIBRATE_ON_NEXT_SONG,false);
-    } */
 
     public static boolean isUseMediaButtons(Context context) {
         SharedPreferences prefs =

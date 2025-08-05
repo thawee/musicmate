@@ -14,7 +14,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.notification.DLNAServerManager;
+import apincer.android.mmate.dlna.DLNAServerManager;
 
 public class DLNAServerManagementSheet extends BottomSheetDialogFragment {
 
@@ -65,14 +65,14 @@ public class DLNAServerManagementSheet extends BottomSheetDialogFragment {
                     // case INITIALIZED: // If you use this intermediate state
                     btnStartServer.setEnabled(false);
                     btnStopServer.setEnabled(true);
-                    // tvServerAddress.setVisibility(View.VISIBLE); // Handled by address observer
+                    tvServerAddress.setVisibility(View.VISIBLE); // Handled by address observer
                     break;
                 case STOPPED:
                 case ERROR:
                     btnStartServer.setEnabled(true);
                     btnStopServer.setEnabled(false);
                     tvServerAddress.setVisibility(View.GONE);
-                    tvServerAddress.setText("Address: N/A");
+                   // tvServerAddress.setText("Location: N/A");
                     break;
                 case STARTING:
                     // case STOPPING: // You might want a STOPPING state from service too
@@ -83,7 +83,7 @@ public class DLNAServerManagementSheet extends BottomSheetDialogFragment {
         });
 
         dlnaServerManager.getServerAddress().observe(getViewLifecycleOwner(), address -> {
-            // ... (this part remains the same) ...
+            tvServerAddress.setText("Location: "+address);
         });
     }
 }

@@ -96,6 +96,8 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory()); // Single boss thread is usually sufficient
     int processorCount = Runtime.getRuntime().availableProcessors();
     EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(processorCount, NioIoHandler.newFactory());
+
+    private Thread serverThread;
     private ChannelFuture channelFuture;
     private boolean isInitialized = false;
 
@@ -104,7 +106,7 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     }
 
     @Override
-    synchronized public void initServer(InetAddress bindAddress) throws InitializationException {
+    public void initServer(InetAddress bindAddress) throws InitializationException {
         if (isInitialized) {
             Log.w(TAG, "Server already initialized");
             return;
@@ -117,7 +119,7 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
             workerGroup = new MultiThreadIoEventLoopGroup(processorCount, NioIoHandler.newFactory());
 
-            Thread thread = new Thread(() -> {
+            serverThread = new Thread(() -> {
                 try {
                     Log.i(TAG, "Starting Netty4 UPNP Server: " + bindAddress.getHostAddress() + ":" + getListenPort());
 
@@ -165,8 +167,8 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 }
             });
 
-            thread.setName("UPNP-Server-Init");
-            thread.start();
+            serverThread.setName("UPNP-Server-Init");
+            serverThread.start();
 
         } catch (Exception e) {
             Log.e(TAG, "Error initializing server groups", e);
@@ -226,6 +228,19 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
         Log.i(TAG, "Stopping Netty4 UPNP Server");
         isInitialized = false;
         cleanup();
+
+        // Interrupt server thread if still running
+        if (serverThread != null && serverThread.isAlive()) {
+            serverThread.interrupt();
+            try {
+                serverThread.join(2000); // Wait up to 2 seconds for thread to terminate
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                serverThread = null;
+            }
+        }
+
         Log.i(TAG, "Netty4 UPNP Server stopped successfully");
     }
 

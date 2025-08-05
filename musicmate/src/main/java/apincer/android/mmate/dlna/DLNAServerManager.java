@@ -1,4 +1,4 @@
-package apincer.android.mmate.notification;
+package apincer.android.mmate.dlna;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,9 +8,6 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import apincer.android.mmate.dlna.MediaServerConfiguration;
-import apincer.android.mmate.dlna.MediaServerService;
 
 public class DLNAServerManager {
     private static final String TAG = "DLNAServerManager";

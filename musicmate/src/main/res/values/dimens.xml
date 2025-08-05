@@ -100,5 +100,8 @@
     <dimen name="active_carousel_item_elevation">8dp</dimen>
     <dimen name="inactive_carousel_item_elevation">2dp</dimen>
     <dimen name="highlight_border_width">2dp</dimen>
-    <dimen name="your_extra_large_corner_radius">16dp</dimen> <!-- Match your shapeAppearance -->
+    <dimen name="your_extra_large_corner_radius">16dp</dimen>
+    <dimen name="dimen_34_dp">34dp</dimen>
+    <dimen name="dimen_54_dp">54dp</dimen>
+    <dimen name="dimen_164_dp">164dp</dimen> <!-- Match your shapeAppearance -->
 </resources>

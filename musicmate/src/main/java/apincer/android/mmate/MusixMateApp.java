@@ -1,6 +1,7 @@
 package apincer.android.mmate;
 
 import static apincer.android.mmate.Constants.COVER_ARTS;
+import static apincer.android.mmate.dlna.MediaServerService.startMediaServer;
 import static apincer.android.mmate.player.NotificationListener.reconnectNotificationListener;
 
 import android.app.Application;
@@ -10,19 +11,15 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.NotificationCompat;
 import androidx.work.WorkManager;
 
-import com.arthenica.ffmpegkit.FFmpegKitConfig;
+import com.antonkarpenko.ffmpegkit.FFmpegKitConfig;
+import com.antonkarpenko.ffmpegkit.Level;
 import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
@@ -53,13 +50,8 @@ import sakout.mehdi.StateViews.StateViewsBuilder;
 public class MusixMateApp extends Application {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
-    private ConnectivityManager connectivityManager;
-    private ConnectivityManager.NetworkCallback networkCallback;
-    private boolean isMediaServerRunning = false;
-
     private static MusixMateApp INSTANCE;
-    //private SearchCriteria criteria;
-    private List<RemoteDevice> renderers = new ArrayList();
+    private final List<RemoteDevice> renderers = new ArrayList<>();
 
     public static MusixMateApp getInstance() {
         return INSTANCE;
@@ -104,81 +96,10 @@ public class MusixMateApp extends Application {
     public void onTerminate() {
         super.onTerminate();
 
-        // Clean up network callback
-        if (connectivityManager != null && networkCallback != null) {
-            try {
-                connectivityManager.unregisterNetworkCallback(networkCallback);
-            } catch (Exception e) {
-                Log.e(TAG, "Error unregistering network callback", e);
-            }
-        }
-
-        // Stop media server if running
-       // if (isMediaServerRunning) {
-          //  MediaServerService.stopMediaServer(this);
-       // }
-
         // Rest of your termination code
         MediaServerService.stopMediaServer(this);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
-    }
-
-    // Add this method to properly set up network monitoring
-    private void setupNetworkMonitoring() {
-        connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-
-        // Create a network request that looks for WiFi without requiring internet
-        // This allows both client WiFi and hotspot modes
-        NetworkRequest networkRequest = new NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                // Don't require internet capability to support hotspot mode
-                .build();
-
-        // Create the callback only once to prevent memory leaks
-        networkCallback = new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(@NonNull Network network) {
-                Log.d(TAG, "WiFi network became available");
-
-                // Check media server settings before starting
-                if (Settings.isAutoStartMediaServer(getApplicationContext())) {
-                    // Use a slight delay to allow network to stabilize
-                    MusicMateExecutors.schedule(() -> {
-                        try {
-                            MediaServerService.startMediaServer(MusixMateApp.this);
-                            isMediaServerRunning = true;
-                            Log.i(TAG, "Media server started after network connection");
-                        } catch (Exception e) {
-                            Log.e(TAG, "Failed to start media server", e);
-                        }
-                    }, 2);
-                }
-            }
-
-            @Override
-            public void onLost(@NonNull Network network) {
-                Log.d(TAG, "WiFi network lost");
-
-                MediaServerService.stopMediaServer(MusixMateApp.this);
-                isMediaServerRunning = false;
-            }
-        };
-
-        // Register the callback
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
-
-        // Initial check for existing connection
-        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(
-                connectivityManager.getActiveNetwork());
-
-        if (capabilities != null &&
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                Settings.isAutoStartMediaServer(getApplicationContext())) {
-            // Network is already available - start service directly
-            MediaServerService.startMediaServer(this);
-            isMediaServerRunning = true;
-        }
     }
 
     @Override public void onCreate() {
@@ -197,12 +118,13 @@ public class MusixMateApp extends Application {
         MusicMateExecutors.getInstance();
 
         // turn off ffmpeg-kit log
-        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_ERROR);
+        FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
         createNotificationChannel();
 
         // Set up network monitoring
-        setupNetworkMonitoring();
+       // setupNetworkMonitoring();
+        startDMSServer(this);
 
         PlaylistRepository.initPlaylist(this);
 
@@ -225,6 +147,22 @@ public class MusixMateApp extends Application {
                 .setButtonTextColor(Color.parseColor("#FFFFFF"))
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
+    }
+
+    private void startDMSServer(MusixMateApp musixMateApp) {
+        // Check media server settings before starting
+        if (Settings.isAutoStartMediaServer(getApplicationContext())) {
+            // Use a slight delay to allow network to stabilize
+            MusicMateExecutors.schedule(() -> {
+                try {
+                    startMediaServer(MusixMateApp.this);
+                    //isMediaServerRunning = true;
+                    Log.i(TAG, "Media server started after network connection");
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to start media server", e);
+                }
+            }, 2);
+        }
     }
 
     // Add this to your MusixMateApp class
@@ -306,41 +244,11 @@ public class MusixMateApp extends Application {
         }
     }
 
-   /* public void setSearchCriteria(SearchCriteria criteria) {
-        this.criteria = criteria;
-    }
-
-    public SearchCriteria getCriteria() {
-        return criteria;
-    } */
-
     public void clearCaches() {
         File dir = getApplicationContext().getExternalCacheDir();
        // FileUtils.deleteDirectory(new File(dir, "/tmp/"));
         FileUtils.deleteDirectory(new File(dir, "/Icons/"));
         FileUtils.deleteDirectory(new File(dir, COVER_ARTS));
-    }
-
-    // Add this method to handle media server setting changes
-    public void onMediaServerSettingChanged(boolean enabled) {
-        Log.d(TAG, "Media server setting changed: enabled=" + enabled);
-
-        if (enabled) {
-            // Only start if we have a WiFi connection
-            Network activeNetwork = connectivityManager.getActiveNetwork();
-            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
-
-            if (capabilities != null &&
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                MediaServerService.startMediaServer(this);
-                isMediaServerRunning = true;
-            } else {
-                Log.i(TAG, "Media server enabled but waiting for WiFi connection");
-            }
-        } else if (isMediaServerRunning) {
-            MediaServerService.stopMediaServer(this);
-            isMediaServerRunning = false;
-        }
     }
 
     public RemoteDevice getRenderer(String ipAddress) {

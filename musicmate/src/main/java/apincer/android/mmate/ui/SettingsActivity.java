@@ -13,8 +13,6 @@ import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
-import apincer.android.mmate.Constants;
-import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -56,7 +54,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String s) {
-            if(Constants.PREF_ENABLE_MEDIA_SERVER.equals(s)) {
+           /* if(Constants.PREF_ENABLE_MEDIA_SERVER.equals(s)) {
                 boolean enableMediaServer = sharedPreferences.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER, false);
                 // Notify the application of the change
                 if (getActivity()!=null && getActivity().getApplication() instanceof MusixMateApp) {
@@ -64,7 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
                 }
             }else if(Constants.PREF_CLEAR_CACHED.equals(s)) {
                 MusixMateApp.getInstance().clearCaches();
-            }
+            } */
         }
 
         @Override

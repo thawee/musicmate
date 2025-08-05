@@ -35,6 +35,7 @@ public class PlaylistRepository {
     public static final String TYPE_ALBUM = "album";
     public static final String TYPE_GENRE = "genre";
     public static final String TYPE_GROUPING = "grouping";
+    public static final String TYPE_RATING = "rating";
 
     public static void initPlaylist(Context context) {
         if (allPlaylists.isEmpty()) { // Ensure it's loaded only once
@@ -129,11 +130,26 @@ public class PlaylistRepository {
                      }
                      break;
 
+                case TYPE_RATING:
+                    if (entry.getSongs() != null) {
+                        for (Song song : entry.getSongs()) {
+                            if (song != null && song.getRating() != null) {
+                                String grouping = getKeyForRating(song);
+                                entry.getMappedSongs().put(grouping, song);
+                            }
+                        }
+                    }
+                    break;
+
                 default:
                    // Log.w(TAG, "populatePlaylistMaps: Unhandled playlist type: " + entry.getType() + " for playlist UUID: " + playlistUuid);
                     break;
             }
         }
+    }
+
+    private static String getKeyForRating(Song song) {
+        return trimToEmpty(song.getRating()).toLowerCase();
     }
 
     private static String getKeyForGrouping(Song song) {
@@ -212,6 +228,7 @@ public class PlaylistRepository {
                 .map(PlaylistEntry::getName)
                 .filter(name -> name != null && !name.isEmpty())
                 .distinct() // Ensure names are unique if multiple entries could somehow have same name
+                .sorted()
                 .collect(Collectors.toList());
     }
 
@@ -288,8 +305,13 @@ public class PlaylistRepository {
             case TYPE_ALBUM -> getKeyForAlbum(tagToCheck);
             case TYPE_GENRE -> getKeyForGenre(tagToCheck);
             case TYPE_GROUPING -> getKeyForGrouping(tagToCheck);
+            case TYPE_RATING -> getKeyForRating(tagToCheck);
             default -> "";
         };
+    }
+
+    private static String getKeyForRating(MusicTag song) {
+        return trimToEmpty(song.getMediaQuality()).toLowerCase();
     }
 
     public static boolean isTitlePlaylist(String playlistName) {

@@ -11,7 +11,7 @@ public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
     public static final String QUALITY_BAD = "Unsatisfactory";
-    public static final String QUALITY_GOOD = "Adequate";
+    public static final String QUALITY_FAVORITE = "Favorite";
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";

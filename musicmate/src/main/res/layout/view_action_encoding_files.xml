@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="@dimen/dimen_24_dp"
-    android:layout_marginRight="@dimen/dimen_24_dp"
+    android:padding="24dp"
     android:orientation="vertical"
     android:background="@drawable/shape_round_actionview_black">
     <TextView
@@ -22,6 +21,7 @@
         android:text="@string/about_encoding_file"
         android:gravity="center_horizontal"
         android:textColor="@color/grey200"
+        android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
         android:background="@drawable/bg_transparent"/>
 
     <LinearLayout
@@ -59,91 +59,7 @@
                 app:spinner_popup_background="@color/black_transparent_64"
                 app:spinner_popup_elevation="14dp"
                 tools:ignore="TouchTargetSizeCheck" />
-            <!--
-            <RadioGroup
-                android:id="@+id/mediaEncoding"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginTop="@dimen/dimen_2_dp"
-                android:orientation="horizontal"
-                tools:ignore="UselessParent">
-                <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/mediaEncodingFLAC"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    app:shapeAppearance="@style/Rounded"
-                    android:background="@drawable/shape_edittext_border"
-                    android:layout_marginLeft="@dimen/dimen_8_dp"
-                    android:layout_marginRight="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:textColor="@color/white"
-                    android:text="FLAC (CL0)"/>
 
-                <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/mediaEncodingFLACOPT"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    app:shapeAppearance="@style/Rounded"
-                    android:background="@drawable/shape_edittext_border"
-                    android:layout_marginLeft="@dimen/dimen_8_dp"
-                    android:layout_marginRight="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:textColor="@color/white"
-                    android:text="FLAC (Optimal)"/>
--->
-                <!--
-                <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/mediaEncodingMPEG"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/dimen_32_dp"
-                    app:shapeAppearance="@style/Rounded"
-                    android:layout_marginLeft="@dimen/dimen_8_dp"
-                    android:layout_marginRight="@dimen/dimen_8_dp"
-                    android:paddingRight="@dimen/dimen_8_dp"
-                    android:paddingLeft="@dimen/dimen_8_dp"
-                    android:background="@drawable/shape_edittext_border"
-                    android:textColor="@color/white"
-                    android:text="MPEG"/> -->
-            <!--
-            </RadioGroup>
-            -->
-            <!--
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_8_dp"
-                android:layout_marginLeft="@dimen/spacing_small"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:textColor="@color/grey200"
-                android:text="@string/encoding_format"
-                android:background="@color/transparent"/>
-            <com.skydoves.powerspinner.PowerSpinnerView
-                android:id="@+id/target_encoding"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/dimen_32_dp"
-                android:background="@drawable/shape_rounded_edittext"
-                android:gravity="left|center_vertical"
-                android:hint=""
-                android:padding="4dp"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:textSize="12sp"
-                android:layout_marginLeft="@dimen/dimen_12_dp"
-                android:layout_marginRight="@dimen/dimen_8_dp"
-                android:drawablePadding="@dimen/dimen_4_dp"
-                android:drawableRight="@drawable/ic_round_keyboard_arrow_down_24"
-                app:spinner_arrow_gravity="end"
-                app:spinner_arrow_padding="8dp"
-                app:spinner_divider_color="@color/grey600_transparent"
-                app:spinner_divider_show="true"
-                app:spinner_divider_size="0.4dp"
-                app:spinner_popup_animation="dropdown"
-                app:spinner_popup_background="@color/black_transparent_80"
-                app:spinner_popup_elevation="14dp" />
-                -->
         </LinearLayout>
 
         <RelativeLayout
@@ -176,64 +92,36 @@
         android:background="@color/grey900">
     </ListView>
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/dimen_32_dp"
-        android:layout_marginLeft="@dimen/dimen_32_dp"
-        android:layout_marginRight="@dimen/dimen_32_dp"
-        android:layout_marginBottom="@dimen/dimen_16_dp"
-        android:layout_marginTop="@dimen/dimen_4_dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="@dimen/dimen_24_dp"
+        android:gravity="end">
 
-        <com.skydoves.elasticviews.ElasticLayout
-            android:id="@+id/btn_cancel"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_cancel"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentBottom="true"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/spacing_medium"
-            android:background="@drawable/shape_border_back"
-            tools:ignore="TouchTargetSizeCheck">
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:layout_gravity="center_horizontal|center_vertical"
-                android:layout_marginLeft="@dimen/spacing_small"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:text="Dismiss"
-                android:textColor="@color/white"
-                tools:ignore="HardcodedText" />
-        </com.skydoves.elasticviews.ElasticLayout>
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/colorOutline" />
 
-        <com.skydoves.elasticviews.ElasticLayout
-            android:id="@+id/btn_ok"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_encode_file"
+            style="@style/Widget.Material3.Button"
+            android:layout_marginStart="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/spacing_medium"
-            android:background="@drawable/shape_border_back"
-            tools:ignore="TouchTargetSizeCheck">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:layout_gravity="center_horizontal|center_vertical"
-                android:layout_marginLeft="@dimen/spacing_small"
-                android:layout_marginRight="@dimen/spacing_small"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:paddingLeft="@dimen/dimen_8_dp"
-                android:paddingRight="@dimen/dimen_8_dp"
-                android:text="Encoding"
-                android:textColor="@color/white"
-                tools:ignore="HardcodedText" />
-        </com.skydoves.elasticviews.ElasticLayout>
-    </RelativeLayout>
+            android:text="Encode File"/>
+    </LinearLayout>
 </LinearLayout>

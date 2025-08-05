@@ -9,6 +9,16 @@ public class Song {
     private String genre;
     private String grouping;
     private String album;
+
+    public String getRating() {
+        return rating;
+    }
+
+    public void setRating(String rating) {
+        this.rating = rating;
+    }
+
+    private String rating;
     private String notes;
     // Add year if you include it for songs in JSON and want to map it
     // private String year;

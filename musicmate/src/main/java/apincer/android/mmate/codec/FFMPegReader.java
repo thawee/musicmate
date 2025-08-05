@@ -43,11 +43,11 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 import android.content.Context;
 import android.util.Log;
 
-import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.FFmpegSession;
-import com.arthenica.ffmpegkit.FFprobeKit;
-import com.arthenica.ffmpegkit.FFprobeSession;
-import com.arthenica.ffmpegkit.ReturnCode;
+import com.antonkarpenko.ffmpegkit.FFmpegKit;
+import com.antonkarpenko.ffmpegkit.FFmpegSession;
+import com.antonkarpenko.ffmpegkit.FFprobeKit;
+import com.antonkarpenko.ffmpegkit.FFprobeSession;
+import com.antonkarpenko.ffmpegkit.ReturnCode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -658,12 +658,12 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
     } */
 
     private static String getFFmpegOutputData(FFmpegSession session) {
-        List<com.arthenica.ffmpegkit.Log> logs = session.getLogs();
+        List<com.antonkarpenko.ffmpegkit.Log> logs = session.getLogs();
         StringBuilder buff = new StringBuilder();
         String keyword = "Output #0,";
         String keyword2 = "[Parsed_";
         boolean foundTag = false;
-        for (com.arthenica.ffmpegkit.Log log : logs) {
+        for (com.antonkarpenko.ffmpegkit.Log log : logs) {
             String msg =  log.getMessage();
             String trimedMsg = trim(msg,"");
             if (trimedMsg.startsWith(keyword)) {

@@ -24,12 +24,6 @@
           "notes": "Features sub-bass that reaches deep into the lowest frequencies, great for testing a system’s low-end reach."
         },
         {
-          "title": "Hysteria",
-          "artist": "Muse",
-          "album": "Absolution",
-          "notes": "A rapid, punchy bassline that reveals how well your system handles fast, complex low-end frequencies."
-        },
-        {
           "title": "When the Levee Breaks",
           "artist": "Led Zeppelin",
           "album": "Led Zeppelin IV",
@@ -82,12 +76,6 @@
           "artist": "Fleetwood Mac",
           "album": "Rumours",
           "notes": "Rich harmonies and intricate instrumentation make this a great test of midrange balance and separation."
-        },
-        {
-          "title": "Caislean Óir",
-          "artist": "Clannad",
-          "album": "Macalla",
-          "notes": "A lush, layered vocal performance that tests midrange openness and depth."
         },
         {
           "title": "Tears in Heaven",
@@ -166,12 +154,6 @@
           "artist": "Trent Reznor & Atticus Ross",
           "album": "The Girl With the Dragon Tattoo",
           "notes": "The high-pitched synth textures should be crystal clear without distortion."
-        },
-        {
-          "title": "B.Y.O.B.",
-          "artist": "System of a Down",
-          "album": "Mezmerize",
-          "notes": "Extreme soft-loud contrasts and fast-paced drumwork."
         },
         {
           "title": "Tame",
@@ -907,6 +889,20 @@
       "songs": [
         {
           "grouping": "Contemporary"
+        }
+      ]
+    },
+    {
+      "name": "Recommended & Favorite",
+      "uuid": "Recommended",
+      "type": "rating",
+      "songs": [
+        {
+          "rating": "Audiophile"
+        },{
+          "rating": "Recommended"
+        },{
+          "rating": "Favorite"
         }
       ]
     }

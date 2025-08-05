@@ -24,7 +24,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -33,6 +32,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -63,6 +63,7 @@ import apincer.android.mmate.notification.AudioTagEditEvent;
 import apincer.android.mmate.notification.AudioTagPlayingEvent;
 import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.provider.CoverartFetcher;
+import apincer.android.mmate.ui.view.DynamicRangeDbView;
 import apincer.android.mmate.ui.view.ResolutionView;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -101,6 +102,7 @@ public class TagsActivity extends AppCompatActivity {
     private View pathInfoLine;
    private View hiresView;
    private ResolutionView resolutionView;
+   private DynamicRangeDbView dynamicRangeView;
     private TextView ratingView;
 
     private int toolbar_from_color;
@@ -116,7 +118,7 @@ public class TagsActivity extends AppCompatActivity {
     private boolean previewState = true;
 
     private AlertDialog progressDialog;
-    private TextView progressLabel;
+   // private TextView progressLabel;
     private boolean finishOnTimeout = false;
 
     private final AtomicLong lastProgressUpdate = new AtomicLong(0);
@@ -250,8 +252,8 @@ public class TagsActivity extends AppCompatActivity {
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
         // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
-        adapter.addNewTab(new TagsEditorFragment(), "TAGs");
-        adapter.addNewTab(new TagsTechnicalFragment(), "for Nerd");
+        adapter.addNewTab(new TagsEditorFragment(), "Music Info");
+        adapter.addNewTab(new TagsTechnicalFragment(), "NERD");
         viewPager.setAdapter(adapter);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -271,17 +273,6 @@ public class TagsActivity extends AppCompatActivity {
         tabLayoutMediator.attach();
 
         appBarLayout.addOnOffsetChangedListener(new OffSetChangeListener());
-
-        findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
-        findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItems());
-        findViewById(R.id.btnMDR).setOnClickListener(v -> doMeasureDR());
-        findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItems());
-        if (viewModel.displayTag != null && viewModel.displayTag.getValue()!= null) {
-            findViewById(R.id.btnAspect).setOnClickListener(view -> ApplicationUtils.startAspect(this, viewModel.displayTag.getValue()));
-            findViewById(R.id.btnWebSearch).setOnClickListener(view -> ApplicationUtils.webSearch(this, viewModel.displayTag.getValue()));
-            findViewById(R.id.btnExplorer).setOnClickListener(view -> ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue()));
-
-        }
     }
 
     private void setupTitlePanelViews() {
@@ -295,6 +286,7 @@ public class TagsActivity extends AppCompatActivity {
         tagInfo = findViewById(R.id.panel_tag);
         hiresView = findViewById(R.id.icon_hires);
         resolutionView = findViewById(R.id.icon_resolution);
+        dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
         ratingView = findViewById(R.id.rating);
 
         playerName = findViewById(R.id.music_player_name);
@@ -303,16 +295,51 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void setupActionButtons() {
-        findViewById(R.id.btnEdit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
-        findViewById(R.id.btnDelete).setOnClickListener(v -> doDeleteMediaItems()); // This method would now likely call a ViewModel method
-        findViewById(R.id.btnMDR).setOnClickListener(v -> {
-            // Pass context carefully if needed by lower layers called by ViewModel
-            viewModel.measureDynamicRange(getApplicationContext());
+        findViewById(R.id.button_edit).setOnClickListener(v -> appBarLayout.setExpanded(false, true));
+        findViewById(R.id.button_delete).setOnClickListener(v -> doDeleteMediaItems()); // This method would now likely call a ViewModel method
+        findViewById(R.id.button_import).setOnClickListener(v -> doMoveMediaItems()); // Call ViewModel
+
+        findViewById(R.id.button_more).setOnClickListener(v -> {
+             doShowMoreActions(findViewById(R.id.button_more));
+            // create popup menu
         });
-        findViewById(R.id.btnImport).setOnClickListener(v -> doMoveMediaItems()); // Call ViewModel
-        findViewById(R.id.btnWebSearch).setOnClickListener(v -> ApplicationUtils.webSearch(this, viewModel.displayTag.getValue()));
-        findViewById(R.id.btnExplorer).setOnClickListener(v -> ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue()));
-        findViewById(R.id.btnAspect).setOnClickListener(v -> ApplicationUtils.startAspect(this, viewModel.displayTag.getValue()));
+    }
+
+    private void doShowMoreActions(View anchorView) {
+        // 1. Create a PopupMenu
+        PopupMenu popup = new PopupMenu(this, anchorView); // 'this' is the Context
+
+        // 2. Inflate your menu resource
+        popup.getMenuInflater().inflate(R.menu.tag_more_actions_menu, popup.getMenu());
+        // Or, if you don't want to use an XML menu, you can add items programmatically:
+        // popup.getMenu().add(Menu.NONE, R.id.my_action_id, Menu.NONE, "My Action Title");
+
+        // 3. Set an OnMenuItemClickListener to handle menu item clicks
+        popup.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.action_measure_dr) {
+                doMeasureDR();
+                return true;
+            } else if (itemId == R.id.action_web_search) {
+                ApplicationUtils.webSearch(this, viewModel.displayTag.getValue());
+                return true;
+            } else if (itemId == R.id.action_spectrum) {
+                ApplicationUtils.startAspect(this, viewModel.displayTag.getValue());
+                return true;
+            } else if (itemId == R.id.action_open_folder) {
+                ApplicationUtils.startFileExplorer(this, viewModel.displayTag.getValue());
+                return true;
+            }
+            return false; // Return false if the item click is not handled
+        });
+
+        // Optional: Set a dismiss listener
+        popup.setOnDismissListener(menu -> {
+            // Actions to perform when the popup is dismissed (optional)
+        });
+
+        // 4. Show the PopupMenu
+        popup.show();
     }
 
     private void observeViewModel() {
@@ -335,12 +362,15 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("CheckResult")
     protected void updateTitlePanel(MusicTag currentDisplayTag) {
         if(MusixMateApp.getPlayerControl().isPlaying()) {
             playerBtn.setVisibility(VISIBLE);
             playerPanel.setVisibility(VISIBLE);
             playerName.setVisibility(VISIBLE);
-            playerName.setText(StringUtils.truncate(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerName(), 20));
+            String player = StringUtils.truncate(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerName(), 20);
+            player = StringUtils.formatTitle(player);
+            playerName.setText("Player: "+player);
             playerBtn.setBackground(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
         }else {
             playerBtn.setVisibility(GONE);
@@ -362,6 +392,7 @@ public class TagsActivity extends AppCompatActivity {
         // load resolution, quality, coverArt
         loadImages(currentDisplayTag);
         resolutionView.setMusicItem(currentDisplayTag);
+        dynamicRangeView.setMusicItem(currentDisplayTag);
 
         TextBuilder builder = new TextBuilder(getApplicationContext());
         int ratingColor = getColor(R.color.audiophile_background); // getDRScoreColor(holder.mContext, (int) tag.getDynamicRangeScore());
@@ -369,11 +400,11 @@ public class TagsActivity extends AppCompatActivity {
         int i=0;
         for(;i<rating;i++) {
             //builder.addColoredText("*", ratingColor);
-            builder.addColoredText("\u272D", ratingColor);
+            builder.addColoredText("✭", ratingColor);
         }
         while(i <5) {
            // builder.addText("*");
-            builder.addText("\u2729");
+            builder.addText("✩");
             i++;
         }
         builder.into(ratingView);
@@ -468,9 +499,9 @@ public class TagsActivity extends AppCompatActivity {
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
 
-            String labelDr = trim(MusicTagUtils.getDynamicRangeScore(currentDisplayTag), "--");
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit("DR"+labelDr, encColor).setTextSize(metaInfoTextSize));
+           // String labelDr = trim(MusicTagUtils.getDynamicRangeScore(currentDisplayTag), "--");
+           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+           //         .append(new SpecialTextUnit("DR"+labelDr, encColor).setTextSize(metaInfoTextSize));
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
@@ -793,40 +824,26 @@ public class TagsActivity extends AppCompatActivity {
 
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
                 View v = getLayoutInflater().inflate(R.layout.animated_progress_dialog_layout, null);
-                progressLabel = v.findViewById(R.id.process_label);
-
-                // Get the animation view
-                //LottieAnimationView animationView = v.findViewById(R.id.lottie_animation);
-                // Ensure animation is playing
-               // animationView.playAnimation();
 
                 dialogBuilder.setView(v);
                 dialogBuilder.setCancelable(true);
                 progressDialog = dialogBuilder.create();
                 progressDialog.setCanceledOnTouchOutside(true);
 
-                if(progressDialog.getWindow() != null) {
-                    progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-                    // Add fade-in animation for the dialog
-                    Window window = progressDialog.getWindow();
+                Window window = progressDialog.getWindow();
+                if (window != null) {
+                    window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     window.setWindowAnimations(R.style.DialogAnimation);
+
+                    // Add these lines to dim the background
+                    WindowManager.LayoutParams layoutParams = window.getAttributes();
+                    layoutParams.dimAmount = 0.8f; // Adjust this value between 0.0f (no dim) and 1.0f (fully black)
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                    window.setAttributes(layoutParams);
                 }
 
                 // Show the dialog with animation
                 progressDialog.show();
-
-                // Add additional entrance animation for content
-                View dialogContent = v.findViewById(R.id.lottie_animation);
-                if (dialogContent != null) {
-                    dialogContent.setAlpha(0f);
-                    dialogContent.animate()
-                            .alpha(1f)
-                            .setDuration(400)
-                            .setInterpolator(new AccelerateDecelerateInterpolator())
-                            .start();
-                }
-
             } catch (Exception ex) {
                 Log.e(TAG, "startProgressBar", ex);
             }
@@ -849,19 +866,6 @@ public class TagsActivity extends AppCompatActivity {
         if (!lastProgressUpdate.compareAndSet(lastUpdate, now)) {
             return;
         }
-
-        runOnUiThread(() -> {
-            if(progressDialog != null && progressLabel != null && !isFinishing()) {
-                // Animate text change
-                progressLabel.setAlpha(0.5f);
-                progressLabel.animate()
-                        .alpha(1f)
-                        .setDuration(300)
-                        .start();
-
-                progressLabel.setText(label);
-            }
-        });
     }
 
     /**
@@ -871,23 +875,8 @@ public class TagsActivity extends AppCompatActivity {
         if(progressDialog != null) {
             runOnUiThread(() -> {
                 try {
-                    // Add exit animation
-                    View dialogView = progressDialog.findViewById(R.id.lottie_animation);
-                    if (dialogView != null) {
-                        dialogView.animate()
-                                .alpha(0f)
-                                .setDuration(300)
-                                .withEndAction(() -> {
-                                    try {
-                                        progressDialog.dismiss();
-                                        progressDialog = null;
-                                    } catch (Exception ignored) {}
-                                })
-                                .start();
-                    } else {
                         progressDialog.dismiss();
                         progressDialog = null;
-                    }
                 } catch (Exception ignored) {}
             });
         }

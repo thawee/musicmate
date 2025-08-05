@@ -293,8 +293,8 @@ public class TagsEditorFragment extends Fragment {
         });
 
         View btnPreview = cview.findViewById(R.id.btn_preview_bar);
-        View btnOK = cview.findViewById(R.id.btn_ok);
-        View btnCancel = cview.findViewById(R.id.btn_cancel);
+        View btnOK = cview.findViewById(R.id.button_ok);
+        View btnCancel = cview.findViewById(R.id.button_cancel);
         btnPreview.setOnClickListener(v -> {
             title.setText("");
             artist.setText("");
@@ -348,6 +348,12 @@ public class TagsEditorFragment extends Fragment {
         final List<MusicTag> itemsToSave = new ArrayList<>(tagsActivity.getEditItems());
         final int totalItems = itemsToSave.size();
         final AtomicInteger completedCount = new AtomicInteger(0);
+
+        // lose focus all dropdown
+        txtGrouping.clearFocus();
+        txtGenre.clearFocus();
+        txtMediaType.clearFocus();
+        qualityDropdown.clearFocus();
 
         // Process tags in a thread pool more efficiently
         CompletableFuture<Void> processingFuture = CompletableFuture.runAsync(() -> {

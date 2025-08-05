@@ -240,7 +240,7 @@
     <color name="quality_hd">#ffb300</color>
     <color name="quality_h24bits">#FEDD55</color>
     <color name="quality_sd">#ffecb3</color>
-    <color name="quality_unknown">@color/grey300</color>
+    <color name="quality_unknown">@color/grey600</color>
     <color name="quality_unknown_black">#000000</color>
 
     <color name="file_format_dsd">#ffb300</color>
@@ -473,6 +473,9 @@
     <color name="search_bar_bg_color">#F0F0F0</color> <!-- Light grey background -->
     <color name="search_bar_stroke_color">#CCCCCC</color> <!-- Slightly darker grey for border -->
     <color name="search_bar_hint_color">#999999</color> <!-- Hint text color -->
-    <color name="search_bar_text_color">#F0F0F0</color> <!-- Input text color -->
+    <color name="search_bar_text_color">#F0F0F0</color>
+    <color name="drdb_perfect">#FFC017</color>
+    <color name="drdb_none">@color/grey600</color>
+    <color name="drdb_normal">#ffffff</color> <!-- Input text color -->
 
 </resources>

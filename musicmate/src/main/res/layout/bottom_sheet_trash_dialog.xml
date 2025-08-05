@@ -15,15 +15,6 @@ android:text="Move this song to the Trash?"
 android:textAppearance="?attr/textAppearanceTitleLarge"
 android:layout_marginBottom="16dp"/>
 
-    <!-- You can add a message TextView here if needed -->
-    <!-- <TextView
-        android:id="@+id/bottom_sheet_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="This action cannot be undone easily."
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:layout_marginBottom="24dp"/> -->
-
 <LinearLayout
 android:layout_width="match_parent"
 android:layout_height="wrap_content"

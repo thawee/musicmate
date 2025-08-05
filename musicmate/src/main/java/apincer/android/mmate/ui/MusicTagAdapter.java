@@ -1,12 +1,13 @@
 package apincer.android.mmate.ui;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static apincer.android.mmate.utils.MusicTagUtils.getRating;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -130,7 +132,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             titles.add(Constants.QUALITY_AUDIOPHILE);
             titles.add(Constants.QUALITY_RECOMMENDED);
-            titles.add(Constants.QUALITY_GOOD);
+            titles.add(Constants.QUALITY_FAVORITE);
             titles.add(Constants.QUALITY_BAD);
         }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
             titles.add(Constants.TITLE_HIGH_QUALITY);
@@ -170,7 +172,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 } else if (!isEmpty(keyword)) {
                     return keyword;
                 } else {
-                    return Constants.QUALITY_GOOD;
+                    return Constants.QUALITY_FAVORITE;
                 }
             }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
                 if(isEmpty(keyword) || Constants.UNKNOWN.equals(keyword)) {
@@ -431,28 +433,31 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         if (isListening) {
             //show music player icon
-            // set italic
             holder.mPlayerView.setImageResource(R.drawable.round_play_circle_outline_24);
-            holder.mPlayerView.setVisibility(View.VISIBLE);
-            holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC);
+            holder.mPlayerView.setVisibility(VISIBLE);
+            if (holder.mTitleLayout != null) {
+                holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background_highlighted); // Create this drawable
+            }
         } else {
-            holder.mPlayerView.setVisibility(View.GONE);
-            holder.mTitle.setTypeface(Typeface.DEFAULT_BOLD);
+            if (holder.mTitleLayout != null) {
+                holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
+            }
+            holder.mPlayerView.setVisibility(GONE);
         }
 
         // download label
         if (tag.isMusicManaged()) {
-            holder.mNewLabelView.setVisibility(View.GONE);
+            holder.mNewLabelView.setVisibility(GONE);
         } else if (MusicTagUtils.isOnDownloadDir(tag)) {
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_red_900);
             holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey200);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            holder.mNewLabelView.setVisibility(View.VISIBLE);
+            holder.mNewLabelView.setVisibility(VISIBLE);
         } else {
             holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
             holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey800);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
-            holder.mNewLabelView.setVisibility(View.VISIBLE);
+            holder.mNewLabelView.setVisibility(VISIBLE);
         }
 
         ImageRequest request = CoverartFetcher.builder(holder.mContext, tag)
@@ -469,35 +474,27 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.resolutionView.setMusicItem(tag);
         holder.drDbView.setMusicItem(tag);
 
-       /* TextBuilder builder = new TextBuilder(holder.mContext);
-       // builder.addText("DR ");
-        int drsColor = getDRScoreColor(holder.mContext, (int) tag.getDynamicRangeScore());
-        String drsLabel = "DR"+ StringUtils.trim(getDynamicRangeScore(tag),"--");
-        builder.addColoredText(drsLabel, drsColor);
-        builder.into(holder.drTextView);
-        holder.drTextView.setBackground(getDRScoreBackgroundColor(holder.mContext, (int) tag.getDynamicRangeScore()));
-        */
-
         TextBuilder builder = new TextBuilder(holder.mContext);
-       // int ratingColor = holder.mContext.getColor(R.color.audiophile_background); // getDRScoreColor(holder.mContext, (int) tag.getDynamicRangeScore());
         int rating = getRating(tag);
-        if(rating >= 4) {
-           // builder.addColoredText("\u272D\u272D", ratingColor);
-            builder.addText("\u2764");
+        if(rating >= 3) {
+           // builder.addText("\u2764");
+           // builder.addText("\u2661");
+            // builder.addText("\u1f90d");
+            // Just copy and paste the emoji
+            builder.addText("🤍");
+            builder.into(holder.ratingTextView);
+            holder.ratingTextView.setVisibility(VISIBLE);
         }else {
-           // builder.addText("\u2729\u2729");
-            builder.addText("\u2661");
+            holder.ratingTextView.setVisibility(GONE);
         }
-        builder.into(holder.ratingTextView);
-        // file encoding format
-       // Drawable resolutionBackground = IconProviders.getFileFormatBackground(holder.mContext, tag); //MusicTagUtils.getResolutionBackground(holder.mContext, tag);
-       // holder.mFileTypeView.setText(trimToEmpty(tag.getAudioEncoding()).toUpperCase(Locale.US));
-        //holder.mFileTypeView.setBackground(resolutionBackground);
-        // duration
-      //  holder.mDurationView.setText(StringUtils.formatDuration(tag.getAudioDuration(), false));
 
         // file size
         holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
+        if(tag.getFileSize() > 0) {
+            holder.mFileSizeView.setTextColor(ContextCompat.getColor(holder.mContext, R.color.white));
+        }else {
+            holder.mFileSizeView.setTextColor(ContextCompat.getColor(holder.mContext, R.color.grey600));
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)

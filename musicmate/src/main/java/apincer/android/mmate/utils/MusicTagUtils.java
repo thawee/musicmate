@@ -1,6 +1,6 @@
 package apincer.android.mmate.utils;
 
-import static apincer.android.mmate.Constants.QUALITY_GOOD;
+import static apincer.android.mmate.Constants.QUALITY_FAVORITE;
 import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
 import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
@@ -76,14 +76,33 @@ public class MusicTagUtils {
         double drDb = tag.getDynamicRange();
         boolean perfect = false;
         if(tag.getAudioBitsDepth()==16) {
-            perfect = (drDb>=96.00);
+            perfect = (drDb>=(96.60 * 0.9));
         }else if(tag.getAudioBitsDepth()==24) {
-            perfect = (drDb>=144.00);
+            perfect = (drDb>=(144.38*0.9));
         }
-        if(perfect) {
+        if(tag.getDynamicRange() == 0.0) {
+            return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_not_measured);
+        }else if(perfect) {
             return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_perfect);
         }else {
             return ContextCompat.getDrawable(context, R.drawable.backgound_drdb_normal);
+        }
+    }
+
+    public static int getDynamicRangeDbColor(Context context, MusicTag tag) {
+        double drDb = tag.getDynamicRange();
+        boolean perfect = false;
+        if(tag.getAudioBitsDepth()==16) {
+            perfect = (drDb>=(96.60 * 0.9));
+        }else if(tag.getAudioBitsDepth()==24) {
+            perfect = (drDb>=(144.38*0.9));
+        }
+        if(tag.getDynamicRange() == 0.0) {
+            return ContextCompat.getColor(context, R.color.drdb_none);
+        }else if(perfect) {
+            return ContextCompat.getColor(context, R.color.drdb_perfect);
+        }else {
+            return ContextCompat.getColor(context, R.color.drdb_normal);
         }
     }
 
@@ -243,7 +262,11 @@ public class MusicTagUtils {
 
     public static int getDRScoreColor(Context context, int drValue) {
         if (drValue == 0) return ContextCompat.getColor(context, R.color.grey600);
-        else return ContextCompat.getColor(context, R.color.grey200);
+        else if (drValue < 8) return ContextCompat.getColor(context, R.color.dr_low);
+        else if (drValue < 13) return ContextCompat.getColor(context, R.color.dr_medium);
+        else return ContextCompat.getColor(context, R.color.dr_high);
+
+        // else return ContextCompat.getColor(context, R.color.grey200);
        /* if (drValue == 0) return ContextCompat.getColor(context, R.color.dr_no_trans);
         else if (drValue < 7) return ContextCompat.getColor(context, R.color.red_light);
         else if (drValue < 10) return ContextCompat.getColor(context, R.color.oranges_salmon);
@@ -289,7 +312,7 @@ public class MusicTagUtils {
             return 5;
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
             return 4;
-        }else if (QUALITY_GOOD.equals(label1)) {
+        }else if (QUALITY_FAVORITE.equals(label1)) {
             return 3;
         }else if(Constants.QUALITY_BAD.equals(label1)) {
             return 1;

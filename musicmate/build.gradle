@@ -144,7 +144,7 @@ dependencies {
     implementation libs.refresh.layout.kernel
     implementation libs.refresh.header.classics
     implementation libs.tutorialsandroid.filepicker
-    implementation libs.airbnb.lottie
+    //implementation libs.airbnb.lottie
 
     //others
     implementation libs.greenrobot.eventbus

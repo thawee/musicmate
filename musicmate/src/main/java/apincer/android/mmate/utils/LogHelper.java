@@ -1,6 +1,6 @@
 package apincer.android.mmate.utils;
 
-import com.arthenica.ffmpegkit.FFmpegKitConfig;
+import com.antonkarpenko.ffmpegkit.FFmpegKitConfig;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,11 +46,11 @@ public class LogHelper {
     }
 
     public static void setFFMpegOn() {
-        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_INFO);
+        FFmpegKitConfig.setLogLevel(com.antonkarpenko.ffmpegkit.Level.AV_LOG_INFO);
     }
 
     public static void setFFMpegOff() {
-        FFmpegKitConfig.setLogLevel(com.arthenica.ffmpegkit.Level.AV_LOG_QUIET);
+        FFmpegKitConfig.setLogLevel(com.antonkarpenko.ffmpegkit.Level.AV_LOG_QUIET);
     }
 
     public static String getTag(Class cls) {

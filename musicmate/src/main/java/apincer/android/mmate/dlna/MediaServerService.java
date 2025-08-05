@@ -25,9 +25,7 @@ import org.jupnp.UpnpServiceImpl;
 import org.jupnp.model.meta.LocalDevice;
 import org.jupnp.model.meta.RemoteDevice;
 import org.jupnp.model.types.DeviceType;
-import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDADeviceType;
-import org.jupnp.model.types.UDAServiceType;
 import org.jupnp.registry.DefaultRegistryListener;
 import org.jupnp.registry.Registry;
 import org.jupnp.registry.RegistryListener;
@@ -36,9 +34,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.MusixMateApp;
@@ -56,7 +51,7 @@ import apincer.android.mmate.worker.MusicMateExecutors;
  *     - DLNA Digital Content Profiler
  *  - UPnP Connection Manager Service
  *  - HTTP Streamer - for streaming digital content to client
- *  - UPnp AV Transport Server (Optional)
+ *  - UPnp AV Transport Server (Not Supported)
  *  Note:
  *   - netty smooth, cpu < 10%, memory < 256 MB, short peak to 512 MB
  *     have issue jupnp auto stopping/starting on wifi loss
@@ -73,14 +68,7 @@ public class MediaServerService extends Service {
             Pattern.compile(
                     "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
-    // Standard DLNA Service Types
-    public static final ServiceType CONTENT_DIRECTORY_SERVICE = new UDAServiceType("ContentDirectory", 1);
-    public static final ServiceType AV_TRANSPORT_SERVICE = new UDAServiceType("AVTransport", 1);
-    public static final ServiceType RENDERING_CONTROL_SERVICE = new UDAServiceType("RenderingControl", 1);
-    public static final ServiceType CONNECTION_MANAGER_SERVICE = new UDAServiceType("ConnectionManager", 1);
-
     // Standard DLNA Device Types
-    public static final DeviceType MEDIA_SERVER_DEVICE_TYPE = new UDADeviceType("MediaServer", 1);
     public static final DeviceType MEDIA_RENDERER_DEVICE_TYPE = new UDADeviceType("MediaRenderer", 1);
 
     // --- Add these constants for Broadcasts ---
@@ -114,7 +102,7 @@ public class MediaServerService extends Service {
     private PowerManager.WakeLock wakeLock;
 
     // Service health monitoring
-    private ScheduledExecutorService healthChecker;
+    //private ScheduledExecutorService healthChecker;
 
     public static void startMediaServer(Application application) {
         Log.d(TAG, "Start media server requested");
@@ -164,9 +152,6 @@ public class MediaServerService extends Service {
         wakeLock.acquire(10*60*1000L /*10 minutes*/);
 
         broadcastStatus(ServerStatus.STARTING, null);
-
-        // Set up network monitoring
-        setupNetworkMonitoring();
     }
 
     /**
@@ -197,7 +182,10 @@ public class MediaServerService extends Service {
             initializationThread.start();
 
             // Start health checker
-            startHealthChecker();
+            //startHealthChecker();
+
+            // Set up network monitoring
+            setupNetworkMonitoring();
 
             Log.d(TAG, "DLNA server startup initiated: " + (System.currentTimeMillis() - start) + "ms");
         }else {
@@ -249,29 +237,9 @@ public class MediaServerService extends Service {
                     }
                 }, 2);
             }
-
-            @Override
-            public void onLost(@NonNull Network network) {
-              //  Log.d(TAG, "Network lost in media server service");
-
-                // Send byebye notification when network is lost
-                if (initialized && upnpService != null && mediaServerDevice != null) {
-                    try {
-                        upnpService.getProtocolFactory().createSendingNotificationByebye(mediaServerDevice).run();
-                       // Log.d(TAG, "Sent byebye notification for lost network");
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error sending byebye notification", e);
-                    }
-                }
-            }
         };
 
         connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
-        // Initial check
-        Network activeNetwork = connectivityManager.getActiveNetwork();
-        if (activeNetwork != null) {
-            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
-        }
     }
 
     /**
@@ -320,7 +288,7 @@ public class MediaServerService extends Service {
                 Log.i(TAG, "DLNA media server initialized successfully");
 
                 // Debugging: Log available services
-                logAvailableServices();
+                //logAvailableServices();
             } catch (Exception e) {
                 Log.e(TAG, "Error initializing DLNA media server", e);
                 shutdown();
@@ -352,51 +320,6 @@ public class MediaServerService extends Service {
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
     }
 
-    /**
-     * Start the health checker that periodically verifies the server is operational
-     */
-    private void startHealthChecker() {
-        healthChecker = Executors.newSingleThreadScheduledExecutor();
-        healthChecker.scheduleWithFixedDelay(() -> {
-            if (initialized && upnpService != null) {
-                try {
-                    // Verify UPnP service is still operational
-                    boolean registryActive = upnpService.getRegistry() != null &&
-                            upnpService.getRegistry().getLocalDevices().size() > 0;
-
-                    if (!registryActive) {
-                        Log.w(TAG, "DLNA registry appears inactive, attempting recovery");
-                        // Re-register if needed
-                        if (mediaServerDevice != null) {
-                            upnpService.getRegistry().addDevice(mediaServerDevice);
-                        }
-                    }
-
-                    // Every 5 checks, send an alive message to ensure visibility
-                    if (System.currentTimeMillis() % (5 * 30000) < 30000) {
-                        if (mediaServerDevice != null) {
-                            upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error in DLNA health check", e);
-                }
-            }
-        }, 30, 30, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Log all available services for debugging
-     */
-    private void logAvailableServices() {
-        if (mediaServerDevice != null) {
-           // Log.d(TAG, "Available DLNA services:");
-            for (org.jupnp.model.meta.Service service : mediaServerDevice.getServices()) {
-                Log.d(TAG, " - " + service.getServiceType().getType());
-            }
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
@@ -417,10 +340,6 @@ public class MediaServerService extends Service {
             } catch (Exception e) {
                 Log.e(TAG, "Error unregistering network callback", e);
             }
-        }
-
-        if (healthChecker != null) {
-            healthChecker.shutdownNow();
         }
 
         if (wakeLock != null && wakeLock.isHeld()) {
@@ -444,7 +363,7 @@ public class MediaServerService extends Service {
 
         // Also update notification if running or error
         if (status == ServerStatus.RUNNING && address != null) {
-            updateNotificationText("Running at http://" + address);
+            updateNotificationText("@ http://" + address);
         } else if (status == ServerStatus.ERROR) {
             updateNotificationText("Error starting server");
         } else if (status == ServerStatus.STOPPED) {
@@ -567,28 +486,11 @@ public class MediaServerService extends Service {
         public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
             Log.i(TAG, "Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
 
-            // You would typically update a UI list here or store the device
-            // Example: Check for MediaServer or MediaRenderer
-            //if (device.getType().equals(MEDIA_SERVER_DEVICE_TYPE)) {
-           //     Log.i(TAG, "Found MediaServer: " + device.getDetails().getFriendlyName());
-                // deviceFoundListener.onMediaServerFound(device);
-           // } else
             if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
                 Log.i(TAG, "Found MediaRenderer: " + device.getDetails().getFriendlyName());
                 // deviceFoundListener.onMediaRendererFound(device);
                 MusixMateApp.getInstance().addRenderer(device);
             }
-
-            // You can also check for specific services
-           /* Service cdService = device.findService(CONTENT_DIRECTORY_SERVICE);
-            if (cdService != null) {
-                Log.d(TAG, device.getDetails().getFriendlyName() + " has ContentDirectory service.");
-            }
-
-            Service avtService = device.findService(AV_TRANSPORT_SERVICE);
-            if (avtService != null) {
-                Log.d(TAG, device.getDetails().getFriendlyName() + " has AVTransport service.");
-            } */
         }
 
         @Override

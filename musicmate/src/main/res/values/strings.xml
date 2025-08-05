@@ -136,7 +136,7 @@
     <string name="sync_to_hiby_label">Sync</string>
     <string name="sample_dr">DR14</string>
     <string name="preferences_sub_streaming">Streaming</string>
-    <string name="title_removing_music_files">Removing music files</string>
+    <string name="title_removing_music_files">Move songs to the Trash?</string>
 
     <string name="this_device">this device</string>
     <string name="play">play</string>
@@ -180,15 +180,15 @@
     <string name="channel_name">MusicMate</string>
     <string name="channel_description">MusicMate Notifications</string>
 
-    <string name="media_server_name">Media Server (DLNA/UPnP-AV 1.0)</string>
+    <string name="media_server_name">UPnP/AV 1.0 Server</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
-    <string name="title_dynamic_range_and_replay_gain">Analysis audio file quality</string>
-    <string name="title_import_to_music_directory">Add to Music Directory</string>
+    <string name="title_dynamic_range_and_replay_gain">Analysis file quality?</string>
+    <string name="title_import_to_music_directory">Move to Music Directory?</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>
-    <string name="label_quality_indicator">File Quality</string>
+    <string name="label_quality_indicator">Quality</string>
     <string name="label_server">Media Server</string>
     <string name="label_collections">Playlists</string>
     <string name="label_dlna_collections">Playlists</string>
@@ -256,5 +256,7 @@
     <string name="label_library">Library</string>
     <string name="enter_custom_text">Enter custom text</string>
     <string name="title_select_output">Select Output</string>
+    <string name="loading_animation_description">Progress</string>
+    <string name="processing">Processing...</string>
 
 </resources>

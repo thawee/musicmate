@@ -25,9 +25,9 @@ import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.model.SearchCriteria;
 
 public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.ViewHolder> {
-    private Context context;
+    private final Context context;
     private ArrayList<MusicFolder> arrayList;
-    private SearchCriteria search;
+    private final SearchCriteria search;
     private int currentlyActivePosition = RecyclerView.NO_POSITION; // To track the active item
 
     public MusicFolderAdapter(Context context, SearchCriteria search) {
@@ -92,7 +92,7 @@ public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.
         }else if(search.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             addFolder(Constants.QUALITY_AUDIOPHILE);
             addFolder(Constants.QUALITY_RECOMMENDED);
-            addFolder(Constants.QUALITY_GOOD);
+            addFolder(Constants.QUALITY_FAVORITE);
             addFolder(Constants.QUALITY_BAD);
         }else if(search.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
             addFolder(Constants.TITLE_HIGH_QUALITY);

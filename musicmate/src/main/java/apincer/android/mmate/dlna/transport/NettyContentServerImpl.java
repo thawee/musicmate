@@ -274,7 +274,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             }
         }, "HTTPServer");
 
-        serverThread.setPriority(Thread.MAX_PRIORITY - 1); // Higher priority for audio streaming
+        // not sure if this is needed, should let netty manage it's own thread
+       // serverThread.setPriority(Thread.MAX_PRIORITY - 1); // Higher priority for audio streaming
         serverThread.start();
 
         // Wait a short time to verify server started properly
@@ -355,7 +356,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
 
     @Override
     protected String getServerVersion() {
-        return "Netty/4.2.1";
+        return "Netty/4.2.x";
     }
 
     public Context getContext() {
@@ -401,7 +402,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
 
             ChannelPipeline pipeline = ch.pipeline();
             pipeline.addLast(new HttpServerCodec());
-            pipeline.addLast(new HttpObjectAggregator(65536)); // Aggregate HTTP messages
+            pipeline.addLast(new HttpObjectAggregator(65536)); // Aggregate HTTP messages - not good for streaming large file
             pipeline.addLast(new ChunkedWriteHandler());
             pipeline.addLast(new IdleStateHandler(120, 60, 0)); // Extended timeouts for music streaming
             pipeline.addLast(new ContentServerHandler());
@@ -671,6 +672,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         private void serveRangeContent(ChannelHandlerContext ctx, FullHttpRequest request,
                                        File file, long fileLength, String rangeHeader,
                                        ContentHolder holder, boolean keepAlive, ClientProfile profile) throws IOException {
+
             // Parse range header
             Matcher matcher = RANGE_PATTERN.matcher(rangeHeader);
             if (!matcher.matches()) {
@@ -706,10 +708,6 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             // Calculate content length
             long contentLength = rangeEnd - rangeStart + 1;
 
-            // Update metrics - record only the requested range size
-            //metrics.recordRequest(contentLength);
-            //bytesTransferred.addAndGet(contentLength);
-
             // Create response
             HttpResponse response = new DefaultHttpResponse(HTTP_1_1, PARTIAL_CONTENT);
             HttpUtil.setContentLength(response, contentLength);
@@ -735,6 +733,63 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             ctx.write(response);
 
             // Write the content
+            if (request.method() != HttpMethod.HEAD) {
+                // Check cache first for this chunk
+                String cacheKey = holder.filePath + ":" + rangeStart + ":" + contentLength;
+                ByteBuf cachedChunk = audioChunkCache.get(cacheKey);
+
+                if (cachedChunk != null && cachedChunk.readableBytes() == contentLength) {
+                    // Use cached chunk if available
+                    Log.d(TAG, "Using cached chunk for " + holder.fileName + " Range: " + rangeStart + "-" + rangeEnd);
+
+                    // Retain for this read operation and send
+                    // The cachedChunk is already retained by the cache.
+                    // We need a duplicate that this write operation will own.
+                    ctx.write(new DefaultHttpContent(cachedChunk.retainedDuplicate()));
+                } else {
+                    // Read from file
+                    RandomAccessFile raf = new RandomAccessFile(file, "r");
+                    try {
+                        raf.seek(rangeStart);
+
+                        // Check if chunk size is small enough to cache
+                        // Heuristic: If requested range is smaller than or equal to twice the general AUDIO_CHUNK_SIZE,
+                        // it might be metadata or a small segment worth caching.
+                        if (contentLength <= AUDIO_CHUNK_SIZE * 2L) { // <<< THIS IS POINT #5
+                            Log.d(TAG, "Small range detected for " + holder.fileName + ". Caching. Range: " + rangeStart + "-" + rangeEnd + ", Length: " + contentLength);
+                            // For small ranges that might be repeatedly requested (e.g., file headers)
+                            // read into memory and cache
+                            byte[] data = new byte[(int)contentLength]; // Safe cast due to contentLength check
+                            raf.readFully(data);
+
+                            ByteBuf bufferToCache = Unpooled.wrappedBuffer(data);
+                            // Store in cache. The LruCache will own this buffer once put.
+                            // We call retain() so the cache starts with a refCnt of 1.
+                            audioChunkCache.put(cacheKey, bufferToCache.retain());
+
+                            // Write to client. We send a duplicate of the buffer we just cached.
+                            // The write operation will release this duplicate.
+                            ctx.write(new DefaultHttpContent(bufferToCache.retainedDuplicate()));
+                        } else {
+                            // For larger ranges, use chunked streaming
+                            Log.d(TAG, "Large range detected for " + holder.fileName + ". Streaming. Range: " + rangeStart + "-" + rangeEnd);
+                            // ChunkedFile will manage the RandomAccessFile internally, including closing it.
+                            ctx.write(new HttpChunkedInput(
+                                    new ChunkedFile(raf, rangeStart, contentLength, profile.chunkSize)));
+                            raf = null; // Mark raf as null so it's not closed in the finally block here
+                        }
+                    } finally {
+                        if (raf != null) {
+                            try {
+                                raf.close();
+                            } catch (IOException e) {
+                                Log.w(TAG, "Error closing RandomAccessFile in range serving: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+            /*
             if (request.method() != HttpMethod.HEAD) {
                 // Check cache first for this chunk
                 String cacheKey = holder.filePath + ":" + rangeStart + ":" + contentLength;
@@ -780,7 +835,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                         }
                     }
                 }
-            }
+            } */
 
             // Write the end marker
             ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
