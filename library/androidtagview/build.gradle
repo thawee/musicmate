@@ -39,6 +39,7 @@ dependencies {
     implementation libs.androidx.lifecycle.runtime
     implementation libs.androidx.lifecycle.process
     implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
    // testImplementation libs.junit
    // androidTestImplementation libs.androidx.junit
    // androidTestImplementation libs.androidx.espresso.core

@@ -1,24 +1,22 @@
 package apincer.android.mmate.worker;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import androidx.annotation.NonNull;
 
-import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import apincer.android.mmate.Constants;
 import apincer.android.mmate.codec.FFMpegHelper;
 import apincer.android.mmate.codec.TagWriter;
-import apincer.android.mmate.notification.AudioTagEditResultEvent;
+import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicAnalyser;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.codec.MusicAnalyser;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.utils.FileUtils;
 
 /**
@@ -60,15 +58,11 @@ public class FileOperationTask {
         for (MusicTag tag : selections) {
             MusicMateExecutors.executeParallel(() -> {
                 try {
+                    skipToNext(context, tag);
                     boolean status = repository.deleteMediaItem(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (status) {
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(
-                                AudioTagEditResultEvent.ACTION_DELETE,
-                                Constants.STATUS_SUCCESS,
-                                tag);
-                        EventBus.getDefault().postSticky(message);
                         callback.onProgress(tag, progress, "Deleted");
                     } else {
                         callback.onProgress(tag, progress, "Failed");
@@ -102,15 +96,11 @@ public class FileOperationTask {
             MusicMateExecutors.executeParallel(() -> {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Moving");
+                    skipToNext(context, tag);
                     boolean status = repository.importAudioFile(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (status) {
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(
-                                AudioTagEditResultEvent.ACTION_MOVE,
-                                Constants.STATUS_SUCCESS,
-                                tag);
-                        EventBus.getDefault().postSticky(message);
                         callback.onProgress(tag, progress, "Done");
                     } else {
                         callback.onProgress(tag, progress, "Failed");
@@ -128,6 +118,18 @@ public class FileOperationTask {
                 }
             });
         }
+    }
+
+    private static void skipToNext(Context context, MusicTag tag) {
+        // Create an Intent for the service
+        Intent intent = new Intent(context, PlaybackService.class);
+
+        // Set the action and put the data as an extra
+        intent.setAction(PlaybackService.ACTION_SKIP_TO_NEXT);
+        intent.putExtra(PlaybackService.EXTRA_MUSIC_ID, tag.getId());
+
+        // Start the service
+        context.startService(intent);
     }
 
     /**
@@ -185,25 +187,6 @@ public class FileOperationTask {
     }
 
     /**
-     * Determine the appropriate output format based on the input file type
-     */
-    public static String determineOutputFormat(MusicTag tag) {
-        if (MusicTagUtils.isAIFFile(tag) ||
-                MusicTagUtils.isALACFile(tag) ||
-                MusicTagUtils.isDSD(tag) ||
-                MusicTagUtils.isWavFile(tag)) {
-            return "flac";
-        } else if (MusicTagUtils.isAACFile(tag)) {
-            return "mp3";
-        } else if (MusicTagUtils.isFLACFile(tag)) {
-            // Default to AIFF when converting from FLAC
-            return "aiff";
-        }
-        // Default to FLAC for any other format
-        return "flac";
-    }
-
-    /**
      * Measure dynamic range for multiple files
      */
     public static void measureDR(@NonNull Context context,
@@ -225,12 +208,6 @@ public class FileOperationTask {
                         TagWriter.writeTagToFile(context, tag);
                         // Update tag in repository
                         TagRepository.saveTag(tag);
-
-                        AudioTagEditResultEvent message = new AudioTagEditResultEvent(
-                                AudioTagEditResultEvent.ACTION_UPDATE,
-                                Constants.STATUS_SUCCESS,
-                                tag);
-                        EventBus.getDefault().postSticky(message);
 
                         callback.onProgress(tag, progress, "Success");
                     } else {

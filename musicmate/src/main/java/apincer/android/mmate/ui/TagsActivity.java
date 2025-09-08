@@ -46,22 +46,17 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.vanniktech.textbuilder.TextBuilder;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import java.io.File;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.notification.AudioTagEditEvent;
-import apincer.android.mmate.notification.AudioTagPlayingEvent;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.ui.view.DynamicRangeDbView;
 import apincer.android.mmate.ui.view.ResolutionView;
@@ -69,6 +64,12 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
+import apincer.android.mmate.viewmodel.Idle;
+import apincer.android.mmate.viewmodel.Loading;
+import apincer.android.mmate.viewmodel.Success;
+import apincer.android.mmate.viewmodel.OperationStatus;
+import apincer.android.mmate.viewmodel.ProgressUpdate;
+import apincer.android.mmate.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.DeleteAudioFileWorker;
 import apincer.android.mmate.worker.ImportAudioFileWorker;
 import apincer.android.mmate.worker.MusicMateExecutors;
@@ -86,6 +87,7 @@ import sakout.mehdi.StateViews.StateView;
 public class TagsActivity extends AppCompatActivity {
     private static final String TAG = "TagsActivity";
 
+    private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
     private TagsViewModel viewModel;
 
     private ImageView coverArtView;
@@ -100,9 +102,9 @@ public class TagsActivity extends AppCompatActivity {
     private TextView encInfo;
     private TextView pathInfo;
     private View pathInfoLine;
-   private View hiresView;
-   private ResolutionView resolutionView;
-   private DynamicRangeDbView dynamicRangeView;
+    private View hiresView;
+    private ResolutionView resolutionView;
+    private DynamicRangeDbView dynamicRangeView;
     private TextView ratingView;
 
     private int toolbar_from_color;
@@ -110,10 +112,12 @@ public class TagsActivity extends AppCompatActivity {
    // FileRepository repos;
     private Fragment activeFragment;
 
-    private ImageView playerBtn;
-    private View playerPanel;
-    private TextView playerName;
+   // private ImageView playerBtn;
+   // private View playerPanel;
+   // private TextView playerName;
    // private boolean closePreview = true;
+
+ //   private SharedViewModel sharedViewModel;
 
     private boolean previewState = true;
 
@@ -127,14 +131,11 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
     }
 
     @Override
     public void onStop() {
-        EventBus.getDefault().unregister(this);
         super.onStop();
-       // stopProgressBar();
         dismissProgressDialog(); // Ensure progress dialog is dismissed
     }
 
@@ -151,6 +152,9 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+       // viewModel.processAudioTagEditEvent(musicList);
+       // viewModel.processAudioTagEditEvent(sharedViewModel.getSharedItems(Constants.SHARED_TYPE.PREVIEW));
+       // viewModel.processAudioTagEditEvent(MusixMateApp.getSharedItems(MusixMateApp.SHARED_TYPE.PREVIEW));
     }
 
     private TextView tagInfo;
@@ -167,6 +171,14 @@ public class TagsActivity extends AppCompatActivity {
         window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
 
         setContentView(R.layout.activity_tags);
+
+       // sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
+        long[] tagIds = getIntent().getLongArrayExtra("MUSIC_TAG_IDS");
+        if (tagIds != null && tagIds.length > 0) {
+            // Load the data from the database on a background thread.
+            // For example, using a ViewModel that calls a repository.
+            loadMusicTagsFromDb(tagIds);
+        }
 
         ExecutorService executor = MusicMateExecutors.getExecutorService(); // Get your executor
         TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory(executor /*, getApplicationContext() if needed and handled carefully */);
@@ -208,6 +220,19 @@ public class TagsActivity extends AppCompatActivity {
         setupPageViewer();
     }
 
+    private void loadMusicTagsFromDb(long[] ids) {
+        if (ids == null || ids.length == 0) {
+                       //  musicTags.postValue(Collections.emptyList());
+                         return;
+                     }
+
+                 databaseExecutor.execute(() -> {
+                     List<MusicTag> musicTags = TagRepository.findByIds(ids);
+                     viewModel.processAudioTagEditEvent(musicTags);
+
+                 });
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -215,43 +240,13 @@ public class TagsActivity extends AppCompatActivity {
         return true;
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    public void onMessageEvent(AudioTagEditEvent event) {
-        if (event != null && event.getItems() != null && !event.getItems().isEmpty()) {
-            viewModel.processAudioTagEditEvent((Collection<MusicTag>) event.getItems(), event.getSearchCriteria());
-            // No need to stopProgressBar here, ViewModel's status LiveData will handle UI
-            EventBus.getDefault().removeStickyEvent(event); // Consume the event
-        }
-
-        // call from EventBus on preview/edit selected tags from main screen
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    public void onMessageEvent(AudioTagPlayingEvent event) {
-        if (MusixMateApp.getPlayerControl().isPlaying()) {
-            playerBtn.setVisibility(VISIBLE);
-            MusicTag tag = event.getPlayingSong();
-            if (tag != null) {
-                // Check if the current view should be updated by the playing song
-                // This logic might depend on user preferences or current state (closePreview)
-                // For now, let's assume you want to update if a song is playing
-                viewModel.updateWithPlayingSong(tag);
-                // No need to stopProgressBar, ViewModel's status LiveData will handle UI
-            }
-        }
-        EventBus.getDefault().removeStickyEvent(event); // Optional: if you want to consume it
-
-    }
-
     private void setupPageViewer() {
-        //final AppBarLayout appBarLayout = findViewById(R.id.appbar);
         appBarLayout = findViewById(R.id.appbar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
 
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
-        // adapter.addNewTab(new TagsMusicBrainzFragment(), "MUSICBRAINZ");
         adapter.addNewTab(new TagsEditorFragment(), "Music Info");
         adapter.addNewTab(new TagsTechnicalFragment(), "NERD");
         viewPager.setAdapter(adapter);
@@ -289,9 +284,9 @@ public class TagsActivity extends AppCompatActivity {
         dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
         ratingView = findViewById(R.id.rating);
 
-        playerName = findViewById(R.id.music_player_name);
-        playerBtn = findViewById(R.id.music_player);
-        playerPanel = findViewById(R.id.music_player_panel);
+      //  playerName = findViewById(R.id.music_player_name);
+     //   playerBtn = findViewById(R.id.music_player);
+      //  playerPanel = findViewById(R.id.music_player_panel);
     }
 
     private void setupActionButtons() {
@@ -342,6 +337,7 @@ public class TagsActivity extends AppCompatActivity {
         popup.show();
     }
 
+    @SuppressLint("CheckResult")
     private void observeViewModel() {
 
         viewModel.displayTag.observe(this, musicTag -> {
@@ -364,19 +360,20 @@ public class TagsActivity extends AppCompatActivity {
 
     @SuppressLint("CheckResult")
     protected void updateTitlePanel(MusicTag currentDisplayTag) {
-        if(MusixMateApp.getPlayerControl().isPlaying()) {
+       /* PlayerInfo player = MusixMateApp.getInstance().getActivePlayer();
+        if(player!= null) {
             playerBtn.setVisibility(VISIBLE);
             playerPanel.setVisibility(VISIBLE);
             playerName.setVisibility(VISIBLE);
-            String player = StringUtils.truncate(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerName(), 20);
-            player = StringUtils.formatTitle(player);
-            playerName.setText("Player: "+player);
-            playerBtn.setBackground(MusixMateApp.getPlayerControl().getPlayerInfo().getPlayerIconDrawable());
+            String displayName = StringUtils.truncate(player.getPlayerName(), 20);
+            displayName = StringUtils.formatTitle(displayName);
+            playerName.setText("Played on "+displayName);
+            playerBtn.setBackground(player.getPlayerIconDrawable());
         }else {
             playerBtn.setVisibility(GONE);
             playerPanel.setVisibility(GONE);
             playerName.setVisibility(GONE);
-        }
+        } */
 
         if (currentDisplayTag == null) {
             // Handle null case, maybe clear fields or show placeholder
@@ -395,7 +392,7 @@ public class TagsActivity extends AppCompatActivity {
         dynamicRangeView.setMusicItem(currentDisplayTag);
 
         TextBuilder builder = new TextBuilder(getApplicationContext());
-        int ratingColor = getColor(R.color.audiophile_background); // getDRScoreColor(holder.mContext, (int) tag.getDynamicRangeScore());
+        int ratingColor = getColor(R.color.audiophile_background);
         int rating = getRating(currentDisplayTag);
         int i=0;
         for(;i<rating;i++) {
@@ -408,7 +405,6 @@ public class TagsActivity extends AppCompatActivity {
             i++;
         }
         builder.into(ratingView);
-        //  qualityView.setImageBitmap(IconProviders.createQualityIcon(getApplicationContext(), displayTag));
 
         if(MusicTagUtils.isDSD(currentDisplayTag) || MusicTagUtils.isHiRes(currentDisplayTag)) {
             hiresView.setVisibility(VISIBLE);
@@ -528,7 +524,7 @@ public class TagsActivity extends AppCompatActivity {
             // Show a Toast or Snackbar with ((Success) status).message
             //ApplicationUtils.showToast(this, ((ListenableWorker.Result.Success) status).message);
             viewModel.resetDrMeasurementStatus(); // Go back to Idle
-        } else if (status instanceof Error) {
+        } else if (status instanceof apincer.android.mmate.viewmodel.Error) {
             dismissProgressDialog();
             // Show a Toast or Snackbar with ((Error) status).errorMessage
            // ApplicationUtils.showErrorToast(this, ((Error) status).errorMessage);
@@ -562,6 +558,8 @@ public class TagsActivity extends AppCompatActivity {
 
     // Create a separate method for image loading to reduce clutter
     private void loadImages(MusicTag displayTag) {
+        if(displayTag ==null) return;
+
         // Load all images in parallel
         ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
 
@@ -632,7 +630,7 @@ public class TagsActivity extends AppCompatActivity {
         finishOnTimeout = true;
         MusicMateExecutors.schedule(() -> {
             if(finishOnTimeout) {
-                viewModel.refreshDisplayTag();
+                refreshDisplayTag();
                 //finish(); // back to prev activity
             }
         }, 5);

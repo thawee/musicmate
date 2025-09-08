@@ -18,7 +18,6 @@ public class MimeTypeUtils {
     private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
 
     // Default audio MIME type
-    private static final String DEFAULT_AUDIO_MIME_TYPE = "audio/mpeg";
 
     static {
         // Initialize the MIME type map with common audio formats
@@ -54,6 +53,13 @@ public class MimeTypeUtils {
         MIME_MAP.put("jpeg", "image/jpeg");
         MIME_MAP.put("png", "image/png");
         MIME_MAP.put("gif", "image/gif");
+
+        // web content
+        MIME_MAP.put("html", "text/html");
+        MIME_MAP.put("css", "text/css");
+        MIME_MAP.put("js", "text/javascript");
+        MIME_MAP.put("ico", "image/x-icon");
+        MIME_MAP.put("woff2", "font/woff2");
     }
 
     /**

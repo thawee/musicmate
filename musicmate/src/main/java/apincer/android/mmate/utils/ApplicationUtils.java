@@ -7,24 +7,29 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.provider.MusicFileProvider;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.ui.TagsActivity;
+import apincer.android.utils.FileUtils;
 
 public class ApplicationUtils {
 
@@ -109,6 +114,51 @@ public class ApplicationUtils {
 
         return tContents;
 
+    }
+
+
+    /**
+     * Recursively copies files and directories from a given path in the assets to the cache.
+     * @param context The application context.
+     * @param path The path within the assets folder.
+     */
+    public static void copyFileOrDirToCache(Context context, String path) throws IOException {
+        AssetManager assetManager = context.getAssets();
+        String[] assets = assetManager.list(path);
+
+        if (assets == null || assets.length == 0) { // It's a file
+            copyFile(context, path);
+        } else { // It's a directory
+            File fullPath = new File(context.getFilesDir(), path);
+            if (!fullPath.exists()) {
+                fullPath.mkdirs();
+            }
+            for (String asset : assets) {
+                String newPath = path.isEmpty() ? asset : path + "/" + asset;
+                copyFileOrDirToCache(context, newPath);
+            }
+        }
+    }
+
+    /**
+     * Copies a single file from assets to the cache directory.
+     * @param context The application context.
+     * @param filename The name/path of the file in assets.
+     */
+    private static void copyFile(Context context, String filename) throws IOException {
+        File newFile = new File(context.getFilesDir(), filename);
+
+        // Use try-with-resources to automatically close streams
+        try (InputStream inputStream = context.getAssets().open(filename);
+             OutputStream outputStream = new FileOutputStream(newFile, false)) {
+
+            // Manually copy the file stream
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+        }
     }
 
     public static void webSearch(Activity activity, MusicTag item) {
@@ -230,7 +280,8 @@ public class ApplicationUtils {
     }
 
     public static String getDeviceDetails() {
-        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+".";
+       // return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+".";
+       return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE);
     }
 
     public static String getVersionNumber(Context context) {
@@ -255,4 +306,19 @@ public class ApplicationUtils {
         return StringUtils.trimToEmpty(Build.MODEL);
     }
 
+    public static void deleteFiles(Context context, String path) {
+        File fullPath = new File(context.getFilesDir(), path);
+        if (fullPath.exists()) {
+            FileUtils.deleteDirectory(fullPath);
+        }
+    }
+
+    public static boolean isInstalled(String packName) {
+        try {
+            MusixMateApp.getInstance().getPackageManager().getPackageInfo(packName,0);
+            return true;
+        } catch (PackageManager.NameNotFoundException ignored) {
+        }
+        return false;
+    }
 }

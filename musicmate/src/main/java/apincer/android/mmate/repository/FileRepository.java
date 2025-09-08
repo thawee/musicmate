@@ -22,6 +22,7 @@ import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.codec.TagWriter;
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.codec.FFMpegHelper;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
@@ -148,44 +149,7 @@ public class FileRepository {
         return coverFile;
     }
 
-    public MusicTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
-        try {
-            List<MusicTag> list = TagRepository.findMediaByTitle(currentTitle);
-
-            double prvTitleScore = 0.0;
-            double prvArtistScore = 0.0;
-            double prvAlbumScore = 0.0;
-            double titleScore;
-            double artistScore;
-            double albumScore;
-            MusicTag matchedMeta = null;
-
-            for (MusicTag metadata : list) {
-                titleScore = StringUtils.similarity(currentTitle, metadata.getTitle());
-                artistScore = StringUtils.similarity(currentArtist, metadata.getArtist());
-                albumScore = StringUtils.similarity(currentAlbum, metadata.getAlbum());
-
-                if (getSimilarScore(titleScore, artistScore, albumScore) > getSimilarScore(prvTitleScore, prvArtistScore, prvAlbumScore)) {
-                    matchedMeta = metadata;
-                    prvTitleScore = titleScore;
-                    prvArtistScore = artistScore;
-                    prvAlbumScore = albumScore;
-                }
-            }
-            if (matchedMeta != null) {
-                return matchedMeta.copy();
-            }
-        }catch (Exception e) {
-            Log.e(TAG, "findMediaItem",e);
-        }
-        return null;
-    }
-
-    private double getSimilarScore(double titleScore, double artistScore, double albumScore) {
-        return (titleScore*60)+(artistScore*20)+(albumScore*20);
-    }
-
-    public boolean setMusicTag(MusicTag item) throws Exception{
+    public boolean setMusicTag(MusicTag item) {
         if (item == null || item.getPath() == null) {
             return false;
         }
@@ -194,7 +158,6 @@ public class FileRepository {
             return false;
         }
 
-       // item.setMusicManaged(StringUtils.compare(item.getPath(),buildCollectionPath(item, true)));
         item.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), item));
 
         if(TagWriter.isSupportedFileFormat(item.getPath())) {
@@ -500,7 +463,7 @@ public class FileRepository {
     public boolean importAudioFile(MusicTag item) {
         boolean status;
         try {
-            MusixMateApp.getPlayerControl().playNextSongOnMatched(getContext(), item);
+           // PlaybackManager.playNextSongOnMatched(getContext(), item);
             status = moveMusicFiles(item);
         }catch(Exception|OutOfMemoryError ex) {
             Log.e(TAG, "importAudioFile",ex);
@@ -513,7 +476,7 @@ public class FileRepository {
     public boolean deleteMediaItem(MusicTag item) {
         boolean status;
         try {
-            MusixMateApp.getPlayerControl().playNextSongOnMatched(getContext(), item);
+            //PlaybackManager.playNextSongOnMatched(getContext(), item);
             status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
             if(status) {
                 cleanCacheCover(getContext(), item);

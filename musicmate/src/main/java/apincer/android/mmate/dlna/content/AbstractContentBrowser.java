@@ -22,7 +22,7 @@ import java.util.List;
 
 import apincer.android.mmate.dlna.MediaServerConfiguration;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 
@@ -64,8 +64,6 @@ public abstract class AbstractContentBrowser {
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
         return "http://" + StreamServerImpl.streamServerHost + ":" +CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileType();
-
-     //   return "http://" + MediaServerSession.getIpAddress() + ":" +MediaServerConfiguration.STREAM_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileFormat();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
@@ -76,8 +74,7 @@ public abstract class AbstractContentBrowser {
         String uri = key+".png";
         return URI.create("http://"
                 + StreamServerImpl.streamServerHost + ":"
-               // + HCContentServer.SERVER_PORT + "/album/" + uri);
-                + MediaServerConfiguration.UPNP_SERVER_PORT + "/coverart/" + uri);
+                + MediaServerConfiguration.WEB_SERVER_PORT + "/coverart/" + uri);
     }
 
     protected MusicTrack buildMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {
@@ -142,7 +139,7 @@ public abstract class AbstractContentBrowser {
         if (tag.getAudioSampleRate() > 44100 || tag.getAudioBitsDepth() > 16) {
             musicTrack.addProperty(new DIDLObject.Property.UPNP.ARTIST_DISCO_URI(
                     URI.create("http://" + StreamServerImpl.streamServerHost + ":" +
-                            MediaServerConfiguration.UPNP_SERVER_PORT + "/hires_badge")));
+                            MediaServerConfiguration.WEB_SERVER_PORT + "/hires_badge")));
         }
 
         return musicTrack;

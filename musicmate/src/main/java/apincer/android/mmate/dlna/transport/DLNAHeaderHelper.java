@@ -9,7 +9,7 @@ import static apincer.android.mmate.utils.MusicTagUtils.isMPegFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isPCM;
 import static apincer.android.mmate.utils.MusicTagUtils.isWavFile;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.MimeTypeUtils;
 
 public class DLNAHeaderHelper {

@@ -139,11 +139,12 @@
     <string name="title_removing_music_files">Move songs to the Trash?</string>
 
     <string name="this_device">this device</string>
-    <string name="play">play</string>
-    <string name="stop">stop</string>
-    <string name="pause">pause</string>
-    <string name="previous">previous</string>
-    <string name="next">next</string>
+    <string name="play">Play</string>
+    <string name="stop">Stop</string>
+    <string name="pause">Pause</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="addToQueue">Add to Queue</string>
     <string name="exit">Exit</string>
 
     <string name="playerCurrentItem">currentItem</string>
@@ -180,11 +181,11 @@
     <string name="channel_name">MusicMate</string>
     <string name="channel_description">MusicMate Notifications</string>
 
-    <string name="media_server_name">UPnP/AV 1.0 Server</string>
+    <string name="media_server_name">MusicMate Music Server</string>
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
-    <string name="title_dynamic_range_and_replay_gain">Analysis file quality?</string>
+    <string name="title_dynamic_range_and_replay_gain">Analyze Dynamic Range?</string>
     <string name="title_import_to_music_directory">Move to Music Directory?</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>
@@ -257,6 +258,14 @@
     <string name="enter_custom_text">Enter custom text</string>
     <string name="title_select_output">Select Output</string>
     <string name="loading_animation_description">Progress</string>
-    <string name="processing">Processing...</string>
+    <string name="processing">Processing…</string>
+    <string name="web_server_name">MusicMate</string>
+    <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
+    <string name="show_frequency_spectrum">Show Frequency Spectrum</string>
+    <string name="open_containing_folder">Open Containing Folder</string>
+    <string name="find_online">Find Online</string>
+    <string name="label_rating_indicator">Rating</string>
+    <string name="editor_label_pathName">Path</string>
+    <string name="analyze_music">Analyze Song</string>
 
 </resources>

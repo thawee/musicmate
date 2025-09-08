@@ -32,7 +32,7 @@ dependencies {
     implementation libs.square.okio
     implementation libs.jetbrains.annotations
     implementation libs.kotlin.stdlib
-    //implementation libs.jcodec
+    implementation libs.kotlin.coroutines.core
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
 }

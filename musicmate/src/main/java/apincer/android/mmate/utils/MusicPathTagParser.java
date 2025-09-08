@@ -6,7 +6,7 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 import java.io.File;
 import java.util.List;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.utils.FileUtils;
 
 public class MusicPathTagParser {

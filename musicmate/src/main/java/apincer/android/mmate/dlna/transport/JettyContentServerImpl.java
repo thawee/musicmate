@@ -1,13 +1,16 @@
 package apincer.android.mmate.dlna.transport;
 
+import static android.content.Context.BIND_AUTO_CREATE;
 import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
 import static apincer.android.mmate.dlna.transport.DLNAHeaderHelper.getDLNAContentFeatures;
 import static apincer.android.mmate.dlna.transport.DLNAHeaderHelper.getEnhancedContentType;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.util.Log;
-
-import androidx.core.content.ContextCompat;
 
 import org.eclipse.jetty.http.CompressedContentFormat;
 import org.eclipse.jetty.http.HttpHeader;
@@ -25,6 +28,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.jupnp.model.meta.RemoteDevice;
 import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
 
@@ -33,9 +37,9 @@ import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.R;
-import apincer.android.mmate.player.PlayerInfo;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.playback.PlaybackService;
+import apincer.android.mmate.playback.Player;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.MimeTypeUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -55,8 +59,32 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
     private static final int RESPONSE_HEADER_SIZE = 16384; // Larger header size for detailed responses
     private static final int ACCEPT_QUEUE_SIZE = 32; //256;     // Larger queue for multiple clients
 
+    private PlaybackService playbackService;
+    private boolean isPlaybackServiceBound = false;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // Get the binder from the service and set the mediaServerService instance
+            PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
+            playbackService = binder.getService();
+            isPlaybackServiceBound = true;
+           // Log.i(TAG, "PlaybackService bound successfully.");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isPlaybackServiceBound = false;
+            playbackService = null;
+           // Log.w(TAG, "PlaybackService disconnected unexpectedly.");
+        }
+    };
+
     public JettyContentServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
+        // Bind to the MediaServerService as soon as this service is created
+        Intent intent = new Intent(context, PlaybackService.class);
+        context.bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 
     private Server server;
@@ -202,20 +230,16 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                             return true;
                         }
 
-                        // Create PlayerInfo for tracking
-                        PlayerInfo player = PlayerInfo.buildStreamPlayer(getContext(),
-                                userAgent,
-                                clientIp //, ContextCompat.getDrawable(getContext(), R.drawable.img_upnp_white)
-                        );
-
-                        // Add client IP to player info for better tracking
-                        player.setClientAddress(clientIp);
-
-                        // Publish currently playing song
-                        MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
-
-                        // Adjust buffer size based on audio format before preparing content
-                       // adjustBufferSizeForContent(tag);
+                        if(isPlaybackServiceBound) {
+                            RemoteDevice device = playbackService.getRendererByIpAddress(clientIp);
+                            if (device != null) {
+                                Player player = Player.Factory.create(getContext(), device);
+                                playbackService.onNewTrackPlaying(player, tag, 0);
+                            } else {
+                                Player player = Player.Factory.create(getContext(), clientIp, userAgent);
+                                playbackService.onNewTrackPlaying(player, tag, 0);
+                            }
+                        }
 
                         // Prepare content
                         content = getResourceService().getContent(tag.getPath(), request);
@@ -348,7 +372,7 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                     quality.append(" Mono");
                 } else if (channels == 2) {
                     quality.append(" Stereo");
-                } else if (channels > 2) {
+                } else {
                     quality.append(" Multichannel (").append(channels).append(")");
                 }
             }

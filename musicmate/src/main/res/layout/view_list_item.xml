@@ -122,12 +122,14 @@
             <apincer.android.mmate.ui.view.DynamicRangeDbView
                 android:id="@+id/dynamic_range_db_view"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_toEndOf="@id/icon_resolution"
                 android:layout_marginStart="@dimen/dimen_6_dp"
+                android:gravity="center_vertical"
                 android:background="@drawable/shape_icon_border_back"
                 app:drDbText="90/96 dB" />
 
+            <!--
             <TextView
                 android:id="@+id/item_file_size"
                 android:layout_width="wrap_content"
@@ -144,51 +146,50 @@
                 android:fontFamily="@font/oswald_bold"
                 android:textColor="#FFFFFF"
                 android:text="10.00 Mb"/>
-
-            <!--
-            <ImageView
-                android:id="@+id/item_audio_quality_icon"
-                android:layout_width="@dimen/dimen_72_dp"
-                android:layout_height="@dimen/dimen_18_dp"
-                android:layout_toEndOf="@id/dynamic_range"
+-->
+            <TextView
+                android:id="@+id/rating"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_toEndOf="@id/dynamic_range_db_view"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                android:layout_marginTop="@dimen/dimen_1_dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_format_mqa_white"
-                tools:ignore="ContentDescription" />
-            -->
+                android:paddingStart="@dimen/dimen_4_dp"
+                android:paddingEnd="@dimen/dimen_4_dp"
+                android:paddingTop="@dimen/dimen_2_dp"
+                android:paddingBottom="@dimen/dimen_2_dp"
+                android:gravity="center_vertical"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:text="*****"/>
+
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 android:layout_marginEnd="@dimen/dimen_4_dp"
                 android:paddingEnd="@dimen/dimen_2_dp"
                 android:orientation="horizontal"
                 tools:ignore="RtlHardcoded,RtlSymmetry">
-                <!--
-                <ImageView
-                    android:id="@+id/item_audio_quality_icon"
-                    android:layout_width="@dimen/dimen_72_dp"
-                    android:layout_height="@dimen/dimen_18_dp"
-                    android:layout_marginStart="@dimen/dimen_4_dp"
-                    android:layout_marginTop="@dimen/dimen_1_dp"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/ic_format_mqa_white"
-                    tools:ignore="ContentDescription" />
-                -->
 
                 <TextView
-                    android:id="@+id/rating"
+                    android:id="@+id/item_duration"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginStart="@dimen/dimen_6_dp"
                     android:padding="@dimen/dimen_2_dp"
                     android:layout_marginEnd="@dimen/dimen_2_dp"
-                    android:gravity="center_vertical"
+                    android:gravity="bottom"
+                    android:layout_gravity="bottom"
                     android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                     android:text="*****"/>
-            </LinearLayout>
 
+                <ImageView
+                    android:id="@+id/item_more_actions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:padding="@dimen/dimen_2_dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/rounded_more_vert_24"/>
+            </LinearLayout>
         </RelativeLayout>
     </LinearLayout>
     <FrameLayout
@@ -224,20 +225,6 @@
             app:secondaryTextColor="@color/material_color_yellow_100"
             app:secondaryTextSize="6sp" />
     </FrameLayout>
-    <!--
-    <ImageView
-        android:id="@+id/item_player"
-        android:layout_width="@dimen/dimen_24_dp"
-        android:layout_height="@dimen/dimen_24_dp"
-        android:layout_alignStart="@id/item_imageFrame"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/dimen_56_dp"
-        android:layout_marginStart="@dimen/dimen_4_dp"
-        android:padding="@dimen/dimen_2_dp"
-        android:src="@mipmap/ic_launcher"
-        android:background="@drawable/shape_play_next_background_refresh"
-        tools:ignore="ContentDescription" />
-    -->
     <ImageView
         android:id="@+id/item_player"
         android:layout_width="@dimen/dimen_24_dp"
@@ -246,10 +233,9 @@
         android:layout_alignParentTop="true"
         android:layout_marginTop="@dimen/dimen_14_dp"
         android:layout_marginEnd="@dimen/dimen_4_dp"
-        android:padding="@dimen/dimen_2_dp"
+        android:padding="@dimen/dimen_6_dp"
         android:background="@drawable/shape_round_background_playing"
         android:src="@mipmap/ic_launcher"
+        android:scaleType="fitXY"
         tools:ignore="ContentDescription"/>
-
-
 </RelativeLayout>

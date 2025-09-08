@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.model.PlaylistCollection;
 import apincer.android.mmate.repository.model.PlaylistEntry;
 import apincer.android.mmate.repository.model.Song;
@@ -230,6 +231,10 @@ public class PlaylistRepository {
                 .distinct() // Ensure names are unique if multiple entries could somehow have same name
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    public static List<PlaylistEntry> getPlaylists() {
+        return allPlaylists;
     }
 
     /**

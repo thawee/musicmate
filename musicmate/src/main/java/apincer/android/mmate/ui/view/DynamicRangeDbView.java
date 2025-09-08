@@ -1,28 +1,26 @@
 package apincer.android.mmate.ui.view;
 
-import static apincer.android.mmate.utils.MusicTagUtils.getDRScoreBackgroundColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getDRScoreColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRange;
-import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeDbBackground;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeDbColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeScore;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trim;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.vanniktech.textbuilder.TextBuilder;
 
-import org.w3c.dom.Text;
-
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 
 public class DynamicRangeDbView extends LinearLayout {
     private TextView dynamicRangeDbTextView;
@@ -55,31 +53,27 @@ public class DynamicRangeDbView extends LinearLayout {
     }
 
 
+    @SuppressLint("CheckResult")
     public void setMusicItem(MusicTag tag) {
         if(tag == null) {
             dynamicRangeDbTextView.setText("-");
         }else {
-            /*if(tag.getAudioBitsDepth()==16) {
-               // dynamicRangeDbTextView.setText(getDynamicRange(tag)+"/96 dB");
-                dynamicRangeDbTextView.setText(getDynamicRange(tag)+" dB");
-            }else if(tag.getAudioBitsDepth()==24) {
-                //dynamicRangeDbTextView.setText(getDynamicRange(tag)+"/144 dB");
-                dynamicRangeDbTextView.setText(getDynamicRange(tag)+" dB");
-            } */
             int drsColor = getDRScoreColor(getContext(), (int) tag.getDynamicRangeScore());
             String drs = getDynamicRangeScore(tag);
-            drs = trim(drs, "-");
+            if(isEmpty(drs)) {
+                drs = "--";
+            }else {
+                drs = "DR"+trim(drs, "");
+            }
             TextBuilder builder = new TextBuilder(getContext());
-            builder.addColoredText("DR"+drs, drsColor);
-            builder.addText(", ");
+            builder.addColoredText(drs, drsColor);
+            builder.addColoredText(" / ", ContextCompat.getColor(getContext(), R.color.grey400));
             //dynamicRangeDbTextView.setText("DR"+drs+", "+getDynamicRange(tag)+" dB");
             int color = getDynamicRangeDbColor(getContext(), tag);
             //dynamicRangeDbTextView.setTextColor(color);
             builder.addColoredText(getDynamicRange(tag)+" dB", color);
             builder.into(dynamicRangeDbTextView);
 
-            // Drawable background = getDRScoreBackgroundColor(getContext(), (int) tag.getDynamicRangeScore());
-           // dynamicRangeDbTextView.setBackground(background);
         }
     }
 }

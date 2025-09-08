@@ -4,7 +4,7 @@
 
     <!-- View background color -->
     <solid
-        android:color="#1DB954" >
+        android:color="@color/your_highlight_border_color" >
     </solid>
 
     <!-- View border color and width -->

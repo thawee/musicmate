@@ -15,7 +15,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicFolder;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.repository.TagRepository;
 
 /**

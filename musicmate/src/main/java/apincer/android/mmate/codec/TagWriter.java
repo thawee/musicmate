@@ -2,7 +2,7 @@ package apincer.android.mmate.codec;
 
 import android.content.Context;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 

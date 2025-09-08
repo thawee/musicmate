@@ -41,5 +41,6 @@ dependencies {
     implementation libs.androidx.lifecycle.runtime
     implementation libs.androidx.lifecycle.process
     implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
     testImplementation libs.junit
 }

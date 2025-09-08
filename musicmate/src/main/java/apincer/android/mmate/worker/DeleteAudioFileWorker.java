@@ -1,23 +1,27 @@
 package apincer.android.mmate.worker;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import org.greenrobot.eventbus.EventBus;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.Constants;
-import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.notification.AudioTagEditResultEvent;
+import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 
 public class DeleteAudioFileWorker extends Worker {
     private static final String TAG = DeleteAudioFileWorker.class.getName();
@@ -40,11 +44,6 @@ public class DeleteAudioFileWorker extends Worker {
             try {
                 boolean status = delete(tag);
 
-                AudioTagEditResultEvent message = new AudioTagEditResultEvent(
-                        AudioTagEditResultEvent.ACTION_DELETE,
-                        status ? Constants.STATUS_SUCCESS : Constants.STATUS_FAIL,
-                        tag);
-                EventBus.getDefault().postSticky(message);
             } catch (Exception e) {
                 Log.e(TAG, "delete", e);
             }
@@ -56,28 +55,53 @@ public class DeleteAudioFileWorker extends Worker {
     }
 
     public static void startWorker(Context context, List<MusicTag> files) {
-        MusixMateApp.putPendingItems("Delete", files);
-            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class).build();
+       // MusixMateApp.addSharedItems(MusixMateApp.SHARED_TYPE.DELETE, files);
+        Gson gson = new Gson();
+        String jsonMusicTags = gson.toJson(files);
+        if (jsonMusicTags.getBytes(StandardCharsets.UTF_8).length > Data.MAX_DATA_BYTES) {
+            Log.e("WorkManager", "MusicTag list is too large to pass as input data.");
+            return; // Handle error
+        }
+        Data inputData = (new Data.Builder())
+                .putString("MUSIC_TAGS_JSON", jsonMusicTags)
+                .build();
+
+            OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DeleteAudioFileWorker.class)
+                    .setInputData(inputData)
+                    .build();
             WorkManager.getInstance(context).enqueue(workRequest);
     }
 
     private List<MusicTag> list() {
-        return MusixMateApp.getPendingItems("Delete");
+        String jsonMusicTags = getInputData().getString("MUSIC_TAGS_JSON");
+        if (jsonMusicTags != null) {
+            Gson gson = new Gson();
+            Type listType = new TypeToken<ArrayList<MusicTag>>() {
+            }.getType();
+            return gson.fromJson(jsonMusicTags, listType);
+        }else {
+            return new ArrayList<>();
+        }
+       // return MusixMateApp.getSharedItems(MusixMateApp.SHARED_TYPE.DELETE);
     }
 
     private boolean delete(MusicTag tag) {
-       /* try {
-            boolean status = repos.deleteMediaItem(tag);
-
-            AudioTagEditResultEvent message = new AudioTagEditResultEvent(AudioTagEditResultEvent.ACTION_DELETE, status?Constants.STATUS_SUCCESS:Constants.STATUS_FAIL, tag);
-            EventBus.getDefault().postSticky(message);
-        } catch (Exception e) {
-            Log.e(TAG, "delete",e);
-        }
-        return false; */
         // Synchronize on repos if needed
         synchronized(repos) {
+            skipToNext(tag);
             return repos.deleteMediaItem(tag);
         }
+    }
+
+    private void skipToNext(MusicTag tag) {
+        // Create an Intent for the service
+        Intent intent = new Intent(getApplicationContext(), PlaybackService.class);
+
+        // Set the action and put the data as an extra
+        intent.setAction(PlaybackService.ACTION_SKIP_TO_NEXT);
+        intent.putExtra(PlaybackService.EXTRA_MUSIC_ID, tag.getId());
+
+        // Start the service
+        getApplicationContext().startService(intent);
     }
 }

@@ -1,6 +1,8 @@
 package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
+import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.util.Log;
@@ -15,16 +17,19 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisAlbumArtistSaveOptions;
+import org.jaudiotagger.tag.wav.WavTag;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.StandardCharsets;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
+import apincer.android.mmate.utils.MusicTagUtils;
 
 public class JThinkWriter extends  TagWriter {
     private static final String TAG = "JThinkWriter";
@@ -58,14 +63,13 @@ public class JThinkWriter extends  TagWriter {
             }
 
             Tag newTag = audioFile.getTagOrCreateDefault();
-            newTag.setEncoding(StandardCharsets.UTF_8);
+            if(!(newTag instanceof ID3v24Tag || newTag instanceof WavTag)) {
+                // wave not support encoding
+                newTag.setEncoding(StandardCharsets.UTF_8);
+            }
 
             // Batch set tag fields to reduce individual operations
             setAllTagFields(newTag, tag);
-
-            //setTagFieldsCommon(newTag, tag);
-            //setTagFieldsExtended(newTag, tag);
-            //setCustomTagsFields(audioFile, tag);
 
             // Commit changes to file
             audioFile.commit();
@@ -78,22 +82,37 @@ public class JThinkWriter extends  TagWriter {
 
     private void setAllTagFields(Tag tag, MusicTag musicTag) throws FieldDataInvalidException {
         // Set all common fields in one method to reduce method call overhead
-        setTagField(FieldKey.TITLE, musicTag.getTitle(), tag);
-        setTagField(FieldKey.ALBUM, musicTag.getAlbum(), tag);
-        setTagField(FieldKey.ALBUM_ARTIST, musicTag.getAlbumArtist(), tag);
-        setTagField(FieldKey.ARTIST, musicTag.getArtist(), tag);
-        setTagField(FieldKey.GENRE, musicTag.getGenre(), tag);
-        setTagField(FieldKey.COMMENT, musicTag.getComment(), tag);
-        setTagField(FieldKey.GROUPING, musicTag.getGrouping(), tag);
-        setTagField(FieldKey.TRACK, musicTag.getTrack(), tag);
-        setTagField(FieldKey.DISC_NO, musicTag.getDisc(), tag);
-        setTagField(FieldKey.YEAR, musicTag.getYear(), tag);
-        setTagField(FieldKey.COMPOSER, musicTag.getComposer(), tag);
-        setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isCompilation()), tag);
+        setTagField(FieldKey.TITLE, trimToEmpty(musicTag.getTitle()), tag);
+        setTagField(FieldKey.ALBUM, trimToEmpty(musicTag.getAlbum()), tag);
+        setTagField(FieldKey.ALBUM_ARTIST, trimToEmpty(musicTag.getAlbumArtist()), tag);
+        setTagField(FieldKey.ARTIST, trimToEmpty(musicTag.getArtist()), tag);
+        setTagField(FieldKey.GENRE, trimToEmpty(musicTag.getGenre()), tag);
+        setTagField(FieldKey.COMMENT, cleanupComment(musicTag.getComment()), tag);
+        setTagField(FieldKey.TRACK, trimToEmpty(musicTag.getTrack()), tag);
+        setTagField(FieldKey.COMPOSER, trimToEmpty(musicTag.getComposer()), tag);
+
+        // WAVE not support Grouping, use RECORD_LABEL
+        if(MusicTagUtils.isWavFile(musicTag)) {
+            setTagField(FieldKey.RECORD_LABEL, trimToEmpty(musicTag.getGrouping()), tag);
+        }else {
+            setTagField(FieldKey.YEAR, trimToEmpty(musicTag.getYear()), tag);
+            setTagField(FieldKey.DISC_NO, trimToEmpty(musicTag.getDisc()), tag);
+            setTagField(FieldKey.GROUPING, trimToEmpty(musicTag.getGrouping()), tag);
+            setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isCompilation()), tag);
+        }
 
         // Extended fields
-        setTagField(FieldKey.MEDIA, musicTag.getMediaType(), tag);
-        setTagField(FieldKey.QUALITY, musicTag.getMediaQuality(), tag);
+       // setTagField(FieldKey.MEDIA, trimToEmpty(musicTag.getMediaType()), tag);
+        setTagField(FieldKey.QUALITY, trimToEmpty(musicTag.getMediaQuality()), tag);
+    }
+
+    private String cleanupComment(String comment) {
+        if(isEmpty(comment)) return "";
+        else if(comment.contains("<##>")) {
+            // Remove all content between <##> and </##>, including the tags themselves.
+            comment = comment.replaceAll("<##>.*?</##>", "");
+        }
+        return trimToEmpty(comment);
     }
 
     private AudioFile getAudioFile(String path) {
@@ -111,20 +130,12 @@ public class JThinkWriter extends  TagWriter {
         return null;
     }
 
-    /*
-    void setCustomTagsFields(AudioFile audioFile, MusicTag tag) {
-        setTagFieldCustom(audioFile, KEY_MM_TRACK_DR, Double.toString(tag.getDynamicRange()));
-        setTagFieldCustom(audioFile, KEY_MM_TRACK_DR_SCORE,Double.toString(tag.getDynamicRangeScore()));
-        setTagFieldCustom(audioFile, KEY_MM_TRACK_UPSCALED,Double.toString(tag.getUpscaledScore()));
-        setTagFieldCustom(audioFile, KEY_MM_TRACK_RESAMPLED,Double.toString(tag.getResampledScore()));
-    } */
-
     void setTagField(FieldKey fieldKey, String value, Tag tag) throws FieldDataInvalidException {
         try {
-            tag.setField(fieldKey, value);
-        } catch (FieldDataInvalidException e) {
-            Log.w(TAG, "Failed to set field " + fieldKey + ": " + e.getMessage());
-            throw e;
+            tag.setField(fieldKey, trimToEmpty(value));
+        } catch (FieldDataInvalidException ignored) {
+            Log.w(TAG, "Failed to set field " + fieldKey + ": " + ignored.getMessage());
+           // throw e;
         }
     }
 

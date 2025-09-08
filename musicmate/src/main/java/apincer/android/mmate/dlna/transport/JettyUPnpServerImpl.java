@@ -1,19 +1,13 @@
 package apincer.android.mmate.dlna.transport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static apincer.android.mmate.Constants.COVER_ARTS;
-import static apincer.android.mmate.Constants.DEFAULT_COVERART_DLNA_RES;
-import static apincer.android.mmate.Constants.DEFAULT_COVERART_FILE;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.util.Log;
 
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.http.content.HttpContent;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -25,9 +19,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.Callback;
-import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.jupnp.model.message.StreamRequestMessage;
 import org.jupnp.model.message.StreamResponseMessage;
@@ -38,23 +30,12 @@ import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
 import org.jupnp.transport.spi.UpnpStream;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-
-import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTag;
-import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.web.MusicApiHandler;
-import apincer.android.mmate.web.MusicWebHandler;
-import apincer.android.utils.FileUtils;
 
 public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
@@ -109,37 +90,9 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 ContextHandler upnpContext = new ContextHandler("/dms");
                 upnpContext.setHandler(new UPnpHandler());
 
-                // Optimized resource handler for cover art
-                ResourceHandler coverartHandler = new CoverartHandler();
-                coverartHandler.setBaseResource(ResourceFactory.of(coverartHandler).newResource("/"));
-                coverartHandler.setDirAllowed(false);
-                coverartHandler.setAcceptRanges(true); // Enable range requests
-                coverartHandler.setEtags(true);        // Enable ETag support
-                coverartHandler.setCacheControl("max-age=3600,public"); // Cache cover art
-                coverartHandler.setServer(server);
-
-                ContextHandler coverartContext = new ContextHandler("/coverart");
-                coverartContext.setHandler(coverartHandler);
-
-                // Web UI handler for music management
-                ResourceHandler musicWebHandler = new MusicWebHandler(getContext());
-                musicWebHandler.setBaseResource(ResourceFactory.of(musicWebHandler).newResource("/"));
-                musicWebHandler.setDirAllowed(false);
-                musicWebHandler.setWelcomeFiles("index.html");
-                musicWebHandler.setEtags(true);
-                musicWebHandler.setCacheControl("max-age=3600,public");
-                musicWebHandler.setServer(server);
-
-                ContextHandler musicWebContext = new ContextHandler("/music");
-                musicWebContext.setHandler(musicWebHandler);
-
-                // API handler for music management
-                ContextHandler apiContext = new ContextHandler("/api");
-                apiContext.setHandler(new MusicApiHandler());
-
                 // Collect all context handlers
                 ContextHandlerCollection contexts = new ContextHandlerCollection(
-                        upnpContext, coverartContext, musicWebContext, apiContext
+                        upnpContext
                 );
 
                 server.setHandler(contexts);
@@ -302,87 +255,4 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
             return requestMessage;
         }
     }
-
-
-    private class CoverartHandler extends ResourceHandler {
-        File defaultCoverartDir;
-        // Cache control for cover art
-        private static final String COVER_ART_CACHE_CONTROL = "max-age=3600,public";
-        private static final long COVER_ART_MAX_AGE = 3600 * 1000; // 1 hour in milliseconds
-
-        private CoverartHandler( ) {
-            defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
-        }
-
-        @Override
-        public boolean handle(Request request, Response response, Callback callback) throws Exception {
-            if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
-                return super.handle(request, response, callback);
-            }
-
-            boolean controlCache = true;
-
-            // Try to find the cover art
-            HttpContent content = getResourceService().getContent(Request.getPathInContext(request), request);
-            if (content == null) {
-                // Try to find folder cover art
-                String uri = request.getHttpURI().getPath();
-                try {
-                    String albumUniqueKey = uri.substring("/coverart/".length(), uri.indexOf(".png"));
-                    MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
-                    if (tag != null) {
-                        File covertFile = FileRepository.getCoverArt(tag);
-                        if(covertFile !=null) {
-                            content = getResourceService().getContent(covertFile.getAbsolutePath(), request);
-                        }
-                    }
-                } catch (Exception ex) {
-                    Log.e(TAG, "lookupContent: - " + uri, ex);
-                }
-            }
-
-            // Fallback to default cover art if necessary
-            if (content == null) {
-                try {
-                    if(!defaultCoverartDir.exists()) {
-                        FileUtils.createParentDirs(defaultCoverartDir);
-                        InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES);
-                        Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
-                    }
-                    content = getResourceService().getContent(defaultCoverartDir.getAbsolutePath(), request);
-                    controlCache = false;
-                } catch (IOException e) {
-                    Log.e(TAG, "Init default missing cover art", e);
-                }
-            }
-
-            if (content == null) {
-                return super.handle(request, response, callback); // no content - try other handlers
-            }
-
-            // Enable ETags and Accept-Ranges for more efficient transfers
-            response.getHeaders().add(HttpHeader.ACCEPT_RANGES, "bytes");
-            if(controlCache) {
-                // Enable efficient caching of cover art
-                response.getHeaders().add(HttpHeader.CACHE_CONTROL, COVER_ART_CACHE_CONTROL);
-
-                // Set Last-Modified and Expires headers for better caching
-                long now = System.currentTimeMillis();
-                response.getHeaders().put(HttpHeader.LAST_MODIFIED, now - 86400000); // Yesterday
-                response.getHeaders().put(HttpHeader.EXPIRES, now + COVER_ART_MAX_AGE); // 1 hour in future
-            }
-
-            // Add MIME type explicitly for improved compatibility
-            if (request.getHttpURI().getPath().endsWith(".png")) {
-                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "image/png");
-            } else if (request.getHttpURI().getPath().endsWith(".jpg") ||
-                    request.getHttpURI().getPath().endsWith(".jpeg")) {
-                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "image/jpeg");
-            }
-
-            getResourceService().doGet(request, response, callback, content);
-            return true;
-        }
-    }
-
 }

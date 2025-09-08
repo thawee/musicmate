@@ -32,22 +32,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.player.PlayerInfo;
-import apincer.android.mmate.repository.MusicTag;
 
 public class AudioOutputHelper {
     private static final String TAG = AudioOutputHelper.class.getName();
-
-    public static Device getDMSDevice(MusicTag tag, PlayerInfo player) {
-        Device device = new Device();
-        device.setCodec(player.getPlayerType().name());
-        if(tag != null) {
-            device.setBitPerSampling(tag.getAudioBitsDepth());
-            device.setSamplingRate(tag.getAudioSampleRate());
-            device.bitRate = tag.getAudioBitRate();
-        }
-        return device;
-    }
 
     public static class Device {
         public String getName() {
@@ -328,10 +315,6 @@ public class AudioOutputHelper {
         }
 
         String rate =  StringUtils.formatAudioSampleRate(dev.getSamplingRate(),true);
-       /* if(streaming) {
-            long bitRate  = dev.bitRate>0?dev.bitRate:dev.getBitPerSampling()*dev.getSamplingRate();
-            rate  = StringUtils.formatAudioBitRateShortUnit(bitRate);
-        } */
 
         Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas myCanvas = new Canvas(myBitmap);

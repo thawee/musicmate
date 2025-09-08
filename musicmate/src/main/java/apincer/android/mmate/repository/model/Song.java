@@ -1,6 +1,6 @@
 package apincer.android.mmate.repository.model;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 
 // Represents a song entry within a "song" type playlist in JSON
 public class Song {

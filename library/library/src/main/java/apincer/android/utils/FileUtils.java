@@ -284,15 +284,14 @@ public class FileUtils {
         // If the directory exists then delete
         if (directory.exists()) {
             File[] files = directory.listFiles();
-            if (files == null) {
-                return;
-            }
-            // Run on all sub files and folders and delete them
-            for (int i = 0; i < files.length; i++) {
-                if (files[i].isDirectory()) {
-                    deleteDirectory(files[i]);
-                } else {
-                    files[i].delete();
+            if (files != null) {
+                // Run on all sub files and folders and delete them
+                for (int i = 0; i < files.length; i++) {
+                    if (files[i].isDirectory()) {
+                        deleteDirectory(files[i]);
+                    } else {
+                        files[i].delete();
+                    }
                 }
             }
         }

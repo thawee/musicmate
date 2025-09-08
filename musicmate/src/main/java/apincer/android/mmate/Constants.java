@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class Constants {
+    public enum SHARED_TYPE {PREVIEW, IMPORT, UPDATE, DELETE}
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
     public static final String QUALITY_BAD = "Unsatisfactory";

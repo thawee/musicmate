@@ -1,11 +1,16 @@
 package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.Constants.MEDIA_ENC_AIFF;
+import static apincer.android.mmate.Constants.MEDIA_ENC_ALAC;
 import static apincer.android.mmate.Constants.MEDIA_ENC_FLAC;
 
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+
+import com.antonkarpenko.ffmpegkit.FFmpegKit;
+import com.antonkarpenko.ffmpegkit.FFmpegSession;
+import com.antonkarpenko.ffmpegkit.ReturnCode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -13,8 +18,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Locale;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import io.nayuki.flac.common.StreamInfo;
 import io.nayuki.flac.decode.FlacDecoder;
@@ -35,7 +41,7 @@ public class AudioDecoder {
         String enc = StringUtils.toUpperCase(tag.getAudioEncoding());
         try {
             return switch (enc) {
-                //case MEDIA_ENC_ALAC -> decodeAlac(tag, maxDurationSeconds);
+                case MEDIA_ENC_ALAC -> decodeAlac(tag, maxDurationSeconds);
                 case MEDIA_ENC_FLAC -> decodeFlac(filePath, maxDurationSeconds);
                 case MEDIA_ENC_AIFF -> decodeAiff(filePath, maxDurationSeconds);
                 default -> decodeAndroid(filePath, maxDurationSeconds);
@@ -49,6 +55,57 @@ public class AudioDecoder {
             return decodeAndroid(filePath, maxDurationSeconds);
         }
     }
+
+    public static byte[] decodeAlac(MusicTag tag, int maxDurationSeconds) throws IOException {
+        String filePath = tag.getPath();
+        File inputFile = new File(filePath);
+        if (!inputFile.exists()) {
+            throw new IOException("File not found: " + filePath);
+        }
+
+        File outputFile = new File(inputFile.getParent(), "temp_pcm.raw");
+        if (outputFile.exists()) {
+            outputFile.delete();
+        }
+
+        int bitDepth = tag.getAudioBitsDepth();
+        String pcmFormat = switch (bitDepth) {
+            case 24 -> "s24le";
+            case 32 -> "s32le";
+            default -> "s16le";
+        };
+
+        // Use FFmpeg to decode ALAC to raw PCM
+        // -t specifies the duration to decode
+        String command = String.format(Locale.US, "-y -i \"%s\" -t %d -f %s -acodec pcm_%s \"%s\"",
+                filePath, maxDurationSeconds, pcmFormat, pcmFormat, outputFile.getAbsolutePath());
+
+        FFmpegSession session = FFmpegKit.execute(command);
+
+        if (ReturnCode.isSuccess(session.getReturnCode())) {
+            // Read the raw PCM data from the temporary file
+            if (outputFile.exists()) {
+                try (FileInputStream fis = new FileInputStream(outputFile);
+                     ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        baos.write(buffer, 0, bytesRead);
+                    }
+                    return baos.toByteArray();
+                } finally {
+                    outputFile.delete(); // Clean up the temporary file
+                }
+            } else {
+                throw new IOException("FFmpeg execution succeeded, but output file was not created.");
+            }
+        } else {
+            // FFmpeg execution failed
+            throw new IOException("FFmpeg decoding failed with return code: " + session.getReturnCode() +
+                    " and logs: " + session.getAllLogsAsString());
+        }
+    }
+
 
     public static byte[] decodeAndroid(String audioFile, int durationInSeconds) throws IOException {
         MediaExtractor extractor = new MediaExtractor();
@@ -119,42 +176,6 @@ public class AudioDecoder {
         return byteArrayOutputStream.toByteArray();
     }
 
-
-    /*
-    private static byte[] decodeWav(String filePath, int maxDurationSeconds) throws IOException {
-        SeekableByteChannel ch = null;
-        try {
-            ch = NIOUtils.readableChannel(new File(filePath));
-            WavDemuxer demuxer = new WavDemuxer(ch);
-            AudioFormat format = demuxer.getMeta().getAudioCodecMeta().getFormat();
-
-            int bytesPerSecond = format.getSampleRate() * format.getChannels() * (format.getSampleSizeInBits() / 8);
-            int maxBytes = bytesPerSecond * maxDurationSeconds;
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(maxBytes);
-            ByteBuffer buffer = ByteBuffer.allocate(8192);
-
-            int totalRead = 0;
-            while (totalRead < maxBytes) {
-                buffer.clear();
-                Packet frame = demuxer.nextFrame();
-                if (frame == null) break;
-                int read = frame.getData().remaining();
-                if (read <= 0) break;
-
-                buffer.flip();
-                byte[] data = new byte[buffer.remaining()];
-                buffer.get(data);
-                baos.write(data);
-
-                totalRead += read;
-            }
-
-            return baos.toByteArray();
-        } finally {
-            NIOUtils.closeQuietly(ch);
-        }
-    } */
 
     public static byte[] decodeFlac(String filePath, int maxDurationSeconds) throws IOException {
         File file = new File(filePath);

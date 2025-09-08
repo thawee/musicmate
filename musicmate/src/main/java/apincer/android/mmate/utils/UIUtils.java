@@ -872,18 +872,18 @@ public class UIUtils  {
             int barColor = Color.GRAY;
             //info.setText(StringUtils.formatStorageSizeGB(free)+"/"+StringUtils.formatStorageSizeGB(total)+" GB - "+((int)pcnt)+"%");
             info.setText(StringUtils.formatStorageSizeGB(used)+"/"+StringUtils.formatStorageSizeGB(total)+" GB - "+((int)pcnt)+"%");
-            if(pcnt > 98) { //if(pcnt > 99) {
+            if(pcnt > 95) { //if(pcnt > 99) {
+                barColor = application.getColor(R.color.meteial_color_deep_orange_A400);
+            }else if(pcnt > 80) { //if(pcnt > 98) {
                 barColor = application.getColor(R.color.meteial_color_orange_800);
-            }else if(pcnt > 95) { //if(pcnt > 98) {
-                barColor = application.getColor(R.color.meteial_color_amber_800);
-            }else if(pcnt > 90) { //if(pcnt > 95) {
-                barColor = application.getColor(R.color.material_color_yellow_800);
-            }else if(pcnt > 80) { //if(pcnt > 90) {
+            //}else if(pcnt > 90) { //if(pcnt > 95) {
+           //     barColor = application.getColor(R.color.material_color_);
+            }else if(pcnt > 70) { //if(pcnt > 90) {
                 barColor = application.getColor(R.color.material_color_lime_800);
-            }else if(pcnt > 70) { //if(pcnt > 75) {
+          //  }else if(pcnt > 60) { //if(pcnt > 75) {
                 barColor = application.getColor(R.color.material_color_light_green_800);
-            }else {  // 50, 75
-                barColor = application.getColor(R.color.material_color_green_800);
+           // }else {  // 50, 75
+           //     barColor = application.getColor(R.color.material_color_green_800);
             }
 
             List<Long> valueList = new ArrayList<>();

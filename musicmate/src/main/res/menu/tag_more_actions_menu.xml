@@ -4,21 +4,22 @@
 
     <item
         android:id="@+id/action_measure_dr"
-        android:title="Measure DR"
-        app:showAsAction="ifRoom"/>
-
-    <item
-        android:id="@+id/action_open_folder"
-        android:title="Open Folder"
+        android:title="@string/analyze_music"
         app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/action_spectrum"
-        android:title="View Spectrum"
+        android:title="@string/show_frequency_spectrum"
         app:showAsAction="ifRoom"/>
 
     <item
+        android:id="@+id/action_open_folder"
+        android:title="@string/open_containing_folder"
+        app:showAsAction="ifRoom"/>
+
+
+    <item
         android:id="@+id/action_web_search"
-        android:title="Web Search"
+        android:title="@string/find_online"
         app:showAsAction="ifRoom"/>
 </menu>

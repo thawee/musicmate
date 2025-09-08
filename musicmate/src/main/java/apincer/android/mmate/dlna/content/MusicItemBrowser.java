@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 
 /**

@@ -893,7 +893,7 @@
       ]
     },
     {
-      "name": "Recommended & Favorite",
+      "name": "Favorite & Recommended",
       "uuid": "Recommended",
       "type": "rating",
       "songs": [

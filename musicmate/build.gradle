@@ -130,7 +130,6 @@ dependencies {
 
     // UI Libs
     implementation libs.skydoves.powerspinner
-    //implementation libs.skydoves.powermenu
     implementation libs.skydoves.progressview
     implementation libs.skydoves.androidribbon
     implementation libs.skydoves.elasticviews
@@ -144,13 +143,10 @@ dependencies {
     implementation libs.refresh.layout.kernel
     implementation libs.refresh.header.classics
     implementation libs.tutorialsandroid.filepicker
-    //implementation libs.airbnb.lottie
 
     //others
-    implementation libs.greenrobot.eventbus
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio
-    //implementation libs.jcodec
 
     implementation libs.commons.codec
     implementation libs.commons.io
@@ -158,7 +154,7 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.commons.text
     implementation libs.commons.match3
-    implementation libs.icm.jlargearrays
+    //implementation libs.icm.jlargearrays
 
     implementation libs.jackson.core
     implementation libs.jackson.databind
@@ -168,9 +164,11 @@ dependencies {
     implementation libs.jupnp.android
     implementation libs.jupnp.support
     implementation libs.jetty.server12
-    implementation libs.jetty.client12
     implementation libs.netty.codec.http
+    implementation libs.square.okhttp3
     implementation libs.coilkt.coil3
+    implementation libs.rxandroid
+    implementation libs.rxjava
 
     implementation libs.iirj
     implementation libs.markwon.core

@@ -12,7 +12,7 @@ import org.jupnp.support.model.item.MusicTrack;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -37,35 +37,13 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
 
     private List<MusicTag> getItems(ContentDirectory contentDirectory, String uuid) {
         List<MusicTag> results = new ArrayList<>();
-        List<MusicTag> list = TagRepository.getAllMusicsForPlaylist(); // MusixMateApp.getInstance().getOrmLite().findMySongs();
+        List<MusicTag> list = TagRepository.getAllMusicsForPlaylist();
         for(MusicTag tag: list) {
             if (CollectionsBrowser.DOWNLOADS_SONGS.equals(uuid) && MusicTagUtils.isOnDownloadDir(tag)) {
                 results.add(tag);
-           /* }else if (CollectionsBrowser.SMART_LIST_ISAAN_SONGS.equals(name) && MusicTagUtils.isISaanPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_BAANTHUNG_SONGS.equals(name) && MusicTagUtils.isBaanThungPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_FINFIN_SONGS.equals(name) && MusicTagUtils.isFinFinPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_CLASSIC_SONGS.equals(name) && MusicTagUtils.isClassicPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_LOUNGE_SONGS.equals(name) && MusicTagUtils.isLoungePlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_VOCAL_SONGS.equals(name) && MusicTagUtils.isVocalPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.SMART_LIST_TRADITIONAL_SONGS.equals(name) && MusicTagUtils.isTraditionalPlaylist(tag)) {
-                results.add(tag);
-            }else if (CollectionsBrowser.AUDIOPHILE_SONGS.equals(name) && MusicTagUtils.isAudiophile(tag)) {
-                results.add(tag); */
             }else if (PlaylistRepository.isSongInPlaylist(tag, uuid)) {
                 results.add(tag);
             }
-                /*
-            }else if (PlaylistRepository.isInAlbumPlaylist(tag,name)) {
-                results.add(tag);
-            }else if (PlaylistRepository.isInTitlePlaylist(tag,name)) {
-                results.add(tag);
-            } */
         }
         return results;
     }
@@ -83,14 +61,10 @@ public class CollectionFolderBrowser extends AbstractContentBrowser {
         List<MusicTrack> result = new ArrayList<>();
         String uuid = extractName(myId, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX);
         List<MusicTag> tags = getItems(contentDirectory, uuid);
-        //int currentCount = 0;
         for(MusicTag tag: tags) {
-           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);
-           // }
         }
-        //result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
     }
 }

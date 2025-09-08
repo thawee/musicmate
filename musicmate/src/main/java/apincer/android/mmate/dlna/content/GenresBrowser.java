@@ -15,7 +15,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicFolder;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.repository.TagRepository;
 
 /**
@@ -32,7 +32,7 @@ public class GenresBrowser extends AbstractContentBrowser {
     }
 
     public Integer getTotalMatches(ContentDirectory contentDirectory, String myId) {
-        return TagRepository.getActualGenreList(getContext()).size();
+        return TagRepository.getActualGenreList().size();
     }
 
     @Override

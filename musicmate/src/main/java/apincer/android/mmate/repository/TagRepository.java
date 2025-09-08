@@ -7,8 +7,12 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 import android.content.Context;
 import android.util.Log;
 
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.QueryBuilder;
+
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +26,8 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
+import apincer.android.mmate.repository.database.MusicTag;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -75,12 +81,16 @@ public class TagRepository {
             MusicTag existingTag = MusixMateApp.getInstance().getOrmLite().findByUniqueKey(tag.getUniqueKey());
             if(existingTag != null) {
                 tag.setId(existingTag.getId());
-                tag.setDynamicRange(existingTag.getDynamicRange());
-                tag.setMqaInd(existingTag.getMqaInd());
-                tag.setMqaSampleRate(existingTag.getMqaSampleRate());
-                tag.setMediaQuality(existingTag.getMediaQuality());
-                tag.setResampledScore(existingTag.getResampledScore());
-                tag.setUpscaledScore(existingTag.getUpscaledScore());
+                if(tag.getDynamicRange()==0) {
+                    // not set, use from existing tag
+                    tag.setDynamicRange(existingTag.getDynamicRange());
+                    tag.setMqaInd(existingTag.getMqaInd());
+                    tag.setMqaSampleRate(existingTag.getMqaSampleRate());
+                    tag.setMediaQuality(existingTag.getMediaQuality());
+                    tag.setWaveformData(existingTag.getWaveformData());
+                   // tag.setResampledScore(existingTag.getResampledScore());
+                   // tag.setUpscaledScore(existingTag.getUpscaledScore());
+                }
             }
         }
         MusixMateApp.getInstance().getOrmLite().save(tag);
@@ -100,6 +110,43 @@ public class TagRepository {
         return helper.getByPath(path);
     }
 
+    public static MusicTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
+        try {
+            List<MusicTag> list = TagRepository.findMediaByTitle(currentTitle);
+
+            double prvTitleScore = 0.0;
+            double prvArtistScore = 0.0;
+            double prvAlbumScore = 0.0;
+            double titleScore;
+            double artistScore;
+            double albumScore;
+            MusicTag matchedMeta = null;
+
+            for (MusicTag metadata : list) {
+                titleScore = StringUtils.similarity(currentTitle, metadata.getTitle());
+                artistScore = StringUtils.similarity(currentArtist, metadata.getArtist());
+                albumScore = StringUtils.similarity(currentAlbum, metadata.getAlbum());
+
+                if (getSimilarScore(titleScore, artistScore, albumScore) > getSimilarScore(prvTitleScore, prvArtistScore, prvAlbumScore)) {
+                    matchedMeta = metadata;
+                    prvTitleScore = titleScore;
+                    prvArtistScore = artistScore;
+                    prvAlbumScore = albumScore;
+                }
+            }
+            if (matchedMeta != null) {
+                return matchedMeta.copy();
+            }
+        }catch (Exception e) {
+            Log.e(TAG, "findMediaItem",e);
+        }
+        return null;
+    }
+
+    private static double getSimilarScore(double titleScore, double artistScore, double albumScore) {
+        return (titleScore*60)+(artistScore*20)+(albumScore*20);
+    }
+
     public static void cleanMusicMate() {
         try {
             List<MusicTag> list =  MusixMateApp.getInstance().getOrmLite().findMySongs();
@@ -115,7 +162,7 @@ public class TagRepository {
         }
     }
 
-    public static List<String> getActualGenreList(Context context) {
+    public static List<String> getActualGenreList() {
         List<String> list = new ArrayList<>();
 
         List<String> names = MusixMateApp.getInstance().getOrmLite().getGenres();
@@ -372,7 +419,7 @@ public class TagRepository {
     }
 
     public static List<MusicTag> getAllMusicsForPlaylist() {
-        OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.ARTIST, OrmLiteHelper.ORDERED_BY.TITLE};
+        OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.TITLE, OrmLiteHelper.ORDERED_BY.ARTIST};
         return MusixMateApp.getInstance().getOrmLite().findMySongs(aristAlbum);
     }
 
@@ -452,4 +499,33 @@ public class TagRepository {
         return list;
     }
 
+    public static long getMusicTotal() {
+        try {
+            return MusixMateApp.getInstance().getOrmLite().getMusicTagDao().countOf();
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    public static List<MusicTag> findByIds(long[] ids) {
+        try {
+            Dao<MusicTag, Long> musicTagDao = MusixMateApp.getInstance().getOrmLite().getMusicTagDao();
+            // OrmLite's 'in' operator needs an array of Objects, not primitives
+            Long[] idObjects = new Long[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                idObjects[i] = ids[i];
+            }
+
+            QueryBuilder<MusicTag, Long> queryBuilder = musicTagDao.queryBuilder();
+            queryBuilder.where().in("id", (Object[]) idObjects); // Cast is important
+            return queryBuilder.query();
+        } catch (SQLException ignored) {
+
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    public static MusicTag findById(long id) {
+        return  MusixMateApp.getInstance().getOrmLite().findById(id);
+    }
 }

@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 
 public class SourceFolderBrowser extends AbstractContentBrowser {

@@ -1,6 +1,5 @@
 package apincer.android.mmate.dlna;
 
-import android.app.Application;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -10,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
@@ -33,12 +33,16 @@ import org.jupnp.registry.RegistryListener;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URL;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.notification.NotificationId;
+import apincer.android.mmate.NotificationId;
 import apincer.android.mmate.R;
+import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
@@ -76,6 +80,31 @@ public class MediaServerService extends Service {
     public static final String EXTRA_STATUS = "extra_status";
     public static final String EXTRA_ADDRESS = "extra_address";
 
+    private final List<RemoteDevice> renderers = new CopyOnWriteArrayList<>();
+
+    public LocalDevice getServerDevice() {
+        return mediaServerDevice;
+    }
+
+    public RendererController getRendererController(PlaybackService playbackService) {
+        rendererControls.setPlaybackService(playbackService);
+        return rendererControls;
+    }
+
+    public void stopServers() {
+        // Clean up resources
+        if (networkCallback != null && connectivityManager != null) {
+            try {
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+            } catch (Exception e) {
+                Log.e(TAG, "Error unregistering network callback", e);
+            }
+        }
+
+        Thread shutdownThread = new Thread(this::shutdown);
+        shutdownThread.start();
+    }
+
     public enum ServerStatus { // You might already have this or a similar concept
         RUNNING,
         STOPPED,
@@ -83,15 +112,14 @@ public class MediaServerService extends Service {
         INITIALIZED, // After successful initialization but before fully running (optional refinement)
         ERROR
     }
+
     // --- End of new constants ---
 
     // Service components
     protected UpnpService upnpService;
-    private RegistryListener registryListener;
     protected LocalDevice mediaServerDevice;
     protected UpnpServiceConfiguration upnpServiceCfg;
     protected IBinder binder = new MediaServerServiceBinder();
-    public static MediaServerService INSTANCE;
     private boolean initialized;
 
     // Network monitoring
@@ -101,34 +129,7 @@ public class MediaServerService extends Service {
     // Wake lock to keep CPU running for stable streaming
     private PowerManager.WakeLock wakeLock;
 
-    // Service health monitoring
-    //private ScheduledExecutorService healthChecker;
-
-    public static void startMediaServer(Application application) {
-        Log.d(TAG, "Start media server requested");
-        if (INSTANCE != null && INSTANCE.isInitialized()) {
-            Log.d(TAG, "Media server already running");
-            return;
-        }
-
-        Intent intent = new Intent(application, MediaServerService.class);
-        try {
-            application.startForegroundService(intent);
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting media server service", e);
-        }
-    }
-
-    public static void stopMediaServer(Application application) {
-        Log.d(TAG, "Stop media server requested");
-        if (INSTANCE == null) {
-            Log.d(TAG, "Media server not running");
-            return;
-        }
-
-        Intent intent = new Intent(application, MediaServerService.class);
-        application.stopService(intent);
-    }
+    private RendererController rendererControls;
 
     /**
      * @return the initialized
@@ -143,7 +144,6 @@ public class MediaServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        INSTANCE = this;
 
         // Acquire wake lock to ensure reliable streaming
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -151,7 +151,7 @@ public class MediaServerService extends Service {
                 "MusixMate:MediaServerWakeLock");
         wakeLock.acquire(10*60*1000L /*10 minutes*/);
 
-        broadcastStatus(ServerStatus.STARTING, null);
+       // broadcastStatus(ServerStatus.STARTING, null);
     }
 
     /**
@@ -159,6 +159,14 @@ public class MediaServerService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        showNotification();
+        if(intent.getStringExtra("START_SERVERS") != null) {
+            startServers();
+        }
+        return START_STICKY;
+    }
+
+    private void startServers() {
         if(!isInitialized()) {
             long start = System.currentTimeMillis();
             showNotification();
@@ -167,32 +175,28 @@ public class MediaServerService extends Service {
             //Thread initializationThread = new Thread(this::initialize);
             // Broadcast STARTING explicitly if not done in onCreate,
             // or if re-attempting start.
-            broadcastStatus(ServerStatus.STARTING, null);
+            //broadcastStatus(ServerStatus.STARTING, null);
 
             Thread initializationThread = new Thread(() -> {
                 initialize(); // Your existing initialize method
                 // After initialize() completes:
                 if (isInitialized()) {
-                    broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.UPNP_SERVER_PORT);
+                    broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
                 } else {
                     broadcastStatus(ServerStatus.ERROR, null); // If initialize failed
                 }
             });
-            initializationThread.setName("DLNA-Init");
+            initializationThread.setName("MediaServer-Init");
             initializationThread.start();
-
-            // Start health checker
-            //startHealthChecker();
 
             // Set up network monitoring
             setupNetworkMonitoring();
 
-            Log.d(TAG, "DLNA server startup initiated: " + (System.currentTimeMillis() - start) + "ms");
+            Log.d(TAG, "MediaServer startup initiated: " + (System.currentTimeMillis() - start) + "ms");
         }else {
             // If already initialized and running, just broadcast current status
-            broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.UPNP_SERVER_PORT);
+            broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
         }
-        return START_STICKY;
     }
 
     /**
@@ -219,7 +223,7 @@ public class MediaServerService extends Service {
                             initialize();
                             //Log.i(TAG, "Media server re-initialized after network connection");
                         });
-                        initThread.setName("DLNA-Reinit");
+                        initThread.setName("MediaServer-Reinit");
                         initThread.start();
                     }
                     return;
@@ -231,9 +235,9 @@ public class MediaServerService extends Service {
                         // Re-register and announce
                         upnpService.getRegistry().addDevice(mediaServerDevice);
                         upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
-                        Log.i(TAG, "DLNA server re-announced after network change");
+                        Log.i(TAG, "MediaServer re-announced after network change");
                     } catch (Exception e) {
-                        Log.e(TAG, "Error re-announcing DLNA server", e);
+                        Log.e(TAG, "Error re-announcing MediaServer", e);
                     }
                 }, 2);
             }
@@ -252,6 +256,10 @@ public class MediaServerService extends Service {
             try {
                 //Log.d(TAG, "Initializing DLNA media server");
 
+                // Set system properties BEFORE any jUPnP code is executed
+                System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
+                System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
+
                 // Create server configuration
                 upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());
                 upnpService = new UpnpServiceImpl(upnpServiceCfg) {
@@ -267,7 +275,7 @@ public class MediaServerService extends Service {
                 upnpService.startup();
 
                 //
-                this.registryListener = new MyRegistryListener();
+                RegistryListener registryListener = new MyRegistryListener();
 
                 // Create and register media server device
                 mediaServerDevice = MediaServerDevice.createMediaServerDevice(getApplicationContext());
@@ -278,19 +286,15 @@ public class MediaServerService extends Service {
                 // Send alive notification
                 upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
                 // Initial search for all devices
-                this.upnpService.getControlPoint().search();
-                // Or search for specific types:
-                // this.upnpService.getControlPoint().search(MEDIA_SERVER_DEVICE_TYPE);
-                //this.upnpService.getControlPoint().search(MEDIA_RENDERER_DEVICE_TYPE);
+                this.upnpService.getControlPoint().search(MEDIA_RENDERER_DEVICE_TYPE.getVersion());
+
+                this.rendererControls = new RendererController(upnpService);
 
                 // Mark as initialized
-                MediaServerService.this.initialized = true;
-                Log.i(TAG, "DLNA media server initialized successfully");
-
-                // Debugging: Log available services
-                //logAvailableServices();
+                this.initialized = true;
+                Log.i(TAG, "MediaServer initialized successfully");
             } catch (Exception e) {
-                Log.e(TAG, "Error initializing DLNA media server", e);
+                Log.e(TAG, "Error initializing MediaServer", e);
                 shutdown();
             }
         }
@@ -313,8 +317,9 @@ public class MediaServerService extends Service {
                 .setContentTitle(getApplicationContext().getString(R.string.media_server_name))
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setSubText(deviceModel)
+                .setPriority(NotificationCompat.PRIORITY_LOW) // Use a lower priority for less important notifications
                 //.setContentText(getApplicationContext().getString(R.string.media_server_name));
-                .setContentText("http://"+getIpAddress()+":"+MediaServerConfiguration.UPNP_SERVER_PORT+"/music/");
+                .setContentText("http://"+getIpAddress()+":"+MediaServerConfiguration.WEB_SERVER_PORT+"/");
 
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
@@ -333,21 +338,12 @@ public class MediaServerService extends Service {
         Thread shutdownThread = new Thread(this::shutdown);
         shutdownThread.start();
 
-        // Clean up resources
-        if (networkCallback != null && connectivityManager != null) {
-            try {
-                connectivityManager.unregisterNetworkCallback(networkCallback);
-            } catch (Exception e) {
-                Log.e(TAG, "Error unregistering network callback", e);
-            }
-        }
-
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
 
         cancelNotification();
-        broadcastStatus(ServerStatus.STOPPED, null);
+       // broadcastStatus(ServerStatus.STOPPED, null);
         super.onDestroy();
     }
 
@@ -359,16 +355,17 @@ public class MediaServerService extends Service {
             intent.putExtra(EXTRA_ADDRESS, address);
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        Log.d(TAG, "Broadcasted status: " + status + (address != null ? " Address: " + address : ""));
+        //Log.d(TAG, "Broadcasted status: " + status + (address != null ? " Address: " + address : ""));
 
         // Also update notification if running or error
         if (status == ServerStatus.RUNNING && address != null) {
-            updateNotificationText("@ http://" + address);
+            updateNotificationText("DMS running on " + address);
         } else if (status == ServerStatus.ERROR) {
-            updateNotificationText("Error starting server");
+            updateNotificationText("Error starting DMS server");
         } else if (status == ServerStatus.STOPPED) {
             // Notification is removed by stopForeground(true) in onDestroy
             // Or update to "Stopped" if you keep a persistent notification for the app
+            updateNotificationText("DMS stopped!");
         }
     }
 
@@ -401,6 +398,10 @@ public class MediaServerService extends Service {
 
     private void shutdown() {
         try {
+            if(rendererControls != null) {
+                rendererControls.stopPolling();
+            }
+
             // Send byebye notification before shutting down
             if (mediaServerDevice != null && upnpService != null) {
                 upnpService.getProtocolFactory().createSendingNotificationByebye(mediaServerDevice).run();
@@ -432,7 +433,7 @@ public class MediaServerService extends Service {
      * @return the address or null if anything went wrong
      */
     @NonNull
-    public static String getIpAddress() {
+    public String getIpAddress() {
         String hostAddress = null;
         try {
             for (Enumeration<NetworkInterface> networkInterfaces = NetworkInterface
@@ -464,60 +465,106 @@ public class MediaServerService extends Service {
         return hostAddress;
     }
 
-    public class MediaServerServiceBinder extends android.os.Binder {
+    public class MediaServerServiceBinder extends Binder {
         public MediaServerService getService() {
             return MediaServerService.this;
         }
     }
 
-    public static class MyRegistryListener extends DefaultRegistryListener {
+    public class MyRegistryListener extends DefaultRegistryListener {
 
         @Override
         public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device) {
-            Log.d(TAG, "Discovery started for: " + device.getDisplayString());
+            //Log.d(TAG, "Discovery started for: " + device.getDisplayString());
         }
 
         @Override
         public void remoteDeviceDiscoveryFailed(Registry registry, RemoteDevice device, Exception ex) {
-            Log.e(TAG, "Discovery failed for: " + device.getDisplayString() + " => " + ex.getMessage(), ex);
+            //Log.e(TAG, "Discovery failed for: " + device.getDisplayString() + " => " + ex.getMessage(), ex);
         }
 
         @Override
         public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
-            Log.i(TAG, "Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
+           // Log.i(TAG, "Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
 
             if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
-                Log.i(TAG, "Found MediaRenderer: " + device.getDetails().getFriendlyName());
-                // deviceFoundListener.onMediaRendererFound(device);
-                MusixMateApp.getInstance().addRenderer(device);
+                addRenderer(device);
+            }
+        }
+
+        @Override
+        public void remoteDeviceUpdated(Registry registry, RemoteDevice device) {
+            super.remoteDeviceUpdated(registry, device);
+            if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
+                addRenderer(device);
             }
         }
 
         @Override
         public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
-            Log.i(TAG, "Remote device removed: " + device.getDisplayString());
+           // Log.i(TAG, "Remote device removed: " + device.getDisplayString());
             // Update your UI or remove from stored list
             // deviceFoundListener.onDeviceRemoved(device);
         }
 
         @Override
         public void localDeviceAdded(Registry registry, LocalDevice device) {
-            Log.i(TAG, "Local device added: " + device.getDisplayString());
+           // Log.i(TAG, "Local device added: " + device.getDisplayString());
         }
 
         @Override
         public void localDeviceRemoved(Registry registry, LocalDevice device) {
-            Log.i(TAG, "Local device removed: " + device.getDisplayString());
+           // Log.i(TAG, "Local device removed: " + device.getDisplayString());
         }
 
         @Override
         public void beforeShutdown(Registry registry) {
-            Log.i(TAG, "Registry about to shut down.");
+           // Log.i(TAG, "Registry about to shut down.");
         }
 
         @Override
         public void afterShutdown() {
-            Log.i(TAG, "Registry has shut down.");
+           // Log.i(TAG, "Registry has shut down.");
         }
     }
+
+    public List<RemoteDevice> getRenderers() {
+        return renderers;
+    }
+
+    private synchronized void addRenderer(RemoteDevice device) {
+        String udn = device.getIdentity().getUdn().getIdentifierString();
+        RemoteDevice udnDev = getRendererByUDN(udn);
+        if(udnDev != null) {
+            renderers.remove(udnDev);
+        }
+        renderers.add(device);
+    }
+
+    public RemoteDevice getRendererByUDN(String udn) {
+        for(RemoteDevice dev: renderers) {
+            String ludn = dev.getIdentity().getUdn().getIdentifierString();
+            if(udn != null && udn.equals(ludn)) {
+                return dev;
+            }
+        }
+        return null;
+    }
+
+    public RemoteDevice getRendererByIpAddress(String ipAddress) {
+        for(RemoteDevice dev: renderers) {
+            String ip = getDeviceIpAddress(dev);
+            if(ipAddress.equals(ip)) {
+                return dev;
+            }
+        }
+        return null;
+    }
+
+    public static String getDeviceIpAddress(RemoteDevice device) {
+        URL descriptorURL = device.getIdentity().getDescriptorURL();
+        return descriptorURL.getHost();
+    }
+
+
 }

@@ -29,7 +29,8 @@
         android:icon="@drawable/ic_baseline_audio_path_24"
         android:title="Signal Path"
         app:showAsAction="always" />
-
+        rounded_music_cast_24
+        ic_baseline_devices_128
 	<item
 		android:id="@+id/menu_media_server"
 		android:icon="@drawable/ic_baseline_devices_128"
@@ -37,16 +38,16 @@
 		app:showAsAction="always" />
 -->
 	<item
-        android:id="@+id/menu_settings"
-        android:icon="@drawable/rounded_display_settings_24"
-        android:title="Settings"
-        app:showAsAction="always" />
-
-	<item
 		android:id="@+id/menu_directories"
 		android:icon="@drawable/rounded_music_history_24"
 		android:title="Scan Music"
 		app:showAsAction="always" />
+
+	<item
+        android:id="@+id/menu_settings"
+        android:icon="@drawable/rounded_display_settings_24"
+        android:title="Settings"
+        app:showAsAction="always" />
 
 	<!--
 	<item

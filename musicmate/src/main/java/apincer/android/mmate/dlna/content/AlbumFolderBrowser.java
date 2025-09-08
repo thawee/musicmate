@@ -10,14 +10,13 @@ import org.jupnp.support.model.container.StorageFolder;
 import org.jupnp.support.model.item.MusicTrack;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 
 /**
@@ -90,19 +89,11 @@ public class AlbumFolderBrowser extends AbstractContentBrowser {
         }
 
         List<MusicTag> tags = MusixMateApp.getInstance().getOrmLite().findByAlbumAndAlbumArtist(album, albumArtist, firstResult, maxResults);
-       // int currentCount = 0;
         for(MusicTag tag: tags) {
-           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId());
                 result.add(musicTrack);
-           // }
-           // currentCount++;
         }
 
-       // result.sort(Comparator.comparing(DIDLObject::getTitle));
-
         return result;
-
     }
-
 }

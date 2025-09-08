@@ -2,8 +2,8 @@ package apincer.android.mmate.provider;
 
 import static apincer.android.mmate.Constants.QUALITY_FAVORITE;
 import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
-import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_RESAMPLED;
-import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_UPSCALED;
+import static apincer.android.mmate.codec.MusicAnalyser.THRESHOLD_RESAMPLED;
+import static apincer.android.mmate.codec.MusicAnalyser.THRESHOLD_UPSCALED;
 import static apincer.android.mmate.utils.MusicTagUtils.getBPSAndSampleRate;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRange;
 import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeAsString;
@@ -53,7 +53,7 @@ import java.util.Locale;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.BitmapHelper;
 import apincer.android.mmate.utils.ColorUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -80,7 +80,7 @@ public class IconProviders {
     public static Bitmap getSourceIcon(Context context, MusicTag tag) {
         int borderColor = Color.GRAY; //Color.TRANSPARENT;//Color.GRAY; //context.getColor(R.color.black);
         int qualityColor = Color.TRANSPARENT; //getResolutionColor(context,item); //getSampleRateColor(context,item);
-        String letter = tag.getMediaType();
+        String letter = ""; //tag.getMediaType();
         if(StringUtils.isEmpty(letter)) {
             return null;
         }
@@ -126,11 +126,13 @@ public class IconProviders {
     }
 
     private static int getResampledScore(MusicTag tag) {
-        return (int) Math.round(tag.getResampledScore() * 100);
+      //  return (int) Math.round(tag.getResampledScore() * 100);
+        return 1;
     }
 
     private static int getUpscaledScore(MusicTag tag) {
-        return (int) Math.round(tag.getUpscaledScore() * 100);
+       // return (int) Math.round(tag.getUpscaledScore() * 100);
+        return 1;
     }
 
     public static int getDRBackgroundColor(Context context, int drValue) {
@@ -945,8 +947,8 @@ public class IconProviders {
         int resampledColor;
 
         // Get scores from tag (values between 0.0-1.0)
-        double upscaledScore = tag.getUpscaledScore(); // Assuming this method exists
-        double resampledScore = tag.getResampledScore(); // Assuming this method exists
+        double upscaledScore = 1; //tag.getUpscaledScore(); // Assuming this method exists
+        double resampledScore = 1; //tag.getResampledScore(); // Assuming this method exists
 
         // Set upscaled color based on score
         if (upscaledScore <= 0.0) {
@@ -1274,8 +1276,8 @@ public class IconProviders {
         int resampledColor;
 
         // Get scores from tag (values between 0.0-1.0)
-        double upscaledScore = tag.getUpscaledScore(); // Assuming this method exists
-        double resampledScore = tag.getResampledScore(); // Assuming this method exists
+        double upscaledScore = 1; //tag.getUpscaledScore(); // Assuming this method exists
+        double resampledScore = 1; //tag.getResampledScore(); // Assuming this method exists
 
         // Set upscaled color based on score
         if (upscaledScore <= 0.0) {

@@ -7,14 +7,13 @@ import org.jupnp.model.Namespace;
 import org.jupnp.model.meta.Device;
 import org.jupnp.model.meta.Service;
 import org.jupnp.model.types.ServiceType;
-import org.jupnp.model.types.UDAServiceType;
 import org.jupnp.transport.spi.NetworkAddressFactory;
 import org.jupnp.transport.spi.StreamClient;
 import org.jupnp.transport.spi.StreamServer;
 
 import java.net.URI;
 
-import apincer.android.mmate.dlna.transport.JettyStreamingClientImpl;
+import apincer.android.mmate.dlna.transport.OKHttpStreamingClient;
 import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
@@ -22,6 +21,7 @@ import apincer.android.mmate.dlna.transport.StreamServerImpl;
 public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     public static final int UPNP_SERVER_PORT = 49152; // IANA-recommended range 49152-65535 for UPnP
     public static final int CONTENT_SERVER_PORT = 8089;
+    public static final int WEB_SERVER_PORT = 9000;
     private final Context context;
 
     MediaServerConfiguration(Context context) {
@@ -36,11 +36,8 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     public ServiceType[] getExclusiveServiceTypes() {
-        // Keep these types to ensure mConnectHD can fully control your server
-        return new ServiceType[]{
-                new UDAServiceType("ContentDirectory"),
-                new UDAServiceType("ConnectionManager"),
-                new UDAServiceType("X_MS_MediaReceiverRegistrar")};
+        // should return empty array, to keep all services for endpoint/renderer
+        return new ServiceType[0];
     }
 
     @Override
@@ -51,19 +48,24 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     @Override
     public StreamClient<StreamClientConfigurationImpl> createStreamClient() {
         // Increased timeouts for better reliability with RoPieeeXL streaming
-        return new JettyStreamingClientImpl(
+        return new OKHttpStreamingClient(
+                new StreamClientConfigurationImpl(
+                        getSyncProtocolExecutorService(),
+                        15,    // Increased from 10 to 15 seconds for connection timeout
+                        8      // Increased from 5 to 8 seconds for data timeout
+                ));
+      /*  return new JettyStreamingClientImpl(
                 new StreamClientConfigurationImpl(
                 getSyncProtocolExecutorService(),
                         15,    // Increased from 10 to 15 seconds for connection timeout
                         8      // Increased from 5 to 8 seconds for data timeout
-        ));
+        )); */
        /* return new NettyStreamingClientImpl(
                 new StreamClientConfigurationImpl(
                         getSyncProtocolExecutorService(),
                         15,    // Increased from 10 to 15 seconds for connection timeout
                         8      // Increased from 5 to 8 seconds for data timeout
                 )); */
-
     }
 
     @Override

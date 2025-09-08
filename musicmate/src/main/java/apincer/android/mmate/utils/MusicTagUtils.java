@@ -17,7 +17,7 @@ import apincer.android.mmate.Constants;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -425,5 +425,52 @@ public class MusicTagUtils {
                 path.endsWith(".flac") || path.endsWith(".alac") || path.endsWith(".aiff") ||
                 path.endsWith(".wav") || path.endsWith(".dsd") || path.endsWith(".dff") ||
                 path.endsWith(".dsf");
+    }
+
+    /**
+     * Determines and formats the audio quality for a given song.
+     * The logic prioritizes specific, high-fidelity formats over generic ones.
+     *
+     * @param song The MusicTag object representing the song.
+     * @return A descriptive string for the audio quality, suitable for music lovers.
+     */
+    public static String getQualityIndicator(MusicTag song) {
+        // 1. Check for DSD, a single-bit format (highest priority)
+        if (song.getAudioBitsDepth() == 1) {
+            return "DSD";
+        }
+
+        // 2. Check for MQA and include the original sample rate
+        String mqaIndicator = trimToEmpty(song.getMqaInd());
+        if ("MQA".equalsIgnoreCase(mqaIndicator) || "MQA Studio".equalsIgnoreCase(mqaIndicator)) {
+            // We now include the original sample rate for MQA
+            //String mqaSampleRate = StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true);
+            //return String.format("%s (%s)", mqaIndicator, mqaSampleRate);
+            return mqaIndicator;
+        }
+
+        // 3. Check for Hi-Res Audio (any format with bit depth > 16 or sample rate > 44.1kHz)
+        if (song.getAudioBitsDepth() > 16 || song.getAudioSampleRate() > 44100) {
+            // Combine bit depth and sample rate for a precise, audiophile-friendly label.
+           // String bitDepth = song.getAudioBitsDepth() + " bit";
+           // String sampleRate = StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true);
+           // return String.format("Hi-Res %s / %s", bitDepth, sampleRate);
+            return "Hi-Res";
+        }
+
+        // 4. Check for CD Quality (16-bit / 44.1 kHz)
+        if (song.getAudioBitsDepth() == 16 && song.getAudioSampleRate() == 44100) {
+            return "CD";
+        }
+
+        // 5. Check for Lossy formats (this should be the final check)
+        if (isLossy(song)) {
+            // Explicitly label the audio as "Lossy" instead of an empty string,
+            // which provides more valuable information to the user.
+            return "Compressed";
+        }
+
+        // 6. Fallback for any unknown format
+        return "";
     }
 }

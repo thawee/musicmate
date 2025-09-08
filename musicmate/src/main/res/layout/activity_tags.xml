@@ -34,8 +34,7 @@
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="true"
                 android:background="@color/black_transparent_80"/>
-
-
+<!--
             <TextView
                 android:id="@+id/music_player_name"
                 android:layout_width="wrap_content"
@@ -70,6 +69,7 @@
                     android:visibility="visible"
                     tools:ignore="ContentDescription,HardcodedText" />
             </com.skydoves.elasticviews.ElasticLayout>
+-->
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/panel_cover_art_layout"

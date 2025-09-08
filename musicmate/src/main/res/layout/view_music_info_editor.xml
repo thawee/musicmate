@@ -15,7 +15,7 @@
     <RelativeLayout
         android:id="@+id/preview_panel"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_105_dp"
+        android:layout_height="@dimen/dimen_72_dp"
         android:layout_gravity="start"
         android:layout_marginTop="@dimen/spacing_small"
         android:background="@drawable/shape_preview_music_info"
@@ -24,8 +24,8 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/preview_coverart"
-            android:layout_width="@dimen/dimen_128_dp"
-            android:layout_height="@dimen/dimen_96_dp"
+            android:layout_width="@dimen/dimen_72_dp"
+            android:layout_height="@dimen/dimen_64_dp"
             android:scaleType="centerCrop"
             android:contentDescription="cover image"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"
@@ -45,8 +45,27 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
                 android:text="Song Title"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall.Emphasized"
                 android:textColor="@color/black"
                 tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/editor_pathname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/preview_title"
+                android:ellipsize="start"
+                android:gravity="left"
+                android:padding="@dimen/dimen_2_dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:lines="2"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:text="Path"
+                android:textColor="@color/grey800"
+                tools:ignore="HardcodedText,RtlHardcoded" />
+<!--
 
             <TextView
                 android:id="@+id/preview_artist"
@@ -54,7 +73,8 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/preview_title"
                 android:layout_gravity="start"
-                android:text="Song Artist"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:text="Album - Song Artist"
                 android:textColor="@color/grey900"
                 tools:ignore="HardcodedText" />
 
@@ -63,11 +83,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/preview_artist"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:layout_gravity="start"
                 android:text="Song Album"
                 tools:ignore="HardcodedText"
                 android:textColor="@color/grey900" />
-
+                -->
+<!--
             <TextView
                 android:id="@+id/editor_pathname"
                 android:layout_width="match_parent"
@@ -86,7 +108,27 @@
                 android:textColor="@color/grey900"
                 android:textSize="11sp"
                 tools:ignore="RtlHardcoded,RtlSymmetry" />
+                -->
         </RelativeLayout>
+        <!--
+        <TextView
+            android:id="@+id/editor_pathname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="center_horizontal"
+            android:ellipsize="start"
+            android:gravity="center_horizontal"
+            android:lines="2"
+            android:maxLines="2"
+            android:layout_marginTop="@dimen/dimen_8_dp"
+            android:padding="@dimen/dimen_2_dp"
+            android:text="@string/file_path"
+            android:textColor="@color/grey200"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:background="@color/black_transparent_64"
+            tools:ignore="RtlHardcoded,RtlSymmetry" />
+            -->
     </RelativeLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -99,6 +141,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+            <!--
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_save"
                 android:layout_width="wrap_content"
@@ -110,11 +153,12 @@
                 app:fabSize="mini"
                 app:backgroundTint="@color/colorPrimary"
                 tools:ignore="RelativeOverlap,RtlHardcoded" />
+                -->
             <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
+<!--
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -123,7 +167,7 @@
                 android:text="@string/editor_info"
                 android:textColor="@color/material_color_blue_grey_300"
                 android:textSize="16sp" />
-
+-->
             <!-- title -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
@@ -220,6 +264,7 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
+                <!--
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -241,6 +286,7 @@
                             tools:ignore="SpeakableTextPresentCheck" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
+                -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -264,16 +310,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_12_dp"
-                android:background="@color/transparent"
-                android:text="@string/editor_musicmate_info"
-                android:textColor="@color/material_color_blue_grey_300"
-                android:textSize="16sp" />
-
-            <!-- genre, grouping [drop down]-->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -302,6 +338,48 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:background="@color/transparent"
+                android:text="@string/editor_musicmate_info"
+                android:textColor="@color/material_color_blue_grey_300"
+                android:textSize="16sp" />
+
+            <!-- genre, grouping [drop down]-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:layout_marginTop="@dimen/dimen_4_dp"
+                android:orientation="horizontal">
+                <!--
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:layout_marginEnd="@dimen/dimen_4_dp"
+                    android:orientation="vertical">
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/editor_label_genre"
+                        app:endIconTint="@color/colorPrimaryDark"
+                        app:shapeAppearance="@style/ShapeAppearance.Rounded">
+                        <AutoCompleteTextView
+                            android:id="@+id/input_genre"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            tools:ignore="LabelFor,SpeakableTextPresentCheck" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+                -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -331,7 +409,7 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/label_quality_indicator"
+                    android:hint="@string/label_rating_indicator"
                     app:endIconTint="@color/colorPrimaryDark"
                     app:shapeAppearance="@style/ShapeAppearance.Rounded">
 
@@ -344,12 +422,14 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
             <!-- media type, publisher [drop down] -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:baselineAligned="false"
                 android:layout_marginTop="@dimen/dimen_4_dp"
                 android:orientation="horizontal">
+                <!--
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -373,7 +453,7 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
-
+                -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -401,7 +481,7 @@
                 <!-- create empty space after input -->
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/dimen_256_dp">
+                    android:layout_height="@dimen/dimen_56_dp">
                 </View>
             </LinearLayout>
         </FrameLayout>

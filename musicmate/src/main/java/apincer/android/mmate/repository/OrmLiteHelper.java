@@ -3,8 +3,8 @@ package apincer.android.mmate.repository;
 import static apincer.android.mmate.Constants.ARTIST_SEP;
 import static apincer.android.mmate.Constants.ARTIST_SEP_SPACE;
 import static apincer.android.mmate.Constants.NONE;
-import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_RESAMPLED;
-import static apincer.android.mmate.repository.MusicAnalyser.THRESHOLD_UPSCALED;
+import static apincer.android.mmate.codec.MusicAnalyser.THRESHOLD_RESAMPLED;
+import static apincer.android.mmate.codec.MusicAnalyser.THRESHOLD_UPSCALED;
 import static apincer.android.mmate.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -28,13 +28,24 @@ import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.repository.database.MusicTag;
+import apincer.android.mmate.repository.database.Playlist;
+import apincer.android.mmate.repository.database.PlaylistItem;
+import apincer.android.mmate.repository.database.QueueItem;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.StringUtils;
 
 public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
+    // DAO objects
+    private Dao<MusicTag, Long> musicTagDao = null;
+    private Dao<Playlist, Long> playlistDao = null;
+    private Dao<PlaylistItem, Long> playlistItemDao = null;
+    private Dao<QueueItem, Long> queueItemDao = null;
+
     public MusicTag findByUniqueKey(String uniqueKey) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("uniqueKey", uniqueKey);
             return dao.queryForFirst(builder.prepare());
@@ -49,7 +60,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
     //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 14;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -66,6 +77,9 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             // creates the database table
             TableUtils.createTable(connectionSource, MusicTag.class);
+            TableUtils.createTable(connectionSource, Playlist.class);
+            TableUtils.createTable(connectionSource, PlaylistItem.class);
+            TableUtils.createTable(connectionSource, QueueItem.class);
         } catch (SQLException e) {
             Log.e(TAG,"onCreate", e);
         }
@@ -76,7 +90,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             // Recreates the database when onUpgrade is called by the framework
             TableUtils.dropTable(connectionSource, MusicTag.class, true);
+            TableUtils.dropTable(connectionSource, Playlist.class, true);
+            TableUtils.dropTable(connectionSource, PlaylistItem.class, true);
+            TableUtils.dropTable(connectionSource, QueueItem.class, true);
             onCreate(database, connectionSource);
+
+            //clean cached directory
+           // TODO: ApplicationUtils.
 
         } catch (java.sql.SQLException e) {
             Log.e(TAG,"onUpgrade", e);
@@ -97,7 +117,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findMySongs(ORDERED_BY[] orderedByList)  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if(orderedByList != null) {
                 for(ORDERED_BY orderBy: orderedByList) {
@@ -119,7 +139,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findMySongs()  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
 
             return dao.queryBuilder().orderBy("title", true).orderByNullsFirst("artist", true).query();
         } catch (SQLException e) {
@@ -129,7 +149,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByTitle(String title)  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao =getMusicTagDao();
 
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             String keyword = LIKE_LITERAL+title.replace("'","''")+LIKE_LITERAL;
@@ -142,7 +162,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByPath(String path)  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
 
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("path",escapeString(path));
@@ -154,7 +174,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findInPath(String path)  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
 
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().like("path",escapeString(path)+LIKE_LITERAL);
@@ -167,7 +187,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public void save(MusicTag tag)   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             dao.createOrUpdate(tag);
         } catch (SQLException e) {
             Log.e(TAG,"save", e);
@@ -176,7 +196,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public MusicTag getByPath(String path) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
 
             // Escape single quotes by replacing ' with ''
             String escapedPath = escapeString(path);
@@ -205,7 +225,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         if (tags == null || tags.isEmpty()) return;
 
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
 
             // Use transaction for better performance
             dao.callBatchTasks(() -> {
@@ -225,7 +245,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public void delete(MusicTag tag)   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             dao.delete(tag);
         } catch (SQLException ignored) {
         }
@@ -233,7 +253,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findMyIncomingSongs(long firstResult, long maxResults)  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("mmManaged",false);
             if(firstResult>0) {
@@ -250,7 +270,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findMyNoDRMeterSongs()  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("drScore",0)
                     .or().eq("dynamicRange", 0);
@@ -263,7 +283,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //@Query("Select * from tag where fileSizeRatioaudioBitRate/(audioBitsDepth*audioSampleRate*audioChannels) <= 0.36")
     public List<MusicTag> findMyUnsatisfiedSongs()   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
                     .lt("drScore", 2).or()
@@ -278,7 +298,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByGenre(String genre)   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if(StringUtils.isEmpty(genre)) {
                 builder.where().isNull("genre").or().eq("genre", "");
@@ -293,7 +313,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByGrouping(String grouping, long firstResult, long maxResults)   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if(StringUtils.isEmpty(grouping)) {
                 builder.where().isNull("grouping").or().eq("grouping", "");
@@ -315,7 +335,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findHiRes(long firstResult, long maxResults)   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("audioEncoding in ('alac', 'flac','aiff', 'wave', 'wav') and audioBitsDepth >= 24 and audioSampleRate >= 96000 and mqaInd not like 'MQA%'");
             if(firstResult>0) {
@@ -333,7 +353,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findHighQuality(long firstResult, long maxResults)   {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw(" audioEncoding in ('aac', 'mpeg') ");
             if(firstResult>0) {
@@ -351,7 +371,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findMQASongs(long firstResult, long maxResults) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("mqaInd like 'MQA%' order by title, artist");
             if(firstResult>0) {
@@ -368,7 +388,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findDSDSongs(long firstResult, long maxResults) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
            // builder.where().raw("audioBitsDepth=1 order by title, artist");
             builder.where().raw("audioEncoding in ('dsd', 'dff') order by title, artist");
@@ -386,7 +406,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByMediaQuality(String keyword) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if (isEmpty(keyword)) {
                 builder.where().raw("mediaQuality is null order by title, artist");
@@ -402,7 +422,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByPublisher(String keyword) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if (isEmpty(keyword) || Constants.UNKNOWN.equals(keyword)) {
                 builder.where().raw("publisher is null order by title, artist");
@@ -418,7 +438,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findLosslessSong(long firstResult, long maxResults) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("audioEncoding in ('flac','alac','aiff','wave','wav') and audioSampleRate < 96000 and mqaInd not like 'MQA%' order by title, artist");
             if(firstResult>0) {
@@ -435,7 +455,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByKeyword(String keyword) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             keyword = "'"+LIKE_LITERAL+keyword.replace("'","''")+LIKE_LITERAL+"'";
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("title like "+keyword+" or artist like "+keyword +" or album like "+keyword);
@@ -447,7 +467,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findDuplicateSong() {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             // Let the database find duplicate titles
             GenericRawResults<String[]> results = dao.queryRaw(
                     "SELECT a.id FROM musictag a JOIN musictag b ON " +
@@ -478,7 +498,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<String> getGenres() {
         try {
             List<String> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("distinct genre");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
@@ -495,7 +515,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<String> getGrouping() {
         try {
             List<String> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("distinct grouping");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
@@ -514,7 +534,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             //select grouping, count(id) from musictag group by grouping
             List<MusicFolder> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("grouping, count(id)");
             builder.groupBy("grouping");
@@ -542,7 +562,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             //select grouping, count(id) from musictag group by grouping
             List<MusicFolder> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("genre, count(id)");
             builder.groupBy("genre");
@@ -569,7 +589,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<String> getPublishers() {
         try {
             List<String> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("distinct publisher");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
@@ -586,7 +606,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<String> getArtists() {
         try {
             List<String> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("distinct artist");
             GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString());
@@ -602,7 +622,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public  MusicTag findById(long id) {
         try {
-            Dao<MusicTag, Long> dao = getDao(MusicTag.class);
+            Dao<MusicTag, Long> dao = getMusicTagDao();
             return dao.queryForId(id);
         } catch (SQLException e) {
             return null;
@@ -611,7 +631,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByGroupingAndArtist(String grouping, String artist)  {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             Where<MusicTag, ?> where = builder.where();
             if(EMPTY.equals(grouping)) {
@@ -633,7 +653,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<MusicTag> findByIdRanges(long idRange1, long idRange2) {
         // 1000 - 1100
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("id BETWEEN "+idRange1+" AND "+idRange2);
             return builder.query();
@@ -644,7 +664,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findNoEmbedCoverArtSong() {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().raw("coverartMime is null or coverartMime = '' order by title, artist");
             return builder.query();
@@ -657,7 +677,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             //select grouping, count(id) from musictag group by grouping
             Map<String, MusicFolder> list = new HashMap<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("artist, count(id)");
             builder.groupBy("artist");
@@ -691,7 +711,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             //select grouping, count(id) from musictag group by grouping
             List<MusicFolder> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.selectRaw("album, albumartist, albumUniqueKey, count(id)");
             builder.groupByRaw("album, albumartist");
@@ -727,7 +747,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByArtist(String name, long firstResult, long maxResults) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if(StringUtils.isEmpty(name)) {
                 builder.where().isNull("artist").or().eq("artist", "");
@@ -753,7 +773,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByAlbumAndAlbumArtist(String album, String albumArtist, long firstResult, long maxResults) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             Where<MusicTag, ?> where = builder.where();
             if(StringUtils.isEmpty(album)) {
@@ -778,7 +798,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public MusicTag findByAlbumUniqueKey(String albumUniqueKey) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             builder.where().eq("albumUniqueKey", albumUniqueKey);
             return dao.queryForFirst(builder.prepare());
@@ -790,7 +810,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     public List<MusicTag> findByGenre(String name, long firstResult, long maxResults) {
         try {
-            Dao<MusicTag, ?> dao = getDao(MusicTag.class);
+            Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
             if(StringUtils.isEmpty(name)) {
                 builder.where().isNull("genre").or().eq("genre", "");
@@ -807,5 +827,44 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
+    }
+
+    // --- Public DAO Getters ---
+
+    public Dao<MusicTag, Long> getMusicTagDao() throws SQLException {
+        if (musicTagDao == null) {
+            musicTagDao = getDao(MusicTag.class);
+        }
+        return musicTagDao;
+    }
+
+    public Dao<Playlist, Long> getPlaylistDao() throws SQLException {
+        if (playlistDao == null) {
+            playlistDao = getDao(Playlist.class);
+        }
+        return playlistDao;
+    }
+
+    public Dao<PlaylistItem, Long> getPlaylistItemDao() throws SQLException {
+        if (playlistItemDao == null) {
+            playlistItemDao = getDao(PlaylistItem.class);
+        }
+        return playlistItemDao;
+    }
+
+    public Dao<QueueItem, Long> getQueueItemDao() throws SQLException {
+        if (queueItemDao == null) {
+            queueItemDao = getDao(QueueItem.class);
+        }
+        return queueItemDao;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        musicTagDao = null;
+        playlistDao = null;
+        playlistItemDao = null;
+        queueItemDao = null;
     }
 }

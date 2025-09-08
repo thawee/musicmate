@@ -1,8 +1,6 @@
 package apincer.android.mmate;
 
-import static apincer.android.mmate.Constants.COVER_ARTS;
-import static apincer.android.mmate.dlna.MediaServerService.startMediaServer;
-import static apincer.android.mmate.player.NotificationListener.reconnectNotificationListener;
+import static apincer.android.mmate.playback.ExternalPlayerListener.setupNotificationListener;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -24,34 +22,26 @@ import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
-import org.jupnp.model.meta.RemoteDevice;
-
 import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import apincer.android.mmate.notification.NotificationId;
-import apincer.android.mmate.player.PlayerControl;
-import apincer.android.mmate.dlna.MediaServerService;
+import apincer.android.mmate.dlna.MediaServerManager;
+import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.OrmLiteHelper;
-import apincer.android.mmate.repository.MusicTag;
 import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.worker.MusicMateExecutors;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
-import apincer.android.utils.FileUtils;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
 public class MusixMateApp extends Application {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
     private static MusixMateApp INSTANCE;
-    private final List<RemoteDevice> renderers = new ArrayList<>();
 
     public static MusixMateApp getInstance() {
         return INSTANCE;
@@ -60,44 +50,18 @@ public class MusixMateApp extends Application {
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
 
-    private static final PlayerControl playerControl = new PlayerControl();
-
-    private static final Map<String, List<MusicTag>> pendingQueue = new HashMap<>();
-
-    public static List<MusicTag> getPendingItems(String name) {
-        List<MusicTag> list = new ArrayList<>();
-        synchronized (pendingQueue) {
-            if (pendingQueue.get(name) != null) {
-                list.addAll(Objects.requireNonNull(pendingQueue.get(name)));
-                pendingQueue.remove(name);
-            }
-        }
-        return list;
-    }
-
-    public static void putPendingItems(String name, List<MusicTag> tags) {
-        synchronized (pendingQueue) {
-            if (pendingQueue.containsKey(name)) {
-                List<MusicTag> list = pendingQueue.get(name);
-                assert list != null;
-                list.addAll(tags);
-                // No need to put the list back into the map, as we modified the list that's already there
-            } else {
-                pendingQueue.put(name, new ArrayList<>(tags)); // Create a copy to avoid external modifications
-            }
-        }
-    }
-
-    public static PlayerControl getPlayerControl() {
-        return playerControl;
-    }
+    private MediaServerManager mediaServerManager;
 
     @Override
     public void onTerminate() {
         super.onTerminate();
 
         // Rest of your termination code
-        MediaServerService.stopMediaServer(this);
+        if(mediaServerManager!= null) {
+            mediaServerManager.stopServer();
+            mediaServerManager.cleanup();
+        }
+
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
     }
@@ -112,7 +76,7 @@ public class MusixMateApp extends Application {
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(getApplicationContext());
 
-        reconnectNotificationListener(this);
+        setupNotificationListener(this);
 
         // initialize thread executors
         MusicMateExecutors.getInstance();
@@ -122,9 +86,13 @@ public class MusixMateApp extends Application {
 
         createNotificationChannel();
 
-        // Set up network monitoring
-       // setupNetworkMonitoring();
-        startDMSServer(this);
+        // Copy web assets like index.html to a place the web server can access them.
+        copyWebAssets();
+
+        startMediaServer();
+
+        // Call the static method to start the service from a valid context
+        PlaybackService.startPlaybackService(this);
 
         PlaylistRepository.initPlaylist(this);
 
@@ -149,19 +117,42 @@ public class MusixMateApp extends Application {
 
     }
 
-    private void startDMSServer(MusixMateApp musixMateApp) {
-        // Check media server settings before starting
-        if (Settings.isAutoStartMediaServer(getApplicationContext())) {
-            // Use a slight delay to allow network to stabilize
-            MusicMateExecutors.schedule(() -> {
-                try {
-                    startMediaServer(MusixMateApp.this);
-                    //isMediaServerRunning = true;
-                    Log.i(TAG, "Media server started after network connection");
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to start media server", e);
+    private void startMediaServer() {
+        mediaServerManager = new MediaServerManager(getApplicationContext());
+        mediaServerManager.startServer();
+    }
+
+    private void copyWebAssets() {
+        try {
+            String assetDir = "webui";
+            String[] assets = getAssets().list(assetDir);
+            if (assets == null || assets.length == 0) {
+                return;
+            }
+
+            File webappDir = new File(getFilesDir(), assetDir);
+            if (!webappDir.exists()) {
+                webappDir.mkdirs();
+            }
+
+            for (String asset : assets) {
+                File destFile = new File(webappDir, asset);
+                // Only copy if the file doesn't exist to prevent overwriting on every launch.
+                if (!destFile.exists()) {
+                    try (InputStream in = getAssets().open(assetDir + "/" + asset);
+                         OutputStream out = new FileOutputStream(destFile)) {
+
+                        byte[] buffer = new byte[1024];
+                        int read;
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
+                    }
+                    Log.i(TAG, "Copied web asset: " + asset);
                 }
-            }, 2);
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to copy web assets", e);
         }
     }
 
@@ -171,30 +162,9 @@ public class MusixMateApp extends Application {
         WorkManager.getInstance(getApplicationContext()).pruneWork();
 
         if(Settings.checkDirectoriesSet(getApplicationContext())) {
-            // Get preferences to check first run or app upgrade
-           // SharedPreferences prefs = Settings.getPreferences(getApplicationContext());
-           // boolean isFirstRun = prefs.getBoolean("is_first_run", true);
-           // long previousVersion = prefs.getLong("app_version", 0);
-           // long currentVersion = ApplicationUtils.getVersionCode(getApplicationContext());
-
-            // Schedule regular incremental scans for ongoing maintenance
-           // ScanAudioFileWorker.scheduleRegularScans(this);
-
-           /* if (isFirstRun || previousVersion < currentVersion) {
-                // Perform a full scan on first run or app upgrade
-                Log.i(TAG, "First run or app upgrade, performing full music scan");
-                ScanAudioFileWorker.startScan(getApplicationContext());
-
-                // Update preferences
-                prefs.edit()
-                        .putBoolean("is_first_run", false)
-                        .putLong("app_version", currentVersion)
-                        .apply();
-            } else { */
-                // On normal startup, do a quick incremental scan
-                Log.i(TAG, "Normal startup, performing incremental music scan");
-                ScanAudioFileWorker.startScan(getApplicationContext());
-          //  }
+            // On normal startup, do a quick incremental scan
+            Log.i(TAG, "Normal startup, performing incremental music scan");
+            ScanAudioFileWorker.startScan(getApplicationContext());
         } else {
             Log.w(TAG, "Music scan skipped - no directories configured");
         }
@@ -243,31 +213,4 @@ public class MusixMateApp extends Application {
             mNotificationManager.cancel(NotificationId.MAIN.getId());
         }
     }
-
-    public void clearCaches() {
-        File dir = getApplicationContext().getExternalCacheDir();
-       // FileUtils.deleteDirectory(new File(dir, "/tmp/"));
-        FileUtils.deleteDirectory(new File(dir, "/Icons/"));
-        FileUtils.deleteDirectory(new File(dir, COVER_ARTS));
-    }
-
-    public RemoteDevice getRenderer(String ipAddress) {
-        for(RemoteDevice dev: renderers) {
-            String ip = getDeviceIpAddress(dev);
-            if(ip != null && ipAddress.equals(ip)) {
-                return dev;
-            }
-        }
-        return null;
-    }
-
-    public void addRenderer(RemoteDevice device) {
-        renderers.add(device);
-    }
-
-    public static String getDeviceIpAddress(RemoteDevice device) {
-        URL descriptorURL = device.getIdentity().getDescriptorURL();
-        return descriptorURL.getHost();
-    }
-
 }

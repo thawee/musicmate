@@ -45,7 +45,7 @@ import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
@@ -181,24 +181,7 @@ public class AboutActivity extends AppCompatActivity {
                 List<MusicTag> tags = TagRepository.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
                 Map<String, Integer> grpList = new HashMap<>();
-               // Map<String, Long> estimatedSize = new HashMap<>();
-              //  Map<String, Long> actualSize = new HashMap<>();
-              //  FileRepository repos = FileRepository.newInstance(getActivity().getApplicationContext());
                 for(MusicTag tag: tags) {
-                  /*  String sid = repos.getStorageIdFor(tag);
-                    String asid = tag.getStorageId();
-                    if(estimatedSize.containsKey(sid)) {
-                        Long s = estimatedSize.get(sid);
-                        estimatedSize.put(sid, s+tag.getFileSize());
-                    }else {
-                        estimatedSize.put(sid, tag.getFileSize());
-                    }
-                    if(actualSize.containsKey(asid)) {
-                        Long s = actualSize.get(asid);
-                        actualSize.put(asid, s+tag.getFileSize());
-                    }else {
-                        actualSize.put(asid, tag.getFileSize());
-                    } */
 
                     String enc = MusicTagUtils.getEncodingTypeShort(tag);
                     if(encList.containsKey(enc)) {

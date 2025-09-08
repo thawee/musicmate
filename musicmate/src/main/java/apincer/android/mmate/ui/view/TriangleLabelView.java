@@ -53,8 +53,8 @@ public class TriangleLabelView extends View {
         }
     }
 
-    private PaintHolder primary = new PaintHolder();
-    private PaintHolder secondary = new PaintHolder();
+    private final PaintHolder primary = new PaintHolder();
+    private final PaintHolder secondary = new PaintHolder();
 
     private float topPadding;
     private float bottomPadding;

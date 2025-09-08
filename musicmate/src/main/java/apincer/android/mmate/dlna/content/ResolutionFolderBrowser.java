@@ -14,7 +14,7 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 
 public class ResolutionFolderBrowser extends AbstractContentBrowser {
     private static final String TAG = "ResolutionFolderBrowser";
@@ -66,16 +66,10 @@ public class ResolutionFolderBrowser extends AbstractContentBrowser {
         List<MusicTrack> result = new ArrayList<>();
         String name = extractName(myId, ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX);
         List<MusicTag> tags = getItems(contentDirectory, name, firstResult, maxResults);
-        //int currentCount = 0;
         for(MusicTag tag: tags) {
-           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_RESOLUTION_ITEM_PREFIX.getId());
                 result.add(musicTrack);
-           // }
-           // if(!forceFullContent)  currentCount++;
-            //currentCount++;
         }
-       // result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;
     }
 }

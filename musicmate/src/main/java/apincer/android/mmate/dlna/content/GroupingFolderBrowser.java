@@ -15,7 +15,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 
 public class GroupingFolderBrowser extends AbstractContentBrowser {
     private static final String TAG = "GroupingFolderBrowser";
@@ -62,15 +62,9 @@ public class GroupingFolderBrowser extends AbstractContentBrowser {
         }else {
             tags = MusixMateApp.getInstance().getOrmLite().findByGrouping(name, firstResult, maxResults);
         }
-        //int currentCount = 0;
         for(MusicTag tag: tags) {
-           // if ((currentCount >= firstResult) && currentCount < (firstResult+maxResults)){
                 MusicTrack musicTrack = buildMusicTrack(contentDirectory, tag, myId, ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId());
-
                 result.add(musicTrack);
-           // }
-           // if(!forceFullContent)  currentCount++;
-            //currentCount++;
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
         return result;

@@ -115,10 +115,10 @@ public class ScanAudioFileWorker extends Worker {
             }
 
             // Report progress
-            setProgressAsync(new Data.Builder()
+           /* setProgressAsync(new Data.Builder()
                     .putInt("progress", end)
                     .putInt("total", paths.size())
-                    .build());
+                    .build()); */
 
             // Add a small delay between batches to prevent CPU overload
             try {

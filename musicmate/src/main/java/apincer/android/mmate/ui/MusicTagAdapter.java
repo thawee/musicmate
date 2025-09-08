@@ -17,12 +17,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.j256.ormlite.dao.Dao;
 import com.vanniktech.textbuilder.TextBuilder;
 
 import java.util.ArrayList;
@@ -31,9 +32,13 @@ import java.util.List;
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.playback.NowPlaying;
+import apincer.android.mmate.playback.PlaybackService;
+import apincer.android.mmate.playback.Player;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.repository.database.QueueItem;
 import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.ui.view.DynamicRangeDbView;
@@ -53,6 +58,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     private OnListItemClick onListItemClick;
     private long totalSize;
     private double totalDuration;
+    private PlaybackService playbackService;
+
+    public void setPlaybackService(PlaybackService playbackService) {
+        this.playbackService = playbackService;
+    }
 
     public boolean isMatchFilter(MusicTag tag) {
         if(criteria==null || isEmpty(criteria.getFilterType())) {
@@ -144,7 +154,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             List<String> tabs = TagRepository.getActualGroupingList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = TagRepository.getActualGenreList(context);
+            List<String> tabs = TagRepository.getActualGenreList();
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
             List<String> tabs = TagRepository.getPublisherList(context);
@@ -285,6 +295,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
     }
 
+    public List<MusicTag> getMusicTags() {
+        return localDataSet;
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;
@@ -293,8 +307,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // View mDynamicRangePanel;
         TextView mTitle;
         TextView mSubtitle;
-       // TextView mDurationView;
-        TextView mFileSizeView;
+        TextView mDurationView;
+       // TextView mFileSizeView;
         ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
@@ -304,6 +318,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         DynamicRangeDbView drDbView;
        // TextView drTextView;
         TextView ratingTextView;
+        View moreActions;
 
         public ViewHolder(View view) {
             super(view);
@@ -315,11 +330,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mTitleLayout = view.findViewById(R.id.item_title_layout);
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
-           // this.mDurationView = view.findViewById(R.id.item_duration);
+            this.mDurationView = view.findViewById(R.id.item_duration);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
 
-            this.mFileSizeView = view.findViewById(R.id.item_file_size);
+           // this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
            // this.mAudioQuality = view.findViewById(R.id.item_audio_quality_icon);
 
@@ -327,6 +342,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
            // this.drTextView = view.findViewById(R.id.dynamic_range);
             this.ratingTextView = view.findViewById(R.id.rating);
+            this.moreActions = view.findViewById(R.id.item_more_actions);
         }
 
         public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
@@ -425,15 +441,32 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
+        holder.moreActions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showMoreActions(view, tag);
+            }
+        });
+
         ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
 
         // Background, when bound the first time
-        MusicTag listeningItem = MusixMateApp.getPlayerControl().getPlayingSong();
-        boolean isListening = tag.equals(listeningItem);
+        //MusicTag listeningItem = MusixMateApp.getInstance().getNowPlaying();
+        boolean isListening = false;
+        NowPlaying nowPlaying = null;
+        if(playbackService != null) {
+            nowPlaying = playbackService.getNowPlayingSubject().getValue();
+            isListening = tag.equals(nowPlaying.getSong());
+        }
 
         if (isListening) {
             //show music player icon
-            holder.mPlayerView.setImageResource(R.drawable.round_play_circle_outline_24);
+            Player player = nowPlaying.getPlayer();
+            if(player != null && player.getIcon()!= null) {
+                holder.mPlayerView.setImageDrawable(player.getIcon());
+            }else {
+                holder.mPlayerView.setImageResource(R.drawable.round_play_circle_outline_24);
+            }
             holder.mPlayerView.setVisibility(VISIBLE);
             if (holder.mTitleLayout != null) {
                 holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background_highlighted); // Create this drawable
@@ -488,13 +521,59 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.ratingTextView.setVisibility(GONE);
         }
 
+        holder.mDurationView.setText(StringUtils.formatDuration(tag.getAudioDuration(), false));
+
         // file size
-        holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
+       /* holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
         if(tag.getFileSize() > 0) {
             holder.mFileSizeView.setTextColor(ContextCompat.getColor(holder.mContext, R.color.white));
         }else {
             holder.mFileSizeView.setTextColor(ContextCompat.getColor(holder.mContext, R.color.grey600));
-        }
+        } */
+    }
+
+    private void showMoreActions(View anchorView, MusicTag song) {
+        // 1. Create a PopupMenu
+        PopupMenu popup = new PopupMenu(anchorView.getContext(), anchorView); // 'this' is the Context
+
+        // 2. Inflate your menu resource
+        popup.getMenuInflater().inflate(R.menu.item_more_actions_menu, popup.getMenu());
+        // Or, if you don't want to use an XML menu, you can add items programmatically:
+        // popup.getMenu().add(Menu.NONE, R.id.my_action_id, Menu.NONE, "My Action Title");
+
+        // 3. Set an OnMenuItemClickListener to handle menu item clicks
+        popup.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.play_button) {
+                if(song != null && playbackService != null) {
+                    playbackService.play(song);
+                }
+                return true;
+            } else if (itemId == R.id.add_to_queue_button) {
+                if(song != null) {
+                    try {
+                        Dao<QueueItem, Long> queueDao = MusixMateApp.getInstance().getOrmLite().getQueueItemDao();
+                        // Get the current size of the queue to determine the next position.
+                        // If the queue has 5 items (positions 0-4), countOf() returns 5, which is the correct next position.
+                        long nextPosition = queueDao.countOf();
+                        QueueItem qItem = new QueueItem(song, nextPosition);
+                        queueDao.create(qItem);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                return true;
+            }
+            return false; // Return false if the item click is not handled
+        });
+
+        // Optional: Set a dismiss listener
+        popup.setOnDismissListener(menu -> {
+            // Actions to perform when the popup is dismissed (optional)
+        });
+
+        // 4. Show the PopupMenu
+        popup.show();
     }
 
     // Return the size of your dataset (invoked by the layout manager)

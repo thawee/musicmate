@@ -263,6 +263,7 @@
 				android:text="Collections"
                 tools:ignore="RtlSymmetry" />
 			</LinearLayout>
+			<!--
 			<ImageView
 				android:id="@+id/navigation_song_playing"
 				android:layout_width="wrap_content"
@@ -276,18 +277,31 @@
 				android:visibility="gone"
 				android:src="@drawable/rounded_auto_read_play_24"
 				tools:ignore="RtlSymmetry" />
-
+			-->
 			<ImageView
-				android:id="@+id/navigation_server"
+				android:id="@+id/navigation_signal_path"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
+				android:layout_alignParentEnd="true"
+				android:layout_centerInParent="true"
+				android:layout_marginStart="@dimen/dimen_12_dp"
+				android:layout_marginEnd="@dimen/dimen_120_dp"
+				android:contentDescription="@string/app_name"
+				android:paddingEnd="@dimen/dimen_8_dp"
+				android:src="@drawable/rounded_music_cast_24"
+				tools:ignore="RtlSymmetry" />
+
+			<ImageView
+				android:id="@+id/navigation_media_server"
+				android:layout_width="@dimen/dimen_32_dp"
+				android:layout_height="@dimen/dimen_32_dp"
 				android:layout_alignParentEnd="true"
 				android:layout_centerInParent="true"
 				android:layout_marginStart="@dimen/dimen_12_dp"
 				android:layout_marginEnd="@dimen/dimen_68_dp"
 				android:contentDescription="@string/app_name"
 				android:paddingEnd="@dimen/dimen_8_dp"
-				android:src="@drawable/rounded_music_cast_24"
+				android:src="@drawable/ic_baseline_devices_128"
 				tools:ignore="RtlSymmetry" />
 
 			<ImageView

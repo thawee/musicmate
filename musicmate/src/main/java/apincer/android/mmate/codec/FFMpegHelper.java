@@ -1,6 +1,5 @@
 package apincer.android.mmate.codec;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
 
 import android.content.Context;
@@ -16,14 +15,13 @@ import com.antonkarpenko.ffmpegkit.Session;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import apincer.android.mmate.provider.FileSystem;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
@@ -234,8 +232,6 @@ public class FFMpegHelper {
         FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
         // if (ReturnCode.isSuccess(session.getReturnCode())) {
         String data = session.getOutput();
-        //    String data = getFFmpegOutputData(session);
-        //parseReplayGain(tag, data);
         parseOverallDRMeter(tag, data);
        // parseVolume(tag, data);
         parseASTATS(tag, data);
@@ -366,9 +362,6 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
 
         String tmpTarget = tmpPath.replace("."+ext, "_NEWFMT."+targetExt);
 
-       // targetPath = escapePathForFFMPEG(targetPath);
-
-       // String cmd = " -hide_banner -nostats -i "+escapeFileName(srcPath)+" "+options+" \""+targetPath+"\"";
         String cmd = " -hide_banner -nostats -i "+tmpPath+" "+options+" \""+tmpTarget+"\"";
         Log.i(TAG, "Converting with cmd: "+ cmd);
 
@@ -389,34 +382,6 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
            FileSystem.delete(context, tmpPath);
        }
        return false;
-    }
-
-    public static ByteBuffer transcodeFile(Context context, String srcPath) {
-       // String options=" -vn -f s16be -ar 44100 -ac 2 "; // lpcm
-       // String options=" -c:a pcm_s16le -ar 44100 -ac 2 ";
-        String options=" -vn -f mp3 -ab 320000 "; // mp3
-
-        String tmpTarget = srcPath+"_tmp.mp3";
-        //String cmd = " -hide_banner -nostats -i \""+srcPath+"\" "+options+" \""+tmpTarget+"\"";
-        String cmd = " -i \""+srcPath+"\" "+options+" \""+tmpTarget+"\"";
-        Log.i(TAG, "Converting with cmd: "+ cmd);
-
-        try {
-            FFmpegSession session = FFmpegKit.execute(cmd);
-            if (!ReturnCode.isCancel(session.getReturnCode())) {
-                return FileUtils.getBytes(new File(tmpTarget));
-              /*  FileInputStream in = new FileInputStream(tmpTarget);
-
-                byte[] data = IOUtils.toByteArray(in);
-                in.close(); */
-              //  return data;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            FileSystem.delete(context, tmpTarget);
-        }
-        return null;
     }
 
     public static String escapePathForFFMPEG(String path) {

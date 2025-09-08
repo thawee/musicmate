@@ -19,7 +19,7 @@ import java.util.List;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicFolder;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.model.SearchCriteria;
@@ -104,7 +104,7 @@ public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.
             List<String> tabs = TagRepository.getActualGroupingList(context);
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = TagRepository.getActualGenreList(context);
+            List<String> tabs = TagRepository.getActualGenreList();
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.PUBLISHER) {
             List<String> tabs = TagRepository.getPublisherList(context);

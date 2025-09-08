@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna.transport;
 
+import static android.content.Context.BIND_AUTO_CREATE;
+import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
 import static apincer.android.mmate.utils.MusicTagUtils.isAACFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isAIFFile;
 import static apincer.android.mmate.utils.MusicTagUtils.isALACFile;
@@ -10,17 +12,18 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.util.Log;
-import android.util.LruCache;
 
 import org.jupnp.model.meta.RemoteDevice;
 import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -32,17 +35,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.player.PlayerInfo;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.playback.PlaybackService;
+import apincer.android.mmate.playback.Player;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.MimeTypeUtils;
 import apincer.android.mmate.utils.StringUtils;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -61,18 +61,14 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.stream.ChunkedFile;
-import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
-import io.netty.util.HashedWheelTimer;
-import io.netty.util.Timer;
 
 public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
     private final Context context;
     private static final String TAG = "NettyContentServer";
-    public static final int DEFAULT_SERVER_PORT = 8089;
+   // public static final int DEFAULT_SERVER_PORT = 8089;
 
     // Audio streaming optimizations - now with adaptive configuration
     private int AUDIO_CHUNK_SIZE = 16384; // 16KB chunks for audio streaming, will be adjusted
@@ -82,13 +78,6 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
 
     // Device-specific optimizations
     private static final Map<String, ClientProfile> CLIENT_PROFILES = new ConcurrentHashMap<>();
-
-    // Content caching
-    private final LruCache<String, ByteBuf> audioChunkCache;
-    private final Map<String, Long> popularFiles = new ConcurrentHashMap<>();
-
-    // Pre-buffering and scheduling
-    private final Timer scheduler = new HashedWheelTimer(100, TimeUnit.MILLISECONDS);
 
     private final int serverPort;
     private final EventLoopGroup bossGroup;
@@ -100,13 +89,35 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
     //RFC 1123 format required by HTTP/DLNA // EEE, dd MMM yyyy HH:mm:ss z
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z");
 
-    // For HTTP Range requests
-    private static final Pattern RANGE_PATTERN = Pattern.compile("bytes=(\\d+)-(\\d*)");
+    private PlaybackService playbackService;
+    private boolean isPlaybackServiceBound = false;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // Get the binder from the service and set the mediaServerService instance
+            PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
+            playbackService = binder.getService();
+            isPlaybackServiceBound = true;
+           // Log.i(TAG, "PlaybackService bound successfully.");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isPlaybackServiceBound = false;
+            playbackService = null;
+          //  Log.w(TAG, "PlaybackService disconnected unexpectedly.");
+        }
+    };
 
     public NettyContentServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
         this.context = context;
-        this.serverPort = DEFAULT_SERVER_PORT;
+        this.serverPort = CONTENT_SERVER_PORT;
+
+        // Bind to the MediaServerService as soon as this service is created
+        Intent intent = new Intent(context, PlaybackService.class);
+        context.bindService(intent, serviceConnection, BIND_AUTO_CREATE);
 
         // Initialize adaptive buffer settings based on device capabilities
         initializeBuffers();
@@ -116,29 +127,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         this.bossGroup = new MultiThreadIoEventLoopGroup(2, NioIoHandler.newFactory());
         this.workerGroup = new MultiThreadIoEventLoopGroup(Math.min(4,cpuCores), NioIoHandler.newFactory());
 
-        // Initialize content cache with appropriate size based on available memory
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        int memoryClass = am.getMemoryClass();
-        int cacheSize = Math.max(10, memoryClass / 4);  // 1/4 of available memory up to 64MB
-        audioChunkCache = new LruCache<>(cacheSize * 1024 * 1024) {
-            @Override
-            protected int sizeOf(String key, ByteBuf value) {
-                return value.capacity();
-            }
-
-            @Override
-            protected void entryRemoved(boolean evicted, String key, ByteBuf oldValue, ByteBuf newValue) {
-                if (oldValue != null && oldValue.refCnt() > 0) {
-                    oldValue.release();
-                }
-            }
-        };
-
         // Initialize default client profiles
         initClientProfiles();
-
-        Log.i(TAG, "NettyContentServer initialized with " + cpuCores +
-                " cores, cache size: " + cacheSize + "MB, audio chunk size: " + AUDIO_CHUNK_SIZE);
     }
 
     /**
@@ -225,7 +215,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
     @Override
     public void initServer(InetAddress bindAddress) throws InitializationException {
         if (isRunning) {
-            Log.w(TAG, "Server already running");
+            Log.w(TAG, "Http Streaming server already running");
             return;
         }
 
@@ -254,16 +244,14 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 ChannelFuture f = b.bind(bindAddress.getHostAddress(), serverPort).sync();
                 serverChannel = f.channel();
                 isRunning = true;
-                Log.i(TAG, "Http server started successfully on " +
-                        bindAddress.getHostAddress() + ":" + serverPort +
-                        " with buffer sizes: chunk=" + AUDIO_CHUNK_SIZE +
-                        ", high=" + HIGH_WATERMARK + ", low=" + LOW_WATERMARK);
+                Log.i(TAG, "\tHttp Streaming server started successfully on " +
+                        bindAddress.getHostAddress() + ":" + serverPort);
 
                 // Start metrics reporting in background
                // startMetricsReporting();
             } catch (Exception ex) {
                 isRunning = false;
-                Log.e(TAG, "Http server initialization failed: " + ex.getMessage(), ex);
+                Log.e(TAG, "Http Streaming server initialization failed: " + ex.getMessage(), ex);
                 // Clean up resources if startup fails
                 try {
                     if (serverChannel != null) {
@@ -272,10 +260,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                     }
                 } catch (Exception ignored) {}
             }
-        }, "HTTPServer");
+        }, "StreamingServer");
 
-        // not sure if this is needed, should let netty manage it's own thread
-       // serverThread.setPriority(Thread.MAX_PRIORITY - 1); // Higher priority for audio streaming
         serverThread.start();
 
         // Wait a short time to verify server started properly
@@ -286,7 +272,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new InitializationException("Http server start was interrupted", e);
+            throw new InitializationException("Http Streaming server start was interrupted", e);
         }
     }
 
@@ -295,48 +281,19 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
        // Log.d(TAG, "Shutting down netty content server");
         isRunning = false;
 
-        // Stop the scheduler
-        scheduler.stop();
-
-        // Clear caches
-        audioChunkCache.evictAll();
-        //clientMetrics.clear();
-        popularFiles.clear();
-       // clientRateLimiters.clear();
-      //  connectionCounter.clear();
-
-        // Close the server channel
-        if (serverChannel != null) {
-            try {
-                serverChannel.close().sync(); // Wait for channel to close
-               // Log.d(TAG, "Server channel closed");
-            } catch (InterruptedException e) {
-                Log.w(TAG, "Http server channel closing interrupted", e);
-                Thread.currentThread().interrupt();
-            } finally {
-                serverChannel = null;
-            }
-        }
-
-        // Shutdown the event loop groups
         try {
-            if (bossGroup != null) {
-                bossGroup.shutdownGracefully(0, 3, TimeUnit.SECONDS).await(3, TimeUnit.SECONDS);
-               // Log.d(TAG, "Boss group shutdown");
+            // Close the server channel to stop accepting new connections
+            if (serverChannel != null) {
+                serverChannel.close().syncUninterruptibly();
             }
-        } catch (InterruptedException e) {
-            Log.w(TAG, "Http server boss group shutdown interrupted", e);
-            Thread.currentThread().interrupt();
-        }
-
-        try {
+        } finally {
+            // Shut down the event loop groups to release all threads and resources
             if (workerGroup != null) {
-                workerGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS).await(5, TimeUnit.SECONDS);
-               // Log.d(TAG, "Worker group shutdown");
+                workerGroup.shutdownGracefully().syncUninterruptibly();
             }
-        } catch (InterruptedException e) {
-            Log.w(TAG, "Http server worker group shutdown interrupted", e);
-            Thread.currentThread().interrupt();
+            if (bossGroup != null) {
+                bossGroup.shutdownGracefully().syncUninterruptibly();
+            }
         }
 
         // Interrupt server thread if still running
@@ -351,7 +308,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             }
         }
 
-        Log.i(TAG, "Http server stopped successfully");
+        Log.i(TAG, "Http Streaming server stopped successfully");
     }
 
     @Override
@@ -363,49 +320,21 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         return context;
     }
 
-    /**
-     * Warm up cache for a file that might be needed soon
-     */
-    private void warmupCache(String filePath) {
-        if (filePath == null || !isRunning) return;
-
-        File file = new File(filePath);
-        if (!file.exists() || !file.canRead()) return;
-
-        // Schedule cache warmup as a background task
-        scheduler.newTimeout(timeout -> {
-            try {
-                // Read beginning of file into cache
-                String cacheKey = filePath + ":0:" + AUDIO_CHUNK_SIZE;
-                if (audioChunkCache.get(cacheKey) == null) {
-                    RandomAccessFile raf = new RandomAccessFile(file, "r");
-
-                    // Only read if file is large enough
-                    if (raf.length() > AUDIO_CHUNK_SIZE) {
-                        byte[] data = new byte[AUDIO_CHUNK_SIZE];
-                        raf.read(data);
-                        ByteBuf buf = Unpooled.wrappedBuffer(data);
-                        audioChunkCache.put(cacheKey, buf);
-                       // Log.d(TAG, "Pre-cached initial chunk of: " + filePath);
-                    }
-                    raf.close();
-                }
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to warmup cache for " + filePath, e);
-            }
-        }, 100, TimeUnit.MILLISECONDS);
-    }
-
     public class ContentServerInitializer extends ChannelInitializer<SocketChannel> {
         @Override
         protected void initChannel(SocketChannel ch) {
 
             ChannelPipeline pipeline = ch.pipeline();
+
+            // Handles basic HTTP protocol encoding and decoding.
             pipeline.addLast(new HttpServerCodec());
-            pipeline.addLast(new HttpObjectAggregator(65536)); // Aggregate HTTP messages - not good for streaming large file
+
+            // Handles writing large files in chunks without high memory use. Essential.
             pipeline.addLast(new ChunkedWriteHandler());
-            pipeline.addLast(new IdleStateHandler(120, 60, 0)); // Extended timeouts for music streaming
-            pipeline.addLast(new ContentServerHandler());
+
+            // Your custom logic to find and send the music file.
+            //pipeline.addLast(new ContentServerHandler());
+            pipeline.addLast(new StreamingContentHandler());
         }
     }
 
@@ -457,26 +386,19 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
     static class ContentHolder {
         private final String contentType;
         private final String filePath;
-        private final byte[] content;
+      //  private final byte[] content;
         private final String fileName;
         private final MusicTag musicTag;
 
         public ContentHolder(String contentType, String filePath, MusicTag tag) {
-            this(contentType, filePath, null, new File(filePath).getName(), tag);
-        }
-
-        public ContentHolder(String contentType, String filePath, byte[] content, String fileName, MusicTag tag) {
+           // this(contentType, filePath, null, new File(filePath).getName(), tag);
             this.filePath = filePath;
             this.contentType = contentType;
-            this.content = content;
-            this.fileName = fileName;
             this.musicTag = tag;
+            this.fileName = new File(filePath).getName();
         }
 
         public boolean exists() {
-            if (content != null) {
-                return true;
-            }
             if (filePath != null) {
                 File file = new File(filePath);
                 return file.exists() && file.canRead();
@@ -489,7 +411,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         }
     }
 
-    private class ContentServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+    private class StreamingContentHandler extends SimpleChannelInboundHandler<HttpObject> {
 
         private ClientProfile detectClientProfile(ChannelHandlerContext ctx, HttpHeaders headers) {
             String userAgent = headers.get(HttpHeaderNames.USER_AGENT, "unknown").toLowerCase();
@@ -497,7 +419,10 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
 
             // Check for specific controller/renderer identification in User-Agent
             // Check for MPD with more detailed detection
-            RemoteDevice dev = MusixMateApp.getInstance().getRenderer(clientIp);
+            RemoteDevice dev = null;
+            if(isPlaybackServiceBound) {
+                dev = playbackService.getRendererByIpAddress(clientIp);
+            }
             if(dev != null) {
                 Log.i(TAG, "found dlna renderer " + dev.getDetails().getFriendlyName() + ": " + userAgent);
                 return CLIENT_PROFILES.getOrDefault("mpd", CLIENT_PROFILES.get("default"));
@@ -536,107 +461,85 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
+        protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
 
-            // Validate request
-            if (!request.decoderResult().isSuccess()) {
-                //errorCounter.incrementAndGet();
-                sendError(ctx, BAD_REQUEST);
-                return;
-            }
-
-            // Check if we support the HTTP method
-            if (!request.method().equals(HttpMethod.GET) && !request.method().equals(HttpMethod.HEAD)) {
-                //errorCounter.incrementAndGet();
-                sendError(ctx, METHOD_NOT_ALLOWED);
-                return;
-            }
-
-            // Get client profile for optimized delivery
-            ClientProfile profile = detectClientProfile(ctx, request.headers());
-
-            // Get requested content
-            ContentHolder holder = getContent(ctx, request);
-
-            // Check if content exists
-            if (holder == null || !holder.exists()) {
-               // errorCounter.incrementAndGet();
-                sendError(ctx, NOT_FOUND);
-                return;
-            }
-
-            boolean keepAlive = HttpUtil.isKeepAlive(request) && profile.keepAlive;
-
-            // Handle in-memory content
-            if (holder.content != null) {
-                serveByteContent(ctx, request, holder, keepAlive, profile);
-
-                return;
-            }
-
-            // Handle file content
-            if (holder.filePath != null) {
-                serveFileContent(ctx, request, holder, keepAlive, profile);
-                return;
-            }
-
-            // Should never reach here if proper validation is done
-            //errorCounter.incrementAndGet();
-            sendError(ctx, INTERNAL_SERVER_ERROR);
-        }
-
-        private void serveByteContent(ChannelHandlerContext ctx, FullHttpRequest request,
-                                      ContentHolder holder, boolean keepAlive, ClientProfile profile) {
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
-            HttpUtil.setContentLength(response, holder.content.length);
-            setContentTypeHeader(response, holder.contentType);
-            setDateAndCacheHeaders(response, holder.fileName);
-            setAudioHeaders(response, holder, profile);
-
-            if (keepAlive) {
-                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-            }
-
-            // Write the initial line and headers
-            ctx.write(response);
-
-            // Write the content
-            if (request.method() != HttpMethod.HEAD) {
-                ctx.write(new HttpChunkedInput(new ChunkedStream(new ByteArrayInputStream(holder.content))));
-            }
-
-            // Write the end marker
-            ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-
-            // Close the connection if not keep-alive
-            if (!keepAlive) {
-                lastContentFuture.addListener(ChannelFutureListener.CLOSE);
-            }
-        }
-
-        private void serveFileContent(ChannelHandlerContext ctx, FullHttpRequest request,
-                                      ContentHolder holder, boolean keepAlive, ClientProfile profile) {
-            try {
-                File file = new File(holder.filePath);
-                long fileLength = file.length();
-
-                // Update metrics - count file access for popularity tracking
-                popularFiles.compute(holder.filePath, (k, v) -> v == null ? 1L : v + 1L);
-
-                // Parse Range header if present
-                String rangeHeader = request.headers().get(HttpHeaderNames.RANGE);
-                if (rangeHeader != null) {
-
-                    serveRangeContent(ctx, request, file, fileLength, rangeHeader, holder, keepAlive, profile);
+            // We only want to react to the beginning of the request.
+            if (msg instanceof HttpRequest request) {
+                // Check if we support the HTTP method
+                if (!request.method().equals(HttpMethod.GET) && !request.method().equals(HttpMethod.HEAD)) {
+                    //errorCounter.incrementAndGet();
+                    sendError(ctx, METHOD_NOT_ALLOWED);
                     return;
                 }
 
-                // Handle normal file serving
-                HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
-                HttpUtil.setContentLength(response, fileLength);
+                // Get client profile for optimized delivery
+                ClientProfile profile = detectClientProfile(ctx, request.headers());
+
+                // Get requested content
+                ContentHolder holder = getContent(ctx, request);
+
+                // Check if content exists
+                if (holder == null || !holder.exists()) {
+                    // errorCounter.incrementAndGet();
+                    sendError(ctx, NOT_FOUND);
+                    return;
+                }
+
+                boolean keepAlive = HttpUtil.isKeepAlive(request) && profile.keepAlive;
+
+                // Handle file content
+                serveContent(ctx, request, holder, keepAlive, profile);
+            } else {
+                sendError(ctx, BAD_REQUEST);
+            }
+        }
+
+        private void serveContent(ChannelHandlerContext ctx, HttpRequest request,
+                                  ContentHolder holder, boolean keepAlive, ClientProfile profile) {
+            try {
+                File file = new File(holder.filePath);
+                long fileLength = file.length();
+                RandomAccessFile raf = new RandomAccessFile(file, "r");
+
+                long start = 0;
+                long length = fileLength;
+
+                // --- RANGE REQUEST HANDLING LOGIC ---
+                String rangeHeader = request.headers().get(HttpHeaderNames.RANGE);
+                HttpResponseStatus status = OK; // Default to 200 OK
+
+                if (rangeHeader != null && !rangeHeader.isEmpty()) {
+                    // Example Range: "bytes=100-500" or "bytes=100-"
+                    String[] ranges = rangeHeader.substring("bytes=".length()).split("-");
+                    start = Long.parseLong(ranges[0]);
+
+                    if (ranges.length > 1) {
+                        long end = Long.parseLong(ranges[1]);
+                        length = end - start + 1;
+                    } else {
+                        length = fileLength - start;
+                    }
+
+                    if (start > 0 || length < fileLength) {
+                        status = PARTIAL_CONTENT; // It's a partial request, so status is 206
+                    }
+                }
+                // --- END OF RANGE LOGIC ---
+
+                HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
+
+                // Set the appropriate length based on whether it's a full or partial response
+                HttpUtil.setContentLength(response, length);
+
                 setContentTypeHeader(response, holder.contentType);
                 setDateAndCacheHeaders(response, holder.fileName);
                 setAudioHeaders(response, holder, profile);
+
+                // If it's a partial request, we MUST add the Content-Range header
+                if (status == PARTIAL_CONTENT) {
+                    String contentRange = "bytes " + start + "-" + (start + length - 1) + "/" + fileLength;
+                    response.headers().set(HttpHeaderNames.CONTENT_RANGE, contentRange);
+                }
 
                 if (keepAlive) {
                     response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
@@ -645,204 +548,20 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 // Write the initial line and headers
                 ctx.write(response);
 
-                // Write the content
-                if (request.method() != HttpMethod.HEAD) {
-                    // Use optimized chunk size for audio streaming
-                    RandomAccessFile rfile = new RandomAccessFile(file, "r");
-                    ChunkedFile chunkedFile = new ChunkedFile(rfile, 0, fileLength, profile.chunkSize);
+                // Write the content using a ChunkedFile that respects the start and length
+                ctx.write(new HttpChunkedInput(new ChunkedFile(raf, start, length, profile.chunkSize)), ctx.newProgressivePromise());
 
-                    ctx.write(new HttpChunkedInput(chunkedFile));
-                }
-
-                // Write the end marker
                 ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 
-                // Close the connection if not keep-alive
                 if (!keepAlive) {
                     lastContentFuture.addListener(ChannelFutureListener.CLOSE);
                 }
 
-            } catch (IOException e) {
+            } catch (Exception e) { // Catching broader exceptions for safety
                 Log.e(TAG, "Failed to serve file: " + e.getMessage(), e);
-                //errorCounter.incrementAndGet();
-                sendError(ctx, INTERNAL_SERVER_ERROR);
-            }
-        }
-
-        private void serveRangeContent(ChannelHandlerContext ctx, FullHttpRequest request,
-                                       File file, long fileLength, String rangeHeader,
-                                       ContentHolder holder, boolean keepAlive, ClientProfile profile) throws IOException {
-
-            // Parse range header
-            Matcher matcher = RANGE_PATTERN.matcher(rangeHeader);
-            if (!matcher.matches()) {
-                // Invalid range format
-                //errorCounter.incrementAndGet();
-                sendError(ctx, REQUESTED_RANGE_NOT_SATISFIABLE);
-                return;
-            }
-
-            // Parse range values
-            long rangeStart = Long.parseLong(matcher.group(1));
-
-            // Handle end range
-            long rangeEnd;
-            if (matcher.group(2) != null && matcher.group(2).isEmpty()) {
-                rangeEnd = fileLength - 1;
-            } else {
-                rangeEnd = Long.parseLong(matcher.group(2));
-            }
-
-            // Validate ranges
-            if (rangeStart > rangeEnd || rangeStart >= fileLength || rangeEnd >= fileLength) {
-                //errorCounter.incrementAndGet();
-                HttpResponse response = new DefaultHttpResponse(HTTP_1_1, REQUESTED_RANGE_NOT_SATISFIABLE);
-                response.headers().set(
-                        HttpHeaderNames.CONTENT_RANGE,
-                        "bytes */" + fileLength
-                );
-                sendError(ctx, REQUESTED_RANGE_NOT_SATISFIABLE);
-                return;
-            }
-
-            // Calculate content length
-            long contentLength = rangeEnd - rangeStart + 1;
-
-            // Create response
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, PARTIAL_CONTENT);
-            HttpUtil.setContentLength(response, contentLength);
-
-            // Set Content-Range header
-            response.headers().set(
-                    HttpHeaderNames.CONTENT_RANGE,
-                    "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength
-            );
-
-            setContentTypeHeader(response, holder.contentType);
-            setDateAndCacheHeaders(response, holder.fileName);
-            setAudioHeaders(response, holder, profile);
-
-            // Set Accept-Ranges header to inform client we support range requests
-            response.headers().set(HttpHeaderNames.ACCEPT_RANGES, "bytes");
-
-            if (keepAlive) {
-                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-            }
-
-            // Write the initial line and headers
-            ctx.write(response);
-
-            // Write the content
-            if (request.method() != HttpMethod.HEAD) {
-                // Check cache first for this chunk
-                String cacheKey = holder.filePath + ":" + rangeStart + ":" + contentLength;
-                ByteBuf cachedChunk = audioChunkCache.get(cacheKey);
-
-                if (cachedChunk != null && cachedChunk.readableBytes() == contentLength) {
-                    // Use cached chunk if available
-                    Log.d(TAG, "Using cached chunk for " + holder.fileName + " Range: " + rangeStart + "-" + rangeEnd);
-
-                    // Retain for this read operation and send
-                    // The cachedChunk is already retained by the cache.
-                    // We need a duplicate that this write operation will own.
-                    ctx.write(new DefaultHttpContent(cachedChunk.retainedDuplicate()));
-                } else {
-                    // Read from file
-                    RandomAccessFile raf = new RandomAccessFile(file, "r");
-                    try {
-                        raf.seek(rangeStart);
-
-                        // Check if chunk size is small enough to cache
-                        // Heuristic: If requested range is smaller than or equal to twice the general AUDIO_CHUNK_SIZE,
-                        // it might be metadata or a small segment worth caching.
-                        if (contentLength <= AUDIO_CHUNK_SIZE * 2L) { // <<< THIS IS POINT #5
-                            Log.d(TAG, "Small range detected for " + holder.fileName + ". Caching. Range: " + rangeStart + "-" + rangeEnd + ", Length: " + contentLength);
-                            // For small ranges that might be repeatedly requested (e.g., file headers)
-                            // read into memory and cache
-                            byte[] data = new byte[(int)contentLength]; // Safe cast due to contentLength check
-                            raf.readFully(data);
-
-                            ByteBuf bufferToCache = Unpooled.wrappedBuffer(data);
-                            // Store in cache. The LruCache will own this buffer once put.
-                            // We call retain() so the cache starts with a refCnt of 1.
-                            audioChunkCache.put(cacheKey, bufferToCache.retain());
-
-                            // Write to client. We send a duplicate of the buffer we just cached.
-                            // The write operation will release this duplicate.
-                            ctx.write(new DefaultHttpContent(bufferToCache.retainedDuplicate()));
-                        } else {
-                            // For larger ranges, use chunked streaming
-                            Log.d(TAG, "Large range detected for " + holder.fileName + ". Streaming. Range: " + rangeStart + "-" + rangeEnd);
-                            // ChunkedFile will manage the RandomAccessFile internally, including closing it.
-                            ctx.write(new HttpChunkedInput(
-                                    new ChunkedFile(raf, rangeStart, contentLength, profile.chunkSize)));
-                            raf = null; // Mark raf as null so it's not closed in the finally block here
-                        }
-                    } finally {
-                        if (raf != null) {
-                            try {
-                                raf.close();
-                            } catch (IOException e) {
-                                Log.w(TAG, "Error closing RandomAccessFile in range serving: " + e.getMessage());
-                            }
-                        }
-                    }
+                if (ctx.channel().isActive()) {
+                    sendError(ctx, INTERNAL_SERVER_ERROR);
                 }
-            }
-            /*
-            if (request.method() != HttpMethod.HEAD) {
-                // Check cache first for this chunk
-                String cacheKey = holder.filePath + ":" + rangeStart + ":" + contentLength;
-                ByteBuf cachedChunk = audioChunkCache.get(cacheKey);
-
-                if (cachedChunk != null && cachedChunk.readableBytes() == contentLength) {
-                    // Use cached chunk if available
-                    Log.d(TAG, "Using cached chunk for " + holder.fileName);
-
-                    // Retain for this read operation
-                    ByteBuf duplicateBuffer = cachedChunk.retainedDuplicate();
-                    ctx.write(new DefaultHttpContent(duplicateBuffer));
-                } else {
-                    // Read from file
-                    RandomAccessFile raf = new RandomAccessFile(file, "r");
-                    try {
-                        raf.seek(rangeStart);
-
-                        // Check if chunk size is small enough to cache
-                        if (contentLength <= AUDIO_CHUNK_SIZE * 2L) {
-                            // For small ranges that might be repeatedly requested (e.g., file headers)
-                            // read into memory and cache
-                            byte[] data = new byte[(int)contentLength];
-                            raf.readFully(data);
-
-                            ByteBuf buffer = Unpooled.wrappedBuffer(data);
-                            // Store in cache (will release old if needed)
-                            audioChunkCache.put(cacheKey, buffer.retain());
-
-                            // Write to client
-                            ctx.write(new DefaultHttpContent(buffer.retain()));
-                        } else {
-                            // For larger ranges, use chunked streaming
-                            ctx.write(new HttpChunkedInput(
-                                    new ChunkedFile(raf, rangeStart, contentLength, profile.chunkSize)));
-
-                            // Don't close RAF here as ChunkedFile will handle it
-                            raf = null;
-                        }
-                    } finally {
-                        if (raf != null) {
-                            raf.close();
-                        }
-                    }
-                }
-            } */
-
-            // Write the end marker
-            ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-
-            // Close the connection if not keep-alive
-            if (!keepAlive) {
-                lastContentFuture.addListener(ChannelFutureListener.CLOSE);
             }
         }
 
@@ -857,10 +576,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             // Add date header with RFC 1123 format required by HTTP/DLNA
             ZoneId zoneId = ZoneId.systemDefault();
             ZonedDateTime now = ZonedDateTime.now(zoneId);
-            //
-            //now.atZone(zoneId);
 
-           // response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(new Date()));
             response.headers().set(HttpHeaderNames.DATE, now.format(dateFormatter));
 
             // Set content disposition for better download behavior
@@ -886,7 +602,7 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             // If we have music tag metadata, add it to help clients
             if (holder.getMusicTag() != null) {
                 MusicTag tag = holder.getMusicTag();
-                String filePath = tag.getPath().toLowerCase();
+                //String filePath = tag.getPath().toLowerCase();
 
                 // Set more specific MIME types for certain formats if needed
                 if (isALACFile(tag)) {
@@ -1026,10 +742,11 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             //errorCounter.incrementAndGet();
             if (ctx.channel().isActive()) {
                 sendError(ctx, INTERNAL_SERVER_ERROR);
+                ctx.close();
             }
         }
 
-        private ContentHolder getContent(ChannelHandlerContext ctx, FullHttpRequest request) {
+        private ContentHolder getContent(ChannelHandlerContext ctx, HttpRequest request) {
             String requestUri = request.uri();
             if (requestUri.startsWith("/")) {
                 requestUri = requestUri.substring(1);
@@ -1071,15 +788,13 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
             // Retrieve the remote address
             String remoteIp = "";
             SocketAddress remoteAddress = ctx.channel().remoteAddress();
-            if (remoteAddress instanceof InetSocketAddress) {
-                InetSocketAddress inetSocketAddress = (InetSocketAddress) remoteAddress;
+            if (remoteAddress instanceof InetSocketAddress inetSocketAddress) {
                 remoteIp = inetSocketAddress.getAddress().getHostAddress();
-                //System.out.println("Remote IP address: " + remoteIp);
             }
             return remoteIp;
         }
 
-        private ContentHolder getSong(ChannelHandlerContext ctx, FullHttpRequest request, String contentId) {
+        private ContentHolder getSong(ChannelHandlerContext ctx, HttpRequest request, String contentId) {
             if (contentId == null || contentId.isEmpty()) {
                 return null;
             }
@@ -1102,17 +817,22 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
 
                 // Record streaming information
                 String agent = request.headers().get(HttpHeaderNames.USER_AGENT);
-                String clientIp = getRemoteAddress(ctx);
-                PlayerInfo player = PlayerInfo.buildStreamPlayer(getContext(), agent, clientIp);
-                MusixMateApp.getPlayerControl().publishPlayingSong(player, tag);
-
-                // Warm up cache for this file
-                warmupCache(tag.getPath());
+                if(isPlaybackServiceBound) {
+                    String clientIp = getRemoteAddress(ctx);
+                    RemoteDevice device = playbackService.getRendererByIpAddress(clientIp);
+                    Player player;
+                    if (device != null) {
+                        player = Player.Factory.create(getContext(), device);
+                    } else {
+                        player = Player.Factory.create(getContext(), clientIp, agent);
+                    }
+                    playbackService.onNewTrackPlaying(player, tag, 0);
+                }
 
                 // Get MIME type for the file
                 String mimeType = MimeTypeUtils.getMimeTypeFromPath(tag.getPath());
 
-               // Log.i(TAG, "Serving media: " + tag.getTitle() + " [" + mimeType + "]");
+                // Log.i(TAG, "Serving media: " + tag.getTitle() + " [" + mimeType + "]");
                 return new ContentHolder(mimeType, tag.getPath(), tag);
             } catch (Exception e) {
                 Log.e(TAG, "Error retrieving song: " + e.getMessage(), e);

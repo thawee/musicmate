@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#2E2E2E">
+
+    <!-- Signal Path Title and Lossless Indicator -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Signal Path"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- Spacer -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/quality_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lossless"
+            android:textColor="#8BC34A"
+            android:textStyle="bold"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <!-- Signal Path Container -->
+    <LinearLayout
+        android:id="@+id/signal_path_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="#555555" />
+
+    <!-- DLNA Players Header (Clickable) -->
+    <LinearLayout
+        android:id="@+id/players_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Available Players"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/expand_arrow"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_expand_more"
+            android:rotation="180"
+            app:tint="#FFFFFF" />
+
+    </LinearLayout>
+
+    <!-- DLNA Players List (Collapsible) -->
+    <LinearLayout
+        android:id="@+id/dlna_players_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical" />
+
+</LinearLayout>

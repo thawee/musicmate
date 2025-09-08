@@ -14,7 +14,7 @@ import android.widget.TextView;
 import java.util.Locale;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 
 public class ResolutionView extends RelativeLayout {

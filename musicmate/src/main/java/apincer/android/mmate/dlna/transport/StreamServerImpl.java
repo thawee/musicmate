@@ -77,6 +77,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     final private StreamServerConfigurationImpl configuration;
     private StreamServer contentServer;
     private StreamServer upnpServer;
+    private StreamServer webServer;
     private final Context context;
 
     public static String streamServerHost = "";
@@ -95,12 +96,15 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
         Log.i(TAG, "Initialise Stream Servers");
 
-        Log.i(TAG, "  Stop servers before start if server already running.");
+       // Log.i(TAG, "  Stop servers before start if server already running.");
         if(upnpServer != null) {
             upnpServer.stopServer();
         }
         if(contentServer != null) {
             contentServer.stopServer();
+        }
+        if(webServer != null) {
+            webServer.stopServer();
         }
 
         streamServerHost = bindAddress.getHostAddress();
@@ -112,12 +116,17 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             this.contentServer = new NettyContentServerImpl(context, router, configuration);
             this.contentServer.initServer(bindAddress);
 
+            this.webServer = new NettyWebServerImpl(context, router, configuration);
+            this.webServer.initServer(bindAddress);
         }else {
             this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
             this.upnpServer.initServer(bindAddress);
 
             this.contentServer = new JettyContentServerImpl(context, router, configuration);
             this.contentServer.initServer(bindAddress);
+
+            this.webServer = new NettyWebServerImpl(context, router, configuration);
+            this.webServer.initServer(bindAddress);
         }
     }
 
@@ -126,12 +135,15 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     }
 
     synchronized public void stop() {
-        Log.i(TAG, "Stop Stream Servers");
+       // Log.i(TAG, "Stop Stream Servers");
         if(upnpServer != null) {
             upnpServer.stopServer();
         }
         if(contentServer != null) {
             contentServer.stopServer();
+        }
+        if(webServer != null) {
+            webServer.stopServer();
         }
     }
 

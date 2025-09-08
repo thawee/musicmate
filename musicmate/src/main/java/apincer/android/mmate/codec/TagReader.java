@@ -9,14 +9,12 @@ import com.anggrayudi.storage.file.DocumentFileCompat;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioHeader;
-import org.jaudiotagger.audio.mp4.EncoderType;
 
 import java.io.File;
-import java.util.List;
 import java.util.Locale;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 

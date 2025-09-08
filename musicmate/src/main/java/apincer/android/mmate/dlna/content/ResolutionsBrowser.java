@@ -17,8 +17,8 @@ import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicFolder;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.model.MusicFolder;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.MusicTagUtils;
 

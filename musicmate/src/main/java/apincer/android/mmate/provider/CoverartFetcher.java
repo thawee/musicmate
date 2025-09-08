@@ -23,7 +23,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.utils.FileUtils;
 import coil3.BitmapImage;
@@ -111,7 +111,7 @@ public class CoverartFetcher implements Fetcher {
     public static ImageRequest.Builder builder(Context context, MusicTag tag) {
         ImageRequest.Builder builder = new ImageRequest.Builder(context);
         builder.fetcherFactory(new Factory(), new KClassMusicTag());
-        if(!tag.isMusicManaged()) {
+        if(tag != null && !tag.isMusicManaged()) {
             builder.diskCachePolicy(CachePolicy.DISABLED); // Disable disk caching
             builder.memoryCachePolicy(CachePolicy.DISABLED); // Disable memory caching
         }

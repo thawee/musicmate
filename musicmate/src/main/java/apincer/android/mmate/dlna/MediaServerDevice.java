@@ -1,6 +1,6 @@
 package apincer.android.mmate.dlna;
 
-import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
+import static apincer.android.mmate.dlna.MediaServerConfiguration.WEB_SERVER_PORT;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -46,24 +46,26 @@ import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.StringUtils;
 
 public class MediaServerDevice extends LocalDevice {
-
-    //private final Context context;
     private final DeviceDetailsProvider deviceDetailsProvider;
 
     public MediaServerDevice(Context context) throws ValidationException {
         super(
                 new DeviceIdentity(new UDN(getUuid(context))),
                 new UDADeviceType("MediaServer"),
-                null,
+                createDetails(context),
                 createDeviceIcons(context),
                 createMediaServerServices(context),
                 null
         );
-       // this.context = context;
-        this.deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
+        deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
         ContentDirectory contentDirectoryService = getServiceImplementation(ContentDirectory.class);
         ConnectionManagerService connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
        // this.mediaReceiverRegistrarService = getServiceImplementation(UmsMediaReceiverRegistrarService.class);
+    }
+
+    private static DeviceDetails createDetails(Context context) {
+        MediaDeviceDetailsProvider deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
+        return deviceDetailsProvider.provide(null);
     }
 
     @Override
@@ -223,11 +225,11 @@ public class MediaServerDevice extends LocalDevice {
             private static final List<String> CAPS_SORT = List.of("dc:title", "upnp:artist", "upnp:album", "upnp:genre");
             private static final DLNACaps SEC_CAP = new DLNACaps(new String[]{"smi", "DCM10", "getMediaInfo.sec", "getCaptionInfo.sec"});
 
-        @Override
+            @Override
             public DeviceDetails provide(RemoteClientInfo info) {
                 String modelNumber = ApplicationUtils.getVersionNumber(context);
                 String modelName = "MusicMate Server";
-                String modelDescription = "DLNA (UPnP/AV 1.0) Media Server - " + ApplicationUtils.getDeviceDetails();
+                String modelDescription = "DLNA (UPnP/AV 1.0) Server - " + ApplicationUtils.getDeviceDetails();
 
                 // For better display in mConnectHD, include the device model in brackets
                 String friendlyName = "MusicMate Server [" + ApplicationUtils.getDeviceModel() + "]";
@@ -243,7 +245,7 @@ public class MediaServerDevice extends LocalDevice {
 
                 URI presentationURI = null;
             if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
-                String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + CONTENT_SERVER_PORT + "/musicmate.html";
+                String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + WEB_SERVER_PORT + "/index.html";
                 presentationURI = URI.create(webInterfaceUrl);
             }
             return new DeviceDetails(

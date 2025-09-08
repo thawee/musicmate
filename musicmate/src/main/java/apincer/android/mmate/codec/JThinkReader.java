@@ -1,10 +1,9 @@
 package apincer.android.mmate.codec;
 
 import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
-import static apincer.android.mmate.repository.MusicAnalyser.analyse;
+import static apincer.android.mmate.codec.MusicAnalyser.analyse;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
-import static apincer.android.mmate.utils.StringUtils.toDouble;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -27,6 +26,7 @@ import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.TagTextField;
 import org.jaudiotagger.tag.flac.FlacTag;
 import org.jaudiotagger.tag.id3.valuepair.TextEncoding;
+import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 import org.jaudiotagger.tag.wav.WavInfoTag;
 import org.jaudiotagger.tag.wav.WavTag;
@@ -34,12 +34,11 @@ import org.jaudiotagger.tag.wav.WavTag;
 import java.io.File;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -57,7 +56,7 @@ public class JThinkReader extends TagReader{
     private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG";
     private static final String KEY_TAG_WAVE_QUALITY = "ISBJ";
 
-    public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
+    //public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
     public JThinkReader(Context context) {
         LogHelper.initial();
@@ -101,8 +100,6 @@ public class JThinkReader extends TagReader{
             return false;
         }
         try {
-
-            // tag.setPath(mediaPath);
             readFileInfo(context, tag);
             tag.setAudioStartTime(0);
 
@@ -184,6 +181,7 @@ public class JThinkReader extends TagReader{
     private static void setupTagOptions() {
         TagOptionSingleton instance = TagOptionSingleton.getInstance();
         instance.setAndroid(true);
+        instance.setID3V2Version(ID3V2Version.ID3_V24);
         instance.setId3v23DefaultTextEncoding(TextEncoding.ISO_8859_1);
         instance.setId3v24DefaultTextEncoding(TextEncoding.UTF_8);
         instance.setId3v24UnicodeTextEncoding(TextEncoding.UTF_16);
@@ -208,15 +206,11 @@ public class JThinkReader extends TagReader{
                 metadata.setArtist(getId3TagValue(tag, FieldKey.ARTIST));
                 metadata.setAlbumArtist(getId3TagValue(tag, FieldKey.ALBUM_ARTIST));
                 metadata.setGenre(getId3TagValue(tag, FieldKey.GENRE));
+                metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
                 metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
                 metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
-
-                // Check for artwork
-                //if (tag.getFirstArtwork() != null) {
-                //    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
-                //}
 
                 // Process format-specific tags
                 processFormatSpecificTags(tag, metadata);
@@ -236,19 +230,20 @@ public class JThinkReader extends TagReader{
         // Extract values from map that we're interested in
         metadata.setPublisher(tempTagsMap.get(KEY_TAG_PUBLISHER));
         metadata.setMediaQuality(tempTagsMap.get(KEY_TAG_QUALITY));
-        metadata.setMediaType(tempTagsMap.get(KEY_TAG_MEDIA));
+       // metadata.setMediaType(tempTagsMap.get(KEY_TAG_MEDIA));
 
         // Handle format-specific tags
         if (MusicTagUtils.isWavFile(metadata)) {
+            metadata.setGrouping(getId3TagValue(tag, FieldKey.RECORD_LABEL));
             processWaveSpecificTags(metadata, tempTagsMap, tag);
-        } else if (MusicTagUtils.isMPegFile(metadata)) {
-            processMpegSpecificTags(metadata, tempTagsMap);
+       // } else if (MusicTagUtils.isMPegFile(metadata)) {
+       //     processMpegSpecificTags(metadata, tempTagsMap);
         } else {
             // Standard files support these tags directly
             metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
             metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
             metadata.setMediaQuality(getId3TagValue(tag, FieldKey.QUALITY));
-            metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
+          //  metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
             metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
         }
     }
@@ -261,19 +256,20 @@ public class JThinkReader extends TagReader{
         metadata.setMediaQuality(tags.get(KEY_TAG_WAVE_QUALITY));
 
         // Process special comment format for WAV
-        String comment = tag.getFirst(FieldKey.COMMENT);
+        /*String comment = tag.getFirst(FieldKey.COMMENT);
         if (!isEmpty(comment)) {
             processWaveComment(metadata, comment);
-        }
+        } */
     }
 
-    private void processMpegSpecificTags(MusicTag metadata, Map<String, String> tags) {
+   /* private void processMpegSpecificTags(MusicTag metadata, Map<String, String> tags) {
         String comment = tags.get(KEY_TAG_MP3_COMMENT);
         if (!isEmpty(comment)) {
             processWaveComment(metadata, comment);
         }
-    }
+    } */
 
+    /*
     private void processWaveComment(MusicTag metadata, String comment) {
         int start = comment.indexOf("<##>");
         int end = comment.indexOf("</##>");
@@ -305,7 +301,7 @@ public class JThinkReader extends TagReader{
         }
 
         metadata.setComment(comment);
-    }
+    } */
 
     private String getId3TagValue(Tag id3Tag, FieldKey key) {
         if (id3Tag != null && id3Tag.hasField(key)) {
@@ -378,167 +374,6 @@ public class JThinkReader extends TagReader{
         }
     }
 
-    private MusicTag readTags2(AudioFile audioFile, MusicTag metadata) {
-            Tag tag = audioFile.getTag();
-            if (tag != null && !tag.isEmpty()) {
-
-                String title = getId3TagValue(tag, FieldKey.TITLE);
-                if (!StringUtils.isEmpty(title)) {
-                    metadata.setTitle(title);
-                }else {
-                    // file name as title
-                    metadata.setTitle(audioFile.getFile().getName());
-                }
-                metadata.setAlbum(getId3TagValue(tag, FieldKey.ALBUM));
-                metadata.setArtist(getId3TagValue(tag, FieldKey.ARTIST));
-                metadata.setAlbumArtist(getId3TagValue(tag, FieldKey.ALBUM_ARTIST));
-                metadata.setGenre(getId3TagValue(tag, FieldKey.GENRE));
-                metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
-                metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
-                metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
-                metadata.setCompilation(toBoolean(getId3TagValue(tag, FieldKey.IS_COMPILATION)));
-                //if(tag.getFirstArtwork() != null) {
-                //    metadata.setCoverartMime(tag.getFirstArtwork().getMimeType());
-                //}
-
-                // read replay gain fields
-                Map<String, String> tags = parseCustomTagFields(tag);
-
-                if (tags.containsKey(KEY_TAG_PUBLISHER)) {
-                    metadata.setPublisher(tags.get(KEY_TAG_PUBLISHER));
-                }
-                if (tags.containsKey(KEY_TAG_QUALITY)) {
-                    metadata.setMediaQuality(tags.get(KEY_TAG_QUALITY));
-                }
-                if (tags.containsKey(KEY_TAG_MEDIA)) {
-                    metadata.setMediaQuality(tags.get(KEY_TAG_MEDIA));
-                }
-
-                // MQA, detect by mqa identifier
-
-                //  if ("wav".equalsIgnoreCase(metadata.getFileExtension()) || "dsf".equalsIgnoreCase(metadata.getFileExtension())) {
-                if (MusicTagUtils.isWavFile(metadata)) {
-                    // wave, not support disk no, grouping, media, quality - write to comment
-                    // parseWaveCommentTag(metadata, getId3TagValue(tag, FieldKey.COMMENT));
-                    metadata.setGrouping(tags.get(KEY_TAG_WAVE_GROUP));
-                    metadata.setAlbumArtist(tags.get(KEY_TAG_WAVE_ALBUM_ARTIST));
-                    metadata.setTrack(tags.get(KEY_TAG_WAVE_TRACK));
-                    metadata.setMediaQuality(tags.get(KEY_TAG_WAVE_QUALITY));
-
-                    String comment = tag.getFirst(FieldKey.COMMENT);
-                    int start = comment.indexOf("<##>");
-                    int end = comment.indexOf("</##>");
-                    if (start >= 0 && end > start) {
-                        // found metadata comment
-                        String mdata = comment.substring(start + 4, end);
-                        if (comment.length() > (end + 5)) {
-                            comment = comment.substring(end + 5);
-                        } else {
-                            comment = "";
-                        }
-
-                        String[] text = mdata.split("#", -1);
-
-                        metadata.setDisc(extractField(text, 0));
-                        metadata.setGrouping(extractField(text, 1));
-                        metadata.setMediaQuality(extractField(text, 2));
-                      //  metadata.setRating(toInt(extractField(text, 3)));
-                        metadata.setAlbumArtist(extractField(text, 4));
-                        metadata.setComposer(extractField(text, 5));
-                        metadata.setDynamicRangeScore(toDouble(extractField(text, 6)));
-                        metadata.setDynamicRange(toDouble(extractField(text, 7)));
-                    }
-                    metadata.setComment(comment);
-                }else if (MusicTagUtils.isMPegFile(metadata)) {
-                    String comment = tags.get(KEY_TAG_MP3_COMMENT);
-                    if(!isEmpty(comment)) {
-                        int start = comment.indexOf("<##>");
-                        int end = comment.indexOf("</##>");
-                        if (start >= 0 && end > start) {
-                            // found metadata comment
-                            String mdata = comment.substring(start + 4, end);
-                            if (comment.length() > (end + 5)) {
-                                comment = comment.substring(end + 5);
-                            } else {
-                                comment = "";
-                            }
-
-                            String[] text = mdata.split("#", -1);
-
-                            metadata.setDisc(extractField(text, 0));
-                            metadata.setGrouping(extractField(text, 1));
-                            metadata.setMediaQuality(extractField(text, 2));
-                         //   metadata.setRating(toInt(extractField(text, 3)));
-                            metadata.setAlbumArtist(extractField(text, 4));
-                            metadata.setComposer(extractField(text, 5));
-                            metadata.setDynamicRangeScore(toDouble(extractField(text, 6)));
-                            metadata.setDynamicRange(toDouble(extractField(text, 7)));
-                        }
-                        metadata.setComment(comment);
-                    }
-                } else {
-                    // WAV file not support these fields
-                    metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
-                    metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
-                    metadata.setMediaQuality(getId3TagValue(tag, FieldKey.QUALITY));
-                    metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
-                    metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
-                }
-            }
-            return metadata;
-    }
-
-    private Map<String, String> parseCustomTagFields(Tag tag) {
-        Map<String, String> tags = null;
-        try {
-            if (tag instanceof VorbisCommentTag) {
-                tags = parseVorbisTags((VorbisCommentTag) tag);
-            } else if (tag instanceof FlacTag) {
-                tags = parseVorbisTags(((FlacTag) tag).getVorbisCommentTag());
-            } else if (tag instanceof WavTag) {
-                tags = parseWaveTags(((WavTag) tag).getInfoTag());
-            } else {
-                tags = parseId3Tags(tag);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "parseCustomTagFields", e);
-        }
-        return tags;
-    }
-
-    private Map<String, String> parseWaveTags(WavInfoTag infoTag) {
-        Map<String, String> tags = new HashMap<>();
-        List<TagTextField> fields = infoTag.getUnrecognisedFields();
-        for(TagTextField field: fields) {
-            tags.put(field.getId(), trimToEmpty(field.getContent()));
-        }
-        return tags;
-    }
-
-    private static Map<String, String> parseId3Tags(Tag tag) {
-        String id = null;
-
-        if (tag.hasField("TXXX")) {
-            id = "TXXX";
-        } else if (tag.hasField("RGAD")) {    // may support legacy metadata formats: RGAD, RVA2
-            id = "RGAD";
-        } else if (tag.hasField("RVA2")) {
-            id = "RVA2";
-        }
-
-        Map<String, String> tags = new HashMap<>();
-
-        for (TagField field : tag.getFields(id)) {
-            String[] data = field.toString().split(";");
-
-            data[0] = data[0].substring(13, data[0].length() - 1).toUpperCase();
-
-            tags.put(data[0], extractId3Val(data[1]));
-        }
-
-        return tags;
-    }
-
     private static String extractId3Val(String datum) {
         if(isEmpty(datum)) return "";
         String val = trimToEmpty(datum);
@@ -549,14 +384,4 @@ public class JThinkReader extends TagReader{
         return trimToEmpty(val);
     }
 
-    private static Map<String, String> parseVorbisTags(VorbisCommentTag tag) {
-        Map<String, String> tags = new HashMap<>();
-
-        List<TagField> list  = tag.getAll();
-        for (TagField field: list) {
-            tags.put(field.getId(), StringUtils.trimToEmpty(tag.getFirst(field.getId())));
-        }
-
-        return tags;
-    }
 }

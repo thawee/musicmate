@@ -1,7 +1,6 @@
 package apincer.android.mmate.dlna.content;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.jupnp.support.model.DIDLObject;
 import org.jupnp.support.model.SortCriterion;
@@ -16,7 +15,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.MusicFolder;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.repository.TagRepository;
 
 /**
@@ -49,7 +48,6 @@ public class ArtistsBrowser extends AbstractContentBrowser {
             result.add(musicAlbum);
         }
         result.sort(Comparator.comparing(DIDLObject::getTitle));
-       // Log.d(TAG, "Returning " + result.size() + " MusicAlbum Containers");
         return result;
     }
 

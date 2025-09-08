@@ -30,7 +30,6 @@ import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_YEAR;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_YEAR;
 import static apincer.android.mmate.utils.MusicTagUtils.isMp4File;
-import static apincer.android.mmate.utils.StringUtils.getWord;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
 import static apincer.android.mmate.utils.StringUtils.toDouble;
@@ -55,7 +54,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import apincer.android.mmate.repository.MusicTag;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -183,27 +182,6 @@ public static class Loudness {
         }
     }
 
-    /*
-    private static void detectFileFormat(MusicTag tag) {
-        String encoding = trimToEmpty(tag.getAudioEncoding());
-        String ext = FileUtils.getExtension(tag.getPath()).toLowerCase(Locale.US);
-        if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_AAC)) {
-            //tag.setFileFormat(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
-            tag.setAudioEncoding(Constants.MEDIA_ENC_AAC.toLowerCase(Locale.US));
-        }else if(encoding.toUpperCase(Locale.US).contains(Constants.MEDIA_ENC_ALAC)) {
-                //tag.setFileFormat(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
-                tag.setAudioEncoding(Constants.MEDIA_ENC_ALAC.toLowerCase(Locale.US));
-        } else if(Constants.FILE_EXT_AIF.equalsIgnoreCase(ext)||Constants.FILE_EXT_AIFF.equalsIgnoreCase(ext)){
-            tag.setFileFormat(Constants.MEDIA_ENC_AIFF.toLowerCase(Locale.US));
-        }else if(Constants.FILE_EXT_WAVE.equalsIgnoreCase(ext)){
-            tag.setFileFormat(Constants.MEDIA_ENC_WAVE.toLowerCase(Locale.US));
-        }else if(Constants.FILE_EXT_MP3.equalsIgnoreCase(ext)){
-            tag.setFileFormat(Constants.MEDIA_ENC_MPEG.toLowerCase(Locale.US));
-        }else {
-            tag.setFileFormat(ext);
-        }
-    } */
-
     private static void parseDurationInfo(MusicTag tag, String data) {
         try {
             //Duration: 00:04:49.11, start: 0.047889, bitrate: 305 kb/s
@@ -294,7 +272,7 @@ public static class Loudness {
         tag.setTrack(getValueForKey(tags, KEY_TAG_TRACK));
 
         //KEY_TAG_MEDIA
-        tag.setMediaType(getValueForKey(tags, KEY_TAG_MEDIA));
+       // tag.setMediaType(getValueForKey(tags, KEY_TAG_MEDIA));
 
         //KEY_TAG_RATING
        // tag.setRating(toInt(getValueForKey(tags, KEY_TAG_RATING)));
@@ -347,7 +325,7 @@ public static class Loudness {
             tag.setComposer(getValueForKey(tags, KEY_TAG_WAVE_COMPOSER));
             tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_WAVE_ALBUM_ARTIST));
             tag.setGrouping(getValueForKey(tags, KEY_TAG_WAVE_GROUP));
-            tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
+          //  tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
             tag.setPublisher(getValueForKey(tags, KEY_TAG_WAVE_PUBLISHER));
             tag.setYear(getValueForKey(tags, KEY_TAG_WAVE_YEAR));
             tag.setMediaQuality(getValueForKey(tags, KEY_TAG_WAVE_QUALITY));
@@ -465,7 +443,7 @@ public static class Loudness {
             tag.setTrack(getTagforKey(tags, KEY_TAG_TRACK));
 
             //KEY_TAG_MEDIA
-            tag.setMediaType(getTagforKey(tags, KEY_TAG_MEDIA));
+           // tag.setMediaType(getTagforKey(tags, KEY_TAG_MEDIA));
 
             //KEY_TAG_RATING
           //  tag.setRating(toInt(getTagforKey(tags, KEY_TAG_RATING)));
@@ -504,7 +482,7 @@ public static class Loudness {
 
             // read Wave specific tags
             if(MusicTagUtils.isWavFile(tag)) {
-                tag.setMediaType(getTagforKey(tags, KEY_TAG_WAVE_MEDIA));
+               // tag.setMediaType(getTagforKey(tags, KEY_TAG_WAVE_MEDIA));
                 tag.setPublisher(getTagforKey(tags, KEY_TAG_WAVE_PUBLISHER));
                 tag.setYear(getTagforKey(tags, KEY_TAG_WAVE_YEAR));
                 parseMMComment(tag);
@@ -588,16 +566,6 @@ public static class Loudness {
             tag.setAudioBitsDepth(parseBitDepth(tags));
         }
 
-        /*
-        matcher = videoPattern.matcher(output); //tag.getData());
-        if (matcher.find()) {
-            String info = matcher.group(1);
-
-           // String [] tags = info.split(",");
-            tag.setCoverartMime(getWord(info,",",0));
-        }else {
-            tag.setCoverartMime("");
-        } */
     }
 
     private static int parseBitDepth(String[] tags) {
