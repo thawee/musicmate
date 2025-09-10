@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.codec.MusicAnalyser;
 import apincer.android.mmate.info.MusicInfoService;
 import apincer.android.mmate.info.TrackInfo;
 import apincer.android.mmate.playback.NowPlaying;
@@ -588,6 +589,7 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
 
         private PlaybackService playbackService;
         private boolean isPlaybackServiceBound = false;
+        private float[] defaultBlockWaveform;
 
         private final ServiceConnection serviceConnection = new ServiceConnection() {
             @SuppressLint("CheckResult")
@@ -614,6 +616,7 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
             // Bind to the MediaServerService as soon as this service is created
             Intent intent = new Intent(getContext(), PlaybackService.class);
             getContext().bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+            defaultBlockWaveform = MusicAnalyser.generateDynamicSongData(640);
             //MusixMateApp.getInstance().getNowPlayingSubject().subscribe(this::broadcastNowPlaying);
         }
 
@@ -753,8 +756,8 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
                         "sampleRate", tag.getAudioSampleRate()
                 ));
 
-                String mqaIndicator = tag.getMqaInd();
-                boolean isMqaFile = (mqaIndicator != null && mqaIndicator.contains("MQA"));
+               // String mqaIndicator = tag.getQualityInd();
+                boolean isMqaFile = MusicTagUtils.isMQA(tag) || MusicTagUtils.isMQAStudio(tag); //mqaIndicator != null && mqaIndicator.contains("MQA"));
 
                 // Only add the 'isMQA' field if it is explicitly true.
                 if (isMqaFile) {
@@ -1011,7 +1014,7 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
                 track.put("sampleRate", song.getAudioSampleRate());
             //}
 
-            String qualityIndicator = MusicTagUtils.getQualityIndicator(song);
+            String qualityIndicator = song.getQualityInd(); //MusicTagUtils.getQualityIndicator(song);
             if(!isEmpty(qualityIndicator)) {
                 track.put("quality", qualityIndicator);
             }
@@ -1088,6 +1091,7 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
                         0.09f, 0.06f, 0.04f, 0.02f, 0.01f, 0.005f
                 }; */
 
+                /*
                 float[] relaxingWaveform = new float[]{
                         // Intro: A very slow, gentle rise
                         0.05f, 0.06f, 0.07f, 0.08f, 0.09f, 0.10f, 0.11f, 0.12f, 0.13f, 0.14f,
@@ -1138,22 +1142,28 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
 
                         // Outro: A clean, smooth fade-out
                         0.18f, 0.15f, 0.12f, 0.10f, 0.08f, 0.06f, 0.04f, 0.02f, 0.01f, 0.005f
-                };
+                }; */
 
-                float[] cleanBlockWaveform = new float[]{
-                        // Intro: A short, smooth ramp up to the main section
-                        0.02f, 0.01f, 0.02f, 0.05f,0.18f,0.05f, 0.02f, 0.04f, 0.15f, 0.25f, 0.35f, 0.45f, 0.55f, 0.65f, 0.75f, 0.85f, 0.90f,
-                        0.95f, 0.98f, 1.00f,
+                float[] cleanBlockWaveform = tag.getWaveformData();
+                if(cleanBlockWaveform == null) {
+                    cleanBlockWaveform = defaultBlockWaveform; //MusicAnalyser.generateDynamicSongData(800);
 
-                        // Main Section: A consistent, stable "block" of sound
-                        1.00f, 0.98f, 1.00f, 0.97f, 0.99f, 0.98f, 1.00f, 0.99f, 0.98f, 1.00f,
-                        0.98f, 0.99f, 0.97f, 1.00f, 0.98f, 0.99f, 0.97f, 1.00f, 0.99f, 0.98f,
-                        1.00f, 0.98f, 0.97f, 0.99f, 1.00f, 0.99f, 0.98f, 1.00f, 0.99f, 0.98f,
+                   /* cleanBlockWaveform = new float[]{
+                            // Intro: A short, smooth ramp up to the main section
+                            0.02f, 0.01f, 0.02f, 0.05f, 0.18f, 0.05f, 0.02f, 0.04f, 0.15f, 0.25f, 0.35f, 0.45f, 0.55f, 0.65f, 0.75f, 0.85f, 0.90f,
+                            0.95f, 0.98f, 1.00f,
 
-                        // Outro: A smooth ramp down to silence
-                        0.95f, 0.90f, 0.85f, 0.75f, 0.65f, 0.55f, 0.45f, 0.35f, 0.25f, 0.15f,
-                        0.05f, 0.02f, 0.01f
-                };
+                            // Main Section: A consistent, stable "block" of sound
+                            1.00f, 0.98f, 1.00f, 0.97f, 0.99f, 0.98f, 1.00f, 0.99f, 0.98f, 1.00f,
+                            0.98f, 0.99f, 0.97f, 1.00f, 0.98f, 0.99f, 0.97f, 1.00f, 0.99f, 0.98f,
+                            1.00f, 0.98f, 0.97f, 0.99f, 1.00f, 0.99f, 0.98f, 1.00f, 0.99f, 0.98f,
+
+                            // Outro: A smooth ramp down to silence
+                            0.95f, 0.90f, 0.85f, 0.75f, 0.65f, 0.55f, 0.45f, 0.35f, 0.25f, 0.15f,
+                            0.05f, 0.02f, 0.01f
+                    }; */
+                }
+
                 track.put("waveform", cleanBlockWaveform);
 
                 Map<String, Object> response = Map.of("type", "nowPlaying", "track", track);

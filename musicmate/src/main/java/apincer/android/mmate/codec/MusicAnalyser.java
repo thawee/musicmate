@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,28 +30,17 @@ import apincer.android.mmate.utils.MusicTagUtils;
 public class MusicAnalyser {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final String TAG = "MusicAnalyser";
-    //public static final String NOT_FOUND = "NF";
-    //public static final String NOT_SCAN = "NS";
-    //Scores > 0.65 strongly indicate upscaled audio (artificially increased from lower resolution)
     public static final double THRESHOLD_UPSCALED = 0.65;
     //A score of 0.70 or higher strongly indicates resampling has occurred
     public static final double THRESHOLD_RESAMPLED = 0.70;
 
     // Change from String to double for numerical representation
-    private double upscaledScore = 0.0;
-    private double resampledScore = 0.0;
+   // private double upscaledScore = 0.0;
+   // private double resampledScore = 0.0;
     private float[] waveformData;
 
     public double getDynamicRange() {
         return dynamicRange;
-    }
-
-    public double getUpScaledScore() {
-        return upscaledScore;
-    }
-
-    public double getReSampledScore() {
-        return resampledScore;
     }
 
     private double dynamicRange = 0.0;
@@ -80,7 +70,7 @@ public class MusicAnalyser {
     public static boolean analyse(MusicTag tag) {
         MusicAnalyser analyser = new MusicAnalyser();
         analyser.doAnalyst(tag);
-        tag.setDynamicRange(analyser.getDynamicRange());
+       /* tag.setDynamicRange(analyser.getDynamicRange());
         tag.setDynamicRangeScore(analyser.getDynamicRangeScore());
         tag.setMqaSampleRate(analyser.getOriginalSampleRate());
         tag.setWaveformData(analyser.getWaveformData());
@@ -95,7 +85,7 @@ public class MusicAnalyser {
             tag.setMqaInd("HR");
         }else {
             tag.setMqaInd("SQ");
-        }
+        } */
 
         return true;
     }
@@ -105,26 +95,26 @@ public class MusicAnalyser {
     }
 
     private void doAnalyst(MusicTag tag) {
-        int durationInSeconds = 30; //20;
+        int durationInSeconds = (int) tag.getAudioDuration()-10; // remove offset 10 seconds // 30;
         this.sampleRate = (int) tag.getAudioSampleRate();
         this.bitsPerSample = tag.getAudioBitsDepth();
         this.channels = 2;
-        int waveformPoints = 320;
+        int waveformPoints = 800; //320;
             try {
                 byte[] audioData = AudioDecoder.decodeAudio(tag, durationInSeconds);
-                dynamicRange = calculateDynamicRange(audioData, tag.getAudioBitsDepth());
-
-                upscaledScore = detectUpscaledAudio(audioData);
-                resampledScore = detectResampledAudio(audioData);
-
-                dynamicRangeScore = calculateDRMeter(audioData);
 
                 if (MusicTagUtils.isFLACFile(tag)) {
                     enhancedMQADetection(audioData);
                 }
 
+                dynamicRange = calculateDynamicRange(audioData, tag.getAudioBitsDepth());
 
-                float[] waveformData = generateWaveform(audioData, waveformPoints);
+              //  upscaledScore = detectUpscaledAudio(audioData);
+              //  resampledScore = detectResampledAudio(audioData);
+
+                dynamicRangeScore = calculateDRMeter(audioData);
+
+                waveformData = generateWaveformFromAudio(audioData, waveformPoints);
                 //Log.i(TAG, tag.getPath());
                 //Log.i(TAG, "DR: " + getDynamicRange() + "dB, DRS: " + getDynamicRangeScore() + ", UpScaledScore: "+getUpScaledScore()+", ReSampledScore: "+getReSampledScore()+", MQA: " + isMQA() + ", MQA Studio: " + isMQAStudio() + ", OriginalSampleRate: " + getOriginalSampleRate());
 
@@ -139,6 +129,18 @@ public class MusicAnalyser {
             } catch (Exception e) {
                 Log.e(TAG, "analyst", e);
             }
+        tag.setDynamicRange(getDynamicRange());
+        tag.setDynamicRangeScore(getDynamicRangeScore());
+        tag.setWaveformData(getWaveformData());
+        // tag.setResampledScore(analyser.getReSampledScore());
+        // tag.setUpscaledScore(analyser.getUpScaledScore());
+
+        if(isMQAStudio()) {
+            tag.setQualityInd("MQA Studio");
+        }else if(isMQA()) {
+            tag.setQualityInd("MQA");
+        }
+        tag.setMqaSampleRate(getOriginalSampleRate());
     }
 
 
@@ -1076,13 +1078,372 @@ public class MusicAnalyser {
     }
 
     /**
+     * Generates a logarithmically-scaled waveform from audio data,
+     * fine-tuned for a 640-point display.
+     *
+     * @param pcmAudioData The raw 16-bit PCM audio data.
+     * @param points The number of data points to generate (e.g., 640).
+     * @return A float array with cleared, logarithmically-scaled [rms, min, max] data.
+     */
+    public static float[] generateWaveformFromAudio(byte[] pcmAudioData, int points) {
+        final float[] waveform = new float[points * 3];
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+
+        // --- ADJUST THIS VALUE TO CHANGE THE LOOK ---
+        // Lower values (e.g., 0.3) = more boosted/full.
+        // Higher values (e.g., 0.6) = more spiky/linear.
+        final double power = 0.4;
+
+        short absoluteMax = 0;
+        for (int i = 0; i < numSamples; i++) {
+            if (Math.abs(samples.get(i)) > absoluteMax) {
+                absoluteMax = (short) Math.abs(samples.get(i));
+            }
+        }
+        if (absoluteMax == 0) {
+            return waveform; // Return array of zeros for silence
+        }
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            short minInBlock = 0;
+            short maxInBlock = 0;
+            double sumOfSquares = 0.0;
+
+            for (int s = startSample; s < endSample; s++) {
+                short currentSample = samples.get(s);
+                sumOfSquares += currentSample * currentSample;
+                if (currentSample < minInBlock) minInBlock = currentSample;
+                if (currentSample > maxInBlock) maxInBlock = currentSample;
+            }
+
+            double rms = (endSample > startSample) ? Math.sqrt(sumOfSquares / (endSample - startSample)) : 0.0;
+
+            float normRms = (float) rms / absoluteMax;
+            float normMin = (float) minInBlock / absoluteMax;
+            float normMax = (float) maxInBlock / absoluteMax;
+
+            float logRms = (float) Math.pow(normRms, power);
+            float logMin = (float) Math.copySign(Math.pow(Math.abs(normMin), power), normMin);
+            float logMax = (float) Math.copySign(Math.pow(Math.abs(normMax), power), normMax);
+
+            waveform[i * 3]     = Float.isNaN(logRms) ? 0.0f : logRms;
+            waveform[i * 3 + 1] = Float.isNaN(logMin) ? 0.0f : logMin;
+            waveform[i * 3 + 2] = Float.isNaN(logMax) ? 0.0f : logMax;
+        }
+
+        return waveform;
+    }
+
+    /**
+     * Generates a logarithmically-scaled waveform from audio data with safety checks
+     * to prevent invalid numbers (NaN) that break rendering.
+     *
+     * @param pcmAudioData The raw 16-bit PCM audio data.
+     * @param points The number of data points to generate.
+     * @return A float array with cleared, logarithmically-scaled [rms, min, max] data.
+     */
+    public static float[] generateWaveformFromAudioOld3(byte[] pcmAudioData, int points) {
+        final float[] waveform = new float[points * 3];
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+        final double power = 0.45; // A power of 0.45 often gives a great visual boost
+
+        short absoluteMax = 0;
+        for (int i = 0; i < numSamples; i++) {
+            if (Math.abs(samples.get(i)) > absoluteMax) {
+                absoluteMax = (short) Math.abs(samples.get(i));
+            }
+        }
+        if (absoluteMax == 0) {
+            return waveform; // Return array of zeros for silence
+        }
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            short minInBlock = 0;
+            short maxInBlock = 0;
+            double sumOfSquares = 0.0;
+
+            for (int s = startSample; s < endSample; s++) {
+                short currentSample = samples.get(s);
+                sumOfSquares += currentSample * currentSample;
+                if (currentSample < minInBlock) minInBlock = currentSample;
+                if (currentSample > maxInBlock) maxInBlock = currentSample;
+            }
+
+            // --- Normalize and Scale in one step ---
+            double rms = (endSample > startSample) ? Math.sqrt(sumOfSquares / (endSample - startSample)) : 0.0;
+
+            float normRms = (float) rms / absoluteMax;
+            float normMin = (float) minInBlock / absoluteMax;
+            float normMax = (float) maxInBlock / absoluteMax;
+
+            float logRms = (float) Math.pow(normRms, power);
+            float logMin = (float) Math.copySign(Math.pow(Math.abs(normMin), power), normMin);
+            float logMax = (float) Math.copySign(Math.pow(Math.abs(normMax), power), normMax);
+
+            // --- SAFETY CHECK: Prevent NaN from breaking the renderer ---
+            waveform[i * 3]     = Float.isNaN(logRms) ? 0.0f : logRms;
+            waveform[i * 3 + 1] = Float.isNaN(logMin) ? 0.0f : logMin;
+            waveform[i * 3 + 2] = Float.isNaN(logMax) ? 0.0f : logMax;
+        }
+
+        return waveform;
+    }
+
+    public static float[] generateWaveformFromAudioOld(byte[] pcmAudioData, int points) {
+        // 3 values (rms, min, max) for each point
+        final float[] waveform = new float[points * 3];
+
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN) // Assumes 16-bit Little Endian PCM
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+
+        short absoluteMax = 0;
+        for (int i = 0; i < numSamples; i++) {
+            if (Math.abs(samples.get(i)) > absoluteMax) {
+                absoluteMax = (short) Math.abs(samples.get(i));
+            }
+        }
+        if (absoluteMax == 0) return waveform;
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            short minInBlock = 0;
+            short maxInBlock = 0;
+            double sumOfSquares = 0.0;
+
+            for (int s = startSample; s < endSample; s++) {
+                short currentSample = samples.get(s);
+                sumOfSquares += currentSample * currentSample;
+                if (currentSample < minInBlock) minInBlock = currentSample;
+                if (currentSample > maxInBlock) maxInBlock = currentSample;
+            }
+
+            double rms = (endSample > startSample) ? Math.sqrt(sumOfSquares / (endSample - startSample)) : 0.0;
+
+            waveform[i * 3]     = (float) rms / absoluteMax;
+            waveform[i * 3 + 1] = (float) minInBlock / absoluteMax;
+            waveform[i * 3 + 2] = (float) maxInBlock / absoluteMax;
+        }
+
+        return waveform;
+    }
+
+    public static float[] generateWaveform(byte[] pcmAudioData, int points) {
+        // 2 values (min, max) for each point
+        final float[] waveform = new float[points * 2];
+
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+
+        short absoluteMax = 0;
+        for (int i = 0; i < numSamples; i++) {
+            if (Math.abs(samples.get(i)) > absoluteMax) {
+                absoluteMax = (short) Math.abs(samples.get(i));
+            }
+        }
+        if (absoluteMax == 0) return waveform;
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            short minInBlock = 0;
+            short maxInBlock = 0;
+
+            for (int s = startSample; s < endSample; s++) {
+                short currentSample = samples.get(s);
+                if (currentSample < minInBlock) minInBlock = currentSample;
+                if (currentSample > maxInBlock) maxInBlock = currentSample;
+            }
+
+            waveform[i * 2]     = (float) minInBlock / absoluteMax;
+            waveform[i * 2 + 1] = (float) maxInBlock / absoluteMax;
+        }
+
+        return waveform;
+    }
+
+    public static float[] generateWaveformOld4(byte[] pcmAudioData, int points) {
+        // 3 values (rms, min, max) for each point
+        final float[] waveform = new float[points * 3];
+
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+
+        short absoluteMax = 0;
+        for (int i = 0; i < numSamples; i++) {
+            if (Math.abs(samples.get(i)) > absoluteMax) {
+                absoluteMax = (short) Math.abs(samples.get(i));
+            }
+        }
+        if (absoluteMax == 0) return waveform; // Return empty on silence
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            short minInBlock = 0;
+            short maxInBlock = 0;
+            double sumOfSquares = 0.0;
+
+            for (int s = startSample; s < endSample; s++) {
+                short currentSample = samples.get(s);
+                sumOfSquares += currentSample * currentSample; // For RMS
+                if (currentSample < minInBlock) minInBlock = currentSample; // For Min
+                if (currentSample > maxInBlock) maxInBlock = currentSample; // For Max
+            }
+
+            // Calculate RMS for this block
+            double rms = 0.0;
+            if (endSample > startSample) {
+                rms = Math.sqrt(sumOfSquares / (endSample - startSample));
+            }
+
+            // Normalize and interleave the three values
+            waveform[i * 3]     = (float) rms / absoluteMax;
+            waveform[i * 3 + 1] = (float) minInBlock / absoluteMax;
+            waveform[i * 3 + 2] = (float) maxInBlock / absoluteMax;
+        }
+
+        return waveform;
+    }
+
+    public static float[] generateWaveformOld3(byte[] pcmAudioData, int points) {
+        // The final array will have 2 values (min, max) for each point
+        final float[] waveform = new float[points * 2];
+
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+
+        // Find the absolute highest peak for normalization
+        short absoluteMax = 0;
+        for (int i = 0; i < numSamples; i++) {
+            short sample = samples.get(i);
+            if (Math.abs(sample) > absoluteMax) {
+                absoluteMax = (short) Math.abs(sample);
+            }
+        }
+
+        if (absoluteMax == 0) { // Handle silent audio
+            return waveform; // Returns an array of zeros
+        }
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            short minInBlock = 0;
+            short maxInBlock = 0;
+
+            for (int s = startSample; s < endSample; s++) {
+                short currentSample = samples.get(s);
+                if (currentSample < minInBlock) {
+                    minInBlock = currentSample;
+                }
+                if (currentSample > maxInBlock) {
+                    maxInBlock = currentSample;
+                }
+            }
+
+            // Normalize and place the interleaved values into the array
+            // Index for min value: i * 2
+            // Index for max value: i * 2 + 1
+            waveform[i * 2] = (float) minInBlock / absoluteMax;
+            waveform[i * 2 + 1] = (float) maxInBlock / absoluteMax;
+        }
+
+        return waveform;
+    }
+
+    public static float[] generateWaveformOld1(byte[] pcmAudioData, int points) {
+        // Create the final waveform array
+        final float[] waveform = new float[points];
+        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
+                .order(ByteOrder.LITTLE_ENDIAN) // Common for WAV files
+                .asShortBuffer();
+
+        final int numSamples = samples.capacity();
+        final int samplesPerPoint = numSamples / points;
+
+        // Keep track of the highest peak found for normalization
+        float maxAmplitude = 0f;
+
+        for (int i = 0; i < points; i++) {
+            int startSample = i * samplesPerPoint;
+            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+
+            double sumOfSquares = 0.0;
+            for (int s = startSample; s < endSample; s++) {
+                // Get sample and square it
+                double sampleValue = samples.get(s);
+                sumOfSquares += sampleValue * sampleValue;
+            }
+
+            // Calculate RMS for this block
+            double rms = 0.0;
+            if (endSample > startSample) {
+                rms = Math.sqrt(sumOfSquares / (endSample - startSample));
+            }
+
+            waveform[i] = (float) rms;
+
+            // Update the overall max amplitude for normalization later
+            if (rms > maxAmplitude) {
+                maxAmplitude = (float) rms;
+            }
+        }
+
+        // Normalize the waveform data to be between 0.0 and 1.0
+        if (maxAmplitude > 0) {
+            for (int i = 0; i < points; i++) {
+                waveform[i] = waveform[i] / maxAmplitude;
+            }
+        }
+
+        return waveform;
+    }
+
+    /**
      * Generates a normalized waveform from raw 16-bit PCM audio data.
      *
      * @param pcmAudioData The raw audio data, assumed to be 16-bit little-endian PCM.
      * @param points       The desired number of data points for the final waveform array.
      * @return A float array of size 'points' with values normalized between 0.0 and 1.0.
      */
-    public static float[] generateWaveform(byte[] pcmAudioData, int points) {
+    public static float[] generateWaveformOld(byte[] pcmAudioData, int points) {
         // Create the final waveform array
         final float[] waveform = new float[points];
 
@@ -1123,6 +1484,142 @@ public class MusicAnalyser {
             for (int i = 0; i < points; i++) {
                 waveform[i] = waveform[i] / maxAmplitude;
             }
+        }
+
+        return waveform;
+    }
+
+    /**
+     * Generates test data that represents a smoothed audio envelope,
+     * similar to an RMS waveform or the visual style of the provided sample image.
+     * It simulates a quiet intro, a dynamic middle, and a fade-out.
+     *
+     * @param points The number of data points to generate (should match canvas width).
+     * @return A float array with interleaved [negative_amplitude, positive_amplitude] data,
+     * suitable for drawing a symmetrical waveform around the center line.
+     */
+    public static float[] generateEnvelopeTestData(int points) {
+        final float[] waveform = new float[points * 2]; // 2 values (min, max) per point
+        final Random random = new Random();
+
+        // --- Define the overall loudness curve of the song ---
+        int introEnd = (int)(points * 0.05);       // Short quiet intro
+        int verseStart = (int)(points * 0.10);     // Start of main section
+        int chorusStart = (int)(points * 0.30);    // Louder part
+        int bridgeStart = (int)(points * 0.60);    // Slightly different dynamic
+        int outroStart = (int)(points * 0.85);     // Fade out begins
+
+        for (int i = 0; i < points; i++) {
+            double progress = (double) i / points;
+            float targetAmplitude; // The desired average amplitude for this point
+
+            if (i < introEnd) {
+                // Short, quiet intro - smoothly increasing
+                targetAmplitude = 0.05f + (0.15f * ((float)i / introEnd));
+            } else if (i < verseStart) {
+                // Gentle rise after intro
+                targetAmplitude = 0.20f + (0.10f * ((float)(i - introEnd) / (verseStart - introEnd)));
+            } else if (i < chorusStart) {
+                // Main verse/chorus section - moderate, with slight variation
+                targetAmplitude = 0.30f + (float)Math.sin((progress - (float)verseStart/points) * Math.PI * 4) * 0.05f;
+            } else if (i < bridgeStart) {
+                // Louder, more sustained section
+                targetAmplitude = 0.50f + (float)Math.sin((progress - (float)chorusStart/points) * Math.PI * 3) * 0.1f;
+            } else if (i < outroStart) {
+                // Bridge/build-up - slightly quieter or more dynamic before fade
+                targetAmplitude = 0.40f + (float)random.nextDouble() * 0.1f;
+            } else {
+                // Fade out
+                float fadeOutProgress = (float)(i - outroStart) / (points - outroStart);
+                targetAmplitude = 0.4f * (1.0f - fadeOutProgress); // Fades from 0.4 to 0
+            }
+
+            // Add a small amount of "texture" noise, but keep it smooth.
+            // This is crucial for the "fuzzy" edge look.
+            float noiseFactor = 0.05f + (float)random.nextDouble() * 0.05f;
+            float currentAmplitude = targetAmplitude * (1.0f + ((float)random.nextGaussian() * noiseFactor));
+
+            // Clamp amplitude to valid range [0, 1]
+            currentAmplitude = Math.max(0.01f, Math.min(1.0f, currentAmplitude)); // Min 0.01 to avoid flat line
+
+            // Since your JS draws symmetrical min/max, we set min to -amplitude and max to +amplitude.
+            waveform[i * 2] = -currentAmplitude; // Bottom half of the "body"
+            waveform[i * 2 + 1] = currentAmplitude; // Top half of the "body"
+        }
+
+        return waveform;
+    }
+
+    /**
+     * Generates a realistic test waveform that mimics the structure and dynamic range
+     * of a well-mastered song (e.g., quiet verses, loud choruses).
+     *
+     * @param points The number of data points to generate (should match canvas width).
+     * @return A float array with interleaved [min, max] peak data for rendering.
+     */
+    public static float[] generateDynamicSongData(int points) {
+        final float[] waveform = new float[points * 2];
+        final Random random = new Random();
+
+        // --- Define a classic song structure in percentages ---
+        int introEnd      = (int)(points * 0.05); // 1. Quiet Intro
+        int verse1End     = (int)(points * 0.30); // 2. First Verse
+        int chorus1End    = (int)(points * 0.45); // 3. First Loud Chorus
+        int verse2End     = (int)(points * 0.70); // 4. Second Verse
+        int chorus2End    = (int)(points * 0.75); // 5. Second, louder Chorus
+        int bridgeEnd     = (int)(points * 0.80); // 6. Bridge / Solo
+        // --- MODIFIED: Climax now ends at 90% to make room for the outro ---
+        int climaxEnd     = (int)(points * 0.95); // 7. Final Climax
+
+        for (int i = 0; i < points; i++) {
+            float envelope;
+
+            if (i < introEnd) {
+                // 1. Quiet Intro, builds slightly from 0.05 to 0.20
+                float progress = (float)i / introEnd;
+                envelope = 0.05f + 0.15f * progress;
+            } else if (i < verse1End) {
+                // 2. Verse 1 at a moderate, steady volume
+                envelope = 0.4f + (float)Math.sin((float)(i - introEnd) / (verse1End - introEnd) * Math.PI * 4) * 0.05f;
+            } else if (i < chorus1End) {
+                // 3. First Chorus - much louder
+                float progress = (float)(i - verse1End) / (chorus1End - verse1End);
+                envelope = 0.45f + 0.35f * progress;
+            } else if (i < verse2End) {
+                // 4. Verse 2 - drops back down
+                envelope = 0.45f;
+            } else if (i < chorus2End) {
+                // 5. Second Chorus - the loudest part yet
+                float progress = (float)(i - verse2End) / (chorus2End - verse2End);
+                envelope = 0.5f + 0.45f * progress;
+            } else if (i < bridgeEnd) {
+                // 6. Bridge or Solo - slightly quieter to build tension
+                envelope = 0.6f;
+            } else if (i < climaxEnd) {
+                // 7. Final Climax - hits the peak
+                envelope = 1.0f;
+            } else {
+                // --- MODIFIED: 8. Mirrored Outro ---
+                // This section fades down from 0.20 to 0.05, mirroring the intro.
+                float progress = (float)(i - climaxEnd) / (points - climaxEnd);
+                envelope = 0.05f + 0.15f * (1.0f - progress);
+            }
+
+            // --- Generate random peaks within the envelope to create texture ---
+            float max = envelope * (0.6f + (float)random.nextDouble() * 0.4f);
+            float min = -envelope * (0.6f + (float)random.nextDouble() * 0.4f);
+
+            // Add a small chance for a sharp transient (like a drum hit)
+            if (envelope > 0.3f && random.nextDouble() < 0.1) {
+                if (random.nextBoolean()) {
+                    max = Math.min(1.0f, envelope * 1.2f);
+                } else {
+                    min = Math.max(-1.0f, -envelope * 1.2f);
+                }
+            }
+
+            waveform[i * 2] = min;
+            waveform[i * 2 + 1] = max;
         }
 
         return waveform;

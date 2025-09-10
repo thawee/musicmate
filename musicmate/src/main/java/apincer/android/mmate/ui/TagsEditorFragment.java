@@ -415,7 +415,7 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setYear(buildTag(txtYear, originTag.getYear()));
         //tagUpdate.setDisc(buildTag(txtDisc, originTag.getDisc()));
        // tagUpdate.setMediaType(buildTag(txtMediaType, originTag.getMediaType()));
-        tagUpdate.setMediaQuality(buildQualityTag());
+        tagUpdate.setQualityRating(buildQualityTag());
     }
 
     private String buildQualityTag() {
@@ -512,7 +512,7 @@ public class TagsEditorFragment extends Fragment {
         txtAlbumArtist.invalidate();
 
         // quality
-        qualityDropdown.setText(tag.getMediaQuality());
+        qualityDropdown.setText(tag.getQualityRating());
     }
 
     private void doPreviewMusicInfo(MusicTag tag) {

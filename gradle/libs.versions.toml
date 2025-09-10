@@ -14,7 +14,7 @@ buildTools ="35.0.1"
 androidGradlePlugin = "8.13.0"
 aboutlibraries = "12.2.4"
 #validationApi = "2.0.1.Final"
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 coroutines = "1.10.2"
 #ksp="2.1.0-1.0.29"
 okio = "3.16.0"
@@ -61,11 +61,11 @@ log4j-api = {module = "org.apache.logging.log4j:log4j-api", version="2.25.1"}
 jupnp-android = {module = "org.jupnp:org.jupnp.android", version="3.0.3"}
 jupnp-support =  {module = "org.jupnp:org.jupnp.support", version="3.0.3"}
 #https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
-jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.0"}
+jetty-server12 = {module = "org.eclipse.jetty:jetty-server", version="12.1.1"}
 #jetty-websocket-server12 = {module = "org.eclipse.jetty.websocket:jetty-websocket-jetty-server", version="12.0.24"}
 #jetty-client12 = {module = "org.eclipse.jetty:jetty-client", version="12.1.0"}
 
-netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.5.Final"}
+netty-codec-http = {module = "io.netty:netty-codec-http", version = "4.2.6.Final"}
 tutorialsandroid-filepicker = {module = "io.github.tutorialsandroid:filepicker", version="9.2.5"}
 #icm-jlargearrays =  {module = "pl.edu.icm:JLargeArrays", version="1.6"}
 square-okio = {module = "com.squareup.okio:okio", version.ref = "okio"}

@@ -62,13 +62,14 @@ public class MusicTag implements Parcelable {
    // protected String mediaType = "";
 
    @DatabaseField(index = true)
-   protected String mediaQuality;
+   protected String qualityRating;
     @DatabaseField
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
-   @DatabaseField(index = true)
-   protected String mqaInd = "SQ";
+
+    @DatabaseField(index = true)
+   protected String qualityInd = "SQ";
     @DatabaseField
-    protected long mqaSampleRate;
+    protected long mqaSampleRate =-1;
     @DatabaseField
     protected String audioChannels; // 2, 4
 
@@ -137,6 +138,14 @@ public class MusicTag implements Parcelable {
         this.waveformData = waveformData;
     }
 
+    public String getQualityInd() {
+        return qualityInd;
+    }
+
+    public void setQualityInd(String qualityInd) {
+        this.qualityInd = qualityInd;
+    }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == null) return false;
@@ -146,6 +155,7 @@ public class MusicTag implements Parcelable {
         return false;
     }
 
+    /*
     public String getMqaInd() {
         return mqaInd;
     }
@@ -153,6 +163,7 @@ public class MusicTag implements Parcelable {
     public void setMqaInd(String mqaInd) {
         this.mqaInd = mqaInd;
     }
+     */
 
     public String getAudioChannels() {
         return audioChannels;
@@ -419,10 +430,10 @@ public class MusicTag implements Parcelable {
        // tag.mediaType = mediaType;
 
         tag.mmManaged = mmManaged;
-        tag.mediaQuality = mediaQuality;
+        tag.qualityRating = qualityRating;
         //tag.rating = rating;
 
-        tag.mqaInd = mqaInd;
+        tag.qualityInd = qualityInd;
         tag.mqaSampleRate = mqaSampleRate;
        // tag.language = language;
         tag.audioStartTime = audioStartTime;
@@ -462,13 +473,13 @@ public class MusicTag implements Parcelable {
         this.compilation = tag.compilation;
 
         this.mmManaged = tag.mmManaged;
-        this.mediaQuality = tag.mediaQuality;
+        this.qualityRating = tag.qualityRating;
        // this.rating = tag.rating;
 
         this.storageId = tag.storageId;
         this.simpleName = tag.simpleName;
 
-        this.mqaInd = tag.mqaInd;
+        this.qualityInd = tag.qualityInd;
         this.mqaSampleRate = tag.mqaSampleRate;
 
         this.drScore = tag.drScore;
@@ -515,12 +526,12 @@ public class MusicTag implements Parcelable {
         this.mediaType = mediaType;
     } */
 
-    public String getMediaQuality() {
-        return mediaQuality;
+    public String getQualityRating() {
+        return qualityRating;
     }
 
-    public void setMediaQuality(String mediaQuality) {
-        this.mediaQuality = mediaQuality;
+    public void setQualityRating(String rating) {
+        this.qualityRating = rating;
     }
 
     public double getAudioStartTime() {
@@ -591,10 +602,9 @@ public class MusicTag implements Parcelable {
         mmManaged = in.readByte() != 0;
         storageId = in.readString();
         simpleName = in.readString();
-        //mediaType = in.readString();
-        mediaQuality = in.readString();
+        qualityRating = in.readString();
         audioEncoding = in.readString();
-        mqaInd = in.readString();
+        qualityInd = in.readString();
         mqaSampleRate = in.readLong();
         audioChannels = in.readString();
         audioBitsDepth = in.readInt();
@@ -634,10 +644,9 @@ public class MusicTag implements Parcelable {
         dest.writeByte((byte) (mmManaged ? 1 : 0));
         dest.writeString(storageId);
         dest.writeString(simpleName);
-        //dest.writeString(mediaType);
-        dest.writeString(mediaQuality);
+        dest.writeString(qualityRating);
         dest.writeString(audioEncoding);
-        dest.writeString(mqaInd);
+        dest.writeString(qualityInd);
         dest.writeLong(mqaSampleRate);
         dest.writeString(audioChannels);
         dest.writeInt(audioBitsDepth);

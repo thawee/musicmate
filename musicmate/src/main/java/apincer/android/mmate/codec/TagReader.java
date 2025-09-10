@@ -39,7 +39,8 @@ public abstract class TagReader {
    protected static final String KEY_TAG_PUBLISHER = "PUBLISHER";
 
     protected static final String KEY_TAG_QUALITY = "QUALITY";
-    protected static final String KEY_TAG_MEDIA = "MEDIA";
+    protected static final String KEY_TAG_MQA_ENCODER = "MQAENCODER";
+    protected static final String KEY_TAG_ORIGINALSAMPLERATE = "ORIGINALSAMPLERATE";
 
     protected static TagReader getReader(Context context, String path) {
         return new JThinkReader(context);

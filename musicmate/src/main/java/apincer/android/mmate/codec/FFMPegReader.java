@@ -278,7 +278,7 @@ public static class Loudness {
        // tag.setRating(toInt(getValueForKey(tags, KEY_TAG_RATING)));
 
         //KEY_TAG_QUALITY
-        tag.setMediaQuality(getValueForKey(tags, KEY_TAG_QUALITY));
+        tag.setQualityRating(getValueForKey(tags, KEY_TAG_QUALITY));
 
         //KEY_TAG_TITLE
         tag.setTitle(getValueForKey(tags, KEY_TAG_TITLE));
@@ -328,7 +328,7 @@ public static class Loudness {
           //  tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
             tag.setPublisher(getValueForKey(tags, KEY_TAG_WAVE_PUBLISHER));
             tag.setYear(getValueForKey(tags, KEY_TAG_WAVE_YEAR));
-            tag.setMediaQuality(getValueForKey(tags, KEY_TAG_WAVE_QUALITY));
+            tag.setQualityRating(getValueForKey(tags, KEY_TAG_WAVE_QUALITY));
             tag.setDisc(getValueForKey(tags, KEY_TAG_WAVE_DISC));
             parseMMComment(tag);
         }else if(MusicTagUtils.isMPegFile(tag)) {
@@ -449,7 +449,7 @@ public static class Loudness {
           //  tag.setRating(toInt(getTagforKey(tags, KEY_TAG_RATING)));
 
             //KEY_TAG_QUALITY
-            tag.setMediaQuality(getTagforKey(tags, KEY_TAG_QUALITY));
+            tag.setQualityRating(getTagforKey(tags, KEY_TAG_QUALITY));
 
             //KEY_TAG_TITLE
             tag.setTitle(getTagforKey(tags, KEY_TAG_TITLE));
@@ -518,13 +518,11 @@ public static class Loudness {
 
             tag.setDisc(extractField(text, 0));
             tag.setGrouping(extractField(text, 1));
-            tag.setMediaQuality(extractField(text,2));
-         //   tag.setRating(toInt(extractField(text, 3)));
+            tag.setQualityRating(extractField(text,2));
             tag.setAlbumArtist(extractField(text, 4));
             tag.setComposer(extractField(text, 5));
             tag.setDynamicRangeScore(toDouble(extractField(text, 6)));
             tag.setDynamicRange(toDouble(extractField(text, 7)));
-          //  tag.setMeasuredSamplingRate(toLong(extractField(text, 8)));
         }
 
         tag.setComment(StringUtils.trimToEmpty(comment));

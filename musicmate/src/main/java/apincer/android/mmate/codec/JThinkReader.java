@@ -4,6 +4,7 @@ import static apincer.android.mmate.repository.FileRepository.isMediaFileExist;
 import static apincer.android.mmate.codec.MusicAnalyser.analyse;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.toBoolean;
+import static apincer.android.mmate.utils.StringUtils.toLong;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -74,6 +75,12 @@ public class JThinkReader extends TagReader{
     @Override
     protected MusicTag readBasicTag(String mediaPath) {
         Log.i(TAG, "readBasicTag: " + mediaPath);
+        // Ensure this method is called from a background thread
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            Log.w(TAG, "Tag reading should not be done on the main thread");
+            return null;
+        }
+
         MusicTag tag = new MusicTag();
 
         // Only read file info, skip audio processing
@@ -85,6 +92,7 @@ public class JThinkReader extends TagReader{
         if(audioFile != null) {
             readHeader(audioFile, tag);
             readTags(audioFile, tag);
+            tag.setQualityInd(MusicTagUtils.getQualityIndicator(tag));
         }
 
         return tag;
@@ -95,10 +103,10 @@ public class JThinkReader extends TagReader{
         Log.i(TAG, "readFullTag: " + tag.getPath());
 
         // Ensure this method is called from a background thread
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            Log.w(TAG, "Tag reading should not be done on the main thread");
-            return false;
-        }
+       // if (Looper.myLooper() == Looper.getMainLooper()) {
+       //     Log.w(TAG, "Tag reading should not be done on the main thread");
+        //    return false;
+       // }
         try {
             readFileInfo(context, tag);
             tag.setAudioStartTime(0);
@@ -107,6 +115,7 @@ public class JThinkReader extends TagReader{
             if (audioFile != null) {
                 readHeader(audioFile, tag);
                 readTags(audioFile, tag);
+                tag.setQualityInd(MusicTagUtils.getQualityIndicator(tag));
             }
             analyse(tag);
             return true;
@@ -188,12 +197,6 @@ public class JThinkReader extends TagReader{
     }
 
     private void readTags(AudioFile audioFile, MusicTag metadata) {
-        // Ensure this method is called from a background thread
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            Log.w(TAG, "Tag reading should not be done on the main thread");
-            return;
-        }
-
         Tag tag = audioFile.getTag();
         if (tag != null && !tag.isEmpty()) {
             try {
@@ -229,20 +232,26 @@ public class JThinkReader extends TagReader{
 
         // Extract values from map that we're interested in
         metadata.setPublisher(tempTagsMap.get(KEY_TAG_PUBLISHER));
-        metadata.setMediaQuality(tempTagsMap.get(KEY_TAG_QUALITY));
-       // metadata.setMediaType(tempTagsMap.get(KEY_TAG_MEDIA));
+        metadata.setQualityRating(tempTagsMap.get(KEY_TAG_QUALITY));
+        if (tempTagsMap.containsKey(KEY_TAG_MQA_ENCODER)) {
+            metadata.setQualityInd("MQA");
+            metadata.setMqaSampleRate(toLong(tempTagsMap.get(KEY_TAG_ORIGINALSAMPLERATE)));
+            if(metadata.getMqaSampleRate() == 0) {
+                metadata.setMqaSampleRate(metadata.getAudioSampleRate());
+            }
+        }
 
         // Handle format-specific tags
         if (MusicTagUtils.isWavFile(metadata)) {
             metadata.setGrouping(getId3TagValue(tag, FieldKey.RECORD_LABEL));
-            processWaveSpecificTags(metadata, tempTagsMap, tag);
+           // processWaveSpecificTags(metadata, tempTagsMap, tag);
        // } else if (MusicTagUtils.isMPegFile(metadata)) {
        //     processMpegSpecificTags(metadata, tempTagsMap);
         } else {
             // Standard files support these tags directly
             metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
             metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
-            metadata.setMediaQuality(getId3TagValue(tag, FieldKey.QUALITY));
+            metadata.setQualityRating(getId3TagValue(tag, FieldKey.QUALITY));
           //  metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
             metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
         }
@@ -253,55 +262,8 @@ public class JThinkReader extends TagReader{
         metadata.setGrouping(tags.get(KEY_TAG_WAVE_GROUP));
         metadata.setAlbumArtist(tags.get(KEY_TAG_WAVE_ALBUM_ARTIST));
         metadata.setTrack(tags.get(KEY_TAG_WAVE_TRACK));
-        metadata.setMediaQuality(tags.get(KEY_TAG_WAVE_QUALITY));
-
-        // Process special comment format for WAV
-        /*String comment = tag.getFirst(FieldKey.COMMENT);
-        if (!isEmpty(comment)) {
-            processWaveComment(metadata, comment);
-        } */
+        metadata.setQualityRating(tags.get(KEY_TAG_WAVE_QUALITY));
     }
-
-   /* private void processMpegSpecificTags(MusicTag metadata, Map<String, String> tags) {
-        String comment = tags.get(KEY_TAG_MP3_COMMENT);
-        if (!isEmpty(comment)) {
-            processWaveComment(metadata, comment);
-        }
-    } */
-
-    /*
-    private void processWaveComment(MusicTag metadata, String comment) {
-        int start = comment.indexOf("<##>");
-        int end = comment.indexOf("</##>");
-
-        if (start >= 0 && end > start) {
-            // Found metadata comment
-            String mdata = comment.substring(start + 4, end);
-
-            // Extract user comment portion (if any)
-            if (comment.length() > (end + 5)) {
-                comment = comment.substring(end + 5);
-            } else {
-                comment = "";
-            }
-
-            // Parse metadata fields
-            String[] text = mdata.split("#", -1);
-
-            // Batch set values to avoid multiple conditionals
-            int fieldCount = text.length;
-            if (fieldCount > 0) metadata.setDisc(extractField(text, 0));
-            if (fieldCount > 1) metadata.setGrouping(extractField(text, 1));
-            if (fieldCount > 2) metadata.setMediaQuality(extractField(text, 2));
-            // Skip field 3 (rating) as it's commented out
-            if (fieldCount > 4) metadata.setAlbumArtist(extractField(text, 4));
-            if (fieldCount > 5) metadata.setComposer(extractField(text, 5));
-            if (fieldCount > 6) metadata.setDynamicRangeScore(toDouble(extractField(text, 6)));
-            if (fieldCount > 7) metadata.setDynamicRange(toDouble(extractField(text, 7)));
-        }
-
-        metadata.setComment(comment);
-    } */
 
     private String getId3TagValue(Tag id3Tag, FieldKey key) {
         if (id3Tag != null && id3Tag.hasField(key)) {

@@ -160,7 +160,7 @@ public class MediaServerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         showNotification();
-        if(intent.getStringExtra("START_SERVERS") != null) {
+        if(intent!=null && intent.getStringExtra("START_SERVERS") != null) {
             startServers();
         }
         return START_STICKY;

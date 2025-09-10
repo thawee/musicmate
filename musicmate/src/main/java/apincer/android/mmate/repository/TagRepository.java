@@ -84,9 +84,9 @@ public class TagRepository {
                 if(tag.getDynamicRange()==0) {
                     // not set, use from existing tag
                     tag.setDynamicRange(existingTag.getDynamicRange());
-                    tag.setMqaInd(existingTag.getMqaInd());
+                    tag.setQualityInd(existingTag.getQualityInd());
                     tag.setMqaSampleRate(existingTag.getMqaSampleRate());
-                    tag.setMediaQuality(existingTag.getMediaQuality());
+                    tag.setQualityRating(existingTag.getQualityRating());
                     tag.setWaveformData(existingTag.getWaveformData());
                    // tag.setResampledScore(existingTag.getResampledScore());
                    // tag.setUpscaledScore(existingTag.getUpscaledScore());
@@ -407,11 +407,6 @@ public class TagRepository {
                 list = MusixMateApp.getInstance().getOrmLite().findMySongs();
             }
         return list;
-    }
-
-    @Deprecated
-    public static MusicTag getMusicTag(long id) {
-        return MusixMateApp.getInstance().getOrmLite().findById(id);
     }
 
     public static List<MusicTag> getAllMusics() {

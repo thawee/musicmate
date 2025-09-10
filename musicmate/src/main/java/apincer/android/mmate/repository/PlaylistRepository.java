@@ -316,7 +316,7 @@ public class PlaylistRepository {
     }
 
     private static String getKeyForRating(MusicTag song) {
-        return trimToEmpty(song.getMediaQuality()).toLowerCase();
+        return trimToEmpty(song.getQualityRating()).toLowerCase();
     }
 
     public static boolean isTitlePlaylist(String playlistName) {

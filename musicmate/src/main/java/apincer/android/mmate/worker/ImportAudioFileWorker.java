@@ -11,15 +11,20 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import apincer.android.mmate.playback.PlaybackService;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 
@@ -54,7 +59,21 @@ public class ImportAudioFileWorker extends Worker {
     }
 
     public static void startWorker(Context context, List<MusicTag> files) {
-        Gson gson = new Gson();
+        //Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .setExclusionStrategies(new ExclusionStrategy(){
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return !f.getName().equals("id");
+                        //return f.getName().equals("waveformData") || f.getName().equals("simpleName");
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                })
+                .create();
         String jsonMusicTags = gson.toJson(files);
         if (jsonMusicTags.getBytes(StandardCharsets.UTF_8).length > Data.MAX_DATA_BYTES) {
             Log.e("WorkManager", "MusicTag list is too large to pass as input data.");
@@ -77,11 +96,13 @@ public class ImportAudioFileWorker extends Worker {
             Gson gson = new Gson();
             Type listType = new TypeToken<ArrayList<MusicTag>>() {
             }.getType();
-            return gson.fromJson(jsonMusicTags, listType);
+            List<MusicTag> list = gson.fromJson(jsonMusicTags, listType);
+            list.forEach(musicTag -> TagRepository.load(musicTag));
+            return list;
+           // return gson.fromJson(jsonMusicTags, listType);
         }else {
             return new ArrayList<>();
         }
-       // return MusixMateApp.getSharedItems(MusixMateApp.SHARED_TYPE.IMPORT);
     }
 
     private boolean importFile(MusicTag tag) {

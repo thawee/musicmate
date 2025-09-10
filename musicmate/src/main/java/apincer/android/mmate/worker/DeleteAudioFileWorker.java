@@ -11,7 +11,10 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -41,12 +44,7 @@ public class DeleteAudioFileWorker extends Worker {
        //list.parallelStream().forEach(this::delete);
 
         list.forEach(tag -> {
-            try {
                 boolean status = delete(tag);
-
-            } catch (Exception e) {
-                Log.e(TAG, "delete", e);
-            }
         });
         // purge previous completed job
         WorkManager.getInstance(getApplicationContext()).pruneWork();
@@ -55,8 +53,22 @@ public class DeleteAudioFileWorker extends Worker {
     }
 
     public static void startWorker(Context context, List<MusicTag> files) {
-       // MusixMateApp.addSharedItems(MusixMateApp.SHARED_TYPE.DELETE, files);
-        Gson gson = new Gson();
+       // Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .setExclusionStrategies(new ExclusionStrategy(){
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return !f.getName().equals("id");
+                        //return f.getName().equals("waveformData") || f.getName().equals("simpleName");
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                })
+                .create();
+
         String jsonMusicTags = gson.toJson(files);
         if (jsonMusicTags.getBytes(StandardCharsets.UTF_8).length > Data.MAX_DATA_BYTES) {
             Log.e("WorkManager", "MusicTag list is too large to pass as input data.");
@@ -85,12 +97,12 @@ public class DeleteAudioFileWorker extends Worker {
        // return MusixMateApp.getSharedItems(MusixMateApp.SHARED_TYPE.DELETE);
     }
 
-    private boolean delete(MusicTag tag) {
+    private synchronized boolean delete(MusicTag tag) {
         // Synchronize on repos if needed
-        synchronized(repos) {
+       // synchronized(repos) {
             skipToNext(tag);
             return repos.deleteMediaItem(tag);
-        }
+      //  }
     }
 
     private void skipToNext(MusicTag tag) {

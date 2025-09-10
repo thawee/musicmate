@@ -493,14 +493,14 @@ public class TagsActivity extends AppCompatActivity {
           //  spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
            // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+          //  spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
 
            // String labelDr = trim(MusicTagUtils.getDynamicRangeScore(currentDisplayTag), "--");
            // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
            //         .append(new SpecialTextUnit("DR"+labelDr, encColor).setTextSize(metaInfoTextSize));
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
+           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
 
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
                     .append(new SpecialTextUnit(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));

@@ -175,7 +175,8 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             resolutionIndicator.setPadding(0, 0, 0, 8);
             signalPathContainer.addView(resolutionIndicator);
 
-            qualityIndicator.setText(MusicTagUtils.getQualityIndicator(song));
+           // qualityIndicator.setText(MusicTagUtils.getQualityIndicator(song));
+            qualityIndicator.setText(song.getQualityInd());
 
             addSignalPathStep(signalPathContainer, "Source", song.getTitle() + " - " + song.getArtist(), true);
         }

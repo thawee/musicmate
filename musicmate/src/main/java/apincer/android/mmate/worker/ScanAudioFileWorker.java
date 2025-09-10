@@ -29,12 +29,11 @@ import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.utils.LogHelper;
-import apincer.android.mmate.utils.MusicTagUtils;
 
 public class ScanAudioFileWorker extends Worker {
     private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
     private static final String WORKER_TAG = "apincer.android.mmate.work.ScanAudioFileWorker";
-    private static final String LAST_SCAN_TIME_PREF = "last_music_scan_time";
+   // private static final String LAST_SCAN_TIME_PREF = "last_music_scan_time";
 
     // These values will be determined dynamically
     private final int optimalThreadCount;
@@ -45,7 +44,7 @@ public class ScanAudioFileWorker extends Worker {
     private final FileRepository repos;
 
    // private boolean isFullScan;
-    private long lastScanTime = 0;
+    //private long lastScanTime = 0;
 
     public ScanAudioFileWorker(
             @NonNull Context context,
@@ -62,7 +61,7 @@ public class ScanAudioFileWorker extends Worker {
        // isFullScan = parameters.getInputData().getBoolean("fullScan", false);
 
         // Get last scan time for incremental scan
-        lastScanTime = Settings.getLastScanTime(context);
+        //lastScanTime = Settings.getLastScanTime(context);
     }
 
     @NonNull

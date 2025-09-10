@@ -144,7 +144,7 @@ public class IconProviders {
     }
 
     private static Object getTrackQuality(MusicTag tag) {
-        return trim(tag.getMediaQuality(), "None");
+        return trim(tag.getQualityRating(), "None");
     }
 
     public static File getFileResolutionIcon( Context context, MusicTag tag) {
@@ -229,7 +229,7 @@ public class IconProviders {
     public static File getSourceQualityIcon(Context context, MusicTag tag) {
         //AudiophileRecords.png
         File dir = context.getExternalCacheDir();
-        String quality = trimToEmpty(tag.getMediaQuality());
+        String quality = trimToEmpty(tag.getQualityRating());
         String path = "/Icons/Quality"+quality+"Records.png";
 
         File pathFile = new File(dir, path);
@@ -255,7 +255,7 @@ public class IconProviders {
     @Deprecated
     public static Object getSourceQualityIconMini(Context context, MusicTag tag) {
         File dir = context.getExternalCacheDir();
-        String quality = trimToEmpty(tag.getMediaQuality());
+        String quality = trimToEmpty(tag.getQualityRating());
         String path = "/Icons/Quality"+quality+"RecordsMini.png";
 
         File pathFile = new File(dir, path);
@@ -930,7 +930,7 @@ public class IconProviders {
     private static Bitmap createQualityIcon(Context context, MusicTag tag) {
         int width = 340; // 16x46, 24x70
         int height = 100;
-        String qualityText = trimToEmpty(tag.getMediaQuality());
+        String qualityText = trimToEmpty(tag.getQualityRating());
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
         int drColor = context.getColor(R.color.white); //context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
         int drsColor = context.getColor(R.color.grey200); //context.getColor(R.color.white);
@@ -1259,7 +1259,7 @@ public class IconProviders {
     private static Bitmap createQualityIconBak(Context context, MusicTag tag) {
         int width = 280; // 16x46, 24x70
         int height = 96;
-        String qualityText = trimToEmpty(tag.getMediaQuality());
+        String qualityText = trimToEmpty(tag.getQualityRating());
         int bgColor = context.getColor(R.color.material_color_blue_grey_900);
         int drColor = context.getColor(R.color.white); //context.getColor(R.color.yellows_lemon); //context.getColor(R.color.quality_label);
         int drsColor = context.getColor(R.color.grey200); //context.getColor(R.color.white);

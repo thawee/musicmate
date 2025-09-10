@@ -259,9 +259,7 @@ public class FFMpegWriter extends TagWriter {
                 getMetadataTrackKey(KEY_TAG_GENRE, tag.getGenre()) +
                 getMetadataTrackKey(KEY_TAG_GROUPING, tag.getGrouping()) +
                 getMetadataTrackKey(KEY_TAG_PUBLISHER, tag.getPublisher()) +
-              //  getMetadataTrackKey(TagReader.KEY_TAG_MEDIA, tag.getMediaType()) +
-                getMetadataTrackKey(TagReader.KEY_TAG_QUALITY, tag.getMediaQuality()) +
-              //  getMetadataTrackKey(KEY_TAG_RATING, tag.getRating()) +
+                getMetadataTrackKey(TagReader.KEY_TAG_QUALITY, tag.getQualityRating()) +
                 getMetadataTrackKey(KEY_TAG_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_YEAR, tag.getYear());
     }
@@ -304,9 +302,7 @@ public class FFMpegWriter extends TagWriter {
                 getMetadataTrackKey(KEY_TAG_AIF_GENRE, tag.getGenre()) +
                 getMetadataTrackKey(KEY_TAG_AIF_GROUPING, tag.getGrouping()) +
                 getMetadataTrackKey(KEY_TAG_AIF_PUBLISHER, tag.getPublisher()) +
-             //   getMetadataTrackKey(KEY_TAG_AIF_MEDIA, tag.getMediaType()) +
-                getMetadataTrackKey(KEY_TAG_AIF_QUALITY, tag.getMediaQuality()) +
-           //     getMetadataTrackKey(KEY_TAG_AIF_RATING, tag.getRating()) +
+                getMetadataTrackKey(KEY_TAG_AIF_QUALITY, tag.getQualityRating()) +
                 getMetadataTrackKey(KEY_TAG_AIF_TRACK, tag.getTrack()) +
                 getMetadataTrackKey(KEY_TAG_AIF_YEAR, tag.getYear());
     }
@@ -327,7 +323,7 @@ public class FFMpegWriter extends TagWriter {
             //    getMetadataTrackKey(KEY_TAG_WAVE_MEDIA,tag.getMediaType())+
                 getMetadataTrackKey(KEY_TAG_WAVE_DISC,tag.getDisc())+
                 getMetadataTrackKey(KEY_TAG_WAVE_PUBLISHER,tag.getPublisher())+
-                getMetadataTrackKey(KEY_TAG_WAVE_QUALITY,tag.getMediaQuality()) +
+                getMetadataTrackKey(KEY_TAG_WAVE_QUALITY,tag.getQualityRating()) +
                 getMetadataTrackKey(KEY_TAG_WAVE_COMMENT,prepareMMComment(tag));
     }
 
@@ -335,7 +331,7 @@ public class FFMpegWriter extends TagWriter {
         return StringUtils.trimToEmpty(musicTag.getComment()) +"\n<##>" +
                 StringUtils.trimToEmpty(musicTag.getDisc())+
                 "#"+StringUtils.trimToEmpty(musicTag.getGrouping())+
-                "#"+StringUtils.trimToEmpty(musicTag.getMediaQuality())+
+                "#"+StringUtils.trimToEmpty(musicTag.getQualityRating())+
            //     "#"+musicTag.getRating()+
                 "#"+StringUtils.trimToEmpty(musicTag.getAlbumArtist())+
                 "#"+StringUtils.trimToEmpty(musicTag.getComposer())+

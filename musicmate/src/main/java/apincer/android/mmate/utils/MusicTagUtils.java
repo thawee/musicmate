@@ -31,11 +31,11 @@ public class MusicTagUtils {
     }
 
     public static boolean isMQAStudio(MusicTag tag) {
-        return trimToEmpty(tag.getMqaInd()).contains("MQA Studio");
+        return trimToEmpty(tag.getQualityInd()).contains("MQA Studio");
     }
 
     public static boolean isMQA(MusicTag tag) {
-        return trimToEmpty(tag.getMqaInd()).contains("MQA");
+        return trimToEmpty(tag.getQualityInd()).contains("MQA");
     }
 
     public static int getResolutionColor(Context context, MusicTag tag) {
@@ -307,7 +307,7 @@ public class MusicTagUtils {
     }
 
     public static int getRating(MusicTag tag) {
-        String label1 = tag.getMediaQuality();
+        String label1 = tag.getQualityRating();
         if(Constants.QUALITY_AUDIOPHILE.equals(label1)) {
             return 5;
         }else if(QUALITY_RECOMMENDED.equals(label1)) {
@@ -441,7 +441,7 @@ public class MusicTagUtils {
         }
 
         // 2. Check for MQA and include the original sample rate
-        String mqaIndicator = trimToEmpty(song.getMqaInd());
+        String mqaIndicator = trimToEmpty(song.getQualityInd());
         if ("MQA".equalsIgnoreCase(mqaIndicator) || "MQA Studio".equalsIgnoreCase(mqaIndicator)) {
             // We now include the original sample rate for MQA
             //String mqaSampleRate = StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true);
@@ -467,7 +467,7 @@ public class MusicTagUtils {
         if (isLossy(song)) {
             // Explicitly label the audio as "Lossy" instead of an empty string,
             // which provides more valuable information to the user.
-            return "Compressed";
+            return "HQ";
         }
 
         // 6. Fallback for any unknown format

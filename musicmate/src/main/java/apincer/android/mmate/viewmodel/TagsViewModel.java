@@ -83,7 +83,7 @@ public class TagsViewModel extends ViewModel {
             newDisplayTag.setDisc(getCommonStringValue(currentItems, MusicTag::getDisc, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
            // newDisplayTag.setMediaType(getCommonStringValue(currentItems, MusicTag::getMediaType, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
             newDisplayTag.setPublisher(getCommonStringValue(currentItems, MusicTag::getPublisher, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setMediaQuality(getCommonStringValue(currentItems, MusicTag::getMediaQuality, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+            newDisplayTag.setQualityRating(getCommonStringValue(currentItems, MusicTag::getQualityRating, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
         }
         _displayTag.postValue(newDisplayTag);
     }

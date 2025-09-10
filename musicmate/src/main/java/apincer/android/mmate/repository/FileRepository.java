@@ -214,7 +214,6 @@ public class FileRepository {
                     // Schedule full tag reading for later (if needed)
                     MusicMateExecutors.lowPriority(() -> {
                         try {
-                          // if(TagReader.readFullTag(context, basicTag)) {
                             if(TagReader.readExtras(context, basicTag)) {
                                basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), basicTag));
                                TagRepository.saveTag(basicTag);

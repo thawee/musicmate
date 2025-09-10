@@ -103,7 +103,7 @@ public class JThinkWriter extends  TagWriter {
 
         // Extended fields
        // setTagField(FieldKey.MEDIA, trimToEmpty(musicTag.getMediaType()), tag);
-        setTagField(FieldKey.QUALITY, trimToEmpty(musicTag.getMediaQuality()), tag);
+        setTagField(FieldKey.QUALITY, trimToEmpty(musicTag.getQualityRating()), tag);
     }
 
     private String cleanupComment(String comment) {

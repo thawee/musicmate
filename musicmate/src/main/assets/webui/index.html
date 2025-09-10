@@ -1038,6 +1038,198 @@
         }
 
         function drawWaveform(canvas, waveformData, progressPercentage) {
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+
+    // Set canvas resolution for a crisp image
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const width = rect.width;
+    const height = rect.height;
+    const center = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+    if (!waveformData || waveformData.length === 0) return;
+
+    // --- CRITICAL: Ensure 'waveformData' contains many points ---
+    // The number of points should be high (e.g., equal to canvas width)
+    const points = waveformData.length / 2;
+    const barWidth = width / points;
+    const progressPoint = width * progressPercentage;
+
+    const playedPath = new Path2D();
+    const unplayedPath = new Path2D();
+
+    for (let i = 0; i < waveformData.length; i += 2) {
+        const x = (i / 2) * barWidth;
+
+        const min = waveformData[i] * center;
+        const max = waveformData[i + 1] * center;
+
+        const path = (x < progressPoint) ? playedPath : unplayedPath;
+
+        path.moveTo(x, center + min);
+        path.lineTo(x, center + max);
+    }
+
+    // --- CRITICAL: Line width must be 1 for a sharp look ---
+    ctx.lineWidth = 1;
+
+    // Draw played portion
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.stroke(playedPath);
+
+    // Draw unplayed portion
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.stroke(unplayedPath);
+}
+
+        function drawWaveformOld4(canvas, waveformData, progressPercentage) {
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const width = rect.width;
+    const height = rect.height;
+    const center = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+    if (!waveformData || waveformData.length === 0) return;
+
+    const progressPoint = width * progressPercentage;
+    const points = waveformData.length / 3;
+
+    // --- Create Drawing Paths ---
+    const rmsPlayedPath = new Path2D();
+    const rmsUnplayedPath = new Path2D();
+    const peakPlayedPath = new Path2D();
+    const peakUnplayedPath = new Path2D();
+
+    for (let i = 0; i < waveformData.length; i += 3) {
+        const x = (i / 3) / points * width;
+
+        const rms = waveformData[i] * center;
+        const min = waveformData[i + 1] * center;
+        const max = waveformData[i + 2] * center;
+
+        const targetRmsPath = (x < progressPoint) ? rmsPlayedPath : rmsUnplayedPath;
+        targetRmsPath.moveTo(x, center - rms);
+        targetRmsPath.lineTo(x, center + rms);
+
+        const targetPeakPath = (x < progressPoint) ? peakPlayedPath : peakUnplayedPath;
+        targetPeakPath.moveTo(x, center + min);
+        targetPeakPath.lineTo(x, center + max);
+    }
+
+    // --- Draw the Waveform in Two Layers ---
+
+    // 1. Draw the RMS body (thicker lines)
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 100, 50, 0.7)'; // Played RMS Color
+    ctx.stroke(rmsPlayedPath);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; // Unplayed RMS Color
+    ctx.stroke(rmsUnplayedPath);
+
+    // 2. Draw the Min/Max peaks on top (thinner lines)
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255, 100, 50, 1.0)'; // Played Peak Color
+    ctx.stroke(peakPlayedPath);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; // Unplayed Peak Color
+    ctx.stroke(peakUnplayedPath);
+}
+
+        function drawWaveformOld3(canvas, waveformData, progressPercentage) {
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+
+    // Match canvas resolution to its display size
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const width = rect.width;
+    const height = rect.height;
+    const center = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+    if (!waveformData || waveformData.length === 0) return;
+
+    const progressPoint = width * progressPercentage;
+
+    // Use a single path for performance and a cleaner look
+    const playedPath = new Path2D();
+    const unplayedPath = new Path2D();
+
+    for (let i = 0; i < waveformData.length; i += 2) {
+        const x = i / 2; // Each point is now 1 pixel wide
+        const min = waveformData[i] * center;
+        const max = waveformData[i + 1] * center;
+
+        const path = (x < progressPoint) ? playedPath : unplayedPath;
+
+        path.moveTo(x, center + min);
+        path.lineTo(x, center + max);
+    }
+
+    ctx.strokeStyle = 'rgba(255, 100, 50, 1.0)'; // Played color
+    ctx.lineWidth = 1;
+    ctx.stroke(playedPath);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; // Unplayed color
+    ctx.stroke(unplayedPath);
+}
+
+        function drawWaveformOld2(canvas, waveformData, progressPercentage) {
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+
+    // Set canvas resolution to match its display size to avoid blurriness
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const width = rect.width;
+    const height = rect.height;
+    const center = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+
+    if (!waveformData || waveformData.length === 0) return;
+
+    // The number of points is half the length of the data array
+    const points = waveformData.length / 2;
+    const barWidth = width / points;
+    const progressPoint = width * progressPercentage;
+
+    // Loop through the data by steps of 2
+    for (let i = 0; i < waveformData.length; i += 2) {
+        const min = waveformData[i];     // Value from -1.0 to 0.0
+        const max = waveformData[i + 1]; // Value from 0.0 to 1.0
+
+        // The horizontal position of this bar (point)
+        const x = (i / 2) * barWidth;
+
+        // Calculate the top and bottom of the bar for this point
+        // min is negative, so multiplying by center moves it UP from the center line
+        const barTop = center + (min * center);
+        const barBottom = center + (max * center);
+        const barHeight = barBottom - barTop;
+
+        // Use a different color for the played portion of the waveform
+        ctx.fillStyle = (x < progressPoint) ? 'rgba(255, 100, 50, 1.0)' : 'rgba(255, 255, 255, 0.5)';
+
+        // Draw the vertical bar (a thin rectangle)
+        // We use a width of at least 1 pixel to ensure it's always visible
+        ctx.fillRect(x, barTop, Math.max(1, barWidth * 0.9), barHeight);
+    }
+}
+
+        function drawWaveformOld(canvas, waveformData, progressPercentage) {
             const ctx = canvas.getContext('2d');
             const rect = canvas.getBoundingClientRect();
             const width = rect.width;
