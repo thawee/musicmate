@@ -1,4 +1,4 @@
-package apincer.android.mmate.repository;
+package apincer.android.mmate.repository.database;
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.field.SqlType;
 import com.j256.ormlite.field.types.BaseDataType;

@@ -15,6 +15,7 @@ import java.util.List;
 
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
+import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.MusicTag;
 
 public class GroupingFolderBrowser extends AbstractContentBrowser {
@@ -37,7 +38,7 @@ public class GroupingFolderBrowser extends AbstractContentBrowser {
         String name = extractName(myId,ContentDirectoryIDs.MUSIC_GROUPING_PREFIX);
         String downloadName = getContext().getString(R.string.downloaded);
         if(downloadName.equals(name)) {
-            return MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs(0, 0).size();
+            return TagRepository.findRecentlyAdded(0, 0).size();
         }else {
             return MusixMateApp.getInstance().getOrmLite().findByGrouping(name, 0, 0).size();
         }
@@ -58,7 +59,7 @@ public class GroupingFolderBrowser extends AbstractContentBrowser {
         List<MusicTag> tags;
         String downloadName = getContext().getString(R.string.downloaded);
         if(downloadName.equals(name)) {
-            tags = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs(firstResult, maxResults);
+            tags = TagRepository.findRecentlyAdded(firstResult, maxResults);
         }else {
             tags = MusixMateApp.getInstance().getOrmLite().findByGrouping(name, firstResult, maxResults);
         }

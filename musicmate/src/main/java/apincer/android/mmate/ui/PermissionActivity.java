@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -17,7 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.utils.PermissionUtils;
@@ -37,8 +37,11 @@ public class PermissionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // set status bar color to black
         Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+       // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+       // window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
+        // If the background is dark, use light icons
+        insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_permissions);
         panel = findViewById(R.id.perms_panel);

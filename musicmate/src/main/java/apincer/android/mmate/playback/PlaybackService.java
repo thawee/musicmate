@@ -1,4 +1,5 @@
 package apincer.android.mmate.playback;
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -36,17 +37,6 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 // This service is a Started Service, meaning it runs in the background
 // to handle playback actions and then stops itself when the work is done.
 // It is a single-purpose service for managing playback commands.
-/*
-    // Create an Intent for the service
-    Intent intent = new Intent(this, PlaybackService.class);
-
-    // Set the action and put the data as an extra
-    intent.setAction(PlaybackService.ACTION_PLAY);
-    intent.putExtra(PlaybackService.EXTRA_MUSIC_TAG, mySong);
-
-    // Start the service
-    startService(intent);
- */
 public class PlaybackService extends Service {
     private static final String TAG = "PlaybackManagerService";
     private static final String NOTIFICATION_CHANNEL_ID = "playback_channel";
@@ -66,7 +56,7 @@ public class PlaybackService extends Service {
     private transient boolean controlledPlayback = false;
     private long currentTrackId = -1;
 
-    private final List<MusicTag> playingQueue = new CopyOnWriteArrayList<>();
+    private final BehaviorSubject<List<MusicTag>> playingQueueSubject = BehaviorSubject.createDefault(new CopyOnWriteArrayList<>());
     private int playingQueueIndex = -1;
 
     // New fields for service binding
@@ -95,6 +85,7 @@ public class PlaybackService extends Service {
         }
     };
 
+    @SuppressLint("CheckResult")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -105,13 +96,13 @@ public class PlaybackService extends Service {
         startForeground(NOTIFICATION_ID, buildForegroundNotification().build());
 
         loadPlayingQueue();
-        nowPlayingSubject.subscribe(nowPlaying -> monitorNowPlaying(nowPlaying));
+        nowPlayingSubject.subscribe(this::monitorNowPlaying);
     }
 
     private void loadPlayingQueue() {
         try {
             List<QueueItem> queues = MusixMateApp.getInstance().getOrmLite().getQueueItemDao().queryForAll();
-            queues.forEach(queueItem -> playingQueue.add(queueItem.getTrack()));
+            queues.forEach(queueItem -> playingQueueSubject.getValue().add(queueItem.getTrack()));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -146,9 +137,6 @@ public class PlaybackService extends Service {
 
         // Check if the Intent is null, which can happen if the service is restarted
         // by the system (e.g., after being killed in low memory situations).
-        if (intent == null) {
-            return START_STICKY;
-        }
 
         // Use a switch statement to handle different playback actions based on the Intent's action string.
         String action = intent.getAction();
@@ -218,60 +206,13 @@ public class PlaybackService extends Service {
      */
     public void skipToNext(MusicTag song) {
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
-        if (nowPlaying != null) {
-            nowPlaying.skipToNext(song);
+        if (nowPlaying != null && nowPlaying.isPlaying(song)) {
+                if (nowPlaying.isLocalPlayer()) {
+                    nowPlaying.skipToNext(song);
+                } else {
+                    next();
+                }
         }
-    }
-
-    public MusicTag skipToNext() {
-        NowPlaying nowPlaying = nowPlayingSubject.getValue();
-        if (nowPlaying != null) {
-            if(controlledPlayback) {
-                playingQueueIndex++;
-                if(playingQueueIndex < 0 || playingQueueIndex >= playingQueue.size()) {
-                    playingQueueIndex =0;
-                }
-                if(playingQueueIndex < playingQueue.size()) {
-                    MusicTag song = playingQueue.get(playingQueueIndex);
-                    nowPlaying.play(song);
-                    nowPlaying.setElapsed(0);
-                    nowPlayingSubject.onNext(nowPlaying);
-                    //onNewTrackPlaying(nowPlaying.getPlayer(), song, 0);
-                    playingQueueIndex++;
-                    return song;
-                }
-            }else {
-                nowPlaying.skipToNext();
-                return null;
-            }
-        }
-        return null;
-    }
-
-    public MusicTag skipToPrevious() {
-        NowPlaying nowPlaying = nowPlayingSubject.getValue();
-        if (nowPlaying != null) {
-            if(controlledPlayback) {
-                playingQueueIndex--;
-                if(playingQueueIndex < 0 || playingQueueIndex >= playingQueue.size()) {
-                    playingQueueIndex =0;
-                }
-                if(playingQueueIndex < playingQueue.size()) {
-                    MusicTag song = playingQueue.get(playingQueueIndex);
-                    nowPlaying.play(song);
-                    nowPlaying.setElapsed(0);
-                    nowPlayingSubject.onNext(nowPlaying);
-                    //onNewTrackPlaying(nowPlaying.getPlayer(), song, 0);
-                    playingQueueIndex++;
-                    return song;
-                }
-            }else {
-                nowPlaying.skipToPrevious();
-                return null;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -286,7 +227,6 @@ public class PlaybackService extends Service {
             nowPlaying.play(song);
             nowPlaying.setElapsed(0);
             nowPlayingSubject.onNext(nowPlaying);
-           // onNewTrackPlaying(nowPlaying.getPlayer(), song, 0);
         }
     }
 
@@ -298,11 +238,11 @@ public class PlaybackService extends Service {
         if(nowPlaying != null) {
             if (controlledPlayback) {
                 // get song in next queue and play
-                if(playingQueueIndex < 0 || playingQueueIndex >= playingQueue.size()) {
+                if(playingQueueIndex < 0 || playingQueueIndex >= playingQueueSubject.getValue().size()) {
                     playingQueueIndex =0;
                 }
-                if(playingQueueIndex < playingQueue.size()) {
-                    MusicTag song = playingQueue.get(playingQueueIndex);
+                if(playingQueueIndex < playingQueueSubject.getValue().size()) {
+                    MusicTag song = playingQueueSubject.getValue().get(playingQueueIndex);
                     nowPlaying.play(song);
                     nowPlaying.setElapsed(0);
                     nowPlayingSubject.onNext(nowPlaying);
@@ -455,12 +395,42 @@ public class PlaybackService extends Service {
 
     public RendererController getRendererController() {
         if(isBound) {
-
             return mediaServerService.getRendererController(this);
         }
         return null;
     }
 
+    public BehaviorSubject<List<MusicTag>> getPlayingQueueSubject() {
+        return playingQueueSubject;
+    }
+
+    public void previous() {
+        NowPlaying nowPlaying = nowPlayingSubject.getValue();
+        if (nowPlaying != null) {
+            if(controlledPlayback) {
+                playingQueueIndex--;
+                if(playingQueueIndex < 0 || playingQueueIndex >= playingQueueSubject.getValue().size()) {
+                    playingQueueIndex =0;
+                }
+                if(playingQueueIndex < playingQueueSubject.getValue().size()) {
+                    MusicTag song = playingQueueSubject.getValue().get(playingQueueIndex);
+                    nowPlaying.play(song);
+                    nowPlaying.setElapsed(0);
+                    nowPlayingSubject.onNext(nowPlaying);
+                    //onNewTrackPlaying(nowPlaying.getPlayer(), song, 0);
+                    playingQueueIndex++;
+                }
+            }else {
+                nowPlaying.skipToPrevious();
+            }
+        }
+    }
+
+    public void setShuffleMode(boolean enabled) {
+    }
+
+    public void setRepeatMode(String mode) {
+    }
 
     public class PlaybackServiceBinder extends Binder {
         public PlaybackService getService() {

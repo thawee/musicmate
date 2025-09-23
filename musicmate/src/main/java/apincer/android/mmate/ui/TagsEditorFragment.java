@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.provider.CoverartFetcher;
@@ -91,8 +92,6 @@ public class TagsEditorFragment extends Fragment {
         View v = inflater.inflate(R.layout.view_music_info_editor, container, false);
        // previewPanel = v.findViewById(R.id.preview_panel);
         previewTitle = v.findViewById(R.id.preview_title);
-       // previewArtist = v.findViewById(R.id.preview_artist);
-       // previewAlbum = v.findViewById(R.id.preview_album);
         previewPath = v.findViewById(R.id.editor_pathname);
         previewCoverart = v.findViewById(R.id.preview_coverart);
         // input fields
@@ -142,17 +141,6 @@ public class TagsEditorFragment extends Fragment {
         input.setThreshold(0);
     }
 
-    private void setupFileQualityList() {
-
-        String[] qualityOptions = getResources().getStringArray(R.array.file_qualities);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                getContext(),
-                R.layout.dropdown_item, // Create this layout with a simple TextView
-                qualityOptions
-        );
-        qualityDropdown.setAdapter(adapter);
-    }
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -174,13 +162,6 @@ public class TagsEditorFragment extends Fragment {
        // dismissPowerMenu();
         super.onPause();
     }
-
-   /*private void dismissPowerMenu() {
-        if (powerMenu != null) {
-            powerMenu.dismiss();
-            powerMenu = null;
-        }
-    }*/
 
     public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
         return item -> {if (item.getItemId() == R.id.menu_editor_read_tag) {
@@ -383,10 +364,10 @@ public class TagsEditorFragment extends Fragment {
 
             // Wait for all futures to complete
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        });
+        }).thenAccept(unused -> tagsActivity.refreshDisplayTag());
 
         // Handle completion
-        processingFuture.whenComplete((result, exception) -> {
+       /* processingFuture.whenComplete((result, exception) -> {
             if (exception != null) {
                 Log.e(TAG, "Error saving tags", exception);
             }
@@ -394,7 +375,7 @@ public class TagsEditorFragment extends Fragment {
             // Update UI
             tagsActivity.refreshDisplayTag();
 
-        });
+        }); */
     }
 
     private void buildPendingTags(MusicTag tagUpdate) {
@@ -413,8 +394,6 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setGenre(buildTag(txtGenre, originTag.getGenre()));
         tagUpdate.setPublisher(buildTag(txtPublisher, originTag.getPublisher()));
         tagUpdate.setYear(buildTag(txtYear, originTag.getYear()));
-        //tagUpdate.setDisc(buildTag(txtDisc, originTag.getDisc()));
-       // tagUpdate.setMediaType(buildTag(txtMediaType, originTag.getMediaType()));
         tagUpdate.setQualityRating(buildQualityTag());
     }
 
@@ -525,8 +504,6 @@ public class TagsEditorFragment extends Fragment {
         imageLoader.enqueue(request);
 
         previewTitle.setText(MusicTagUtils.getFormattedTitle(getContext(),tag));
-       // previewArtist.setText(MusicTagUtils.getFormattedSubtitle(tag)); // tag.getArtist());
-      //  previewAlbum.setText(tag.getAlbum());
         previewPath.setText(tag.getSimpleName());
     }
 

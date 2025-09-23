@@ -67,7 +67,7 @@ public abstract class AbstractContentBrowser {
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
-        return getAlbumArtUri(contentDirectory, tag.getAlbumUniqueKey());
+        return getAlbumArtUri(contentDirectory, tag.getAlbumCoverUniqueKey());
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, String key) {

@@ -55,9 +55,9 @@
             <View
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="@android:color/white"
-                android:layout_marginRight="@dimen/dimen_8_dp"
-                android:layout_marginLeft="@dimen/dimen_8_dp"/>
+                android:background="@color/material_color_grey_600"
+                android:layout_marginRight="@dimen/dimen_4_dp"
+                android:layout_marginLeft="@dimen/dimen_4_dp"/>
 
             <LinearLayout
                 android:layout_width="0dip"
@@ -113,8 +113,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginTop="1dp"
-                android:layout_marginStart="@dimen/dimen_24_dp"
-                android:layout_marginEnd="@dimen/dimen_24_dp">
+                android:layout_marginStart="@dimen/dimen_12_dp"
+                android:layout_marginEnd="@dimen/dimen_12_dp">
 
                 <TextView
                     android:id="@+id/panel_tag"
@@ -142,8 +142,8 @@
                     android:textColor="@android:color/white"
                     android:layout_gravity="center_horizontal"
                     android:padding="@dimen/dimen_4_dp"
-                    android:paddingStart="@dimen/dimen_12_dp"
-                    android:paddingEnd="@dimen/dimen_12_dp"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:paddingEnd="@dimen/dimen_8_dp"
                     android:background="@drawable/textview_dent_background"
                     android:elevation="8dp"
                     tools:ignore="HardcodedText,SmallSp" />
@@ -175,6 +175,7 @@
                     android:singleLine="true"
                     android:background="@drawable/shape_background_filename"
                     tools:ignore="HardcodedText,SmallSp" />
+                    <!--
                     <View
                         android:id="@+id/panel_path_line"
                         android:layout_width="match_parent"
@@ -184,6 +185,7 @@
                         android:gravity="center"
                         android:layout_gravity="center"
                         android:background="@color/grey100"/>
+                        -->
                 </LinearLayout>
             </LinearLayout>
         <RelativeLayout
@@ -209,7 +211,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:text="Delete"/>
+                    android:text="Delete"
+                    tools:ignore="HardcodedText" />
 
                 <View
                     android:layout_width="1dp"
@@ -227,7 +230,8 @@
                     android:layout_marginEnd="8dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Import"/>
+                    android:text="Import"
+                    tools:ignore="HardcodedText" />
 
                 <View
                     android:layout_width="1dp"
@@ -244,7 +248,8 @@
                     android:layout_marginStart="8dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="More..."/>
+                    android:text="More..."
+                    tools:ignore="HardcodedText" />
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
@@ -256,7 +261,8 @@
                 android:layout_centerInParent="true"
                 android:layout_width="@dimen/dimen_164_dp"
                 android:layout_height="wrap_content"
-                android:text="Edit Song Info"/>
+                android:text="Edit Song Info"
+                tools:ignore="HardcodedText" />
         </RelativeLayout>
     </LinearLayout>
     <FrameLayout

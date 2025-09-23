@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/new_indicator_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/dimen_1_dp"
+        android:background="@drawable/backgound_new_indicator"
+        android:gravity="center"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/dimen_6_dp"
+        android:paddingStart="@dimen/dimen_8_dp"
+        android:paddingEnd="@dimen/dimen_8_dp"
+        android:paddingTop="@dimen/dimen_2_dp"
+        android:paddingBottom="@dimen/dimen_2_dp"
+        android:fontFamily="@font/oswald_bold"
+        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        android:textColor="@color/new_indicator_text"
+        android:text="NEW"/>
+</merge>

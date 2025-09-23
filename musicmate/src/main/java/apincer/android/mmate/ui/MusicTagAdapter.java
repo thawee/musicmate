@@ -2,7 +2,6 @@ package apincer.android.mmate.ui;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static apincer.android.mmate.utils.MusicTagUtils.getRating;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 
@@ -24,7 +23,6 @@ import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.j256.ormlite.dao.Dao;
-import com.vanniktech.textbuilder.TextBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +39,10 @@ import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.QueueItem;
 import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.provider.CoverartFetcher;
-import apincer.android.mmate.ui.view.DynamicRangeDbView;
-import apincer.android.mmate.ui.view.ResolutionView;
+import apincer.android.mmate.ui.view.DurationView;
+import apincer.android.mmate.ui.view.DynamicRangeView;
+import apincer.android.mmate.ui.view.QualityIndicatorView;
+import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
@@ -138,7 +138,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_TO_ANALYST_DR);
-            titles.add(Constants.TITLE_BROKEN);
+           // titles.add(Constants.TITLE_BROKEN);
         }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             titles.add(Constants.QUALITY_AUDIOPHILE);
             titles.add(Constants.QUALITY_RECOMMENDED);
@@ -230,16 +230,18 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(criteria!=null) {
             if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
                 return Constants.TITLE_LIBRARY;
-            }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
-                return Constants.TITLE_QUALITY;
+           // }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
+          //      return Constants.TITLE_QUALITY;
             }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
                 return Constants.TITLE_RESOLUTION;
             }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
                 return Constants.TITLE_GROUPING;
             }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
                 return Constants.TITLE_GENRE;
-            }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-                return Constants.TITLE_PUBLISHER;
+            }else if(criteria.getType() == SearchCriteria.TYPE.ARTIST) {
+                return Constants.TITLE_ARTIST;
+          //  }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
+           //     return Constants.TITLE_PUBLISHER;
             }else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
                 return Constants.TITLE_PLAYLIST;
             }else {
@@ -295,29 +297,22 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
     }
 
-    public List<MusicTag> getMusicTags() {
-        return localDataSet;
-    }
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         long id;
         View rootView;
         View mCoverArtFrame;
         View mTitleLayout;
-        // View mDynamicRangePanel;
         TextView mTitle;
         TextView mSubtitle;
-        TextView mDurationView;
-       // TextView mFileSizeView;
-        ImageView mCoverArtView;
+       ImageView mCoverArtView;
         Context mContext;
         ImageView mPlayerView;
-        //ImageView mAudioResolutionView;
         TriangleLabelView mNewLabelView;
-        ResolutionView resolutionView;
-        DynamicRangeDbView drDbView;
-       // TextView drTextView;
-        TextView ratingTextView;
+       // ResolutionView resolutionView;
+        DynamicRangeView drDbView;
+        QualityIndicatorView qualityIndicatorView;
+        RatingIndicatorView ratingIndicatorView;
+        DurationView mDurationView;
         View moreActions;
 
         public ViewHolder(View view) {
@@ -330,18 +325,17 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             this.mTitleLayout = view.findViewById(R.id.item_title_layout);
             this.mTitle = view.findViewById(R.id.item_title);
             this.mSubtitle = view.findViewById(R.id.item_subtitle);
-            this.mDurationView = view.findViewById(R.id.item_duration);
+            this.mDurationView = view.findViewById(R.id.view_duration);
             this.mCoverArtView = view.findViewById(R.id.item_image_coverart);
             this.mPlayerView = view.findViewById(R.id.item_player);
 
            // this.mFileSizeView = view.findViewById(R.id.item_file_size);
             this.mNewLabelView = view.findViewById(R.id.item_new_label);
-           // this.mAudioQuality = view.findViewById(R.id.item_audio_quality_icon);
 
-            this.resolutionView = view.findViewById(R.id.icon_resolution);
             this.drDbView = view.findViewById(R.id.dynamic_range_db_view);
-           // this.drTextView = view.findViewById(R.id.dynamic_range);
-            this.ratingTextView = view.findViewById(R.id.rating);
+            this.qualityIndicatorView = view.findViewById(R.id.icon_quality_indicator);
+            this.ratingIndicatorView = view.findViewById(R.id.rating_view);
+
             this.moreActions = view.findViewById(R.id.item_more_actions);
         }
 
@@ -440,26 +434,24 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, @SuppressLint("RecyclerView") final int position, MusicTag tag) {
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
-        holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
-        holder.moreActions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showMoreActions(view, tag);
-            }
-        });
+        if(tag == null || tag.getAudioDuration() == 0) {
+            holder.moreActions.setEnabled(false);
+            holder.rootView.setEnabled(false);
+        }else {
+            holder.moreActions.setEnabled(true);
+            holder.rootView.setEnabled(true);
+            holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
+            holder.moreActions.setOnClickListener(view -> showMoreActions(view, tag));
+        }
 
         ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
 
-        // Background, when bound the first time
-        //MusicTag listeningItem = MusixMateApp.getInstance().getNowPlaying();
-        boolean isListening = false;
         NowPlaying nowPlaying = null;
         if(playbackService != null) {
             nowPlaying = playbackService.getNowPlayingSubject().getValue();
-            isListening = tag.equals(nowPlaying.getSong());
         }
 
-        if (isListening) {
+        if (nowPlaying!= null && nowPlaying.isPlaying(tag)) {
             //show music player icon
             Player player = nowPlaying.getPlayer();
             if(player != null && player.getIcon()!= null) {
@@ -482,13 +474,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if (tag.isMusicManaged()) {
             holder.mNewLabelView.setVisibility(GONE);
         } else if (MusicTagUtils.isOnDownloadDir(tag)) {
-            holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_red_900);
-            holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey200);
+            holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.new_indicator_background);
+            holder.mNewLabelView.setPrimaryTextColorResource(R.color.new_download_indicator_text);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
             holder.mNewLabelView.setVisibility(VISIBLE);
         } else {
-            holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.material_color_yellow_200);
-            holder.mNewLabelView.setPrimaryTextColorResource(R.color.grey800);
+            holder.mNewLabelView.setTriangleBackgroundColorResource(R.color.new_indicator_background);
+            holder.mNewLabelView.setPrimaryTextColorResource(R.color.new_indicator_text);
             holder.mNewLabelView.setSecondaryTextColorResource(R.color.material_color_yellow_100);
             holder.mNewLabelView.setVisibility(VISIBLE);
         }
@@ -504,32 +496,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, tag));
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
-        holder.resolutionView.setMusicItem(tag);
+      //  holder.resolutionView.setMusicItem(tag);
         holder.drDbView.setMusicItem(tag);
-
-        TextBuilder builder = new TextBuilder(holder.mContext);
-        int rating = getRating(tag);
-        if(rating >= 3) {
-           // builder.addText("\u2764");
-           // builder.addText("\u2661");
-            // builder.addText("\u1f90d");
-            // Just copy and paste the emoji
-            builder.addText("🤍");
-            builder.into(holder.ratingTextView);
-            holder.ratingTextView.setVisibility(VISIBLE);
-        }else {
-            holder.ratingTextView.setVisibility(GONE);
-        }
-
-        holder.mDurationView.setText(StringUtils.formatDuration(tag.getAudioDuration(), false));
-
-        // file size
-       /* holder.mFileSizeView.setText(StringUtils.formatStorageSize(tag.getFileSize()));
-        if(tag.getFileSize() > 0) {
-            holder.mFileSizeView.setTextColor(ContextCompat.getColor(holder.mContext, R.color.white));
-        }else {
-            holder.mFileSizeView.setTextColor(ContextCompat.getColor(holder.mContext, R.color.grey600));
-        } */
+        holder.qualityIndicatorView.setMusicItem(tag);
+        holder.ratingIndicatorView.setMusicItem(tag);
+        holder.mDurationView.setMusicItem(tag);
     }
 
     private void showMoreActions(View anchorView, MusicTag song) {

@@ -50,9 +50,6 @@ public class PlaylistRepository {
                     if (collection != null && collection.getPlaylists() != null) {
                         allPlaylists = collection.getPlaylists();
                         Log.d(TAG, "Loaded " + allPlaylists.size() + " playlist entries from JSON.");
-                        // if (collection.getMetadata() != null) {
-                        // playlistMetadata = collection.getMetadata();
-                        // }
                     } else {
                         Log.e(TAG, "Failed to parse playlists.json or it's empty.");
                         allPlaylists = Collections.emptyList(); // Ensure it's not null
@@ -67,7 +64,6 @@ public class PlaylistRepository {
                 allPlaylists = Collections.emptyList();
             }
         }
-
     }
 
     private static void populatePlaylistMap(List<PlaylistEntry> allPlaylists) {
@@ -269,6 +265,8 @@ public class PlaylistRepository {
                 MusicTag missingTag = songFromPlaylist.toMusicTag();
                 missingTag.setId(pseudoIdCounter.getAndIncrement());
                 missingTag.setUniqueKey(String.valueOf(missingTag.getId()));
+                missingTag.setMusicManaged(true);
+                missingTag.setQualityInd("NA");
                 missingTags.add(missingTag);
             }
         }

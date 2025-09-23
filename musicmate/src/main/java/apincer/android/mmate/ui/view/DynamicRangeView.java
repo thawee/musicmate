@@ -22,20 +22,20 @@ import com.vanniktech.textbuilder.TextBuilder;
 import apincer.android.mmate.R;
 import apincer.android.mmate.repository.database.MusicTag;
 
-public class DynamicRangeDbView extends LinearLayout {
+public class DynamicRangeView extends LinearLayout {
     private TextView dynamicRangeDbTextView;
 
-    public DynamicRangeDbView(Context context) {
+    public DynamicRangeView(Context context) {
         super(context);
         init(context, null);
     }
 
-    public DynamicRangeDbView(Context context, @Nullable AttributeSet attrs) {
+    public DynamicRangeView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context, attrs);
     }
 
-    public DynamicRangeDbView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public DynamicRangeView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
     }
@@ -52,28 +52,36 @@ public class DynamicRangeDbView extends LinearLayout {
         setOrientation(LinearLayout.HORIZONTAL);
     }
 
-
     @SuppressLint("CheckResult")
     public void setMusicItem(MusicTag tag) {
         if(tag == null) {
             dynamicRangeDbTextView.setText("-");
+           // setVisibility(GONE);
         }else {
             int drsColor = getDRScoreColor(getContext(), (int) tag.getDynamicRangeScore());
             String drs = getDynamicRangeScore(tag);
             if(isEmpty(drs)) {
-                drs = "--";
+                drs = " -- ";
+               // setVisibility(VISIBLE);
+               // return;
             }else {
                 drs = "DR"+trim(drs, "");
             }
             TextBuilder builder = new TextBuilder(getContext());
             builder.addColoredText(drs, drsColor);
-            builder.addColoredText(" / ", ContextCompat.getColor(getContext(), R.color.grey400));
-            //dynamicRangeDbTextView.setText("DR"+drs+", "+getDynamicRange(tag)+" dB");
-            int color = getDynamicRangeDbColor(getContext(), tag);
-            //dynamicRangeDbTextView.setTextColor(color);
-            builder.addColoredText(getDynamicRange(tag)+" dB", color);
-            builder.into(dynamicRangeDbTextView);
 
+            /*
+            builder.addColoredText(" / ", ContextCompat.getColor(getContext(), R.color.grey400));
+            int color = getDynamicRangeDbColor(getContext(), tag);
+            String dr = getDynamicRange(tag);
+            if(isEmpty(dr)) {
+                dr = " -- ";
+            }else {
+                dr = dr +" dB";
+            }
+            builder.addColoredText(dr, color);
+            */
+            builder.into(dynamicRangeDbTextView);
         }
     }
 }

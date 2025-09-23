@@ -9,6 +9,7 @@ import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 
 import java.util.Locale;
@@ -240,7 +241,7 @@ public class MusicTagUtils {
     public static String getDynamicRange(MusicTag tag) {
         String text;
         if(tag.getDynamicRange()==0.00) {
-            text = "--";
+            text = "";
         }else {
             text = String.format(Locale.US, "%.0f", tag.getDynamicRange());
         }
@@ -261,7 +262,7 @@ public class MusicTagUtils {
     }
 
     public static int getDRScoreColor(Context context, int drValue) {
-        if (drValue == 0) return ContextCompat.getColor(context, R.color.grey600);
+        if (drValue <= 0) return ContextCompat.getColor(context, R.color.dr_none);
         else if (drValue < 8) return ContextCompat.getColor(context, R.color.dr_low);
         else if (drValue < 13) return ContextCompat.getColor(context, R.color.dr_medium);
         else return ContextCompat.getColor(context, R.color.dr_high);
@@ -322,8 +323,8 @@ public class MusicTagUtils {
     }
 
     public static boolean isOnDownloadDir(MusicTag tag) {
-        return !tag.isMusicManaged();
-       // return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
+       // return !tag.isMusicManaged();
+        return (!tag.getPath().contains("/Music/")) || tag.getPath().contains("/Telegram/");
     }
 
     public static String getDefaultAlbum(MusicTag tag) {
@@ -446,31 +447,61 @@ public class MusicTagUtils {
             // We now include the original sample rate for MQA
             //String mqaSampleRate = StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true);
             //return String.format("%s (%s)", mqaIndicator, mqaSampleRate);
-            return mqaIndicator;
+            return "MQA"; // mqaIndicator;
         }
 
         // 3. Check for Hi-Res Audio (any format with bit depth > 16 or sample rate > 44.1kHz)
-        if (song.getAudioBitsDepth() > 16 || song.getAudioSampleRate() > 44100) {
-            // Combine bit depth and sample rate for a precise, audiophile-friendly label.
-           // String bitDepth = song.getAudioBitsDepth() + " bit";
-           // String sampleRate = StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true);
-           // return String.format("Hi-Res %s / %s", bitDepth, sampleRate);
-            return "Hi-Res";
+        if (song.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() > Constants.QUALITY_SAMPLING_RATE_48) {
+            return "HR"; //""Hi-Res";
         }
 
-        // 4. Check for CD Quality (16-bit / 44.1 kHz)
-        if (song.getAudioBitsDepth() == 16 && song.getAudioSampleRate() == 44100) {
-            return "CD";
-        }
-
-        // 5. Check for Lossy formats (this should be the final check)
+        // 4. Check for Lossy formats (this should be the final check)
         if (isLossy(song)) {
             // Explicitly label the audio as "Lossy" instead of an empty string,
             // which provides more valuable information to the user.
-            return "HQ";
+            return "LC"; // lossy compress codecs
+        }
+
+        // 5. Check for CD Quality (16-bit / 44.1 kHz)
+        if (song.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48) {
+            return "SQ"; //""CD";
         }
 
         // 6. Fallback for any unknown format
-        return "";
+        return "NA";
+    }
+
+    public static int getQualityTextColor(Context context, String qualityInd) {
+        if(qualityInd ==null || isEmpty(qualityInd)) return context.getColor(R.color.quality_unknown);
+
+        if(qualityInd.equals("MQA Studio")) {
+            return context.getColor(R.color.quality_mqa_studio_text);
+        } else if(qualityInd.startsWith("MQA")) {
+            return context.getColor(R.color.quality_mqa_text);
+        }else if(qualityInd.equals("SQ")) {
+            return context.getColor(R.color.quality_sq_text);
+        }else if(qualityInd.equals("HR")) {
+            return context.getColor(R.color.quality_hr_text);
+        }else if(qualityInd.equals("DSD")) {
+            return context.getColor(R.color.quality_dsd_text);
+        }
+
+        return context.getColor(R.color.quality_lc_text);
+    }
+
+    public static Drawable getQualityBackground(Context context, String qualityInd) {
+        if(qualityInd ==null || isEmpty(qualityInd)) return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_unkwon);
+        if(qualityInd.equals("MQA Studio")) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_mqa_studio);
+        } else if(qualityInd.startsWith("MQA")) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_mqa);
+        }else if(qualityInd.equals("SQ")) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_sq);
+        }else if(qualityInd.equals("HR")) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_hr);
+        }else if(qualityInd.equals("DSD")) {
+            return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_dsd);
+        }
+        return AppCompatResources.getDrawable(context, R.drawable.backgound_quality_lc);
     }
 }

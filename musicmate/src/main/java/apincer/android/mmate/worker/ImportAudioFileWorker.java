@@ -21,13 +21,13 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.FileRepository;
 
+@Deprecated
 public class ImportAudioFileWorker extends Worker {
     private static final String TAG = ImportAudioFileWorker.class.getName();
     private final FileRepository repos;

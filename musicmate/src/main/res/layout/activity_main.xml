@@ -301,7 +301,7 @@
 				android:layout_marginEnd="@dimen/dimen_68_dp"
 				android:contentDescription="@string/app_name"
 				android:paddingEnd="@dimen/dimen_8_dp"
-				android:src="@drawable/ic_baseline_devices_128"
+				android:src="@drawable/rounded_broadcast_on_personal_24"
 				tools:ignore="RtlSymmetry" />
 
 			<ImageView

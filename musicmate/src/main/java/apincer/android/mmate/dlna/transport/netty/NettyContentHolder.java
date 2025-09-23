@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.transport;
+package apincer.android.mmate.dlna.transport.netty;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;

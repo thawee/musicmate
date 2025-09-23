@@ -1,14 +1,9 @@
 package apincer.android.mmate;
 
-import android.content.Context;
-
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public final class Constants {
-    public enum SHARED_TYPE {PREVIEW, IMPORT, UPDATE, DELETE}
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
     public static final String QUALITY_RECOMMENDED = "Recommended";
     public static final String QUALITY_BAD = "Unsatisfactory";
@@ -28,7 +23,7 @@ public final class Constants {
     // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
    // public static final long QUALITY_SAMPLING_RATE_88 = 88200;
-  //  public static final int QUALITY_SAMPLING_RATE_48 = 48000;
+    public static final int QUALITY_SAMPLING_RATE_48 = 48000;
     public static final int QUALITY_SAMPLING_RATE_44 = 44100;
     public static final int QUALITY_BIT_DEPTH_HD = 24;
   //  public static final int QUALITY_BIT_CD = 16;
@@ -44,44 +39,42 @@ public final class Constants {
     public static final String GROUPING_TRADITIONAL = "Traditional";
     public static final String GROUPING_LOUNGE = "Lounge";
     public static final String GROUPING_CONTEMPORARY = "Contemporary";
+    public static final String GROUPING_OLDEIS = "Oldies";
 
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
-    public static final String TITLE_PLAYLIST = "Playlist";
-    public static final String TITLE_RESOLUTION = "Resolution";
-    public static final String TITLE_GROUPING = "Grouping";
-    public static final String TITLE_GENRE = "Genre";
-    public static final String TITLE_PUBLISHER = "Publisher";
-    public static final String TITLE_QUALITY = "File Quality";
+    public static final String TITLE_PLAYLIST = "Playlists";
+    public static final String TITLE_RESOLUTION = "Resolutions";
+    public static final String TITLE_GROUPING = "Groupings";
+    public static final String TITLE_GENRE = "Genres";
+    public static final String TITLE_ARTIST = "Artists";
     public static final String TITLE_NO_COVERART = "No Embed Coverart";
 
-    public static final String TITLE_DUPLICATE = "Duplicates";
-    public static final String TITLE_BROKEN = "Quality Issues"; //	"Unsatisfactory"	"Needs Attention" or "Quality Issues"
+    public static final String TITLE_DUPLICATE = "Similar Songs";
+    //public static final String TITLE_BROKEN = "Quality Issues"; //	"Unsatisfactory"	"Needs Attention" or "Quality Issues"
     public static final String TITLE_TO_ANALYST_DR = "Pending Analysis";
     public static final String TITLE_INCOMING_SONGS = "Recently Added";
-    public static final String TITLE_ALL_SONGS = "All Music";
+    public static final String TITLE_ALL_SONGS = "All Songs";
     public static final String TITLE_DSD = "DSD Audio"; //""Direct Stream Digital";
-    public static final String TITLE_HIRES = "Hi-Res Lossless";
-    public static final String TITLE_HIFI_LOSSLESS = "Hi-Fi Lossless";
-    public static final String TITLE_HIGH_QUALITY = "HQ Compressed"; //""High Quality";
-    public static final String TITLE_MASTER_AUDIO = "Studio Masters";  // Industry standard term //"Master Recordings";
+    public static final String TITLE_HIRES = "High Resolution"; //""Hi-Res Lossless";
+    public static final String TITLE_HIFI_LOSSLESS = "Standard Quality"; //""Hi-Fi Lossless";
+    public static final String TITLE_HIGH_QUALITY = "Lossy Codec"; //""High Quality";
+    public static final String TITLE_MASTER_AUDIO = "Master Quality Authenticated"; //""Studio Masters";  // Industry standard term //"Master Recordings";
     //public static final String TITLE_MASTER_STUDIO_AUDIO = "Master Studio Recordings";
 
    // public static final String TITLE_PCM = "PCM";
-   public static final String TITLE_HIRES_SHORT = "Hi-Res";
-    public static final String TITLE_HIFI_LOSSLESS_SHORT = "Hi-Fi";
+   public static final String TITLE_HIRES_SHORT = "HR";
+    public static final String TITLE_HIFI_LOSSLESS_SHORT = "SQ";
     public static final String TITLE_DSD_SHORT = "DSD";
     public static final String TITLE_MQA_SHORT = "MQA";
-    public static final String TITLE_HIGH_QUALITY_SHORT = "HQ";
+    public static final String TITLE_HIGH_QUALITY_SHORT = "LC"; //Lossy Codec
 
  //   public static final String FIELD_SEP = ";";
-    public static final double MIN_TITLE = 0.80;
-    public static final double MIN_ARTIST = 0.70;
+  //  public static final double MIN_TITLE = 0.80;
+  //  public static final double MIN_ARTIST = 0.70;
 
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
-    public static final String PREF_CLEAR_CACHED = "preference_clear_cached";
     public static final String PREF_LAST_SCAN_TIME = "LAST_SCAN_TIME_PREF";
-    public static final String GROUPING_OLDEIS = "Oldies";
 
     static {
         IMAGE_COVERS.add("front.png");
@@ -101,13 +94,13 @@ public final class Constants {
 
     }
 
-    public static final String STATUS_SUCCESS="success";
-    public static final String STATUS_FAIL="fail";
+   // public static final String STATUS_SUCCESS="success";
+    //public static final String STATUS_FAIL="fail";
     public static final String KEY_SEARCH_TYPE="search_criteria_type";
     public static final String KEY_SEARCH_KEYWORD="search_criteria_keyword";
     public static final String KEY_FILTER_TYPE="search_filter_type";
     public static final String KEY_FILTER_KEYWORD="search_filter_keyword";
-    public static final String KEY_COVER_ART_PATH = "coverArtPath";
+   // public static final String KEY_COVER_ART_PATH = "coverArtPath";
 
     public static final String MEDIA_ENC_AAC="AAC";
     public static final String MEDIA_ENC_MPEG="MPEG";
@@ -119,19 +112,13 @@ public final class Constants {
     public static final String MEDIA_ENC_AIFF = "AIFF";
     public static final String MEDIA_ENC_AIFF_ALT = "AIF";
     public static final String MEDIA_ENC_SACD = "SACD";
-
-    public static final String MEDIA_PATH_DSD = "DSD"; // DSD
-    public static final String MEDIA_PATH_MQA = "MQA"; //MQA
-    public static final String MEDIA_PATH_HRA = "Hi-Res"; //HRA
-    public static final String MEDIA_PATH_SACD = "SACD";
-    public static final String MEDIA_PATH_HIFI = "Hi-Fi";
-    public static final String MEDIA_PATH_HIGH_QUALITY = "HQ";
+    public static final String MEDIA_ENC_MQA = "MQA";
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
-    public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
+   // public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";
     public static final String PREF_PREFIX_TRACK_NUMBER_ON_TITLE = "preference_prefix_title_with_track_number";
     public static final String PREF_SHOW_STORAGE_SPACE = "preference_show_storage_space";
-    public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
+   // public static final String PREF_NIGHT_MODE_ONLY = "preference_night_mode_only";
     public static final String PREF_LIST_FOLLOW_NOW_PLAYING = "preference_list_follows_now_playing";
     public static final String PREF_MUSICMATE_DIRECTORIES = "preference_musicmate_directories";
     //public static final String PREF_MUSICMATE_NEXT_STEP = "preference_musicmate_next_step";
@@ -153,12 +140,4 @@ public final class Constants {
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
     public static final String DEFAULT_COVERART_DLNA_RES = "no_cover.png";
-
-    public static List<String> getSourceList(Context context) {
-        String[] srcs =  context.getResources().getStringArray(R.array.default_mediaType);
-        List<String> list = new ArrayList<>(Arrays.asList(srcs));
-        Collections.sort(list);
-
-    return list;
- }
 }

@@ -103,7 +103,7 @@
     <!-- Extras -->
 
     <!-- internal defaults -->
-    <string name="welcome_text">Manage Your Music Files Your Way and Enjoy Listening! :D</string>
+    <string name="welcome_text">Manage Your Music Files Your Way and Enjoy Listening!</string>
     <string name="changelog_text">2.0.1 - update to androidx</string>
 
     <string name="app_permission">Storage Access</string>
@@ -199,9 +199,9 @@
     <string name="label_ffmpeg_reader">FFMpeg Reader</string>
     <string name="about_encoding_file">Encode Audio: Recommended FLAC (Lossless)</string>
     <string name="label_resolutions">Resolutions</string>
-    <string name="label_lossy">HQ</string>
-    <string name="label_Lossless">Hi-FI</string>
-    <string name="label_hi_res">Hi-Res</string>
+    <string name="label_lossy">LC</string>
+    <string name="label_Lossless">SQ</string>
+    <string name="label_hi_res">HR</string>
     <string name="label_dsd">DSD</string>
     <string name="label_mqa">MQA</string>
     <string name="label_audio_encoding_format">Resolutions</string>
@@ -209,19 +209,19 @@
     <string name="label_file_resolution">Resolution:</string>
     <string name="label_file_recommended">Recommended Genre:</string>
 
-    <string name="encoding_hq_header">HQ Premium Compressed</string>
+    <string name="encoding_hq_header">Lossy Codecs</string>
     <string name="encoding_hq_desc">Optimal Balance of Data Usage and Sound Fidelity.</string>
     <string name="encoding_hq_format">MP3, AAC(M4A)</string>
     <string name="encoding_hq_resolution">16bit/44.1kHz, bitrate 256kbps or higher</string>
     <string name="encoding_hq_recommended">-</string>
 
-    <string name="encoding_lossless_header">Hi-Fi Lossless</string>
+    <string name="encoding_lossless_header">Standard Quality</string>
     <string name="encoding_lossless_desc">Reproduce Music with Smooth CD Quality.</string>
     <string name="encoding_lossless_format">FLAC, ALAC, WAVE, AIFF</string>
     <string name="encoding_lossless_resolution">16bit/44.1kHz, 24bit/48kHz</string>
     <string name="encoding_lossless_recommended">Pop, Rock</string>
 
-    <string name="encoding_hires_header">Hi-Res Lossless</string>
+    <string name="encoding_hires_header">High Resolution Lossless</string>
     <string name="encoding_hires_desc">Enjoy Rich Music with Fine Instrument Details.</string>
     <string name="encoding_hires_format">FLAC, ALAC, WAVE, AIFF</string>
     <string name="encoding_hires_resolution">24bit/96kHz or Higher</string>
@@ -245,6 +245,9 @@
     <string name="label_audio_quality">Sound Quality</string>
     <string name="cancel">Cancel</string>
     <string name="ok">Ok</string>
+    <string name="save">Save</string>
+    <string name="scan">Scan</string>
+    <string name="close">Close</string>
     <string name="label_audio_resolutions">Audio Resolution</string>
     <string name="groupings_header_content">This delightful journey through the world\'s musical landscape offers something for every passionate listener</string>
     <string name="groupings_contemporary_content">Contemporary Music embraces the cutting edge of musical expression—from the minimalist compositions of Philip Glass to the genre-defying works of modern composers and experimental artists. This category constantly challenges conventions, incorporating electronic elements, unconventional instruments, and diverse global influences to create sound experiences that reflect our complex modern world.</string>
@@ -263,9 +266,12 @@
     <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
     <string name="show_frequency_spectrum">Show Frequency Spectrum</string>
     <string name="open_containing_folder">Open Containing Folder</string>
-    <string name="find_online">Find Online</string>
+    <string name="find_online">Find Info Online</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
-    <string name="analyze_music">Analyze Song</string>
+    <string name="analyze_music">Analyze Music File</string>
+    <string name="move_to_trash">Move to Trash</string>
+    <string name="analyst">Analyst</string>
+    <string name="encode">Encode</string>
 
 </resources>

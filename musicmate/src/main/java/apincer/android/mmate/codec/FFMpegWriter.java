@@ -9,7 +9,6 @@ import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_COMPOSER;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_DISC;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_GENRE;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_GROUPING;
-import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_MEDIA;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_PUBLISHER;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_QUALITY;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_AIF_TITLE;
@@ -56,7 +55,6 @@ import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_COMPOSER;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_DISC;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_GENRE;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_GROUP;
-import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_MEDIA;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_PUBLISHER;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_TITLE;
@@ -181,7 +179,7 @@ public class FFMpegWriter extends TagWriter {
                     FileRepository.newInstance(context).scanMusicFile(new File(srcPath),true);
                     return true;
                 }else {
-                    FileSystem.delete(context, targetPath); // delete source file to clear space
+                    FileSystem.delete(targetPath); // delete source file to clear space
                     return false;
                 }
           /*  }else {
@@ -195,7 +193,7 @@ public class FFMpegWriter extends TagWriter {
             // fail, delete tmp file;
             File tmp = new File(targetPath);
             if(tmp.exists()) {
-                FileSystem.delete(context, tmp);
+                FileSystem.delete(tmp);
             }
             return false;
         }

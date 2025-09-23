@@ -88,7 +88,7 @@ public class FileSystem {
 
         //check file size
         if(!isValidSize(source.getAbsolutePath(), target.getAbsolutePath(), true)) {
-            delete(context, target.getAbsolutePath());
+            delete(target.getAbsolutePath());
             return false;
         }
 
@@ -127,15 +127,15 @@ public class FileSystem {
                 if(rename(context, targetPath, bakPath)) { // backup file
                    // return rename(context, tmpPath, srcPath);
                     if(rename(context, tmpPath, targetPath)) {
-                        delete(context, bakPath);
-                        delete(context, srcPath); // delete source file if everything ok
+                        delete(bakPath);
+                        delete(srcPath); // delete source file if everything ok
                         return true;
                     }else {
                         rename(context, bakPath, targetPath);
                     }
                 }
             }else {
-                delete(context, tmpPath); // copy is fail, no valid file size
+                delete(tmpPath); // copy is fail, no valid file size
             }
         }
         return false;
@@ -150,8 +150,8 @@ public class FileSystem {
         String bakPath = targetPath+"_tmp_safe_backup";
         if(rename(context, targetPath, bakPath)) {
             if(rename(context, srcPath, targetPath)) {
-                delete(context, bakPath);
-                delete(context, srcPath);
+                delete(bakPath);
+                delete(srcPath);
             }else {
                 rename(context, bakPath, targetPath); // copy is fail
             }
@@ -249,8 +249,8 @@ public class FileSystem {
         return success;
     }
 
-    public static boolean delete(Context context, final String file) {
-        return delete(context, new File(file));
+    public static boolean delete(final String file) {
+        return delete(new File(file));
     }
 
     /**
@@ -259,7 +259,7 @@ public class FileSystem {
      * @param file the file to be deleted.
      * @return True if successfully deleted.
      */
-    public static boolean delete(Context context, final File file) {
+    public static boolean delete(final File file) {
         if (!file.exists()) {
             Log.i(TAG,"cannot delete path "+file.getAbsolutePath());
             return false;

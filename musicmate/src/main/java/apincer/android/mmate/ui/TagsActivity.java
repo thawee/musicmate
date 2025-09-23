@@ -1,8 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static apincer.android.mmate.utils.MusicTagUtils.getRating;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
@@ -35,6 +32,8 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
@@ -44,10 +43,8 @@ import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-import com.vanniktech.textbuilder.TextBuilder;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,21 +55,16 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.provider.CoverartFetcher;
-import apincer.android.mmate.ui.view.DynamicRangeDbView;
-import apincer.android.mmate.ui.view.ResolutionView;
+import apincer.android.mmate.ui.view.DynamicRangeView;
+import apincer.android.mmate.ui.view.NewIndicatorView;
+import apincer.android.mmate.ui.view.QualityIndicatorView;
+import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.viewmodel.Idle;
-import apincer.android.mmate.viewmodel.Loading;
-import apincer.android.mmate.viewmodel.Success;
-import apincer.android.mmate.viewmodel.OperationStatus;
-import apincer.android.mmate.viewmodel.ProgressUpdate;
 import apincer.android.mmate.viewmodel.TagsViewModel;
-import apincer.android.mmate.worker.DeleteAudioFileWorker;
-import apincer.android.mmate.worker.ImportAudioFileWorker;
-import apincer.android.mmate.worker.MusicMateExecutors;
+import apincer.android.mmate.worker.FileOperationTask;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
@@ -101,29 +93,24 @@ public class TagsActivity extends AppCompatActivity {
     private TextView genreView;
     private TextView encInfo;
     private TextView pathInfo;
-    private View pathInfoLine;
-    private View hiresView;
-    private ResolutionView resolutionView;
-    private DynamicRangeDbView dynamicRangeView;
-    private TextView ratingView;
+    //private View pathInfoLine;
+    //private View hiresView;
+    //private ResolutionView resolutionView;
+    private DynamicRangeView dynamicRangeView;
+    private QualityIndicatorView qualityIndicatorView;
+    private RatingIndicatorView ratingIndicatorView;
+    private NewIndicatorView newIndicatorView;
 
     private int toolbar_from_color;
     private int toolbar_to_color;
    // FileRepository repos;
     private Fragment activeFragment;
 
-   // private ImageView playerBtn;
-   // private View playerPanel;
-   // private TextView playerName;
-   // private boolean closePreview = true;
-
- //   private SharedViewModel sharedViewModel;
-
     private boolean previewState = true;
 
     private AlertDialog progressDialog;
    // private TextView progressLabel;
-    private boolean finishOnTimeout = false;
+   // private boolean finishOnTimeout = false;
 
     private final AtomicLong lastProgressUpdate = new AtomicLong(0);
     private final long PROGRESS_UPDATE_THROTTLE_MS = 100; // Limit updates to every 100ms
@@ -140,7 +127,21 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void doMeasureDR() {
-        viewModel.measureDynamicRange(getApplicationContext());
+        startProgressBar();
+        FileOperationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+            @Override
+            public void onProgress(MusicTag tag, int progress, String status) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                stopProgressBar();
+                viewModel.refreshDisplayTag();
+            }
+        });
+
+      //  viewModel.measureDynamicRange(getApplicationContext(), (Consumer<Object>) o -> stopProgressBar());
     }
 
     @Override
@@ -152,13 +153,9 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-       // viewModel.processAudioTagEditEvent(musicList);
-       // viewModel.processAudioTagEditEvent(sharedViewModel.getSharedItems(Constants.SHARED_TYPE.PREVIEW));
-       // viewModel.processAudioTagEditEvent(MusixMateApp.getSharedItems(MusixMateApp.SHARED_TYPE.PREVIEW));
     }
 
     private TextView tagInfo;
-    //private SearchCriteria criteria;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,8 +164,11 @@ public class TagsActivity extends AppCompatActivity {
 
         // set status bar color to black
         Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+       // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        //window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
+        // If the background is dark, use light icons
+        insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_tags);
 
@@ -180,8 +180,8 @@ public class TagsActivity extends AppCompatActivity {
             loadMusicTagsFromDb(tagIds);
         }
 
-        ExecutorService executor = MusicMateExecutors.getExecutorService(); // Get your executor
-        TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory(executor /*, getApplicationContext() if needed and handled carefully */);
+       // ExecutorService executor = MusicMateExecutors.getExecutorService(); // Get your executor
+        TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory();
         viewModel = new ViewModelProvider(this, factory).get(TagsViewModel.class);
 
         toolbar = findViewById(R.id.toolbar);
@@ -209,10 +209,6 @@ public class TagsActivity extends AppCompatActivity {
         // --- Observe LiveData from ViewModel ---
         observeViewModel();
 
-        // If you need to re-process an event on configuration change,
-        // the ViewModel might need to hold the raw event data or re-trigger.
-        // For simplicity, assuming EventBus delivers sticky events if the Activity is recreated.
-
         // Initial setup for ViewPager might depend on data, or can be done once
         // Consider if setupPageViewer() needs data from ViewModel before being called
         // If data is ready, call it. If not, observe some "dataReady" LiveData.
@@ -222,7 +218,6 @@ public class TagsActivity extends AppCompatActivity {
 
     private void loadMusicTagsFromDb(long[] ids) {
         if (ids == null || ids.length == 0) {
-                       //  musicTags.postValue(Collections.emptyList());
                          return;
                      }
 
@@ -277,16 +272,15 @@ public class TagsActivity extends AppCompatActivity {
         genreView = findViewById(R.id.panel_genre);
         encInfo = findViewById(R.id.panel_enc);
         pathInfo = findViewById(R.id.panel_path);
-        pathInfoLine = findViewById(R.id.panel_path_line);
+        //pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
-        hiresView = findViewById(R.id.icon_hires);
-        resolutionView = findViewById(R.id.icon_resolution);
+        //hiresView = findViewById(R.id.icon_hires);
+        //resolutionView = findViewById(R.id.icon_resolution);
         dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
-        ratingView = findViewById(R.id.rating);
-
-      //  playerName = findViewById(R.id.music_player_name);
-     //   playerBtn = findViewById(R.id.music_player);
-      //  playerPanel = findViewById(R.id.music_player_panel);
+        //ratingView = findViewById(R.id.rating);
+        qualityIndicatorView = findViewById(R.id.icon_quality_indicator);
+        ratingIndicatorView = findViewById(R.id.rating_view);
+        newIndicatorView = findViewById(R.id.new_view);
     }
 
     private void setupActionButtons() {
@@ -349,7 +343,7 @@ public class TagsActivity extends AppCompatActivity {
             dismissProgressDialog();
         });
 
-        viewModel.drMeasurementStatus.observe(this, this::handleOperationStatus);
+      //  viewModel.drMeasurementStatus.observe(this, this::handleOperationStatus);
     }
 
     private void updateViewPagers(MusicTag musicTag) {
@@ -360,20 +354,6 @@ public class TagsActivity extends AppCompatActivity {
 
     @SuppressLint("CheckResult")
     protected void updateTitlePanel(MusicTag currentDisplayTag) {
-       /* PlayerInfo player = MusixMateApp.getInstance().getActivePlayer();
-        if(player!= null) {
-            playerBtn.setVisibility(VISIBLE);
-            playerPanel.setVisibility(VISIBLE);
-            playerName.setVisibility(VISIBLE);
-            String displayName = StringUtils.truncate(player.getPlayerName(), 20);
-            displayName = StringUtils.formatTitle(displayName);
-            playerName.setText("Played on "+displayName);
-            playerBtn.setBackground(player.getPlayerIconDrawable());
-        }else {
-            playerBtn.setVisibility(GONE);
-            playerPanel.setVisibility(GONE);
-            playerName.setVisibility(GONE);
-        } */
 
         if (currentDisplayTag == null) {
             // Handle null case, maybe clear fields or show placeholder
@@ -388,29 +368,11 @@ public class TagsActivity extends AppCompatActivity {
 
         // load resolution, quality, coverArt
         loadImages(currentDisplayTag);
-        resolutionView.setMusicItem(currentDisplayTag);
+        //resolutionView.setMusicItem(currentDisplayTag);
         dynamicRangeView.setMusicItem(currentDisplayTag);
-
-        TextBuilder builder = new TextBuilder(getApplicationContext());
-        int ratingColor = getColor(R.color.audiophile_background);
-        int rating = getRating(currentDisplayTag);
-        int i=0;
-        for(;i<rating;i++) {
-            //builder.addColoredText("*", ratingColor);
-            builder.addColoredText("✭", ratingColor);
-        }
-        while(i <5) {
-           // builder.addText("*");
-            builder.addText("✩");
-            i++;
-        }
-        builder.into(ratingView);
-
-        if(MusicTagUtils.isDSD(currentDisplayTag) || MusicTagUtils.isHiRes(currentDisplayTag)) {
-            hiresView.setVisibility(VISIBLE);
-        }else {
-            hiresView.setVisibility(GONE);
-        }
+        qualityIndicatorView.setMusicItem(currentDisplayTag);
+        ratingIndicatorView.setMusicItem(currentDisplayTag);
+        newIndicatorView.setMusicItem(currentDisplayTag);
 
         artistView.setPaintFlags(artistView.getPaintFlags()| Paint.UNDERLINE_TEXT_FLAG);
         artistView.setOnClickListener(view -> {
@@ -462,13 +424,12 @@ public class TagsActivity extends AppCompatActivity {
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
-        boolean inLibrary = MusicTagUtils.isManagedInLibrary(getApplicationContext(), currentDisplayTag);
-        // String matePath = repos.buildCollectionPath(displayTag, true);
-        if(inLibrary) {
-            pathInfoLine.setBackgroundColor(getColor(R.color.grey400));
-        }else {
-            pathInfoLine.setBackgroundColor(getColor(R.color.warn_not_in_managed_dir));
-        }
+       // boolean inLibrary = currentDisplayTag.isMusicManaged(); //MusicTagUtils.isManagedInLibrary(getApplicationContext(), currentDisplayTag);
+       // if(inLibrary) {
+        //    pathInfo.setTextColor(getColor(R.color.managed_dir));
+        //}else {
+        //    pathInfo.setTextColor(getColor(R.color.not_managed_dir));
+       // }
         pathInfo.setText(simplePath);
 
         pathInfo.setOnClickListener(view -> {
@@ -482,28 +443,31 @@ public class TagsActivity extends AppCompatActivity {
 
         // ENC info
         try {
-            int metaInfoTextSize = 12; //10
+            int metaInfoTextSize = 10; //12; //10
             int encColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_200);
+            int sepColor = ContextCompat.getColor(getApplicationContext(), R.color.material_color_blue_grey_600);
             SimplifySpanBuild spannableEnc = new SimplifySpanBuild("");
-            // spannableEnc.append(new SpecialTextUnit(StringUtils.SEP_LEFT,encColor));
+
+            // encoding type
+            spannableEnc.append(new SpecialTextUnit(currentDisplayTag.getAudioEncoding().toUpperCase(),encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor));
 
             // bps
-           // spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
-           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
-          //  spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
-           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
+            if(MusicTagUtils.isMQA(currentDisplayTag)) {
+                spannableEnc.append(new SpecialTextUnit(" ("+StringUtils.formatAudioSampleRate(currentDisplayTag.getMqaSampleRate(), true)+")", encColor).setTextSize(metaInfoTextSize));
+            }
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
 
-          //  spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitRate(currentDisplayTag.getAudioBitRate()),encColor).setTextSize(metaInfoTextSize));
 
-           // String labelDr = trim(MusicTagUtils.getDynamicRangeScore(currentDisplayTag), "--");
-           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-           //         .append(new SpecialTextUnit("DR"+labelDr, encColor).setTextSize(metaInfoTextSize));
-
-           // spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatDurationAsMinute(currentDisplayTag.getAudioDuration()), encColor).setTextSize(metaInfoTextSize));
 
-            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP).setTextSize(metaInfoTextSize))
-                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
+            spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize).setTextColor(encColor))
+            spannableEnc.append(new SpecialTextUnit(StringUtils.formatStorageSize(currentDisplayTag.getFileSize()), encColor).setTextSize(metaInfoTextSize));
 
             encInfo.setText(spannableEnc.build());
         }catch (Exception ex) {
@@ -511,6 +475,7 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
+    /*
     private void handleOperationStatus(OperationStatus status) {
         if (status instanceof Idle) {
             dismissProgressDialog();
@@ -530,12 +495,13 @@ public class TagsActivity extends AppCompatActivity {
            // ApplicationUtils.showErrorToast(this, ((Error) status).errorMessage);
             viewModel.resetDrMeasurementStatus(); // Go back to Idle
         }
-    }
+    } */
 
+    /*
     private void showProgressDialog(String title, int progress, String currentStep) {
 
         // If you have a ProgressBar
-    }
+    } */
 
     private void dismissProgressDialog() {
         if (progressDialog != null && progressDialog.isShowing()) {
@@ -607,7 +573,20 @@ public class TagsActivity extends AppCompatActivity {
 
         moveToTrashButton.setOnClickListener(v -> {
             startProgressBar();
-            DeleteAudioFileWorker.startWorker(getApplicationContext(), editItems);
+            FileOperationTask.deleteFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+                @Override
+                public void onProgress(MusicTag tag, int progress, String status) {
+
+                }
+
+                @Override
+                public void onComplete() {
+                    stopProgressBar();
+                    finish(); // back to prev activity
+                }
+            });
+
+            /*DeleteAudioFileWorker.startWorker(getApplicationContext(), editItems);
 
             // set timeout to finish, 3 seconds
             finishOnTimeout = true;
@@ -615,7 +594,7 @@ public class TagsActivity extends AppCompatActivity {
                 if(finishOnTimeout) {
                     finish(); // back to prev activity
                 }
-            }, 3);
+            }, 1); */
             bottomSheetDialog.dismiss();
         });
 
@@ -624,7 +603,20 @@ public class TagsActivity extends AppCompatActivity {
 
     public void doMoveMediaItems() {
         startProgressBar();
-        ImportAudioFileWorker.startWorker(getApplicationContext(), getEditItems());
+        FileOperationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+            @Override
+            public void onProgress(MusicTag tag, int progress, String status) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                stopProgressBar();
+                viewModel.refreshDisplayTag();
+            }
+        });
+
+       /* ImportAudioFileWorker.startWorker(getApplicationContext(), getEditItems());
 
         // set timeout to finish, 5 seconds
         finishOnTimeout = true;
@@ -633,8 +625,7 @@ public class TagsActivity extends AppCompatActivity {
                 refreshDisplayTag();
                 //finish(); // back to prev activity
             }
-        }, 5);
-
+        }, 1); */
     }
 
     public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {

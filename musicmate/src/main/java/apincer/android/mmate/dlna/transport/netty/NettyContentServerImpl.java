@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.transport;
+package apincer.android.mmate.dlna.transport.netty;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.playback.Player;
 import apincer.android.mmate.repository.database.MusicTag;

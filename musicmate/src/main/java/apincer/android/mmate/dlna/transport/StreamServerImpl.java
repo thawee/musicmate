@@ -16,11 +16,16 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import apincer.android.mmate.Settings;
+import apincer.android.mmate.dlna.transport.jetty.JettyContentServerImpl;
+import apincer.android.mmate.dlna.transport.jetty.JettyUPnpServerImpl;
+import apincer.android.mmate.dlna.transport.netty.NettyContentServerImpl;
+import apincer.android.mmate.dlna.transport.netty.NettyUPnpServerImpl;
+import apincer.android.mmate.dlna.transport.netty.NettyWebServerImpl;
 import apincer.android.mmate.utils.ApplicationUtils;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
 
-    abstract static class StreamServer {
+    public abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
         public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0.3";
         private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
@@ -125,6 +130,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
             this.contentServer = new JettyContentServerImpl(context, router, configuration);
             this.contentServer.initServer(bindAddress);
 
+            //this.webServer = new JettyWebServerImpl(context, router, configuration);
             this.webServer = new NettyWebServerImpl(context, router, configuration);
             this.webServer.initServer(bindAddress);
         }

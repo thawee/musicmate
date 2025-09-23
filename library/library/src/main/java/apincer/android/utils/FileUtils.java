@@ -9,19 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 public class FileUtils {
-  //  private static final String PATH_TREE = "tree";
-  //  private static final String PATH_DOCUMENT = "document";
-  //  public static final String BASIC_MIME_TYPE = "application/octet-stream";
-
-    /*
-    @Deprecated
-    public static String getTypeForFile(File file) {
-        if (file.isDirectory()) {
-            return DocumentsContract.Document.MIME_TYPE_DIR;
-        } else {
-            return getTypeForName(file.getName());
-        }
-    } */
 
     /**
      * Returns the extension of the given file.
@@ -82,37 +69,6 @@ public class FileUtils {
     }
 
     /*
-    private static String getTypeForFile(DocumentFile file) {
-        if (file.isDirectory()) {
-            return DocumentsContract.Document.MIME_TYPE_DIR;
-        } else {
-            return getTypeForName(file.getName());
-        }
-    } */
-
-    /*
-    public static String formatFileCount(Context context, int count) {
-        String value = NumberFormat.getInstance().format(count);
-        String fileIndex = context.getString(R.string.index_file);
-        String empty = context.getString(R.string.index_empty);
-        return count == 0 ? empty : value + " " + fileIndex;
-    } */
-
-    /*
-    public static String getTypeForName(String name) {
-        final int lastDot = name.lastIndexOf('.');
-        if (lastDot >= 0) {
-            final String extension = name.substring(lastDot + 1).toLowerCase();
-            final String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-            if (mime != null) {
-                return mime;
-            }
-        }
-
-        return BASIC_MIME_TYPE;
-    } */
-
-    /*
     private static Uri buildDocumentUriUsingTree(Uri treeUri, String documentId) {
         return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
                 .authority(treeUri.getAuthority()).appendPath(PATH_TREE)
@@ -132,24 +88,6 @@ public class FileUtils {
         } else {
             return buildDocumentUri(baseUri.getAuthority(), documentId);
         }
-    } */
-
-    /*
-    public static Uri getRootUriForStorage(Context context, String storageId){
-        Uri treeUri = null;
-
-        //get root dynamically
-        List<UriPermission> permissions = context.getContentResolver().getPersistedUriPermissions();
-        for (UriPermission permission : permissions) {
-            String treeRootId = getRootUri(permission.getUri());
-            //if(storageId.startsWith(treeRootId) || storageId.contains(treeRootId)){
-            if(treeRootId.endsWith(":")) treeRootId = treeRootId.substring(0,treeRootId.length()-1);
-            if(storageId.contains(treeRootId)){
-                treeUri = permission.getUri();
-                return treeUri;
-            }
-        }
-        return treeUri;
     } */
 
     /*
@@ -194,14 +132,6 @@ public class FileUtils {
     } */
 
     /*
-    public static String makeFilePath(File parentFile, String name){
-        if(null == parentFile || TextUtils.isEmpty(name)){
-            return "";
-        }
-        return new File(parentFile, name).getPath();
-    } */
-
-    /*
     public static int parseMode(String mode) {
         final int modeBits;
         if ("r".equals(mode)) {
@@ -227,14 +157,6 @@ public class FileUtils {
         return modeBits;
     } */
 
-    @Deprecated
-    public static boolean isExisted(String s) {
-        if(s ==null) return false;
-
-        File f = new File(s);
-        return f.exists();
-    }
-
     public static String getFileName(String mediaPath) {
         if(mediaPath==null) {
             return "";
@@ -243,15 +165,6 @@ public class FileUtils {
         String fileName = file.getName();
         int dotIndex = fileName.lastIndexOf('.');
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
-    }
-
-    @Deprecated
-    public static String getFullFileName(String mediaPath) {
-        if(mediaPath==null) {
-            return "";
-        }
-        File file = new File(mediaPath);
-        return file.getName();
     }
 
     @Deprecated
@@ -279,23 +192,23 @@ public class FileUtils {
      * @param directory The absolute directory path. For example:
      *             <i>mnt/sdcard/NewFolder/</i>.
      */
-    public static void deleteDirectory(File directory) {
-
+    public static boolean delete(File directory) {
         // If the directory exists then delete
         if (directory.exists()) {
             File[] files = directory.listFiles();
             if (files != null) {
                 // Run on all sub files and folders and delete them
-                for (int i = 0; i < files.length; i++) {
-                    if (files[i].isDirectory()) {
-                        deleteDirectory(files[i]);
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        delete(file);
                     } else {
-                        files[i].delete();
+                        file.delete();
                     }
                 }
             }
+            return directory.delete();
         }
-        directory.delete();
+        return false;
     }
 
     public static ByteBuffer getBytes(File file) throws IOException {
@@ -319,15 +232,6 @@ public class FileUtils {
         }
 
         return buffer;
-
-        //okio
-        /*
-        try (Source source = Okio.source(file); Buffer buffer = new Buffer()) {
-            buffer.writeAll(source);
-            return buffer;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } */
     }
 
     public static void createParentDirs(File dir) {
@@ -335,5 +239,11 @@ public class FileUtils {
         if(!dir.getParentFile().exists()) {
             dir.getParentFile().mkdirs();
         }
+    }
+
+    public static boolean existed(String path) {
+        if(path == null) return false;
+        File file = new File(path);
+        return file.exists();
     }
 }

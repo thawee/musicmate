@@ -47,7 +47,6 @@ public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MusicFolder folder =  arrayList.get(position);
-       // Glide.with(context).load(arrayList.get(position)).into(holder.imageView);
         holder.title.setText(folder.getName());
        // holder.itemView.setOnClickListener(view -> onItemClickListener.onClick(holder.imageView, folder.getName()));
 
@@ -105,6 +104,9 @@ public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.GENRE) {
             List<String> tabs = TagRepository.getActualGenreList();
+            addFolders(tabs);
+        }else if(search.getType() == SearchCriteria.TYPE.ARTIST) {
+            List<String> tabs = TagRepository.getArtistList();
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.PUBLISHER) {
             List<String> tabs = TagRepository.getPublisherList(context);

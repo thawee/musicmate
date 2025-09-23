@@ -24,7 +24,6 @@ import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_ALBUM_ARTIST
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_COMPOSER;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_DISC;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_GROUP;
-import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_MEDIA;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_PUBLISHER;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_QUALITY;
 import static apincer.android.mmate.codec.FFMpegHelper.KEY_TAG_WAVE_YEAR;

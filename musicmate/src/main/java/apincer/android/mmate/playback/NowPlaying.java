@@ -110,4 +110,15 @@ public class NowPlaying {
            // player.previous();
         }
     }
+
+    public boolean isPlaying(MusicTag tag) {
+        if(song == null) return false;
+        return song.equals(tag);
+    }
+
+    public boolean isLocalPlayer() {
+        if(player == null) return false;
+
+        return player instanceof ExternalPlayer;
+    }
 }

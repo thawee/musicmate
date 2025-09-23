@@ -43,7 +43,7 @@ public class FileRepository {
 
     public File extractCoverArt(MusicTag tag) {
         try {
-            String coverFile = COVER_ARTS +tag.getAlbumUniqueKey()+".png";
+            String coverFile = COVER_ARTS +tag.getAlbumCoverUniqueKey()+".png";
             File dir =  getContext().getExternalCacheDir();
             File pathFile = new File(dir, coverFile);
             if(!pathFile.exists()) {
@@ -57,7 +57,7 @@ public class FileRepository {
         return null;
     }
 
-    private static void extractCoverArt(MusicTag tag, File targetFile) {
+    public static void extractCoverArt(MusicTag tag, File targetFile) {
         if(tag == null) return;
         try {
             // Log.d(TAG, "extractCoverArt: "+path);
@@ -100,7 +100,7 @@ public class FileRepository {
     public static File getCoverArt(MusicTag music) {
         File cover = getFolderCoverArt(music.getPath());
         if(cover == null) {
-            String coverFile = COVER_ARTS +music.getAlbumUniqueKey()+".png";
+            String coverFile = COVER_ARTS +music.getAlbumCoverUniqueKey()+".png";
             File dir =  MusixMateApp.getInstance().getExternalCacheDir();
             cover = new File(dir, coverFile);
             if(!cover.exists()) cover = null;
@@ -108,7 +108,27 @@ public class FileRepository {
         return cover;
     }
 
-    private static File getFolderCoverArt(String musicPath) {
+    public static File getCoverArt(String albumCoverUniqueKey) {
+            String coverFile = COVER_ARTS +albumCoverUniqueKey+".png";
+            File dir =  MusixMateApp.getInstance().getExternalCacheDir();
+            File cover = new File(dir, coverFile);
+            if(!cover.exists()) {
+                // try to to get folder cover art
+                MusicTag song = TagRepository.getByAlbumCoverUniqueKey(albumCoverUniqueKey);
+                return getFolderCoverArt(song.getPath());
+                /*
+                coverFile = COVER_ARTS +albumCoverUniqueKey+".png";
+                File pathFile = new File(dir, coverFile);
+                if(!pathFile.exists()) {
+                    MusicTag song = TagRepository.getByAlbumCoverUniqueKey(albumCoverUniqueKey);
+                    FileUtils.createParentDirs(pathFile);
+                    extractCoverArt(song, pathFile);
+                } */
+            }
+        return cover;
+    }
+
+    public static File getFolderCoverArt(String musicPath) {
         // try loading from folder
         // front.png, front.jpg
         // cover.png, cover.jpg
@@ -212,7 +232,7 @@ public class FileRepository {
                     TagRepository.saveTag(basicTag);
 
                     // Schedule full tag reading for later (if needed)
-                    MusicMateExecutors.lowPriority(() -> {
+                    /*MusicMateExecutors.lowPriority(() -> {
                         try {
                             if(TagReader.readExtras(context, basicTag)) {
                                basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), basicTag));
@@ -221,23 +241,27 @@ public class FileRepository {
                         } catch(Exception e) {
                             Log.e(TAG, "Error reading full tags", e);
                         }
-                    });
+                    }); */
 
                     // Defer cover art extraction completely
                     MusicMateExecutors.lowPriority(() -> {
-                        try {
-                            File folderCover = getFolderCoverArt(basicTag.getPath());
-                            if(folderCover == null) {
-                                extractCoverArt(basicTag);
-                            }
-                        } catch(Exception e) {
-                            Log.e(TAG, "Error extracting cover art", e);
-                        }
+                        saveCoverartToCache(basicTag);
                     });
                 }
             }
         } catch (Exception ex) {
             Log.e(TAG, "scanMusicFile", ex);
+        }
+    }
+
+    public void saveCoverartToCache(MusicTag basicTag) {
+        try {
+            File folderCover = getFolderCoverArt(basicTag.getPath());
+            if(folderCover == null) {
+                extractCoverArt(basicTag);
+            }
+        } catch(Exception e) {
+            Log.e(TAG, "Error extracting cover art", e);
         }
     }
 
@@ -256,29 +280,37 @@ public class FileRepository {
         // /format/<album|albumartist|artist>/<track no> <artist>-<title>
         final String ReservedChars = "?|\\*<\":>[]~#%^@.";
         try {
-            String musicPath ="Music/";
+            String musicPath = "Music/";
             String storageId = getStorageIdFor(metadata);
             String ext = FileUtils.getExtension(metadata.getPath());
             StringBuilder filename = new StringBuilder(musicPath);
 
-            if(!StringUtils.isEmpty(metadata.getGrouping())) {
-                filename.append(StringUtils.formatFilePath(metadata.getGrouping())).append(File.separator);
+            if (!StringUtils.isEmpty(metadata.getGrouping())) {
+                filename.append(StringUtils.formatFilePath(metadata.getGrouping()));
+                filename.append(File.separator);
             }
 
-            if (metadata.isSACDISO()) {
-                filename.append(Constants.MEDIA_PATH_SACD);
-            }else if (MusicTagUtils.isMQA(metadata)) {
-                filename.append(Constants.MEDIA_PATH_MQA);
-            }else if (MusicTagUtils.isHiRes(metadata)) {
-                filename.append(Constants.MEDIA_PATH_HRA);
-            }else if(MusicTagUtils.isDSD(metadata)) {
-                filename.append(Constants.MEDIA_PATH_DSD);
-            }else if(MusicTagUtils.isLossless(metadata)) {
-                filename.append(Constants.MEDIA_PATH_HIFI);
-            }else {
-                filename.append(Constants.MEDIA_PATH_HIGH_QUALITY);
+            if (!isEmpty(metadata.getQualityInd())) {
+                if(metadata.getQualityInd().startsWith(Constants.MEDIA_ENC_MQA)) {
+                    filename.append(Constants.MEDIA_ENC_MQA);
+                } else {
+                    filename.append(metadata.getQualityInd());
+                }
+               /* if (metadata.isSACDISO()) {
+                    filename.append(Constants.MEDIA_PATH_SACD);
+                } else if (MusicTagUtils.isMQA(metadata)) {
+                    filename.append(Constants.MEDIA_PATH_MQA);
+                } else if (MusicTagUtils.isHiRes(metadata)) {
+                    filename.append(Constants.MEDIA_PATH_HRA);
+                } else if (MusicTagUtils.isDSD(metadata)) {
+                    filename.append(Constants.MEDIA_PATH_DSD);
+                } else if (MusicTagUtils.isLossless(metadata)) {
+                    filename.append(Constants.MEDIA_PATH_HIFI);
+                } else {
+                    filename.append(Constants.MEDIA_PATH_HIGH_QUALITY);
+                } */
+                filename.append(File.separator);
             }
-            filename.append(File.separator);
 
             // publisher if albumArtist is various artist
             // albumArtist
@@ -388,7 +420,7 @@ public class FileRepository {
             }
             if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
                 copyRelatedFiles(tag, newPath);
-                cleanCacheCover(getContext(), tag);
+                cleanCacheCover(tag);
 
                 File file = new File(tag.getPath());
                 cleanMediaDirectory(file.getParentFile());
@@ -431,13 +463,13 @@ public class FileRepository {
             // directory is empty or no others media files
             if(!toDelete.isEmpty()) {
                     for (File file: toDelete) {
-                        FileSystem.delete(getContext(), file);
+                        FileSystem.delete(file);
                     }
             }
 
             // trying delete parent folder
             File parentFolder = mediaDir.getParentFile();
-            FileSystem.delete(getContext(), mediaDir);
+            FileSystem.delete(mediaDir);
             cleanMediaDirectory(parentFolder);
         }
      }
@@ -462,7 +494,6 @@ public class FileRepository {
     public boolean importAudioFile(MusicTag item) {
         boolean status;
         try {
-           // PlaybackManager.playNextSongOnMatched(getContext(), item);
             status = moveMusicFiles(item);
         }catch(Exception|OutOfMemoryError ex) {
             Log.e(TAG, "importAudioFile",ex);
@@ -473,28 +504,42 @@ public class FileRepository {
     }
 
     public boolean deleteMediaItem(MusicTag item) {
-        boolean status;
+        boolean status = false;
         try {
-            //PlaybackManager.playNextSongOnMatched(getContext(), item);
-            status = com.anggrayudi.storage.file.FileUtils.forceDelete(new File(item.getPath()));
-            if(status) {
-                cleanCacheCover(getContext(), item);
+            status = FileUtils.delete(new File(item.getPath()));
+
+            if(!FileUtils.existed(item.getPath())) {
+                cleanCacheCover(item);
                 TagRepository.removeTag(item);
                 File file = new File(item.getPath());
                 cleanMediaDirectory(file.getParentFile());
+                status = true;
             }
-        } catch (Exception|OutOfMemoryError ex) {
-            status = false;
+        } catch (Exception|OutOfMemoryError ignored) {
         }
         return status;
     }
 
-    public void cleanCacheCover(Context context, MusicTag item) {
-        String coverFile = COVER_ARTS +item.getAlbumUniqueKey()+".png";
+    private void cleanCacheCover(MusicTag item) {
+        String coverFile = COVER_ARTS +item.getAlbumCoverUniqueKey()+".png";
         File dir =  getContext().getExternalCacheDir();
         File pathFile = new File(dir, coverFile);
         if(pathFile.exists()) {
-            com.anggrayudi.storage.file.FileUtils.forceDelete(pathFile);
+            FileSystem.delete(pathFile);
+        }
+    }
+
+    public void cleanCacheCovers() {
+        File dir =  getContext().getExternalCacheDir();
+        File pathFile = new File(dir, COVER_ARTS);
+        if(pathFile.exists()) {
+            File[] files = pathFile.listFiles();
+            if(files != null) {
+                for (File f : files) {
+                    FileSystem.delete(f);
+                }
+            }
+            FileSystem.delete(pathFile);
         }
     }
 

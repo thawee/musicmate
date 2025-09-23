@@ -1,7 +1,8 @@
-package apincer.android.mmate.dlna.transport;
+package apincer.android.mmate.dlna.transport.netty;
 
 import android.util.Log;
 
+import apincer.android.mmate.dlna.transport.StreamClientConfigurationImpl;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

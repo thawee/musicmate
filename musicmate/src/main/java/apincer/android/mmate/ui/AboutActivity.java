@@ -11,14 +11,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -26,6 +24,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.PieChart;
@@ -69,8 +69,11 @@ public class AboutActivity extends AppCompatActivity {
 
         // set status bar color to black
         Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        //window.setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
+        // If the background is dark, use light icons
+        insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_fragement);
         if(getSupportActionBar() != null) {
@@ -112,17 +115,18 @@ public class AboutActivity extends AppCompatActivity {
             TextView encodingHeader = v.findViewById(R.id.encoding_header);
             TextView encodingDetail = v.findViewById(R.id.encoding_details);
 
-            TextView groupingsHeader = v.findViewById(R.id.groupings_header);
-            TextView groupingsDetail = v.findViewById(R.id.groupings_details);
+           // TextView groupingsHeader = v.findViewById(R.id.groupings_header);
+           // TextView groupingsDetail = v.findViewById(R.id.groupings_details);
 
-            v.findViewById(R.id.encoding_btn_hq).setOnClickListener(view -> updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_lossless).setOnClickListener(view -> updateEncodings(TITLE_HIFI_LOSSLESS_SHORT, encodingHeader, encodingDetail));
-            v.findViewById(R.id.encoding_btn_hires).setOnClickListener(view -> updateEncodings(TITLE_HIRES_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_lc).setOnClickListener(view -> updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_sq).setOnClickListener(view -> updateEncodings(TITLE_HIFI_LOSSLESS_SHORT, encodingHeader, encodingDetail));
+            v.findViewById(R.id.encoding_btn_hr).setOnClickListener(view -> updateEncodings(TITLE_HIRES_SHORT, encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_dsd).setOnClickListener(view -> updateEncodings(TITLE_DSD_SHORT, encodingHeader, encodingDetail));
             v.findViewById(R.id.encoding_btn_mqa).setOnClickListener(view -> updateEncodings(TITLE_MQA_SHORT, encodingHeader, encodingDetail));
             updateEncodings(TITLE_HIGH_QUALITY_SHORT, encodingHeader, encodingDetail);
 
             // groupings description
+            /*
             LinearLayout groupingBtnPanel = v.findViewById(R.id.groupingBtnPanel);
             List<String> groupList = TagRepository.getDefaultGroupingList(getContext());
             for(String name: groupList) {
@@ -139,6 +143,7 @@ public class AboutActivity extends AppCompatActivity {
                 params.setMargins(8, 6, 8, 6);
                 btn.setLayoutParams(params);
                 if(Constants.GROUPING_CONTEMPORARY.equals(name)) {
+                    btn.setText(StringUtils.truncate(name, 10));
                     btn.setBackgroundResource(R.drawable.shape_background_contemporary);
                 }else if(Constants.GROUPING_OLDEIS.equals(name)) {
                     btn.setBackgroundResource(R.drawable.shape_background_oldies);
@@ -146,7 +151,9 @@ public class AboutActivity extends AppCompatActivity {
                     btn.setBackgroundResource(R.drawable.shape_background_lounge);
                 }else if(Constants.GROUPING_CLASSICAL.equals(name)) {
                     btn.setBackgroundResource(R.drawable.shape_background_classical);
+                    btn.setText(StringUtils.truncate(name, 8));
                 }else if(Constants.GROUPING_TRADITIONAL.equals(name)) {
+                    btn.setText(StringUtils.truncate(name, 7));
                     btn.setBackgroundResource(R.drawable.shape_background_traditional);
                 }else {
                     btn.setBackgroundResource(R.drawable.shape_background_unkown);
@@ -154,16 +161,24 @@ public class AboutActivity extends AppCompatActivity {
                 btn.setOnClickListener(view -> {
                     if(Constants.GROUPING_CONTEMPORARY.equals(name)) {
                         groupingsHeader.setText(Constants.GROUPING_CONTEMPORARY);
-                        groupingsDetail.setText(R.string.groupings_contemporary_content);
+                       // groupingsDetail.setText(R.string.groupings_contemporary_content);
+                        String details = getString(R.string.groupings_contemporary_content);
+                        renderMarkdown(details, groupingsDetail);
                     }else if(Constants.GROUPING_LOUNGE.equals(name)) {
                         groupingsHeader.setText(Constants.GROUPING_LOUNGE);
-                        groupingsDetail.setText(R.string.groupings_lounge_content);
+                       // groupingsDetail.setText(R.string.groupings_lounge_content);
+                        String details = getString(R.string.groupings_lounge_content);
+                        renderMarkdown(details, groupingsDetail);
                     }else if(Constants.GROUPING_CLASSICAL.equals(name)) {
                         groupingsHeader.setText(Constants.GROUPING_CLASSICAL);
-                        groupingsDetail.setText(R.string.groupings_classical_content);
+                       // groupingsDetail.setText(R.string.groupings_classical_content);
+                        String details = getString(R.string.groupings_classical_content);
+                        renderMarkdown(details, groupingsDetail);
                     }else if(Constants.GROUPING_TRADITIONAL.equals(name)) {
                         groupingsHeader.setText(Constants.GROUPING_TRADITIONAL);
-                        groupingsDetail.setText(R.string.groupings_traditional_content);
+                       // groupingsDetail.setText(R.string.groupings_traditional_content);
+                        String details = getString(R.string.groupings_traditional_content);
+                        renderMarkdown(details, groupingsDetail);
                     }
                 });
                 groupingBtnPanel.addView(btn);
@@ -171,6 +186,8 @@ public class AboutActivity extends AppCompatActivity {
 
             groupingsHeader.setText(Constants.GROUPING_CLASSICAL);
             groupingsDetail.setText(R.string.groupings_classical_content);
+
+             */
 
             TextView qualityDetail = v.findViewById(R.id.quality_details);
             String content = ApplicationUtils.getAssetsText(getActivity(),"music_quality_info.md");
@@ -209,7 +226,7 @@ public class AboutActivity extends AppCompatActivity {
 
                     // file type piechart
                     setupResolutionChart(v, encList, "");
-                    setupGroupingChart(v, grpList, "");
+                    //setupGroupingChart(v, grpList, "");
 
                     // setup digital music details
                 });
@@ -377,6 +394,7 @@ public class AboutActivity extends AppCompatActivity {
             setDataForEncodings(chart, encList, title);
         }
 
+        /*
         private void setupGroupingChart(View v, Map<String, Integer> encList, String title) {
             PieChart chart = v.findViewById(R.id.chartGroupings);
             chart.setUsePercentValues(false);
@@ -413,7 +431,7 @@ public class AboutActivity extends AppCompatActivity {
             //  chart.setEntryLabelTypeface(tfRegular);
             chart.setEntryLabelTextSize(10f);
             setDataForGroupings(chart, encList, title);
-        }
+        } */
 
         private void setDataForGroupings(PieChart chart, Map<String, Integer> list, String title) {
             ArrayList<PieEntry> entries = new ArrayList<>();
@@ -488,13 +506,20 @@ public class AboutActivity extends AppCompatActivity {
             ArrayList<Integer> colors = new ArrayList<>();
             Map<String, Integer> mappedColors = new HashMap<>();
 
+            /*
             mappedColors.put(TITLE_MQA_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_mqa_studio));
             mappedColors.put(TITLE_DSD_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_dsd));
             mappedColors.put(TITLE_HIRES_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_hires));
             mappedColors.put(TITLE_HIFI_LOSSLESS_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_lossless));
             mappedColors.put(TITLE_HIGH_QUALITY_SHORT, ContextCompat.getColor(getContext(), R.color.resolution_lossy));
+            */
+            mappedColors.put(TITLE_MQA_SHORT, ContextCompat.getColor(getContext(), R.color.quality_mqa_background));
+            mappedColors.put(TITLE_DSD_SHORT, ContextCompat.getColor(getContext(), R.color.quality_dsd_background));
+            mappedColors.put(TITLE_HIRES_SHORT, ContextCompat.getColor(getContext(), R.color.quality_hr_background));
+            mappedColors.put(TITLE_HIFI_LOSSLESS_SHORT, ContextCompat.getColor(getContext(), R.color.quality_sq_background));
+            mappedColors.put(TITLE_HIGH_QUALITY_SHORT, ContextCompat.getColor(getContext(), R.color.quality_lc_background));
 
-             for(String enc: encList.keySet()) {
+            for(String enc: encList.keySet()) {
                 entries.add(new PieEntry(encList.get(enc), enc));
                 if(mappedColors.containsKey(enc)) {
                     colors.add(mappedColors.get(enc));

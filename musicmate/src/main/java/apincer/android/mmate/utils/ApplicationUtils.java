@@ -18,9 +18,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.android.mmate.Constants;
@@ -174,11 +174,7 @@ public class ApplicationUtils {
             text = text+" "+item.getArtist();
         }
         String search= text; //StandardCharsets.UTF_8);
-        try {
-            search = URLEncoder.encode(text, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        search = URLEncoder.encode(text, StandardCharsets.UTF_8);
         //Uri uri = Uri.parse("http://www.google.com/#q=" + search);
         Uri uri = Uri.parse("http://www.google.com/search?q=" + search);
         Intent gSearchIntent = new Intent(Intent.ACTION_VIEW, uri);
@@ -249,15 +245,6 @@ public class ApplicationUtils {
         return criteria;
     }
 
-    public static void setSearchCriteria(Intent intent, SearchCriteria criteria) {
-        if(criteria!=null && intent!=null) {
-            intent.putExtra(Constants.KEY_SEARCH_TYPE, criteria.getType().name());
-            intent.putExtra(Constants.KEY_SEARCH_KEYWORD,StringUtils.trimToEmpty(criteria.getKeyword()));
-            intent.putExtra(Constants.KEY_FILTER_TYPE,StringUtils.trimToEmpty(criteria.getFilterType()));
-            intent.putExtra(Constants.KEY_FILTER_KEYWORD,StringUtils.trimToEmpty(criteria.getFilterText()));
-        }
-    }
-
     public static void openBrowser(Context context, String url) {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         context.startActivity(browserIntent);
@@ -309,8 +296,17 @@ public class ApplicationUtils {
     public static void deleteFiles(Context context, String path) {
         File fullPath = new File(context.getFilesDir(), path);
         if (fullPath.exists()) {
-            FileUtils.deleteDirectory(fullPath);
+            FileUtils.delete(fullPath);
         }
+    }
+
+    public static void purgeAndroidCache(Context context) {
+
+    }
+
+    public static void purgeAndroidFiles(Context context) {
+         context.getFilesDir();
+
     }
 
     public static boolean isInstalled(String packName) {

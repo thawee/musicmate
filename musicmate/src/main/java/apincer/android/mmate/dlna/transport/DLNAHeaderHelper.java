@@ -27,9 +27,9 @@ public class DLNAHeaderHelper {
 
         if (isMPegFile(tag)) {
             if (tag.getAudioBitRate() >= 320) {
-                return "DLNA.ORG_PN=MP3_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+                return "DLNA.ORG_PN=MP3_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
             } else {
-                return "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+                return "DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
             }
         } else if (isFLACFile(tag)) {
             if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {
@@ -45,9 +45,9 @@ public class DLNAHeaderHelper {
             }
         } else if (isAACFile(tag)) {
             if (tag.getAudioBitRate() >= 320) {
-                return "DLNA.ORG_PN=AAC_ADTS_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+                return "DLNA.ORG_PN=AAC_ADTS_320;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
             } else {
-                return "DLNA.ORG_PN=AAC_ADTS;DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=" + flags;
+                return "DLNA.ORG_PN=AAC_ADTS;DLNA.ORG_OP=01;DLNA.ORG_CI=0"; //DLNA.ORG_FLAGS=" + flags;
             }
         } else if (isALACFile(tag)) {
             if (tag.getAudioSampleRate() > 48000 || tag.getAudioBitsDepth() > 16) {

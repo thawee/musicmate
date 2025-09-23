@@ -111,9 +111,18 @@
 		<attr name="resolutionText" format="string" />
 	</declare-styleable>
 
-	<declare-styleable name="DynamicRangeDbView">
-		<attr name="drDbText" format="string" />
+	<declare-styleable name="DynamicRangeView">
+		<attr name="db" format="string" />
+		<attr name="dr" format="string" />
 		<!-- You could add more attributes for colors, text appearances, etc. if needed -->
+	</declare-styleable>
+
+	<declare-styleable name="QualityIndicatorView">
+		<attr name="label" format="string" />
+	</declare-styleable>
+
+	<declare-styleable name="RatingIndicatorView">
+		<attr name="mode" format="string" />
 	</declare-styleable>
 
 </resources>

@@ -74,7 +74,8 @@ public class CoverartFetcher implements Fetcher {
     @Override
     public FetchResult fetch(@NonNull Continuation<? super FetchResult> continuation) {
         File covertFile = FileRepository.getCoverArt(musicTag);
-        String key = musicTag.isMusicManaged()?musicTag.getAlbumUniqueKey():musicTag.getUniqueKey();
+       // String key = musicTag.isMusicManaged()?musicTag.getAlbumCoverUniqueKey():musicTag.getUniqueKey();
+        String key = musicTag.getAlbumCoverUniqueKey();
         if(covertFile == null) {
             // FIXME: should remove, cover already extracted during scan
             covertFile = FileRepository.newInstance(MusixMateApp.getInstance()).extractCoverArt(musicTag);

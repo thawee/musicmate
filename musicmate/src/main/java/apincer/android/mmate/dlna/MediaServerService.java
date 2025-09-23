@@ -30,6 +30,11 @@ import org.jupnp.registry.DefaultRegistryListener;
 import org.jupnp.registry.Registry;
 import org.jupnp.registry.RegistryListener;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -105,6 +110,41 @@ public class MediaServerService extends Service {
         shutdownThread.start();
     }
 
+
+    private void copyWebUIAssets(Context context) {
+        try {
+            String assetDir = "webui";
+            String[] assets = context.getAssets().list(assetDir);
+            if (assets == null || assets.length == 0) {
+                return;
+            }
+
+            File webappDir = new File(context.getFilesDir(), assetDir);
+            if (!webappDir.exists()) {
+                webappDir.mkdirs();
+            }
+
+            for (String asset : assets) {
+                File destFile = new File(webappDir, asset);
+                // Only copy if the file doesn't exist to prevent overwriting on every launch.
+                if (!destFile.exists()) {
+                    try (InputStream in = context.getAssets().open(assetDir + "/" + asset);
+                         OutputStream out = new FileOutputStream(destFile)) {
+
+                        byte[] buffer = new byte[1024];
+                        int read;
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
+                    }
+                    Log.i(TAG, "Copied web asset: " + asset);
+                }
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to copy web assets", e);
+        }
+    }
+
     public enum ServerStatus { // You might already have this or a similar concept
         RUNNING,
         STOPPED,
@@ -160,7 +200,7 @@ public class MediaServerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         showNotification();
-        if(intent!=null && intent.getStringExtra("START_SERVERS") != null) {
+        if(intent!=null && intent.getStringExtra("START_SERVER") != null) {
             startServers();
         }
         return START_STICKY;
@@ -170,12 +210,6 @@ public class MediaServerService extends Service {
         if(!isInitialized()) {
             long start = System.currentTimeMillis();
             showNotification();
-
-            // Initialize asynchronously to avoid ANR
-            //Thread initializationThread = new Thread(this::initialize);
-            // Broadcast STARTING explicitly if not done in onCreate,
-            // or if re-attempting start.
-            //broadcastStatus(ServerStatus.STARTING, null);
 
             Thread initializationThread = new Thread(() -> {
                 initialize(); // Your existing initialize method
@@ -259,6 +293,8 @@ public class MediaServerService extends Service {
                 // Set system properties BEFORE any jUPnP code is executed
                 System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
                 System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
+
+                copyWebUIAssets(getApplicationContext());
 
                 // Create server configuration
                 upnpServiceCfg = new MediaServerConfiguration(getApplicationContext());

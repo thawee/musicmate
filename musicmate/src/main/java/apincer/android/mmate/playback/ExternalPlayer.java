@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.util.Arrays;
@@ -41,11 +40,12 @@ public class ExternalPlayer implements Player {
 
     // Set of supported music player package names for efficient lookup
     public static final Set<String> SUPPORTED_PLAYERS = new HashSet<>(Arrays.asList(
-            ExternalPlayer.HIBY_MUSIC_PACK_NAME,
-            ExternalPlayer.NE_PLAYER_LITE_PACK_NAME,
-            ExternalPlayer.NEUTRON_MUSIC_PACK_NAME,
-            ExternalPlayer.UAPP_PACK_NAME,
-            ExternalPlayer.POWERAMP_PACK_NAME
+            HIBY_MUSIC_PACK_NAME,
+            NE_PLAYER_LITE_PACK_NAME,
+            NEUTRON_MUSIC_PACK_NAME,
+            UAPP_PACK_NAME,
+            POWERAMP_PACK_NAME,
+            FOOBAR2000_PACK_NAME
             // Add new player packages here
     ));
 
@@ -54,7 +54,7 @@ public class ExternalPlayer implements Player {
     private final String displayName;
     private final Drawable icon;
     private final MutableLiveData<NowPlaying> nowPlaying = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isConnected = new MutableLiveData<>(true);
+   // private final MutableLiveData<Boolean> isConnected = new MutableLiveData<>(true);
 
     public ExternalPlayer(Context context, String packageName, String displayName, Drawable icon) {
         this.context = context;
@@ -161,14 +161,14 @@ public class ExternalPlayer implements Player {
 
     @Override
     public void pause() {
-        if(!SUPPORTED_PLAYERS.contains(packageName)) return;
+        //if(!SUPPORTED_PLAYERS.contains(packageName)) return;
         // Cannot control external player directly
         // You might want to update the NowPlaying state to PAUSED if you have a way to detect it
     }
 
     @Override
     public void resume() {
-        if(!SUPPORTED_PLAYERS.contains(packageName)) return;
+        //if(!SUPPORTED_PLAYERS.contains(packageName)) return;
         // Cannot control external player directly
     }
 

@@ -52,11 +52,6 @@ public class JThinkReader extends TagReader{
     // Reusable map for temporary tag storage
     private final Map<String, String> tempTagsMap = new HashMap<>();
 
-    private static final String KEY_TAG_WAVE_GROUP = "IKEY";
-    private static final String KEY_TAG_WAVE_TRACK = "IPRT"; //track
-    private static final String KEY_TAG_WAVE_ALBUM_ARTIST = "IENG";
-    private static final String KEY_TAG_WAVE_QUALITY = "ISBJ";
-
     //public static final String KEY_TAG_MP3_COMMENT = "COMMENT";
 
     public JThinkReader(Context context) {
@@ -255,14 +250,6 @@ public class JThinkReader extends TagReader{
           //  metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
             metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));
         }
-    }
-
-    private void processWaveSpecificTags(MusicTag metadata, Map<String, String> tags, Tag tag) {
-        // Get wave-specific tags
-        metadata.setGrouping(tags.get(KEY_TAG_WAVE_GROUP));
-        metadata.setAlbumArtist(tags.get(KEY_TAG_WAVE_ALBUM_ARTIST));
-        metadata.setTrack(tags.get(KEY_TAG_WAVE_TRACK));
-        metadata.setQualityRating(tags.get(KEY_TAG_WAVE_QUALITY));
     }
 
     private String getId3TagValue(Tag id3Tag, FieldKey key) {

@@ -4,18 +4,18 @@
 
     <!-- View background color -->
     <solid
-        android:color="@color/black" >
+        android:color="@color/drdb_background" >
     </solid>
 
     <!-- View border color and width -->
     <stroke
-        android:width="2dp"
+        android:width="1dp"
         android:color="@color/black" >
     </stroke>
 
     <!-- The radius makes the corners rounded -->
     <corners
-        android:radius="@dimen/dimen_2_dp"   >
+        android:radius="@dimen/dimen_8_dp"   >
     </corners>
 
 </shape>

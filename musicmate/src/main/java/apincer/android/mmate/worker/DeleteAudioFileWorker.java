@@ -26,6 +26,7 @@ import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.database.MusicTag;
 
+@Deprecated
 public class DeleteAudioFileWorker extends Worker {
     private static final String TAG = DeleteAudioFileWorker.class.getName();
     final FileRepository repos;
@@ -58,7 +59,7 @@ public class DeleteAudioFileWorker extends Worker {
                 .setExclusionStrategies(new ExclusionStrategy(){
                     @Override
                     public boolean shouldSkipField(FieldAttributes f) {
-                        return !f.getName().equals("id");
+                        return !(f.getName().equals("id") || f.getName().equals("path"));
                         //return f.getName().equals("waveformData") || f.getName().equals("simpleName");
                     }
 
@@ -94,15 +95,11 @@ public class DeleteAudioFileWorker extends Worker {
         }else {
             return new ArrayList<>();
         }
-       // return MusixMateApp.getSharedItems(MusixMateApp.SHARED_TYPE.DELETE);
     }
 
     private synchronized boolean delete(MusicTag tag) {
-        // Synchronize on repos if needed
-       // synchronized(repos) {
-            skipToNext(tag);
-            return repos.deleteMediaItem(tag);
-      //  }
+        skipToNext(tag);
+        return repos.deleteMediaItem(tag);
     }
 
     private void skipToNext(MusicTag tag) {

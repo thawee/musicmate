@@ -393,7 +393,14 @@
     <color name="encoding_desc">@color/grey600</color>
     <color name="encoding_label">#000000</color>
     <color name="encoding_detail">#3F51B5</color>
-    <color name="warn_not_in_managed_dir">#FF5722</color>
+
+    <color name="managed_dir">#ffbdbdbd</color>
+    <color name="not_managed_dir">#ff757575</color>
+<!--
+    <color name="grey400">#ffbdbdbd</color>
+    <color name="grey500">#ff9e9e9e</color>
+    <color name="grey600">#ff757575</color>
+-->
 
     <!-- Reds -->
     <color name="reds_crimson">#DC143C</color>
@@ -435,12 +442,9 @@
     <color name="grays_silver">#C0C0C0</color>
     <color name="grays_slate">#708090</color>
 
-    <!-- Dynamic Range Color Scheme - Main Tiers -->
-    <color name="dr_none">@color/transparent</color>
-    <color name="dr_low">#9333ea</color>            <!-- <8 dB - Purple -->
-    <color name="dr_medium">#16a34a</color>         <!-- 9-13 dB - Green -->
-    <color name="dr_high">#3b82f6</color>           <!-- 14+ dB - Blue -->
-    <color name="dr_very_high">#9370DB</color>      <!-- 19+ dB - Medium Purple -->
+
+    <!--
+    <color name="dr_very_high">#9370DB</color> -->     <!-- 19+ dB - Medium Purple -->
 
     <!-- Dynamic Range - Detailed Gradient -->
     <color name="dr_1_4">#FF3300</color>            <!-- 1-4 dB - Bright Red -->
@@ -451,11 +455,11 @@
     <color name="dr_21_plus">#9933CC</color>        <!-- 21+ dB - Purple -->
 
     <!-- Transparent Versions for Overlays (50% opacity) -->
-    <color name="dr_no_trans">#80708090</color>
-    <color name="dr_low_trans">#80FF4500</color>
-    <color name="dr_medium_trans">#8032CD32</color>
-    <color name="dr_high_trans">#801E90FF</color>
-    <color name="dr_very_high_trans">#809370DB</color>
+    <color name="dr_no_trans">#708090</color>
+    <color name="dr_low_trans">#FF4500</color>
+    <color name="dr_medium_trans">#32CD32</color>
+    <color name="dr_high_trans">#1E90FF</color>
+    <color name="dr_very_high_trans">#9370DB</color>
 
     <!-- Dark Text Colors for Light Backgrounds -->
     <color name="text_on_light">#DE000000</color>   <!-- 87% black -->
@@ -465,7 +469,6 @@
     <color name="text_on_dark">#FFFFFF</color>
     <color name="text_on_dark_secondary">#B3FFFFFF</color>
 
-
     <color name="your_highlight_color">#4CAF50</color> <!-- Green example -->
     <color name="your_highlight_border_color">#FFC107</color> <!-- Amber example -->
     <color name="highlighted_text_color">#FFFFFF</color>
@@ -474,8 +477,49 @@
     <color name="search_bar_stroke_color">#CCCCCC</color> <!-- Slightly darker grey for border -->
     <color name="search_bar_hint_color">#999999</color> <!-- Hint text color -->
     <color name="search_bar_text_color">#F0F0F0</color>
+
+    <!-- Dynamic Range Color Scheme - Main Tiers -->
+    <!-- <8 dB - Purple -->
+    <!-- 9-13 dB - Green -->
+    <!-- 14+ dB - Blue -->
+    <!--
+    <color name="dr_none">#ff757575</color>
+    <color name="dr_low">#9333ea</color>
+    <color name="dr_medium">#16a34a</color>
+    <color name="dr_high">#3b82f6</color>
+    -->
+    <color name="dr_none">#BDBDBD</color>
+    <color name="dr_low">#C084FC</color>
+    <color name="dr_medium">#4ADE80</color>
+    <color name="dr_high">#60A5FA</color>
+
     <color name="drdb_perfect">#FFC017</color>
     <color name="drdb_none">@color/grey600</color>
-    <color name="drdb_normal">#ffffff</color> <!-- Input text color -->
+    <color name="drdb_normal">#ffffff</color>
+
+    <color name="drdb_background">#36454F</color>
+
+    <color name="quality_dsd_text">#d8b4fe</color>
+    <color name="quality_dsd_background">#6b21a8</color>
+    <color name="quality_sq_text">#93c5fd</color>
+    <color name="quality_sq_background">#1d4ed8</color>
+    <color name="quality_hr_text">#fde68a</color>
+    <color name="quality_hr_background">#d97706</color>
+    <color name="quality_mqa_text">#86efac</color>
+    <color name="quality_mqa_background">#14532d</color>
+    <color name="quality_mqa_studio_text">#dcfce7</color>
+    <color name="quality_mqa_studio_background">#2196F3</color>
+    <color name="quality_lc_text">#d1d5db</color>
+    <color name="quality_lc_background">#374151</color>
+
+    <color name="rating_text">#ffb300</color>
+    <color name="rating_background">#36454F</color>
+
+    <color name="duration_background">#36454F</color>
+
+    <color name="new_indicator_text">#ff424242</color>
+    <color name="new_indicator_background">#fff59d</color>
+    <color name="new_download_indicator_text">#b0120a</color>
+    <color name="new_download_indicator_background">#fff59d</color>
 
 </resources>

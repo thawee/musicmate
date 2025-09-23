@@ -61,7 +61,7 @@ public class TagRepository {
                 path = FileUtils.getParentName(path);
             }
         }
-        tag.setAlbumUniqueKey(DigestUtils.md5Hex(path));
+        tag.setAlbumCoverUniqueKey(DigestUtils.md5Hex(path)); // used for cached coverart
 
         if(StringUtils.isEmpty(tag.getGenre())) {
             tag.setGenre(Constants.NONE);
@@ -362,9 +362,9 @@ public class TagRepository {
                 if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
                     list = MusixMateApp.getInstance().getOrmLite().findMySongs();
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
-                    list = MusixMateApp.getInstance().getOrmLite().findMyIncomingSongs(0, 0);
-                } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
-                    list = MusixMateApp.getInstance().getOrmLite().findMyUnsatisfiedSongs();
+                    list = findRecentlyAdded(0, 0);
+               // } else if (Constants.TITLE_BROKEN.equals(criteria.getKeyword())) {
+                //    list = MusixMateApp.getInstance().getOrmLite().findMyUnsatisfiedSongs();
                 } else if (Constants.TITLE_TO_ANALYST_DR.equals(criteria.getKeyword())) {
                     list = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
                 } else if (Constants.TITLE_DUPLICATE.equals(criteria.getKeyword())) {
@@ -374,6 +374,8 @@ public class TagRepository {
                 }
             } else if (criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
                 list = MusixMateApp.getInstance().getOrmLite().findByPublisher(criteria.getKeyword());
+            } else if (criteria.getType() == SearchCriteria.TYPE.ARTIST) {
+                list = MusixMateApp.getInstance().getOrmLite().findByArtist(criteria.getKeyword(),0,0);
             } else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 list = MusixMateApp.getInstance().getOrmLite().findByMediaQuality(criteria.getKeyword());
             } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
@@ -522,5 +524,17 @@ public class TagRepository {
 
     public static MusicTag findById(long id) {
         return  MusixMateApp.getInstance().getOrmLite().findById(id);
+    }
+
+    public static List<MusicTag> findRecentlyAdded(long firstResult, long maxResults) {
+        return  MusixMateApp.getInstance().getOrmLite().findRecentlyAdded(firstResult, maxResults);
+    }
+
+    public static void deleteMediaTag(MusicTag tag) {
+        MusixMateApp.getInstance().getOrmLite().delete(tag);
+    }
+
+    public static MusicTag getByAlbumCoverUniqueKey(String albumCoverUniqueKey) {
+        return MusixMateApp.getInstance().getOrmLite().findByAlbumCoverUniqueKey(albumCoverUniqueKey);
     }
 }

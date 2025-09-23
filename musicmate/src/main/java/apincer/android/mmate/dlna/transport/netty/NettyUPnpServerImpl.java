@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.transport;
+package apincer.android.mmate.dlna.transport.netty;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import android.content.Context;
@@ -24,6 +24,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;

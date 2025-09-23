@@ -1,4 +1,4 @@
-package apincer.android.mmate.dlna.transport;
+package apincer.android.mmate.dlna.transport.jetty;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static apincer.android.mmate.utils.StringUtils.isEmpty;
@@ -37,7 +37,10 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
-public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
+import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
+import apincer.android.mmate.dlna.transport.StreamServerImpl;
+
+public class JettyUPnpServerImpl2 extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyUPnpServer";
     // Jetty tuning parameters for better streaming
     private static final int OUTPUT_BUFFER_SIZE = 65536; // 64KB buffer for better streaming
@@ -47,7 +50,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
 
     private Server server;
 
-    public JettyUPnpServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
+    public JettyUPnpServerImpl2(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
     }
 

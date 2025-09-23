@@ -8,19 +8,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
-import apincer.android.mmate.codec.MusicAnalyser;
 import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.codec.TagWriter;
-import android.content.Context;
 
 public class TagsViewModel extends ViewModel {
 
-    private final ExecutorService executorService;
+   // private final ExecutorService executorService;
 
     public static final String MULTIPLE_ALBUMS = "[Multiple Albums]";
     public static final String MULTIPLE_ARTISTS = "[Multiple Artists]";
@@ -35,11 +30,13 @@ public class TagsViewModel extends ViewModel {
     public final LiveData<MusicTag> displayTag = _displayTag;
 
     // --- Operation Status (e.g., for DR Measurement, Saving) ---
-    private final MutableLiveData<OperationStatus> _drMeasurementStatus = new MutableLiveData<>(new Idle());
-    public final LiveData<OperationStatus> drMeasurementStatus = _drMeasurementStatus;
+   // @Deprecated
+   // private final MutableLiveData<OperationStatus> _drMeasurementStatus = new MutableLiveData<>(new Idle());
+   // @Deprecated
+   // public final LiveData<OperationStatus> drMeasurementStatusxx = _drMeasurementStatus;
 
-    public TagsViewModel(ExecutorService executorService /*, Context applicationContext */) {
-        this.executorService = executorService;
+    public TagsViewModel() {
+       // this.executorService = executorService;
         // this.applicationContext = applicationContext;
     }
 
@@ -126,8 +123,8 @@ public class TagsViewModel extends ViewModel {
     }
 
     // --- Actions ---
-
-    public void measureDynamicRange(Context context /* Pass context here if unavoidable for TagWriter */) {
+    /*@Deprecated
+    public void measureDynamicRange(Context context, Consumer consumer) {
         List<MusicTag> items = _editItems.getValue();
         if (items == null || items.isEmpty()) {
             _drMeasurementStatus.postValue(new Error("No items to process."));
@@ -158,6 +155,7 @@ public class TagsViewModel extends ViewModel {
             List<MusicTag> updatedItems = new ArrayList<>(items); // Or refetch
             _editItems.postValue(updatedItems); // This will trigger observers
             rebuildDisplayTag(updatedItems);     // This will also trigger observers
+            consumer.accept(updatedItems);
 
             if(successCount == items.size()) {
                 _drMeasurementStatus.postValue(new Success("DR measurement completed for all items."));
@@ -171,11 +169,13 @@ public class TagsViewModel extends ViewModel {
             _drMeasurementStatus.postValue(new Error("DR measurement failed: " + ex.getMessage()));
             return null;
         });
-    }
+    } */
 
+    /*
+    @Deprecated
     public void resetDrMeasurementStatus() {
         _drMeasurementStatus.postValue(new Idle());
-    }
+    } */
 
     public void refreshDisplayTag() {
         List<MusicTag> items = _editItems.getValue();
@@ -191,16 +191,16 @@ public class TagsViewModel extends ViewModel {
 
     // --- ViewModel Factory ---
     public static class TagsViewModelFactory implements ViewModelProvider.Factory {
-        private final ExecutorService executorService;
+       // private final ExecutorService executorService;
 
-        public TagsViewModelFactory(ExecutorService executorService /*, Context applicationContext */) {
-            this.executorService = executorService;
+        public TagsViewModelFactory() {
+         //   this.executorService = executorService;
         }
 
         @Override
         public <T extends ViewModel> T create(Class<T> modelClass) {
             if (modelClass.isAssignableFrom(TagsViewModel.class)) {
-                return (T) new TagsViewModel(executorService /*, applicationContext */);
+                return (T) new TagsViewModel();
             }
             throw new IllegalArgumentException("Unknown ViewModel class");
         }

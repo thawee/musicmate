@@ -135,7 +135,8 @@ public class TagsTechnicalFragment extends Fragment {
                     || field.getName().equals("mmManaged")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
-                    || field.getName().equals("albumUniqueKey")
+                    || field.getName().equals("albumCoverUniqueKey")
+                    || field.getName().equals("waveformData")
                     || field.getName().equals("data")
                     || field.getName().equals("storageId")
                     || field.getName().equals("CREATOR")
@@ -254,7 +255,6 @@ public class TagsTechnicalFragment extends Fragment {
                 () -> {
                     FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        repos.cleanCacheCover(getContext(), tag);
                         TagRepository.removeTag(tag);
                         repos.scanMusicFile(new File(tag.getPath()), true);
                     }

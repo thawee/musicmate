@@ -33,13 +33,11 @@ android {
         applicationId = "apincer.android.mmate"
         minSdk = libs.versions.minSdkVersion.get() as Integer
         targetSdk = libs.versions.targetSdkVersion.get() as Integer
-        versionCode = 100
-        versionName  = "3.10.0-"+ getDate()
+        versionCode = 101
+        versionName  = "3.11.0-"+ getDate()
         //noinspection ChromeOsAbiSupport
         ndk.abiFilters = ['arm64-v8a']
         multiDexEnabled = true
-		//renderscriptTargetApi versions.renderscriptTargetApi
-		//renderscriptSupportModeEnabled = true
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -49,8 +47,8 @@ android {
         targetCompatibility = JavaLanguageVersion.of(17)
     }
 
-    kotlinOptions {
-        jvmTarget = '17'
+    kotlin {
+        jvmToolchain(17)
     }
 
     tasks.withType(KotlinCompile).configureEach {
@@ -119,6 +117,7 @@ dependencies {
 
     implementation libs.kotlin.stdlib
     implementation libs.kotlin.coroutines.core
+    implementation libs.kotlinx.serialization.core
 
     // OrmLite
     implementation libs.ormlite.android
@@ -164,6 +163,7 @@ dependencies {
     implementation libs.jupnp.android
     implementation libs.jupnp.support
     implementation libs.jetty.server12
+    implementation libs.jetty.websocket.server12
     implementation libs.netty.codec.http
     implementation libs.square.okhttp3
     implementation libs.coilkt.coil3

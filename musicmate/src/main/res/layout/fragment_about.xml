@@ -141,20 +141,55 @@
             android:layout_marginTop="@dimen/dimen_4_dp"
             android:layout_marginLeft="@dimen/dimen_4_dp"
             android:layout_marginRight="@dimen/dimen_4_dp">
+
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/encoding_btn_lc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:label="@string/label_lossy"
+                />
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/encoding_btn_sq"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                app:label="@string/label_Lossless"
+                />
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/encoding_btn_hr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                app:label="@string/label_hi_res"
+                />
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/encoding_btn_mqa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                app:label="@string/label_mqa"
+                />
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/encoding_btn_dsd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                app:label="@string/label_dsd"
+                />
+            <!--
             <TextView
                 android:id="@+id/encoding_btn_hq"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/label_lossy"
-                android:textStyle="bold"
-                android:textColor="@color/black"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:background="@drawable/shape_background_lossy"
                 android:gravity="center"
                 android:paddingStart="@dimen/dimen_8_dp"
                 android:paddingEnd="@dimen/dimen_8_dp"
-                android:layout_marginStart="@dimen/dimen_8_dp"
-                android:background="@drawable/shape_background_lossy"
-                tools:ignore="RtlSymmetry"
-                />
+                android:text="@string/label_lossy"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                tools:ignore="RtlSymmetry" />
             <TextView
                 android:id="@+id/encoding_btn_lossless"
                 android:layout_width="wrap_content"
@@ -168,6 +203,7 @@
                 android:layout_marginStart="@dimen/dimen_8_dp"
                 android:background="@drawable/shape_background_lossless"
                 tools:ignore="RtlSymmetry" />
+
             <TextView
                 android:id="@+id/encoding_btn_hires"
                 android:layout_width="wrap_content"
@@ -210,6 +246,7 @@
                 android:background="@drawable/shape_background_dsd"
                 tools:ignore="RtlSymmetry"
                 />
+                -->
         </LinearLayout>
             <TextView
                 android:id="@+id/encoding_header"
@@ -235,7 +272,8 @@
                 />
         </LinearLayout>
 
-    <LinearLayout
+    <!--
+        <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -273,6 +311,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center"
             android:layout_gravity="center_horizontal"
             android:layout_marginLeft="@dimen/dimen_4_dp"
             android:layout_marginRight="@dimen/dimen_4_dp">
@@ -301,6 +340,7 @@
             tools:ignore="RtlSymmetry"
             />
     </LinearLayout>
+    -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

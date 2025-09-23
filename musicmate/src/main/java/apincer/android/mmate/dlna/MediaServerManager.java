@@ -12,6 +12,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import apincer.android.mmate.Settings;
+
 public class MediaServerManager {
     private static final String TAG = "MediaServerManager";
     private MediaServerService mediaServerService;
@@ -68,7 +70,7 @@ public class MediaServerManager {
         try {
             // For Android O and above, use startForegroundService
             // The service itself MUST call startForeground() within 5 seconds
-            intent.putExtra("START_SERVERS", "YES");
+            intent.putExtra("START_SERVER", "YES");
 
             context.startForegroundService(intent);
         } catch (Exception e) {
@@ -79,8 +81,6 @@ public class MediaServerManager {
 
     public void stopServer() {
         Log.d(TAG, "Requesting to stop MediaServerService");
-       /* Intent intent = new Intent(context, MediaServerService.class);
-        context.stopService(intent); */
         if (isBound) {
             mediaServerService.stopServers();
         }
@@ -109,8 +109,6 @@ public class MediaServerManager {
     // or if this manager's lifecycle is tied to something else).
     public void cleanup() {
         LocalBroadcastManager.getInstance(context).unregisterReceiver(statusReceiver);
-       // instance = null; // Allow it to be GC'd and re-created if needed
-
         // Unbind from the service in onStop to prevent memory leaks
         if (isBound) {
             context.unbindService(serviceConnection);
@@ -130,6 +128,9 @@ public class MediaServerManager {
             MediaServerService.MediaServerServiceBinder binder = (MediaServerService.MediaServerServiceBinder) service;
             mediaServerService = binder.getService();
             isBound = true;
+            if(Settings.isAutoStartMediaServer(context) && !mediaServerService.isInitialized()) {
+                startServer();
+            }
             requestServiceStatusUpdate();
         }
 

@@ -12,7 +12,6 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.util.Objects;
 
 import apincer.android.mmate.Constants;
-import apincer.android.mmate.repository.FloatArrayPersister;
 
 @DatabaseTable(tableName = "musictag")
 public class MusicTag implements Parcelable {
@@ -29,16 +28,16 @@ public class MusicTag implements Parcelable {
     @DatabaseField(uniqueIndex = true)
     protected String uniqueKey;
 
-    public String getAlbumUniqueKey() {
-        return albumUniqueKey;
+    public String getAlbumCoverUniqueKey() {
+        return albumCoverUniqueKey;
     }
 
-    public void setAlbumUniqueKey(String albumUniqueKey) {
-        this.albumUniqueKey = albumUniqueKey;
+    public void setAlbumCoverUniqueKey(String albumUniqueKey) {
+        this.albumCoverUniqueKey = albumUniqueKey;
     }
 
     @DatabaseField
-    protected String albumUniqueKey;
+    protected String albumCoverUniqueKey;
 
     // file information
     @DatabaseField
@@ -58,10 +57,8 @@ public class MusicTag implements Parcelable {
     protected String storageId;
     @DatabaseField
     protected String simpleName;
-   // @DatabaseField
-   // protected String mediaType = "";
 
-   @DatabaseField(index = true)
+    @DatabaseField(index = true)
    protected String qualityRating;
     @DatabaseField
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
@@ -124,12 +121,6 @@ public class MusicTag implements Parcelable {
     @DatabaseField(persisterClass = FloatArrayPersister.class)
     private float[] waveformData;
 
-    //@DatabaseField
-    //protected double upscaledScore; // -1 = upscaled, 0 - not analyst, 1 - not upscaled, increasing the bit depth from original file
-
-    //@DatabaseField
-    //protected double resampledScore; // -1 = re sampling, 0 - not analyst, 1 - not re sampling, resampling the sampling rate from original file
-
     public float[] getWaveformData() {
         return waveformData;
     }
@@ -154,16 +145,6 @@ public class MusicTag implements Parcelable {
         }
         return false;
     }
-
-    /*
-    public String getMqaInd() {
-        return mqaInd;
-    }
-
-    public void setMqaInd(String mqaInd) {
-        this.mqaInd = mqaInd;
-    }
-     */
 
     public String getAudioChannels() {
         return audioChannels;
@@ -394,7 +375,7 @@ public class MusicTag implements Parcelable {
         MusicTag tag = new MusicTag();
         tag.id = id;
         tag.uniqueKey = uniqueKey;
-        tag.albumUniqueKey = albumUniqueKey;
+        tag.albumCoverUniqueKey = albumCoverUniqueKey;
         tag.path = path;
         tag.storageId = storageId;
         tag.simpleName = simpleName;
@@ -410,8 +391,6 @@ public class MusicTag implements Parcelable {
         tag.audioChannels = audioChannels;
 
         tag.drScore = drScore;
-       // tag.upscaledScore = upscaledScore;
-       // tag.resampledScore = resampledScore;
         tag.dynamicRange = dynamicRange;
 
         tag.title = title;
@@ -445,7 +424,7 @@ public class MusicTag implements Parcelable {
     public void cloneFrom(MusicTag tag) {
         this.id = tag.id;
         this.uniqueKey = tag.uniqueKey;
-        this.albumUniqueKey = tag.albumUniqueKey;
+        this.albumCoverUniqueKey = tag.albumCoverUniqueKey;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
         this.fileType = tag.fileType;
@@ -483,8 +462,6 @@ public class MusicTag implements Parcelable {
         this.mqaSampleRate = tag.mqaSampleRate;
 
         this.drScore = tag.drScore;
-       // this.upscaledScore = tag.upscaledScore;
-       // this.resampledScore = tag.resampledScore;
         this.dynamicRange = tag.dynamicRange;
 
         this.publisher = tag.publisher;
@@ -516,15 +493,6 @@ public class MusicTag implements Parcelable {
     public void setMusicManaged(boolean musicManaged) {
         this.mmManaged = musicManaged;
     }
-
-    /*
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    public void setMediaType(String mediaType) {
-        this.mediaType = mediaType;
-    } */
 
     public String getQualityRating() {
         return qualityRating;
@@ -574,27 +542,10 @@ public class MusicTag implements Parcelable {
         this.dynamicRange = measuredDR;
     }
 
-    /*
-    public double getUpscaledScore() {
-        return upscaledScore;
-    }
-
-    public void setUpscaledScore(double upscaled) {
-        this.upscaledScore = upscaled;
-    }
-
-    public double getResampledScore() {
-        return resampledScore;
-    }
-
-    public void setResampledScore(double upsampled) {
-        this.resampledScore = upsampled;
-    } */
-
     protected MusicTag(Parcel in) {
         id = in.readLong();
         uniqueKey = in.readString();
-        albumUniqueKey = in.readString();
+        albumCoverUniqueKey = in.readString();
         path = in.readString();
         fileType = in.readString();
         fileLastModified = in.readLong();
@@ -628,15 +579,13 @@ public class MusicTag implements Parcelable {
         drScore = in.readDouble();
         dynamicRange = in.readDouble();
         in.readFloatArray(waveformData);
-       // upscaledScore = in.readDouble();
-       // resampledScore = in.readDouble();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(id);
         dest.writeString(uniqueKey);
-        dest.writeString(albumUniqueKey);
+        dest.writeString(albumCoverUniqueKey);
         dest.writeString(path);
         dest.writeString(fileType);
         dest.writeLong(fileLastModified);
@@ -670,8 +619,6 @@ public class MusicTag implements Parcelable {
         dest.writeDouble(drScore);
         dest.writeDouble(dynamicRange);
         dest.writeFloatArray(waveformData);
-       // dest.writeDouble(upscaledScore);
-       // dest.writeDouble(resampledScore);
     }
 
     @Override
@@ -679,7 +626,7 @@ public class MusicTag implements Parcelable {
         return 0;
     }
 
-    public static final Creator<MusicTag> CREATOR = new Creator<MusicTag>() {
+    public static final Creator<MusicTag> CREATOR = new Creator<>() {
         @Override
         public MusicTag createFromParcel(Parcel in) {
             return new MusicTag(in);

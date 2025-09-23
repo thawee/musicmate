@@ -20,20 +20,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.codec.TagReader;
 import apincer.android.mmate.repository.FileRepository;
 import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.LogHelper;
+import apincer.android.mmate.utils.MusicTagUtils;
 
 public class ScanAudioFileWorker extends Worker {
     private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
     private static final String WORKER_TAG = "apincer.android.mmate.work.ScanAudioFileWorker";
-   // private static final String LAST_SCAN_TIME_PREF = "last_music_scan_time";
 
     // These values will be determined dynamically
     private final int optimalThreadCount;
@@ -42,9 +45,6 @@ public class ScanAudioFileWorker extends Worker {
 
     static final long SCAN_SCHEDULE_TIME = 5;
     private final FileRepository repos;
-
-   // private boolean isFullScan;
-    //private long lastScanTime = 0;
 
     public ScanAudioFileWorker(
             @NonNull Context context,
@@ -71,9 +71,7 @@ public class ScanAudioFileWorker extends Worker {
 
         try {
             // Only clean database on full scan
-           // if (isFullScan) {
-                TagRepository.cleanMusicMate();
-           // }
+            TagRepository.cleanMusicMate();
 
             List<File> list = pathList(getApplicationContext());
             List<Path> allPaths = new ArrayList<>();
@@ -85,6 +83,26 @@ public class ScanAudioFileWorker extends Worker {
 
             // Then process in batches
             processedFiles = processPaths(allPaths);
+
+            // start scan extras
+            MusicMateExecutors.lowPriority(() -> {
+                        List<MusicTag> BasicList = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
+                        for (MusicTag basicTag : BasicList) {
+                            //full scan
+                            if (TagReader.readExtras(getApplicationContext(), basicTag)) {
+                                basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getApplicationContext(), basicTag));
+                                TagRepository.saveTag(basicTag);
+                            }
+
+                            // extract cover art
+                            try {
+                                FileRepository repos = FileRepository.newInstance(getApplicationContext());
+                                repos.saveCoverartToCache(basicTag);
+                            } catch(Exception e) {
+                                Log.e(TAG, "Error extracting cover art", e);
+                            }
+                        }
+                    });
 
             // Save current time as last scan time
             Settings.setLastScanTime(getApplicationContext(), System.currentTimeMillis());
@@ -113,12 +131,6 @@ public class ScanAudioFileWorker extends Worker {
                 processedCount++;
             }
 
-            // Report progress
-           /* setProgressAsync(new Data.Builder()
-                    .putInt("progress", end)
-                    .putInt("total", paths.size())
-                    .build()); */
-
             // Add a small delay between batches to prevent CPU overload
             try {
                 Thread.sleep(pauseBetweenBatchesMs);
@@ -130,28 +142,30 @@ public class ScanAudioFileWorker extends Worker {
         return processedCount;
     }
 
-    private List<Path> search(String pathname) {
+    private List<Path> search(String pathname) throws ExecutionException, InterruptedException {
         List<Path> result = new ArrayList<>();
-        try {
+      //  try {
             // Use optimal thread count for file searching
-            ForkJoinPool customThreadPool = new ForkJoinPool(optimalThreadCount);
+            try (ForkJoinPool customThreadPool = new ForkJoinPool(optimalThreadCount)) {
 
-            customThreadPool.submit(() -> {
-                try {
-                    // First do a quick filter by extension to improve performance
-                    try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
-                        pathStream
-                                .filter(this::filter)
-                                .forEach(result::add);
+                customThreadPool.submit(() -> {
+                    try {
+                        // First do a quick filter by extension to improve performance
+                        try (Stream<Path> pathStream = Files.walk(Paths.get(pathname))) {
+                            pathStream
+                                    .filter(this::filter)
+                                    .forEach(result::add);
+                        }
+                    } catch (IOException ignored) {
                     }
-                } catch (IOException ignored) {}
-            }).get();
+                }).get();
 
-            // Explicitly shutdown the pool to free resources
-            customThreadPool.shutdown();
-        } catch (Exception e) {
-            Log.e(TAG, "Error searching path: " + pathname, e);
-        }
+                // Explicitly shutdown the pool to free resources
+                customThreadPool.shutdown();
+            }
+      //  } catch (Exception e) {
+      //      Log.e(TAG, "Error searching path: " + pathname, e);
+      //  }
         return result;
     }
 
@@ -169,14 +183,6 @@ public class ScanAudioFileWorker extends Worker {
                 // always re-scan in-comming songs
                 return true;
             }
-
-            /*
-            // Skip files that haven't changed since last scan
-            File file = path.toFile();
-            if(file.lastModified() <= lastScanTime) {
-                System.out.println("  NOT MODIFIED!, "+pathString +", "+file.lastModified()+"<="+lastScanTime);
-            }
-            return file.lastModified() > lastScanTime; */
 
             return true;
         } catch (Exception e) {

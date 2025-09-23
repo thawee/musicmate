@@ -14,7 +14,10 @@ import com.antonkarpenko.ffmpegkit.Session;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +72,7 @@ public class FFMpegHelper {
                 FileSystem.safeMove(context, pathFile, tag.getPath(), true);
                 //return pathFile;
             }else {
-                FileSystem.delete(context, pathFile);
+                FileSystem.delete(pathFile);
             }
        // }
     }
@@ -156,6 +159,82 @@ public class FFMpegHelper {
     public static final String KEY_TAG_MP3_DISC = "disc";
     public static final String KEY_TAG_MP3_COMMENT = "comment";  // comment
     public static final String METADATA_KEY = "-metadata";
+
+    /**
+     * Converts an audio file from a MusicTag to raw 16-bit 44.1kHz PCM data.
+     *
+     * @param tag     The MusicTag object containing the audio file path (or content URI).
+     * @param context An Android Context, required for creating temp files and resolving content URIs.
+     * @return A byte[] array of the raw PCM data, or an empty array on failure.
+     */
+    public static byte[] toLowwerPCM16(MusicTag tag, Context context) {
+        // todo convert tah.getPath() to 16bits 44.1 Hz
+        String inputPath = tag.getPath();
+        if (inputPath == null || inputPath.isEmpty()) {
+            System.err.println("MusicTag has no path.");
+            return new byte[0];
+        }
+
+        // 1. Define a temporary output file in the app's cache directory
+        File outputDir = context.getCacheDir();
+        File outputFile = new File(outputDir, "temp_pcm.raw");
+        String outputPath = outputFile.getAbsolutePath();
+
+        // 2. Build the FFmpeg command
+        // -f s16le:  Format is signed 16-bit little-endian PCM
+        // -ar 44100: Audio rate is 44.1 kHz
+        // -ac 2:     Audio channels is 2 (stereo)
+        // -y:        Overwrite output file if it exists
+        String command = String.format(
+                "-i %s -f s16le -ar 44100 -ac 2 \"%s\" -y",
+                inputPath,
+                outputPath
+        );
+
+        System.out.println("Executing FFmpeg: " + command);
+
+        // 3. Execute the command
+        FFmpegSession session = FFmpegKit.execute(command);
+
+        // 4. Check for success and read the file
+        if (ReturnCode.isSuccess(session.getReturnCode())) {
+            System.out.println("FFmpeg conversion successful.");
+            // 5. Read the temporary file into a byte array
+            try {
+                return readBytesFromFile(outputFile);
+            } catch (IOException e) {
+                System.err.println("Failed to read temp PCM file: " + e.getMessage());
+                return new byte[0];
+            } finally {
+                // 6. Clean up the temporary file
+                outputFile.delete();
+            }
+        } else {
+            // Failure
+            System.err.println("FFmpeg conversion failed!");
+            System.err.println("Logs: " + session.getLogsAsString());
+
+            // 6. Clean up the temporary file
+            outputFile.delete();
+            return new byte[0];
+        }
+    }
+
+    /**
+     * Helper method to read a file into a byte array.
+     */
+    private static byte[] readBytesFromFile(File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                bos.write(buffer, 0, bytesRead);
+            }
+            return bos.toByteArray();
+        }
+    }
 
     public static class Loudness {
         double integratedLoudness;
@@ -379,7 +458,7 @@ The definition of signal-to-noise ratio (SNR) is the difference in level between
                return true;
            }
        }finally {
-           FileSystem.delete(context, tmpPath);
+           FileSystem.delete(tmpPath);
        }
        return false;
     }

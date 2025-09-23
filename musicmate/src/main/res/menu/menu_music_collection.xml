@@ -24,18 +24,6 @@
         app:showAsAction="always" />
 
     <item
-        android:icon="@drawable/round_featured_play_list_24"
-        android:id="@+id/menu_collection"
-        android:title="@string/label_collections"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:icon="@drawable/rounded_equalizer_24"
-        android:id="@+id/menu_encodings"
-        android:title="@string/label_resolutions"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:icon="@drawable/ic_round_local_play_24"
         android:id="@+id/menu_groupings"
         android:title="@string/label_groupings"
@@ -60,6 +48,18 @@
         android:title="@string/label_genres"
         app:showAsAction="always" />
 
+    <item
+        android:icon="@drawable/rounded_demography_24"
+        android:id="@+id/menu_tag_artist"
+        android:title="@string/artists"
+        app:showAsAction="always" />
+
+    <item
+        android:icon="@drawable/rounded_order_play_24"
+        android:id="@+id/menu_collection"
+        android:title="@string/label_collections"
+        app:showAsAction="ifRoom" />
+
     <!--
     <item
         android:icon="@drawable/ic_touch_app_white_24dp"
@@ -82,5 +82,10 @@
         app:showAsAction="always" />
 -->
 
+    <item
+        android:icon="@drawable/rounded_equalizer_24"
+        android:id="@+id/menu_encodings"
+        android:title="@string/label_resolutions"
+        app:showAsAction="ifRoom" />
 
 </menu>

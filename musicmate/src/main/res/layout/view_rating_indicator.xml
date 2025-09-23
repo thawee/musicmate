@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"> <!-- Outer background -->
+
+    <TextView
+        android:id="@+id/rating_indicator_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dimen_24_dp"
+        android:layout_margin="@dimen/dimen_1_dp"
+        android:background="@drawable/shape_background_rating"
+        android:gravity="center"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/dimen_6_dp"
+        android:paddingStart="@dimen/dimen_8_dp"
+        android:paddingEnd="@dimen/dimen_8_dp"
+        android:paddingTop="@dimen/dimen_2_dp"
+        android:paddingBottom="@dimen/dimen_2_dp"
+        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+        android:text="*****"/>
+</merge>
