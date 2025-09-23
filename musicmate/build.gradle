@@ -111,7 +111,7 @@ dependencies {
     implementation libs.androidx.work
     implementation libs.androidx.drawerlayout
     implementation libs.androidx.loader
-    implementation libs.androidx.localbroadcastmanager
+   // implementation libs.androidx.localbroadcastmanager
     implementation libs.androidx.drawerlayout
     implementation libs.androidx.viewpager2
 

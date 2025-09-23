@@ -9,11 +9,14 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -52,6 +55,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.R;
+import apincer.android.mmate.playback.NowPlaying;
+import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.provider.CoverartFetcher;
@@ -101,19 +106,35 @@ public class TagsActivity extends AppCompatActivity {
     private RatingIndicatorView ratingIndicatorView;
     private NewIndicatorView newIndicatorView;
 
-    private int toolbar_from_color;
+    //private int toolbar_from_color;
     private int toolbar_to_color;
-   // FileRepository repos;
     private Fragment activeFragment;
 
     private boolean previewState = true;
 
     private AlertDialog progressDialog;
-   // private TextView progressLabel;
-   // private boolean finishOnTimeout = false;
 
     private final AtomicLong lastProgressUpdate = new AtomicLong(0);
-    private final long PROGRESS_UPDATE_THROTTLE_MS = 100; // Limit updates to every 100ms
+
+    private PlaybackService playbackService;
+    private boolean isPlaybackServiceBound = false;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @SuppressLint("CheckResult")
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // Get the binder from the service and set the mediaServerService instance
+            PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
+            playbackService = binder.getService();
+            isPlaybackServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            playbackService = null;
+            isPlaybackServiceBound = false;
+        }
+    };
 
     @Override
     public void onStart() {
@@ -140,8 +161,6 @@ public class TagsActivity extends AppCompatActivity {
                 viewModel.refreshDisplayTag();
             }
         });
-
-      //  viewModel.measureDynamicRange(getApplicationContext(), (Consumer<Object>) o -> stopProgressBar());
     }
 
     @Override
@@ -198,7 +217,7 @@ public class TagsActivity extends AppCompatActivity {
         int statusBarHeight = getStatusBarHeight();
         int height = UIUtils.getScreenHeight(this);
         toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
-        toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
+       // toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         StateView mStateView = findViewById(R.id.status_page);
         mStateView.hideStates();
@@ -214,6 +233,19 @@ public class TagsActivity extends AppCompatActivity {
         // If data is ready, call it. If not, observe some "dataReady" LiveData.
         // For now, let's assume it can be setup and fragments will observe ViewModel.
         setupPageViewer();
+
+        // Bind to the MediaServerService as soon as this service is created
+        Intent intent = new Intent(this, PlaybackService.class);
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        databaseExecutor.shutdown();
+        if(isPlaybackServiceBound) {
+            unbindService(serviceConnection);
+        }
     }
 
     private void loadMusicTagsFromDb(long[] ids) {
@@ -424,12 +456,6 @@ public class TagsActivity extends AppCompatActivity {
         if(simplePath.contains("/")) {
             simplePath = simplePath.substring(0, simplePath.lastIndexOf("/"));
         }
-       // boolean inLibrary = currentDisplayTag.isMusicManaged(); //MusicTagUtils.isManagedInLibrary(getApplicationContext(), currentDisplayTag);
-       // if(inLibrary) {
-        //    pathInfo.setTextColor(getColor(R.color.managed_dir));
-        //}else {
-        //    pathInfo.setTextColor(getColor(R.color.not_managed_dir));
-       // }
         pathInfo.setText(simplePath);
 
         pathInfo.setOnClickListener(view -> {
@@ -495,12 +521,6 @@ public class TagsActivity extends AppCompatActivity {
            // ApplicationUtils.showErrorToast(this, ((Error) status).errorMessage);
             viewModel.resetDrMeasurementStatus(); // Go back to Idle
         }
-    } */
-
-    /*
-    private void showProgressDialog(String title, int progress, String currentStep) {
-
-        // If you have a ProgressBar
     } */
 
     private void dismissProgressDialog() {
@@ -585,16 +605,6 @@ public class TagsActivity extends AppCompatActivity {
                     finish(); // back to prev activity
                 }
             });
-
-            /*DeleteAudioFileWorker.startWorker(getApplicationContext(), editItems);
-
-            // set timeout to finish, 3 seconds
-            finishOnTimeout = true;
-            MusicMateExecutors.schedule(() -> {
-                if(finishOnTimeout) {
-                    finish(); // back to prev activity
-                }
-            }, 1); */
             bottomSheetDialog.dismiss();
         });
 
@@ -603,29 +613,33 @@ public class TagsActivity extends AppCompatActivity {
 
     public void doMoveMediaItems() {
         startProgressBar();
+
+        NowPlaying nowPlaying;
+        if(playbackService!= null) {
+            nowPlaying = playbackService.getNowPlayingSubject().getValue();
+        } else {
+            nowPlaying = null;
+        }
         FileOperationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+            boolean closeScreen = false;
             @Override
             public void onProgress(MusicTag tag, int progress, String status) {
-
+                if(nowPlaying!=null && !closeScreen) {
+                    closeScreen = nowPlaying.isPlaying(tag);
+                }
             }
 
             @Override
             public void onComplete() {
-                stopProgressBar();
-                viewModel.refreshDisplayTag();
+                if(closeScreen) {
+                    stopProgressBar();
+                    finish(); // back to prev activity
+                }else {
+                    stopProgressBar();
+                    viewModel.refreshDisplayTag();
+                }
             }
         });
-
-       /* ImportAudioFileWorker.startWorker(getApplicationContext(), getEditItems());
-
-        // set timeout to finish, 5 seconds
-        finishOnTimeout = true;
-        MusicMateExecutors.schedule(() -> {
-            if(finishOnTimeout) {
-                refreshDisplayTag();
-                //finish(); // back to prev activity
-            }
-        }, 1); */
     }
 
     public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {
@@ -847,6 +861,8 @@ public class TagsActivity extends AppCompatActivity {
         // Check if enough time has passed since the last update to avoid too many UI updates
         long now = System.currentTimeMillis();
         long lastUpdate = lastProgressUpdate.get();
+        // Limit updates to every 100ms
+        long PROGRESS_UPDATE_THROTTLE_MS = 100;
         if (now - lastUpdate < PROGRESS_UPDATE_THROTTLE_MS) {
             return; // Skip this update to avoid overloading the UI thread
         }

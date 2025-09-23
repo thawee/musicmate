@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.graphics.drawable.Drawable;
 
-import androidx.lifecycle.LiveData;
-
 import org.jupnp.model.meta.RemoteDevice;
 
 import apincer.android.mmate.repository.database.MusicTag;

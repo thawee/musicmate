@@ -15,9 +15,7 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
@@ -51,6 +49,7 @@ import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.worker.MusicMateExecutors;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 /**
  * DLNA Media Server consists of
@@ -145,6 +144,10 @@ public class MediaServerService extends Service {
         }
     }
 
+    public BehaviorSubject<ServerStatus> getServerStatus() {
+        return serverStatus;
+    }
+
     public enum ServerStatus { // You might already have this or a similar concept
         RUNNING,
         STOPPED,
@@ -170,6 +173,8 @@ public class MediaServerService extends Service {
     private PowerManager.WakeLock wakeLock;
 
     private RendererController rendererControls;
+
+    private final BehaviorSubject<ServerStatus> serverStatus = BehaviorSubject.createDefault(ServerStatus.STOPPED);
 
     /**
      * @return the initialized
@@ -199,14 +204,14 @@ public class MediaServerService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        showNotification();
+       // showNotification();
         if(intent!=null && intent.getStringExtra("START_SERVER") != null) {
             startServers();
         }
         return START_STICKY;
     }
 
-    private void startServers() {
+    public void startServers() {
         if(!isInitialized()) {
             long start = System.currentTimeMillis();
             showNotification();
@@ -215,9 +220,13 @@ public class MediaServerService extends Service {
                 initialize(); // Your existing initialize method
                 // After initialize() completes:
                 if (isInitialized()) {
-                    broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
+                    serverStatus.onNext(ServerStatus.RUNNING);
+                   // updateNotificationText(getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
+                    //broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
                 } else {
-                    broadcastStatus(ServerStatus.ERROR, null); // If initialize failed
+                    serverStatus.onNext(ServerStatus.ERROR);
+                    cancelNotification();
+                    //broadcastStatus(ServerStatus.ERROR, null); // If initialize failed
                 }
             });
             initializationThread.setName("MediaServer-Init");
@@ -227,9 +236,10 @@ public class MediaServerService extends Service {
             setupNetworkMonitoring();
 
             Log.d(TAG, "MediaServer startup initiated: " + (System.currentTimeMillis() - start) + "ms");
-        }else {
+        //}else {
             // If already initialized and running, just broadcast current status
-            broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
+           // serverStatus.onNext(ServerStatus.RUNNING);
+            //broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
         }
     }
 
@@ -355,7 +365,7 @@ public class MediaServerService extends Service {
                 .setSubText(deviceModel)
                 .setPriority(NotificationCompat.PRIORITY_LOW) // Use a lower priority for less important notifications
                 //.setContentText(getApplicationContext().getString(R.string.media_server_name));
-                .setContentText("http://"+getIpAddress()+":"+MediaServerConfiguration.WEB_SERVER_PORT+"/");
+                .setContentText("http://"+getIpAddress()+":"+MediaServerConfiguration.WEB_SERVER_PORT);
 
         mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
@@ -384,6 +394,8 @@ public class MediaServerService extends Service {
     }
 
     // --- Add this method to broadcast status ---
+    /*
+    @Deprecated
     public void broadcastStatus(ServerStatus status, @Nullable String address) {
         Intent intent = new Intent(ACTION_STATUS_CHANGED);
         intent.putExtra(EXTRA_STATUS, status.name()); // Send enum name as String
@@ -403,9 +415,9 @@ public class MediaServerService extends Service {
             // Or update to "Stopped" if you keep a persistent notification for the app
             updateNotificationText("DMS stopped!");
         }
-    }
+    } */
 
-    private void updateNotificationText(String text) {
+    private void updateNotificationTextx(String text) {
         // Your existing showNotification logic creates the initial notification.
         // This method updates its content text.
         // You'll need to make your NotificationCompat.Builder accessible or rebuild part of it.
@@ -447,6 +459,8 @@ public class MediaServerService extends Service {
                 upnpService.shutdown();
                 upnpService = null;
             }
+            serverStatus.onNext(ServerStatus.STOPPED);
+            cancelNotification();
         } catch (Exception e) {
             Log.e(TAG, "Error shutting down UPnP service", e);
         }
@@ -601,6 +615,4 @@ public class MediaServerService extends Service {
         URL descriptorURL = device.getIdentity().getDescriptorURL();
         return descriptorURL.getHost();
     }
-
-
 }

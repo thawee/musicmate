@@ -108,8 +108,6 @@ public class MusicAnalyser {
             }
         tag.setDynamicRange(getDynamicRange());
         tag.setDynamicRangeScore(getDynamicRangeScore());
-        // tag.setResampledScore(analyser.getReSampledScore());
-        // tag.setUpscaledScore(analyser.getUpScaledScore());
 
         if(isMQAStudio()) {
             tag.setQualityInd("MQA Studio");
@@ -273,14 +271,6 @@ public class MusicAnalyser {
 
             // DR = peak dB - RMS dB
             double channelDR = peakDb - rmsDb;
-
-            /*
-            // Convert to dB scale
-            double peakDb = 20 * Math.log10(Math.max(maxPeak, 1e-6));
-            double rmsDb = 20 * Math.log10(Math.max(avgRms, 1e-6));
-
-            // DR = peak dB - RMS dB
-            double channelDR = peakDb - rmsDb; */
 
             // Ensure realistic DR value (typically between 1-20 dB)
            // channelDR = Math.min(20.0, Math.max(1.0, channelDR));

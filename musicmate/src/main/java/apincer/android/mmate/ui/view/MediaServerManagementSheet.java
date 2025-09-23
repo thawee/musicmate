@@ -72,13 +72,13 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     btnStartServer.setEnabled(false);
                     btnStopServer.setEnabled(true);
                     tvServerAddress.setVisibility(View.VISIBLE); // Handled by address observer
+                    tvServerAddress.setText("Location: "+serverManager.getServerLocation());
                     break;
                 case STOPPED:
                 case ERROR:
                     btnStartServer.setEnabled(true);
                     btnStopServer.setEnabled(false);
                     tvServerAddress.setVisibility(View.GONE);
-                   // tvServerAddress.setText("Location: N/A");
                     break;
                 case STARTING:
                     // case STOPPING: // You might want a STOPPING state from service too
@@ -86,10 +86,6 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     btnStopServer.setEnabled(false);
                     break;
             }
-        });
-
-        serverManager.getServerAddress().observe(getViewLifecycleOwner(), address -> {
-            tvServerAddress.setText("Location: http://"+address+"/");
         });
     }
 }

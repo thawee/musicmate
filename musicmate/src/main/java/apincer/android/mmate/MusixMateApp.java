@@ -2,13 +2,17 @@ package apincer.android.mmate;
 
 import static apincer.android.mmate.playback.ExternalPlayerListener.setupNotificationListener;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.os.IBinder;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -22,7 +26,7 @@ import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
-import apincer.android.mmate.dlna.MediaServerManager;
+import apincer.android.mmate.dlna.MediaServerService;
 import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.OrmLiteHelper;
 import apincer.android.mmate.repository.PlaylistRepository;
@@ -44,16 +48,21 @@ public class MusixMateApp extends Application {
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
 
-    private MediaServerManager mediaServerManager;
+   // private MediaServerManager mediaServerManager;
+    private MediaServerService mediaServerService;
 
     @Override
     public void onTerminate() {
         super.onTerminate();
 
         // Rest of your termination code
-        if(mediaServerManager!= null) {
+       /* if(mediaServerManager!= null) {
             mediaServerManager.stopServer();
             mediaServerManager.cleanup();
+        }*/
+        if(mediaServerService != null) {
+            mediaServerService.stopServers();
+            unbindService(serviceConnection);
         }
 
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
@@ -79,12 +88,12 @@ public class MusixMateApp extends Application {
         FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
         createNotificationChannel();
-        mediaServerManager = new MediaServerManager(getApplicationContext());
+        //mediaServerManager = new MediaServerManager(getApplicationContext());
 
         // Copy web assets like index.html to a place the web server can access them.
         //copyWebAssets();
 
-       // startMediaServer();
+        startMediaServer();
 
         // Call the static method to start the service from a valid context
         PlaybackService.startPlaybackService(this);
@@ -112,6 +121,14 @@ public class MusixMateApp extends Application {
 
     }
 
+    private void startMediaServer() {
+        if(Settings.isAutoStartMediaServer(this)) {
+            Intent intent = new Intent(this, MediaServerService.class);
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
+    }
+
+
     // Add this to your MusixMateApp class
     public void startMusicScan() {
         // Clean up any pending work requests
@@ -125,6 +142,23 @@ public class MusixMateApp extends Application {
             Log.w(TAG, "Music scan skipped - no directories configured");
         }
     }
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @SuppressLint("CheckResult")
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MediaServerService.MediaServerServiceBinder binder = (MediaServerService.MediaServerServiceBinder) service;
+            mediaServerService = binder.getService();
+            if(!mediaServerService.isInitialized()) {
+                mediaServerService.startServers();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     /*
     Provides the SQLite Helper Object among the application

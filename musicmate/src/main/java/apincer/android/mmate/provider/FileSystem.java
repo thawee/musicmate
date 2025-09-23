@@ -33,7 +33,7 @@ public class FileSystem {
 
         // create new directory if not existed
         File newDir  = newFile.getParentFile();
-        if(!newDir.exists()) {
+        if(newDir != null && !newDir.exists()) {
             // create new directory
             com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
             //mkdirs(newDir);

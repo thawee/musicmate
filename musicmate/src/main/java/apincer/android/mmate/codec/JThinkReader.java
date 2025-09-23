@@ -98,10 +98,6 @@ public class JThinkReader extends TagReader{
         Log.i(TAG, "readFullTag: " + tag.getPath());
 
         // Ensure this method is called from a background thread
-       // if (Looper.myLooper() == Looper.getMainLooper()) {
-       //     Log.w(TAG, "Tag reading should not be done on the main thread");
-        //    return false;
-       // }
         try {
             readFileInfo(context, tag);
             tag.setAudioStartTime(0);

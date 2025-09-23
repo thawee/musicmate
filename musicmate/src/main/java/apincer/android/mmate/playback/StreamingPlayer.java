@@ -4,17 +4,12 @@ package apincer.android.mmate.playback;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-
 import apincer.android.mmate.repository.database.MusicTag;
 
 public class StreamingPlayer implements Player {
     private final Context context;
     private final String ipAddress;
     private final String displayName;
-    private final MutableLiveData<NowPlaying> nowPlaying = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isConnected = new MutableLiveData<>(true);
 
     public StreamingPlayer(Context context, String ipAddress, String displayName) {
         this.context = context;

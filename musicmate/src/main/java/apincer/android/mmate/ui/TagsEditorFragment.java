@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.provider.CoverartFetcher;

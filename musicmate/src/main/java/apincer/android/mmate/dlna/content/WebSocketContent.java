@@ -32,7 +32,6 @@ import apincer.android.mmate.repository.database.QueueItem;
 import apincer.android.mmate.repository.model.PlaylistEntry;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.android.mmate.utils.StringUtils;
-import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 public class WebSocketContent {
     private final MusicInfoService musicInfoService = new MusicInfoService();
@@ -211,6 +210,8 @@ public class WebSocketContent {
                         .collect(Collectors.toList());
             }
 
+            MusicTag song = MusixMateApp.getInstance().getOrmLite().findById(Long.parseLong(id));
+            int songIndex = 0;
             if(!songsInContext.isEmpty()) {
                 // --- 2. Clear the entire existing playing queue ---
                 DeleteBuilder<QueueItem, Long> deleteBuilder = queueDao.deleteBuilder();
@@ -224,16 +225,18 @@ public class WebSocketContent {
                 for (MusicTag tag : songsInContext) {
                     QueueItem newItem = new QueueItem(tag, queueIndex++);
                     queueDao.create(newItem);
-
+                    if(tag.equals(song)) {
+                        songIndex = queueIndex;
+                    }
                 }
             }
+
+            // play song
+            playbackService.setPlayingQueueIndex(songIndex);
+            playbackService.play(song);
         } catch (SQLException e) {
             //throw new RuntimeException(e);
         }
-
-        // play song
-        MusicTag tag = MusixMateApp.getInstance().getOrmLite().findById(Long.parseLong(id));
-        playbackService.play(tag);
     }
 
     private void handlePlayPrevious() {

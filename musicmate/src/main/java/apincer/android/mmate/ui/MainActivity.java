@@ -335,41 +335,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         });
-
-        // 2. Observe Now Playing Song
-       /* viewModel.nowPlayingSong.observe(this, song -> {
-           // navigationSongPlaying.setVisibility(VISIBLE);
-
-            if (song != null) {
-                if(!song.equals(previouslyPlaying)) {
-                    if (Settings.isListFollowNowPlaying(getBaseContext())) {
-                        // only scrolled on first event for each song
-                        if (timer != null) {
-                            timer.cancel();
-                        }
-                        timer = new Timer();
-                        timer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                if (!busy) {
-                                    runOnUiThread(() -> scrollToListening());
-                                }
-                            }
-                        }, 500); // 0.5 seconds
-                    }
-
-                    // refresh music list
-                    adapter.notifyItemChanged(previouslyPlaying);
-                    adapter.notifyItemChanged(song);
-                }
-            }// else {
-               // nowPlayingHolder.hideNowPlaying();
-            //    navigationSongPlaying.setVisibility(GONE);
-            //}
-            previouslyPlaying = song;
-        });  */
-
-      //  MusixMateApp.getInstance().getNowPlayingSubject().subscribe(nowPlaying -> viewModel.setNowPlaying(nowPlaying.getSong()));
     }
 
     private void setupHeaderPanel() {
@@ -781,11 +746,13 @@ public class MainActivity extends AppCompatActivity {
             timer.cancel();
             timer = null;
         }
+        if(isPlaybackServiceBound) {
+            unbindService(serviceConnection);
+        }
         super.onDestroy();
     }
 
     private boolean scrollToListening(MusicTag currentlyPlaying) {
-       // MusicTag currentlyPlaying = previouslyPlaying;   //viewModel.nowPlayingSong.getValue();
         if (currentlyPlaying == null) return false;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);

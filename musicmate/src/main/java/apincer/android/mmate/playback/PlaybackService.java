@@ -57,6 +57,11 @@ public class PlaybackService extends Service {
     private long currentTrackId = -1;
 
     private final BehaviorSubject<List<MusicTag>> playingQueueSubject = BehaviorSubject.createDefault(new CopyOnWriteArrayList<>());
+
+    public void setPlayingQueueIndex(int playingQueueIndex) {
+        this.playingQueueIndex = playingQueueIndex;
+    }
+
     private int playingQueueIndex = -1;
 
     // New fields for service binding
@@ -123,8 +128,8 @@ public class PlaybackService extends Service {
     private NotificationCompat.Builder buildForegroundNotification() {
         createNotificationChannel();
         return new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("Playing Music")
-                .setContentText("Your music is now playing in the background.")
+                .setContentTitle("Where music is more than just a sound.")
+                //.setContentText("Monitoring song playback.")
                 .setSmallIcon(R.drawable.round_play_circle_outline_24)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY) // Assign the group ID
@@ -310,41 +315,8 @@ public class PlaybackService extends Service {
               //  Log.d(TAG, "schedule to play next song...");
                 isNextTrackScheduled = true; // Set flag to prevent re-entry
 
-                scheduler.schedule(() -> {
-                  //  Log.d(TAG, "play next song by schedule...");
-                    next();
-                }, delaySecond-gracePeriod, TimeUnit.SECONDS);
-
-                /*
-                try {
-                    Dao<QueueItem, Long> queueDao = MusixMateApp.getInstance().getOrmLite().getQueueItemDao();
-                    QueueItem currentItem = queueDao.queryBuilder().where().eq("track_id", song.getId()).queryForFirst();
-
-                    if (currentItem != null) {
-                        QueueItem nextItem = queueDao.queryBuilder().orderBy("position", true).where().gt("position", currentItem.getPosition()).queryForFirst();
-                        MusicTag songToPlayNext;
-
-                        if (nextItem != null) {
-                            // Case 1: A next song exists in the queue.
-                            songToPlayNext = nextItem.getTrack();
-                        } else {
-                            // Case 2: This is the last song, so loop back to the first.
-                            QueueItem firstItem = queueDao.queryBuilder().orderBy("position", true).queryForFirst();
-                            songToPlayNext = (firstItem != null) ? firstItem.getTrack() : null;
-                        }
-
-                        Log.d(TAG, "to schedule to play next song : "+songToPlayNext);
-
-                        if (songToPlayNext != null) {
-                            scheduler.schedule(() -> {
-                                Log.d(TAG, "play next song by schedule...");
-                                play(songToPlayNext);
-                            }, delaySecond-gracePeriod, TimeUnit.SECONDS);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } */
+                //  Log.d(TAG, "play next song by schedule...");
+                scheduler.schedule(this::next, delaySecond-gracePeriod, TimeUnit.SECONDS);
             }
         }
     }

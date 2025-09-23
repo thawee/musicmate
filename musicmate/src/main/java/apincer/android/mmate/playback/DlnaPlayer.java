@@ -62,17 +62,6 @@ public class DlnaPlayer implements Player {
 
     }
 
-    /*
-    public void play(List<MusicTag> queue, int position) {
-        if (isBound) {
-            currentQueue.clear();
-            currentQueue.addAll(queue);
-            currentPlayingIndex = position;
-            MusicTag song = currentQueue.get(currentPlayingIndex);
-            rendererController.playSong(renderer.getIdentity().getUdn().getIdentifierString(), song);
-        }
-    } */
-
     @Override
     public void pause() {
         // Not implemented yet for DLNA, requires specific UPnP action

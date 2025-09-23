@@ -116,14 +116,6 @@ public class FileRepository {
                 // try to to get folder cover art
                 MusicTag song = TagRepository.getByAlbumCoverUniqueKey(albumCoverUniqueKey);
                 return getFolderCoverArt(song.getPath());
-                /*
-                coverFile = COVER_ARTS +albumCoverUniqueKey+".png";
-                File pathFile = new File(dir, coverFile);
-                if(!pathFile.exists()) {
-                    MusicTag song = TagRepository.getByAlbumCoverUniqueKey(albumCoverUniqueKey);
-                    FileUtils.createParentDirs(pathFile);
-                    extractCoverArt(song, pathFile);
-                } */
             }
         return cover;
     }
@@ -231,22 +223,8 @@ public class FileRepository {
                     basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), basicTag));
                     TagRepository.saveTag(basicTag);
 
-                    // Schedule full tag reading for later (if needed)
-                    /*MusicMateExecutors.lowPriority(() -> {
-                        try {
-                            if(TagReader.readExtras(context, basicTag)) {
-                               basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getContext(), basicTag));
-                               TagRepository.saveTag(basicTag);
-                            }
-                        } catch(Exception e) {
-                            Log.e(TAG, "Error reading full tags", e);
-                        }
-                    }); */
-
                     // Defer cover art extraction completely
-                    MusicMateExecutors.lowPriority(() -> {
-                        saveCoverartToCache(basicTag);
-                    });
+                    MusicMateExecutors.lowPriority(() -> saveCoverartToCache(basicTag));
                 }
             }
         } catch (Exception ex) {
@@ -296,19 +274,6 @@ public class FileRepository {
                 } else {
                     filename.append(metadata.getQualityInd());
                 }
-               /* if (metadata.isSACDISO()) {
-                    filename.append(Constants.MEDIA_PATH_SACD);
-                } else if (MusicTagUtils.isMQA(metadata)) {
-                    filename.append(Constants.MEDIA_PATH_MQA);
-                } else if (MusicTagUtils.isHiRes(metadata)) {
-                    filename.append(Constants.MEDIA_PATH_HRA);
-                } else if (MusicTagUtils.isDSD(metadata)) {
-                    filename.append(Constants.MEDIA_PATH_DSD);
-                } else if (MusicTagUtils.isLossless(metadata)) {
-                    filename.append(Constants.MEDIA_PATH_HIFI);
-                } else {
-                    filename.append(Constants.MEDIA_PATH_HIGH_QUALITY);
-                } */
                 filename.append(File.separator);
             }
 

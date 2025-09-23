@@ -15,8 +15,6 @@ import apincer.android.mmate.repository.TagRepository;
 
 public class TagsViewModel extends ViewModel {
 
-   // private final ExecutorService executorService;
-
     public static final String MULTIPLE_ALBUMS = "[Multiple Albums]";
     public static final String MULTIPLE_ARTISTS = "[Multiple Artists]";
     public static final String MULTIPLE_ALBUM_ARTISTS = "[Multiple Album Artists]";
@@ -29,15 +27,8 @@ public class TagsViewModel extends ViewModel {
     private final MutableLiveData<MusicTag> _displayTag = new MutableLiveData<>();
     public final LiveData<MusicTag> displayTag = _displayTag;
 
-    // --- Operation Status (e.g., for DR Measurement, Saving) ---
-   // @Deprecated
-   // private final MutableLiveData<OperationStatus> _drMeasurementStatus = new MutableLiveData<>(new Idle());
-   // @Deprecated
-   // public final LiveData<OperationStatus> drMeasurementStatusxx = _drMeasurementStatus;
 
     public TagsViewModel() {
-       // this.executorService = executorService;
-        // this.applicationContext = applicationContext;
     }
 
     public void processAudioTagEditEvent(List<MusicTag> items) {
@@ -121,61 +112,6 @@ public class TagsViewModel extends ViewModel {
             return commonValue != null ? commonValue : defaultValueForNullCommon;
         }
     }
-
-    // --- Actions ---
-    /*@Deprecated
-    public void measureDynamicRange(Context context, Consumer consumer) {
-        List<MusicTag> items = _editItems.getValue();
-        if (items == null || items.isEmpty()) {
-            _drMeasurementStatus.postValue(new Error("No items to process."));
-            return;
-        }
-
-        _drMeasurementStatus.postValue(new Loading("Starting DR measurement..."));
-
-        CompletableFuture.runAsync(() -> {
-            int successCount = 0;
-            for (int i = 0; i < items.size(); i++) {
-                MusicTag tag = items.get(i);
-                try {
-                    _drMeasurementStatus.postValue(new ProgressUpdate( (i * 100) / items.size(), "Analysing: " + tag.getTitle()));
-                    if (MusicAnalyser.analyse(tag)) { // Assuming analyse modifies the tag
-                        TagWriter.writeTagToFile(context, tag); // BE CAREFUL with context in ViewModel
-                        TagRepository.saveTag(tag); // Assuming this updates your persistent storage
-                        successCount++;
-                    }
-                } catch (Exception ex) {
-                    // Log error for this specific tag
-                    // You might want a more granular error reporting mechanism
-                    System.err.println("Error processing DR for " + tag.getPath() + ": " + ex.getMessage());
-                }
-            }
-            // After processing, update editItems and displayTag if tags were modified
-            // This might require re-fetching or carefully updating the existing LiveData list
-            List<MusicTag> updatedItems = new ArrayList<>(items); // Or refetch
-            _editItems.postValue(updatedItems); // This will trigger observers
-            rebuildDisplayTag(updatedItems);     // This will also trigger observers
-            consumer.accept(updatedItems);
-
-            if(successCount == items.size()) {
-                _drMeasurementStatus.postValue(new Success("DR measurement completed for all items."));
-            } else if (successCount > 0) {
-                _drMeasurementStatus.postValue(new Success("DR measurement partially completed ("+successCount+"/"+items.size()+"). Check logs for errors."));
-            } else {
-                _drMeasurementStatus.postValue(new Error("DR measurement failed for all items."));
-            }
-
-        }, executorService).exceptionally(ex -> {
-            _drMeasurementStatus.postValue(new Error("DR measurement failed: " + ex.getMessage()));
-            return null;
-        });
-    } */
-
-    /*
-    @Deprecated
-    public void resetDrMeasurementStatus() {
-        _drMeasurementStatus.postValue(new Idle());
-    } */
 
     public void refreshDisplayTag() {
         List<MusicTag> items = _editItems.getValue();
