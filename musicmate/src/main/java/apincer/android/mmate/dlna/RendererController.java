@@ -30,6 +30,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.playback.NowPlaying;
@@ -204,7 +205,7 @@ public class RendererController {
 
         Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
         if (avTransportService == null) {
-            System.err.println("Renderer does not have an AVTransport service.");
+           // System.err.println("Renderer does not have an AVTransport service.");
             return;
         }
 
@@ -213,12 +214,12 @@ public class RendererController {
         controlPoint.execute(new Play(avTransportService) {
             @Override
             public void success(ActionInvocation invocation) {
-                System.out.println("Play command successful.");
+               // System.out.println("Play command successful.");
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                System.err.println("Play command failed: " + defaultMsg);
+               // System.err.println("Play command failed: " + defaultMsg);
             }
         });
     }
@@ -258,19 +259,19 @@ public class RendererController {
                 controlPoint.execute(new Play(avTransportService) {
                     @Override
                     public void success(ActionInvocation invocation) {
-                        System.out.println("Play command successful.");
+                       // System.out.println("Play command successful.");
                     }
 
                     @Override
                     public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                        System.err.println("Play command failed: " + defaultMsg);
+                       // System.err.println("Play command failed: " + defaultMsg);
                     }
                 });
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                System.err.println("SetAVTransportURI failed: " + defaultMsg);
+              //  System.err.println("SetAVTransportURI failed: " + defaultMsg);
             }
         });
     }
@@ -377,14 +378,15 @@ public class RendererController {
      * @param rendererUdn The UDN of the renderer to poll.
      */
     public void startPolling(String rendererUdn) {
+        int maxFails = 5;
         if (isPolling.compareAndSet(false, true)) {
             scheduler = Executors.newScheduledThreadPool(2); // One thread for each task
-
+            final AtomicInteger count = new AtomicInteger();
             // Task to get the current time position, polling every 3 seconds
             final Runnable positionInfoPoller = () -> getPositionInfo(rendererUdn, new RendererController.PositionInfoCallback() {
                 @Override
                 public void onReceived(PositionInfo positionInfo) {
-
+                    count.set(0);
                     BehaviorSubject<NowPlaying> nowPlayingSubject = playbackService.getNowPlayingSubject();
                     NowPlaying nowPlaying = nowPlayingSubject.getValue();
                     if (nowPlaying != null) {
@@ -397,6 +399,11 @@ public class RendererController {
                 @Override
                 public void onFailure(String message) {
                     System.err.println("Polling position info failed: " + message);
+                    int cnt = count.incrementAndGet();
+                    if(cnt > maxFails) {
+                        stopPolling();
+                        System.err.println("Maximum polling failed: stop polling.");
+                    }
                 }
             });
 
@@ -423,7 +430,7 @@ public class RendererController {
             });
 
             transportInfoHandle = scheduler.scheduleWithFixedDelay(transportInfoPoller, 0, 30, TimeUnit.SECONDS);
-            System.out.println("Started polling renderer: " + rendererUdn);
+           // System.out.println("Started polling renderer: " + rendererUdn);
         } else {
             System.out.println("Polling is already active.");
         }
@@ -524,7 +531,7 @@ public class RendererController {
                     scheduler.shutdownNow();
                 }
             }
-            System.out.println("Stopped polling.");
+          //  System.out.println("Stopped polling.");
         }
     }
 }

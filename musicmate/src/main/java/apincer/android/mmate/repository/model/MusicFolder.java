@@ -13,6 +13,7 @@ public class MusicFolder extends MusicTag {
         this.uniqueKey = name;
         this.fileType = type;
         this.audioEncoding = type;
+        this.mmManaged = true;
     }
 
     public String getName() {
@@ -31,7 +32,7 @@ public class MusicFolder extends MusicTag {
         this.childCount = childCount;
     }
 
-    public void addChildCount(){
+    public void increaseChildCount(){
         childCount++;
     }
 

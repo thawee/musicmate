@@ -133,7 +133,7 @@ public class NettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                     serverChannel = f.channel();
                     isInitialized = true;
 
-                    Log.i(TAG, "\tHttp UPNP Server started successfully on "+bindAddress.getHostAddress()+":"+getListenPort());
+                    Log.i(TAG, "UPnP Server started on "+bindAddress.getHostAddress()+":"+getListenPort()+" successfully.");
 
                 } catch (Exception ex) {
                     Log.e(TAG, "Failed to initialize server: " + ex.getMessage(), ex);

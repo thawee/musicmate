@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:paddingTop="@dimen/dimen_1_dp"
+    android:paddingBottom="@dimen/dimen_2_dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/selector_item">
+
+    <LinearLayout
+        android:id="@+id/item_title_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:layout_marginEnd="@dimen/dimen_2_dp"
+        android:background="@drawable/shape_item_background"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/item_title_area"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="34dp"
+            android:layout_marginBottom="@dimen/dimen_4_dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/item_title"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/sfthonburi_bold"
+                android:maxLines="1"
+                android:paddingTop="1dp"
+                android:text="@{title}"
+                android:textColor="@color/grey100"
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"/>
+
+            <TextView
+                android:id="@+id/item_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:fontFamily="@font/sfthonburi_regular"
+                android:singleLine="true"
+                android:text="@{subtitle}"
+                android:textColor="@color/grey300"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/item_imageFrame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen_2_dp"
+        android:background="@drawable/shape_item_coverart_background">
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/item_image_coverart"
+            android:layout_width="68dp"
+            android:layout_height="64dp"
+            android:layout_margin="@dimen/dimen_2_dp"
+            android:scaleType="fitCenter"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"
+            tools:ignore="ContentDescription" />
+    </FrameLayout>
+</RelativeLayout>

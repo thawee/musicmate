@@ -21,8 +21,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.content.HttpContent;
 import org.eclipse.jetty.http.pathmap.PathSpec;
 import org.eclipse.jetty.server.AliasCheck;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
@@ -31,14 +29,16 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.PathMappingsHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.Callback;
-import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.server.ServerWebSocketContainer;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.InitializationException;
@@ -46,40 +46,68 @@ import org.jupnp.transport.spi.InitializationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Supplier;
+import java.util.concurrent.CopyOnWriteArraySet;
 
-import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.dlna.content.WebSocketContent;
 import apincer.android.mmate.dlna.transport.StreamServerConfigurationImpl;
 import apincer.android.mmate.dlna.transport.StreamServerImpl;
 import apincer.android.mmate.playback.NowPlaying;
 import apincer.android.mmate.playback.PlaybackService;
 import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.utils.ApplicationUtils;
 import apincer.android.mmate.utils.MimeTypeUtils;
 
 public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
     private static final String TAG = "JettyWebServer";
+
+    private final Context context;
     private Server server;
-    private final MusicWebSocketManager webSocketManager;
+    private final WebSocketContent wsContent = new WebSocketContent();
+    private final WebSocketHandler wsHandler = new WebSocketHandler();
+    private PlaybackService playbackService;
+    private boolean isPlaybackServiceBound = false;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @SuppressLint("CheckResult")
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // Get the binder from the service and set the mediaServerService instance
+            PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
+            playbackService = binder.getService();
+            isPlaybackServiceBound = true;
+            if(playbackService != null) {
+                //observe song and player, and playing progress
+                playbackService.getNowPlayingSubject().subscribe(wsHandler::broadcastNowPlaying);
+            }
+            wsContent.setPlaybackService(playbackService);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            playbackService = null;
+            isPlaybackServiceBound = false;
+            wsContent.setPlaybackService(null);
+            // Log.w(TAG, "PlaybackService disconnected unexpectedly.");
+        }
+    };
 
     public JettyWebServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
-        this.webSocketManager = new MusicWebSocketManager(context);
+        this.context = context;
     }
 
     @Override
     public void initServer(InetAddress bindAddress) throws InitializationException {
+        // Bind to the MediaServerService as soon as this service is created
+        Intent intent = new Intent(getContext(), PlaybackService.class);
+        getContext().bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+
         Thread serverThread = new Thread(() -> {
             try {
-                Log.i(TAG, "Starting Web Server (Jetty) on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
+                //Log.i(TAG, "Starting Web Server (Jetty) on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
 
                 prepareWebUIFiles();
 
@@ -97,51 +125,60 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
                 connector.setHost("0.0.0.0");
                 connector.setPort(WEB_SERVER_PORT);
                 connector.setIdleTimeout(60000);
-                server.setConnectors(new Connector[]{connector});
+                server.addConnector(connector);
 
                 // 1. WebSocket Handler on /ws context
-                ContextHandler wsContext = new ContextHandler("/ws");
-                WebSocketUpgradeHandler wsUpgradeHandler = WebSocketUpgradeHandler.from(server, wsContext, container -> {
-                    container.setMaxTextMessageSize(128 * 1024);
-                    container.addMapping("/", (rq, rs, cb) -> webSocketManager.createEndpoint());
+               // ContextHandler wsContext = new ContextHandler("/ws");
+                WebSocketUpgradeHandler wsUpgradeHandler = WebSocketUpgradeHandler.from(server, container -> {
+                    // Configure WebSocket policy
+                    container.setMaxTextMessageSize(64 * 1024); // 64KB max message size
+                    container.setIdleTimeout(Duration.ofMinutes(10)); // 10 minutes idle timeout
+                    container.setMaxBinaryMessageSize(64 * 1024);
+
+                    // Add WebSocket endpoint mapping
+                    PathSpec pathSpec = PathSpec.from("^.*$");
+                    container.addMapping(pathSpec, (req, resp, callback) -> {
+                    // Create and return WebSocket endpoint instance
+                        return wsHandler;
+                    });
                 });
+
+                // Create context handler for WebSocket
+                ContextHandler wsContext = new ContextHandler();
+                wsContext.setContextPath(WEBSOCKET_PATH);
                 wsContext.setHandler(wsUpgradeHandler);
-                //ServerWebSocketContainer.ensure(server, wsContext);
+
+                //Required:
+                AliasCheck aliasCheck = (pathInContext, resource) -> true;
+                wsContext.setAliasChecks(Collections.singletonList(aliasCheck)); // bypass alias check
+                wsContext.setAllowNullPathInContext(true);
+
+                // Optional: Add context attributes
+                wsContext.setAttribute("websocket.server.version", "12.1.0");
+                wsContext.setAttribute("websocket.max.connections", 1000);
 
                 // 2. Album Art Handler on /coverart and static files (HTML, CSS, JS) on root context
-                AliasCheck aliasCheck = (pathInContext, resource) -> true;
                 ResourceHandler webHandler = new WebContentHandler();
                 webHandler.setBaseResource(ResourceFactory.of(webHandler).newResource("/"));
                 webHandler.setDirAllowed(false);
                 webHandler.setCacheControl("public, max-age=86400");
                 webHandler.setServer(server);
-                ContextHandler webContext = new ContextHandler("/");
+                ContextHandler webContext = new ContextHandler(CONTEXT_PATH);
                 webContext.setAliasChecks(Collections.singletonList(aliasCheck)); // bypass alias check
                 webContext.setHandler(webHandler);
 
-                /*
-                ResourceFactory resourceFactory = ResourceFactory.of(server);
-                Resource rootResourceDir = resourceFactory.newResource(Paths.get("/var/www/html"));
-                ResourceHandler rootResourceHandler = new ResourceHandler();
-                rootResourceHandler.setBaseResource(rootResourceDir);
-                rootResourceHandler.setDirAllowed(false);
-                rootResourceHandler.setWelcomeFiles("index.html"); */
-
                 // 4. Combine all handlers using ContextHandlerCollection
-              //  ContextHandlerCollection handlers = new ContextHandlerCollection(wsContext, webContext);
-               // server.setHandler(handlers);
-
-                PathMappingsHandler pathMappingsHandler = new PathMappingsHandler(true);
-               // pathMappingsHandler.addMapping(PathSpec.from("/ws/*"), wsUpgradeHandler);
-                pathMappingsHandler.addMapping(PathSpec.from("/"), webHandler);
-                server.setHandler(pathMappingsHandler);
+                ContextHandlerCollection handlers = new ContextHandlerCollection(wsContext, webContext);
+                server.setHandler(handlers);
 
                 server.start();
-                Log.i(TAG, "Web Server (Jetty) started successfully.");
-                server.join();
 
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to start or run Web server (Jetty)", e);
+                Log.i(TAG, "WebUI server started on " +
+                        bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT+" successfully.");
+
+                server.join(); // last step
+            } catch (Exception ex) {
+                Log.e(TAG, "Http WebUI server initialization failed: " + ex.getMessage(), ex);
             }
         });
         serverThread.setName("jetty-web-runner");
@@ -159,17 +196,19 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
 
     @Override
     public void stopServer() {
-        Log.i(TAG, "Stopping Web Server (Jetty)");
+       // Log.i(TAG, "Stopping WebUI Server (Jetty)");
         try {
-            if (webSocketManager != null) {
-                webSocketManager.stop();
-            }
             if (server != null && server.isRunning()) {
                 server.stop();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error stopping Web server (Jetty)", e);
         }
+        if(isPlaybackServiceBound) {
+            context.unbindService(serviceConnection);
+        }
+
+        Log.i(TAG, "Http WebUI server stopped successfully");
     }
 
     @Override
@@ -178,7 +217,6 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
     }
 
     private class WebContentHandler extends ResourceHandler {
-        //private final LruCache<String, > albumArtCache = new LruCache<>(100);
         final File defaultCoverartDir;
 
         private WebContentHandler() {
@@ -194,9 +232,16 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
             }
 
             String requestUri = request.getHttpURI().getPath();
+
             if (isEmpty(requestUri) || requestUri.equals("/")) {
                 requestUri = "/index.html";
             }
+
+            if (requestUri.startsWith(WEBSOCKET_PATH)) {
+                Log.w(TAG, "WebSocket Content: " + request.getHttpURI().getPath());
+                return super.handle(request, response, callback);
+            }
+
             File filePath = null;
             if (requestUri.startsWith("/coverart/")) {
                 // Log.d(TAG, "Processing album art request: " + uri);
@@ -206,12 +251,12 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
             }
 
             if (filePath == null) {
-                Log.w(TAG, "Content not found for URI: " + request.getHttpURI().getPath());
+                //Log.w(TAG, "Content not found for URI: " + request.getHttpURI().getPath());
                 return super.handle(request, response, callback);
             }
 
             if (!filePath.exists() || !filePath.canRead()) {
-                Log.e(TAG, "Audio file not accessible: " + filePath);
+                Log.e(TAG, "file not accessible: " + filePath);
                 response.setStatus(HttpStatus.NOT_FOUND_404);
                 callback.succeeded();
                 return true;
@@ -238,11 +283,7 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
 
         private File handleAlbumArt(Request request, String requestUri) {
             String albumUniqueKey = requestUri.substring("/coverart/".length(), requestUri.indexOf(".png"));
-           // MusicTag tag = MusixMateApp.getInstance().getOrmLite().findByAlbumUniqueKey(albumUniqueKey);
-           // if (tag != null) {
-                return FileRepository.getCoverArt(albumUniqueKey);
-           // }
-           // return null;
+            return FileRepository.getCoverArt(albumUniqueKey);
         }
 
         private void prepareResponseHeaders(Response response, File filePath) {
@@ -267,175 +308,71 @@ public class JettyWebServerImpl extends StreamServerImpl.StreamServer {
         }
     }
 
-    private class WSContentHandler extends Handler.Abstract {
-        ServerWebSocketContainer container;
-        public WSContentHandler() {
-           // this.container = container;
+    @WebSocket
+    public class WebSocketHandler {
+        // Store all active sessions
+        private static final CopyOnWriteArraySet<Session> sessions = new CopyOnWriteArraySet<>();
+        private final Gson gson = new Gson();
+
+        @OnWebSocketOpen
+        public void onConnect(Session session) {
+            Log.d(TAG, "New WebSocket connection: "+session.getRemoteSocketAddress());
+            sessions.add(session);
         }
 
-        @Override
-        public boolean handle(Request request, Response response, Callback callback) throws Exception {
-            // Retrieve the ServerWebSocketContainer.
-            ServerWebSocketContainer container = ServerWebSocketContainer.get(request.getContext());
+        @OnWebSocketMessage
+        public void onMessage(Session session, String message) {
+            Log.d(TAG, "Received message from "+session.getRemoteSocketAddress()+", message="+ message);
+            Map<String, Object> messageMap = gson.fromJson(message, Map.class);
+            String command = messageMap.getOrDefault("command", "").toString();
 
-            // Verify special conditions for which a request should be upgraded to WebSocket.
-           // String pathInContext = Request.getPathInContext(request);
-           // if (pathInContext.startsWith("/")) {
-                try {
-                    // This is a WebSocket upgrade request, perform a direct upgrade.
-                    boolean upgraded = container.upgrade((rq, rs, cb) -> new MusicMateEndpoint(webSocketManager), request, response, callback);
-                    if (upgraded)
-                        return true;
-                    // This was supposed to be a WebSocket upgrade request, but something went wrong.
-                    Response.writeError(request, response, callback, HttpStatus.UPGRADE_REQUIRED_426);
-                    return true;
-                }
-                catch (Exception x)
-                {
-                    Response.writeError(request, response, callback, HttpStatus.UPGRADE_REQUIRED_426, "failed to upgrade", x);
-                    return true;
-                }
-           // }else {
-                // Handle a normal HTTP request.
-           //     response.setStatus(HttpStatus.OK_200);
-           //     callback.succeeded();
-           //     return true;
-           // }
-        }
-    }
-}
-
-// =======================================================================================
-// WebSocket Manager (Singleton, manages all endpoints)
-// =======================================================================================
-class MusicWebSocketManager {
-    private static final String TAG = "MusicWebSocketManager";
-    private final Context context;
-    private final Gson gson = new Gson();
-    private final List<MusicMateEndpoint> endpoints = new CopyOnWriteArrayList<>();
-    private PlaybackService playbackService;
-    private boolean isPlaybackServiceBound = false;
-    private final WebSocketContent wsContent = new WebSocketContent();
-
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @SuppressLint("CheckResult")
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
-            playbackService = binder.getService();
-            isPlaybackServiceBound = true;
-            wsContent.setPlaybackService(playbackService);
-            if (playbackService != null && playbackService.getNowPlayingSubject() != null) {
-                playbackService.getNowPlayingSubject().subscribe(nowPlaying -> broadcastNowPlaying(nowPlaying));
-                playbackService.getPlayingQueueSubject().subscribe(nowPlaying -> broadcastPlayingQueue(nowPlaying));
-            }
-            Log.i(TAG, "PlaybackService bound successfully.");
-        }
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            isPlaybackServiceBound = false;
-            playbackService = null;
-            Log.w(TAG, "PlaybackService disconnected unexpectedly.");
-        }
-    };
-
-    private void broadcastPlayingQueue(List<MusicTag> playingQueue) {
-        // Sends the current queue state to ALL connected clients
-        Map<String, Object> response = wsContent.getPlayingQueue(playingQueue);
-        if(response != null) {
-            String jsonResponse = gson.toJson(response);
-            endpoints.forEach(endpoint -> endpoint.sendMessage(jsonResponse));
-        }
-    }
-
-    public MusicWebSocketManager(Context context) {
-        this.context = context;
-        Intent intent = new Intent(context, PlaybackService.class);
-        context.bindService(intent, serviceConnection, BIND_AUTO_CREATE);
-    }
-
-    public Object createEndpoint() {
-        return new MusicMateEndpoint(this);
-    }
-
-    public void register(MusicMateEndpoint endpoint) {
-        endpoints.add(endpoint);
-        Log.i(TAG, "Client connected: " + endpoint.getRemoteAddress());
-    }
-
-    public void unregister(MusicMateEndpoint endpoint) {
-        endpoints.remove(endpoint);
-        Log.i(TAG, "Client disconnected: " + endpoint.getRemoteAddress());
-    }
-
-    public void stop() {
-        if (isPlaybackServiceBound) {
-            context.unbindService(serviceConnection);
-            isPlaybackServiceBound = false;
-        }
-    }
-
-    public void processMessage(MusicMateEndpoint endpoint, String messageText) {
-        Log.d(TAG, "Received message: " + messageText);
-        try {
-            Map<String, Object> message = gson.fromJson(messageText, Map.class);
-            String command = message.getOrDefault("command", "").toString();
-
-            // ... (All your case statements would go here) ...
-            Map<String, Object> response = wsContent.handleCommand(command, message);
-
+            Map<String, Object> response = wsContent.handleCommand(command, messageMap);
             if(response != null) {
-                endpoint.sendMessage(gson.toJson(response));
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error processing WebSocket message", e);
-        }
-    }
-
-    private void broadcastNowPlaying(NowPlaying nowPlaying) {
-        if (nowPlaying.getSong() != null) {
-            Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);// getMap(nowPlaying.getSong());
-            if(response != null) {
-                String jsonResponse = gson.toJson(response);
-                endpoints.forEach(endpoint -> endpoint.sendMessage(jsonResponse));
+                session.sendText(gson.toJson(response), null);
+                Log.d(TAG, "Response message: " + gson.toJson(response));
             }
         }
-    }
 
-}
+        @OnWebSocketClose
+        public void onClose(Session session, int statusCode, String reason) {
+            Log.d(TAG, "WebSocket connection closed: "+session.getRemoteSocketAddress());
 
-// =======================================================================================
-// WebSocket Endpoint (A new instance is created for each connection)
-// =======================================================================================
-class MusicMateEndpoint {
-    private final MusicWebSocketManager manager;
-    private Session session;
-
-    public MusicMateEndpoint(MusicWebSocketManager manager) {
-        this.manager = manager;
-    }
-
-    public void onOpen(Session session) {
-        this.session = session;
-        this.manager.register(this);
-    }
-
-    public void onClose(int statusCode, String reason) {
-        this.manager.unregister(this);
-    }
-
-    public void onMessage(String message) {
-        this.manager.processMessage(this, message);
-    }
-
-    public void sendMessage(String jsonMessage) {
-        if (session != null && session.isOpen()) {
-            session.sendText(jsonMessage, org.eclipse.jetty.websocket.api.Callback.NOOP);
+            sessions.remove(session);
         }
-    }
 
-    public String getRemoteAddress() {
-        return (session != null) ? session.getRemoteSocketAddress().toString(): "Unknown"; // .getRemoteAddress().toString() : "Unknown";
+        @OnWebSocketError
+        public void onError(Session session, Throwable error) {
+        }
+
+        /**
+         * Broadcast message to all connected clients
+         * @param message Message to broadcast
+         */
+        private void broadcast(String message) {
+           // logger.debug("Broadcasting message to {} sessions: {}", sessions.size(), message);
+
+            sessions.parallelStream()
+                    .filter(Session::isOpen)
+                    .forEach(session -> {
+                        try {
+                            session.sendText(message, null);
+                        } catch (Exception e) {
+                            // Remove dead session
+                            sessions.remove(session);
+                        }
+                    });
+        }
+
+        public void broadcastNowPlaying(NowPlaying nowPlaying) {
+            if (nowPlaying.getSong() != null) {
+                Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);// getMap(nowPlaying.getSong());
+                if(response != null) {
+                    String jsonResponse = gson.toJson(response);
+                    broadcast(jsonResponse);
+                   // sessions.forEach(endpoint -> endpoint.sendText(jsonResponse, null));
+                }
+            }
+        }
     }
 }
 

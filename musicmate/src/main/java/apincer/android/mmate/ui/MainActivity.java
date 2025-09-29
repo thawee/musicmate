@@ -584,7 +584,9 @@ public class MainActivity extends AppCompatActivity {
             MusicTag tag = adapter.getMusicTag(position);
             if(tag == null) return;
 
-            if("PLS".equals(tag.getAudioEncoding())) {
+            if(SearchCriteria.TYPE.ARTIST.name().equals(tag.getFileType())) {
+                doStartRefresh(SearchCriteria.TYPE.ARTIST, tag.getTitle());
+            }else if("PLS".equals(tag.getAudioEncoding())) {
                 doStartRefresh(SearchCriteria.TYPE.PLAYLIST, tag.getUniqueKey());
             }else {
                 doShowEditActivity(Collections.singletonList(tag));
@@ -592,37 +594,37 @@ public class MainActivity extends AppCompatActivity {
         };
         adapter.setClickListener(onListItemClick);
 
-        // Setup selection tracker
-        mTracker = new SelectionTracker.Builder<>(
-                "selection-id",
-                mRecyclerView,
-                new MusicTagAdapter.KeyProvider(),
-                new MusicTagAdapter.DetailsLookup(mRecyclerView),
-                StorageStrategy.createLongStorage())
-                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
-                .build();
-        adapter.injectTracker(mTracker);
+            // Setup selection tracker
+            mTracker = new SelectionTracker.Builder<>(
+                    "selection-id",
+                    mRecyclerView,
+                    new MusicTagAdapter.KeyProvider(),
+                    new MusicTagAdapter.DetailsLookup(mRecyclerView),
+                    StorageStrategy.createLongStorage())
+                    .withSelectionPredicate(SelectionPredicates.createSelectAnything())
+                    .build();
+            adapter.injectTracker(mTracker);
 
-        // Setup selection observer
-        SelectionTracker.SelectionObserver<Long> observer = new SelectionTracker.SelectionObserver<>() {
-            @Override
-            public void onSelectionChanged() {
-                int count = mTracker.getSelection().size();
-                selections.clear();
-                if (count > 0) {
-                    mTracker.getSelection().forEach(item ->
-                            selections.add(adapter.getMusicTag(item.intValue())));
-                    if (actionMode == null) {
-                        actionMode = startSupportActionMode(actionModeCallback);
-                    }
+            // Setup selection observer
+            SelectionTracker.SelectionObserver<Long> observer = new SelectionTracker.SelectionObserver<>() {
+                @Override
+                public void onSelectionChanged() {
+                        int count = mTracker.getSelection().size();
+                        selections.clear();
+                        if (count > 0) {
+                            mTracker.getSelection().forEach(item ->
+                                    selections.add(adapter.getMusicTag(item.intValue())));
+                            if (actionMode == null) {
+                                actionMode = startSupportActionMode(actionModeCallback);
+                            }
+                        }
+                        if (actionMode != null) {
+                            actionMode.setTitle(StringUtils.formatSongSize(count));
+                            actionMode.invalidate();
+                        }
                 }
-                if (actionMode != null) {
-                    actionMode.setTitle(StringUtils.formatSongSize(count));
-                    actionMode.invalidate();
-                }
-            }
-        };
-        mTracker.addObserver(observer);
+            };
+            mTracker.addObserver(observer);
 
         // Setup fast scroller
         new FastScrollerBuilder(mRecyclerView)
@@ -695,29 +697,40 @@ public class MainActivity extends AppCompatActivity {
         titleLabel.setText(label);
 
         // Build statistics text
-        int count = adapter.getTotalSongs();
-        long totalSize = adapter.getTotalSize();
-        String duration = StringUtils.formatDuration(adapter.getTotalDuration(), true);
-
         SimplifySpanBuild spannable = new SimplifySpanBuild("");
-        if (count > 0) {
-            // Ensure this file is saved with UTF-8 encoding.
-            String totalSongCountIcon = "🎵 ";
-            //String totalDurationIcon = "  ⏱ ";
-            String totalDurationIcon = "  ⏳ ";
-            String totalLibrarySizeIcon = "  📁 ";
-            spannable.append(new SpecialTextUnit(totalSongCountIcon))
-                    .append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
-                    .append(new SpecialTextUnit(" songs ").setTextSize(12).useTextBold())
-                    .append(totalDurationIcon)
-                    .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold())
-                    .append(totalLibrarySizeIcon)
-                    .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold());
+        if(SearchCriteria.TYPE.ARTIST.equals(adapter.getCriteria().getType())) {
+            if(adapter.getCriteria().getKeyword() == null) {
+                spannable.append(StringUtils.formatNumber(adapter.getTotalSongs()))
+                        .append(new SpecialTextUnit(" artists").setTextSize(12).useTextBold());
+            }else {
+                spannable.append(adapter.getCriteria().getKeyword())
+                        .append(new SpecialTextUnit(" [").setTextSize(12).useTextBold())
+                        .append(StringUtils.formatNumber(adapter.getTotalSongs()))
+                        .append(new SpecialTextUnit(" songs]").setTextSize(12).useTextBold());
+            }
+        }else {
+            int count = adapter.getTotalSongs();
+            long totalSize = adapter.getTotalSize();
+            String duration = StringUtils.formatDuration(adapter.getTotalDuration(), true);
 
-        } else {
-            spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
+            if (count > 0) {
+                // Ensure this file is saved with UTF-8 encoding.
+                String totalSongCountIcon = "🎵 ";
+                //String totalDurationIcon = "  ⏱ ";
+                String totalDurationIcon = "  ⏳ ";
+                String totalLibrarySizeIcon = "  📁 ";
+                spannable.append(new SpecialTextUnit(totalSongCountIcon))
+                        .append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
+                        .append(new SpecialTextUnit(" songs ").setTextSize(12).useTextBold())
+                        .append(totalDurationIcon)
+                        .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold())
+                        .append(totalLibrarySizeIcon)
+                        .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold());
+
+            } else {
+                spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
+            }
         }
-
         headerSubtitle.setText(spannable.build());
     }
 
@@ -819,7 +832,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if (item.getItemId() == R.id.menu_tag_artist) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.ARTIST, TagRepository.getArtistList().get(0));
+            //doStartRefresh(SearchCriteria.TYPE.ARTIST, TagRepository.getArtistList().get(0));
+            doStartRefresh(SearchCriteria.TYPE.ARTIST, null);
             return true;
         } else if (item.getItemId() == R.id.menu_settings) {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
@@ -1622,6 +1636,15 @@ public class MainActivity extends AppCompatActivity {
                // refreshLayout.autoRefresh();
                 viewModel.loadMusicItems(adapter.getCriteria());
                 return;
+            }
+
+            // if artist
+            if (adapter != null && SearchCriteria.TYPE.ARTIST.equals(adapter.getCriteria().getType())) {
+                if(adapter.getCriteria().getKeyword() != null) {
+                    adapter.getCriteria().setKeyword(null);
+                    viewModel.loadMusicItems(adapter.getCriteria());
+                    return;
+                }
             }
 
             // If not on first item in library

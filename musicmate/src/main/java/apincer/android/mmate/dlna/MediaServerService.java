@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -80,9 +81,13 @@ public class MediaServerService extends Service {
     public static final DeviceType MEDIA_RENDERER_DEVICE_TYPE = new UDADeviceType("MediaRenderer", 1);
 
     // --- Add these constants for Broadcasts ---
-    public static final String ACTION_STATUS_CHANGED = "apincer.android.mmate.dlna.STATUS_CHANGED";
-    public static final String EXTRA_STATUS = "extra_status";
-    public static final String EXTRA_ADDRESS = "extra_address";
+   // public static final String ACTION_STATUS_CHANGED = "apincer.android.mmate.dlna.STATUS_CHANGED";
+   // public static final String EXTRA_STATUS = "extra_status";
+   // public static final String EXTRA_ADDRESS = "extra_address";
+
+    // You will need locks to keep Wi-Fi active
+    private WifiManager.WifiLock wifiLock;
+    private WifiManager.MulticastLock multicastLock;
 
     private final List<RemoteDevice> renderers = new CopyOnWriteArrayList<>();
 
@@ -189,14 +194,6 @@ public class MediaServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        // Acquire wake lock to ensure reliable streaming
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "MusixMate:MediaServerWakeLock");
-        wakeLock.acquire(10*60*1000L /*10 minutes*/);
-
-       // broadcastStatus(ServerStatus.STARTING, null);
     }
 
     /**
@@ -204,7 +201,6 @@ public class MediaServerService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-       // showNotification();
         if(intent!=null && intent.getStringExtra("START_SERVER") != null) {
             startServers();
         }
@@ -215,18 +211,13 @@ public class MediaServerService extends Service {
         if(!isInitialized()) {
             long start = System.currentTimeMillis();
             showNotification();
-
             Thread initializationThread = new Thread(() -> {
                 initialize(); // Your existing initialize method
-                // After initialize() completes:
                 if (isInitialized()) {
                     serverStatus.onNext(ServerStatus.RUNNING);
-                   // updateNotificationText(getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
-                    //broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
                 } else {
                     serverStatus.onNext(ServerStatus.ERROR);
                     cancelNotification();
-                    //broadcastStatus(ServerStatus.ERROR, null); // If initialize failed
                 }
             });
             initializationThread.setName("MediaServer-Init");
@@ -236,10 +227,6 @@ public class MediaServerService extends Service {
             setupNetworkMonitoring();
 
             Log.d(TAG, "MediaServer startup initiated: " + (System.currentTimeMillis() - start) + "ms");
-        //}else {
-            // If already initialized and running, just broadcast current status
-           // serverStatus.onNext(ServerStatus.RUNNING);
-            //broadcastStatus(ServerStatus.RUNNING, getIpAddress() + ":" + MediaServerConfiguration.WEB_SERVER_PORT);
         }
     }
 
@@ -296,6 +283,26 @@ public class MediaServerService extends Service {
     private synchronized void initialize() {
         if(!initialized) {
             shutdown(); // clean up before start
+
+            // Acquire wake lock to ensure reliable streaming
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                    "MusixMate:MediaServerWakeLock");
+            wakeLock.acquire(10*60*1000L /*10 minutes*/);
+
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (wm != null) {
+                // Keeps the Wi-Fi radio from turning off
+                wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MyWifiLockTag");
+                wifiLock.setReferenceCounted(false);
+                wifiLock.acquire();
+
+                // Allows the app to receive multicast packets
+                multicastLock = wm.createMulticastLock("MyMulticastLockTag");
+                multicastLock.setReferenceCounted(false);
+                multicastLock.acquire();
+                Log.d(TAG, "Wi-Fi and Multicast locks acquired.");
+            }
 
             try {
                 //Log.d(TAG, "Initializing DLNA media server");
@@ -383,65 +390,9 @@ public class MediaServerService extends Service {
     public void onDestroy() {
         Thread shutdownThread = new Thread(this::shutdown);
         shutdownThread.start();
-
-        if (wakeLock != null && wakeLock.isHeld()) {
-            wakeLock.release();
-        }
-
         cancelNotification();
-       // broadcastStatus(ServerStatus.STOPPED, null);
+
         super.onDestroy();
-    }
-
-    // --- Add this method to broadcast status ---
-    /*
-    @Deprecated
-    public void broadcastStatus(ServerStatus status, @Nullable String address) {
-        Intent intent = new Intent(ACTION_STATUS_CHANGED);
-        intent.putExtra(EXTRA_STATUS, status.name()); // Send enum name as String
-        if (address != null) {
-            intent.putExtra(EXTRA_ADDRESS, address);
-        }
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        //Log.d(TAG, "Broadcasted status: " + status + (address != null ? " Address: " + address : ""));
-
-        // Also update notification if running or error
-        if (status == ServerStatus.RUNNING && address != null) {
-            updateNotificationText("DMS running on " + address);
-        } else if (status == ServerStatus.ERROR) {
-            updateNotificationText("Error starting DMS server");
-        } else if (status == ServerStatus.STOPPED) {
-            // Notification is removed by stopForeground(true) in onDestroy
-            // Or update to "Stopped" if you keep a persistent notification for the app
-            updateNotificationText("DMS stopped!");
-        }
-    } */
-
-    private void updateNotificationTextx(String text) {
-        // Your existing showNotification logic creates the initial notification.
-        // This method updates its content text.
-        // You'll need to make your NotificationCompat.Builder accessible or rebuild part of it.
-
-        Intent notificationIntent = new Intent(this, MainActivity.class); // Assuming MainActivity
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-
-        String deviceModel = ApplicationUtils.getDeviceModel();
-
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, MusixMateApp.NOTIFICATION_CHANNEL_ID)
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_notification_default)
-                .setSilent(true)
-                .setContentTitle(getApplicationContext().getString(R.string.media_server_name))
-                .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
-                .setSubText(deviceModel)
-                .setContentText(text); // Key change here
-
-        mBuilder.setContentIntent(contentIntent);
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.notify(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
-        }
     }
 
     private void shutdown() {
@@ -460,6 +411,20 @@ public class MediaServerService extends Service {
                 upnpService = null;
             }
             serverStatus.onNext(ServerStatus.STOPPED);
+
+            if (wakeLock != null && wakeLock.isHeld()) {
+                wakeLock.release();
+            }
+
+            if (multicastLock != null && multicastLock.isHeld()) {
+                multicastLock.release();
+                Log.d(TAG, "Multicast lock released.");
+            }
+            if (wifiLock != null && wifiLock.isHeld()) {
+                wifiLock.release();
+                Log.d(TAG, "Wi-Fi lock released.");
+            }
+
             cancelNotification();
         } catch (Exception e) {
             Log.e(TAG, "Error shutting down UPnP service", e);

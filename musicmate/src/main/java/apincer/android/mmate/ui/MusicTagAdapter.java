@@ -37,6 +37,7 @@ import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.PlaylistRepository;
 import apincer.android.mmate.repository.TagRepository;
 import apincer.android.mmate.repository.database.QueueItem;
+import apincer.android.mmate.repository.model.MusicFolder;
 import apincer.android.mmate.repository.model.SearchCriteria;
 import apincer.android.mmate.provider.CoverartFetcher;
 import apincer.android.mmate.ui.view.DurationView;
@@ -410,15 +411,32 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         setHasStableIds(true);
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        if(localDataSet.get(position) instanceof MusicFolder) {
+            return 1;
+        }else {
+            return 0;
+        }
+    }
+
     // Create new views (invoked by the layout manager)
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Create a new view, which defines the UI of the list item
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.view_list_item, parent, false);
+        if(viewType == 0) {
+            // Create a new view, which defines the UI of the list item
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.view_list_item, parent, false);
 
-        return new ViewHolder(view);
+            return new ViewHolder(view);
+        }else {
+            // Create a new view, which defines the UI of the list item
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.view_list_folder, parent, false);
+
+            return new ViewHolder(view);
+        }
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -428,10 +446,36 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         // contents of the view with that element
         MusicTag item = localDataSet.get(position);
         holder.id = position;
-        onBindViewHolder(holder, position, item); // Pass item, not position
+        int itemViewType = getItemViewType(position);
+        if(itemViewType == 0) {
+            onBindViewMusicTag(holder, position, item); // Pass item, not position
+        } else {
+            onBindViewMusicFolder(holder, position, (MusicFolder) item); // Pass item, not position
+        }
     }
 
-    public void onBindViewHolder(ViewHolder holder, @SuppressLint("RecyclerView") final int position, MusicTag tag) {
+    private void onBindViewMusicFolder(ViewHolder holder, int position, MusicFolder item) {
+        // When user scrolls, this line binds the correct selection status
+       // holder.rootView.setActivated(mTracker.isSelected((long) position));
+        holder.rootView.setEnabled(true);
+        holder.rootView.setOnClickListener(view -> onListItemClick.onClick(holder.rootView, holder.getLayoutPosition()));
+        ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
+
+        ImageRequest request = CoverartFetcher.builder(holder.mContext, item)
+                .data(item)
+                .size(240, 240)
+                .target(new ImageViewTarget(holder.mCoverArtView))
+                .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
+                .build();
+        imageLoader.enqueue(request);
+
+        holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, item));
+        if(SearchCriteria.TYPE.ARTIST.name().equals(item.getFileType())) {
+            holder.mSubtitle.setText(StringUtils.formatNumber(item.getChildCount()) +" songs");
+        }
+    }
+
+    public void onBindViewMusicTag(ViewHolder holder, @SuppressLint("RecyclerView") final int position, MusicTag tag) {
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
         if(tag == null || tag.getAudioDuration() == 0) {

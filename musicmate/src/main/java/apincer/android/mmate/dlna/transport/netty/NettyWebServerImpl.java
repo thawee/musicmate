@@ -112,8 +112,39 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
     private Thread serverThread;
     private volatile boolean isRunning = false;
 
+    private final WebSocketContent wsContent = new WebSocketContent();
+    private final WebSocketFrameHandler wsHandler = new WebSocketFrameHandler();
+    private PlaybackService playbackService;
+    private boolean isPlaybackServiceBound = false;
+
     //RFC 1123 format required by HTTP/DLNA // EEE, dd MMM yyyy HH:mm:ss z
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z");
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @SuppressLint("CheckResult")
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // Get the binder from the service and set the mediaServerService instance
+            PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
+            playbackService = binder.getService();
+            isPlaybackServiceBound = true;
+            if(playbackService != null) {
+                //observe song and player, and playing progress
+                playbackService.getNowPlayingSubject().subscribe(wsHandler::broadcastNowPlaying);
+                //observe queue
+                //  playbackService.getPlayingQueueSubject().subscribe(playingQueue -> broadcastPlayingQueue(playingQueue));
+            }
+            wsContent.setPlaybackService(playbackService);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            playbackService = null;
+            isPlaybackServiceBound = false;
+            wsContent.setPlaybackService(null);
+            // Log.w(TAG, "PlaybackService disconnected unexpectedly.");
+        }
+    };
 
     public NettyWebServerImpl(Context context, Router router, StreamServerConfigurationImpl configuration) {
         super(context, router, configuration);
@@ -151,6 +182,9 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
         }
 
        // Log.d(TAG, "Starting netty content server: " + bindAddress.getHostAddress() + ":" + serverPort);
+        // Bind to the MediaServerService as soon as this service is created
+        Intent intent = new Intent(getContext(), PlaybackService.class);
+        getContext().bindService(intent, serviceConnection, BIND_AUTO_CREATE);
 
         serverThread = new Thread(() -> {
             // Web UI handler for music management
@@ -183,12 +217,12 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
                 ChannelFuture f = b.bind(bindAddress.getHostAddress(), serverPort).sync();
                 serverChannel = f.channel();
                 isRunning = true;
-                Log.i(TAG, "\tHttp WebUI server started successfully on " +
-                        bindAddress.getHostAddress() + ":" + serverPort);
+                Log.i(TAG, "WebUI Server started on " +
+                        bindAddress.getHostAddress() + ":" + serverPort+" successfully.");
 
             } catch (Exception ex) {
                 isRunning = false;
-                Log.e(TAG, "Http WebUI server initialization failed: " + ex.getMessage(), ex);
+                Log.e(TAG, "WebUI Server initialization failed: " + ex.getMessage(), ex);
                 // Clean up resources if startup fails
                 try {
                     if (serverChannel != null) {
@@ -244,6 +278,10 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
             }
         }
 
+        if(isPlaybackServiceBound) {
+            context.unbindService(serviceConnection);
+        }
+
         Log.i(TAG, "Http WebUI server stopped successfully");
     }
 
@@ -277,10 +315,10 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
 
             // 5. Handles the WebSocket handshake and protocol details for any requests to "/ws".
             // It will pass all other requests down the pipeline. THIS MUST COME FIRST.
-            pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true));
+            pipeline.addLast(new WebSocketServerProtocolHandler(WEBSOCKET_PATH, null, true));
 
             // 6. Your custom logic for handling WebSocket messages (frames).
-            pipeline.addLast(new WebSocketFrameHandler());
+            pipeline.addLast(wsHandler);
 
             // 7. Your custom logic for all other HTTP requests (HTML, CSS, images).
             pipeline.addLast(new ContentServerHandler());
@@ -557,40 +595,9 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
     }
 
     private class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
-        private PlaybackService playbackService;
-
-        private final WebSocketContent wsContent = new WebSocketContent();
-
-        private final ServiceConnection serviceConnection = new ServiceConnection() {
-            @SuppressLint("CheckResult")
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                // Get the binder from the service and set the mediaServerService instance
-                PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
-                playbackService = binder.getService();
-              //  isPlaybackServiceBound = true;
-                if(playbackService != null) {
-                    //observe song and player, and playing pogress
-                    playbackService.getNowPlayingSubject().subscribe(nowPlaying -> broadcastNowPlaying(nowPlaying));
-                    //observe queue
-                  //  playbackService.getPlayingQueueSubject().subscribe(playingQueue -> broadcastPlayingQueue(playingQueue));
-                }
-                wsContent.setPlaybackService(playbackService);
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                playbackService = null;
-                wsContent.setPlaybackService(null);
-               // Log.w(TAG, "PlaybackService disconnected unexpectedly.");
-            }
-        };
 
         @SuppressLint("CheckResult")
         public WebSocketFrameHandler() {
-            // Bind to the MediaServerService as soon as this service is created
-            Intent intent = new Intent(getContext(), PlaybackService.class);
-            getContext().bindService(intent, serviceConnection, BIND_AUTO_CREATE);
         }
 
         private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);

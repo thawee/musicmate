@@ -1,5 +1,7 @@
 package apincer.android.mmate.dlna.transport.jetty;
 
+import static apincer.android.mmate.dlna.MediaServerConfiguration.CONTENT_SERVER_PORT;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -55,7 +57,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
     public void initServer(InetAddress bindAddress) throws InitializationException {
         Thread serverThread = new Thread(() -> {
             try {
-                Log.i(TAG, "Starting UPnP Server (Jetty) on " + bindAddress.getHostAddress() + ":" + getListenPort());
+               // Log.i(TAG, "Starting UPnP Server (Jetty) on " + bindAddress.getHostAddress() + ":" + getListenPort());
 
                 QueuedThreadPool threadPool = new QueuedThreadPool(MAX_THREADS, MIN_THREADS, IDLE_TIMEOUT);
                 threadPool.setName("jetty-upnp-server");
@@ -79,7 +81,8 @@ public class JettyUPnpServerImpl extends StreamServerImpl.StreamServer {
                 // Set the UPnP handler for all contexts
                 server.setHandler(new UPnpHandler());
                 server.start();
-                Log.i(TAG, "UPnP Server started successfully.");
+                Log.i(TAG, "UPnP Server started on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT +" successfully.");
+
                 server.join();
 
             } catch (Exception e) {

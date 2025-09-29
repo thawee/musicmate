@@ -49,6 +49,11 @@ public class Settings {
         return prefs.getBoolean(Constants.PREF_NETTY_MEDIA_SERVER,false);
     }
 
+    public static boolean isExcludeArtistFromSimilarSongs(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(Constants.PREF_EXCLUDE_ARTIST_FROM_SIMILAR_SONGS,false);
+    }
+
     public static List<String> getDirectories(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);

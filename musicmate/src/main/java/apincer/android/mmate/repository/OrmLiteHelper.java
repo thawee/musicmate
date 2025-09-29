@@ -23,12 +23,14 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import apincer.android.mmate.Constants;
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.Settings;
 import apincer.android.mmate.repository.database.MusicTag;
 import apincer.android.mmate.repository.database.Playlist;
 import apincer.android.mmate.repository.database.PlaylistItem;
@@ -60,8 +62,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
-    //Version of the database. Changing the version will call {@Link OrmLite.onUpgrade}
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 8;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -135,7 +136,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
 
-            return dao.queryBuilder().orderBy("title", true).orderByNullsFirst("artist", true).query();
+            return dao.queryBuilder().orderBy("normalizedTitle", true).orderByNullsFirst("normalizedArtist", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
@@ -188,7 +189,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public MusicTag getByPath(String path) {
+    public List<MusicTag> getByPath(String path) {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
 
@@ -199,14 +200,13 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             QueryBuilder<MusicTag, ?> qb = dao.queryBuilder();
             qb.where().eq("path", escapedPath);
 
-            return qb.queryForFirst();
+            return qb.query();
 
            // return dao.queryForFirst(qb.prepare());
 
-
         } catch (SQLException e) {
             Log.e(TAG, "getByPath", e);
-            return null; // Assume outdated if we can't check
+            return EMPTY_LIST; // Assume outdated if we can't check
         }
     }
 
@@ -458,33 +458,40 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public List<MusicTag> findDuplicateSong() {
+    public List<MusicTag> findSimilarSongs() {
         try {
-            Dao<MusicTag, ?> dao = getMusicTagDao();
-            // Let the database find duplicate titles
-            List<Long> duplicateIds = new ArrayList<>();
+            List<MusicTag> list =  getMusicTagDao().queryForAll();
+            boolean excludeArtist = Settings.isExcludeArtistFromSimilarSongs(MusixMateApp.getInstance());
 
-            try (GenericRawResults<String[]> results = dao.queryRaw(
-                    "SELECT a.id FROM musictag a JOIN musictag b ON " +
-                            "a.id != b.id AND a.title = b.title AND a.artist = b.artist"
-            )) {
-                for (String[] row : results) {
-                    duplicateIds.add(Long.parseLong(row[0]));
+            Map<String, List<MusicTag>> consolidatedMap = new HashMap<>();
+            for (MusicTag song : list) {
+                String key = song.getNormalizedTitle();// + "||" + song.getNormalizedTitle();
+                if(!excludeArtist) {
+                    key = key  + "||" + song.getNormalizedArtist();
+                }
+
+                // This is a shorter way to get the list for a key or create a new one
+                List<MusicTag> group = consolidatedMap.computeIfAbsent(key, k -> new ArrayList<>());
+                group.add(song);
+            }
+
+            List<MusicTag> masterList = new ArrayList<>();
+            for (List<MusicTag> duplicateGroup : consolidatedMap.values()) {
+                if(duplicateGroup.size()>1) {
+                    masterList.addAll(duplicateGroup);
                 }
             }
 
-            if (duplicateIds.isEmpty()) {
-                return EMPTY_LIST;
-            }
+            // --- 2. Sort the final list of master records ---
+            // This sorts first by artist (A-Z), and then by title (A-Z) for artists with the same name.
+            masterList.sort(Comparator
+                    .comparing(MusicTag::getNormalizedTitle)
+                    .thenComparing(MusicTag::getNormalizedArtist)
+            );
 
-            // Now fetch only the duplicate songs
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().in("id", duplicateIds);
-            builder.orderBy("title", true);
-            builder.orderBy("artist", true);
-            return builder.query();
+            return masterList;
         } catch (Exception e) {
-            Log.e(TAG, "findDuplicateSong: " + e.getMessage());
+            Log.e(TAG, "findSimilarSongs: " + e.getMessage());
             return EMPTY_LIST;
         }
     }

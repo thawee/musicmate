@@ -1160,7 +1160,7 @@ public class MusicAnalyser {
      * @param points The number of data points to generate (should match canvas width).
      * @return A float array with interleaved [min, max] peak data for rendering.
      */
-    private static float[] generateDynamicSongData(int points) {
+    public static float[] generateDynamicSongData(int points) {
         final float[] waveform = new float[points * 2];
         final Random random = new Random();
 

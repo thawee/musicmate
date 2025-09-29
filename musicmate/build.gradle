@@ -163,6 +163,7 @@ dependencies {
     implementation libs.jupnp.android
     implementation libs.jupnp.support
     implementation libs.jetty.server12
+    implementation libs.jetty.websocket.api12
     implementation libs.jetty.websocket.server12
     implementation libs.netty.codec.http
     implementation libs.square.okhttp3

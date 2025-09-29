@@ -134,7 +134,7 @@ public class OKHttpStreamingClient extends AbstractStreamClient<StreamClientConf
     @Override
     protected boolean logExecutionException(Throwable t) {
         if (t instanceof IOException) {
-            Log.w(TAG, "OkHttp execution error: " + t.getMessage());
+            //Log.w(TAG, "OkHttp execution error: " + t.getMessage());
             return true; // Suppress full stack trace for common I/O errors
         }
         return false; // Log other, unexpected exceptions

@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.text.WordUtils;
 
+import java.text.Normalizer;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -494,9 +495,13 @@ public class StringUtils {
         return result.toString().trim();
     }
 
+    /**
+     * A highly robust function to normalize strings for duplicate checking.
+     * It handles case, accents, punctuation, and special characters from editors like MS Word.
+     */
     public static String normalizeName(String name) {
-        if (name == null)
-            return name;
+       /* if (name == null)
+            return "";
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             switch (name.charAt(i)) {
@@ -510,7 +515,56 @@ public class StringUtils {
                     result.append(name.charAt(i));
             }
         }
-        return result.toString().trim();
+        return result.toString().trim(); */
+        // 1. Handle null or empty input
+        if (name == null || name.isEmpty()) {
+            return "";
+        }
+
+        // 2. Pre-process common Microsoft Word and typographic characters
+        // This step converts them to their simple ASCII equivalents before further processing.
+        String processed = name
+                // Replace smart single quotes (left and right) with a standard apostrophe
+                .replace('‘', '\'')
+                .replace('’', '\'')
+
+                // Replace smart double quotes (left and right) with a standard double quote
+                .replace('“', '"')
+                .replace('”', '"')
+
+                // Replace en-dash and em-dash with a standard hyphen
+                .replace('–', '-')
+                .replace('—', '-')
+
+                // Replace the single-character ellipsis with a space
+                .replace('…', ' ');
+
+        // 3. Normalize to separate accents from base letters (e.g., "é" -> "e" + "´")
+        processed = Normalizer.normalize(processed, Normalizer.Form.NFD);
+
+        // 4. Remove the separated accent characters (diacritics)
+        processed = processed.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+
+        // 5. Final cleanup: lowercase, remove all remaining punctuation, and fix whitespace
+        /*return processed
+                .toLowerCase()
+                .replaceAll("[^a-z0-9\\s]", "") // Remove anything not a letter, number, or space
+                .replaceAll("\\s+", " ")       // Collapse multiple spaces to one
+                .trim(); */
+        // --- Step 2: Perform the final cleanup with Unicode-aware patterns ---
+        return processed
+                // Use Locale.ROOT for consistent, non-regional lowercasing.
+                .toLowerCase(Locale.ROOT)
+
+                // Keep only Unicode letters (\p{L}), numbers (\p{N}), and whitespace (\s).
+                // This correctly preserves letters from all languages.
+                .replaceAll("[^\\p{L}\\p{N}\\s]", "")
+
+                // Collapse multiple whitespace characters into a single space.
+                .replaceAll("\\s+", " ")
+
+                // Trim any final leading/trailing whitespace.
+                .trim();
     }
 
     public static String formatTrack(String track) {

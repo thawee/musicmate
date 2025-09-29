@@ -60,19 +60,19 @@ public class ResolutionsBrowser extends AbstractContentBrowser {
         List<MusicTag> songs = TagRepository.getAllMusics();
         for(MusicTag tag: songs) {
            if(MusicTagUtils.isHiRes(tag)) {
-                mapped.get(Constants.TITLE_HIRES).addChildCount();
+                mapped.get(Constants.TITLE_HIRES).increaseChildCount();
            }
            if(MusicTagUtils.isMQA(tag)) {
-                mapped.get(Constants.TITLE_MASTER_AUDIO).addChildCount();
+                mapped.get(Constants.TITLE_MASTER_AUDIO).increaseChildCount();
            }
             if(MusicTagUtils.isLossless(tag)) {
-                mapped.get(Constants.TITLE_HIFI_LOSSLESS).addChildCount();
+                mapped.get(Constants.TITLE_HIFI_LOSSLESS).increaseChildCount();
             }
             if(MusicTagUtils.isLossy(tag)) {
-                mapped.get(Constants.TITLE_HIGH_QUALITY).addChildCount();
+                mapped.get(Constants.TITLE_HIGH_QUALITY).increaseChildCount();
             }
             if(MusicTagUtils.isDSD(tag)) {
-                mapped.get(Constants.TITLE_DSD).addChildCount();
+                mapped.get(Constants.TITLE_DSD).increaseChildCount();
             }
         }
 

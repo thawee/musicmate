@@ -33,6 +33,7 @@ public class FFMpegHelper {
 
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         //if(!isEmpty(tag.getCoverartMime())) {
+        Log.d(TAG, "extractCoverArt: "+pathFile);
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -45,7 +46,7 @@ public class FFMpegHelper {
 
     public static void extractCoverArt(String path, File pathFile) {
         try {
-           // Log.d(TAG, "extractCoverArt: "+path);
+            Log.d(TAG, "extractCoverArt: "+path);
             String targetPath = pathFile.getAbsolutePath();
             targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -169,6 +170,7 @@ public class FFMpegHelper {
      */
     public static byte[] toLowwerPCM16(MusicTag tag, Context context) {
         // todo convert tah.getPath() to 16bits 44.1 Hz
+        Log.d(TAG, "toLowwerPCM16: "+tag.getPath());
         String inputPath = tag.getPath();
         if (inputPath == null || inputPath.isEmpty()) {
             System.err.println("MusicTag has no path.");
@@ -186,24 +188,24 @@ public class FFMpegHelper {
         // -ac 2:     Audio channels is 2 (stereo)
         // -y:        Overwrite output file if it exists
         String command = String.format(
-                "-i %s -f s16le -ar 44100 -ac 2 \"%s\" -y",
+                "-i \"%s\" -f s16le -ar 44100 -ac 2 \"%s\" -y",
                 inputPath,
                 outputPath
         );
 
-        System.out.println("Executing FFmpeg: " + command);
+        Log.d(TAG, "Executing FFmpeg: " + command);
 
         // 3. Execute the command
         FFmpegSession session = FFmpegKit.execute(command);
 
         // 4. Check for success and read the file
         if (ReturnCode.isSuccess(session.getReturnCode())) {
-            System.out.println("FFmpeg conversion successful.");
+           // System.out.println("FFmpeg conversion successful.");
             // 5. Read the temporary file into a byte array
             try {
                 return readBytesFromFile(outputFile);
             } catch (IOException e) {
-                System.err.println("Failed to read temp PCM file: " + e.getMessage());
+                //System.err.println("Failed to read temp PCM file: " + e.getMessage());
                 return new byte[0];
             } finally {
                 // 6. Clean up the temporary file
@@ -211,8 +213,8 @@ public class FFMpegHelper {
             }
         } else {
             // Failure
-            System.err.println("FFmpeg conversion failed!");
-            System.err.println("Logs: " + session.getLogsAsString());
+           // System.err.println("FFmpeg conversion failed!");
+           // System.err.println("Logs: " + session.getLogsAsString());
 
             // 6. Clean up the temporary file
             outputFile.delete();

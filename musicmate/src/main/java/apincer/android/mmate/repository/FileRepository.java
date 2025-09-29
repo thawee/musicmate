@@ -203,19 +203,22 @@ public class FileRepository {
                 Log.i(TAG, "scanFile: skip zero byte file - " + mediaPath);
                 return;
             }
-            if(forceRead) {
-                lastModified = -1;
-            }
+            //if(forceRead) {
+            //    lastModified = -1;
+            //}
 
             // if timestamp is outdated
            // if(TagRepository.cleanOutdatedMusicTag(mediaPath, lastModified)) {
-            MusicTag tag = TagRepository.getByPath(mediaPath);
-            if(TagRepository.isOutdated(tag, lastModified)) {
+            List<MusicTag> tags = TagRepository.getByPath(mediaPath);
+
+            forceRead = forceRead || tags == null || tags.isEmpty();
+
+            if(forceRead || TagRepository.isOutdated(tags.get(0), lastModified)) {
                 // Read minimal tag data first
                 MusicTag basicTag = TagReader.readBasicTag(context, mediaPath);
-                if(tag != null) {
+                if(tags != null && !tags.isEmpty()) {
                     // maintain id
-                    basicTag.setId(tag.getId());
+                    basicTag.setId(tags.get(0).getId());
                 }
 
                 if(basicTag != null) {
@@ -471,13 +474,19 @@ public class FileRepository {
     public boolean deleteMediaItem(MusicTag item) {
         boolean status = false;
         try {
-            status = FileUtils.delete(new File(item.getPath()));
-
-            if(!FileUtils.existed(item.getPath())) {
-                cleanCacheCover(item);
+            // more others tag shared same file, skip delete file
+            if(TagRepository.getByPath(item.getPath()).size()==1) {
+                status = FileUtils.delete(new File(item.getPath()));
+                if(!FileUtils.existed(item.getPath())) {
+                    cleanCacheCover(item);
+                    TagRepository.removeTag(item);
+                    File file = new File(item.getPath());
+                    cleanMediaDirectory(file.getParentFile());
+                    status = true;
+                }
+            }else {
+                // clan database only
                 TagRepository.removeTag(item);
-                File file = new File(item.getPath());
-                cleanMediaDirectory(file.getParentFile());
                 status = true;
             }
         } catch (Exception|OutOfMemoryError ignored) {

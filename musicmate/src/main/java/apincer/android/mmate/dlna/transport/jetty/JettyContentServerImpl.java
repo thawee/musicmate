@@ -93,7 +93,7 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
         // Initialize the server with the specified port.
         Thread serverThread = new Thread(() -> {
             try {
-                Log.i(TAG, "Starting Content Server (Jetty) on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT);
+                //Log.i(TAG, "Starting Content Server (Jetty) on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT);
 
                 // Configure thread pool optimized for audio streaming
                 QueuedThreadPool threadPool = new QueuedThreadPool();
@@ -146,8 +146,10 @@ public class JettyContentServerImpl extends StreamServerImpl.StreamServer {
                 server.setStopAtShutdown(true);
                 server.setStopTimeout(5000);
                 server.start();
+
+                Log.i(TAG, "Content Server started on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT +" successfully.");
+
                 server.join(); // Keep the thread alive until the server is stopped.
-                Log.i(TAG, "Content Server started successfully");
             } catch (Exception e) {
                 Log.e(TAG, "Failed to start Content Server", e);
                // throw new RuntimeException(e);

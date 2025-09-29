@@ -18,6 +18,7 @@ import java.util.TimeZone;
 import apincer.android.mmate.Settings;
 import apincer.android.mmate.dlna.transport.jetty.JettyContentServerImpl;
 import apincer.android.mmate.dlna.transport.jetty.JettyUPnpServerImpl;
+import apincer.android.mmate.dlna.transport.jetty.JettyWebServerImpl;
 import apincer.android.mmate.dlna.transport.netty.NettyContentServerImpl;
 import apincer.android.mmate.dlna.transport.netty.NettyUPnpServerImpl;
 import apincer.android.mmate.dlna.transport.netty.NettyWebServerImpl;
@@ -28,6 +29,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
     public abstract static class StreamServer {
         public static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
         public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0.3";
+        protected static final String WEBSOCKET_PATH = "/ws";
+        protected static final String CONTEXT_PATH = "/";
         private final static TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
         static final SimpleDateFormat dateFormatter = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
         static {
@@ -115,24 +118,23 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         streamServerHost = bindAddress.getHostAddress();
 
         if(Settings.isUseNettyLibrary(context)) {
-            this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
-            this.upnpServer.initServer(bindAddress);
+            this.webServer = new NettyWebServerImpl(context, router, configuration);
+            this.webServer.initServer(bindAddress);
 
             this.contentServer = new NettyContentServerImpl(context, router, configuration);
             this.contentServer.initServer(bindAddress);
 
-            this.webServer = new NettyWebServerImpl(context, router, configuration);
-            this.webServer.initServer(bindAddress);
-        }else {
-            this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
+            this.upnpServer = new NettyUPnpServerImpl(context,router, configuration);
             this.upnpServer.initServer(bindAddress);
+        }else {
+            this.webServer = new JettyWebServerImpl(context, router, configuration);
+            this.webServer.initServer(bindAddress);
 
             this.contentServer = new JettyContentServerImpl(context, router, configuration);
             this.contentServer.initServer(bindAddress);
 
-            //this.webServer = new JettyWebServerImpl(context, router, configuration);
-            this.webServer = new NettyWebServerImpl(context, router, configuration);
-            this.webServer.initServer(bindAddress);
+            this.upnpServer = new JettyUPnpServerImpl(context,router, configuration);
+            this.upnpServer.initServer(bindAddress);
         }
     }
 

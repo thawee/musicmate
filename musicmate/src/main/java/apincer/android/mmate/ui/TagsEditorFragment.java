@@ -352,7 +352,7 @@ public class TagsEditorFragment extends Fragment {
                         boolean status = repos.setMusicTag(tag);
                         int current = completedCount.incrementAndGet();
                         tagsActivity.updateProgressBar(current + "/" + totalItems);
-                        tagsActivity.refreshDisplayTag();
+                       // tagsActivity.refreshDisplayTag();
                         // Post events one at a time
                     } catch (Exception e) {
                         Log.e(TAG, "doSaveMediaItem", e);
@@ -366,15 +366,14 @@ public class TagsEditorFragment extends Fragment {
         }).thenAccept(unused -> tagsActivity.refreshDisplayTag());
 
         // Handle completion
-       /* processingFuture.whenComplete((result, exception) -> {
+        processingFuture.whenComplete((result, exception) -> {
             if (exception != null) {
                 Log.e(TAG, "Error saving tags", exception);
             }
 
             // Update UI
             tagsActivity.refreshDisplayTag();
-
-        }); */
+        });
     }
 
     private void buildPendingTags(MusicTag tagUpdate) {

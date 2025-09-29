@@ -12,6 +12,7 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.util.Objects;
 
 import apincer.android.mmate.Constants;
+import apincer.android.mmate.utils.StringUtils;
 
 @DatabaseTable(tableName = "musictag")
 public class MusicTag implements Parcelable {
@@ -27,14 +28,6 @@ public class MusicTag implements Parcelable {
 
     @DatabaseField(uniqueIndex = true)
     protected String uniqueKey;
-
-    public String getAlbumCoverUniqueKey() {
-        return albumCoverUniqueKey;
-    }
-
-    public void setAlbumCoverUniqueKey(String albumUniqueKey) {
-        this.albumCoverUniqueKey = albumUniqueKey;
-    }
 
     @DatabaseField
     protected String albumCoverUniqueKey;
@@ -84,8 +77,15 @@ public class MusicTag implements Parcelable {
     // tags information
     @DatabaseField(index = true)
     protected String title = "";
+
+    @DatabaseField(index = true)
+    protected String normalizedTitle = "";
+
     @DatabaseField(index = true)
     protected String artist = "";
+    @DatabaseField(index = true)
+    protected String normalizedArtist = "";
+
     @DatabaseField
     protected String album = "";
     @DatabaseField
@@ -116,6 +116,23 @@ public class MusicTag implements Parcelable {
     protected double drScore = 0; //gainTrackDR; // Dynamic Range
    @DatabaseField
    protected double dynamicRange = 0;
+
+
+    public String getAlbumCoverUniqueKey() {
+        return albumCoverUniqueKey;
+    }
+
+    public void setAlbumCoverUniqueKey(String albumUniqueKey) {
+        this.albumCoverUniqueKey = albumUniqueKey;
+    }
+
+    public String getNormalizedArtist() {
+        return normalizedArtist;
+    }
+
+    public String getNormalizedTitle() {
+        return normalizedTitle;
+    }
 
     // Use the custom persister for this field
     @DatabaseField(persisterClass = FloatArrayPersister.class)
@@ -300,6 +317,7 @@ public class MusicTag implements Parcelable {
 
     public void setTitle(String title) {
         this.title = title;
+        this.normalizedTitle = StringUtils.normalizeName(title);
     }
 
     public String getArtist() {
@@ -308,6 +326,7 @@ public class MusicTag implements Parcelable {
 
     public void setArtist(String artist) {
         this.artist = artist;
+        this.normalizedArtist = StringUtils.normalizeName(artist);
     }
 
     public String getAlbum() {

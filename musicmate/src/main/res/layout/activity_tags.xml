@@ -184,6 +184,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center"
+                        android:layout_alignParentStart="true"
                         android:layout_alignParentEnd="true"
                         android:layout_gravity="center"
                         android:padding="@dimen/dimen_2_dp"

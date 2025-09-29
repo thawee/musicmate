@@ -183,6 +183,10 @@ public class WebSocketContent {
 
         // update playing queue
         try {
+            // play song
+            MusicTag song = MusixMateApp.getInstance().getOrmLite().findById(Long.parseLong(id));
+            playbackService.play(song);
+
             // --- 1. Get references to our Data Access Objects (DAOs) ---
             Dao<QueueItem, Long> queueDao = MusixMateApp.getInstance().getOrmLite().getQueueItemDao();
 
@@ -210,7 +214,6 @@ public class WebSocketContent {
                         .collect(Collectors.toList());
             }
 
-            MusicTag song = MusixMateApp.getInstance().getOrmLite().findById(Long.parseLong(id));
             int songIndex = 0;
             if(!songsInContext.isEmpty()) {
                 // --- 2. Clear the entire existing playing queue ---
@@ -231,9 +234,8 @@ public class WebSocketContent {
                 }
             }
 
-            // play song
-            playbackService.setPlayingQueueIndex(songIndex);
-            playbackService.play(song);
+            //update current song index in playlist
+            playbackService.setPlayingQueueIndex(songIndex-1); // subtract 1 because index starts at 0
         } catch (SQLException e) {
             //throw new RuntimeException(e);
         }
@@ -493,10 +495,11 @@ public class WebSocketContent {
 
             float[] cleanBlockWaveform = tag.getWaveformData();
             if (cleanBlockWaveform == null) {
+                cleanBlockWaveform = MusicAnalyser.generateDynamicSongData(640);
                 // should create from file and save to db
-                cleanBlockWaveform = MusicAnalyser.generateWaveform(tag);
+              /*  cleanBlockWaveform = MusicAnalyser.generateWaveform(tag);
                 tag.setWaveformData(cleanBlockWaveform);
-                TagRepository.saveTag(tag);
+                TagRepository.saveTag(tag); */
             }
 
             track.put("waveform", cleanBlockWaveform);

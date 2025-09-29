@@ -63,7 +63,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
         for(MusicTag tag: songs) {
             for (String name : PlaylistRepository.getPlaylistNames()) {
                 if(PlaylistRepository.isSongInPlaylistName(tag, name)) {
-                    Objects.requireNonNull(mapped.get(name)).addChildCount();
+                    Objects.requireNonNull(mapped.get(name)).increaseChildCount();
                 }
             }
         }

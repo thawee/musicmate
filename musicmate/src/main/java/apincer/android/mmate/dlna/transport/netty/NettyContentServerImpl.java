@@ -246,8 +246,8 @@ public class NettyContentServerImpl extends StreamServerImpl.StreamServer {
                 ChannelFuture f = b.bind(bindAddress.getHostAddress(), serverPort).sync();
                 serverChannel = f.channel();
                 isRunning = true;
-                Log.i(TAG, "\tHttp Streaming server started successfully on " +
-                        bindAddress.getHostAddress() + ":" + serverPort);
+                Log.i(TAG, "Content Server started on " +
+                        bindAddress.getHostAddress() + ":" + serverPort +" successfully.");
 
                 // Start metrics reporting in background
                // startMetricsReporting();

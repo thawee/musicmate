@@ -239,6 +239,7 @@ public class PlaybackService extends Service {
      * Plays the next song in the current queue.
      */
     public void next() {
+        Log.d(TAG, "play next song: controlledPlayback="+controlledPlayback+", playingQueueIndex="+playingQueueIndex);
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
         if(nowPlaying != null) {
             if (controlledPlayback) {
@@ -315,7 +316,7 @@ public class PlaybackService extends Service {
               //  Log.d(TAG, "schedule to play next song...");
                 isNextTrackScheduled = true; // Set flag to prevent re-entry
 
-                //  Log.d(TAG, "play next song by schedule...");
+                Log.d(TAG, "play next song by schedule in next "+(delaySecond-gracePeriod)+" seconds ...");
                 scheduler.schedule(this::next, delaySecond-gracePeriod, TimeUnit.SECONDS);
             }
         }

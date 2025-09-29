@@ -96,6 +96,9 @@ public class ExternalPlayerListener extends NotificationListenerService {
     @Override
     public void onDestroy() {
       //  Log.d(TAG, "NotificationListener service being destroyed");
+        if(isPlaybackServiceBound) {
+            unbindService(serviceConnection);
+        }
 
         // Let the parent handle unbinding - don't call unbindService yourself
         super.onDestroy();

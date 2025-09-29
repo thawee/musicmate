@@ -125,6 +125,7 @@ public final class Constants {
     public static final String PREF_ENABLE_MEDIA_SERVER = "preference_dlna_media_server";
     public static final String PREF_MEDIA_SERVER_UUID_KEY = "preference_dlna_media_server_uuid_key";
     public static final String PREF_NETTY_MEDIA_SERVER = "preference_netty_media_server";
+    public static final String PREF_EXCLUDE_ARTIST_FROM_SIMILAR_SONGS = "preference_exclude_artist_from_similar_songs";
 
     // Source
     public static final String PUBLISHER_JOOX = "Joox";
