@@ -1,6 +1,6 @@
 package apincer.android.mmate.ui.view;
 
-import static apincer.android.mmate.utils.MusicTagUtils.getRating;
+import static apincer.android.mmate.core.utils.TagUtils.getRating;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
+import apincer.android.mmate.core.database.MusicTag;
 
 public class RatingIndicatorView extends LinearLayout {
     private TextView textView;

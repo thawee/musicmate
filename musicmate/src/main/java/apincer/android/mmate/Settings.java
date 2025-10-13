@@ -5,12 +5,11 @@ import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import apincer.android.mmate.repository.FileRepository;
+import apincer.android.mmate.core.Constants;
 
 public class Settings {
     private static final String TAG = Settings.class.getSimpleName();
@@ -54,6 +53,7 @@ public class Settings {
         return prefs.getBoolean(Constants.PREF_EXCLUDE_ARTIST_FROM_SIMILAR_SONGS,false);
     }
 
+    /*
     public static List<String> getDirectories(Context context) {
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
@@ -61,7 +61,7 @@ public class Settings {
         Set<String> defaultDirsSet = new HashSet<>(defaultDirs);
         Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, defaultDirsSet);
         return new ArrayList<>(dirs);
-    }
+    } */
 
     public static void setDirectories(Context context, List<String> dirs) {
         SharedPreferences prefs =

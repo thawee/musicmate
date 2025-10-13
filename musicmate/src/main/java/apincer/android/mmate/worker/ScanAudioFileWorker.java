@@ -26,13 +26,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.core.MusicMateExecutors;
 import apincer.android.mmate.Settings;
-import apincer.android.mmate.codec.TagReader;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.utils.LogHelper;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.core.codec.TagReader;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.utils.LogHelper;
 
 public class ScanAudioFileWorker extends Worker {
     private static final String TAG = LogHelper.getTag(ScanAudioFileWorker.class);
@@ -41,21 +41,24 @@ public class ScanAudioFileWorker extends Worker {
     // These values will be determined dynamically
     private final int optimalThreadCount;
     private final int optimalBatchSize;
-    private final int pauseBetweenBatchesMs;
 
     static final long SCAN_SCHEDULE_TIME = 5;
-    private final FileRepository repos;
+    protected final FileRepository repos;
+    protected final TagRepository tagRepos;
 
     public ScanAudioFileWorker(
             @NonNull Context context,
             @NonNull WorkerParameters parameters) {
+           // FileRepository repos, // 3. Hilt provides this dependency automatically!
+           // TagRepository tagRepos) {
         super(context, parameters);
-        repos = FileRepository.newInstance(getApplicationContext());
+
+        this.repos = ((MusixMateApp)getApplicationContext()).getFileRepository();;
+        this.tagRepos = ((MusixMateApp)getApplicationContext()).getTagRepository();;
 
         // Get dynamic configuration based on device capabilities
         optimalThreadCount = getOptimalThreadCount();
         optimalBatchSize = getOptimalBatchSize();
-        pauseBetweenBatchesMs = getOptimalPauseTime();
 
         // Get scan mode (full or incremental)
        // isFullScan = parameters.getInputData().getBoolean("fullScan", false);
@@ -71,7 +74,7 @@ public class ScanAudioFileWorker extends Worker {
 
         try {
             // Only clean database on full scan
-            TagRepository.cleanMusicMate();
+            tagRepos.cleanMusicMate();
 
             List<File> list = pathList(getApplicationContext());
             List<Path> allPaths = new ArrayList<>();
@@ -86,17 +89,16 @@ public class ScanAudioFileWorker extends Worker {
 
             // start scan extras
             MusicMateExecutors.lowPriority(() -> {
-                        List<MusicTag> BasicList = MusixMateApp.getInstance().getOrmLite().findMyNoDRMeterSongs();
+                        List<MusicTag> BasicList = tagRepos.findMyNoDRMeterSongs();
                         for (MusicTag basicTag : BasicList) {
                             //full scan
                             if (TagReader.readExtras(getApplicationContext(), basicTag)) {
-                                basicTag.setMusicManaged(MusicTagUtils.isManagedInLibrary(getApplicationContext(), basicTag));
-                                TagRepository.saveTag(basicTag);
+                                basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
+                                tagRepos.saveTag(basicTag);
                             }
 
                             // extract cover art
                             try {
-                                FileRepository repos = FileRepository.newInstance(getApplicationContext());
                                 repos.saveCoverartToCache(basicTag);
                             } catch(Exception e) {
                                 Log.e(TAG, "Error extracting cover art", e);
@@ -129,13 +131,6 @@ public class ScanAudioFileWorker extends Worker {
             for (Path path : batch) {
                 MusicMateExecutors.scan(() -> repos.scanMusicFile(path.toFile(), false));
                 processedCount++;
-            }
-
-            // Add a small delay between batches to prevent CPU overload
-            try {
-                Thread.sleep(pauseBetweenBatchesMs);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
 
@@ -193,7 +188,7 @@ public class ScanAudioFileWorker extends Worker {
 
     public static List<File> pathList(Context context) {
         List<File> files = new ArrayList<>();
-        List<String> dirs = Settings.getDirectories(context);
+        List<String> dirs = TagRepository.getDirectories(context);
         for (String dir : dirs) {
             files.add(new File(dir));
         }
@@ -236,7 +231,7 @@ public class ScanAudioFileWorker extends Worker {
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 "PERIODIC_MUSIC_SCAN",
-                ExistingPeriodicWorkPolicy.REPLACE,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 periodicWorkRequest);
     }
 

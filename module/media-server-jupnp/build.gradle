@@ -1,0 +1,56 @@
+//apply plugin: 'com.android.library'
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.dagger.hilt)
+}
+
+android {
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+
+    defaultConfig {
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+    }
+    compileOptions {
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+    buildTypes {
+        release {
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lint {
+        abortOnError = true
+    }
+    namespace = 'musicmate.mediaserver.jupnp'
+}
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    implementation libs.androidx.annotation
+    implementation libs.androidx.core
+
+    implementation libs.ormlite.android
+
+    implementation libs.jupnp.android
+    implementation libs.jupnp.support
+    implementation libs.jetty.server12
+    implementation libs.netty.codec.http
+    implementation libs.io.undertow.core
+
+    implementation libs.commons.io
+    implementation libs.google.gson
+    implementation libs.square.okhttp3
+    implementation libs.rxandroid
+    implementation libs.rxjava
+    implementation libs.dagger.hilt.android
+    ksp libs.dagger.hilt.compiler
+
+    implementation project(':module:musicmate-core')
+    implementation project(':library:library')
+}

@@ -17,23 +17,21 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import org.jupnp.model.meta.LocalDevice;
-import org.jupnp.model.meta.RemoteDevice;
-
 import java.util.List;
 
+import apincer.android.mmate.core.server.RendererDevice;
 import apincer.android.mmate.R;
-import apincer.android.mmate.playback.DlnaPlayer;
-import apincer.android.mmate.playback.ExternalPlayer;
-import apincer.android.mmate.playback.PlaybackService;
-import apincer.android.mmate.playback.Player;
-import apincer.android.mmate.playback.StreamingPlayer;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.playback.DlnaPlayer;
+import apincer.android.mmate.core.playback.Player;
+import apincer.android.mmate.core.playback.StreamingPlayer;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.service.PlaybackService;
+import apincer.android.mmate.core.utils.StringUtils;
+import apincer.android.mmate.utils.AudioOutputHelper;
 
 public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     private boolean isPlayersExpanded = true;
@@ -41,7 +39,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     private ImageView expandArrow;
 
     private PlaybackService playbackService;
-    private boolean isBound = false;
+    private boolean isPlaybackServiceBound = false;
 
     @Override
     public void onStart() {
@@ -55,9 +53,9 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     public void onStop() {
         super.onStop();
         // Unbind from the service in onStop to prevent memory leaks
-        if (isBound) {
+        if (isPlaybackServiceBound) {
             getContext().unbindService(serviceConnection);
-            isBound = false;
+            isPlaybackServiceBound = false;
         }
     }
 
@@ -85,20 +83,20 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void populateDlnaPlayers() {
-        List<RemoteDevice> renderers = playbackService.getRenderers();
+        List<RendererDevice> renderers = playbackService.getRenderers();
         dlnaPlayersContainer.removeAllViews();
         if (renderers != null && !renderers.isEmpty()) {
-            for (RemoteDevice device : renderers) {
+            for (RendererDevice device : renderers) {
                 TextView playerView = new TextView(getContext());
-                playerView.setText(device.getDetails().getFriendlyName());
+                playerView.setText(device.getFriendlyName());
                 playerView.setTextColor(Color.BLUE);
                 playerView.setPadding(32, 32, 32, 32);
                 playerView.setBackgroundResource(R.drawable.rounded_bg);
                 playerView.setOnClickListener(v -> {
-                    if(isBound) {
+                    if(isPlaybackServiceBound) {
                         Player player = Player.Factory.create(getContext(), device);
                         playbackService.setActivePlayer(player);
-                        Toast.makeText(getContext(), "Selected: " + device.getDetails().getFriendlyName(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Selected: " + device.getFriendlyName(), Toast.LENGTH_SHORT).show();
                     }
                     dismiss();
                 });
@@ -143,7 +141,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         public void onServiceConnected(ComponentName name, IBinder service) {
             PlaybackService.PlaybackServiceBinder binder = (PlaybackService.PlaybackServiceBinder) service;
             playbackService = binder.getService();
-            isBound = true;
+            isPlaybackServiceBound = true;
 
             addSignalPathSteps();
             populateDlnaPlayers();
@@ -151,7 +149,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            isBound = false;
+            isPlaybackServiceBound = false;
         }
     };
 
@@ -164,56 +162,43 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         qualityIndicator.setText("");
 
         // Step 1: Song
-        MusicTag song = playbackService.getNowPlaying();
+        MusicTag song = playbackService.getNowPlayingSong();
         if (song != null) {
             // Add the "Lossless" indicator at the very top
             String quality = song.getAudioEncoding().toUpperCase()+", "+ StringUtils.formatAudioSampleRate(song.getAudioSampleRate(), true) + ", "+ StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth());
             TextView resolutionIndicator = new TextView(getContext());
             resolutionIndicator.setText(quality.trim());
-            resolutionIndicator.setTextColor(getContext().getResources().getColor(android.R.color.holo_green_light));
+            resolutionIndicator.setTextColor(ResourcesCompat.getColor(getResources(), android.R.color.holo_green_light, getContext().getTheme()));
             resolutionIndicator.setTextSize(14f);
             resolutionIndicator.setPadding(0, 0, 0, 8);
             signalPathContainer.addView(resolutionIndicator);
 
-           // qualityIndicator.setText(MusicTagUtils.getQualityIndicator(song));
             qualityIndicator.setText(song.getQualityInd());
 
-            addSignalPathStep(signalPathContainer, "Source", song.getTitle() + " - " + song.getArtist(), true);
+           // addSignalPathStep(signalPathContainer, "Source", song.getTitle() + " - " + song.getArtist(), true);
+            addSignalPathStep(signalPathContainer, "Source", song.getSimpleName(), true);
         }
 
         Player playerInfo = playbackService.getActivePlayer();
         if (playerInfo != null) {
-            if(isBound) {
-                LocalDevice device = playbackService.getServerDevice();
-                if(device != null) {
-                    String serverDetails = device.getDetails().getFriendlyName();
-
-                    if (playerInfo instanceof DlnaPlayer player) {
-                        // serverDetails = serverDetails + "\n" + device.getDetails().getModelDetails().getModelDescription();
-                        serverDetails = serverDetails + "\n" + device.getDetails().getPresentationURI().getHost();
-
-                    } else if (playerInfo instanceof StreamingPlayer) {
-                        serverDetails = serverDetails + "\n" + device.getDetails().getPresentationURI().getHost();
-                    }
-
-                    // Step 2: Media Server
-                    if (!(playerInfo instanceof ExternalPlayer)) {
-                        addSignalPathStep(signalPathContainer, "Media Server", serverDetails, true);
-                    }
-                }
-            }
-
             String playerDetails = playerInfo.getDisplayName();
+            String serverDetails = "MusicMate MediaServer\n" + playbackService.getServerLocation();
             if (playerInfo instanceof DlnaPlayer player) {
-                // playerDetails = playerDetails +"\n"+player.getDetails();
                 playerDetails = playerDetails +"\n"+player.getLocation();
+                addSignalPathStep(signalPathContainer, "Streaming Server", serverDetails, true);
+                addSignalPathStep(signalPathContainer, "Renderer", playerDetails, false);
             } else if (playerInfo instanceof StreamingPlayer) {
-                //  playerDetails = playerDetails +"\n"+playerInfo.getDetails();
                 playerDetails = playerDetails +"\n"+playerInfo.getId();
+                addSignalPathStep(signalPathContainer, "Streaming Server", serverDetails, true);
+                addSignalPathStep(signalPathContainer, "Renderer", playerDetails, false);
+            }else {
+                addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
+                //TODO get device details
+                AudioOutputHelper.getOutputDevice(getContext(), device -> {
+                    String deviceDetails = device.getName()+"\n"+device.getCodec()+", "+device.getBitPerSampling()+", "+device.getSamplingRate();
+                    addSignalPathStep(signalPathContainer, "Device", deviceDetails, false);
+                });
             }
-
-            // Step 3: Player
-            addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
         }
 
         // --- Populate DLNA players ---

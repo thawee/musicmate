@@ -78,6 +78,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.core.utils.StringUtils;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 
 /**

@@ -12,9 +12,9 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import apincer.android.mmate.core.server.IMediaServer;
 import apincer.android.mmate.R;
-import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.dlna.MediaServerManager;
+import apincer.android.mmate.service.MediaServerManager;
 
 public class MediaServerManagementSheet extends BottomSheetDialogFragment {
     public static final String TAG = "MediaServerManagementSheet";
@@ -62,7 +62,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
     private void observeServerStatus() {
         serverManager.getServerStatus().observe(getViewLifecycleOwner(), status -> {
             if (status == null) { // Default to stopped if null initially
-                status = MediaServerService.ServerStatus.STOPPED;
+                status = IMediaServer.ServerStatus.STOPPED;
             }
             tvServerStatus.setText(status.name()); // Use the name of the enum constant
 

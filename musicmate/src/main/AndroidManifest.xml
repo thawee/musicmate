@@ -78,7 +78,7 @@
         tools:ignore="UnusedAttribute">
         <!-- Read Playing song from notification for not broadcast app i.e. hiby-->
         <service
-            android:name="apincer.android.mmate.playback.ExternalPlayerListener"
+            android:name="apincer.android.mmate.service.ExternalPlayerListener"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true" >
@@ -87,14 +87,15 @@
             </intent-filter>
         </service>
 
+        <!-- jupnp -->
         <service
-            android:name=".dlna.MediaServerService"
+            android:name=".service.MediaServerHostingService"
             android:foregroundServiceType="mediaPlayback"
             android:enabled="true"
             android:exported="false"/>
 
         <service
-            android:name=".playback.PlaybackService"
+            android:name=".service.PlaybackService"
             android:enabled="true"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false"/>
@@ -156,7 +157,7 @@
         </provider>
 
         <provider
-            android:name="apincer.android.mmate.provider.MusicFileProvider"
+            android:name="apincer.android.mmate.core.provider.MusicFileProvider"
             android:authorities="apincer.android.mmate.provider"
             android:exported="false"
             android:grantUriPermissions="true"/>

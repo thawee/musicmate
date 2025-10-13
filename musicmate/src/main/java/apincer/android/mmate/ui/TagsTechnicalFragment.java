@@ -1,6 +1,6 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.utils.StringUtils.format;
+import static apincer.android.mmate.core.utils.StringUtils.format;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -26,20 +26,30 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import apincer.android.mmate.R;
-import apincer.android.mmate.codec.FFMPegReader;
-import apincer.android.mmate.codec.TagReader;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.codec.FFMpegHelper;
-import apincer.android.mmate.utils.ReflectUtil;
-import apincer.android.mmate.utils.StringUtils;
+import javax.inject.Inject;
 
+import apincer.android.mmate.R;
+import apincer.android.mmate.core.codec.FFMPegReader;
+import apincer.android.mmate.core.codec.TagReader;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.core.codec.FFMpegHelper;
+import apincer.android.mmate.core.utils.ReflectUtil;
+import apincer.android.mmate.core.utils.StringUtils;
+import dagger.hilt.android.AndroidEntryPoint;
+import dagger.hilt.android.EntryPointAccessors;
+
+@AndroidEntryPoint
 public class TagsTechnicalFragment extends Fragment {
     protected Context context;
     protected TagsActivity tagsActivity;
-    AlertDialog progressDialog;
+    private AlertDialog progressDialog;
+
+    @Inject
+    TagRepository tagRepos;
+    @Inject
+    FileRepository fileRepos;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -78,7 +88,7 @@ public class TagsTechnicalFragment extends Fragment {
         TableLayout table = view.findViewById(R.id.tags);
 
         MusicTag tag = tagsActivity.getEditItems().get(0);
-        String musicMatePath = FileRepository.newInstance(getContext()).buildCollectionPath(tag, true);
+        String musicMatePath = fileRepos.buildCollectionPath(tag, true);
         filename.setText(String.format("Current Path:\n%s\n\nMusicMate Path:\n%s", tag.getPath(), musicMatePath));
 
         MusicTag tt = tag.copy();
@@ -206,10 +216,9 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
                         FFMpegHelper.removeCoverArt(getContext(), tag);
-                        repos.scanMusicFile(new File(tag.getPath()), false);
+                        fileRepos.scanMusicFile(new File(tag.getPath()), false);
                     }
                 }
         ).thenAccept(
@@ -253,10 +262,9 @@ public class TagsTechnicalFragment extends Fragment {
         startProgressBar();
         CompletableFuture.runAsync(
                 () -> {
-                    FileRepository repos = FileRepository.newInstance(getContext());
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                        TagRepository.removeTag(tag);
-                        repos.scanMusicFile(new File(tag.getPath()), true);
+                        tagRepos.removeTag(tag);
+                        fileRepos.scanMusicFile(new File(tag.getPath()), true);
                     }
                 }
         ).thenAccept(

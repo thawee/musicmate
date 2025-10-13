@@ -2,8 +2,8 @@ package apincer.android.mmate.ui;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
-import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -22,31 +22,27 @@ import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.j256.ormlite.dao.Dao;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.Constants;
-import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.core.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.playback.NowPlaying;
-import apincer.android.mmate.playback.PlaybackService;
-import apincer.android.mmate.playback.Player;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.PlaylistRepository;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.repository.database.QueueItem;
-import apincer.android.mmate.repository.model.MusicFolder;
-import apincer.android.mmate.repository.model.SearchCriteria;
-import apincer.android.mmate.provider.CoverartFetcher;
+import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.android.mmate.core.playback.NowPlaying;
+import apincer.android.mmate.core.playback.Player;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.PlaylistRepository;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.core.model.MusicFolder;
+import apincer.android.mmate.core.model.SearchCriteria;
+import apincer.android.mmate.service.PlaybackService;
 import apincer.android.mmate.ui.view.DurationView;
 import apincer.android.mmate.ui.view.DynamicRangeView;
 import apincer.android.mmate.ui.view.QualityIndicatorView;
 import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.utils.StringUtils;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
@@ -60,6 +56,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     private long totalSize;
     private double totalDuration;
     private PlaybackService playbackService;
+    private final TagRepository tagRepos;
 
     public void setPlaybackService(PlaybackService playbackService) {
         this.playbackService = playbackService;
@@ -152,13 +149,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             titles.add(Constants.TITLE_MASTER_AUDIO);
             titles.add(Constants.TITLE_DSD);
         }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-            List<String> tabs = TagRepository.getActualGroupingList(context);
+            List<String> tabs = tagRepos.getActualGroupingList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = TagRepository.getActualGenreList();
+            List<String> tabs = tagRepos.getActualGenreList();
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-            List<String> tabs = TagRepository.getPublisherList(context);
+            List<String> tabs = tagRepos.getPublisherList(context);
             titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
             PlaylistRepository.initPlaylist(context);
@@ -405,8 +402,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
      * Initialize the dataset of the Adapter
      *
      */
-    public MusicTagAdapter(SearchCriteria criteria) {
+    public MusicTagAdapter(TagRepository tagRepos, SearchCriteria criteria) {
         this.criteria = criteria;
+        this.tagRepos = tagRepos;
         this.localDataSet = new ArrayList<>();
         setHasStableIds(true);
     }
@@ -566,8 +564,9 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 return true;
             } else if (itemId == R.id.add_to_queue_button) {
                 if(song != null) {
-                    try {
-                        Dao<QueueItem, Long> queueDao = MusixMateApp.getInstance().getOrmLite().getQueueItemDao();
+                    tagRepos.addToQueue(song);
+                  /*  try {
+                        Dao<QueueItem, Long> queueDao = tagRepos.getOrmLite().getQueueItemDao();
                         // Get the current size of the queue to determine the next position.
                         // If the queue has 5 items (positions 0-4), countOf() returns 5, which is the correct next position.
                         long nextPosition = queueDao.countOf();
@@ -575,7 +574,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                         queueDao.create(qItem);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
-                    }
+                    } */
                 }
                 return true;
             }

@@ -1,6 +1,6 @@
 package apincer.android.mmate;
 
-import static apincer.android.mmate.playback.ExternalPlayerListener.setupNotificationListener;
+import static apincer.android.mmate.service.ExternalPlayerListener.setupNotificationListener;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
@@ -20,46 +20,49 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.NotificationCompat;
 import androidx.work.WorkManager;
 
-import com.antonkarpenko.ffmpegkit.FFmpegKitConfig;
-import com.antonkarpenko.ffmpegkit.Level;
 import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
-import com.j256.ormlite.android.apptools.OpenHelperManager;
 
-import apincer.android.mmate.dlna.MediaServerService;
-import apincer.android.mmate.playback.PlaybackService;
-import apincer.android.mmate.repository.OrmLiteHelper;
-import apincer.android.mmate.repository.PlaylistRepository;
+import javax.inject.Inject;
+
+import apincer.android.mmate.core.MusicMateExecutors;
+import apincer.android.mmate.core.NotificationId;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.service.MediaServerHostingService;
+import apincer.android.mmate.core.repository.PlaylistRepository;
+import apincer.android.mmate.service.PlaybackService;
 import apincer.android.mmate.ui.MainActivity;
-import apincer.android.mmate.utils.LogHelper;
-import apincer.android.mmate.worker.MusicMateExecutors;
+import apincer.android.mmate.core.utils.LogHelper;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
+import dagger.hilt.android.HiltAndroidApp;
 import sakout.mehdi.StateViews.StateViewsBuilder;
 
+@HiltAndroidApp
 public class MusixMateApp extends Application {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
-    private static MusixMateApp INSTANCE;
+   /* private static MusixMateApp INSTANCE;
 
-    public static MusixMateApp getInstance() {
+    public static MusixMateApp getInstancex() {
         return INSTANCE;
-    }
+    } */
 
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
 
-   // private MediaServerManager mediaServerManager;
-    private MediaServerService mediaServerService;
+    private MediaServerHostingService mediaServerService;
+
+    @Inject
+    FileRepository fileRepos;
+    @Inject
+    TagRepository tagRepos;
 
     @Override
     public void onTerminate() {
         super.onTerminate();
 
         // Rest of your termination code
-       /* if(mediaServerManager!= null) {
-            mediaServerManager.stopServer();
-            mediaServerManager.cleanup();
-        }*/
         if(mediaServerService != null) {
             mediaServerService.stopServers();
             unbindService(serviceConnection);
@@ -71,7 +74,7 @@ public class MusixMateApp extends Application {
 
     @Override public void onCreate() {
         super.onCreate();
-        INSTANCE = this;
+        //INSTANCE = this;
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -84,14 +87,14 @@ public class MusixMateApp extends Application {
         // initialize thread executors
         MusicMateExecutors.getInstance();
 
+       // WorkManager.initialize(this, getWorkManagerConfiguration());
+        startMusicScan();
+
         // turn off ffmpeg-kit log
-        FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
+       // FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
         createNotificationChannel();
         //mediaServerManager = new MediaServerManager(getApplicationContext());
-
-        // Copy web assets like index.html to a place the web server can access them.
-        //copyWebAssets();
 
         startMediaServer();
 
@@ -123,11 +126,10 @@ public class MusixMateApp extends Application {
 
     private void startMediaServer() {
         if(Settings.isAutoStartMediaServer(this)) {
-            Intent intent = new Intent(this, MediaServerService.class);
+            Intent intent = new Intent(this, MediaServerHostingService.class);
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
     }
-
 
     // Add this to your MusixMateApp class
     public void startMusicScan() {
@@ -147,9 +149,9 @@ public class MusixMateApp extends Application {
         @SuppressLint("CheckResult")
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MediaServerService.MediaServerServiceBinder binder = (MediaServerService.MediaServerServiceBinder) service;
+            MediaServerHostingService.MediaServerBinder binder = (MediaServerHostingService.MediaServerBinder) service;
             mediaServerService = binder.getService();
-            if(!mediaServerService.isInitialized()) {
+            if(Settings.isAutoStartMediaServer(getApplicationContext())) {
                 mediaServerService.startServers();
             }
         }
@@ -159,13 +161,6 @@ public class MusixMateApp extends Application {
 
         }
     };
-
-    /*
-    Provides the SQLite Helper Object among the application
-    */
-    public OrmLiteHelper getOrmLite() {
-        return OpenHelperManager.getHelper(this, OrmLiteHelper.class);
-    }
 
     public void createNotificationChannel() {
         CharSequence name = getString(R.string.channel_name);
@@ -202,5 +197,13 @@ public class MusixMateApp extends Application {
         if (mNotificationManager.getActiveNotifications().length == 1) {
             mNotificationManager.cancel(NotificationId.MAIN.getId());
         }
+    }
+
+    public FileRepository getFileRepository() {
+        return fileRepos;
+    }
+
+    public TagRepository getTagRepository() {
+        return tagRepos;
     }
 }

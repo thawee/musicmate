@@ -2,7 +2,6 @@ package apincer.android.mmate.viewmodel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,9 +9,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.TagRepository;
+import javax.inject.Inject;
 
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.repository.TagRepository;
+import dagger.hilt.android.lifecycle.HiltViewModel;
+
+@HiltViewModel
 public class TagsViewModel extends ViewModel {
 
     public static final String MULTIPLE_ALBUMS = "[Multiple Albums]";
@@ -27,8 +31,11 @@ public class TagsViewModel extends ViewModel {
     private final MutableLiveData<MusicTag> _displayTag = new MutableLiveData<>();
     public final LiveData<MusicTag> displayTag = _displayTag;
 
+    private final TagRepository repos;
 
-    public TagsViewModel() {
+    @Inject
+    public TagsViewModel(TagRepository repos) {
+        this.repos = repos;
     }
 
     public void processAudioTagEditEvent(List<MusicTag> items) {
@@ -42,7 +49,7 @@ public class TagsViewModel extends ViewModel {
         // This is a simplified version of your updatePreview logic
         // You might need more sophisticated logic to decide if the current editItems
         // should be completely replaced or if this is just for preview.
-        TagRepository.load(playingSong); // Assuming this is synchronous or you handle async
+        repos.load(playingSong); // Assuming this is synchronous or you handle async
         List<MusicTag> singleItemList = new ArrayList<>();
         singleItemList.add(playingSong.copy()); // Work with a copy
         _editItems.postValue(singleItemList);
@@ -118,27 +125,10 @@ public class TagsViewModel extends ViewModel {
         List<MusicTag> updatedItems = new ArrayList<>(); // Or refetch
         //should reload music tags
         items.forEach(musicTag -> {
-            TagRepository.load(musicTag);
+            repos.load(musicTag);
             updatedItems.add(musicTag);
         });
         _editItems.postValue(updatedItems); // This will trigger observers
         rebuildDisplayTag(updatedItems);     // This will also trigger observers
-    }
-
-    // --- ViewModel Factory ---
-    public static class TagsViewModelFactory implements ViewModelProvider.Factory {
-       // private final ExecutorService executorService;
-
-        public TagsViewModelFactory() {
-         //   this.executorService = executorService;
-        }
-
-        @Override
-        public <T extends ViewModel> T create(Class<T> modelClass) {
-            if (modelClass.isAssignableFrom(TagsViewModel.class)) {
-                return (T) new TagsViewModel();
-            }
-            throw new IllegalArgumentException("Unknown ViewModel class");
-        }
     }
 }

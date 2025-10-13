@@ -10,22 +10,36 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import apincer.android.mmate.codec.FFMpegHelper;
-import apincer.android.mmate.codec.TagWriter;
-import apincer.android.mmate.playback.PlaybackService;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.codec.MusicAnalyser;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.TagRepository;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import apincer.android.mmate.core.MusicMateExecutors;
+import apincer.android.mmate.core.codec.FFMpegHelper;
+import apincer.android.mmate.core.codec.TagWriter;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.codec.MusicAnalyser;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.service.PlaybackService;
 import apincer.android.utils.FileUtils;
 
 /**
  * Utility class to handle file operations in background threads
  * with progress reporting capabilities
  */
+@Singleton
 public class FileOperationTask {
     private static final String TAG = "FileOperationTask";
     private static final double MAX_PROGRESS = 100.0;
+
+    final FileRepository fileRepos;
+    final TagRepository tagRepos;
+
+    @Inject
+    public FileOperationTask(FileRepository fileRepos, TagRepository tagRepos) {
+        this.fileRepos = fileRepos;
+        this.tagRepos = tagRepos;
+    }
 
     /**
      * Interface for reporting progress of file operations
@@ -48,10 +62,10 @@ public class FileOperationTask {
     /**
      * Delete multiple media files
      */
-    public static void deleteFiles(@NonNull Context context,
+    public void deleteFiles(@NonNull Context context,
                                    @NonNull List<MusicTag> selections,
                                    @NonNull ProgressCallback callback) {
-        final FileRepository repository = FileRepository.newInstance(context);
+
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
@@ -59,7 +73,7 @@ public class FileOperationTask {
             MusicMateExecutors.executeParallel(() -> {
                 try {
                     skipToNext(context, tag);
-                    boolean status = repository.deleteMediaItem(tag);
+                    boolean status = fileRepos.deleteMediaItem(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (status) {
@@ -85,10 +99,9 @@ public class FileOperationTask {
     /**
      * Move/import files to music directory
      */
-    public static void moveFiles(@NonNull Context context,
+    public void moveFiles(@NonNull Context context,
                                  @NonNull List<MusicTag> selections,
                                  @NonNull ProgressCallback callback) {
-        final FileRepository repository = FileRepository.newInstance(context);
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
@@ -97,7 +110,7 @@ public class FileOperationTask {
                 try {
                     callback.onProgress(tag, (int)(count.get() * rate), "Moving");
                     skipToNext(context, tag);
-                    boolean status = repository.importAudioFile(tag);
+                    boolean status = fileRepos.importAudioFile(tag);
                     int progress = (int) Math.ceil(count.incrementAndGet() * rate);
 
                     if (status) {
@@ -135,12 +148,11 @@ public class FileOperationTask {
     /**
      * Encode audio files to different format
      */
-    public static void encodeFiles(@NonNull Context context,
+    public void encodeFiles(@NonNull Context context,
                                    @NonNull List<MusicTag> selections,
                                    @NonNull String targetFormat,
                                    int compressionLevel,
                                    @NonNull ProgressCallback callback) {
-        final FileRepository repository = FileRepository.newInstance(context);
         final AtomicInteger count = new AtomicInteger(0);
         final double rate = MAX_PROGRESS / selections.size();
 
@@ -166,7 +178,7 @@ public class FileOperationTask {
 
                     if (success) {
                         // Re-scan the new file
-                        repository.scanMusicFile(new File(targetPath), true);
+                        fileRepos.scanMusicFile(new File(targetPath), true);
                         callback.onProgress(tag, progress, "Done");
                     } else {
                         callback.onProgress(tag, progress, "Failed");
@@ -189,7 +201,7 @@ public class FileOperationTask {
     /**
      * Measure dynamic range for multiple files
      */
-    public static void measureDR(@NonNull Context context,
+    public void measureDR(@NonNull Context context,
                                  @NonNull List<MusicTag> selections,
                                  @NonNull ProgressCallback callback) {
         final AtomicInteger count = new AtomicInteger(0);
@@ -207,7 +219,7 @@ public class FileOperationTask {
                         // Write updated tags back to file
                         TagWriter.writeTagToFile(context, tag);
                         // Update tag in repository
-                        TagRepository.saveTag(tag);
+                        tagRepos.saveTag(tag);
 
                         callback.onProgress(tag, progress, "Success");
                     } else {

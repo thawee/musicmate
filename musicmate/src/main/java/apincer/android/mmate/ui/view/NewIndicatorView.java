@@ -13,8 +13,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.utils.MusicTagUtils;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.utils.TagUtils;
 
 public class NewIndicatorView extends LinearLayout {
     private TextView textView;
@@ -52,7 +52,7 @@ public class NewIndicatorView extends LinearLayout {
         }else {
             Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.backgound_new_indicator);
             textView.setBackground(drawable);
-            if (MusicTagUtils.isOnDownloadDir(tag)) {
+            if (TagUtils.isOnDownloadDir(tag)) {
                 textView.setTextColor(ResourcesCompat.getColor(getResources() ,R.color.new_download_indicator_text, getContext().getTheme()));
             } else {
                 textView.setTextColor(ResourcesCompat.getColor(getResources() ,R.color.new_indicator_text, getContext().getTheme()));

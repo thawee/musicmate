@@ -10,8 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.utils.StringUtils;
 
 public class DurationView extends LinearLayout {
     private TextView textView;

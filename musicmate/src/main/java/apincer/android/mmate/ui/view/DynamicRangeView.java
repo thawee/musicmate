@@ -1,11 +1,9 @@
 package apincer.android.mmate.ui.view;
 
+import static apincer.android.mmate.core.utils.TagUtils.getDynamicRangeScore;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.trim;
 import static apincer.android.mmate.utils.MusicTagUtils.getDRScoreColor;
-import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRange;
-import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeDbColor;
-import static apincer.android.mmate.utils.MusicTagUtils.getDynamicRangeScore;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
-import static apincer.android.mmate.utils.StringUtils.trim;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -15,12 +13,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 
 import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
+import apincer.android.mmate.core.database.MusicTag;
 
 public class DynamicRangeView extends LinearLayout {
     private TextView dynamicRangeDbTextView;

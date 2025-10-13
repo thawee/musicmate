@@ -1,7 +1,7 @@
 package apincer.android.mmate.utils;
 
 import static android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.core.utils.StringUtils;
 
 public class AudioOutputHelper {
     private static final String TAG = AudioOutputHelper.class.getName();

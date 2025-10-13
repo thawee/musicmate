@@ -17,22 +17,23 @@ import com.google.android.material.carousel.MaskableFrameLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-import apincer.android.mmate.Constants;
+import apincer.android.mmate.core.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.model.MusicFolder;
-import apincer.android.mmate.repository.PlaylistRepository;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.repository.model.SearchCriteria;
+import apincer.android.mmate.core.model.MusicFolder;
+import apincer.android.mmate.core.repository.PlaylistRepository;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.core.model.SearchCriteria;
 
 public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.ViewHolder> {
     private final Context context;
     private ArrayList<MusicFolder> arrayList;
     private final SearchCriteria search;
     private int currentlyActivePosition = RecyclerView.NO_POSITION; // To track the active item
-
-    public MusicFolderAdapter(Context context, SearchCriteria search) {
+    private final TagRepository tagRepos;
+    public MusicFolderAdapter(Context context, TagRepository tagRepos, SearchCriteria search) {
         this.context = context;
         this.search = search;
+        this.tagRepos = tagRepos;
         refresh();
     }
 
@@ -100,16 +101,16 @@ public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.
             addFolder(Constants.TITLE_MASTER_AUDIO);
             addFolder(Constants.TITLE_DSD);
         }else if(search.getType() == SearchCriteria.TYPE.GROUPING) {
-            List<String> tabs = TagRepository.getActualGroupingList(context);
+            List<String> tabs = tagRepos.getActualGroupingList(context);
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = TagRepository.getActualGenreList();
+            List<String> tabs = tagRepos.getActualGenreList();
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.ARTIST) {
-            List<String> tabs = TagRepository.getArtistList();
+            List<String> tabs = tagRepos.getArtistList();
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.PUBLISHER) {
-            List<String> tabs = TagRepository.getPublisherList(context);
+            List<String> tabs = tagRepos.getPublisherList(context);
             addFolders(tabs);
         }else if(search.getType() == SearchCriteria.TYPE.PLAYLIST) {
             PlaylistRepository.initPlaylist(context);

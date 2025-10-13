@@ -1,8 +1,8 @@
 package apincer.android.mmate.ui.view;
-import static apincer.android.mmate.utils.MusicTagUtils.getBPSAndSampleRate;
+import static apincer.android.mmate.core.utils.TagUtils.getBPSAndSampleRate;
+import static apincer.android.mmate.core.utils.TagUtils.isMQA;
 import static apincer.android.mmate.utils.MusicTagUtils.getFileEncodingColor;
 import static apincer.android.mmate.utils.MusicTagUtils.getResolutionBackground;
-import static apincer.android.mmate.utils.MusicTagUtils.isMQA;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -14,8 +14,8 @@ import android.widget.TextView;
 import java.util.Locale;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.utils.StringUtils;
 
 public class ResolutionView extends RelativeLayout {
 

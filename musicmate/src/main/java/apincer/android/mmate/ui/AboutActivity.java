@@ -1,10 +1,10 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.Constants.TITLE_DSD_SHORT;
-import static apincer.android.mmate.Constants.TITLE_HIFI_LOSSLESS_SHORT;
-import static apincer.android.mmate.Constants.TITLE_HIGH_QUALITY_SHORT;
-import static apincer.android.mmate.Constants.TITLE_HIRES_SHORT;
-import static apincer.android.mmate.Constants.TITLE_MQA_SHORT;
+import static apincer.android.mmate.core.Constants.TITLE_DSD_SHORT;
+import static apincer.android.mmate.core.Constants.TITLE_HIFI_LOSSLESS_SHORT;
+import static apincer.android.mmate.core.Constants.TITLE_HIGH_QUALITY_SHORT;
+import static apincer.android.mmate.core.Constants.TITLE_HIRES_SHORT;
+import static apincer.android.mmate.core.Constants.TITLE_MQA_SHORT;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -43,19 +43,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.Constants;
+import javax.inject.Inject;
+
+import apincer.android.mmate.core.Constants;
+import apincer.android.mmate.core.MusicMateExecutors;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.core.utils.ApplicationUtils;
+import apincer.android.mmate.core.utils.TagUtils;
+import apincer.android.mmate.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.worker.MusicMateExecutors;
+import dagger.hilt.android.AndroidEntryPoint;
 import io.noties.markwon.Markwon;
 import io.noties.markwon.html.HtmlPlugin;
 
+@AndroidEntryPoint
 public class AboutActivity extends AppCompatActivity {
+    @Inject
+    TagRepository tagRepos;
 
     public static void showAbout(Activity activity) {
         Intent myIntent = new Intent(activity, AboutActivity.class);
@@ -74,6 +80,13 @@ public class AboutActivity extends AppCompatActivity {
         WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
         // If the background is dark, use light icons
         insetsController.setAppearanceLightStatusBars(false);
+
+        /*
+        RepositoryEntryPoint entryPoint = EntryPointAccessors.fromApplication(
+                getApplicationContext(),
+                RepositoryEntryPoint.class
+        );
+        tagRepos = entryPoint.tagRepository(); */
 
         setContentView(R.layout.activity_fragement);
         if(getSupportActionBar() != null) {
@@ -96,7 +109,7 @@ public class AboutActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static class AboutFragment extends Fragment {
+    public class AboutFragment extends Fragment {
         protected Context context;
 
         @Override
@@ -195,12 +208,12 @@ public class AboutActivity extends AppCompatActivity {
             renderMarkdown(content, qualityDetail);
 
             MusicMateExecutors.executeUI(() -> {
-                List<MusicTag> tags = TagRepository.getAllMusics();
+                List<MusicTag> tags = tagRepos.getAllMusics();
                 Map<String, Integer> encList = new HashMap<>();
                 Map<String, Integer> grpList = new HashMap<>();
                 for(MusicTag tag: tags) {
 
-                    String enc = MusicTagUtils.getEncodingTypeShort(tag);
+                    String enc = TagUtils.getEncodingTypeShort(tag);
                     if(encList.containsKey(enc)) {
                         Integer cnt = encList.get(enc);
                         encList.put(enc, cnt + 1);

@@ -1,10 +1,10 @@
 package apincer.android.mmate.utils;
 
-import static apincer.android.mmate.Constants.QUALITY_FAVORITE;
-import static apincer.android.mmate.Constants.QUALITY_RECOMMENDED;
-import static apincer.android.mmate.Constants.QUALITY_SAMPLING_RATE_96;
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
-import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+import static apincer.android.mmate.core.Constants.QUALITY_FAVORITE;
+import static apincer.android.mmate.core.Constants.QUALITY_RECOMMENDED;
+import static apincer.android.mmate.core.Constants.QUALITY_SAMPLING_RATE_96;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -14,11 +14,11 @@ import androidx.core.content.ContextCompat;
 
 import java.util.Locale;
 
-import apincer.android.mmate.Constants;
-import apincer.android.mmate.Settings;
+import apincer.android.mmate.core.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.database.MusicTag;
+import apincer.android.mmate.Settings;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.utils.StringUtils;
 
 public class MusicTagUtils {
     private static final String TAG = "MusicTagUtils";
@@ -400,10 +400,11 @@ public class MusicTagUtils {
         return (Constants.MEDIA_ENC_AIFF.equalsIgnoreCase(tag.getAudioEncoding()) || Constants.MEDIA_ENC_AIFF_ALT.equalsIgnoreCase(tag.getAudioEncoding()));
     }
 
+    /*
     public static boolean isManagedInLibrary(Context context, MusicTag tag) {
         String path = FileRepository.newInstance(context).buildCollectionPath(tag, true);
         return StringUtils.compare(path, tag.getPath());
-    }
+    } */
 
     public static boolean isAACFile(MusicTag musicTag) {
         return Constants.MEDIA_ENC_AAC.equalsIgnoreCase(musicTag.getAudioEncoding());
@@ -463,12 +464,12 @@ public class MusicTagUtils {
         }
 
         // 5. Check for CD Quality (16-bit / 44.1 kHz)
-        if (song.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48) {
+        //if (song.getAudioBitsDepth() <= Constants.QUALITY_BIT_DEPTH_HD && song.getAudioSampleRate() <= Constants.QUALITY_SAMPLING_RATE_48) {
             return "SQ"; //""CD";
-        }
+       // }
 
         // 6. Fallback for any unknown format
-        return "NA";
+      //  return "NA";
     }
 
     public static int getQualityTextColor(Context context, String qualityInd) {

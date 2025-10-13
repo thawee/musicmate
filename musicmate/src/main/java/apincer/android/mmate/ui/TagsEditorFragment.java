@@ -1,6 +1,6 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -35,22 +35,27 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.inject.Inject;
+
+import apincer.android.mmate.core.MusicMateExecutors;
 import apincer.android.mmate.R;
-import apincer.android.mmate.provider.CoverartFetcher;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.utils.MusicPathTagParser;
+import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.core.utils.MusicPathTagParser;
 import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.StringUtils;
-import apincer.android.mmate.worker.MusicMateExecutors;
+import apincer.android.mmate.core.utils.StringUtils;
 import co.lujun.androidtagview.ColorFactory;
 import co.lujun.androidtagview.TagContainerLayout;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
 import coil3.target.ImageViewTarget;
+import dagger.hilt.android.AndroidEntryPoint;
+import dagger.hilt.android.EntryPointAccessors;
 
+@AndroidEntryPoint
 public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
@@ -78,6 +83,11 @@ public class TagsEditorFragment extends Fragment {
     private AutoCompleteTextView qualityDropdown;
    //private PowerSpinnerView fileQuality;
     private volatile boolean bypassChange = false;
+
+    @Inject
+    TagRepository tagRepos;
+    @Inject
+    FileRepository fileRepos;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -116,13 +126,13 @@ public class TagsEditorFragment extends Fragment {
         String[] qualityList = getResources().getStringArray(R.array.file_qualities);
         setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
        // setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
-        setupListValuePopup(txtArtist, TagRepository.getArtistList(), 1);
-        setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
-        setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
+        setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
+        setupListValuePopup(txtAlbumArtist, tagRepos.getDefaultAlbumArtistList(getContext()),1);
+        setupListValuePopup(txtGenre, tagRepos.getDefaultGenreList(getContext()),1);
         //TagRepository.getDefaultGenreList(getContext());
         setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
         // setupListValuePopup(txtGrouping, TagRepository.getGroupingList(getContext()),1);
-        setupListValuePopup(txtPublisher, TagRepository.getDefaultPublisherList(getContext()),3);
+        setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),3);
        // setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1);
 
         return v;
@@ -341,15 +351,13 @@ public class TagsEditorFragment extends Fragment {
                 buildPendingTags(item);
             }
         }).thenCompose(unused -> {
-            // Create repository once
-            FileRepository repos = FileRepository.newInstance(tagsActivity.getApplicationContext());
 
             // Process all items in parallel but with controlled concurrency
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             for (MusicTag tag : itemsToSave) {
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     try {
-                        boolean status = repos.setMusicTag(tag);
+                        boolean status = fileRepos.setMusicTag(tag);
                         int current = completedCount.incrementAndGet();
                         tagsActivity.updateProgressBar(current + "/" + totalItems);
                        // tagsActivity.refreshDisplayTag();

@@ -2,16 +2,16 @@ package apincer.android.mmate.ui;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static apincer.android.mmate.Constants.FLAC_NO_COMPRESS_LEVEL;
-import static apincer.android.mmate.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
-import static apincer.android.mmate.Constants.KEY_FILTER_KEYWORD;
-import static apincer.android.mmate.Constants.KEY_FILTER_TYPE;
-import static apincer.android.mmate.Constants.TITLE_ARTIST;
-import static apincer.android.mmate.Constants.TITLE_GENRE;
-import static apincer.android.mmate.Constants.TITLE_GROUPING;
-import static apincer.android.mmate.Constants.TITLE_LIBRARY;
-import static apincer.android.mmate.Constants.TITLE_PLAYLIST;
-import static apincer.android.mmate.Constants.TITLE_RESOLUTION;
+import static apincer.android.mmate.core.Constants.FLAC_NO_COMPRESS_LEVEL;
+import static apincer.android.mmate.core.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
+import static apincer.android.mmate.core.Constants.KEY_FILTER_KEYWORD;
+import static apincer.android.mmate.core.Constants.KEY_FILTER_TYPE;
+import static apincer.android.mmate.core.Constants.TITLE_ARTIST;
+import static apincer.android.mmate.core.Constants.TITLE_GENRE;
+import static apincer.android.mmate.core.Constants.TITLE_GROUPING;
+import static apincer.android.mmate.core.Constants.TITLE_LIBRARY;
+import static apincer.android.mmate.core.Constants.TITLE_PLAYLIST;
+import static apincer.android.mmate.core.Constants.TITLE_RESOLUTION;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
@@ -91,25 +91,27 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import apincer.android.mmate.Constants;
+import javax.inject.Inject;
+
+import apincer.android.mmate.core.Constants;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.android.mmate.Settings;
-import apincer.android.mmate.playback.PlaybackService;
-import apincer.android.mmate.repository.FileRepository;
-import apincer.android.mmate.repository.model.MusicFolder;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.repository.PlaylistRepository;
-import apincer.android.mmate.repository.model.SearchCriteria;
-import apincer.android.mmate.repository.TagRepository;
+import apincer.android.mmate.core.repository.FileRepository;
+import apincer.android.mmate.core.model.MusicFolder;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.PlaylistRepository;
+import apincer.android.mmate.core.model.SearchCriteria;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.service.PlaybackService;
 import apincer.android.mmate.ui.view.BottomOffsetDecoration;
 import apincer.android.mmate.ui.view.MediaServerManagementSheet;
 import apincer.android.mmate.ui.view.SignalPathBottomSheet;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
-import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.PermissionUtils;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.utils.ApplicationUtils;
+import apincer.android.mmate.core.utils.TagUtils;
+import apincer.android.mmate.core.utils.PermissionUtils;
+import apincer.android.mmate.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
@@ -118,12 +120,14 @@ import apincer.android.residemenu.ResideMenu;
 import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
+import dagger.hilt.android.AndroidEntryPoint;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
 /**
  * Main Activity for MusicMate application
  */
+@AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
@@ -184,6 +188,9 @@ public class MainActivity extends AppCompatActivity {
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
 
+    @Inject
+    FileOperationTask operationTask;
+
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
         @Override
@@ -241,9 +248,6 @@ public class MainActivity extends AppCompatActivity {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
-        // Start music scan
-        MusixMateApp.getInstance().startMusicScan();
-
         tagViewResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -284,9 +288,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize ViewModel
        // viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        MainViewModel.MusicViewModelFactory factory = new MainViewModel.MusicViewModelFactory(getApplication());
-        viewModel = new ViewModelProvider(this, factory).get(MainViewModel.class);
-
+       // MainViewModel.MusicViewModelFactory factory = new MainViewModel.MusicViewModelFactory(getApplication());
+        //viewModel = new ViewModelProvider(this, factory).get(MainViewModel.class);
+        // Get the ViewModel. Hilt handles all the factory creation for you.
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        //operationTask = new FileOperationTask(viewModel.getFileRepository(), viewModel.getTagRepository());
         // Setup UI components
         setupHeaderPanel();
         //setupNowPlayingView();
@@ -305,6 +311,9 @@ public class MainActivity extends AppCompatActivity {
         mExitSnackbar = Snackbar.make(mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
         View snackBarView = mExitSnackbar.getView();
         snackBarView.setBackgroundColor(getColor(R.color.warningColor));
+
+        // Start music scan
+      //  MusixMateApp.getInstance().startMusicScan();
 
         // Bind to the MediaServerService as soon as this service is created
         Intent intent = new Intent(this, PlaybackService.class);
@@ -484,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
 
         ///  Music Folder List
         // Initialize adapter
-        folderAdapter = new MusicFolderAdapter(this, searchCriteria);
+        folderAdapter = new MusicFolderAdapter(this, viewModel.getTagRepository(), searchCriteria);
 
         // Setup RecyclerView
         folderRecyclerView = findViewById(R.id.carousel_recycler_view);
@@ -552,7 +561,7 @@ public class MainActivity extends AppCompatActivity {
 
         ///  Music Items List
         // Initialize adapter
-        adapter = new MusicTagAdapter(searchCriteria);
+        adapter = new MusicTagAdapter(viewModel.getTagRepository(), searchCriteria);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {
@@ -824,11 +833,11 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if (item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, TagRepository.getActualGroupingList(getApplicationContext()).get(0));
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, viewModel.getTagRepository().getActualGroupingList(getApplicationContext()).get(0));
             return true;
         } else if (item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GENRE, TagRepository.getActualGenreList().get(0));
+            doStartRefresh(SearchCriteria.TYPE.GENRE, viewModel.getTagRepository().getActualGenreList().get(0));
             return true;
         } else if (item.getItemId() == R.id.menu_tag_artist) {
             doHideSearch();
@@ -887,9 +896,9 @@ public class MainActivity extends AppCompatActivity {
         View btnOK = cview.findViewById(R.id.button_ok);
         View btnCancel = cview.findViewById(R.id.button_cancel);
 
-        List<String> defaultPaths = FileRepository.newInstance(getApplicationContext()).getDefaultMusicPaths();
+        List<String> defaultPaths = FileRepository.getDefaultMusicPaths(this);
         Set<String> defaultPathsSet = new HashSet<>(defaultPaths);
-        List<String> dirs = Settings.getDirectories(getApplicationContext());
+        List<String> dirs = TagRepository.getDirectories(this);
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -985,7 +994,6 @@ public class MainActivity extends AppCompatActivity {
             // start scan after setting dirs
             Log.i(TAG, "Starting scan music file for first time.");
             ScanAudioFileWorker.startScan(getApplicationContext());
-            ScanAudioFileWorker.startScan(getApplicationContext());
             alert.dismiss();
         });
 
@@ -1007,7 +1015,7 @@ public class MainActivity extends AppCompatActivity {
                             if(isPlaybackServiceBound) {
                                 playbackService.skipToNext(tag);
                             }
-                            TagRepository.deleteMediaTag(tag);
+                            viewModel.getTagRepository().deleteMediaTag(tag);
                            // repos.deleteMediaItem(tag);
                             viewModel.loadMusicItems(adapter.getCriteria());
                             dialogInterface.dismiss();
@@ -1114,7 +1122,7 @@ public class MainActivity extends AppCompatActivity {
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
-            FileOperationTask.deleteFiles(getApplicationContext(), selections,
+            operationTask.deleteFiles(getApplicationContext(), selections,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(MusicTag tag, int progress, String status) {
@@ -1229,7 +1237,7 @@ public class MainActivity extends AppCompatActivity {
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
-            FileOperationTask.moveFiles(getApplicationContext(), selections,
+            operationTask.moveFiles(getApplicationContext(), selections,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(MusicTag tag, int progress, String status) {
@@ -1345,7 +1353,7 @@ public class MainActivity extends AppCompatActivity {
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
-            FileOperationTask.measureDR(getApplicationContext(), selections,
+            operationTask.measureDR(getApplicationContext(), selections,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(MusicTag tag, int progress, String status) {
@@ -1392,18 +1400,18 @@ public class MainActivity extends AppCompatActivity {
         List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
 
         // Determine possible output formats based on input file type
-        if (MusicTagUtils.isAIFFile(selections.get(0)) ||
-                MusicTagUtils.isALACFile(selections.get(0)) ||
-                MusicTagUtils.isDSD(selections.get(0))) {
+        if (TagUtils.isAIFFile(selections.get(0)) ||
+                TagUtils.isALACFile(selections.get(0)) ||
+                TagUtils.isDSD(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
-        } else if (MusicTagUtils.isAACFile(selections.get(0))) {
+        } else if (TagUtils.isAACFile(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(MP3_320_KHZ, null));
-        } else if (MusicTagUtils.isFLACFile(selections.get(0))) {
+        } else if (TagUtils.isFLACFile(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
             iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
-        } else if (MusicTagUtils.isWavFile(selections.get(0))) {
+        } else if (TagUtils.isWavFile(selections.get(0))) {
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
             iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
             iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
@@ -1507,7 +1515,7 @@ public class MainActivity extends AppCompatActivity {
 
             progressBar.setProgress(FileOperationTask.getInitialProgress(selections.size()));
 
-            FileOperationTask.encodeFiles(getApplicationContext(), selections, finalTargetExt, finalCompressionLevel,
+            operationTask.encodeFiles(getApplicationContext(), selections, finalTargetExt, finalCompressionLevel,
                     new FileOperationTask.ProgressCallback() {
                         @Override
                         public void onProgress(MusicTag tag, int progress, String status) {

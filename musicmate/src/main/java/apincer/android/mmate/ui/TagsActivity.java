@@ -1,8 +1,8 @@
 package apincer.android.mmate.ui;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
-import static apincer.android.mmate.utils.StringUtils.trim;
-import static apincer.android.mmate.utils.StringUtils.trimToEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.trim;
+import static apincer.android.mmate.core.utils.StringUtils.trimToEmpty;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -53,20 +53,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import apincer.android.mmate.Constants;
+import javax.inject.Inject;
+
+import apincer.android.mmate.core.Constants;
 import apincer.android.mmate.R;
-import apincer.android.mmate.playback.NowPlaying;
-import apincer.android.mmate.playback.PlaybackService;
-import apincer.android.mmate.repository.TagRepository;
-import apincer.android.mmate.repository.database.MusicTag;
-import apincer.android.mmate.provider.CoverartFetcher;
+import apincer.android.mmate.coil3.CoverartFetcher;
+import apincer.android.mmate.core.playback.NowPlaying;
+import apincer.android.mmate.core.database.MusicTag;
+import apincer.android.mmate.core.repository.TagRepository;
+import apincer.android.mmate.service.PlaybackService;
 import apincer.android.mmate.ui.view.DynamicRangeView;
 import apincer.android.mmate.ui.view.NewIndicatorView;
 import apincer.android.mmate.ui.view.QualityIndicatorView;
 import apincer.android.mmate.ui.view.RatingIndicatorView;
-import apincer.android.mmate.utils.ApplicationUtils;
-import apincer.android.mmate.utils.MusicTagUtils;
-import apincer.android.mmate.utils.StringUtils;
+import apincer.android.mmate.core.utils.ApplicationUtils;
+import apincer.android.mmate.core.utils.TagUtils;
+import apincer.android.mmate.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
@@ -79,8 +81,10 @@ import coil3.request.CachePolicy;
 import coil3.request.ImageRequest;
 import coil3.size.Size;
 import coil3.target.ImageViewTarget;
+import dagger.hilt.android.AndroidEntryPoint;
 import sakout.mehdi.StateViews.StateView;
 
+@AndroidEntryPoint
 public class TagsActivity extends AppCompatActivity {
     private static final String TAG = "TagsActivity";
 
@@ -119,6 +123,12 @@ public class TagsActivity extends AppCompatActivity {
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
 
+    @Inject
+    TagRepository tagRepos;
+
+    @Inject
+    FileOperationTask operationTask;
+
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
         @Override
@@ -149,7 +159,7 @@ public class TagsActivity extends AppCompatActivity {
 
     private void doMeasureDR() {
         startProgressBar();
-        FileOperationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+        operationTask.measureDR(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             @Override
             public void onProgress(MusicTag tag, int progress, String status) {
 
@@ -200,8 +210,11 @@ public class TagsActivity extends AppCompatActivity {
         }
 
        // ExecutorService executor = MusicMateExecutors.getExecutorService(); // Get your executor
-        TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory();
-        viewModel = new ViewModelProvider(this, factory).get(TagsViewModel.class);
+       // TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory();
+       // viewModel = new ViewModelProvider(this, factory).get(TagsViewModel.class);
+        viewModel = new ViewModelProvider(this).get(TagsViewModel.class);
+
+        //operationTask = new FileOperationTask(viewModel.getFileRepository(), viewModel.getTagRepository());
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -254,7 +267,7 @@ public class TagsActivity extends AppCompatActivity {
                      }
 
                  databaseExecutor.execute(() -> {
-                     List<MusicTag> musicTags = TagRepository.findByIds(ids);
+                     List<MusicTag> musicTags = tagRepos.findByIds(ids);
                      viewModel.processAudioTagEditEvent(musicTags);
 
                  });
@@ -413,7 +426,7 @@ public class TagsActivity extends AppCompatActivity {
 
         });
         if(isEmpty(currentDisplayTag.getAlbum())) {
-            albumView.setText(String.format("[%s]", MusicTagUtils.getDefaultAlbum(currentDisplayTag)));
+            albumView.setText(String.format("[%s]", TagUtils.getDefaultAlbum(currentDisplayTag)));
         }else {
             albumView.setText(currentDisplayTag.getAlbum());
             albumView.setPaintFlags(albumView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -426,7 +439,7 @@ public class TagsActivity extends AppCompatActivity {
         if((!isEmpty(currentDisplayTag.getAlbumArtist()))) {
             mediaTypeAndPublisher = " " +currentDisplayTag.getAlbumArtist()+" ";
         }else {
-            mediaTypeAndPublisher = " " +StringUtils.SYMBOL_SEP+" ";
+            mediaTypeAndPublisher = " " + StringUtils.SYMBOL_SEP+" ";
         }
 
         genreView.setText(mediaTypeAndPublisher);
@@ -482,7 +495,7 @@ public class TagsActivity extends AppCompatActivity {
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioBitsDepth(currentDisplayTag.getAudioBitsDepth()), encColor).setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
             spannableEnc.append(new SpecialTextUnit(StringUtils.formatAudioSampleRate(currentDisplayTag.getAudioSampleRate(), true), encColor).setTextSize(metaInfoTextSize));
-            if(MusicTagUtils.isMQA(currentDisplayTag)) {
+            if(TagUtils.isMQA(currentDisplayTag)) {
                 spannableEnc.append(new SpecialTextUnit(" ("+StringUtils.formatAudioSampleRate(currentDisplayTag.getMqaSampleRate(), true)+")", encColor).setTextSize(metaInfoTextSize));
             }
             spannableEnc.append(new SpecialTextUnit(StringUtils.SYMBOL_ENC_SEP, sepColor)); //.setTextSize(metaInfoTextSize));
@@ -593,7 +606,7 @@ public class TagsActivity extends AppCompatActivity {
 
         moveToTrashButton.setOnClickListener(v -> {
             startProgressBar();
-            FileOperationTask.deleteFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+            operationTask.deleteFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
                 @Override
                 public void onProgress(MusicTag tag, int progress, String status) {
 
@@ -620,7 +633,7 @@ public class TagsActivity extends AppCompatActivity {
         } else {
             nowPlaying = null;
         }
-        FileOperationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
+        operationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             boolean closeScreen = false;
             @Override
             public void onProgress(MusicTag tag, int progress, String status) {

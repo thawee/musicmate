@@ -28,6 +28,9 @@ dependencyResolutionManagement {
 
 rootProject.name = 'musicmate'
 include ':musicmate'
+include ':module:musicmate-core'
+include ':module:media-server-jupnp'
+
 //include ':TripMate'
 include ':library:library'
 include ':library:justdsd'
@@ -55,4 +58,6 @@ include ':library:crashreporter'
 //include ':library:musicmeterlib'
 //include ':library:jaudiotagger'
 include ':library:jaudiotagger-android'
+//include ':library:cling:core'
+//include ':library:cling:support'
 include ':cardashboard'

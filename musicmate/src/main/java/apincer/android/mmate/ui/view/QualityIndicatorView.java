@@ -1,6 +1,6 @@
 package apincer.android.mmate.ui.view;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -16,7 +16,7 @@ import androidx.annotation.Nullable;
 import com.vanniktech.textbuilder.TextBuilder;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.repository.database.MusicTag;
+import apincer.android.mmate.core.database.MusicTag;
 import apincer.android.mmate.utils.MusicTagUtils;
 
 public class QualityIndicatorView extends LinearLayout {

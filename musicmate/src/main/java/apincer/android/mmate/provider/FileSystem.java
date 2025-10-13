@@ -1,6 +1,6 @@
 package apincer.android.mmate.provider;
 
-import static apincer.android.mmate.utils.StringUtils.isEmpty;
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 
 import android.content.Context;
 import android.util.Log;
