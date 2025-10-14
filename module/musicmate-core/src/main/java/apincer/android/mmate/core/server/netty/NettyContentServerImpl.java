@@ -32,7 +32,7 @@ import apincer.android.mmate.core.playback.Player;
 import apincer.android.mmate.core.repository.TagRepository;
 import apincer.android.mmate.core.server.IMediaServer;
 import apincer.android.mmate.core.server.RendererDevice;
-import apincer.android.mmate.core.server.WebServer;
+import apincer.android.mmate.core.server.AbstractServer;
 import apincer.android.mmate.core.utils.MimeTypeUtils;
 import apincer.android.mmate.core.utils.StringUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -72,7 +72,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
-public class NettyContentServerImpl extends WebServer {
+public class NettyContentServerImpl extends AbstractServer {
     private final Context context;
     private static final String TAG = "NettyContentServer";
    // public static final int DEFAULT_SERVER_PORT = 8089;
@@ -101,6 +101,9 @@ public class NettyContentServerImpl extends WebServer {
         super(context, mediaServer);
         this.context = context;
         this.serverPort = CONTENT_SERVER_PORT;
+
+        addLibInfo("Netty", "4.2.6");
+
         repos = mediaServer.getTagReRepository();
         // Initialize adaptive buffer settings based on device capabilities
         initializeBuffers();
@@ -299,8 +302,8 @@ public class NettyContentServerImpl extends WebServer {
     }
 
     @Override
-    protected String getServerVersion() {
-        return "Netty/4.2.x";
+    protected String getComponentName() {
+        return "ContentServer";
     }
 
     public Context getContext() {
@@ -563,7 +566,7 @@ public class NettyContentServerImpl extends WebServer {
 
         private void setDateAndCacheHeaders(HttpResponse response, String fileName) {
             // Add server header
-            response.headers().set(HttpHeaderNames.SERVER, getFullServerName("ContentServer"));
+            response.headers().set(HttpHeaderNames.SERVER, getServerSignature());
 
             // Add date header with RFC 1123 format required by HTTP/DLNA
             ZoneId zoneId = ZoneId.systemDefault();

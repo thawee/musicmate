@@ -96,7 +96,7 @@ public class AboutActivity extends AppCompatActivity {
         }
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.main_content, new AboutFragment())
+                .replace(R.id.main_content, new AboutFragment(tagRepos))
                 .commit();
     }
 
@@ -109,8 +109,13 @@ public class AboutActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class AboutFragment extends Fragment {
+    public static class AboutFragment extends Fragment {
         protected Context context;
+        protected TagRepository tagRepos;
+
+        public AboutFragment(TagRepository tagRepos) {
+            this.tagRepos = tagRepos;
+        }
 
         @Override
         public void onAttach(@NonNull Context context) {

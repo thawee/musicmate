@@ -50,6 +50,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.JUpnpServer {
 
     public JettyUPnpServerImpl(Context context, IMediaServer mediaServer, Router router, StreamServerConfigurationImpl configuration) {
         super(context, mediaServer, router, configuration);
+        addLibInfo("Jetty", "12.1.2");
     }
 
     @Override
@@ -104,11 +105,6 @@ public class JettyUPnpServerImpl extends StreamServerImpl.JUpnpServer {
         }
     }
 
-    @Override
-    protected String getServerVersion() {
-        return "Jetty/12.1.1";
-    }
-
     private class UPnpHandler extends Handler.Abstract {
         private final ProtocolFactory protocolFactory;
 
@@ -149,7 +145,7 @@ public class JettyUPnpServerImpl extends StreamServerImpl.JUpnpServer {
                     resp.getHeaders().add(entry.getKey(), value);
                 }
             }
-            resp.getHeaders().put(HttpHeader.SERVER, getFullServerName(SERVER_SUFFIX));
+            resp.getHeaders().put(HttpHeader.SERVER, getServerSignature());
 
             resp.getHeaders().put(HttpHeader.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
             resp.getHeaders().put(HttpHeader.PRAGMA, "no-cache");

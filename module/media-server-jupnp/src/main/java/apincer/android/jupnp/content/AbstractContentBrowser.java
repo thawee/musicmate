@@ -1,7 +1,9 @@
 package apincer.android.jupnp.content;
 
-import static apincer.android.mmate.core.server.WebServer.CONTENT_SERVER_PORT;
-import static apincer.android.mmate.core.server.WebServer.WEB_SERVER_PORT;
+import static apincer.android.mmate.core.server.AbstractServer.CONTENT_SERVER_PORT;
+import static apincer.android.mmate.core.server.AbstractServer.CONTEXT_PATH_COVERART;
+import static apincer.android.mmate.core.server.AbstractServer.CONTEXT_PATH_MUSIC;
+import static apincer.android.mmate.core.server.AbstractServer.WEB_SERVER_PORT;
 import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -71,7 +73,7 @@ public abstract class AbstractContentBrowser {
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
-        return "http://" + StreamServerImpl.streamServerHost + ":" +CONTENT_SERVER_PORT + "/res/" + tag.getId() + "/file." + tag.getFileType();
+        return "http://" + StreamServerImpl.streamServerHost + ":" +CONTENT_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
@@ -82,7 +84,7 @@ public abstract class AbstractContentBrowser {
         String uri = key+".png";
         return URI.create("http://"
                 + StreamServerImpl.streamServerHost + ":"
-                + WEB_SERVER_PORT + "/coverart/" + uri);
+                + WEB_SERVER_PORT + CONTEXT_PATH_COVERART  + uri);
     }
 
     protected MusicTrack buildMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {

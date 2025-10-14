@@ -30,6 +30,7 @@ rootProject.name = 'musicmate'
 include ':musicmate'
 include ':module:musicmate-core'
 include ':module:media-server-jupnp'
+//include ':module:media-server-cling'
 
 //include ':TripMate'
 include ':library:library'

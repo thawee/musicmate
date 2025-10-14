@@ -17,12 +17,10 @@ import org.jupnp.transport.spi.InitializationException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
-import apincer.android.mmate.core.server.HTTPServer;
+import apincer.android.mmate.core.http.HTTPServer;
 import apincer.android.mmate.core.server.IMediaServer;
 
 public class DefaultUPnpServerImpl extends StreamServerImpl.JUpnpServer {
@@ -32,6 +30,7 @@ public class DefaultUPnpServerImpl extends StreamServerImpl.JUpnpServer {
 
     public DefaultUPnpServerImpl(Context context, IMediaServer mediaServer, Router router, StreamServerConfigurationImpl configuration) {
         super(context, mediaServer, router, configuration);
+        addLibInfo("JLHTTP", "3.2");
     }
 
     @Override
@@ -39,9 +38,9 @@ public class DefaultUPnpServerImpl extends StreamServerImpl.JUpnpServer {
         Thread serverThread = new Thread(() -> {
             try {
                 server = new HTTPServer(getListenPort());
-                server.setSocketTimeout(30000); // 30 seconds
+               // server.setSocketTimeout(30000); // 30 seconds
 
-                HTTPServer.VirtualHost host = server.getVirtualHost(null);  // default virtual host
+                HTTPServer.VirtualHost host = server.getDefaultHost();  // default virtual host
                 host.setAllowGeneratedIndex(false);
                 host.addContext("/{*}", new UpnpStreamHandler(router.getProtocolFactory()), "GET", "POST");
                 server.start();
@@ -63,13 +62,7 @@ public class DefaultUPnpServerImpl extends StreamServerImpl.JUpnpServer {
         }
     }
 
-    @Override
-    protected String getServerVersion() {
-        // Use the version of NanoHTTPD you have in your dependencies
-        return "DefaultServer";
-    }
-
-    private static class UpnpStreamHandler implements HTTPServer.ContextHandler {
+    private class UpnpStreamHandler implements HTTPServer.ContextHandler {
         ProtocolFactory protocolFactory;
         protected UpnpStreamHandler(ProtocolFactory protocolFactory) {
             super();
@@ -113,16 +106,13 @@ public class DefaultUPnpServerImpl extends StreamServerImpl.JUpnpServer {
                 for (String value : entry.getValue()) {
                     if("Server".equalsIgnoreCase(entry.getKey())) {
                         // add server
-                        String sName = String.format("%s %s %s",SERVER_SUFFIX,value,SERVER_SUFFIX);
-                        resp.getHeaders().add("Server", sName);
+                       // String sName = String.format("%s %s %s",SERVER_SUFFIX,value,SERVER_SUFFIX);
+                        resp.getHeaders().add("Server", getServerSignature());
                     }else {
                         resp.getHeaders().add(entry.getKey(), value);
                     }
                 }
             }
-            // The Date header is recommended in UDA
-            Calendar time = new GregorianCalendar();
-            resp.getHeaders().add("Date", dateFormatter.format(time.getTime()));
 
             // Body
             byte[] responseBodyBytes = responseMessage.hasBody() ? responseMessage.getBodyBytes() : null;
@@ -158,7 +148,7 @@ public class DefaultUPnpServerImpl extends StreamServerImpl.JUpnpServer {
             UpnpHeaders headers = new UpnpHeaders();
             HTTPServer.Headers requestHeaders = req.getHeaders();
             for (HTTPServer.Header header : requestHeaders) {
-                headers.add(header.getName(), header.getValue());
+                headers.add(header.name(), header.value());
             }
             requestMessage.setHeaders(headers);
 

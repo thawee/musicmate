@@ -1,5 +1,7 @@
 package apincer.android.jupnp.transport.netty;
 
+import static apincer.android.mmate.core.http.HTTPServer.formatDate;
+
 import android.util.Log;
 
 import org.jupnp.http.Headers;
@@ -188,6 +190,7 @@ public class NettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
                 headers.add(entry.getKey(), value);
             }
         }
+        headers.set(HttpHeaderNames.DATE, formatDate(System.currentTimeMillis()));
     }
 
     @Override

@@ -11,8 +11,6 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 public interface IMediaServer {
     String getWebUIPort();
 
-   // IPlaybackService getPlaybackService();
-
     TagRepository getTagReRepository();
 
     FileRepository getFileRepository();

@@ -1,6 +1,6 @@
 package apincer.android.mmate.service;
 
-import static apincer.android.mmate.core.server.WebServer.WEB_SERVER_PORT;
+import static apincer.android.mmate.core.server.AbstractServer.WEB_SERVER_PORT;
 
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;

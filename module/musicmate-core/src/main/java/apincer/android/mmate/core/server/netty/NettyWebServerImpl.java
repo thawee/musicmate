@@ -31,7 +31,7 @@ import apincer.android.mmate.core.playback.NowPlaying;
 import apincer.android.mmate.core.repository.FileRepository;
 import apincer.android.mmate.core.repository.WebSocketContent;
 import apincer.android.mmate.core.server.IMediaServer;
-import apincer.android.mmate.core.server.WebServer;
+import apincer.android.mmate.core.server.AbstractServer;
 import apincer.android.mmate.core.utils.ApplicationUtils;
 import apincer.android.mmate.core.utils.MimeTypeUtils;
 import apincer.android.utils.FileUtils;
@@ -80,7 +80,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
-public class NettyWebServerImpl extends WebServer {
+public class NettyWebServerImpl extends AbstractServer {
     private final Context context;
     private static final String TAG = "NettyWebServer";
     private static final String DEFAULT_COVERART_KEY = "DEFAULT_COVERART_KEY";
@@ -115,6 +115,9 @@ public class NettyWebServerImpl extends WebServer {
         super(context, mediaServer);
         this.context = context;
         this.serverPort = WEB_SERVER_PORT;
+
+        addLibInfo("Netty", "4.2.6");
+
         repos = mediaServer.getFileRepository();
         wsContent = new WebSocketContent(mediaServer, mediaServer.getTagReRepository());
 
@@ -198,7 +201,7 @@ public class NettyWebServerImpl extends WebServer {
                 // Clean up resources if startup fails
                 stopServer();
             }
-        }, "WebUIServer");
+        }, "WebServer");
 
         serverThread.start();
     }
@@ -245,8 +248,8 @@ public class NettyWebServerImpl extends WebServer {
     }
 
     @Override
-    protected String getServerVersion() {
-        return "Netty/4.2.x";
+    protected String getComponentName() {
+        return "WebServer";
     }
 
     public Context getContext() {
@@ -435,7 +438,7 @@ public class NettyWebServerImpl extends WebServer {
 
         private void setDateAndCacheHeaders(HttpResponse response, String fileName) {
             // Add server header
-            response.headers().set(HttpHeaderNames.SERVER, getFullServerName("WebUIServer"));
+            response.headers().set(HttpHeaderNames.SERVER, getServerSignature());
 
             // Add date header with RFC 1123 format required by HTTP/DLNA
           //  ZoneId zoneId = ZoneId.systemDefault();

@@ -1,4 +1,5 @@
-package apincer.android.mmate.core.server;/*
+package apincer.android.mmate.core.http;
+/*
  *  Copyright © 2005-2024 Amichai Rothman
  *
  *  This file is part of JLHTTP - the Java Lightweight HTTP Server.
@@ -55,16 +56,16 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Formatter;
-import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -73,7 +74,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -177,41 +177,35 @@ import javax.net.ssl.SSLSocket;
  * @author Amichai Rothman
  * @since  2008-07-24
  *
+ * @version 3.3 (Modernized) - Updated in 2025 to leverage modern Java features
+ * including Virtual Threads, Records, and Text Blocks for enhanced
+ * performance, scalability, and code clarity.
+ * @author thawee.p
  * improved:
- *  request/response object pooling
- *  thread bound
- *  zero-copy file serving
+ * request/response object pooling
+ * thread bound
+ * zero-copy file serving
  *
  */
 public class HTTPServer {
 
     /**
-     * The SimpleDateFormat-compatible formats of dates which must be supported.
+     * The DateTimeFormatter-compatible formats for dates that must be supported for parsing.
+     * The first pattern (RFC_1123) is the standard for generating dates.
      * Note that all generated date fields must be in the IMF-fixdate format only,
-     * while the others are supported by recipients for backwards-compatibility.
+     *  while the others are supported by recipients for backwards-compatibility.
      */
-    public static final String[] DATE_PATTERNS = {
-        "EEE, dd MMM yyyy HH:mm:ss z", // [RFC9110#5.6.7] IMF-fixdate format
-        "EEEE, dd-MMM-yy HH:mm:ss z",  // obsolete RFC 850 format
-        "EEE MMM d HH:mm:ss yyyy"      // ANSI C's asctime() format
+    private static final DateTimeFormatter[] DATE_FORMATTERS = {
+            DateTimeFormatter.RFC_1123_DATE_TIME, // Primary format: "EEE, dd MMM yyyy HH:mm:ss z"
+            DateTimeFormatter.ofPattern("EEEE, dd-MMM-yy HH:mm:ss z", Locale.US), // Obsolete RFC 850
+            DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy", Locale.US) // ANSI C's asctime()
     };
-
-    /** A GMT (UTC) timezone instance. */
-    protected static final TimeZone GMT = TimeZone.getTimeZone("GMT");
-
-    /** Date format strings. */
-    protected static final char[]
-        DAYS = "Sun Mon Tue Wed Thu Fri Sat".toCharArray(),
-        MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".toCharArray();
 
     /** A convenience array containing the carriage-return and line feed chars. */
     public static final byte[] CRLF = { 0x0d, 0x0a };
 
     /** The HTTP status description strings. */
     protected static final String[] statuses = new String[600];
-
-    protected static final ThreadLocal<Calendar> GREGORIAN_CALENDAR =
-            ThreadLocal.withInitial(() -> new GregorianCalendar(GMT, Locale.US));
 
     static {
         // initialize status descriptions lookup table
@@ -284,6 +278,10 @@ public class HTTPServer {
     /** The MIME types that can be compressed (prefix/suffix wildcards allowed). */
     protected static String[] compressibleContentTypes =
         { "text/*", "*/javascript", "*icon", "*+xml", "*/json" };
+
+    public VirtualHost getDefaultHost() {
+        return getVirtualHost(null);
+    }
 
     /**
      * The {@code LimitedInputStream} provides access to a limited number
@@ -627,9 +625,6 @@ public class HTTPServer {
         public long skip(long len) throws IOException {
             if (len <= 0 || !fill())
                 return 0;
-           // len = Math.min(tail - head, len);
-           // head += (int) len;
-           // return len;
             long skippable = Math.min(tail - head, len);
             head += (int) skippable; // CORRECT: Safely cast the skippable amount
             return skippable;
@@ -1313,43 +1308,45 @@ public class HTTPServer {
     }
 
     /**
-     * The {@code Header} class encapsulates a single HTTP header.
-     */
-    public static class Header {
-
-        protected final String name;
-        protected final String value;
-
-        /**
-         * Constructs a header with the given name and value.
-         * Leading and trailing whitespace are trimmed.
-         *
-         * @param name the header name
-         * @param value the header value
-         * @throws NullPointerException if name or value is null
-         * @throws IllegalArgumentException if name is empty
+         * The {@code Header} class encapsulates a single HTTP header.
          */
-        public Header(String name, String value) {
-            this.name = name.trim();
-            this.value = value.trim(); // [RFC9110#5.5] value can be empty
-            if (this.name.isEmpty()) // [RFC9110#5.1] name cannot be empty
-                throw new IllegalArgumentException("name cannot be empty");
+        public static class Header {
+            private final String name;
+            private final String value;
+            /**
+             * Constructs a header with the given name and value.
+             * Leading and trailing whitespace are trimmed.
+             *
+             * @param name  the header name
+             * @param value the header value
+             * @throws NullPointerException     if name or value is null
+             * @throws IllegalArgumentException if name is empty
+             */
+            public Header(String name, String value) {
+                this.name = name.trim();
+                this.value = value.trim(); // [RFC9110#5.5] value can be empty
+                if (this.name.isEmpty()) // [RFC9110#5.1] name cannot be empty
+                    throw new IllegalArgumentException("name cannot be empty");
+            }
+
+            /**
+             * Returns this header's name.
+             *
+             * @return this header's name
+             */
+            public String name() {
+                return name;
+            }
+
+            /**
+             * Returns this header's value.
+             *
+             * @return this header's value
+             */
+            public String value() {
+                return value;
+            }
         }
-
-        /**
-         * Returns this header's name.
-         *
-         * @return this header's name
-         */
-        public String getName() { return name; }
-
-        /**
-         * Returns this header's value.
-         *
-         * @return this header's value
-         */
-        public String getValue() { return value; }
-    }
 
     /**
      * The {@code Headers} class encapsulates a collection of HTTP headers.
@@ -1390,19 +1387,19 @@ public class HTTPServer {
          */
         public String get(String name) {
             for (int i = 0; i < count; i++)
-                if (headers[i].getName().equalsIgnoreCase(name))
-                    return headers[i].getValue();
+                if (headers[i].name().equalsIgnoreCase(name))
+                    return headers[i].value();
             return null;
         }
 
         /**
-         * Returns the Date value of the header with the given name.
+         * Returns the Instant value of the header with the given name.
          *
          * @param name the header name (case-insensitive)
-         * @return the header value as a Date, or null if none exists
-         *         or if the value is not in any supported date format
+         * @return the header value as an Instant, or null if none exists
+         * or if the value is not in any supported date format
          */
-        public Date getDate(String name) {
+        public Instant getDate(String name) {
             try {
                 String header = get(name);
                 return header == null ? null : parseDate(header);
@@ -1447,7 +1444,7 @@ public class HTTPServer {
          */
         public void addAll(Headers headers) {
             for (Header header : headers)
-                add(header.getName(), header.getValue());
+                add(header.name(), header.value());
         }
 
         /**
@@ -1461,7 +1458,7 @@ public class HTTPServer {
          */
         public Header replace(String name, String value) {
             for (int i = 0; i < count; i++) {
-                if (headers[i].getName().equalsIgnoreCase(name)) {
+                if (headers[i].name().equalsIgnoreCase(name)) {
                     Header prev = headers[i];
                     headers[i] = new Header(name, value);
                     return prev;
@@ -1479,7 +1476,7 @@ public class HTTPServer {
         public void remove(String name) {
             int j = 0;
             for (int i = 0; i < count; i++)
-                if (!headers[i].getName().equalsIgnoreCase(name))
+                if (!headers[i].name().equalsIgnoreCase(name))
                     headers[j++] = headers[i];
             while (count > j)
                 headers[--count] = null;
@@ -1493,7 +1490,7 @@ public class HTTPServer {
          */
         public void writeTo(OutputStream out) throws IOException {
             for (int i = 0; i < count; i++) {
-                out.write(getBytes(headers[i].getName(), ": ", headers[i].getValue()));
+                out.write(getBytes(headers[i].name(), ": ", headers[i].value()));
                 out.write(CRLF);
             }
             out.write(CRLF); // ends header block
@@ -1984,9 +1981,14 @@ public class HTTPServer {
         public void sendHeaders(int status) throws IOException {
             if (headersSent())
                 throw new IOException("headers were already sent");
-            if (!headers.contains("Date"))
+            if (!headers.contains("Date")) {
                 headers.add("Date", formatDate(System.currentTimeMillis()));
-            headers.add("Server", "JLHTTP/3.2");
+            }
+            if (headers.contains("Server")) {
+                headers.add("X-Powered-By", "JLHTTP/3.2");
+            }else {
+                headers.add("Server", "JLHTTP/3.2");
+            }
             out.write(getBytes("HTTP/1.1 ", Integer.toString(status), " ", statuses[status]));
             out.write(CRLF);
             headers.writeTo(out);
@@ -2771,7 +2773,7 @@ public class HTTPServer {
                     start = parseULong(token.substring(0, dash), 10);
                     if (dash < token.length() - 1) { // full range
                         long i = parseULong(token.substring(dash + 1), 10);
-                        end = i < end ? i : end;
+                        end = Math.min(i, end);
                         if (i < start)
                             throw new RuntimeException();
                     }
@@ -2806,55 +2808,39 @@ public class HTTPServer {
     }
 
     /**
-     * Parses a date string in one of the supported {@link #DATE_PATTERNS}.
-     * <p>
+     * Parses a date string in one of the supported HTTP formats.
      * Received date header values must be in one of the following formats:
      * Sun, 06 Nov 1994 08:49:37 GMT  ; IMF-fixdate
      * Sunday, 06-Nov-94 08:49:37 GMT ; obsolete RFC 850 format
      * Sun Nov  6 08:49:37 1994       ; ANSI C's asctime() format
      *
      * @param time a string representation of a time value
-     * @return the parsed date value
+     * @return the parsed time as an Instant
      * @throws IllegalArgumentException if the given string does not contain
-     *         a valid date format in any of the supported formats
+     * a valid date in any of the supported formats
      */
-    public static Date parseDate(String time) {
-        // [RFC9110#5.6.7] interpret 2-digit years >50 years in future as past,
-        // SDF defaults to >20 years which covers it (see set2DigitYearStart)
-        for (String pattern : DATE_PATTERNS) {
+    public static Instant parseDate(String time) {
+        for (DateTimeFormatter formatter : DATE_FORMATTERS) {
             try {
-                SimpleDateFormat df = new SimpleDateFormat(pattern, Locale.US);
-                df.setLenient(false);
-                df.setTimeZone(GMT);
-                return df.parse(time);
-            } catch (ParseException ignore) {}
+                // All HTTP dates are in GMT/UTC
+                return ZonedDateTime.parse(time, formatter).toInstant();
+            } catch (DateTimeParseException ignored) {
+                // Try the next format
+            }
         }
         throw new IllegalArgumentException("invalid date format: " + time);
     }
 
     /**
-     * Formats the given time value as a string in IMF-fixdate format.
+     * Formats the given time value as a string in the standard IMF-fixdate format (RFC 1123).
      *
-     * @param time the time in milliseconds since January 1, 1970, 00:00:00 GMT
-     * @return the given time value as a string in IMF-fixdate format
+     * @param time the time in milliseconds since the Java epoch (00:00:00 GMT, January 1, 1970)
+     * @return the given time value as a formatted string
      */
     public static String formatDate(long time) {
-        // this implementation performs far better than SimpleDateFormat instances, and even
-        // quite better than ThreadLocal SDFs - the server's CPU-bound benchmark gains over 20%!
-        if (time < -62167392000000L || time > 253402300799999L)
-            throw new IllegalArgumentException("year out of range (0001-9999): " + time);
-        char[] s = "DAY, 00 MON 0000 00:00:00 GMT".toCharArray(); // copy the format template
-        Calendar cal = GREGORIAN_CALENDAR.get(); // Get thread-safe instance //new GregorianCalendar(GMT, Locale.US);
-        cal.setTimeInMillis(time);
-        System.arraycopy(DAYS, 4 * (cal.get(Calendar.DAY_OF_WEEK) - 1), s, 0, 3);
-        System.arraycopy(MONTHS, 4 * cal.get(Calendar.MONTH), s, 8, 3);
-        int n = cal.get(Calendar.DATE);    s[5]  += n / 10;      s[6]  += n % 10;
-        n = cal.get(Calendar.YEAR);        s[12] += n / 1000;    s[13] += n / 100 % 10;
-                                           s[14] += n / 10 % 10; s[15] += n % 10;
-        n = cal.get(Calendar.HOUR_OF_DAY); s[17] += n / 10;      s[18] += n % 10;
-        n = cal.get(Calendar.MINUTE);      s[20] += n / 10;      s[21] += n % 10;
-        n = cal.get(Calendar.SECOND);      s[23] += n / 10;      s[24] += n % 10;
-        return new String(s);
+        return DateTimeFormatter.RFC_1123_DATE_TIME.format(
+                ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC)
+        );
     }
 
     /**
@@ -3040,14 +3026,14 @@ public class HTTPServer {
         StringBuilder sb = new StringBuilder(len + 30);
         int start = 0;
         for (int i = 0; i < len; i++) {
-            String ref = null;
-            switch (s.charAt(i)) {
-                case '&': ref = "&amp;"; break;
-                case '>': ref = "&gt;"; break;
-                case '<': ref = "&lt;"; break;
-                case '"': ref = "&quot;"; break;
-                case '\'': ref = "&#39;"; break;
-            }
+            String ref = switch (s.charAt(i)) {
+                case '&' -> "&amp;";
+                case '>' -> "&gt;";
+                case '<' -> "&lt;";
+                case '"' -> "&quot;";
+                case '\'' -> "&#39;";
+                default -> null;
+            };
             if (ref != null) {
                 sb.append(s.substring(start, i)).append(ref);
                 start = i + 1;
@@ -3187,7 +3173,7 @@ public class HTTPServer {
                 throw new IOException("invalid whitespace in header: \"" + line + "\"");
             Header prev = headers.replace(name, value);
             if (prev != null) // [RFC9110#5.3] concatenate repeated headers
-                headers.replace(name, prev.getValue() + ", " + value);
+                headers.replace(name, prev.value() + ", " + value);
             if (++count > 100)
                 throw new IOException("too many header lines");
         }
@@ -3243,8 +3229,10 @@ public class HTTPServer {
                 return 412;
         } else {
             // If-Unmodified-Since [RFC9110#13.1.4]
-            Date date = headers.getDate("If-Unmodified-Since");
-            if (date != null && lastModified > date.getTime())
+            //Date date = headers.getDate("If-Unmodified-Since");
+            //if (date != null && lastModified > date.getTime())
+            Instant date = headers.getDate("If-Unmodified-Since");
+            if (date != null && lastModified > date.toEpochMilli())
                 return 412;
         }
         boolean isGetOrHead = req.getMethod().equals("GET") || req.getMethod().equals("HEAD");
@@ -3255,8 +3243,10 @@ public class HTTPServer {
                 return isGetOrHead ? 304 : 412;
         } else if (isGetOrHead) {
             // If-Modified-Since [RFC9110#13.1.3]
-            Date date = headers.getDate("If-Modified-Since");
-            if (date != null && lastModified <= date.getTime())
+            //Date date = headers.getDate("If-Modified-Since");
+            //if (date != null && lastModified <= date.getTime())
+            Instant date = headers.getDate("If-Modified-Since");
+            if (date != null && lastModified <= date.toEpochMilli())
                 return 304;
         }
         // [RFC9110#14.2] Range is ignored on any method other than GET,
@@ -3267,8 +3257,11 @@ public class HTTPServer {
         header = req.getHeaders().get("If-Range"); // either a date or an etag
         if (header != null) {
             if (!header.startsWith("\"") && !header.startsWith("W/")) {
-                Date date = req.getHeaders().getDate("If-Range");
-                if (date == null || lastModified != date.getTime()) // [RFC9110#13.1.5] exact match
+                //Date date = req.getHeaders().getDate("If-Range");
+                //if (date == null || lastModified != date.getTime()) // [RFC9110#13.1.5] exact match
+                Instant date = req.getHeaders().getDate("If-Range");
+                // [RFC9110#13.1.5] exact match required
+                if (date == null || lastModified != date.toEpochMilli())
                     return 200; // date validator doesn't match - ignore range
             } else if (!match(true, new String[] { header }, etag)) { // [RFC9110#13.1.5] strong etag
                 return 200; // etag validator doesn't match - ignore range
@@ -3297,38 +3290,29 @@ public class HTTPServer {
         // handle conditional request and range
         long[] range = req.getRange(len);
         int status = getConditionalStatus(req, lastModifiedSecs, etag, range != null);
-        if (status == 206)
-            status = range[0] >= len ? 416 : 200; // unsatisfiable range or 200 flow but with range
-        else
-            range = null; // ignore range
+        if (status == 206) {
+            if (range[0] >= len) {
+                status = 416; // The range is not satisfiable, so send an error
+            }
+            // Otherwise, 'status' correctly remains 206
+        } else {
+            range = null; // Ignore the range if we are not sending partial content
+        }
         // send the response
         Headers respHeaders = resp.getHeaders();
         switch (status) {
-            case 304: // [RFC9110#15.4.5] no other headers or body allowed
+            case 304 -> {
                 respHeaders.add("ETag", etag);
                 respHeaders.add("Vary", "Accept-Encoding");
                 respHeaders.add("Last-Modified", formatDate(lastModified));
                 resp.sendHeaders(304);
-                break;
-            case 412:
-                resp.sendError(412);
-                break;
-            case 416:
+            }
+            case 412 -> resp.sendError(412);
+            case 416 -> {
                 respHeaders.add("Content-Range", "bytes */" + len);
                 resp.sendError(416);
-                break;
-            case 200: // This now handles both 200 (full) and 206 (partial)
-            case 206:
-                // send OK response
-                /*resp.sendHeaders(200, len, lastModified, etag,
-                    getContentType(file.getName(), "application/octet-stream"), range);
-                // send body
-                InputStream in = new FileInputStream(file);
-                try {
-                    resp.sendBody(in, len, range);
-                } finally {
-                    in.close();
-                }*/
+            } // This now handles both 200 (full) and 206 (partial)
+            case 200, 206 -> {
                 resp.sendHeaders(status, len, lastModified, etag,
                         getContentType(file.getName(), "application/octet-stream"), range);
 
@@ -3354,10 +3338,8 @@ public class HTTPServer {
                         }
                     }
                 }
-                break;
-            default:
-                resp.sendError(500); // should never happen
-                break;
+            }
+            default -> resp.sendError(500); // should never happen
         }
     }
 

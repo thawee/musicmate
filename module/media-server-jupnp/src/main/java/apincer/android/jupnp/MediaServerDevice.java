@@ -1,6 +1,6 @@
 package apincer.android.jupnp;
 
-import static apincer.android.mmate.core.server.WebServer.WEB_SERVER_PORT;
+import static apincer.android.mmate.core.server.AbstractServer.CONTENT_SERVER_PORT;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -47,7 +47,6 @@ import apincer.android.mmate.core.utils.StringUtils;
 
 public class MediaServerDevice extends LocalDevice {
     private final DeviceDetailsProvider deviceDetailsProvider;
-    private final TagRepository tagRepos;
 
     public MediaServerDevice(Context context, TagRepository tagRepos) throws ValidationException {
         super(
@@ -58,7 +57,7 @@ public class MediaServerDevice extends LocalDevice {
                 createMediaServerServices(context, tagRepos),
                 null
         );
-        this.tagRepos = tagRepos;
+      //  this.tagRepos = tagRepos;
         deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
         ContentDirectory contentDirectoryService = getServiceImplementation(ContentDirectory.class);
         ConnectionManagerService connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
@@ -247,7 +246,7 @@ public class MediaServerDevice extends LocalDevice {
 
                 URI presentationURI = null;
             if (!StringUtils.isEmpty(StreamServerImpl.streamServerHost)) {
-                String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + WEB_SERVER_PORT + "/index.html";
+                String webInterfaceUrl = "http://" + StreamServerImpl.streamServerHost + ":" + CONTENT_SERVER_PORT + "/index.html";
                 presentationURI = URI.create(webInterfaceUrl);
             }
             return new DeviceDetails(

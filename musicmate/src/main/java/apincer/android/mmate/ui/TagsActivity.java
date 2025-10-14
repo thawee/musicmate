@@ -102,15 +102,11 @@ public class TagsActivity extends AppCompatActivity {
     private TextView genreView;
     private TextView encInfo;
     private TextView pathInfo;
-    //private View pathInfoLine;
-    //private View hiresView;
-    //private ResolutionView resolutionView;
     private DynamicRangeView dynamicRangeView;
     private QualityIndicatorView qualityIndicatorView;
     private RatingIndicatorView ratingIndicatorView;
     private NewIndicatorView newIndicatorView;
 
-    //private int toolbar_from_color;
     private int toolbar_to_color;
     private Fragment activeFragment;
 
@@ -200,21 +196,14 @@ public class TagsActivity extends AppCompatActivity {
         insetsController.setAppearanceLightStatusBars(false);
 
         setContentView(R.layout.activity_tags);
+        viewModel = new ViewModelProvider(this).get(TagsViewModel.class);
 
-       // sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
         long[] tagIds = getIntent().getLongArrayExtra("MUSIC_TAG_IDS");
         if (tagIds != null && tagIds.length > 0) {
             // Load the data from the database on a background thread.
             // For example, using a ViewModel that calls a repository.
             loadMusicTagsFromDb(tagIds);
         }
-
-       // ExecutorService executor = MusicMateExecutors.getExecutorService(); // Get your executor
-       // TagsViewModel.TagsViewModelFactory factory = new TagsViewModel.TagsViewModelFactory();
-       // viewModel = new ViewModelProvider(this, factory).get(TagsViewModel.class);
-        viewModel = new ViewModelProvider(this).get(TagsViewModel.class);
-
-        //operationTask = new FileOperationTask(viewModel.getFileRepository(), viewModel.getTagRepository());
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -265,11 +254,11 @@ public class TagsActivity extends AppCompatActivity {
         if (ids == null || ids.length == 0) {
                          return;
                      }
-
                  databaseExecutor.execute(() -> {
-                     List<MusicTag> musicTags = tagRepos.findByIds(ids);
-                     viewModel.processAudioTagEditEvent(musicTags);
-
+                     if(viewModel != null) {
+                         List<MusicTag> musicTags = tagRepos.findByIds(ids);
+                         viewModel.processAudioTagEditEvent(musicTags);
+                     }
                  });
     }
 

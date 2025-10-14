@@ -7,8 +7,8 @@ import static apincer.android.mmate.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
+import androidx.preference.PreferenceManager;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.QueryBuilder;
@@ -535,8 +535,10 @@ public class TagRepository {
     }
 
     public static List<String> getDirectories(Context context) {
+        // The default preference file name is constructed like this
         SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
+
         List<String> defaultDirs = getDefaultMusicPaths(context);
         Set<String> defaultDirsSet = new HashSet<>(defaultDirs);
         Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, defaultDirsSet);

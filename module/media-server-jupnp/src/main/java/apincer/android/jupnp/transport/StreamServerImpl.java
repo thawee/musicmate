@@ -13,20 +13,26 @@ import java.net.InetAddress;
 
 import apincer.android.mmate.core.server.DefaultContentServerImpl;
 import apincer.android.mmate.core.server.IMediaServer;
-import apincer.android.mmate.core.server.WebServer;
+import apincer.android.mmate.core.server.AbstractServer;
 import apincer.android.mmate.core.server.jetty.JettyContentServerImpl;
 import apincer.android.mmate.core.server.jetty.JettyWebServerImpl;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
 
-    public abstract static class JUpnpServer extends WebServer {
+    public abstract static class JUpnpServer extends AbstractServer {
         protected Router router;
         protected StreamServerConfigurationImpl configuration;
-        public static final String SERVER_SUFFIX = "UPnP/1.0 jUPnP/3.0.3";
+
+        @Override
+        protected String getComponentName() {
+            return "UPnP/1.0";
+        }
+
         public JUpnpServer(Context context, IMediaServer mediaServer, Router router, StreamServerConfigurationImpl configuration) {
             super(context, mediaServer);
             this.router = router;
             this.configuration = configuration;
+            addLibInfo("jUPnP", "3.0.3");
         }
 
         public ProtocolFactory getProtocolFactory() {
@@ -46,9 +52,9 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
    // public static final UDAServiceType AV_TRANSPORT_TYPE = new UDAServiceType("AVTransport");
     private static final String TAG = "StreamServerImpl";
     final private StreamServerConfigurationImpl configuration;
-    private WebServer contentServer;
+    private AbstractServer contentServer;
     private JUpnpServer upnpServer;
-    private WebServer webServer;
+    private AbstractServer webServer;
     private final Context context;
     private final IMediaServer mediaServer;
    // private final TagRepository tagRepos;
@@ -85,12 +91,12 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
         try {
             // if(Settings.isUseNettyLibrary(context)) {
             //this.webServer = new NettyWebServerImpl(context, router, configuration);
-            this.webServer = new JettyWebServerImpl(context, mediaServer);
-            this.webServer.initServer(bindAddress);
+           // this.webServer = new JettyWebServerImpl(context, mediaServer);
+           // this.webServer.initServer(bindAddress);
 
             //this.contentServer = new NettyContentServerImpl(context, router, configuration);
             this.contentServer = new JettyContentServerImpl(context, mediaServer);
-            //this.contentServer = new DefaultContentServerImpl(context, mediaServer);
+           // this.contentServer = new DefaultContentServerImpl(context, mediaServer);
             this.contentServer.initServer(bindAddress);
 
             //this.upnpServer = new NettyUPnpServerImpl(context, mediaServer, router, configuration);

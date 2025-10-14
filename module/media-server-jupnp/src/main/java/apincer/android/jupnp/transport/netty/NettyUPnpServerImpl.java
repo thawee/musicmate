@@ -17,12 +17,8 @@ import org.jupnp.transport.spi.UpnpStream;
 
 import java.net.InetAddress;
 import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.concurrent.ThreadFactory;
 
 import apincer.android.jupnp.transport.StreamServerConfigurationImpl;
@@ -83,6 +79,8 @@ public class NettyUPnpServerImpl extends StreamServerImpl.JUpnpServer {
 
     public NettyUPnpServerImpl(Context context, IMediaServer mediaServer, Router router, StreamServerConfigurationImpl configuration)  {
         super(context, mediaServer, router, configuration);
+
+        addLibInfo("Netty", "4.2.6");
 
         // Name threads for better debugging
         ThreadFactory bossThreadFactory = new DefaultThreadFactory("upnp-boss");
@@ -196,11 +194,6 @@ public class NettyUPnpServerImpl extends StreamServerImpl.JUpnpServer {
         Log.i(TAG, "Http UPNP Server stopped successfully");
     }
 
-    @Override
-    protected String getServerVersion() {
-        return "Netty/4.2.0";
-    }
-
     @Sharable
     private class HttpServerHandler extends ChannelInboundHandlerAdapter {
         final String upnpPath;
@@ -244,16 +237,13 @@ public class NettyUPnpServerImpl extends StreamServerImpl.JUpnpServer {
             final boolean keepAlive = HttpUtil.isKeepAlive(request);
             HttpUtil.setContentLength(response, response.content().readableBytes());
             HttpUtil.setKeepAlive(response.headers(), request.protocolVersion(), keepAlive);
-            // Add date header with RFC 1123 format required by HTTP/DLNA
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            dateFormatter.setTimeZone(TimeZone.getTimeZone("GMT"));
-            response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(new Date()));
+            response.headers().set(HttpHeaderNames.DATE, formatDate(System.currentTimeMillis()));
 
             // Add more comprehensive DLNA headers for better compatibility
             response.headers().set("TransferMode.DLNA.ORG", "Interactive");
             response.headers().set("Connection-Timeout", "60");
 
-            response.headers().set(HttpHeaderNames.SERVER, getFullServerName(SERVER_SUFFIX));
+            response.headers().set(HttpHeaderNames.SERVER, getServerSignature());
             ChannelFuture flushPromise = ctx.writeAndFlush(response);
 
             if (!keepAlive) {

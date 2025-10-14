@@ -1,6 +1,6 @@
 package apincer.android.jupnp;
 
-import static apincer.android.mmate.core.server.WebServer.UPNP_SERVER_PORT;
+import static apincer.android.mmate.core.server.AbstractServer.UPNP_SERVER_PORT;
 
 import android.content.Context;
 

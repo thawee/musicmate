@@ -35,6 +35,7 @@ dependencies {
     implementation libs.androidx.annotation
     implementation libs.androidx.core
     implementation libs.androidx.work
+    implementation libs.androidx.preference
 
     implementation libs.rxandroid
     implementation libs.rxjava
@@ -49,7 +50,7 @@ dependencies {
     implementation libs.jetty.websocket.api12
     implementation libs.jetty.websocket.server12
     implementation libs.netty.codec.http
-    implementation libs.io.undertow.core
+    //implementation libs.io.undertow.core
 
     //others
     implementation libs.commons.codec

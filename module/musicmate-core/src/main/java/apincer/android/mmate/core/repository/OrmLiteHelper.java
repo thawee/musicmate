@@ -3,8 +3,6 @@ package apincer.android.mmate.core.repository;
 import static apincer.android.mmate.core.Constants.ARTIST_SEP;
 import static apincer.android.mmate.core.Constants.ARTIST_SEP_SPACE;
 import static apincer.android.mmate.core.Constants.NONE;
-import static apincer.android.mmate.core.codec.MusicAnalyser.THRESHOLD_RESAMPLED;
-import static apincer.android.mmate.core.codec.MusicAnalyser.THRESHOLD_UPSCALED;
 import static apincer.android.mmate.core.utils.StringUtils.EMPTY;
 import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.core.utils.StringUtils.trimToEmpty;
@@ -77,8 +75,14 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     }
 
     public List<MusicTag> getAllMusicsForPlaylist() {
-            OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.TITLE, OrmLiteHelper.ORDERED_BY.ARTIST};
-            return findMySongs(aristAlbum);
+           // OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.TITLE, OrmLiteHelper.ORDERED_BY.ARTIST};
+          //  return findMySongs(aristAlbum);
+        List<MusicTag> list = findMySongs();
+        list.sort(Comparator
+                .comparing(MusicTag::getNormalizedTitle)
+                .thenComparing(MusicTag::getNormalizedArtist)
+        );
+        return list;
     }
 
     public enum ORDERED_BY {ALBUM, ARTIST,TITLE}
@@ -281,7 +285,14 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             if(maxResults>0) {
                 builder.limit(maxResults);
             }
-            return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
+
+            //List<MusicTag> masterList = builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
+            List<MusicTag> masterList = builder.query();
+            masterList.sort(Comparator
+                    .comparing(MusicTag::getNormalizedTitle)
+                    .thenComparing(MusicTag::getNormalizedArtist)
+            );
+            return masterList;
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
@@ -294,22 +305,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.where().eq("drScore",0)
                     .or().eq("dynamicRange", 0);
             return builder.orderByNullsFirst("title", true).orderByNullsFirst("artist", true).query();
-        } catch (SQLException e) {
-            return EMPTY_LIST;
-        }
-    }
-
-    //@Query("Select * from tag where fileSizeRatioaudioBitRate/(audioBitsDepth*audioSampleRate*audioChannels) <= 0.36")
-    public List<MusicTag> findMyUnsatisfiedSongs()   {
-        try {
-            Dao<MusicTag, ?> dao = getMusicTagDao();
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("mediaQuality", Constants.QUALITY_BAD).or()
-                    .lt("drScore", 2).or()
-                    .gt("upscaledScore", THRESHOLD_UPSCALED).or()
-                    .gt("resampledScore", THRESHOLD_RESAMPLED).or()
-                    .in("audioEncoding", "AAC", "MPEG");
-            return builder.orderBy("title", true).query();
         } catch (SQLException e) {
             return EMPTY_LIST;
         }
@@ -486,7 +481,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     public List<MusicTag> findSimilarSongs(boolean excludeArtist) {
         try {
             List<MusicTag> list =  getMusicTagDao().queryForAll();
-          //  boolean excludeArtist = Settings.isExcludeArtistFromSimilarSongs(MusixMateApp.getInstance());
 
             Map<String, List<MusicTag>> consolidatedMap = new HashMap<>();
             for (MusicTag song : list) {

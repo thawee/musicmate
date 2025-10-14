@@ -234,7 +234,7 @@ public class NettyWebServerImpl extends StreamServerImpl.StreamServer {
                 // Clean up resources if startup fails
                 stopServer();
             }
-        }, "WebUIServer");
+        }, "WebServer");
 
         serverThread.start();
     }

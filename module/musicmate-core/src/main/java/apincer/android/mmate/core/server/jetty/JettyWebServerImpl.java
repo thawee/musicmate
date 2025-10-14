@@ -48,10 +48,10 @@ import apincer.android.mmate.core.repository.FileRepository;
 import apincer.android.mmate.core.repository.TagRepository;
 import apincer.android.mmate.core.repository.WebSocketContent;
 import apincer.android.mmate.core.server.IMediaServer;
-import apincer.android.mmate.core.server.WebServer;
+import apincer.android.mmate.core.server.AbstractServer;
 import apincer.android.mmate.core.utils.MimeTypeUtils;
 
-public class JettyWebServerImpl extends WebServer {
+public class JettyWebServerImpl extends AbstractServer {
     private static final String TAG = "JettyWebServer";
 
     private final Context context;
@@ -68,6 +68,7 @@ public class JettyWebServerImpl extends WebServer {
         tagRepos = mediaServer.getTagReRepository();
         fileRepos = mediaServer.getFileRepository();
         wsContent =new WebSocketContent(mediaServer, tagRepos);
+        addLibInfo("Jetty", "12.1.2");
     }
 
     @Override
@@ -122,7 +123,7 @@ public class JettyWebServerImpl extends WebServer {
                 wsContext.setAllowNullPathInContext(true);
 
                 // Optional: Add context attributes
-                wsContext.setAttribute("websocket.server.version", "12.1.0");
+                wsContext.setAttribute("websocket.server.version", "12.1.2");
                 wsContext.setAttribute("websocket.max.connections", 1000);
 
                 // 2. Album Art Handler on /coverart and static files (HTML, CSS, JS) on root context
@@ -178,8 +179,8 @@ public class JettyWebServerImpl extends WebServer {
     }
 
     @Override
-    protected String getServerVersion() {
-        return "Jetty/12.1.1";
+    protected String getComponentName() {
+        return "WebServer";
     }
 
     @Override
@@ -196,7 +197,7 @@ public class JettyWebServerImpl extends WebServer {
 
         @Override
         public boolean handle(Request request, Response response, Callback callback) throws Exception {
-            response.getHeaders().put(HttpHeader.SERVER, getFullServerName("WebUiServer"));
+            response.getHeaders().put(HttpHeader.SERVER, getServerSignature());
 
             if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
                 return super.handle(request, response, callback);

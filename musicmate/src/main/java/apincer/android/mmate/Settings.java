@@ -93,7 +93,12 @@ public class Settings {
         edit.apply();
     }
 
-    public static SharedPreferences getPreferences(Context applicationContext) {
-        return PreferenceManager.getDefaultSharedPreferences(applicationContext);
+    public static SharedPreferences getPreferences(Context context) {
+        // The default preference file name is constructed like this
+        String defaultPrefsName = context.getPackageName() + "_preferences";
+
+        return context.getSharedPreferences(defaultPrefsName, Context.MODE_PRIVATE);
+
+       // return PreferenceManager.getDefaultSharedPreferences(applicationContext);
     }
 }

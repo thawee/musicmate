@@ -41,7 +41,7 @@ dependencies {
     implementation libs.jupnp.support
     implementation libs.jetty.server12
     implementation libs.netty.codec.http
-    implementation libs.io.undertow.core
+    //implementation libs.io.undertow.core
 
     implementation libs.commons.io
     implementation libs.google.gson

@@ -1,6 +1,6 @@
 package apincer.android.jupnp;
 
-import static apincer.android.mmate.core.server.WebServer.CONTENT_SERVER_PORT;
+import static apincer.android.mmate.core.server.AbstractServer.CONTENT_SERVER_PORT;
 
 import android.content.Context;
 import android.util.Log;
@@ -85,7 +85,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  *  </p>
  */
 public class MediaServerImpl implements IMediaServer {
-    private static final String TAG = "JupnpMediaServerImpl";
+    private static final String TAG = "MediaServerImpl";
     public static final UDAServiceType AV_TRANSPORT_TYPE = new UDAServiceType("AVTransport");
     public static final Pattern IPV4_PATTERN =
             Pattern.compile(
@@ -474,14 +474,13 @@ public class MediaServerImpl implements IMediaServer {
     public void playSong(String rendererUdn, MusicTag song) {
         // Step 1: Find the target device (renderer) by its UDN
         Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-        // Device device = MusixMateApp.getInstance().getRendererByUDN(rendererUdn);
         if (device == null) {
             System.err.println("Renderer with UDN " + rendererUdn + " not found.");
             return;
         }
 
         // Step 2: Get the AVTransport service from the device
-        org.jupnp.model.meta.Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
         if (avTransportService == null) {
             System.err.println("Renderer does not have an AVTransport service.");
             return;
@@ -522,7 +521,6 @@ public class MediaServerImpl implements IMediaServer {
             }
         });
     }
-
 
     /**
      * Finds a service recursively within a device and its embedded devices.
@@ -578,7 +576,7 @@ public class MediaServerImpl implements IMediaServer {
             return;
         }
 
-        org.jupnp.model.meta.Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
         if (avTransportService == null) {
             return;
         }
@@ -843,7 +841,6 @@ public class MediaServerImpl implements IMediaServer {
     public void onDestroy() {
 
     }
-
 
     // --- Interfaces for Callbacks ---
     public interface TransportInfoCallback {

@@ -169,6 +169,7 @@ public class PlaybackService extends Service implements IPlaybackService {
     private void loadPlayingQueue() {
         try {
            // List<QueueItem> queues = MusixMateApp.getInstance().getOrmLite().getQueueItemDao().queryForAll();
+            playingQueueSubject.getValue().clear();
             List<QueueItem> queues = tagRepos.getQueueItems();
             queues.forEach(queueItem -> playingQueueSubject.getValue().add(queueItem.getTrack()));
             originalQueue = playingQueueSubject.getValue();
