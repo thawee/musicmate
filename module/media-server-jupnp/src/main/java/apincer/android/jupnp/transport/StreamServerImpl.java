@@ -11,12 +11,9 @@ import org.jupnp.transport.spi.StreamServer;
 
 import java.net.InetAddress;
 
-import apincer.android.mmate.core.server.DefaultContentServerImpl;
 import apincer.android.mmate.core.server.IMediaServer;
 import apincer.android.mmate.core.server.AbstractServer;
 import apincer.android.mmate.core.server.NioContentServerImpl;
-import apincer.android.mmate.core.server.jetty.JettyContentServerImpl;
-import apincer.android.mmate.core.server.jetty.JettyWebServerImpl;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfigurationImpl> {
 

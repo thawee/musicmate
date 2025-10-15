@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="MetaDataEncodingNames">
+        <item>CP720 - Arabic DOS</item>
+        <item>CP1256 - Arabic ANSI</item>
+        <item>CP775 - Baltic DOS</item>
+        <item>CP1257 - Baltic ANSI</item>
+        <item>CP936 - Chinese Simplified ANSI/OEM</item>
+        <item>CP950 - Chinese Traditional ANSI/OEM</item>
+        <item>CP855 - Cyrillic OEM</item>
+        <item>CP1251 - Cyrillic ANSI</item>
+        <item>CP852 - European Central DOS</item>
+        <item>CP1250 - European Central ANSI</item>
+        <item>CP850 - European Western DOS</item>
+        <item>CP1252 - European Western ANSI</item>
+        <item>CP863 - French OEM</item>
+        <item>CP737 - Greek DOS</item>
+        <item>CP1253 - Greek ANSI</item>
+        <item>CP862 - Hebrew DOS</item>
+        <item>CP1255 - Hebrew ANSI</item>
+        <item>CP932 - Japanese Shift_JIS</item>
+        <item>CP949 - Korean ANSI/OEM</item>
+        <item>CP865 - Nordic DOS</item>
+        <item>CP860 - Portuguese DOS</item>
+        <item>CP866 - Russian DOS</item>
+        <item>CP874 - Thai ANSI/OEM</item>
+        <item>CP857 - Turkish DOS</item>
+        <item>CP1254 - Turkish ANSI</item>
+        <item>CP1125 - Ukraine OEM</item>
+        <item>CP437 - US DOS</item>
+        <item>CP1258 - Vietnamese ANSI/OEM</item>
+    </string-array>
+    <string-array name="MetaDataEncodingValues">
+        <item>CP720</item>
+        <item>CP1256</item>
+        <item>CP775</item>
+        <item>CP1257</item>
+        <item>CP936</item>
+        <item>CP950</item>
+        <item>CP855</item>
+        <item>CP1251</item>
+        <item>CP852</item>
+        <item>CP1250</item>
+        <item>CP850</item>
+        <item>CP1252</item>
+        <item>CP863</item>
+        <item>CP737</item>
+        <item>CP1253</item>
+        <item>CP862</item>
+        <item>CP1255</item>
+        <item>CP932</item>
+        <item>CP949</item>
+        <item>CP865</item>
+        <item>CP860</item>
+        <item>CP866</item>
+        <item>TIS-620</item>
+        <item>CP857</item>
+        <item>CP1254</item>
+        <item>CP1125</item>
+        <item>CP437</item>
+        <item>CP1258</item>
+    </string-array>
+
+    <string-array name="default_album_artist" >
+        <item>Various Artists</item>
+        <item>Soundtrack</item>
+    </string-array>
+    <string-array name="default_publisher" >
+        <!-- audio recording company -->
+        <item>Joox</item>
+        <item>Qobuz</item>
+        <item>Apple</item>
+        <item>Spotify</item>
+        <item>Tidal</item>
+        <item>Youtube</item>
+        <item>2L</item>
+        <item>HD Tracks</item>
+        <item>NativeDSD</item>
+        <item>Onkyo</item>
+        <item>GMM Grammy</item>
+        <item>Audioquest</item>
+        <item>Reference Recordings</item>
+        <item>Chesky Records</item>
+        <item>Linn Records</item>
+        <item>Sheffield Lab</item>
+        <item>Clearaudio</item>
+        <item>Stockfisch</item>
+        <item>Telarc Records</item>
+        <item>Opus3</item>
+        <item>JVC</item>
+        <item>Lasting Impression Music</item>
+        <item>First Impression Music</item>
+        <item>Three Blind Mice</item>
+        <item>Classic Records</item>
+        <item>Proprius Records</item>
+        <item>Impex Records</item>
+        <item>Groove Note</item>
+        <item>Pope Music</item>
+        <item>Analogue Productions</item>
+        <item>Mobile Fidelity Sound Lab</item>
+        <item>TopMusic</item>
+        <item>Premonition Records</item>
+        <item>The Absolute Sound</item>
+    </string-array>
+
+    <array name="auto_size_text_sizes">
+        <item>16sp</item>
+        <item>28sp</item>
+        <item>32sp</item>
+        <item>42sp</item>
+        <item>54sp</item>
+    </array>
+
+    <string-array name="default_mediaType">
+        <item>Digital</item>
+        <item>Analog</item>
+        <item>CD</item>
+        <item>SACD</item>
+        <item>MC</item>
+        <item>VINYL</item>
+    </string-array>
+
+    <string-array name="default_genres">
+        <item>Alternative</item>
+        <item>Acoustic</item>
+        <item>Bossa Nova</item>
+        <item>Classical</item>
+        <item>Classical, Concertos</item>
+        <item>Instrument</item>
+        <item>Instrument, Vocal</item>
+        <item>Jazz</item>
+        <item>Jazz, Ballads</item>
+        <item>Jazz, Vocal</item>
+        <item>Blues</item>
+        <item>Country</item>
+        <item>Folk</item>
+        <item>Funk</item>
+        <item>Soul</item>
+        <item>R&amp;B</item>
+        <item>Pop</item>
+        <item>Pop, Dance</item>
+        <item>Pop, Rock</item>
+        <item>Pop, Vocal</item>
+        <item>Rock</item>
+        <item>Rock, Alternative</item>
+        <item>Rock, Classic</item>
+        <item>Rock, Hard Rock</item>
+        <item>Rock, Metal</item>
+        <item>Rock, Soft Rock</item>
+        <item>Reggae &amp; Ska</item>
+        <item>Latin</item>
+        <item>Hip-Hop</item>
+        <item>EDM</item>
+        <item>Rap</item>
+        <item>Indie</item>
+
+        <item>Thai, Alternative</item>
+        <item>Thai, Acoustic</item>
+        <item>Thai, Instrument</item>
+        <item>Thai, Instrument Vocal</item>
+        <item>Thai, Classical</item>
+        <item>Thai, EDM</item>
+        <item>Thai, Hip-Hop</item>
+        <item>Thai, Indie</item>
+        <item>Thai, Pop</item>
+        <item>Thai, Pop Vocal</item>
+        <item>Thai, Rock</item>
+        <item>Thai, Jazz</item>
+
+        <item>Kantrum</item>
+        <item>Kam Mueang</item>
+        <item>Luk Thung</item>
+        <item>Luk Krung</item>
+        <item>Mor Lum</item>
+        <item>Phuea Chiwit</item>
+
+        <item>Indonesia</item>
+    </string-array>
+    <string-array name="default_groupings">
+        <item>Lounge</item>
+        <item>Traditional</item>
+        <item>Contemporary</item>
+        <item>Oldies</item>
+        <item>Classical</item>
+        <!--
+        <item>English</item>
+        <item>Lounge</item>
+        <item>Thai Classical</item>
+        <item>Thai Lounge</item>
+        <item>Thai</item>
+        <item>World</item> -->
+    </string-array>
+    <string-array name="file_qualities">
+        <item>Audiophile</item>
+        <item>Recommended</item>
+        <item>Favorite</item>
+        <item>Bad</item>
+        <item>Not Rated</item>
+    </string-array>
+</resources>

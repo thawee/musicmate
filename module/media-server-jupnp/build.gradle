@@ -32,6 +32,10 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 dependencies {
+    implementation project(':core')
+    implementation project(':server-api')
+    implementation project(':library:library')
+
     implementation libs.androidx.annotation
     implementation libs.androidx.core
 
@@ -50,7 +54,4 @@ dependencies {
     implementation libs.rxjava
     implementation libs.dagger.hilt.android
     ksp libs.dagger.hilt.compiler
-
-    implementation project(':module:musicmate-core')
-    implementation project(':library:library')
 }

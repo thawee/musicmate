@@ -1,0 +1,250 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+    alias libs.plugins.android.application
+    alias libs.plugins.kotlin.android
+    alias libs.plugins.devtools.ksp
+    alias libs.plugins.dagger.hilt
+}
+
+android {
+    compileSdk = libs.versions.compileSdkVersion.get() as Integer
+    buildToolsVersion = libs.versions.buildTools.get()
+    //buildTools( libs.versions.buildTools.get())
+
+    defaultConfig {
+        applicationId = "apincer.android.mmate"
+        minSdk = libs.versions.minSdkVersion.get() as Integer
+        targetSdk = libs.versions.targetSdkVersion.get() as Integer
+        versionCode = 101
+        versionName  = "3.11.0-"+ getDate()
+        //noinspection ChromeOsAbiSupport
+        ndk.abiFilters = ['arm64-v8a']
+        multiDexEnabled = true
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    // Define the dimensions for your flavors
+    flavorDimensions "database", "server"
+    productFlavors {
+            ormlite {
+                dimension = "database"
+                // Gradle will look for code in `src/ormlite/java`
+            }
+            nio {
+                dimension = "server"
+                // Gradle will look for code in `src/nio/java`
+            }
+            jetty {
+                dimension = "server"
+                // Gradle will look for code in `src/netty/java`
+            }
+            netty {
+                dimension = "server"
+                // Gradle will look for code in `src/netty/java`
+            }
+    }
+
+    compileOptions {
+        // jetty12 required java 17
+        sourceCompatibility = JavaLanguageVersion.of(17)
+        targetCompatibility = JavaLanguageVersion.of(17)
+    }
+
+    kotlin {
+        jvmToolchain(17)
+    }
+
+    tasks.withType(KotlinCompile).configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        dataBinding = false
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/library_release.kotlin_module',
+                         'META-INF/library-core_release.kotlin_module',
+                         'META-INF/LICENSE.md',
+                         'META-INF/NOTICE.md',
+                         'META-INF/AL2.0',
+                         'META-INF/LGPL2.1',
+                         'META-INF/INDEX.LIST',
+                         'META-INF/io.netty.versions.properties',
+                         'META-INF/io.netty.versions.properties']
+            pickFirsts += ['META-INF/DEPENDENCIES']
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+    lint {
+        abortOnError = true
+    }
+
+    namespace = 'apincer.android.mmate'
+}
+
+dependencies {
+    // modules
+    implementation project(':core')
+    //implementation project(':db-api')
+    //implementation project(':server-api')
+
+    // Flavor-specific dependencies
+    //ormliteImplementation project(':db-ormlite')
+    //nioImplementation project(':server-server-serverJupnp-serverNio')
+    //jettyImplementation project(':server-serverJupnp-jetty')
+    //nettyImplementation project(':server-serverJupnp-netty')
+
+    // AndroidX
+    implementation libs.androidx.annotation
+    implementation libs.androidx.core
+    implementation libs.androidx.activity
+    implementation libs.androidx.recyclerView
+    implementation libs.androidx.recyclerView.selection
+    implementation libs.androidx.coordinatorlayout
+    implementation libs.androidx.appCompat
+    implementation libs.androidx.fragment
+    implementation libs.androidx.cardView
+    implementation libs.androidx.annotation
+    implementation libs.androidx.lifecycle.runtime
+    implementation libs.androidx.lifecycle.process
+    implementation libs.androidx.palette
+    implementation libs.androidx.preference
+    implementation libs.androidx.documentFile
+    implementation libs.androidx.work
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.loader
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.viewpager2
+
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlin.coroutines.core
+    implementation libs.kotlinx.serialization.core
+
+    // google
+    implementation libs.google.material
+    implementation libs.google.gson
+    implementation libs.google.guava
+
+    // hilt
+    implementation libs.dagger.hilt.android
+    ksp libs.dagger.hilt.compiler
+    implementation libs.androidx.hilt.lifecycle.viewmodel
+    ksp libs.androidx.hilt.compiler
+
+    // UI Libs
+    implementation libs.skydoves.powerspinner
+    implementation libs.skydoves.progressview
+    implementation libs.skydoves.androidribbon
+    implementation libs.skydoves.elasticviews
+    implementation libs.iwgang.simplifyspan
+    implementation libs.zhanghai.fastscroll
+    implementation libs.medyo.stateviews
+    implementation libs.chrisbanes.photoview
+    implementation libs.philjay.mpandroidchart
+    implementation libs.vanniktech.textbuilder
+    implementation libs.sparrow007.carouselrecyclerview // for reflectioncontainer
+    implementation libs.refresh.layout.kernel
+    implementation libs.refresh.header.classics
+    implementation libs.tutorialsandroid.filepicker
+
+    //others
+    implementation libs.anggrayudi.storage
+   // implementation libs.ffmpegkit.audio
+
+    implementation libs.commons.codec
+    implementation libs.commons.io
+    implementation libs.commons.logging
+    implementation libs.commons.lang3
+    implementation libs.commons.text
+    implementation libs.commons.match3
+    //implementation libs.icm.jlargearrays
+
+    implementation libs.jackson.core
+    implementation libs.jackson.databind
+    implementation libs.jetbrains.annotations
+    implementation libs.slf4j.api
+    implementation libs.log4j.api
+    implementation libs.square.okhttp3
+    implementation libs.coilkt.coil3
+    implementation libs.rxandroid
+    implementation libs.rxjava
+
+    implementation libs.iirj
+    implementation libs.markwon.core
+    implementation libs.markwon.html
+
+    // OrmLite
+    ormliteImplementation libs.ormlite.android
+
+    // serverNio
+    //nioImplementation project(':server-api')
+    nioImplementation libs.jupnp.android
+    nioImplementation project(':server-jupnp')
+
+    // jetty
+    //jettyImplementation project(':server-api')
+    jettyImplementation libs.jupnp.android
+    jettyImplementation project(':server-jupnp')
+    jettyImplementation project(':server-jupnp-jetty')
+
+    //netty
+   // nettyImplementation project(':server-api')
+    nettyImplementation libs.jupnp.android
+    nettyImplementation project(':server-jupnp')
+    nettyImplementation project(':server-jupnp-netty')
+
+    // Local Library
+    //implementation project(':library:justdsd')
+   // implementation project(':library:JustFLAC')
+    implementation project(':library:library')
+    implementation project(':library:androidtagview')
+   // implementation project(':library:jaudiotagger-android')
+   // implementation project(':library:cling:common')
+   // implementation project(':library:cling:support')
+    implementation project(':library:crashreporter')
+}
+
+configurations.implementation {
+    exclude group: 'com.hazelcast', module: 'hazelcast'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+//    exclude group: 'androidx.documentfile', module: 'documentfile'
+}
+
+static def getDate() {
+    def date = new Date()
+    return date.format('yyMMdd')
+}

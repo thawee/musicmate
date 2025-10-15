@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<item
+		android:icon="@drawable/round_note_alt_24"
+		android:id="@+id/action_edit_metadata"
+		android:title="Preview Tags"
+		app:showAsAction="always"/>
+
+	<item
+		android:icon="@drawable/sharp_settings_suggest_24"
+		android:id="@+id/action_encoding_file"
+		android:title="Encode Files"
+		app:showAsAction="always"/>
+
+	<item
+		android:icon="@drawable/round_query_stats_24"
+		android:id="@+id/action_calculate_replay_gain"
+		android:title="Measure DR"
+		app:showAsAction="always"/>
+
+	<item
+		android:icon="@drawable/ic_archive_white_24dp"
+		android:id="@+id/action_transfer_file"
+		android:title="Manage Songs"
+		app:showAsAction="always"/>
+
+	<item android:id="@+id/action_delete"
+		android:title="@string/action_delete"
+		android:icon="@drawable/ic_item_delete_while_24dp"
+		app:showAsAction="ifRoom"/>
+
+	<item android:id="@+id/action_select_all"
+		android:title="@string/action_select_all"
+		android:icon="@drawable/ic_select_all_white_24dp"
+		app:showAsAction="always"/>
+<!--
+	<item
+		android:icon="@drawable/round_playlist_play_24"
+		android:id="@+id/action_export_playlist"
+		android:title="Export to Playlist"
+		app:showAsAction="ifRoom"/>
+		-->
+<!--
+	<item
+		android:icon="@drawable/round_upload_file_24"
+		android:id="@+id/action_send_to_media_server"
+		android:title="Send to NAS Server"
+		app:showAsAction="collapseActionView"/>
+
+	<item
+		android:icon="@drawable/round_upload_file_24"
+		android:id="@+id/action_send_playlist_to_streaming"
+		android:title="Send as playlist to Streamer"
+		app:showAsAction="collapseActionView"/>
+		-->
+<!--
+	<item
+		android:icon="@drawable/round_upload_file_24"
+		android:id="@+id/action_send_to_hibyos"
+		android:title="Send to Hiby DAP"
+		app:showAsAction="collapseActionView"/>
+		-->
+</menu>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<attr name="primaryTextSelector" format="reference" />
+
+	<declare-styleable name="ProgressBar">
+		<attr name="barColor" format="color" />
+		<attr name="barHeight" format="dimension" />
+		<attr name="detentWidth" format="dimension" />
+		<attr name="useShadow" format="boolean" />
+	</declare-styleable>
+<!--
+	<declare-styleable name="ForegroundView">
+		<attr name="foreground" />
+		<attr name="foregroundInsidePadding" />
+		<attr name="foregroundGravity" />
+	</declare-styleable>
+-->
+	<declare-styleable name="CollapsingImageBehavior">
+		<attr name="collapsedTarget" format="reference" />
+	</declare-styleable>
+
+    <!-- CarouselMenuView -->
+    <declare-styleable name="CarouselMenuView">
+        <attr name="items_visible" />
+    </declare-styleable>
+    <attr name="items_visible" format="enum">
+        <enum name="three" value="3" />
+        <enum name="five" value="5" />
+        <enum name="seven" value="7" />
+    </attr>
+
+	<declare-styleable name="AvatarImageBehavior">
+		<attr name="finalYPosition" format="dimension"/>
+		<attr name="startXPosition" format="dimension"/>
+		<attr name="startToolbarPosition" format="dimension"/>
+		<attr name="startHeight" format="dimension"/>
+		<attr name="finalHeight" format="dimension"/>
+	</declare-styleable>
+
+	<declare-styleable name="StyleableToast">
+		<attr name="textBold" format="boolean" />
+		<attr name="textColor" format="color" />
+		<attr name="font" format="reference" />
+		<attr name="textSize" format="dimension" />
+		<attr name="colorBackground" format="color" />
+		<attr name="solidBackground" format="boolean" />
+		<attr name="radius" format="dimension" />
+		<attr name="strokeWidth" format="dimension" />
+		<attr name="strokeColor" format="color" />
+		<attr name="iconStart" format="reference" />
+		<attr name="iconEnd" format="reference" />
+		<attr name="length" format="integer">
+			<enum name="LONG" value="1" />
+			<enum name="SHORT" value="0" />
+		</attr>
+		<attr name="gravity" format="integer">
+			<enum name="center" value="1" />
+			<enum name="top" value="2" />
+		</attr>
+	</declare-styleable>
+	
+	<declare-styleable name="CollapsingViewBehavior">
+        <attr name="target_place" format="reference" />
+	</declare-styleable>
+
+	<declare-styleable name="TriangleLabelView">
+
+		<attr name="backgroundColor" format="color" />
+		<attr name="primaryTextColor" format="color" />
+		<attr name="secondaryTextColor" format="color" />
+
+		<attr name="primaryText" format="string" />
+		<attr name="secondaryText" format="string" />
+
+		<attr name="primaryTextSize" format="dimension" />
+		<attr name="secondaryTextSize" format="dimension" />
+
+		<attr name="labelTopPadding" format="dimension" />
+		<attr name="labelCenterPadding" format="dimension" />
+		<attr name="labelBottomPadding" format="dimension" />
+
+		<attr name="primaryTextStyle">
+			<enum name="normal" value="0" />
+			<enum name="italic" value="1" />
+			<enum name="bold" value="2" />
+		</attr>
+
+		<attr name="secondaryTextStyle">
+			<enum name="normal" value="0" />
+			<enum name="italic" value="1" />
+			<enum name="bold" value="2" />
+		</attr>
+
+		<attr name="corner">
+			<enum name="leftTop" value="1" />
+			<enum name="rightTop" value="2" />
+			<enum name="leftBottom" value="3" />
+			<enum name="rightBottom" value="4" />
+		</attr>
+
+	</declare-styleable>
+
+	<declare-styleable name="AspectRatioPhotoView">
+		<attr name="widthRatio" format="integer" />
+		<attr name="heightRatio" format="integer" />
+	</declare-styleable>
+
+	<declare-styleable name="ResolutionView">
+		<attr name="encodingText" format="string" />
+		<attr name="resolutionText" format="string" />
+	</declare-styleable>
+
+	<declare-styleable name="DynamicRangeView">
+		<attr name="db" format="string" />
+		<attr name="dr" format="string" />
+		<!-- You could add more attributes for colors, text appearances, etc. if needed -->
+	</declare-styleable>
+
+	<declare-styleable name="QualityIndicatorView">
+		<attr name="label" format="string" />
+	</declare-styleable>
+
+	<declare-styleable name="RatingIndicatorView">
+		<attr name="mode" format="string" />
+	</declare-styleable>
+
+</resources>
