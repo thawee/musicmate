@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import apincer.android.mmate.core.server.DefaultContentServerImpl;
 import apincer.android.mmate.core.server.IMediaServer;
 import apincer.android.mmate.core.server.AbstractServer;
+import apincer.android.mmate.core.server.NioContentServerImpl;
 import apincer.android.mmate.core.server.jetty.JettyContentServerImpl;
 import apincer.android.mmate.core.server.jetty.JettyWebServerImpl;
 
@@ -95,13 +96,15 @@ public class StreamServerImpl implements StreamServer<StreamServerConfigurationI
            // this.webServer.initServer(bindAddress);
 
             //this.contentServer = new NettyContentServerImpl(context, router, configuration);
-            this.contentServer = new JettyContentServerImpl(context, mediaServer);
+           // this.contentServer = new JettyContentServerImpl(context, mediaServer);
            // this.contentServer = new DefaultContentServerImpl(context, mediaServer);
+            this.contentServer = new NioContentServerImpl(context, mediaServer);
             this.contentServer.initServer(bindAddress);
 
             //this.upnpServer = new NettyUPnpServerImpl(context, mediaServer, router, configuration);
            // this.upnpServer = new UndertowUPnpServerImpl(context, mediaServer, router, configuration);
-            this.upnpServer = new DefaultUPnpServerImpl(context, mediaServer, router, configuration);
+           // this.upnpServer = new DefaultUPnpServerImpl(context, mediaServer, router, configuration);
+            this.upnpServer = new NioUPnpServer(context, mediaServer, router, configuration);
             this.upnpServer.initServer(bindAddress);
       /*  }else {
             this.webServer = new JettyWebServerImpl(context, router, configuration);

@@ -1,5 +1,6 @@
 package apincer.android.mmate.core.server;
 
+import static apincer.android.mmate.core.utils.StringUtils.isEmpty;
 import static apincer.android.mmate.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -53,7 +54,11 @@ public abstract class AbstractServer {
     }
 
     public void addLibInfo(String name, String version) {
-        libInfos.add(name+"/"+version);
+        if(isEmpty(version)) {
+            libInfos.add(name);
+        }else {
+            libInfos.add(name + "/" + version);
+        }
     }
 
     protected abstract String getComponentName();
