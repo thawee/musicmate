@@ -91,7 +91,7 @@
 
         <!-- jupnp -->
         <service
-            android:name=".service.MediaServerHostingService"
+            android:name=".service.MediaServerHubService"
             android:foregroundServiceType="dataSync"
             android:enabled="true"
             android:exported="false"/>

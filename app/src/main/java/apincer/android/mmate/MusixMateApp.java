@@ -30,7 +30,7 @@ import apincer.music.core.NotificationId;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
-import apincer.android.mmate.service.MediaServerHostingService;
+import apincer.android.mmate.service.MediaServerHubService;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.music.core.utils.LogHelper;
@@ -51,7 +51,7 @@ public class MusixMateApp extends Application {
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
 
-    private MediaServerHostingService mediaServerService;
+    private MediaServerHubService mediaServerService;
 
     @Inject
     FileRepository fileRepos;
@@ -126,7 +126,7 @@ public class MusixMateApp extends Application {
 
     private void startMediaServer() {
         if(Settings.isAutoStartMediaServer(this)) {
-            Intent intent = new Intent(this, MediaServerHostingService.class);
+            Intent intent = new Intent(this, MediaServerHubService.class);
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
     }
@@ -149,7 +149,7 @@ public class MusixMateApp extends Application {
         @SuppressLint("CheckResult")
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MediaServerHostingService.MediaServerBinder binder = (MediaServerHostingService.MediaServerBinder) service;
+            MediaServerHubService.MediaServerHubBinder binder = (MediaServerHubService.MediaServerHubBinder) service;
             mediaServerService = binder.getService();
             if(Settings.isAutoStartMediaServer(getApplicationContext())) {
                 mediaServerService.startServers();

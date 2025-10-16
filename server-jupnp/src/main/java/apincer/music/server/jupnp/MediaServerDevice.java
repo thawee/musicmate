@@ -4,8 +4,9 @@ import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import org.apache.commons.io.IOUtils;
 import org.jupnp.binding.annotations.AnnotationLocalServiceBinder;
@@ -102,10 +103,9 @@ public class MediaServerDevice extends LocalDevice {
 
             @Override
             protected ConnectionManagerService createServiceInstance() {
-                ConnectionManagerService connectionManager = new ConnectionManagerService(sourceProtocols, new ProtocolInfos());
                 // Customize connection manager for better streaming
                 //connectionManager.(50);  // Increased connections for multiple clients
-                return connectionManager;
+                return new ConnectionManagerService(sourceProtocols, new ProtocolInfos());
             }
         });
 

@@ -5,7 +5,6 @@ import org.jupnp.model.message.*;
 import org.jupnp.protocol.ProtocolFactory;
 import org.jupnp.protocol.ReceivingSync;
 import org.jupnp.transport.Router;
-import org.jupnp.transport.spi.StreamServerConfiguration;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -13,7 +12,6 @@ import java.util.*;
 
 import apincer.music.core.http.NioHttpServer;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.spi.MediaServer;
 import apincer.music.core.server.spi.UpnpServer;
 
 public class NioUPnpServerImpl extends BaseServer implements UpnpServer {

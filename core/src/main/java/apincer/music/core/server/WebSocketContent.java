@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import apincer.music.core.codec.MusicAnalyser;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.QueueItem;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.TrackInfo;
-import apincer.music.core.playback.NowPlaying;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.MusicInfoService;
 import apincer.music.core.repository.OrmLiteHelper;
 import apincer.music.core.repository.PlaylistRepository;
@@ -38,15 +38,16 @@ public class WebSocketContent {
     private final Context context;
     private final TagRepository tagRepos;
     private final OrmLiteHelper ormLiteHelper;
-    private PlaybackService playbackService;
+    private final PlaybackService playbackService;
 
     private static final String TAG = "WebSocketContent";
     private final MusicInfoService musicInfoService = new MusicInfoService();
 
-    public WebSocketContent(Context context, TagRepository tagRepos) {
+    protected WebSocketContent(Context context, PlaybackService playbackService, TagRepository tagRepos) {
         this.context = context;
         this.ormLiteHelper = tagRepos.getOrmLiteHelper();
         this.tagRepos = tagRepos;
+        this.playbackService = playbackService;
     }
 
     public Map<String, Object> handleCommand(String command, Map<String, Object> message) {
@@ -256,7 +257,7 @@ public class WebSocketContent {
 
     private void setRenderer(String udn) {
         if(playbackService != null) {
-            playbackService.setActiveDlnaPlayer(udn);
+            playbackService.switchPlayer(udn);
         }
     }
 
@@ -264,21 +265,21 @@ public class WebSocketContent {
         if(playbackService ==null) return null;
 
         String activeRendererUdn;
-        if(playbackService.getActivePlayer() != null) {
-            activeRendererUdn = playbackService.getActivePlayer().getId();
+        if(playbackService.getPlayer() != null) {
+            activeRendererUdn = playbackService.getPlayer().getTargetId();
         } else {
             activeRendererUdn = null;
         }
         List<Map<String, ?>> renderers = new ArrayList<>();
         // In a real app, this would come from your DLNA discovery service
-        List<RendererDevice> rendererList = playbackService.getRenderers();
+        List<PlaybackTarget> rendererList = playbackService.getAvaiablePlaybackTargets();
         if(!rendererList.isEmpty()) {
             // to send a list of renderers
             renderers = rendererList.stream()
                     .map(device -> Map.of(
-                            "name", device.getFriendlyName(), // Assuming methods to get details
-                            "udn", device.getUdn(),
-                            "active", device.getUdn().equals(activeRendererUdn)
+                            "name", device.getDisplayName(), // Assuming methods to get details
+                            "udn", device.getTargetId(),
+                            "active", device.getTargetId().equals(activeRendererUdn)
                     ))
                     .collect(Collectors.toList());
         }
@@ -340,10 +341,9 @@ public class WebSocketContent {
 
     private Map<String, Object> sendNowPlaying() {
         if(playbackService != null) {
-            NowPlaying nowPlaying = playbackService.getNowPlaying();
-            if (nowPlaying != null && nowPlaying.getSong() != null) {
-                MusicTag tag = nowPlaying.getSong();
-                Map<String, Object> track = getMap(tag);
+            MediaTrack nowPlaying = playbackService.getNowPlayingSong();
+            if (nowPlaying != null) {
+                Map<String, Object> track = getMap(nowPlaying);
 
                 return Map.of("type", "nowPlaying", "track", track);
             }
@@ -444,7 +444,7 @@ public class WebSocketContent {
     }
 
         @NonNull
-        private Map<String, Object> getMap(MusicTag song) {
+        private Map<String, Object> getMap(MediaTrack song) {
             if(song == null) return new HashMap<>();
 
             Map<String, Object> track = new HashMap<>(Map.of(
@@ -483,6 +483,7 @@ public class WebSocketContent {
 
     }
 
+    /*
     public Map<String, Object> getNowPlaying(NowPlaying nowPlaying) {
         long elapsed = nowPlaying.getElapsed();
         MusicTag tag = nowPlaying.getSong();
@@ -490,21 +491,20 @@ public class WebSocketContent {
             Map<String, Object> track = getMap(tag);
             track.put("elapsed", elapsed);
             track.put("state", nowPlaying.getPlayingState());
-
-            float[] cleanBlockWaveform = tag.getWaveformData();
+*/
+           /* float[] cleanBlockWaveform = tag.getWaveformData();
             if (cleanBlockWaveform == null) {
                 cleanBlockWaveform = MusicAnalyser.generateDynamicSongData(640);
                 // should create from file and save to db
-            }
+            } */
+    /*
+            float[] cleanBlockWaveform = MusicAnalyser.generateDynamicSongData(640);
 
             track.put("waveform", cleanBlockWaveform);
 
             return Map.of("type", "nowPlaying", "track", track);
         }
         return null;
-    }
+    } */
 
-    public void setPlaybackService(PlaybackService playbackService) {
-        this.playbackService = playbackService;
-    }
 }

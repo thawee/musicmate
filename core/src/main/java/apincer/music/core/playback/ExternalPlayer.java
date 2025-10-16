@@ -1,24 +1,23 @@
-
 package apincer.music.core.playback;
 
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
+import android.content.pm.ApplicationInfo;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 
-import androidx.lifecycle.MutableLiveData;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackTarget;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
-public class ExternalPlayer implements Player {
+public class ExternalPlayer implements PlaybackTarget {
     public static String DEFAULT_PLAYER_NAME = "UNKNOWN Player";
     public static final String HIBY_MUSIC_PACK_NAME = "com.hiby.music";
     public static final String NE_PLAYER_LITE_PACK_NAME = "jp.co.radius.neplayer_lite_an";
@@ -49,78 +48,70 @@ public class ExternalPlayer implements Player {
     ));
 
     private final Context context;
-    private final String packageName;
+    private final String targetId;
     private final String displayName;
-    private final Drawable icon;
-    private final MutableLiveData<NowPlaying> nowPlaying = new MutableLiveData<>();
-   // private final MutableLiveData<Boolean> isConnected = new MutableLiveData<>(true);
+    private final String description;
 
-    public ExternalPlayer(Context context, String packageName, String displayName, Drawable icon) {
+    private final BehaviorSubject<PlaybackState> playbackStateSubject = BehaviorSubject.createDefault(new PlaybackState());
+
+    private ExternalPlayer(Context context, String targetId,String displayName,String description) {
         this.context = context;
-        this.packageName = packageName;
+        this.targetId = targetId;
         this.displayName = displayName;
-        this.icon = icon;
+        this.description = description;
     }
 
     @Override
-    public String getDisplayName() {
-        return displayName;
-    }
+    public boolean play(MediaTrack track) {
+        if(!SUPPORTED_PLAYERS.contains(targetId)) return false;
 
-    @Override
-    public String getId() {
-        return packageName;
-    }
-
-    @Override
-    public Drawable getIcon() {
-        return icon;
-    }
-
-    @Override
-    public void play(MusicTag song) {
-        if(!SUPPORTED_PLAYERS.contains(packageName)) return;
-
-        Uri musicUri = Uri.parse(song.getPath());
+        Uri musicUri = Uri.parse(track.getPath());
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(musicUri, "audio/*");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
-
-        // Update NowPlaying state to reflect that an external player is likely playing
-        NowPlaying current = nowPlaying.getValue();
-        if (current == null) {
-            current = new NowPlaying();
-        }
-        current.setSong(song);
-        current.setPlayingState("PLAYING"); // Assume it starts playing
-        nowPlaying.postValue(current);
+        return true;
     }
 
     @Override
-    public void next() {
-        if(!SUPPORTED_PLAYERS.contains(packageName)) return;
+    public boolean pause() {
+        return false;
+    }
 
-        if(ExternalPlayer.NEUTRON_MUSIC_PACK_NAME.equals(packageName)) {
+    @Override
+    public boolean resume() {
+        return false;
+    }
+
+    @Override
+    public boolean stop() {
+        return false;
+    }
+
+    @Override
+    public boolean next() {
+        if(!SUPPORTED_PLAYERS.contains(targetId)) return false;
+
+        if(ExternalPlayer.NEUTRON_MUSIC_PACK_NAME.equals(targetId)) {
             // Neutron MP use
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             dispatchMediaKeyEvent(audioManager, event);
-        }else if(ExternalPlayer.POWERAMP_PACK_NAME.equals(packageName)) {
+        }else if(ExternalPlayer.POWERAMP_PACK_NAME.equals(targetId)) {
             // call PowerAmp API
             //PowerampAPIHelper.startPAService(this, new Intent(PowerampAPI.ACTION_API_COMMAND).putExtra(PowerampAPI.COMMAND, PowerampAPI.Commands.NEXT));
             Intent intent = new Intent(PAAPI_ACTION_API_COMMAND).putExtra(PAAPI_COMMAND, PAAPI_COMMAND_NEXT);
             intent.setComponent(PAAPI_PLAYER_SERVICE_COMPONENT_NAME);
             context.startForegroundService(intent);
-        }else if(ExternalPlayer.UAPP_PACK_NAME.equals(packageName) ||
-                ExternalPlayer.FOOBAR2000_PACK_NAME.equals(packageName) ) {
+        }else if(ExternalPlayer.UAPP_PACK_NAME.equals(targetId) ||
+                ExternalPlayer.FOOBAR2000_PACK_NAME.equals(targetId) ) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             dispatchMediaKeyEvent(audioManager, event);
             //long eventTime = SystemClock.uptimeMillis();
             // audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             //  audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
-        }else if (ExternalPlayer.HIBY_MUSIC_PACK_NAME.equals(packageName)) {
+        }else if (ExternalPlayer.HIBY_MUSIC_PACK_NAME.equals(targetId)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             long eventTime = SystemClock.uptimeMillis();
             dispatchMediaKeyEvent(audioManager, new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
@@ -130,7 +121,7 @@ public class ExternalPlayer implements Player {
             long eventTime = SystemClock.uptimeMillis();
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT, 0));
             audioManager.dispatchMediaKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT, 0)); */
-        }else if (ExternalPlayer.NE_PLAYER_LITE_PACK_NAME.equals(packageName)) {
+        }else if (ExternalPlayer.NE_PLAYER_LITE_PACK_NAME.equals(targetId)) {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             dispatchMediaKeyEvent(audioManager, event);
@@ -157,42 +148,70 @@ public class ExternalPlayer implements Player {
             KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT);
             dispatchMediaKeyEvent(audioManager, event); */
         }
+        return true;
     }
 
     @Override
-    public void pause() {
-        //if(!SUPPORTED_PLAYERS.contains(packageName)) return;
-        // Cannot control external player directly
-        // You might want to update the NowPlaying state to PAUSED if you have a way to detect it
+    public boolean seekTo(long positionMs) {
+        return false;
     }
 
     @Override
-    public void resume() {
-        //if(!SUPPORTED_PLAYERS.contains(packageName)) return;
-        // Cannot control external player directly
+    public boolean setVolume(float volume) {
+        return false;
     }
 
     @Override
-    public void stop() {
-        if(!SUPPORTED_PLAYERS.contains(packageName)) return;
+    public boolean isStreaming() {
+        return false;
+    }
 
-        // Cannot control external player directly
-        NowPlaying current = nowPlaying.getValue();
-        if (current != null) {
-            current.setPlayingState("STOPPED");
-            nowPlaying.postValue(current);
+    @Override
+    public PlaybackState getPlaybackState() {
+        return null;
+    }
+
+    @Override
+    public String getTargetId() {
+        return targetId;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public void refreshPlayerState() {
+
+    }
+
+    private void dispatchMediaKeyEvent(AudioManager audioManager, KeyEvent event) {
+        if(audioManager != null && event != null) {
+            audioManager.dispatchMediaKeyEvent(event);
         }
     }
 
-    @Override
-    public String getDetails() {
-        if(!SUPPORTED_PLAYERS.contains(packageName)) return packageName;
-        return "";
-    }
+    public static class Factory {
+        public static PlaybackTarget create(Context context, String packageName, String playerName) {
+            if(ExternalPlayer.SUPPORTED_PLAYERS.contains(packageName)) {
+                try {
+                    ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, 0);
+                    if (playerName == null || playerName.equals(packageName)) {
+                        playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
+                    }
+                } catch (Exception ignore) {
+                }
 
-    private static void dispatchMediaKeyEvent(AudioManager audioManager, KeyEvent event) {
-        if(audioManager != null && event != null) {
-            audioManager.dispatchMediaKeyEvent(event);
+                playerName = (playerName == null) ? ExternalPlayer.DEFAULT_PLAYER_NAME : playerName;
+                return new ExternalPlayer(context, packageName, playerName, playerName);
+            }
+            return null;
         }
     }
 }

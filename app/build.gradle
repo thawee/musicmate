@@ -180,10 +180,10 @@ dependencies {
     implementation libs.refresh.layout.kernel
     implementation libs.refresh.header.classics
     implementation libs.tutorialsandroid.filepicker
+    implementation libs.zxing.core
 
     //others
     implementation libs.anggrayudi.storage
-   // implementation libs.ffmpegkit.audio
 
     implementation libs.commons.codec
     implementation libs.commons.io

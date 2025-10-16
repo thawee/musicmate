@@ -5,9 +5,8 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,14 +27,13 @@ import javax.inject.Inject;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.QueueItem;
+import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.RendererDevice;
-import apincer.music.core.server.spi.MediaServer;
 import apincer.android.mmate.MusixMateApp;
 import apincer.android.mmate.R;
 import apincer.music.core.playback.spi.PlaybackService;
-import apincer.music.core.playback.NowPlaying;
-import apincer.music.core.playback.Player;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.worker.PlayNextSongWorker;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -55,8 +53,8 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
     // Intent Extra keys
     private static final String UNIQUE_PLAYBACK_WORK_NAME = "PLAYBACK_PLAY_NEXT_WORK_NAME";
 
-    private final BehaviorSubject<NowPlaying> nowPlayingSubject = BehaviorSubject.createDefault(new NowPlaying());
-    private transient boolean controlledPlayback = false;
+    //private final BehaviorSubject<NowPlaying> nowPlayingSubject = BehaviorSubject.createDefault(new NowPlaying());
+    private boolean controlledPlayback = false;
     private long currentTrackId = -1;
 
     private final BehaviorSubject<List<MusicTag>> playingQueueSubject = BehaviorSubject.createDefault(new CopyOnWriteArrayList<>());
@@ -73,19 +71,21 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
     private int currentPlayPosition = -1; // Start at -1 so the first song is at index 0
 
     // New fields for service binding
-    private MediaServer mediaServer;
+   // private MediaServerHub mediaServer;
     private boolean isBound = false;
 
     private boolean isNextTrackScheduled = false;
+    private final List<PlaybackTarget> playbackTargets = new CopyOnWriteArrayList<>();
 
     @Inject
     TagRepository tagRepos;
 
+    /*
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             // Get the binder from the service and set the mediaServerService instance
-            MediaServerHostingService.MediaServerBinder binder = (MediaServerHostingService.MediaServerBinder) service;
+            MediaServerHubService.MediaServerHubBinder binder = (MediaServerHubService.MediaServerHubBinder) service;
             mediaServer = binder.getMediaServer();
             mediaServer.setPlaybackService(PlaybackServiceImpl.this);
             isBound = true;
@@ -98,19 +98,22 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
             mediaServer = null;
             Log.w(TAG, "MediaServerService disconnected unexpectedly.");
         }
-    };
+    }; */
+    private PlaybackTarget currentPlayer;
+    private MediaTrack currentTrack;
+    private final BehaviorSubject<PlaybackState> playbackStateSubject = BehaviorSubject.createDefault(new PlaybackState());
 
     @SuppressLint("CheckResult")
     @Override
     public void onCreate() {
         super.onCreate();
         // Bind to the MediaServerService as soon as this service is created
-        Intent intent = new Intent(this, MediaServerHostingService.class);
-        bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+        /*Intent intent = new Intent(this, MediaServerHubService.class);
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE); */
 
         startForeground(NOTIFICATION_ID, buildForegroundNotification().build());
         loadPlayingQueue();
-        subscribeNowPlaying(this::monitorNowPlaying);
+        subscribePlaybackState(this::monitorNowPlaying);
        // nowPlayingSubject.subscribe(this::monitorNowPlaying);
     }
 
@@ -210,7 +213,8 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
             case ACTION_SKIP_TO_NEXT:
                 MusicTag oldSong = getSong(intent);
                 if (oldSong != null) {
-                    skipToNext(oldSong);
+                    //skipToNext(oldSong);
+                    playNext();
                 }
                 break;
             case ACTION_PLAY_NEXT:
@@ -219,7 +223,8 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
             case ACTION_SET_DLNA_PLAYER:
                 String udn = intent.getStringExtra(EXTRA_UDN);
                 if (udn != null) {
-                    setActiveDlnaPlayer(udn);
+                   // setActiveDlnaPlayer(udn);
+                    switchPlayer(udn);
                 }
                 break;
             default:
@@ -250,25 +255,10 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
     public void onDestroy() {
         super.onDestroy();
         // Unbind from the MediaServerService to prevent a service connection leak.
-        if (isBound) {
+       /* if (isBound) {
             unbindService(serviceConnection);
             isBound = false;
-        }
-    }
-
-    /**
-     * Skips to the next song in the playback queue.
-     * @param song The MusicTag object representing the song to play next.
-     */
-    public void skipToNext(MusicTag song) {
-        NowPlaying nowPlaying = nowPlayingSubject.getValue();
-        if (nowPlaying != null && nowPlaying.isPlaying(song)) {
-                if (nowPlaying.isLocalPlayer()) {
-                    nowPlaying.skipToNext(song);
-                } else {
-                    playNext();
-                }
-        }
+        } */
     }
 
     /**
@@ -276,15 +266,29 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
      * This method is used when playing a single song, not a queue
      * @param song The MusicTag object representing the song to play.
      */
-    public void play(MusicTag song) {
+    @Override
+    public void play(MediaTrack song) {
+        /*
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
         if (nowPlaying != null) {
             controlledPlayback = true;
             nowPlaying.play(song);
             nowPlaying.setElapsed(0);
             nowPlayingSubject.onNext(nowPlaying);
-            mediaServer.startPolling(nowPlaying.getPlayer().getId());
+            mediaServer.startPolling(nowPlaying.getPlayer().getTargetId());
+        } */
+
+        if(currentPlayer != null) {
+            currentPlayer.stop();
+            currentPlayer.play(song);
+            playbackStateSubject.onNext(currentPlayer.getPlaybackState());
+
+            // should start polling for DMCA only
+           // if(getPlayer() instanceof DMCAPlayer) {
+           //     mediaServer.startPolling(getPlayer().getTargetId());
+           // }
         }
+
         // This is the single line of code to cancel the work.
         WorkManager.getInstance(getApplicationContext()).cancelUniqueWork(UNIQUE_PLAYBACK_WORK_NAME);
     }
@@ -294,12 +298,14 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
      */
     public void playNext() {
         Log.d(TAG, "play next song: controlledPlayback="+controlledPlayback+", playingQueueIndex="+playingQueueIndex);
-        NowPlaying nowPlaying = nowPlayingSubject.getValue();
+        if(currentPlayer == null || !controlledPlayback) return;
+
+        //NowPlaying nowPlaying = nowPlayingSubject.getValue();
         List<MusicTag> currentQueue = playingQueueSubject.getValue();
 
         // Ensure we have something to play
-        if (nowPlaying == null || currentQueue == null || currentQueue.isEmpty()) {
-            Log.w(TAG, "Cannot play next song, nowPlaying or queue is null/empty.");
+        if (currentPlayer == null || currentQueue == null || currentQueue.isEmpty()) {
+            Log.w(TAG, "Cannot play next song, play or queue is null/empty.");
             return;
         }
 
@@ -335,16 +341,18 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
             // Final check to prevent crash if index is somehow out of bounds
             if (songIndexToPlay >= 0 && songIndexToPlay < queueSize) {
                 MusicTag song = originalQueue.get(songIndexToPlay);
-                nowPlaying.play(song);
+                play(song);
+               /* nowPlaying.play(song);
                 nowPlaying.setElapsed(0);
                 nowPlayingSubject.onNext(nowPlaying);
-                mediaServer.startPolling(nowPlaying.getPlayer().getId());
+                mediaServer.startPolling(nowPlaying.getPlayer().getTargetId());
+               */
             } else {
                 Log.e(TAG, "Error: songIndexToPlay is out of bounds!");
             }
 
-        } else {
-            nowPlaying.next();
+       // } else {
+       //     nowPlaying.next();
         }
     }
 
@@ -366,31 +374,37 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
         Log.d(TAG, "Generated new shuffled list.");
     }
 
-    /**
-     * Sets the active DLNA player using its Unique Device Name (UDN).
-     * @param udn The UDN of the DLNA renderer.
-     */
     @Override
-    public void setActiveDlnaPlayer(String udn) {
+    public void switchPlayer(String targetId) {
         if(isBound) {
-            RendererDevice remoteDevice = mediaServer.getRendererByUDN(udn);
-            if (remoteDevice != null) {
-                Player player = Player.Factory.create(getApplicationContext(), remoteDevice);
-                setActivePlayer(player);
-                mediaServer.startPolling(remoteDevice.getUdn());
+            PlaybackTarget player = getPlaybackTargetById(targetId);
+            if (player != null) {
+                switchPlayer(player);
             }
         }
     }
 
-    @Override
+    private PlaybackTarget getPlaybackTargetById(String targetId) {
+        if(targetId == null) return null;
+
+        for(PlaybackTarget dev: playbackTargets) {
+            if(targetId.equals(dev.getTargetId())) {
+                return dev;
+            }
+        }
+        return null;
+    }
+
+   /* @Override
     public void setNowPlayingElapsedTime(long elapsedTime) {
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
         if(nowPlaying != null) {
             nowPlaying.setElapsed(elapsedTime);
             nowPlayingSubject.onNext(nowPlaying);
         }
-    }
+    } */
 
+    /*
     @Override
     public void setNowPlayingState(String currentSpeed, String playingState) {
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
@@ -399,8 +413,9 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
             nowPlaying.setPlayingState(playingState);
             nowPlayingSubject.onNext(nowPlaying);
         }
-    }
+    } */
 
+    /*
     @Override
     public void setNowPlaying(MusicTag song) {
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
@@ -408,47 +423,71 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
             nowPlaying.setSong(song);
             nowPlayingSubject.onNext(nowPlaying);
         }
-    }
+    } */
 
     @Override
     public String getServerLocation() {
         return BaseServer.getIpAddress();
     }
 
+    /*
     public Player getActivePlayer() {
         NowPlaying nowPlaying = nowPlayingSubject.getValue();
         return  nowPlaying.getPlayer();
-    }
+    } */
 
+    /*
     @Override
     public NowPlaying getNowPlaying() {
         return nowPlayingSubject.getValue();
-    }
+    } */
 
-    public void setActivePlayer(Player player) {
-        nowPlayingSubject.onNext(new NowPlaying(player, null, 0));
-        //onNewTrackPlaying(player, null, 0);
+    @Override
+    public void switchPlayer(PlaybackTarget newTarget) {
+        if (currentPlayer != null) {
+            currentPlayer.stop();
+        }
+        this.currentPlayer = newTarget;
+        this.currentPlayer.refreshPlayerState();
+        // Start playing the current track on the new device, or wait for command
     }
 
     @Override
+    public void subscribePlaybackState(Consumer<PlaybackState> consumer) {
+        playbackStateSubject.subscribe(consumer);
+    }
+
+    /*
+    public void setActivePlayer(Player player) {
+        nowPlayingSubject.onNext(new NowPlaying(player, null, 0));
+        //onNewTrackPlaying(player, null, 0);
+    } */
+
+   /* @Override
     public void subscribeNowPlaying(Consumer<NowPlaying> consumer) {
         nowPlayingSubject.subscribe(consumer);
     }
 
-    public void onNewTrackPlaying(Player player, MusicTag song, long elapsedTime) {
-         nowPlayingSubject.onNext(new NowPlaying(player, song, elapsedTime));
-    }
+    @Override
+    public void subscribeNowPlaying(Consumer<PlaybackState> consumer) {
+        playbackStateSubject.subscribe(consumer);
+    }*/
 
-    private void monitorNowPlaying(NowPlaying nowPlaying) {
+    /*
+    public void onNewTrackPlaying(PlaybackTarget player, MusicTag song, long elapsedTime) {
+         nowPlayingSubject.onNext(new NowPlaying(player, song, elapsedTime));
+    } */
+
+    private void monitorNowPlaying(PlaybackState state) {
         if(isNextTrackScheduled) return;
         if(!controlledPlayback) return;
 
-        MusicTag song = nowPlaying.getSong();
+        MediaTrack song = state.currentTrack;
         if (song != null) {
 
             // --- MODIFIED STATE MANAGEMENT ---
             // A track is considered "new" if its ID changes OR if it just started playing (elapsed < 1s).
-            if (song.getId() != currentTrackId || nowPlaying.getElapsed() < 1) {
+            if (song.getId() != currentTrackId || state.currentPositionMs < 1) {
                 // Only reset the flag if it was previously set OR if it's a genuinely new track ID.
                 // This prevents resetting the flag unnecessarily on every progress update at the start of a song.
                 if (isNextTrackScheduled || song.getId() != currentTrackId) {
@@ -463,7 +502,7 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
 
            // Log.d(TAG, "check for schedule to play next song, isNextTrackScheduled="+isNextTrackScheduled+", elapsed="+nowPlaying.getElapsed()+", delaySecond="+delaySecond+", song.getAudioDuration()="+song.getAudioDuration());
             // Check if the song is about to end AND we haven't already scheduled the next one.
-            if (!isNextTrackScheduled && (nowPlaying.getElapsed() + delaySecond) >= song.getAudioDuration()) {
+            if (!isNextTrackScheduled && (state.currentPositionMs + delaySecond) >= song.getAudioDuration()) {
               //  Log.d(TAG, "schedule to play next song...");
                 isNextTrackScheduled = true; // Set flag to prevent re-entry
 
@@ -489,54 +528,92 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
         return null;
     }
 
-    public BehaviorSubject<NowPlaying> getNowPlayingSubject() {
-        return nowPlayingSubject;
+   // public BehaviorSubject<NowPlaying> getNowPlayingSubject() {
+   //     return nowPlayingSubject;
+   // }
+
+    @Override
+    public List<PlaybackTarget> getAvaiablePlaybackTargets() {
+        return playbackTargets;
     }
 
-    public List<RendererDevice> getRenderers() {
-        if(isBound) {
-            return mediaServer.getRenderers();
-        }
-        return new ArrayList<>();
+    @Override
+    public MediaTrack getNowPlayingSong() {
+        return currentTrack;
     }
 
-    public MusicTag getNowPlayingSong() {
-        return nowPlayingSubject.getValue().getSong();
-    }
-
+    /*
     public RendererDevice getRendererByIpAddress(String clientIp) {
         if(isBound) {
             return mediaServer.getRendererByIpAddress(clientIp);
         }
         return null;
+    } */
+
+    @Override
+    public PlaybackTarget getPlayer() {
+        return currentPlayer;
     }
 
+    @Override
+    public void notifyNewTrackPlaying(PlaybackTarget player, MediaTrack track) {
+        currentPlayer = player;
+        notifyNewTrackPlaying(track);
+    }
+
+    @Override
+    public void notifyNewTrackPlaying(MediaTrack song) {
+        currentTrack = song;
+
+        PlaybackState state = new PlaybackState();
+        state.currentState = PlaybackState.State.PLAYING;
+        state.currentTrack = song;
+        state.currentPositionMs =0;
+        notifyPlaybackState(state);
+    }
+
+    @Override
+    public void notifyPlaybackState(PlaybackState state) {
+        playbackStateSubject.onNext(state);
+    }
+
+    @Override
+    public void notifyPlaybackStateElapsedTime(long elapsedTimeMS) {
+        PlaybackState state = playbackStateSubject.getValue();
+        state.currentPositionMs = elapsedTimeMS;
+        playbackStateSubject.onNext(state);
+    }
+
+    /*
     public RendererDevice getRendererByUDN(String rendererUdn) {
         if(isBound) {
             return mediaServer.getRendererByUDN(rendererUdn);
         }
         return null;
-    }
+    } */
 
     public void playPrevious() {
-        NowPlaying nowPlaying = nowPlayingSubject.getValue();
-        if (nowPlaying != null) {
-            if(controlledPlayback) {
-                playingQueueIndex--;
-                if(playingQueueIndex < 0 || playingQueueIndex >= playingQueueSubject.getValue().size()) {
-                    playingQueueIndex =0;
-                }
-                if(playingQueueIndex < playingQueueSubject.getValue().size()) {
+        Log.d(TAG, "play next song: controlledPlayback="+controlledPlayback+", playingQueueIndex="+playingQueueIndex);
+        if(currentPlayer == null || !controlledPlayback) return;
+
+        List<MusicTag> currentQueue = playingQueueSubject.getValue();
+
+        // Ensure we have something to play
+        if (currentPlayer == null || currentQueue == null || currentQueue.isEmpty()) {
+            Log.w(TAG, "Cannot play next song, play or queue is null/empty.");
+            return;
+        }
+
+
+        playingQueueIndex--;
+        if(playingQueueIndex < 0 || playingQueueIndex >= playingQueueSubject.getValue().size()) {
+            playingQueueIndex =0;
+        }
+
+        if(playingQueueIndex < playingQueueSubject.getValue().size()) {
                     MusicTag song = playingQueueSubject.getValue().get(playingQueueIndex);
-                    nowPlaying.play(song);
-                    nowPlaying.setElapsed(0);
-                    nowPlayingSubject.onNext(nowPlaying);
-                    //onNewTrackPlaying(nowPlaying.getPlayer(), song, 0);
+                    play(song);
                     playingQueueIndex++;
-                }
-            }else {
-                nowPlaying.skipToPrevious();
-            }
         }
     }
 
@@ -552,18 +629,27 @@ public class PlaybackServiceImpl extends Service implements PlaybackService {
     public void setRepeatMode(String mode) {
     }
 
+    @Override
+    public void loadPlayingQueue(MediaTrack song) {
+
+    }
+
+    public List<PlaybackTarget> getPlaybackTargets() {
+        return playbackTargets;
+    }
+
     public class PlaybackServiceBinder extends Binder implements apincer.music.core.playback.spi.PlaybackServiceBinder {
         public PlaybackService getService() {
             return PlaybackServiceImpl.this;
         }
     }
 
-    public static void startPlaybackService(Application application) {
+    public static void startPlaybackService(Context context) {
         Log.d(TAG, "Start PlaybackService requested");
 
-        Intent intent = new Intent(application, PlaybackService.class);
+        Intent intent = new Intent(context, PlaybackServiceImpl.class);
         try {
-            application.startForegroundService(intent);
+            context.startForegroundService(intent);
         } catch (Exception e) {
             Log.e(TAG, "Error starting PlaybackService ", e);
         }

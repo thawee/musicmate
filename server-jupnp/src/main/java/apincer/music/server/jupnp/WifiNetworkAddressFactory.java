@@ -1,6 +1,6 @@
 package apincer.music.server.jupnp;
 
-import static apincer.music.server.jupnp.MediaServerImpl.IPV4_PATTERN;
+import static apincer.music.core.server.BaseServer.IPV4_PATTERN;
 
 import org.jupnp.android.AndroidNetworkAddressFactory;
 

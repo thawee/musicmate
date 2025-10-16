@@ -1,8 +1,5 @@
 package apincer.music.core.database;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -12,10 +9,11 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.util.Objects;
 
 import apincer.music.core.Constants;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.StringUtils;
 
 @DatabaseTable(tableName = "musictag")
-public class MusicTag implements Parcelable {
+public class MusicTag implements MediaTrack {
     @Override
     public int hashCode() {
         return Objects.hash(id);
@@ -113,7 +111,7 @@ public class MusicTag implements Parcelable {
 
     // loudness and gain
     @DatabaseField
-    protected double drScore = 0; //gainTrackDR; // Dynamic Range
+    protected double drScore = 0;
    @DatabaseField
    protected double dynamicRange = 0;
 
@@ -135,16 +133,16 @@ public class MusicTag implements Parcelable {
     }
 
     // Use the custom persister for this field
-    @DatabaseField(persisterClass = FloatArrayPersister.class)
-    private float[] waveformData;
+   // @DatabaseField(persisterClass = FloatArrayPersister.class)
+   // private float[] waveformData;
 
-    public float[] getWaveformData() {
-        return waveformData;
-    }
+   // public float[] getWaveformData() {
+   //     return waveformData;
+   // }
 
-    public void setWaveformData(float[] waveformData) {
-        this.waveformData = waveformData;
-    }
+    //public void setWaveformData(float[] waveformData) {
+    //    this.waveformData = waveformData;
+   // }
 
     public String getQualityInd() {
         return qualityInd;
@@ -315,6 +313,11 @@ public class MusicTag implements Parcelable {
         return title;
     }
 
+    @Override
+    public String getRating() {
+        return getQualityRating();
+    }
+
     public void setTitle(String title) {
         this.title = title;
         this.normalizedTitle = StringUtils.normalizeName(title);
@@ -436,7 +439,7 @@ public class MusicTag implements Parcelable {
        // tag.language = language;
         tag.audioStartTime = audioStartTime;
         //tag.coverartMime = coverartMime;
-        tag.waveformData = waveformData;
+        //tag.waveformData = waveformData;
         return tag;
     }
 
@@ -486,7 +489,7 @@ public class MusicTag implements Parcelable {
         this.publisher = tag.publisher;
         //this.coverartMime = tag.coverartMime;
         this.audioStartTime = tag.audioStartTime;
-        this.waveformData = tag.waveformData;
+        //this.waveformData = tag.waveformData;
     }
 
     public MusicTag getOriginTag() {
@@ -561,6 +564,7 @@ public class MusicTag implements Parcelable {
         this.dynamicRange = measuredDR;
     }
 
+    /*
     protected MusicTag(Parcel in) {
         id = in.readLong();
         uniqueKey = in.readString();
@@ -598,8 +602,9 @@ public class MusicTag implements Parcelable {
         drScore = in.readDouble();
         dynamicRange = in.readDouble();
         in.readFloatArray(waveformData);
-    }
+    } */
 
+    /*
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(id);
@@ -638,8 +643,9 @@ public class MusicTag implements Parcelable {
         dest.writeDouble(drScore);
         dest.writeDouble(dynamicRange);
         dest.writeFloatArray(waveformData);
-    }
+    } */
 
+    /*
     @Override
     public int describeContents() {
         return 0;
@@ -655,5 +661,5 @@ public class MusicTag implements Parcelable {
         public MusicTag[] newArray(int size) {
             return new MusicTag[size];
         }
-    };
+    }; */
 }

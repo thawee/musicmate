@@ -2,58 +2,87 @@ package apincer.music.core.playback.spi;
 
 import java.util.List;
 
-import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.NowPlaying;
-import apincer.music.core.playback.Player;
-import apincer.music.core.server.RendererDevice;
+import apincer.music.core.playback.PlaybackState;
 import io.reactivex.rxjava3.functions.Consumer;
 
 public interface PlaybackService {
     // Define custom action strings for the Intent
-    public static final String ACTION_PLAY = "apincer.android.mmate.playback.ACTION_PLAY";
-    public static final String ACTION_SKIP_TO_NEXT = "apincer.android.mmate.playback.ACTION_SKIP_TO_NEXT";
-    public static final String ACTION_PLAY_NEXT = "apincer.android.mmate.playback.ACTION_PLAY_NEXT";
-    public static final String ACTION_SET_DLNA_PLAYER = "apincer.android.mmate.playback.ACTION_SET_DLNA_PLAYER";
-    public static final String EXTRA_MUSIC_ID = "EXTRA_MUSIC_ID";
-    public static final String EXTRA_UDN = "EXTRA_UDN";
-
-    void play(MusicTag tag);
+    String ACTION_PLAY = "apincer.android.mmate.playback.ACTION_PLAY";
+    String ACTION_SKIP_TO_NEXT = "apincer.android.mmate.playback.ACTION_SKIP_TO_NEXT";
+    String ACTION_PLAY_NEXT = "apincer.android.mmate.playback.ACTION_PLAY_NEXT";
+    String ACTION_SET_DLNA_PLAYER = "apincer.android.mmate.playback.ACTION_SET_DLNA_PLAYER";
+    String EXTRA_MUSIC_ID = "EXTRA_MUSIC_ID";
+    String EXTRA_UDN = "EXTRA_UDN";
 
     void setShuffleMode(boolean enabled);
 
     void setRepeatMode(String mode);
 
-    void loadPlayingQueue(MusicTag song);
+    void loadPlayingQueue(MediaTrack song);
 
     void playPrevious();
 
+    void play(MediaTrack song);
+
     void playNext();
 
-    Player getActivePlayer();
+   // Player getActivePlayer();
 
-    NowPlaying getNowPlaying();
+   // NowPlaying getNowPlaying();
 
-    void setActiveDlnaPlayer(String udn);
+    void switchPlayer(PlaybackTarget newTarget);
 
-    void subscribeNowPlaying(Consumer<NowPlaying> consumer);
+    void switchPlayer(String targetId);
 
-    void onNewTrackPlaying(Player player, MusicTag tag, long time);
+   // void setActiveDlnaPlayer(String udn);
 
-    void setNowPlayingElapsedTime(long time);
+   // void subscribeNowPlaying(Consumer<NowPlaying> consumer);
 
-    void setNowPlayingState(String currentSpeed, String value);
+    void subscribePlaybackState(Consumer<PlaybackState> consumer);
 
-    void setNowPlaying(MusicTag song);
+   // void onNewTrackPlaying(PlaybackTarget player, MediaTrack tag, long time);
+
+    // @Override
+    /*
+    public void setActiveDlnaPlayer(String udn) {
+        if(isBound) {
+            RendererDevice remoteDevice = mediaServer.getRendererByUDN(udn);
+            if (remoteDevice != null) {
+                Player player = Player.Factory.create(getApplicationContext(), remoteDevice);
+                setActivePlayer(player);
+                mediaServer.startPolling(remoteDevice.getUdn());
+            }
+        }
+    } */
+
+
+    //void setNowPlayingElapsedTime(long time);
+
+    //void setNowPlayingState(String currentSpeed, String value);
+
+   // void setNowPlaying(MusicTag song);
 
     String getServerLocation();
 
-    MusicTag getNowPlayingSong();
+    List<PlaybackTarget> getAvaiablePlaybackTargets();
 
-    List<RendererDevice> getRenderers();
+    MediaTrack getNowPlayingSong();
 
-    void setActivePlayer(Player player);
+   // List<RendererDevice> getRenderers();
 
-    void skipToNext(MusicTag tag);
+   // void setActivePlayer(Player player);
 
-    RendererDevice getRendererByIpAddress(String clientIp);
+   // void skipToNext(MusicTag tag);
+
+    //RendererDevice getRendererByIpAddress(String clientIp);
+
+    PlaybackTarget getPlayer();
+
+    void notifyNewTrackPlaying(PlaybackTarget player, MediaTrack track);
+
+    void notifyNewTrackPlaying(MediaTrack song);
+
+    void notifyPlaybackState(PlaybackState state);
+
+    void notifyPlaybackStateElapsedTime(long elapsedTimeMS);
 }

@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackServiceBinder;
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.ApplicationUtils;
 
 public class BaseServer {
@@ -57,6 +59,7 @@ public class BaseServer {
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound;
+    private WebSocketContent webSocketContent;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
@@ -118,6 +121,10 @@ public class BaseServer {
 
     public File getCoverartDir(String coverartName) {
         return new File(coverartDir, coverartName);
+    }
+
+    public WebSocketContent buildWebSocketContent(TagRepository tagRepo) {
+        return new WebSocketContent(context, playbackService, tagRepo);
     }
 
     /**

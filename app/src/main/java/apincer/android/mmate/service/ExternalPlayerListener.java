@@ -1,6 +1,5 @@
 package apincer.android.mmate.service;
 
-
 import static apincer.music.core.playback.ExternalPlayer.SUPPORTED_PLAYERS;
 
 import android.app.Notification;
@@ -23,8 +22,9 @@ import android.util.Log;
 import javax.inject.Inject;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.Player;
+import apincer.music.core.playback.ExternalPlayer;
 import apincer.music.core.playback.spi.PlaybackService;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.StringUtils;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -66,9 +66,11 @@ public class ExternalPlayerListener extends NotificationListenerService {
                         PlaybackState playbackState = activeMediaController.getPlaybackState();
                         if (playbackState != null && playbackState.getState() == PlaybackState.STATE_PLAYING) {
                             long elapsedSeconds = getElapsedTime(playbackState);
-                            Player player = playbackService.getActivePlayer();
-                            MusicTag song = playbackService.getNowPlayingSong();
-                            playbackService.onNewTrackPlaying(player, song, elapsedSeconds);
+                            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+                            state.currentTrack = playbackService.getNowPlayingSong();
+                            state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+                            state.currentPositionMs = elapsedSeconds;
+                            playbackService.notifyPlaybackState(state);
 
                             // Re-schedule the runnable to run again after the interval
                             handler.postDelayed(this, POLLING_INTERVAL_MS);
@@ -95,7 +97,7 @@ public class ExternalPlayerListener extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         // Bind to the PlaybackService as soon as this service is created
-        Intent intent = new Intent(this, PlaybackService.class);
+        Intent intent = new Intent(this, PlaybackServiceImpl.class);
         bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 
@@ -146,34 +148,34 @@ public class ExternalPlayerListener extends NotificationListenerService {
             if (title == null) {
                 return;
             }
-            long elapsedTime = 0;
+           // long elapsedTime = 0;
             title = StringUtils.removeTrackNo(title);
 
             // Get artist information
             CharSequence textSequence = extras.getCharSequence(EXTRA_TEXT);
             String artist = textSequence != null ? textSequence.toString() : "";
+            if(playbackService != null) {
+                PlaybackTarget currentPlayer = ExternalPlayer.Factory.create(getBaseContext(), packageName,null);
+                MusicTag currentSong = tagRepos.findMediaItem(title, artist,"");
 
-            Player currentPlayer = Player.Factory.create(getBaseContext(), packageName,null);
-            MusicTag currentSong = tagRepos.findMediaItem(title, artist,"");
+                MediaSession.Token token = extras.getParcelable(Notification.EXTRA_MEDIA_SESSION, MediaSession.Token.class);
+                if (token != null) {
+                    // Stop any previous polling
+                    stopPolling();
 
-            MediaSession.Token token = extras.getParcelable(Notification.EXTRA_MEDIA_SESSION, MediaSession.Token.class);
-            if (token != null) {
-                // Stop any previous polling
-                stopPolling();
-
-                // We have a token, now we can get the controller
-                activeMediaController = new MediaController(getApplicationContext(), token);
-                PlaybackState playbackState = activeMediaController.getPlaybackState();
-
-                if (playbackState != null) {
-                    elapsedTime = getElapsedTime(playbackState);
+                    // We have a token, now we can get the controller
+                   // activeMediaController = new MediaController(getApplicationContext(), token);
+                    //PlaybackState playbackState = activeMediaController.getPlaybackState();
+    //
+                    //if (playbackState != null) {
+                    //    elapsedTime = getElapsedTime(playbackState);
+                    //}
+                    startPolling();
                 }
-                startPolling();
-            }
 
-            // Publish the now playing information
-            if(isPlaybackServiceBound) {
-                playbackService.onNewTrackPlaying(currentPlayer, currentSong, elapsedTime);
+                // Publish the now playing information
+
+                playbackService.notifyNewTrackPlaying(currentPlayer, currentSong);
             }
 
         } catch (Exception e) {
@@ -214,8 +216,8 @@ public class ExternalPlayerListener extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         if(isPlaybackServiceBound) {
-            Player currentPlayer = playbackService.getActivePlayer();
-            if (sbn != null && currentPlayer != null && sbn.getPackageName().equals(currentPlayer.getId())) {
+            PlaybackTarget currentPlayer = playbackService.getPlayer();
+            if (sbn != null && currentPlayer != null && sbn.getPackageName().equals(currentPlayer.getTargetId())) {
                 Log.d(TAG, "Stopping polling for: " + sbn.getPackageName());
                 stopPolling();
             }

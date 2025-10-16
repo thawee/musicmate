@@ -4,14 +4,16 @@
         android:summary="DLNA Media Server">
         <SwitchPreferenceCompat
             android:key="preference_dlna_media_server"
-            android:summary="Auto start DLNA MediaServer, share music library to streaming devices."
-            android:title="Auto Start DLNA MediaServer"
+            android:summary="Auto start MediaServer on startup, to cast songs to streaming device."
+            android:title="Start MediaServer"
             android:defaultValue="false"/>
+        <!--
         <SwitchPreferenceCompat
             android:key="preference_netty_media_server"
             android:summary="Use Netty as server engine, defaults is jetty."
             android:title="Use Netty for server"
             android:defaultValue="false"/>
+            -->
     </PreferenceCategory>
     <PreferenceCategory
         android:summary="User Interface">
@@ -47,11 +49,13 @@
             android:summary="Auto scroll to currently listening song."
             android:title="Auto Scroll to now playing"
             android:defaultValue="false"/>
+        <!--
         <SwitchPreferenceCompat
             android:key="preference_exclude_artist_from_similar_songs"
             android:summary="Exclude artist from similar songs list."
             android:title="Similar Songs"
             android:defaultValue="false"/>
+            -->
     </PreferenceCategory>
     <PreferenceCategory
         android:summary="Control &amp; Notification">

@@ -17,8 +17,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.http.NioHttpServer;
-import apincer.music.core.playback.NowPlaying;
-import apincer.music.core.playback.Player;
+import apincer.music.core.playback.StreamPlayer;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.ContentServer;
@@ -34,7 +34,6 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
     private static final int READ_BUFFER_SIZE = 8192;
 
     private NioHttpServer server;
-    private final WebSocketContent wsContent;
     private WebSocketHandlerImpl wsHandler;
 
     private final TagRepository tagRepos;
@@ -44,7 +43,6 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         super(context);
         this.fileRepos = fileRepos;
         this.tagRepos =tagRepos;
-        wsContent = new WebSocketContent(context, tagRepos);
         addLibInfo("NioHttpServer", "2.0");
     }
 
@@ -211,24 +209,28 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
 
     private void notifyPlaybackService(String clientIp, String userAgent, MusicTag tag) {
         if(getPlaybackService() != null) {
-            RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
-            Player player = (device != null) ?
-                    Player.Factory.create(getContext(), device) :
-                    Player.Factory.create(getContext(), clientIp, userAgent);
-            getPlaybackService().onNewTrackPlaying(player, tag, 0);
+           // RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
+           // if(device!=null) {
+           //     PlaybackTarget player = DMCAPlayer.Factory.create(getContext(), device);
+           //     getPlaybackService().notifyNewTrackPlaying(player, tag);
+           // }else {
+                PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
+                getPlaybackService().notifyNewTrackPlaying(player, tag);
+          //  }
         }
     }
 
     // This method needs to be called from the PlaybackService to push updates
-    public void broadcastNowPlaying(NowPlaying nowPlaying) {
+   /* public void broadcastNowPlaying(NowPlaying nowPlaying) {
         if (wsHandler != null) {
             wsHandler.broadcastNowPlaying(nowPlaying);
         }
-    }
+    } */
 
     private class WebSocketHandlerImpl implements NioHttpServer.WebSocketHandler {
         private final CopyOnWriteArraySet<NioHttpServer.WebSocketConnection> sessions = new CopyOnWriteArraySet<>();
         private final Gson gson = new Gson();
+        private final WebSocketContent webSocketContent = buildWebSocketContent(tagRepos);
 
         @Override
         public void onOpen(NioHttpServer.WebSocketConnection connection) {
@@ -248,7 +250,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 Map<String, Object> messageMap = gson.fromJson(message, Map.class);
                 String command = messageMap.getOrDefault("command", "").toString();
 
-                Map<String, Object> response = wsContent.handleCommand(command, messageMap);
+                Map<String, Object> response = webSocketContent.handleCommand(command, messageMap);
                 if (response != null) {
                     String jsonResponse = gson.toJson(response);
                     connection.send(jsonResponse);
@@ -292,6 +294,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             });
         }
 
+        /*
         public void broadcastNowPlaying(NowPlaying nowPlaying) {
             if (nowPlaying != null && nowPlaying.getSong() != null) {
                 Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);
@@ -300,7 +303,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                     broadcast(jsonResponse);
                 }
             }
-        }
+        } */
     }
 }
 

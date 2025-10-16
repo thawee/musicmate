@@ -98,7 +98,7 @@ import apincer.android.mmate.Settings;
 import apincer.android.mmate.service.PlaybackServiceImpl;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.NowPlaying;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.model.MusicFolder;
@@ -122,7 +122,6 @@ import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import dagger.hilt.android.AndroidEntryPoint;
-import io.reactivex.rxjava3.functions.Consumer;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -185,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
     // State variables
     private Timer timer;
     private volatile boolean busy;
-    private MusicTag previouslyPlaying;
+    private MediaTrack previouslyPlaying;
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
@@ -202,14 +201,7 @@ public class MainActivity extends AppCompatActivity {
             playbackService = binder.getService();
             isPlaybackServiceBound = true;
             adapter.setPlaybackService(playbackService);
-            playbackService.subscribeNowPlaying(new Consumer<NowPlaying>() {
-                @Override
-                public void accept(NowPlaying nowPlaying) throws Throwable {
-                    setNowPlaying(nowPlaying.getSong());
-                }
-            });
-            //playbackService.getNowPlayingSubject().subscribe(nowPlaying -> setNowPlaying(nowPlaying.getSong()));
-           // Log.i(TAG, "PlaybackService bound successfully.");
+            playbackService.subscribePlaybackState(playbackState -> setNowPlaying(playbackService.getNowPlayingSong()));
         }
 
         @Override
@@ -220,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void setNowPlaying(MusicTag song) {
+    private void setNowPlaying(MediaTrack song) {
         if (song != null) {
             mRecyclerView.post(() -> {
                 if(!song.equals(previouslyPlaying)) {
@@ -522,7 +514,7 @@ public class MainActivity extends AppCompatActivity {
                         int newActivePosition = carouselLayoutManager.getPosition(centerView);
 
                         if (newActivePosition != RecyclerView.NO_POSITION && newActivePosition != currentlyActiveFolderPosition) {
-                            Log.d("FolderCarousel", "New active folder snapped: position " + newActivePosition);
+                           // Log.d("FolderCarousel", "New active folder snapped: position " + newActivePosition);
 
                             // 1. Update highlighted state (optional, but good for UX)
                             //    You might need to notify the adapter for previous and new item to rebind
@@ -544,7 +536,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 String name = selectedFolder.getName(); // Or unique key
 
-                                Log.d("FolderCarousel", "Selected name: " + name);
+                               // Log.d("FolderCarousel", "Selected name: " + name);
 
                                 if (adapter != null) {
                                     if (mTracker!= null) mTracker.clearSelection();
@@ -782,7 +774,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private boolean scrollToListening(MusicTag currentlyPlaying) {
+    private boolean scrollToListening(MediaTrack currentlyPlaying) {
         if (currentlyPlaying == null) return false;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
@@ -1021,7 +1013,7 @@ public class MainActivity extends AppCompatActivity {
                         .setMessage(getString(R.string.alert_invalid_media_file, tag==null?" - ":tag.getPath()))
                         .setPositiveButton("GOT IT", (dialogInterface, i) -> {
                             if(isPlaybackServiceBound) {
-                                playbackService.skipToNext(tag);
+                                playbackService.play(tag);
                             }
                             viewModel.getTagRepository().deleteMediaTag(tag);
                            // repos.deleteMediaItem(tag);

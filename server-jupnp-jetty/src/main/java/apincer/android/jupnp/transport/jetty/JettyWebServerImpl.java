@@ -43,7 +43,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import apincer.music.core.playback.NowPlaying;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
@@ -56,7 +55,6 @@ public class JettyWebServerImpl extends BaseServer implements ContentServer {
 
     private final Context context;
     private Server server;
-    private final WebSocketContent wsContent;
     private final FileRepository fileRepos;
     private final TagRepository tagRepos;
 
@@ -67,7 +65,6 @@ public class JettyWebServerImpl extends BaseServer implements ContentServer {
         this.context = context;
         this.tagRepos = tagRepos;
         this.fileRepos = fileRepos;
-        wsContent =new WebSocketContent(context, tagRepos);
         addLibInfo("Jetty", "12.1.2");
     }
 
@@ -285,6 +282,7 @@ public class JettyWebServerImpl extends BaseServer implements ContentServer {
         // Store all active sessions
         private static final CopyOnWriteArraySet<Session> sessions = new CopyOnWriteArraySet<>();
         private final Gson gson = new Gson();
+        private final WebSocketContent webSocketContent = buildWebSocketContent(tagRepos);
 
         @OnWebSocketOpen
         public void onConnect(Session session) {
@@ -298,7 +296,7 @@ public class JettyWebServerImpl extends BaseServer implements ContentServer {
             Map<String, Object> messageMap = gson.fromJson(message, Map.class);
             String command = messageMap.getOrDefault("command", "").toString();
 
-            Map<String, Object> response = wsContent.handleCommand(command, messageMap);
+            Map<String, Object> response = webSocketContent.handleCommand(command, messageMap);
             if(response != null) {
                 session.sendText(gson.toJson(response), null);
                 Log.d(TAG, "Response message: " + gson.toJson(response));
@@ -334,7 +332,7 @@ public class JettyWebServerImpl extends BaseServer implements ContentServer {
                         }
                     });
         }
-
+/*
         public void broadcastNowPlaying(NowPlaying nowPlaying) {
             if (nowPlaying.getSong() != null) {
                 Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);// getMap(nowPlaying.getSong());
@@ -344,7 +342,7 @@ public class JettyWebServerImpl extends BaseServer implements ContentServer {
                    // sessions.forEach(endpoint -> endpoint.sendText(jsonResponse, null));
                 }
             }
-        }
+        }*/
     }
 }
 

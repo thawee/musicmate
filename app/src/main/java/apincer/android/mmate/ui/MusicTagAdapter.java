@@ -22,6 +22,8 @@ import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +31,7 @@ import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.NowPlaying;
-import apincer.music.core.playback.Player;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
@@ -99,7 +100,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         this.onListItemClick = context;
     }
 
-    public int getMusicTagPosition(MusicTag selectedSong) {
+    public int getMusicTagPosition(MediaTrack selectedSong) {
         int i =0;
         for(MusicTag tag : localDataSet) {
             if(tag != null && tag.equals(selectedSong)) return i;
@@ -286,7 +287,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         notifyDataSetChanged();
     }
 
-    public void notifyItemChanged(MusicTag currentlyPlaying) {
+    public void notifyItemChanged(MediaTrack currentlyPlaying) {
         if(currentlyPlaying == null) return;
 
         int previousPosition = getMusicTagPosition(currentlyPlaying);
@@ -473,10 +474,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         }
     }
 
-    public void onBindViewMusicTag(ViewHolder holder, @SuppressLint("RecyclerView") final int position, MusicTag tag) {
+    public void onBindViewMusicTag(ViewHolder holder, @SuppressLint("RecyclerView") final int position, @NotNull MusicTag tag) {
         // When user scrolls, this line binds the correct selection status
         holder.rootView.setActivated(mTracker.isSelected((long) position));
-        if(tag == null || tag.getAudioDuration() == 0) {
+        if(tag.getAudioDuration() == 0) {
             holder.moreActions.setEnabled(false);
             holder.rootView.setEnabled(false);
         }else {
@@ -488,28 +489,19 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
         ImageLoader imageLoader = SingletonImageLoader.get(holder.mContext);
 
-        NowPlaying nowPlaying = null;
-        if(playbackService != null) {
-            nowPlaying = playbackService.getNowPlaying();
+        // reset player icon
+        holder.mPlayerView.setVisibility(GONE);
+        if (holder.mTitleLayout != null) {
+            holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
         }
-
-        if (nowPlaying!= null && nowPlaying.isPlaying(tag)) {
-            //show music player icon
-            Player player = nowPlaying.getPlayer();
-            if(player != null && player.getIcon()!= null) {
-                holder.mPlayerView.setImageDrawable(player.getIcon());
-            }else {
+        if(playbackService != null) {
+            if(tag.equals(playbackService.getNowPlayingSong())) {
                 holder.mPlayerView.setImageResource(R.drawable.round_play_circle_outline_24);
+                holder.mPlayerView.setVisibility(VISIBLE);
+                if (holder.mTitleLayout != null) {
+                    holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background_highlighted); // Create this drawable
+                }
             }
-            holder.mPlayerView.setVisibility(VISIBLE);
-            if (holder.mTitleLayout != null) {
-                holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background_highlighted); // Create this drawable
-            }
-        } else {
-            if (holder.mTitleLayout != null) {
-                holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
-            }
-            holder.mPlayerView.setVisibility(GONE);
         }
 
         // download label
@@ -565,16 +557,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             } else if (itemId == R.id.add_to_queue_button) {
                 if(song != null) {
                     tagRepos.addToQueue(song);
-                  /*  try {
-                        Dao<QueueItem, Long> queueDao = tagRepos.getOrmLite().getQueueItemDao();
-                        // Get the current size of the queue to determine the next position.
-                        // If the queue has 5 items (positions 0-4), countOf() returns 5, which is the correct next position.
-                        long nextPosition = queueDao.countOf();
-                        QueueItem qItem = new QueueItem(song, nextPosition);
-                        queueDao.create(qItem);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    } */
                 }
                 return true;
             }

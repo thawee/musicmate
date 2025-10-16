@@ -3,7 +3,6 @@ package apincer.music.module.jetty;
 import android.content.Context;
 
 import org.jupnp.UpnpServiceConfiguration;
-import org.jupnp.transport.Router;
 import org.jupnp.transport.spi.StreamServerConfiguration;
 
 import apincer.android.jupnp.transport.jetty.JettyContentServerImpl;
@@ -11,10 +10,10 @@ import apincer.android.jupnp.transport.jetty.JettyUPnpServerImpl;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.ContentServer;
-import apincer.music.core.server.spi.MediaServer;
+import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.server.spi.UpnpServer;
 import apincer.music.server.jupnp.MediaServerConfiguration;
-import apincer.music.server.jupnp.MediaServerImpl;
+import apincer.music.server.jupnp.MediaServerHubImpl;
 import apincer.music.server.jupnp.transport.StreamServerConfigurationImpl;
 import dagger.Module;
 import dagger.Provides;
@@ -37,8 +36,8 @@ public class JettyServerModule {
     }
 
     @Provides
-    public MediaServer provideMediaServer(@ApplicationContext Context context, UpnpServiceConfiguration cfg, FileRepository fileRepos, TagRepository tagRepos) {
-        return new MediaServerImpl(context, cfg, fileRepos, tagRepos);
+    public MediaServerHub provideMediaServerHub(@ApplicationContext Context context, UpnpServiceConfiguration cfg, FileRepository fileRepos, TagRepository tagRepos) {
+        return new MediaServerHubImpl(context, cfg, fileRepos, tagRepos);
     }
 
     @Provides

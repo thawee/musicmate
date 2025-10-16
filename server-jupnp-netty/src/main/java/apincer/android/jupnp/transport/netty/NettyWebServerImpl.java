@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 
 import apincer.android.utils.FileUtils;
-import apincer.music.core.playback.NowPlaying;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
@@ -103,7 +102,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
     private Thread serverThread;
     private volatile boolean isRunning = false;
 
-    private final WebSocketContent wsContent;
     final TagRepository tagRepos;
     FileRepository fileRepos;
     private final WebSocketFrameHandler wsHandler = new WebSocketFrameHandler();
@@ -120,8 +118,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
         addLibInfo("Netty", "4.2.6");
-
-        wsContent = new WebSocketContent(context, tagRepos);
 
         // Initialize adaptive buffer settings based on device capabilities
         initializeBuffers();
@@ -158,13 +154,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
         }
 
         serverThread = new Thread(() -> {
-            // Web UI handler for music management
-           /* try {
-                ApplicationUtils.deleteFiles(getContext(), "webui");
-                ApplicationUtils.copyFileOrDirToCache(getContext(), "webui");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } */
 
             try {
                 ServerBootstrap b = new ServerBootstrap();
@@ -190,10 +179,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
                 isRunning = true;
                 Log.i(TAG, "WebUI Server started on " +
                         bindAddress.getHostAddress() + ":" + serverPort+" successfully.");
-
-                // Bind to the MediaServerService as soon as this service is created
-               // Intent intent = new Intent(getContext(), PlaybackService.class);
-               // getContext().bindService(intent, serviceConnection, BIND_AUTO_CREATE);
 
                 // Block this thread until the server channel is closed.
                 f.channel().closeFuture().sync();
@@ -238,10 +223,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
                 serverThread = null;
             }
         }
-
-        //if(isPlaybackServiceBound) {
-       //     context.unbindService(serviceConnection);
-       // }
 
         // Also clear disposables on full server stop
         disposables.clear();
@@ -351,7 +332,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
                 File file = new File(holder.getFilePath());
                 long fileLength = file.length();
 
-
                 // Handle normal file serving
                 HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
                 HttpUtil.setContentLength(response, fileLength);
@@ -441,12 +421,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
         private void setDateAndCacheHeaders(HttpResponse response, String fileName) {
             // Add server header
             response.headers().set(HttpHeaderNames.SERVER, getServerSignature(getComponentName()));
-
-            // Add date header with RFC 1123 format required by HTTP/DLNA
-          //  ZoneId zoneId = ZoneId.systemDefault();
-          //  ZonedDateTime now = ZonedDateTime.now(zoneId);
-
-           // response.headers().set(HttpHeaderNames.DATE, now.format(dateFormatter));
 
             // Set content disposition for better download behavior
             response.headers().set(
@@ -538,7 +512,6 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
         }
 
         private NettyContentHolder getFile(ChannelHandlerContext ctx, FullHttpRequest request, String path) {
-
             try {
                 File filePath = new File(getContext().getFilesDir(), "webui");
                 if(path.contains("?")) {
@@ -572,6 +545,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
 
         private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
         private final Gson gson = new Gson();
+        private final WebSocketContent webSocketContent = buildWebSocketContent(tagRepos);
 
         @Override
         public void handlerAdded(ChannelHandlerContext ctx) {
@@ -591,7 +565,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
                 Map<String, Object> message = gson.fromJson(request, Map.class);
                 String command = message.getOrDefault("command", "").toString();
 
-                Map<String, Object> response = wsContent.handleCommand(command, message);
+                Map<String, Object> response = webSocketContent.handleCommand(command, message);
                 if(response != null) {
                     ctx.channel().writeAndFlush(new TextWebSocketFrame(gson.toJson(response)));
                     Log.d(TAG, "Response message: " + gson.toJson(response));
@@ -602,11 +576,12 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
             }
         }
 
+        /*
         private void broadcastNowPlaying(NowPlaying nowPlaying) {
             Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);
             if(response != null) {
                 channels.writeAndFlush(new TextWebSocketFrame(gson.toJson(response)));
             }
-        }
+        } */
     }
 }

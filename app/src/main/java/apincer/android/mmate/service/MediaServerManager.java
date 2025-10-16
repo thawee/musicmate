@@ -13,16 +13,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.spi.MediaServer;
+import apincer.music.core.server.spi.MediaServerHub;
 import apincer.android.mmate.Settings;
 
 public class MediaServerManager {
     private static final String TAG = "MediaServerManager";
-    private MediaServer mediaServer;
-    private MediaServerHostingService service;
+    private MediaServerHub mediaServer;
+    private MediaServerHubService service;
     private boolean isBound = false;
 
-    private final MutableLiveData<MediaServer.ServerStatus> serverStatusLiveData = new MutableLiveData<>();
+    private final MutableLiveData<MediaServerHub.ServerStatus> serverStatusLiveData = new MutableLiveData<>();
     private final Context context;
 
     public MediaServerManager(Context context) {
@@ -30,13 +30,13 @@ public class MediaServerManager {
         init();
     }
 
-    public LiveData<MediaServer.ServerStatus> getServerStatus() {
+    public LiveData<MediaServerHub.ServerStatus> getServerStatus() {
         return serverStatusLiveData;
     }
 
     public void startServer() {
         Log.d(TAG, "Requesting to start MediaServerService");
-        Intent intent = new Intent(context, MediaServerHostingService.class);
+        Intent intent = new Intent(context, MediaServerHubService.class);
         try {
             // For Android O and above, use startForegroundService
             // The service itself MUST call startForeground() within 5 seconds
@@ -44,7 +44,7 @@ public class MediaServerManager {
             context.startForegroundService(intent);
         } catch (Exception e) {
             Log.e(TAG, "Error starting MediaServerService", e);
-            serverStatusLiveData.setValue(MediaServer.ServerStatus.ERROR); // Reflect error immediately
+            serverStatusLiveData.setValue(MediaServerHub.ServerStatus.ERROR); // Reflect error immediately
         }
     }
 
@@ -66,7 +66,7 @@ public class MediaServerManager {
 
     public void init() {
         // Bind to the service in onStart, which is a good place to handle resources that should be active when the fragment is visible
-        Intent intent = new Intent(context, MediaServerHostingService.class);
+        Intent intent = new Intent(context, MediaServerHubService.class);
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -74,7 +74,7 @@ public class MediaServerManager {
         @SuppressLint("CheckResult")
         @Override
         public void onServiceConnected(ComponentName name, IBinder serviceBinder) {
-            MediaServerHostingService.MediaServerBinder binder = (MediaServerHostingService.MediaServerBinder) serviceBinder;
+            MediaServerHubService.MediaServerHubBinder binder = (MediaServerHubService.MediaServerHubBinder) serviceBinder;
             service = binder.getService();
             mediaServer = binder.getMediaServer();
             isBound = true;
@@ -92,5 +92,37 @@ public class MediaServerManager {
 
     public String getServerLocation() {
         return "http://"+ BaseServer.getIpAddress()+":"+ CONTENT_SERVER_PORT;
+    }
+
+    public String getWebEngineName() {
+        String webEngine = "Unknown";
+        // Check for Jetty
+        try {
+            Class.forName("org.eclipse.jetty.server.Server");
+            webEngine = "Eclipse Jetty";
+        } catch (ClassNotFoundException e) {
+            // Not Jetty, continue checking
+        }
+
+        // Check for Netty if Jetty not found
+        if ("Unknown".equals(webEngine)) {
+            try {
+                Class.forName("io.netty.bootstrap.ServerBootstrap");
+                webEngine = "Netty Framework";
+            } catch (ClassNotFoundException e) {
+                // Not Netty, continue checking
+            }
+        }
+
+        // Check for Java NIO if others not found
+        if ("Unknown".equals(webEngine)) {
+            try {
+                Class.forName("java.nio.channels.Selector");
+                webEngine = "Standard Java NIO";
+            } catch (ClassNotFoundException e) {
+                // This is unlikely to fail in an Android environment
+            }
+        }
+        return webEngine;
     }
 }

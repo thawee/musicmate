@@ -60,7 +60,6 @@ import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.PlaybackServiceImpl;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.NowPlaying;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.repository.TagRepository;
 import apincer.android.mmate.ui.view.DynamicRangeView;
@@ -238,7 +237,7 @@ public class TagsActivity extends AppCompatActivity {
         setupPageViewer();
 
         // Bind to the MediaServerService as soon as this service is created
-        Intent intent = new Intent(this, PlaybackService.class);
+        Intent intent = new Intent(this, PlaybackServiceImpl.class);
         bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 
@@ -309,8 +308,6 @@ public class TagsActivity extends AppCompatActivity {
         pathInfo = findViewById(R.id.panel_path);
         //pathInfoLine = findViewById(R.id.panel_path_line);
         tagInfo = findViewById(R.id.panel_tag);
-        //hiresView = findViewById(R.id.icon_hires);
-        //resolutionView = findViewById(R.id.icon_resolution);
         dynamicRangeView = findViewById(R.id.dynamic_range_db_view);
         //ratingView = findViewById(R.id.rating);
         qualityIndicatorView = findViewById(R.id.icon_quality_indicator);
@@ -504,28 +501,6 @@ public class TagsActivity extends AppCompatActivity {
         }
     }
 
-    /*
-    private void handleOperationStatus(OperationStatus status) {
-        if (status instanceof Idle) {
-            dismissProgressDialog();
-        } else if (status instanceof Loading) {
-            showProgressDialog(((Loading) status).message, -1, null);
-        } else if (status instanceof ProgressUpdate) {
-            ProgressUpdate pu = (ProgressUpdate) status;
-            showProgressDialog("Processing...", pu.progress, pu.currentStep);
-        } else if (status instanceof Success) {
-            dismissProgressDialog();
-            // Show a Toast or Snackbar with ((Success) status).message
-            //ApplicationUtils.showToast(this, ((ListenableWorker.Result.Success) status).message);
-            viewModel.resetDrMeasurementStatus(); // Go back to Idle
-        } else if (status instanceof apincer.android.mmate.viewmodel.Error) {
-            dismissProgressDialog();
-            // Show a Toast or Snackbar with ((Error) status).errorMessage
-           // ApplicationUtils.showErrorToast(this, ((Error) status).errorMessage);
-            viewModel.resetDrMeasurementStatus(); // Go back to Idle
-        }
-    } */
-
     private void dismissProgressDialog() {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
@@ -575,7 +550,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void doDeleteMediaItems() {
-        String text = "";
+        String text;
         List<MusicTag> editItems = getEditItems();
         if(editItems.size()>1) {
             text = "Move songs to the Trash?";
@@ -617,18 +592,12 @@ public class TagsActivity extends AppCompatActivity {
     public void doMoveMediaItems() {
         startProgressBar();
 
-        NowPlaying nowPlaying;
-        if(playbackService!= null) {
-            nowPlaying = playbackService.getNowPlaying();
-        } else {
-            nowPlaying = null;
-        }
         operationTask.moveFiles(getApplicationContext(), getEditItems(), new FileOperationTask.ProgressCallback() {
             boolean closeScreen = false;
             @Override
             public void onProgress(MusicTag tag, int progress, String status) {
-                if(nowPlaying!=null && !closeScreen) {
-                    closeScreen = nowPlaying.isPlaying(tag);
+                if(playbackService!= null) {
+                    closeScreen = tag.equals(playbackService.getNowPlayingSong());
                 }
             }
 

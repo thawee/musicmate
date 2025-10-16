@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.spi.MediaTrack;
 import musicmate.core.R;
 
 public class TagUtils {
@@ -29,7 +30,7 @@ public class TagUtils {
         return trimToEmpty(tag.getQualityInd()).contains("MQA Studio");
     }
 
-    public static boolean isMQA(MusicTag tag) {
+    public static boolean isMQA(MediaTrack tag) {
         return trimToEmpty(tag.getQualityInd()).contains("MQA");
     }
 

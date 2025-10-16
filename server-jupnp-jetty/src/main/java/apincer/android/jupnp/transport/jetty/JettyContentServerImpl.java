@@ -46,12 +46,11 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.NowPlaying;
-import apincer.music.core.playback.Player;
+import apincer.music.core.playback.StreamPlayer;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.RendererDevice;
 import apincer.music.core.server.WebSocketContent;
 import apincer.music.core.server.spi.ContentServer;
 import apincer.music.core.utils.MimeTypeUtils;
@@ -77,7 +76,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     private static final int ACCEPT_QUEUE_SIZE = 16; // More than enough for a personal server.
 
     private Server server;
-    private final WebSocketContent wsContent;
     private final WebSocketHandler wsHandler = new WebSocketHandler();
 
     private final TagRepository repos;
@@ -87,7 +85,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
         super(context);
         this.repos = tagRepos;
         this.fileRepos = fileRepos;
-        wsContent =new WebSocketContent(context, repos);
         addLibInfo("Jetty", "12.1.2");
     }
 
@@ -270,11 +267,14 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
     private void notifyPlaybackService(String clientIp, String userAgent, MusicTag tag) {
         if(getPlaybackService() != null) {
-            RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
-            Player player = (device != null) ?
-                    Player.Factory.create(getContext(), device) :
-                    Player.Factory.create(getContext(), clientIp, userAgent);
-            getPlaybackService().onNewTrackPlaying(player, tag, 0);
+           // RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
+           // if(device!=null) {
+           //     PlaybackTarget player = DMCAPlayer.Factory.create(getContext(), device);
+           //     getPlaybackService().notifyNewTrackPlaying(player, tag);
+           // }else {
+                PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
+                getPlaybackService().notifyNewTrackPlaying(player, tag);
+           // }
         }
     }
 
@@ -563,6 +563,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
         // Store all active sessions
         private static final CopyOnWriteArraySet<Session> sessions = new CopyOnWriteArraySet<>();
         private final Gson gson = new Gson();
+        private final WebSocketContent wsContent = buildWebSocketContent(repos);
 
         @OnWebSocketOpen
         public void onConnect(Session session) {
@@ -614,7 +615,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                         }
                     });
         }
-
+/*
         public void broadcastNowPlaying(NowPlaying nowPlaying) {
             if (nowPlaying.getSong() != null) {
                 Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);// getMap(nowPlaying.getSong());
@@ -624,7 +625,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                     // sessions.forEach(endpoint -> endpoint.sendText(jsonResponse, null));
                 }
             }
-        }
+        } */
     }
 
     private static class CompletionCallback implements Callback {

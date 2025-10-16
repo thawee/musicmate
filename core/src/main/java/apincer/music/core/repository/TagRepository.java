@@ -106,7 +106,7 @@ public class TagRepository {
                     tag.setQualityInd(existingTag.getQualityInd());
                     tag.setMqaSampleRate(existingTag.getMqaSampleRate());
                     tag.setQualityRating(existingTag.getQualityRating());
-                    tag.setWaveformData(existingTag.getWaveformData());
+                   // tag.setWaveformData(existingTag.getWaveformData());
                 }
             }
         }
@@ -309,12 +309,13 @@ public class TagRepository {
                         results.add(tag);
                     }
                 }
+                /*
                 if(PlaylistRepository.isTitlePlaylist(name)) {
                     // add missing titles
                     List<MusicTag> missingList = PlaylistRepository.getMissingSongsForPlaylist(name, results);
                     missingList.sort(Comparator.comparing(MusicTag::getTitle));
                     results.addAll(missingList);
-                }
+                } */
             } else {
                 int index = 1;
                 for (String name : PlaylistRepository.getPlaylistNames()) {

@@ -126,8 +126,8 @@ public class TagsEditorFragment extends Fragment {
         setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
        // setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
         setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
-        setupListValuePopup(txtAlbumArtist, tagRepos.getDefaultAlbumArtistList(getContext()),1);
-        setupListValuePopup(txtGenre, tagRepos.getDefaultGenreList(getContext()),1);
+        setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
+        setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
         //TagRepository.getDefaultGenreList(getContext());
         setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
         // setupListValuePopup(txtGrouping, TagRepository.getGroupingList(getContext()),1);

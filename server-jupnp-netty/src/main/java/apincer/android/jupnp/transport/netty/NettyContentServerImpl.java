@@ -33,13 +33,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.Player;
+import apincer.music.core.playback.StreamPlayer;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.RendererDevice;
 import apincer.music.core.server.spi.ContentServer;
-import apincer.music.core.server.spi.MediaServer;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -420,14 +419,15 @@ public class NettyContentServerImpl extends BaseServer implements ContentServer 
 
             // Check for specific controller/renderer identification in User-Agent
             // Check for MPD with more detailed detection
-            RendererDevice dev = null;
-            if(getPlaybackService() != null) {
-                dev = getPlaybackService().getRendererByIpAddress(clientIp);
-            }
-            if(dev != null) {
-                Log.i(TAG, "found dlna renderer " + dev.getFriendlyName() + ": " + userAgent);
-                return CLIENT_PROFILES.getOrDefault("mpd", CLIENT_PROFILES.get("default"));
-            }else if (userAgent.contains("music player daemon") ||
+           // RendererDevice dev = null;
+           // if(getPlaybackService() != null) {
+           //     dev = getPlaybackService().getRendererByIpAddress(clientIp);
+           // }
+           // if(dev != null) {
+           //     Log.i(TAG, "found dlna renderer " + dev.getFriendlyName() + ": " + userAgent);
+           //     return CLIENT_PROFILES.getOrDefault("mpd", CLIENT_PROFILES.get("default"));
+            //}else
+            if (userAgent.contains("music player daemon") ||
                     userAgent.contains("mpd") ||
                     userAgent.contains("mpdclient")) {
                 // Use RopieeeXL use MPD client
@@ -817,17 +817,17 @@ public class NettyContentServerImpl extends BaseServer implements ContentServer 
                 }
 
                 // Record streaming information
-                String agent = request.headers().get(HttpHeaderNames.USER_AGENT);
+                String userAgent = request.headers().get(HttpHeaderNames.USER_AGENT);
                 if(getPlaybackService() != null) {
                     String clientIp = getRemoteAddress(ctx);
-                    RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
-                    Player player;
-                    if (device != null) {
-                        player = Player.Factory.create(getContext(), device);
-                    } else {
-                        player = Player.Factory.create(getContext(), clientIp, agent);
-                    }
-                    getPlaybackService().onNewTrackPlaying(player, tag, 0);
+                    //RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
+                    //if(device!=null) {
+                    //    PlaybackTarget player = DMCAPlayer.Factory.create(getContext(), device);
+                    //    getPlaybackService().notifyNewTrackPlaying(player, tag);
+                    //}else {
+                        PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
+                        getPlaybackService().notifyNewTrackPlaying(player, tag);
+                   // }
                 }
 
                 // Get MIME type for the file

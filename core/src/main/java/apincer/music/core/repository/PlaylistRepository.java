@@ -1,6 +1,5 @@
 package apincer.music.core.repository;
 
-import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
@@ -19,13 +18,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.PlaylistCollection;
 import apincer.music.core.model.PlaylistEntry;
-import apincer.music.core.model.Song;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.ApplicationUtils;
 
 public class PlaylistRepository {
@@ -85,7 +83,7 @@ public class PlaylistRepository {
             switch (type) {
                 case TYPE_SONG:
                     if (entry.getSongs() != null) {
-                        for (Song song : entry.getSongs()) {
+                        for (MusicTag song : entry.getSongs()) {
                             if (song != null && song.getTitle() != null && song.getArtist() != null) {
                                 String key = getKeyForSong(song);
                                 entry.getMappedSongs().put(key, song);
@@ -96,7 +94,7 @@ public class PlaylistRepository {
 
                 case TYPE_ALBUM:
                     if (entry.getSongs() != null) {
-                        for (Song song : entry.getSongs()) {
+                        for (MusicTag song : entry.getSongs()) {
                             if (song != null && song.getAlbum() != null && song.getArtist() != null) {
                                 String key = getKeyForAlbum(song);
                                 entry.getMappedSongs().put(key, song);
@@ -107,7 +105,7 @@ public class PlaylistRepository {
 
                 case TYPE_GENRE:
                     if (entry.getSongs() != null) {
-                        for (Song song : entry.getSongs()) {
+                        for (MusicTag song : entry.getSongs()) {
                             if (song != null && song.getGenre() != null ) {
                                 String genre = getKeyForGenre(song);
                                 entry.getMappedSongs().put(genre, song);
@@ -118,7 +116,7 @@ public class PlaylistRepository {
 
                  case TYPE_GROUPING:
                      if (entry.getSongs() != null) {
-                         for (Song song : entry.getSongs()) {
+                         for (MusicTag song : entry.getSongs()) {
                              if (song != null && song.getGrouping() != null) {
                                  String grouping = getKeyForGrouping(song);
                                  entry.getMappedSongs().put(grouping, song);
@@ -129,7 +127,7 @@ public class PlaylistRepository {
 
                 case TYPE_RATING:
                     if (entry.getSongs() != null) {
-                        for (Song song : entry.getSongs()) {
+                        for (MusicTag song : entry.getSongs()) {
                             if (song != null && song.getRating() != null) {
                                 String grouping = getKeyForRating(song);
                                 entry.getMappedSongs().put(grouping, song);
@@ -145,28 +143,28 @@ public class PlaylistRepository {
         }
     }
 
-    private static String getKeyForRating(Song song) {
+    private static String getKeyForRating(MediaTrack song) {
         return trimToEmpty(song.getRating()).toLowerCase();
     }
 
-    private static String getKeyForGrouping(Song song) {
+    private static String getKeyForGrouping(MediaTrack song) {
         return trimToEmpty(song.getGrouping()).toLowerCase();
     }
 
     @NonNull
-    private static String getKeyForGenre(Song song) {
+    private static String getKeyForGenre(MediaTrack song) {
         return trimToEmpty(song.getGenre()).toLowerCase();
     }
 
     @NonNull
-    private static String getKeyForAlbum(Song song) {
+    private static String getKeyForAlbum(MediaTrack song) {
         String albumTitle = trimToEmpty(song.getAlbum()).toLowerCase();
         String artist = trimToEmpty(song.getArtist()).toLowerCase();
         return albumTitle + "|" + artist;
     }
 
     @NonNull
-    private static String getKeyForSong(Song song) {
+    private static String getKeyForSong(MediaTrack song) {
         String title = trimToEmpty(song.getTitle()).toLowerCase();
         String artist = trimToEmpty(song.getArtist()).toLowerCase();
         // Album can be optional or empty for songs in some contexts
@@ -236,21 +234,22 @@ public class PlaylistRepository {
     /**
      * Finds songs defined in a "song" type playlist that are missing from the user's library.
      *
-     * @param playlistName UUID of the "song" type playlist.
-     * @param existingMusicTagsInLibrary List of MusicTags representing the user's current music library.
+     //* @param playlistName UUID of the "song" type playlist.
+     //* @param existingMusicTagsInLibrary List of MusicTags representing the user's current music library.
      * @return List of MusicTags for songs defined in the playlist but not found in the library.
      */
+    /*
     public static List<MusicTag> getMissingSongsForPlaylist(String playlistName, List<MusicTag> existingMusicTagsInLibrary) {
         Optional<PlaylistEntry> playlistOpt = findPlaylistByName(playlistName);
         if (!playlistOpt.isPresent() || !TYPE_SONG.equalsIgnoreCase(playlistOpt.get().getType()) || playlistOpt.get().getSongs() == null) {
             return Collections.emptyList();
         }
 
-        List<Song> songsInJsonPlaylist = playlistOpt.get().getSongs();
+        List<MediaTrack> songsInJsonPlaylist = playlistOpt.get().getSongs();
         List<MusicTag> missingTags = new ArrayList<>();
         AtomicInteger pseudoIdCounter = new AtomicInteger(2999000);
 
-        for (Song songFromPlaylist : songsInJsonPlaylist) {
+        for (MediaTrack songFromPlaylist : songsInJsonPlaylist) {
             if (songFromPlaylist == null) continue;
 
             boolean foundInLibrary = existingMusicTagsInLibrary.stream()
@@ -271,7 +270,7 @@ public class PlaylistRepository {
             }
         }
         return missingTags;
-    }
+    } */
 
     public static boolean isSongInPlaylistName(MusicTag tagToCheck, String playlistname) {
         Optional<PlaylistEntry> playlistOpt = findPlaylistByName(playlistname);

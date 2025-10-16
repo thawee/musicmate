@@ -8,8 +8,6 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -17,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.http.HTTPServer;
-import apincer.music.core.playback.NowPlaying;
-import apincer.music.core.playback.Player;
+import apincer.music.core.playback.StreamPlayer;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.ContentServer;
 import apincer.music.core.utils.MimeTypeUtils;
@@ -160,8 +158,19 @@ public class HttpContentServerImpl extends BaseServer implements ContentServer {
         private void notifyPlaybackService(HTTPServer.Request req, MusicTag tag) {
             String clientIp = req.getSocket().getInetAddress().getHostAddress();
             String userAgent = req.getHeaders().get("User-Agent");
-            Player player = Player.Factory.create(getContext(), clientIp, userAgent);
-            NowPlaying nowPlaying = new NowPlaying(player, tag, 0);
+           // Player player = Player.Factory.create(getContext(), clientIp, userAgent);
+           // NowPlaying nowPlaying = new NowPlaying(player, tag, 0); */
+
+            if(getPlaybackService() != null) {
+               // RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
+               // if(device!=null) {
+              //      PlaybackTarget player = DMCAPlayer.Factory.create(getContext(), device);
+              //      getPlaybackService().notifyNewTrackPlaying(player, tag);
+              //  }else {
+                    PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
+                    getPlaybackService().notifyNewTrackPlaying(player, tag);
+              //  }
+            }
         }
 
         private void prepareResponseHeaders(HTTPServer.Headers headers, MusicTag tag) {
