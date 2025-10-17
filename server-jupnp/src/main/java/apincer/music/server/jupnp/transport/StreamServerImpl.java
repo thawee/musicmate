@@ -34,7 +34,7 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
     }
 
     synchronized public void init(InetAddress bindAddress, final Router router) throws InitializationException {
-        Log.i(TAG, "Initialise Stream Servers");
+        Log.i(TAG, TAG+" - Initialise Stream Servers");
 
        // Log.i(TAG, "  Stop servers before start if server already running.");
         if(upnpServer != null) {

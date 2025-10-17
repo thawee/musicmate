@@ -4,7 +4,6 @@ import android.content.Context;
 
 import org.jupnp.model.meta.RemoteDevice;
 
-import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.server.spi.MediaServerHub;
@@ -37,6 +36,7 @@ public class DMCAPlayer implements PlaybackTarget {
 
     @Override
     public boolean play(MediaTrack song) {
+        mediaServer.stopPlaying(udn);
         mediaServer.playSong(udn, song);
         return true;
     }
@@ -62,11 +62,6 @@ public class DMCAPlayer implements PlaybackTarget {
     }
 
     @Override
-    public PlaybackState getPlaybackState() {
-        return null;
-    }
-
-    @Override
     public boolean pause() {
         // Not implemented yet for DLNA, requires specific UPnP action
         return false;
@@ -80,8 +75,8 @@ public class DMCAPlayer implements PlaybackTarget {
 
     @Override
     public boolean stop() {
-        // Not implemented yet for DLNA, requires specific UPnP action
-        return false;
+        mediaServer.stopPlaying(udn);
+        return true;
     }
 
     @Override
@@ -90,8 +85,8 @@ public class DMCAPlayer implements PlaybackTarget {
     }
 
     @Override
-    public void refreshPlayerState() {
-        mediaServer.fetchPlayerState(udn);
+    public void onSelected() {
+        mediaServer.fetchPlaybackState(udn);
     }
 
     public static class Factory {

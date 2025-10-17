@@ -9,6 +9,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -46,8 +47,7 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.StreamPlayer;
-import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
@@ -75,22 +75,22 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     private static final int RESPONSE_HEADER_SIZE = 8192; // standard default for most web servers
     private static final int ACCEPT_QUEUE_SIZE = 16; // More than enough for a personal server.
 
+    private Thread serverThread;
     private Server server;
-    private final WebSocketHandler wsHandler = new WebSocketHandler();
 
-    private final TagRepository repos;
+    private final TagRepository tagRepos;
     private final FileRepository fileRepos;
 
     public JettyContentServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context);
-        this.repos = tagRepos;
+        this.tagRepos = tagRepos;
         this.fileRepos = fileRepos;
         addLibInfo("Jetty", "12.1.2");
     }
 
     public void initServer(InetAddress bindAddress) throws Exception {
         // Initialize the server with the specified port.
-        Thread serverThread = new Thread(() -> {
+        serverThread = new Thread(() -> {
             try {
                 //Log.i(TAG, "Starting Content Server (Jetty) on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT);
 
@@ -154,7 +154,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                     PathSpec pathSpec = PathSpec.from("^.*$"); //accept any string including empty space
                     container.addMapping(pathSpec, (req, resp, callback) -> {
                         // Create and return WebSocket endpoint instance
-                        return wsHandler;
+                        return new WebSocketHandler();
                     });
                 });
 
@@ -176,6 +176,8 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 ResourceHandler webHandler = new WebContentHandler();
                 webHandler.setBaseResource(ResourceFactory.of(webHandler).newResource("/"));
                 webHandler.setDirAllowed(false);
+                webHandler.setAcceptRanges(true);  // Enable range requests for seeking
+                webHandler.setEtags(true);         // Enable ETags for caching
                 webHandler.setCacheControl("public, max-age=86400");
                 webHandler.setServer(server);
                 ContextHandler webContext = new ContextHandler(CONTEXT_PATH_ROOT);
@@ -215,6 +217,15 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             Log.e(TAG, "Error stopping Content Server", e);
            // throw new RuntimeException(e);
         }
+        // Add thread cleanup
+        if (serverThread != null && serverThread.isAlive()) {
+            try {
+                serverThread.join(5000); // Wait up to 5 seconds
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                Log.w(TAG, "Interrupted while waiting for server thread", e);
+            }
+        }
     }
 
     @Override
@@ -225,57 +236,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     @Override
     public int getListenPort() {
         return CONTENT_SERVER_PORT;
-    }
-
-    /**
-     * Format audio quality description based on tag properties
-     */
-    private String formatAudioQuality(MusicTag tag) {
-        StringBuilder quality = new StringBuilder();
-
-        if (tag.getAudioSampleRate() > 0 && tag.getAudioBitsDepth() > 0) {
-            if (tag.getAudioSampleRate() >= 88200 && tag.getAudioBitsDepth() >= 24) {
-                quality.append("Hi-Res ");
-            } else if (tag.getAudioSampleRate() >= 44100 && tag.getAudioBitsDepth() >= 16) {
-                quality.append("CD-Quality ");
-            }
-        }
-
-        quality.append(tag.getFileType());
-
-        if (tag.getAudioSampleRate() > 0) {
-            quality.append(" ").append(tag.getAudioSampleRate() / 1000.0).append("kHz");
-        }
-
-        if (tag.getAudioBitsDepth() > 0) {
-            quality.append("/").append(tag.getAudioBitsDepth()).append("-bit");
-        }
-
-        int channels = TagUtils.getChannels(tag);
-        if (channels > 0) {
-            if (channels == 1) {
-                quality.append(" Mono");
-            } else if (channels == 2) {
-                quality.append(" Stereo");
-            } else {
-                quality.append(" Multichannel (").append(channels).append(")");
-            }
-        }
-
-        return quality.toString();
-    }
-
-    private void notifyPlaybackService(String clientIp, String userAgent, MusicTag tag) {
-        if(getPlaybackService() != null) {
-           // RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
-           // if(device!=null) {
-           //     PlaybackTarget player = DMCAPlayer.Factory.create(getContext(), device);
-           //     getPlaybackService().notifyNewTrackPlaying(player, tag);
-           // }else {
-                PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
-                getPlaybackService().notifyNewTrackPlaying(player, tag);
-           // }
-        }
     }
 
     private class ContentHandler extends ResourceHandler {
@@ -304,7 +264,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 return true;
             }
 
-            notifyPlaybackService(Request.getRemoteAddr(request), request.getHeaders().get(HttpHeader.USER_AGENT), tag);
+            notifyPlayback(Request.getRemoteAddr(request), request.getHeaders().get(HttpHeader.USER_AGENT), tag);
 
             HttpContent content = getResourceService().getContent(tag.getPath(), request);
             if (content == null) {
@@ -325,12 +285,17 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 return null;
             }
             try {
-                // IMPROVEMENT: More robust URI parsing to prevent exceptions.
-                String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length()); // Everything after "/res/"
+                // More robust URI parsing to prevent exceptions.
+                String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length()); // Everything after "/music/"
+                if (pathPart.isEmpty()) {
+                    return null;
+                }
                 String[] parts = pathPart.split("/");
                 if (parts.length > 0 && !parts[0].isEmpty()) {
                     long contentId = StringUtils.toLong(parts[0]);
-                    return repos.findById(contentId);
+                    if (contentId > 0) { // Add validation
+                        return tagRepos.findById(contentId);
+                    }
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "Failed to parse content ID from URI: " + uri, ex);
@@ -369,44 +334,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             if (tag.getAudioBitRate() > 0) response.getHeaders().put("X-Audio-Bitrate", tag.getAudioBitRate() + " kbps");
             if (TagUtils.getChannels(tag) > 0) response.getHeaders().put("X-Audio-Channels", String.valueOf(TagUtils.getChannels(tag)));
             response.getHeaders().put("X-Audio-Format", Objects.toString(tag.getFileType(), ""));
-        }
-
-        /**
-         * Format audio quality description based on tag properties
-         */
-        private String formatAudioQuality(MusicTag tag) {
-            StringBuilder quality = new StringBuilder();
-
-            if (tag.getAudioSampleRate() > 0 && tag.getAudioBitsDepth() > 0) {
-                if (tag.getAudioSampleRate() >= 88200 && tag.getAudioBitsDepth() >= 24) {
-                    quality.append("Hi-Res ");
-                } else if (tag.getAudioSampleRate() >= 44100 && tag.getAudioBitsDepth() >= 16) {
-                    quality.append("CD-Quality ");
-                }
-            }
-
-            quality.append(tag.getFileType());
-
-            if (tag.getAudioSampleRate() > 0) {
-                quality.append(" ").append(tag.getAudioSampleRate() / 1000.0).append("kHz");
-            }
-
-            if (tag.getAudioBitsDepth() > 0) {
-                quality.append("/").append(tag.getAudioBitsDepth()).append("-bit");
-            }
-
-            int channels = TagUtils.getChannels(tag);
-            if (channels > 0) {
-                if (channels == 1) {
-                    quality.append(" Mono");
-                } else if (channels == 2) {
-                    quality.append(" Stereo");
-                } else {
-                    quality.append(" Multichannel (").append(channels).append(")");
-                }
-            }
-
-            return quality.toString();
         }
     }
 
@@ -460,7 +387,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             prepareMusicStreamingHeaders(response, song);
 
             //notify new song playing
-            notifyPlaybackService(Request.getRemoteAddr(request), request.getHeaders().get(HttpHeader.USER_AGENT), song);
+            notifyPlayback(Request.getRemoteAddr(request), request.getHeaders().get(HttpHeader.USER_AGENT), song);
 
             // Now, call the generic file sender
             return sendResource(audioFile, request, response, callback);
@@ -513,7 +440,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 String[] parts = pathPart.split("/");
                 if (parts.length > 0 && !parts[0].isEmpty()) {
                     long contentId = StringUtils.toLong(parts[0]);
-                    return repos.findById(contentId);
+                    return tagRepos.findById(contentId);
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "Failed to parse content ID from URI: " + uri, ex);
@@ -562,25 +489,78 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     public class WebSocketHandler {
         // Store all active sessions
         private static final CopyOnWriteArraySet<Session> sessions = new CopyOnWriteArraySet<>();
-        private final Gson gson = new Gson();
-        private final WebSocketContent wsContent = buildWebSocketContent(repos);
+        private static final int MAX_SESSIONS = 100;
+        private static final Gson GSON = new GsonBuilder()
+                .disableHtmlEscaping() // Reduces string processing
+                .serializeNulls() // Optional: skip nulls to reduce JSON size
+                .create();
+        private final WebSocketContent wsContent = buildWebSocketContent(tagRepos);
+
+        public WebSocketHandler() {
+            subscribePlaybackState(playbackState -> broadcastPlaybackState(playbackState));
+        }
 
         @OnWebSocketOpen
         public void onConnect(Session session) {
             Log.d(TAG, "New WebSocket connection: "+session.getRemoteSocketAddress());
+            if (sessions.size() >= MAX_SESSIONS) {
+                Log.w(TAG, "Max WebSocket connections reached, rejecting new connection");
+                session.close(1008, "Server full", null);
+                return;
+            }
             sessions.add(session);
         }
 
         @OnWebSocketMessage
         public void onMessage(Session session, String message) {
             Log.d(TAG, "Received message from "+session.getRemoteSocketAddress()+", message="+ message);
-            Map<String, Object> messageMap = gson.fromJson(message, Map.class);
-            String command = messageMap.getOrDefault("command", "").toString();
+            if (message == null || message.length() < 2) { // Minimum: "{}"
+                return;
+            }
 
-            Map<String, Object> response = wsContent.handleCommand(command, messageMap);
-            if(response != null) {
-                session.sendText(gson.toJson(response), null);
-                Log.d(TAG, "Response message: " + gson.toJson(response));
+            // More efficient whitespace check
+            char firstChar = message.charAt(0);
+            if (firstChar != '{') {
+                if (!Character.isWhitespace(firstChar)) {
+                    return;
+                }
+                // Only trim if needed
+                message = message.trim();
+                if (message.isEmpty() || message.charAt(0) != '{') {
+                    return;
+                }
+            }
+
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> messageMap = GSON.fromJson(message, Map.class);
+
+                // Add null check
+                if (messageMap == null) {
+                    Log.w(TAG, "Null message map, ignoring");
+                    return;
+                }
+
+                String command = String.valueOf(messageMap.getOrDefault("command", ""));
+
+                // Validate command before processing
+                if (command.isEmpty()) {
+                    Log.w(TAG, "Empty command, ignoring");
+                    return;
+                }
+
+                Map<String, Object> response = wsContent.handleCommand(command, messageMap);
+                if(response != null) {
+                    session.sendText(GSON.toJson(response), null);
+                    Log.d(TAG, "Response message: " + GSON.toJson(response));
+                }
+            } catch (com.google.gson.JsonSyntaxException e) {
+                // Catching the specific exception for bad JSON.
+                Log.e(TAG, "Error parsing WebSocket JSON message: " + message, e);
+                // We don't call onError because this is a client-side data error, not a connection error.
+            } catch (Exception e) {
+                Log.e(TAG, "Error processing WebSocket message", e);
+                onError(session, e);
             }
         }
 
@@ -615,17 +595,20 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                         }
                     });
         }
-/*
-        public void broadcastNowPlaying(NowPlaying nowPlaying) {
-            if (nowPlaying.getSong() != null) {
-                Map<String, Object> response = wsContent.getNowPlaying(nowPlaying);// getMap(nowPlaying.getSong());
-                if(response != null) {
-                    String jsonResponse = gson.toJson(response);
-                    broadcast(jsonResponse);
-                    // sessions.forEach(endpoint -> endpoint.sendText(jsonResponse, null));
-                }
+
+        public void broadcastPlaybackState(PlaybackState state) {
+            Map<String, Object> response = wsContent.getPlaybackState(state);
+            if (response != null) {
+                String jsonResponse = GSON.toJson(response);
+                broadcast(jsonResponse);
             }
-        } */
+        }
+
+        // Shutdown cleanup executor when server stops
+        public void shutdown() {
+            sessions.forEach(session -> session.close());
+            sessions.clear();
+        }
     }
 
     private static class CompletionCallback implements Callback {

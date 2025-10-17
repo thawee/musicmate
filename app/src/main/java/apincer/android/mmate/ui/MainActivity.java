@@ -882,6 +882,7 @@ public class MainActivity extends AppCompatActivity {
         AboutActivity.showAbout(this);
     }
 
+    @SuppressLint("SetTextI18n")
     private void doSetDirectories() {
         if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
             Intent intent = new Intent(MainActivity.this, PermissionActivity.class);

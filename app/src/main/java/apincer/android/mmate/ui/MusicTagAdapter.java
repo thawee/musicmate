@@ -556,7 +556,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 return true;
             } else if (itemId == R.id.add_to_queue_button) {
                 if(song != null) {
-                    tagRepos.addToQueue(song);
+                    tagRepos.addToPlayingQueue(song);
                 }
                 return true;
             }

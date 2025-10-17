@@ -29,6 +29,7 @@ import apincer.music.core.playback.ExternalPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 
@@ -62,6 +63,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
         return inflater.inflate(R.layout.layout_signal_path_bottom_sheet, container, false);
     }
 
@@ -178,10 +180,10 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             String playerDetails = playbackTarget.getDisplayName();
-            String serverDetails = "MusicMate MediaServer\n" + playbackService.getServerLocation();
+            String serverDetails = "MusicMate MediaServer ["+ ApplicationUtils .getDeviceModel()+"]\n" + playbackService.getServerLocation();
             if (playbackTarget.isStreaming()) {
                 playerDetails = playerDetails + "\n" + playbackTarget.getDescription();
-                addSignalPathStep(signalPathContainer, "Streaming Server", serverDetails, true);
+                addSignalPathStep(signalPathContainer, "Media Server", serverDetails, true);
                 addSignalPathStep(signalPathContainer, "Renderer", playerDetails, false);
             }else if (playbackTarget instanceof ExternalPlayer player) {
                 playerDetails = playerDetails +"\n"+player.getDescription();
@@ -196,7 +198,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         }
 
         // --- Populate DLNA players ---
-        populateDMCAPlayers();;
+        populateDMCAPlayers();
 
         // Set the initial state of the collapsible list based on the active player
         isPlayersExpanded = playbackTarget != null;

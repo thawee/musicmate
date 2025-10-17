@@ -35,6 +35,7 @@ import org.jupnp.support.avtransport.callback.GetTransportInfo;
 import org.jupnp.support.avtransport.callback.Pause;
 import org.jupnp.support.avtransport.callback.Play;
 import org.jupnp.support.avtransport.callback.SetAVTransportURI;
+import org.jupnp.support.avtransport.callback.Stop;
 import org.jupnp.support.contentdirectory.DIDLParser;
 import org.jupnp.support.model.DIDLContent;
 import org.jupnp.support.model.DIDLObject;
@@ -85,7 +86,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  *  </p>
  */
 public class MediaServerHubImpl implements MediaServerHub {
-    private static final String TAG = "MediaServerImpl";
+    private static final String TAG = "MediaServerHubImpl";
     private static final UDAServiceType AV_TRANSPORT_TYPE = new UDAServiceType("AVTransport");
 
     // Standard DLNA Device Types
@@ -97,7 +98,6 @@ public class MediaServerHubImpl implements MediaServerHub {
     private final FileRepository fileRepos;
     private final TagRepository tagRepos;
 
-    //private final List<RendererDevice> renderers = new CopyOnWriteArrayList<>();
     public BehaviorSubject<ServerStatus> getServerStatus() {
         return serverStatus;
     }
@@ -159,27 +159,56 @@ public class MediaServerHubImpl implements MediaServerHub {
         return initialized;
     }
 
-    /*
     @Override
-    public TagRepository getTagReRepository() {
-        return tagRepos;
-    }
+    public void fetchPlaybackState(String udn) {
+        Device device = upnpService.getRegistry().getDevice(new UDN(udn), false);
+        if (device == null) {
+            return;
+        }
 
-    @Override
-    public FileRepository getFileRepository() {
-        return fileRepos;
-    }
+        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+        if (avTransportService == null) {
+            return;
+        }
+        upnpService.getControlPoint().execute(new GetMediaInfo(avTransportService) {
+            @Override
+            public void received(ActionInvocation invocation, MediaInfo mediaInfo) {
+                // The metadata is an XML string. We need to parse it.
+                String metadata = mediaInfo.getCurrentURIMetaData();
+                Item songItem = null;
 
-    @Override
-    public PlaybackService getPlaybackService() {
-        return playbackService;
+                if (metadata != null && !metadata.isEmpty()) {
+                    try {
+                        DIDLParser parser = new DIDLParser();
+                        DIDLContent didl = parser.parse(metadata);
+                        if (!didl.getItems().isEmpty()) {
+                            // The first item in the list is the current track
+                            songItem = didl.getItems().get(0);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, TAG+" - Error parsing DIDL metadata: " + e.getMessage());
+                    }
+                }
+
+                String title = songItem.getTitle();
+                String artist = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class).getName();
+                String album = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class).toString();
+                MusicTag song = tagRepos.findMediaItem(title, artist,album);
+                playbackService.notifyNewTrackPlaying(song);
+            }
+
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+            }
+        });
+        stopPolling();
+        startPolling(udn);
     }
-    */
 
     @Override
     public void startServers() {
         if(!isInitialized()) {
-            long start = System.currentTimeMillis();
+           // long start = System.currentTimeMillis();
             Thread initializationThread = new Thread(() -> {
                 initialize(); // Your existing initialize method
                 if (isInitialized()) {
@@ -188,9 +217,9 @@ public class MediaServerHubImpl implements MediaServerHub {
                         // Re-register and announce
                         upnpService.getRegistry().addDevice(mediaServerDevice);
                         upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
-                        Log.i(TAG, "MediaServer announced after started");
+                        //Log.i(TAG, "MediaServer announced after started");
                     } catch (Exception e) {
-                        Log.e(TAG, "Error announcing MediaServer", e);
+                        Log.e(TAG, TAG+" - Error announcing MediaServer", e);
                     }
                 } else {
                     serverStatus.onNext(ServerStatus.ERROR);
@@ -199,7 +228,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             initializationThread.setName("MediaServer-Init");
             initializationThread.start();
 
-            Log.d(TAG, "MediaServer startup initiated: " + (System.currentTimeMillis() - start) + "ms");
+         //   Log.d(TAG, TAG+" - MediaServer startup initiated: " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 
@@ -207,52 +236,51 @@ public class MediaServerHubImpl implements MediaServerHub {
      * Initialize the DLNA server
      */
     private synchronized void initialize() {
-        if(!initialized) {
-            shutdown(); // clean up before start
+            if (!initialized) {
+                shutdown(); // clean up before start
 
-            try {
-                //Log.d(TAG, "Initializing DLNA media server");
+                try {
+                    //Log.d(TAG, "Initializing DLNA media server");
 
-                // Set system properties BEFORE any jUPnP code is executed
-                System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
-                System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
+                    // Set system properties BEFORE any jUPnP code is executed
+                    System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
+                    System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
 
-                // Create server configuration
-               // upnpServiceCfg = new MediaServerConfiguration(context, this);
-                upnpService = new UpnpServiceImpl(upnpServiceCfg) {
-                    @Override
-                    public synchronized void shutdown() {
-                        // Now we can concurrently run the Cling shutdown code, without occupying the
-                        // Android main UI thread. This will complete probably after the main UI thread
-                        // is done.
-                        super.shutdown(true);
-                    }
-                };
-                // Start UPnP service
-                upnpService.startup();
+                    // Create server configuration
+                    upnpService = new UpnpServiceImpl(upnpServiceCfg) {
+                        @Override
+                        public synchronized void shutdown() {
+                            // Now we can concurrently run the Cling shutdown code, without occupying the
+                            // Android main UI thread. This will complete probably after the main UI thread
+                            // is done.
+                            super.shutdown(true);
+                        }
+                    };
+                    // Start UPnP service
+                    upnpService.startup();
 
-                //
-                RegistryListener registryListener = new MyRegistryListener();
+                    //
+                    RegistryListener registryListener = new MyRegistryListener();
 
-                // Create and register media server device
-                mediaServerDevice = MediaServerDevice.createMediaServerDevice(context, tagRepos);
-                upnpService.getRegistry().addDevice(mediaServerDevice);
+                    // Create and register media server device
+                    mediaServerDevice = MediaServerDevice.createMediaServerDevice(context, tagRepos);
+                    upnpService.getRegistry().addDevice(mediaServerDevice);
 
-                this.upnpService.getRegistry().addListener(registryListener);
+                    this.upnpService.getRegistry().addListener(registryListener);
 
-                // Send alive notification
-                upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
-                // Initial search for all devices
-                this.upnpService.getControlPoint().search(MEDIA_RENDERER_DEVICE_TYPE.getVersion());
+                    // Send alive notification
+                    upnpService.getProtocolFactory().createSendingNotificationAlive(mediaServerDevice).run();
+                    // Initial search for all devices
+                    this.upnpService.getControlPoint().search(MEDIA_RENDERER_DEVICE_TYPE.getVersion());
 
-                // Mark as initialized
-                this.initialized = true;
-                Log.i(TAG, "MediaServer initialized successfully");
-            } catch (Exception e) {
-                Log.e(TAG, "Error initializing MediaServer", e);
-                shutdown();
+                    // Mark as initialized
+                    this.initialized = true;
+                    Log.i(TAG, TAG+" - MediaServer initialized successfully");
+                } catch (Exception e) {
+                    Log.e(TAG, TAG+" - Error initializing MediaServer", e);
+                    shutdown();
+                }
             }
-        }
     }
 
     private void shutdown() {
@@ -270,7 +298,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             serverStatus.onNext(ServerStatus.STOPPED);
 
         } catch (Exception e) {
-            Log.e(TAG, "Error shutting down UPnP service", e);
+            Log.e(TAG, TAG+" - Error shutting down UPnP service", e);
         }
         initialized = false;
     }
@@ -289,7 +317,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         @Override
         public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
-            Log.i(TAG, "Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
+            Log.i(TAG, TAG+" - Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
 
             if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
                 if(playbackService!= null) {
@@ -341,13 +369,13 @@ public class MediaServerHubImpl implements MediaServerHub {
     public void pause(String rendererUdn) {
         Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
         if (device == null) {
-            System.err.println("Renderer with UDN " + rendererUdn + " not found.");
+            Log.i(TAG, TAG+" - Renderer with UDN " + rendererUdn + " not found.");
             return;
         }
 
         Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
         if (avTransportService == null) {
-            System.err.println("Renderer does not have an AVTransport service.");
+            Log.i(TAG, TAG+" - Renderer does not have an AVTransport service.");
             return;
         }
 
@@ -355,12 +383,12 @@ public class MediaServerHubImpl implements MediaServerHub {
         controlPoint.execute(new Pause(avTransportService) {
             @Override
             public void success(ActionInvocation invocation) {
-                System.out.println("Pause command successful.");
+                Log.i(TAG, TAG+" - Pause command successful.");
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                System.err.println("Pause command failed: " + defaultMsg);
+                Log.i(TAG, TAG+" - Pause command failed: " + defaultMsg);
             }
         });
     }
@@ -369,17 +397,16 @@ public class MediaServerHubImpl implements MediaServerHub {
      * Resumes (or starts) playback on the specified renderer.
      * @param rendererUdn The UDN of the target renderer.
      */
-    @Override
-    public void play(String rendererUdn) {
+    private void startPlaying(String rendererUdn) {
         Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
         if (device == null) {
-            System.err.println("Renderer with UDN " + rendererUdn + " not found.");
+            Log.i(TAG, TAG+" - Renderer with UDN " + rendererUdn + " not found.");
             return;
         }
 
         Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
         if (avTransportService == null) {
-            // System.err.println("Renderer does not have an AVTransport service.");
+            Log.i(TAG, TAG+" - Renderer does not have an AVTransport service.");
             return;
         }
 
@@ -388,12 +415,39 @@ public class MediaServerHubImpl implements MediaServerHub {
         controlPoint.execute(new Play(avTransportService) {
             @Override
             public void success(ActionInvocation invocation) {
-                // System.out.println("Play command successful.");
+                Log.i(TAG, TAG+" - Play command successful.");
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                // System.err.println("Play command failed: " + defaultMsg);
+                Log.i(TAG, TAG+" - Play command failed: " + defaultMsg);
+            }
+        });
+    }
+
+    /**
+     * pause (or stop) playback on the specified renderer.
+     * @param rendererUdn The UDN of the target renderer.
+     */
+    public void stopPlaying(String rendererUdn) {
+        Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+        if (device == null) {
+            Log.i(TAG, TAG+" - Renderer with UDN " + rendererUdn + " not found.");
+            return;
+        }
+
+        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+        if (avTransportService == null) {
+            Log.i(TAG, TAG+" - Renderer does not have an AVTransport service.");
+            return;
+        }
+
+        ControlPoint controlPoint = upnpService.getControlPoint();
+        // The "Play" action requires a speed parameter, "1" is normal playback.
+        controlPoint.execute(new Stop(avTransportService) {
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+
             }
         });
     }
@@ -403,16 +457,19 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Step 1: Find the target device (renderer) by its UDN
         Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
         if (device == null) {
-            System.err.println("Renderer with UDN " + rendererUdn + " not found.");
+            Log.i(TAG, TAG+" - Renderer with UDN " + rendererUdn + " not found.");
             return;
         }
 
         // Step 2: Get the AVTransport service from the device
         Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
         if (avTransportService == null) {
-            System.err.println("Renderer does not have an AVTransport service.");
+            Log.i(TAG, TAG+" - Renderer does not have an AVTransport service.");
             return;
         }
+
+        //
+        stopPolling();
 
         // --- Create the URL for the song ---
         // This URL must point to your app's internal HTTP server.
@@ -434,20 +491,21 @@ public class MediaServerHubImpl implements MediaServerHub {
                     @Override
                     public void success(ActionInvocation invocation) {
                         // System.out.println("Play command successful.");
-                        //TODO start polling
+                        startPlaying(rendererUdn);
+                        fetchPlaybackState(rendererUdn);
                         startPolling(rendererUdn);
                     }
 
                     @Override
                     public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                        // System.err.println("Play command failed: " + defaultMsg);
+                        Log.i(TAG, TAG+" - Play command failed: " + defaultMsg);
                     }
                 });
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                //  System.err.println("SetAVTransportURI failed: " + defaultMsg);
+                Log.i(TAG, TAG+" - SetAVTransportURI failed: " + defaultMsg);
             }
         });
     }
@@ -494,53 +552,9 @@ public class MediaServerHubImpl implements MediaServerHub {
 
             return (hours * 3600) + (minutes * 60) + seconds;
         } catch (NumberFormatException e) {
-            System.err.println("Could not parse time string: " + hms);
+            Log.i(TAG, TAG+" - Could not parse time string: " + hms);
             return 0;
         }
-    }
-
-    @Override
-    public void fetchPlayerState(String rendererUdn) {
-        Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
-        if (device == null) {
-            return;
-        }
-
-        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
-        if (avTransportService == null) {
-            return;
-        }
-        upnpService.getControlPoint().execute(new GetMediaInfo(avTransportService) {
-            @Override
-            public void received(ActionInvocation invocation, MediaInfo mediaInfo) {
-                // The metadata is an XML string. We need to parse it.
-                String metadata = mediaInfo.getCurrentURIMetaData();
-                Item songItem = null;
-
-                if (metadata != null && !metadata.isEmpty()) {
-                    try {
-                        DIDLParser parser = new DIDLParser();
-                        DIDLContent didl = parser.parse(metadata);
-                        if (!didl.getItems().isEmpty()) {
-                            // The first item in the list is the current track
-                            songItem = didl.getItems().get(0);
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Error parsing DIDL metadata: " + e.getMessage());
-                    }
-                }
-
-                String title = songItem.getTitle();
-                String artist = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class).getName();
-                String album = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class).toString();
-                MusicTag song = tagRepos.findMediaItem(title, artist,album);
-                playbackService.notifyNewTrackPlaying(song);
-            }
-
-            @Override
-            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-            }
-        });
     }
 
     /**
@@ -562,43 +576,18 @@ public class MediaServerHubImpl implements MediaServerHub {
 
                 @Override
                 public void onFailure(String message) {
-                    System.err.println("Polling position info failed: " + message);
+                    Log.i(TAG, TAG+" - Polling position info failed: " + message);
                     int cnt = count.incrementAndGet();
                     if(cnt > maxFails) {
                         stopPolling();
-                        System.err.println("Maximum polling failed: stop polling.");
+                        Log.i(TAG, TAG+" - Maximum polling failed: stop polling.");
                     }
                 }
             });
 
             positionInfoHandle = scheduler.scheduleWithFixedDelay(positionInfoPoller, 0, 2, TimeUnit.SECONDS);
-
-            // Task to get the current transport status, polling every 1 minute
-            final Runnable transportInfoPoller = () -> getTransportInfo(rendererUdn, new TransportInfoCallback() {
-                @Override
-                public void onReceived(TransportInfo transportInfo) {
-
-                   // getPlaybackService().setNowPlayingState(transportInfo.getCurrentSpeed(), transportInfo.getCurrentTransportState().getValue());
-                    // System.out.println("Transport State: " + transportInfo.getCurrentTransportState().getValue());
-                  /*  BehaviorSubject<NowPlaying> nowPlayingSubject = playbackService.getNowPlayingSubject();
-                    NowPlaying nowPlaying = nowPlayingSubject.getValue();
-                    if (nowPlaying != null) {
-                        nowPlaying.setPlayingSpeed(transportInfo.getCurrentSpeed());
-                        nowPlaying.setPlayingState(transportInfo.getCurrentTransportState().getValue());
-                        nowPlayingSubject.onNext(nowPlaying);
-                    } */
-                }
-
-                @Override
-                public void onFailure(String message) {
-                    System.err.println("Polling transport info failed: " + message);
-                }
-            });
-
-           // transportInfoHandle = scheduler.scheduleWithFixedDelay(transportInfoPoller, 0, 30, TimeUnit.SECONDS);
-            // System.out.println("Started polling renderer: " + rendererUdn);
         } else {
-            System.out.println("Polling is already active.");
+            Log.i(TAG, TAG+" - Polling is already active.");
         }
     }
 

@@ -42,21 +42,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private Dao<PlaylistItem, Long> playlistItemDao = null;
     private Dao<QueueItem, Long> queueItemDao = null;
 
-    // 3. Create a public static synchronized "getInstance" method
-   /* public static OrmLiteHelper getInstance(Context context) {
-        // Use the double-checked locking pattern for thread-safe lazy initialization
-        if (instance == null) {
-            synchronized (OrmLiteHelper.class) {
-                if (instance == null) {
-                    // Use the application context to prevent memory leaks
-                    // OpenHelperManager ensures that only one instance of the helper is created.
-                    instance = OpenHelperManager.getHelper(context.getApplicationContext(), OrmLiteHelper.class);
-                }
-            }
-        }
-        return instance;
-    } */
-
     public MusicTag findByUniqueKey(String uniqueKey) {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
@@ -472,7 +457,51 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    // In your OrmLiteHelper.java class
     public List<MusicTag> findSimilarSongs(boolean excludeArtist) {
+        try {
+            Dao<MusicTag, Long> dao = getMusicTagDao();
+
+            if (excludeArtist) {
+                // --- Case 1: Find songs with the same title, regardless of artist ---
+
+                // Build the outer query
+                QueryBuilder<MusicTag, Long> outerQb = dao.queryBuilder();
+
+                // Build the inner subquery to find titles that appear more than once
+                QueryBuilder<MusicTag, Long> subQb = dao.queryBuilder();
+                subQb.selectRaw("normalizedTitle"); // Select the column for the IN clause
+                subQb.groupBy("normalizedTitle");
+                subQb.having("COUNT(*) > 1");
+
+                // Use the SubQuery in the outer query's WHERE IN (...) clause
+                outerQb.where().in("normalizedTitle", subQb);
+                outerQb.orderBy("normalizedTitle", true).orderBy("normalizedArtist", true);
+
+                return outerQb.query();
+
+            } else {
+                // --- Case 2: Find songs with the same title AND artist ---
+                // This is more complex and best handled with a single, clear raw query.
+
+                String rawQuery = "SELECT * FROM musictag WHERE (normalizedTitle, normalizedArtist) " +
+                        "IN (SELECT normalizedTitle, normalizedArtist FROM musictag " +
+                        "GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) " +
+                        "ORDER BY normalizedTitle, normalizedArtist";
+
+                GenericRawResults<MusicTag> rawResults = dao.queryRaw(rawQuery, dao.getRawRowMapper());
+                // Use getResults() which is the correct method to get the list
+                return rawResults.getResults();
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "findSimilarSongs Error: " + e.getMessage(), e);
+            // Return an empty list instead of null to prevent NullPointerExceptions
+            return new ArrayList<>();
+        }
+    }
+
+    public List<MusicTag> findSimilarSongsOld(boolean excludeArtist) {
         try {
             List<MusicTag> list =  getMusicTagDao().queryForAll();
 

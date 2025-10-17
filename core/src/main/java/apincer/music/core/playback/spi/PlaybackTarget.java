@@ -16,12 +16,12 @@ public interface PlaybackTarget {
     boolean isStreaming();
 
     // To report status back to the service/UI
-    PlaybackState getPlaybackState();
+   // PlaybackState getPlaybackState();
 
     // To identify the player
     String getTargetId();
     String getDisplayName();
     String getDescription();
 
-    void refreshPlayerState();
+    void onSelected();
 }

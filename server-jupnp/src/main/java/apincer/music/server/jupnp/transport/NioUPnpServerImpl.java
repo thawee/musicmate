@@ -1,5 +1,6 @@
 package apincer.music.server.jupnp.transport;
 import android.content.Context;
+import android.util.Log;
 
 import org.jupnp.model.message.*;
 import org.jupnp.protocol.ProtocolFactory;
@@ -39,11 +40,11 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                     // System.out.println("Preparing HTTP response message: " + responseMessage);
                     return writeResponseMessage(responseMessage);
                 } else {
-                    System.out.println("Sending HTTP response status: 404 - No response from protocol stack");
+                   // System.out.println("Sending HTTP response status: 404 - No response from protocol stack");
                     return new NioHttpServer.HttpResponse().setStatus(404, "Not Found");
                 }
             } catch (Exception t) {
-                System.err.println("Exception occurred during UPnP stream processing: " + t.getMessage());
+                Log.i(TAG, TAG+" - Exception occurred during UPnP stream processing: " + t.getMessage());
                 return new NioHttpServer.HttpResponse().setStatus(500, "Internal Server Error").setBody(t.getMessage().getBytes());
             }
         }
@@ -104,7 +105,6 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
     private static final String TAG = "NioUPnpServer";
     private NioHttpServer server;
     private Router router;
-   // private StreamServerConfiguration configuration;
 
     private Thread serverThread;
 
@@ -129,12 +129,11 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
         serverThread = new Thread(server);
         serverThread.setName("nio-upnp-runner");
         serverThread.start();
-
-        System.out.println(TAG + ": UPnP Server startup sequence initiated on port " + getListenPort());
+        Log.i(TAG, TAG+" - UnNP Server (NIO) running on " + bindAddress.getHostAddress() + ":" + getListenPort());
     }
 
     public void stopServer() {
-        System.out.println(TAG + ": Stopping UPnP Server");
+        //System.out.println(TAG + ": Stopping UPnP Server");
         if (server != null) {
             server.stop();
         }
@@ -143,7 +142,7 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
                 serverThread.join(2000); // Wait for thread to die
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                System.err.println(TAG + ": Interrupted while waiting for server thread to stop.");
+                Log.i(TAG, TAG+" - Interrupted while waiting for server thread to stop.");
             }
         }
     }
@@ -155,6 +154,6 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
 
     @Override
     public String getComponentName() {
-        return "java.nio";
+        return "UPnPServer";
     }
 }

@@ -18,10 +18,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.utils.StringUtils;
@@ -29,6 +31,10 @@ import apincer.android.utils.FileUtils;
 
 public class FFMpegHelper {
     private static final String TAG = "FFMpegHelper";
+
+    public interface PcmStreamProcessor {
+        void process(java.io.InputStream pcmStream) throws IOException;
+    }
 
     public static void extractCoverArt(MusicTag tag, File pathFile) {
         //if(!isEmpty(tag.getCoverartMime())) {
@@ -161,15 +167,62 @@ public class FFMpegHelper {
     public static final String METADATA_KEY = "-metadata";
 
     /**
+     * Converts an audio file to raw 16-bit 44.1kHz PCM and processes it as a stream
+     * to avoid loading the entire file into memory.
+     *
+     * @param tag The MusicTag object for the audio file.
+     * @param context An Android Context.
+     * @param processor A callback that will receive the InputStream of the raw PCM data.
+     * @return true on success, false on failure.
+     */
+    public static boolean processPcmStream(MediaTrack tag, Context context, PcmStreamProcessor processor) {
+        String inputPath = tag.getPath();
+        if (inputPath == null || inputPath.isEmpty()) {
+            Log.e(TAG, "processPcmStream: MusicTag has no path.");
+            return false;
+        }
+
+        File outputFile = new File(context.getCacheDir(), "temp_pcm.raw");
+        String outputPath = outputFile.getAbsolutePath();
+
+        String command = String.format(
+                "-i \"%s\" -f s16le -ar 44100 -ac 2 \"%s\" -y",
+                inputPath,
+                outputPath
+        );
+
+        FFmpegSession session = FFmpegKit.execute(command);
+
+        if (ReturnCode.isSuccess(session.getReturnCode())) {
+            // Use try-with-resources to ensure the stream is always closed.
+            try (FileInputStream fis = new FileInputStream(outputFile)) {
+                // The magic happens here: we pass the stream to the processor
+                // and it reads the data in chunks. NO large byte[] is created.
+                processor.process(fis);
+                return true;
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to process temp PCM file stream", e);
+                return false;
+            } finally {
+                outputFile.delete(); // Always clean up the temp file
+            }
+        } else {
+            Log.e(TAG, "FFmpeg conversion failed!");
+            outputFile.delete();
+            return false;
+        }
+    }
+
+    /**
      * Converts an audio file from a MusicTag to raw 16-bit 44.1kHz PCM data.
      *
      * @param tag     The MusicTag object containing the audio file path (or content URI).
      * @param context An Android Context, required for creating temp files and resolving content URIs.
      * @return A byte[] array of the raw PCM data, or an empty array on failure.
      */
-    public static byte[] toLowwerPCM16(MusicTag tag, Context context) {
-        // todo convert tah.getPath() to 16bits 44.1 Hz
-        Log.d(TAG, "toLowwerPCM16: "+tag.getPath());
+    public static byte[] toLowwerPCM16(MediaTrack tag, Context context) {
+        // convert tah.getPath() to 16bits 44.1 Hz
+       // Log.d(TAG, "toLowwerPCM16: "+tag.getPath());
         String inputPath = tag.getPath();
         if (inputPath == null || inputPath.isEmpty()) {
             System.err.println("MusicTag has no path.");
@@ -192,7 +245,7 @@ public class FFMpegHelper {
                 outputPath
         );
 
-        Log.d(TAG, "Executing FFmpeg: " + command);
+       // Log.d(TAG, "Executing FFmpeg: " + command);
 
         // 3. Execute the command
         FFmpegSession session = FFmpegKit.execute(command);
@@ -236,64 +289,6 @@ public class FFMpegHelper {
             return bos.toByteArray();
         }
     }
-
-    public static class Loudness {
-        double integratedLoudness;
-        double loudnessRange;
-        double truePeak;
-
-        public Loudness(double integrated, double range, double peak) {
-            this.integratedLoudness = integrated;
-            this.loudnessRange = range;
-            this.truePeak = peak;
-        }
-    }
-
-    public interface CallBack {
-        void onFinish(boolean status);
-    }
-
-    /*
-    @Deprecated
-    public static Loudness getLoudness(String path) {
-        try { */
-/*
-   -i "%a" -af ebur128 -f null --i "%a" -af ebur128 -f null -
-  Integrated loudness:
-    I:         -19.7 LUFS
-    Threshold: -30.6 LUFS
-
-  Loudness range:
-    LRA:        13.0 LU
-    Threshold: -40.6 LUFS
-    LRA low:   -30.0 LUFS
-    LRA high:  -17.0 LUFS
-
-  True peak:
-    Peak:        0.5 dBFS[Parsed_ebur128_0 @ 0x7b44c68950]
-
-*/
- /*           //String cmd = "-i \""+tag.getPath()+"\" -af ebur128= -f null -";
-            String cmd = " -hide_banner -nostats -i \"" + path + "\" -filter_complex ebur128=peak=true:framelog=verbose -f null -";
-            //ffmpeg -nostats -i ~/Desktop/input.wav -filter_complex ebur128=peak=true -f null -
-            // String cmd = "-i \""+path+"\" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null -";
-            FFmpegSession session = FFmpegKit.execute(cmd);
-            String data = getFFmpegOutputData(session);
-            String keyword = "Integrated loudness:";
-
-            int startTag = data.lastIndexOf(keyword);
-            if (startTag > 0) {
-                String integrated = data.substring(data.indexOf("I:") + 3, data.indexOf("LUFS"));
-                String range = data.substring(data.indexOf("LRA:") + 5, data.indexOf("LU\n"));
-                String peak = data.substring(data.indexOf("Peak:") + 6, data.indexOf("dBFS"));
-                return new Loudness(toDouble(trimToEmpty(integrated)), toDouble(trimToEmpty(range)), toDouble(trimToEmpty(peak)));
-            }
-        } catch (Exception ex) {
-            Timber.e(ex);
-        }
-        return null;
-    } */
-
 
     @Deprecated
     public static void measureDRandStat(MusicTag tag) {
@@ -341,33 +336,6 @@ public class FFMpegHelper {
         }
     }
 
-    /*
-    private static void parseReplayGain(MusicTag tag, String data) {
-        try {
-            //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_gain = -0.37 dB
-            //[Parsed_replaygain_1 @ 0x7f82d1b047c0] track_peak = 0.931971
-            if(data.contains("[Parsed_replaygain")) {
-                data = data.substring(data.indexOf("[Parsed_replaygain"));
-            }
-            Pattern pattern = Pattern.compile("\\s*track_gain =\\s*(\\S*)");
-            Matcher matcher = pattern.matcher(data);
-            if (matcher.find()) {
-                String info = matcher.group(1);
-                info = info.replace("+", "");
-                tag.setTrackRG(toDouble(info));
-            }
-
-            pattern = Pattern.compile("\\s*track_peak =\\s*(\\S*)");
-            matcher = pattern.matcher(data);
-            if (matcher.find()) {
-                String info = matcher.group(1);
-                tag.setTrackTP(toDouble(info));
-            }
-        }catch (Exception ex) {
-            Log.e(TAG, "parseReplayGain", ex);
-        }
-    } */
-
     private static void parseOverallDRMeter(MusicTag tag, String data) {
         try {
             // Overall DR: 14.0357
@@ -381,21 +349,6 @@ public class FFMpegHelper {
             Log.e(TAG, "parseOverallDRMeter", ex);
         }
     }
-
-
-    /*
-    public static void calculateSNR () {
-    Dynamic range refers to the difference between the loudest and quietest parts of a signal, measured in dB (decibels).
-
-    Maximum dynamic range in decibels = number of bits x 6
-    8 x 6 = 48dB of dynamic range – less than the dynamic range of analog tape recorders.
-
-16 x 6 = 96dB of dynamic range – ample room for recording.
-
-24 x 6 = 144 dB of dynamic range – high resolution dynamic range.
-
-The definition of signal-to-noise ratio (SNR) is the difference in level between the maximum input your gear can handle before noise creeps into the signal.
-    } */
 
     public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
         String options="";

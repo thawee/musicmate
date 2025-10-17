@@ -35,7 +35,7 @@ public class MediaServerManager {
     }
 
     public void startServer() {
-        Log.d(TAG, "Requesting to start MediaServerService");
+        //Log.d(TAG, "Requesting to start MediaServerService");
         Intent intent = new Intent(context, MediaServerHubService.class);
         try {
             // For Android O and above, use startForegroundService
@@ -118,7 +118,7 @@ public class MediaServerManager {
         if ("Unknown".equals(webEngine)) {
             try {
                 Class.forName("java.nio.channels.Selector");
-                webEngine = "Standard Java NIO";
+                webEngine = "Pure Java NIO";
             } catch (ClassNotFoundException e) {
                 // This is unlikely to fail in an Android environment
             }

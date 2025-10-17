@@ -7,28 +7,26 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.stmt.DeleteBuilder;
+import androidx.collection.LruCache;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import apincer.music.core.codec.MusicAnalyser;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.QueueItem;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.TrackInfo;
+import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.MusicInfoService;
-import apincer.music.core.repository.OrmLiteHelper;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.StringUtils;
@@ -37,46 +35,53 @@ import apincer.music.core.utils.TagUtils;
 public class WebSocketContent {
     private final Context context;
     private final TagRepository tagRepos;
-    private final OrmLiteHelper ormLiteHelper;
     private final PlaybackService playbackService;
 
     private static final String TAG = "WebSocketContent";
     private final MusicInfoService musicInfoService = new MusicInfoService();
+    private final LruCache<String, float[]> memoryCache;
+    final int cacheSize = 10240; // 10 k
 
     protected WebSocketContent(Context context, PlaybackService playbackService, TagRepository tagRepos) {
         this.context = context;
-        this.ormLiteHelper = tagRepos.getOrmLiteHelper();
         this.tagRepos = tagRepos;
         this.playbackService = playbackService;
+        memoryCache = new LruCache<>(cacheSize) {
+            @Override
+            protected int sizeOf(@NonNull String key, @NonNull float[] waveform) {
+                // The size of the float array in kilobytes
+                return (waveform.length * 4) / 1024;
+            }
+        };
     }
 
     public Map<String, Object> handleCommand(String command, Map<String, Object> message) {
         // Use a switch statement for clarity
         switch (command) {
             case "browse":
-                String path = message.getOrDefault("path", "Library").toString();
+                String path = String.valueOf(message.getOrDefault("path", "Library"));
                 return sendBrowseResult(path);
             case "getNowPlaying":
                 return sendNowPlaying();
             case "getRenderers": // Corrected from "dlnaRenderers"
                 return sendDlnaRenderers();
             case "setRenderer": // Corrected from "dlnaRenderers"
-                setRenderer((String) message.get("udn"));
+                setRenderer(String.valueOf(message.get("udn")));
                 return sendDlnaRenderers();
             case "getQueue": // Corrected from "updateQueue"
                 return sendQueueUpdate(); // Send queue only to the requesting client
             case "addToQueue":
-                handleAddToQueue((String) message.get("id")); // Use ID instead of name
+                handleAddToQueue(String.valueOf(message.get("id"))); // Use ID instead of name
                 break;
             case "emptyQueue":
                 handleEmptyQueue();
                 break;
             case "play":
                 // Add logic to start playing the song with this ID
-                handlePlay((String) message.get("id"));
+                handlePlay(String.valueOf(message.get("id")));
                 break;
             case "playFromContext":
-                handlePlayFormContext((String) message.get("id"), (String) message.get("path"));
+                handlePlayFormContext(String.valueOf(message.get("id")), String.valueOf(message.get("path")));
                 break;
             case "next":
                 handlePlayNext();
@@ -87,17 +92,17 @@ public class WebSocketContent {
             case "getStats":
                 return handleGetStats();
             case "getTrackDetails":
-                return handleGetTrackDetails((String) message.get("id"));
+                return handleGetTrackDetails(String.valueOf(message.get("id")));
             case "getTrackInfo":
-                String artist = message.get("artist").toString();
-                String album = message.get("album").toString();
+                String artist = String.valueOf(message.get("artist"));
+                String album = String.valueOf(message.get("album"));
                 return handleGetTrackInfo(artist, album);
             case "setRepeatMode":
-                String mode = message.get("mode").toString();
+                String mode = String.valueOf(message.get("mode"));
                 handleSetRepeatMode(mode);
                 break;
             case "setShuffle":
-                boolean enabled = (boolean) message.get("enabled");
+                boolean enabled = (boolean) message.getOrDefault("enabled", false);
                 handleSetShuffleMode( enabled);
                 break;
             default:
@@ -174,15 +179,7 @@ public class WebSocketContent {
     }
 
     private void handleEmptyQueue() {
-        try {
-            Dao<QueueItem, Long> queueDao = tagRepos.getQueueItemDao();
-
-            DeleteBuilder<QueueItem, Long> deleteBuilder = queueDao.deleteBuilder();
-
-            deleteBuilder.delete(); // This efficiently deletes all rows from the queue_item table.
-        } catch (SQLException e) {
-           // throw new RuntimeException(e);
-        }
+        tagRepos.emptyPlayingQueue();
     }
 
     private void handlePlayFormContext(String id, String path) {
@@ -191,12 +188,10 @@ public class WebSocketContent {
         // update playing queue
         try {
             // play song
-            MusicTag song = tagRepos.findById(Long.parseLong(id));
+           // MusicTag song = tagRepos.findById(Long.parseLong(id));
             playbackService.setShuffleMode(false); //  reset shuffle mode
-            playbackService.play(song);
-
-            // --- 1. Get references to our Data Access Objects (DAOs) ---
-            Dao<QueueItem, Long> queueDao = tagRepos.getQueueItemDao();
+            //playbackService.play(song);
+            handlePlay(id);
 
             List<MusicTag> songsInContext = new ArrayList<>();
             if (path.equalsIgnoreCase("Library/All Songs")) {
@@ -207,37 +202,27 @@ public class WebSocketContent {
                 songsInContext = tagRepos.findRecentlyAdded(0,0); // MusixMateApp.getInstance().getOrmLite().findMySongs();
             }else if(path.startsWith("Library/Genres/")) {
                 String name = path.substring("Library/Genres/".length());
-                songsInContext = ormLiteHelper.findByGenre(name);
+                songsInContext = tagRepos.findByGenre(name);
             }else if(path.startsWith("Library/Artists/")) {
                 String name = path.substring("Library/Artists/".length());
-                songsInContext = ormLiteHelper.findByArtist(name,0,0);
+                songsInContext = tagRepos.findByArtist(name,0,0);
             }else if(path.startsWith("Library/Groupings/")) {
                 String name = path.substring("Library/Groupings/".length());
-                songsInContext = ormLiteHelper.findByGrouping(name,0,0);
+                songsInContext = tagRepos.findByGrouping(name,0,0);
             }else if(path.startsWith("Library/Playlists/")) {
                 String name = path.substring("Library/Playlists/".length());
-                List<MusicTag> songs = ormLiteHelper.findMySongs();
+                List<MusicTag> songs = tagRepos.findMySongs();
                 songsInContext = songs.stream()
                         .filter(musicTag -> PlaylistRepository.isSongInPlaylistName(musicTag, name))
                         .collect(Collectors.toList());
             }
 
-            if(!songsInContext.isEmpty()) {
-                // --- 2. Clear the entire existing playing queue ---
-                DeleteBuilder<QueueItem, Long> deleteBuilder = queueDao.deleteBuilder();
-                deleteBuilder.delete(); // This efficiently deletes all rows from the queue_item table.
-
-                // Populate the database with the new queue items.
-                int queueIndex = 1;
-                for (MusicTag tag : songsInContext) {
-                    QueueItem newItem = new QueueItem(tag, queueIndex++);
-                    queueDao.create(newItem);
-                }
-            }
+            tagRepos.setPlayingQueue(songsInContext);
 
             //update current song index in playlist
+            MusicTag song = tagRepos.findById(Long.parseLong(id));
             playbackService.loadPlayingQueue(song);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             //throw new RuntimeException(e);
             Log.e(TAG, "handlePlayFormContext", e);
         }
@@ -264,12 +249,7 @@ public class WebSocketContent {
     private Map<String, Object> sendDlnaRenderers() {
         if(playbackService ==null) return null;
 
-        String activeRendererUdn;
-        if(playbackService.getPlayer() != null) {
-            activeRendererUdn = playbackService.getPlayer().getTargetId();
-        } else {
-            activeRendererUdn = null;
-        }
+        final String activeRendererUdn = playbackService.getPlayer()!=null?playbackService.getPlayer().getTargetId():"";
         List<Map<String, ?>> renderers = new ArrayList<>();
         // In a real app, this would come from your DLNA discovery service
         List<PlaybackTarget> rendererList = playbackService.getAvaiablePlaybackTargets();
@@ -279,7 +259,7 @@ public class WebSocketContent {
                     .map(device -> Map.of(
                             "name", device.getDisplayName(), // Assuming methods to get details
                             "udn", device.getTargetId(),
-                            "active", device.getTargetId().equals(activeRendererUdn)
+                            "active", activeRendererUdn.equals(device.getTargetId())
                     ))
                     .collect(Collectors.toList());
         }
@@ -293,17 +273,7 @@ public class WebSocketContent {
         // Find the song by ID and add it to the queue
         MusicTag song = tagRepos.findById(Long.parseLong(songId));
         if(song != null) {
-            try {
-                Dao<QueueItem, Long> queueDao = tagRepos.getQueueItemDao();
-                // Get the current size of the queue to determine the next position.
-                // If the queue has 5 items (positions 0-4), countOf() returns 5, which is the correct next position.
-                long nextPosition = queueDao.countOf();
-                QueueItem item = new QueueItem(song, nextPosition);
-                queueDao.create(item);
-               // return broadcastQueueUpdate();
-            } catch (Exception ignored) {
-
-            }
+            tagRepos.addToPlayingQueue(song);
         }
     }
 
@@ -356,7 +326,7 @@ public class WebSocketContent {
             // In a real app, you would use the 'path' to query a database or filesystem.
             // Here, we'll return different mock data based on the path to simulate navigation.
 
-            List<Map<String, ?>> items = Collections.emptyList();
+            List<Map<String, ?>> items;
             /*
              Library
              ├── All Songs
@@ -388,7 +358,7 @@ public class WebSocketContent {
                         .collect(Collectors.toList());
             } else if (path.startsWith("Library/Genres/")) {
                 String name = path.substring("Library/Genres/".length());
-                List<MusicTag> songs = ormLiteHelper.findByGenre(name);
+                List<MusicTag> songs = tagRepos.findByGenre(name);
                 // Convert the List<MusicTag> to a List<Map<String, ?>>
                 items = songs.stream()
                         .map(this::getMap)
@@ -405,7 +375,7 @@ public class WebSocketContent {
                         .collect(Collectors.toList());
             } else if (path.startsWith("Library/Artists/")) {
                 String name = path.substring("Library/Artists/".length());
-                List<MusicTag> songs = ormLiteHelper.findByArtist(name, 0, 0);
+                List<MusicTag> songs = tagRepos.findByArtist(name, 0, 0);
                 items = songs.stream()
                         .map(this::getMap)
                         .collect(Collectors.toList());
@@ -480,7 +450,31 @@ public class WebSocketContent {
                 .map(this::getMap)
                 .collect(Collectors.toList());
         return Map.of("type", "updateQueue", "path", "Playing Queue","queue", queueAsMaps);
+    }
 
+    public Map<String, Object> getPlaybackState(PlaybackState state) {
+        long elapsed = state.currentPositionMs;
+        MediaTrack tag = state.currentTrack;
+        if(tag != null) {
+            Map<String, Object> track = getMap(tag);
+            track.put("elapsed", elapsed);
+            track.put("state", state.currentState.name());
+
+            float[] waveform = getWaveform(tag);
+            track.put("waveform", waveform);
+
+            return Map.of("type", "nowPlaying", "track", track);
+        }
+        return null;
+    }
+
+    private float[] getWaveform(MediaTrack tag) {
+        float[] waveform = memoryCache.get(String.valueOf(tag.getId()));
+        if(waveform == null) {
+            waveform = MusicAnalyser.generateWaveform(context, tag, 480, 0.6);
+            memoryCache.put(String.valueOf(tag.getId()), waveform);
+        }
+        return waveform;
     }
 
     /*

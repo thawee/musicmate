@@ -167,11 +167,6 @@ public class ExternalPlayer implements PlaybackTarget {
     }
 
     @Override
-    public PlaybackState getPlaybackState() {
-        return null;
-    }
-
-    @Override
     public String getTargetId() {
         return targetId;
     }
@@ -187,7 +182,7 @@ public class ExternalPlayer implements PlaybackTarget {
     }
 
     @Override
-    public void refreshPlayerState() {
+    public void onSelected() {
 
     }
 

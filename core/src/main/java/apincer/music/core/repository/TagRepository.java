@@ -11,7 +11,9 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.table.TableUtils;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -26,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -164,6 +167,25 @@ public class TagRepository {
 
     public void cleanMusicMate() {
         try {
+            Dao<MusicTag, Long> dao = dbHelper.getMusicTagDao();
+            // Use an iterator to process one song at a time without loading the whole list.
+            // This is extremely memory-efficient.
+            try (com.j256.ormlite.dao.CloseableIterator<MusicTag> iterator = dao.iterator()) {
+                while (iterator.hasNext()) {
+                    MusicTag mdata = iterator.next();
+                    if (!FileRepository.isMediaFileExist(mdata.getPath()) || mdata.getFileSize() == 0.0) {
+                        // It's also more efficient to collect IDs and delete in a batch.
+                        dao.delete(mdata);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "cleanMusicMate", e);
+        }
+    }
+
+    public void cleanMusicMateOld() {
+        try {
             List<MusicTag> list =  dbHelper.findMySongs();
             for(int i=0; i<list.size();i++) {
                 MusicTag mdata = list.get(i);
@@ -245,6 +267,28 @@ public class TagRepository {
     }
 
     public List<String> getArtistList() {
+        List<String> allArtistStrings = dbHelper.getArtists();
+        // Use a HashSet for efficient de-duplication (fast lookups).
+        Set<String> uniqueArtists = new HashSet<>();
+
+        for (String artistField : allArtistStrings) {
+            // Still creates temp arrays, but is a vast improvement.
+            String[] artists = artistField.split(ARTIST_SEP, -1);
+            for (String artist : artists) {
+                String trimmedArtist = trimToEmpty(artist);
+                if (!trimmedArtist.isEmpty()) {
+                    uniqueArtists.add(trimmedArtist);
+                }
+            }
+        }
+
+        // Convert the set to a list and sort it.
+        List<String> sortedList = new ArrayList<>(uniqueArtists);
+        Collections.sort(sortedList);
+        return sortedList;
+    }
+
+    public List<String> getArtistListOld() {
         List<String> list = dbHelper.getArtists();
         List<String> artistList = new ArrayList<>();
         for(String artist:list) {
@@ -600,7 +644,7 @@ public class TagRepository {
         return dbHelper.findMyNoDRMeterSongs();
     }
 
-    public void addToQueue(MusicTag song) {
+    public void addToPlayingQueue(MusicTag song) {
         try {
             Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
             // Get the current size of the queue to determine the next position.
@@ -691,5 +735,43 @@ public class TagRepository {
 
     public List<MusicFolder> getGroupingWithChildrenCount() {
         return dbHelper.getGroupingWithChildrenCount();
+    }
+
+    public void setPlayingQueue(List<MusicTag> songsInContext) {
+        try {
+            // --- Get references to our Data Access Objects (DAOs) ---
+            Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
+
+            // Use a batch task to perform all operations in a single transaction
+            queueDao.callBatchTasks(new Callable<Void>() {
+                public Void call() throws Exception {
+                    // --- 1. Clear the entire table ---
+                    // This is the most direct and reliable way to clear a table.
+                    TableUtils.clearTable(queueDao.getConnectionSource(), QueueItem.class);
+
+                    // --- 2. Populate the table with the new queue items ---
+                    int queueIndex = 1;
+                    for (MusicTag tag : songsInContext) {
+                        QueueItem newItem = new QueueItem(tag, queueIndex++);
+                        // This create is now part of the batch transaction
+                        queueDao.create(newItem);
+                    }
+                    return null;
+                }
+            });
+        } catch (Exception e) {
+            // Handle the exception (e.g., log it)
+            Log.e("DatabaseError", "Failed to rebuild queue", e);
+        }
+    }
+
+    public void emptyPlayingQueue() {
+        try {
+            Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
+
+            TableUtils.clearTable(queueDao.getConnectionSource(), QueueItem.class);
+        } catch (SQLException e) {
+            // throw new RuntimeException(e);
+        }
     }
 }

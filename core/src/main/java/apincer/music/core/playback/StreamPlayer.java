@@ -8,15 +8,15 @@ import apincer.music.core.playback.spi.PlaybackTarget;
 public class StreamPlayer implements PlaybackTarget {
 
     private final Context context;
-    private final String ipAddress;
+    private final String targetId;
     private final String displayName;
-    private final String description;
+    private final String location;
 
-    private StreamPlayer(Context context, String ipAddress, String userAgent, String localtion) {
+    private StreamPlayer(Context context, String targetId, String userAgent, String localtion) {
         this.context = context;
-        this.ipAddress = ipAddress;
+        this.targetId = targetId;
         this.displayName = userAgent;
-        this.description = localtion;
+        this.location = localtion;
     }
 
     @Override
@@ -26,7 +26,7 @@ public class StreamPlayer implements PlaybackTarget {
 
     @Override
     public String getTargetId() {
-        return ipAddress;
+        return targetId;
     }
 
     @Override
@@ -55,11 +55,6 @@ public class StreamPlayer implements PlaybackTarget {
     }
 
     @Override
-    public PlaybackState getPlaybackState() {
-        return null;
-    }
-
-    @Override
     public boolean pause() {
         // Not implemented yet for DLNA, requires specific UPnP action
         return false;
@@ -79,11 +74,11 @@ public class StreamPlayer implements PlaybackTarget {
 
     @Override
     public String getDescription() {
-        return description;
+        return location;
     }
 
     @Override
-    public void refreshPlayerState() {
+    public void onSelected() {
 
     }
 

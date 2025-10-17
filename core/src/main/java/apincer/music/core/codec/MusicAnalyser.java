@@ -1,15 +1,24 @@
 package apincer.music.core.codec;
 
+import static apincer.music.core.utils.LogHelper.setFFMpegOff;
 import static apincer.music.core.utils.Utils.runGcIfNeeded;
 
 import android.content.Context;
 import android.util.Log;
+
+import com.antonkarpenko.ffmpegkit.FFmpegKit;
+import com.antonkarpenko.ffmpegkit.FFmpegSession;
+import com.antonkarpenko.ffmpegkit.ReturnCode;
 
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -20,26 +29,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.utils.TagUtils;
 
 public class MusicAnalyser {
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final String TAG = "MusicAnalyser";
     public static final double THRESHOLD_UPSCALED = 0.65;
     //A score of 0.70 or higher strongly indicates resampling has occurred
     public static final double THRESHOLD_RESAMPLED = 0.70;
-
-    public static float[] generateWaveform(Context context, MusicTag tag) {
-        byte[] audioData = FFMpegHelper.toLowwerPCM16(tag, context);
-        // byte[] audioData = AudioDecoder.decodeAudio(tag, durationInSeconds);
-        return generateWaveformFromAudio(audioData, 640);
-    }
 
     public double getDynamicRange() {
         return dynamicRange;
@@ -978,71 +978,224 @@ public class MusicAnalyser {
     }
 
     /**
-     * Generates waveform data from raw PCM, supporting both 16 and 24-bit depths.
+     * Generates a logarithmically-scaled waveform from a raw PCM audio file stream.
+     * This method is memory-safe and uses a two-pass approach to avoid loading the
+     * entire file into memory.
      *
-     * @param pcmData   The raw PCM audio data.
-     * @param points    The desired number of data points for the waveform.
-     * @param bitDepth  The bit depth of the PCM data (either 16 or 24).
-     * @return A Future that will contain the float array of peak values, or null on error.
+     * @param pcmFile The raw 16-bit little-endian PCM audio file.
+     * @param points The number of data points to generate for the waveform.
+     * @param logPower The power for the logarithmic scaling of the waveform height.
+     * @return A float array with cleared, logarithmically-scaled [rms, min, max] data.
+     * @throws IOException If the file cannot be read.
      */
-    public Future<float[]> generateWaveform(byte[] pcmData, int points, int bitDepth) {
-        return executor.submit(() -> {
-            if (bitDepth != 16 && bitDepth != 24) {
-                throw new IllegalArgumentException("This function only supports 16-bit or 24-bit PCM data.");
+    public static float[] generateWaveformFromPCMStream(File pcmFile, int points, double logPower) throws IOException {
+        if (pcmFile == null || !pcmFile.exists() || pcmFile.length() == 0) {
+            return generateDynamicSongData(points); // Your existing fallback
+        }
+        if (points <= 0) {
+            throw new IllegalArgumentException("Points must be positive");
+        }
+        if (pcmFile.length() % 2 != 0) {
+            throw new IllegalArgumentException("PCM file must have even byte length");
+        }
+
+        final int numSamples = (int) (pcmFile.length() / 2);
+        final int samplesPerPoint = Math.max(1, numSamples / points);
+        final float[] waveform = new float[points * 3];
+
+        // **Pass 1: Find the absolute maximum sample value for normalization.**
+        // This pass reads the file once to determine the overall volume.
+        final int absoluteMax = findAbsoluteMaxFromPCMStream(pcmFile);
+        if (absoluteMax == 0) {
+            return waveform; // Return silent waveform if audio is empty
+        }
+
+        // **Pass 2: Generate the waveform data.**
+        // This pass reads the file a second time, processing it in small chunks.
+        try (InputStream is = new FileInputStream(pcmFile)) {
+            byte[] blockBuffer = new byte[samplesPerPoint * 2]; // Buffer for one block of samples
+            for (int i = 0; i < points; i++) {
+                int bytesRead = is.read(blockBuffer);
+                if (bytesRead <= 0) {
+                    break; // End of stream
+                }
+                processBlock(blockBuffer, bytesRead, waveform, i, absoluteMax, logPower);
             }
+        }
 
-            try {
-                int bytesPerSample = bitDepth / 8;
-                int numSamples = pcmData.length / bytesPerSample;
+        return waveform;
+    }
 
-                List<Float> peaks = new ArrayList<>();
-                int samplesPerPoint = numSamples / points;
-                if (samplesPerPoint == 0) return null;
+    /**
+     * Processes a single block of PCM data to calculate RMS, min, and max values.
+     * This is an adapted version of your original method to work with a byte buffer.
+     */
+    private static void processBlock(byte[] blockBuffer, int bytesRead, float[] waveform, int pointIndex, int absoluteMax, double logPower) {
+        long rmsSum = 0;
+        short min = Short.MAX_VALUE;
+        short max = Short.MIN_VALUE;
+        int numSamplesInBlock = bytesRead / 2;
 
-                int currentMax = 0;
+        for (int i = 0; i < bytesRead; i += 2) {
+            short sample = (short) ((blockBuffer[i] & 0xFF) | (blockBuffer[i + 1] << 8));
+            rmsSum += sample * sample;
+            if (sample < min) min = sample;
+            if (sample > max) max = sample;
+        }
 
-                for (int i = 0; i < numSamples; i++) {
-                    int sampleValue = 0;
-                    int byteOffset = i * bytesPerSample;
+        float rms = (float) Math.sqrt((double) rmsSum / numSamplesInBlock) / absoluteMax;
+        float minFloat = (float) min / absoluteMax;
+        float maxFloat = (float) max / absoluteMax;
 
-                    if (bitDepth == 16) {
-                        // 16-bit: Read 2 bytes (little-endian)
-                        sampleValue = (pcmData[byteOffset] & 0xFF) | (pcmData[byteOffset + 1] << 8);
-                    } else { // 24-bit
-                        // 24-bit: Read 3 bytes (little-endian)
-                        sampleValue = (pcmData[byteOffset] & 0xFF) |
-                                ((pcmData[byteOffset + 1] & 0xFF) << 8) |
-                                (pcmData[byteOffset + 2] << 16);
-                        // Handle sign extension for 24-bit data
-                        if ((sampleValue & 0x800000) != 0) {
-                            sampleValue |= 0xFF000000;
-                        }
-                    }
+        // Apply logarithmic scaling
+        rms = (float) Math.pow(rms, logPower);
+        minFloat = (minFloat < 0) ? -(float) Math.pow(-minFloat, logPower) : (float) Math.pow(minFloat, logPower);
+        maxFloat = (maxFloat < 0) ? -(float) Math.pow(-maxFloat, logPower) : (float) Math.pow(maxFloat, logPower);
 
-                    int absSample = Math.abs(sampleValue);
-                    if (absSample > currentMax) {
-                        currentMax = absSample;
-                    }
+        int baseIndex = pointIndex * 3;
+        waveform[baseIndex] = rms;
+        waveform[baseIndex + 1] = minFloat;
+        waveform[baseIndex + 2] = maxFloat;
+    }
 
-                    if ((i + 1) % samplesPerPoint == 0) {
-                        // Normalize the peak based on the max possible value for the bit depth
-                        float maxAmplitude = (float) Math.pow(2, bitDepth - 1) - 1;
-                        peaks.add((float) currentMax / maxAmplitude);
-                        currentMax = 0;
+    /**
+     * Reads a PCM file stream to find the maximum absolute sample value.
+     */
+    private static int findAbsoluteMaxFromPCMStream(File pcmFile) throws IOException {
+        int max = 0;
+        try (InputStream is = new FileInputStream(pcmFile)) {
+            byte[] buffer = new byte[8192]; // Process in 8KB chunks
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                for (int i = 0; i < bytesRead; i += 2) {
+                    // Combine two bytes to a short (little-endian)
+                    short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
+                    int absSample = Math.abs(sample);
+                    if (absSample > max) {
+                        max = absSample;
                     }
                 }
+            }
+        }
+        return max;
+    }
 
-                float[] waveformData = new float[peaks.size()];
-                for (int i = 0; i < peaks.size(); i++) {
-                    waveformData[i] = peaks.get(i);
-                }
-                return waveformData;
+    /**
+     * The main public method to generate a waveform. It handles the entire process:
+     * 1. Converts the source audio to a temporary raw PCM file using FFmpeg.
+     * 2. Processes the temporary file in memory-safe chunks to generate the waveform data.
+     * 3. Deletes the temporary file.
+     *
+     * @return A float array representing the waveform, or null on failure.
+     */
+    public static float[] generateWaveform(Context context, MediaTrack tag, int points, double logPower) {
+        String inputPath = tag.getPath();
+        if (inputPath == null || inputPath.isEmpty()) {
+            Log.e(TAG, "generateWaveform: MusicTag has no path.");
+            return null;
+        }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+        // Create a unique temporary file to avoid conflicts
+        File outputFile = new File(context.getCacheDir(), "temp_pcm_" + System.currentTimeMillis() + ".raw");
+        String outputPath = outputFile.getAbsolutePath();
+
+        String command = String.format(
+                "-i \"%s\" -f s16le -ar 44100 -ac 2 \"%s\" -y",
+                inputPath,
+                outputPath
+        );
+        setFFMpegOff();
+        FFmpegSession session = FFmpegKit.execute(command);
+
+        try {
+            if (ReturnCode.isSuccess(session.getReturnCode())) {
+                // If FFmpeg succeeded, the temp file now exists.
+                // Process it using our memory-safe, file-based generator.
+                return generateWaveformFromAudio(outputFile, points, logPower);
+            } else {
+                Log.e(TAG, "FFmpeg conversion failed for waveform generation!");
                 return null;
             }
-        });
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to read or process temp PCM file", e);
+            return null;
+        } finally {
+            // This is critical: ALWAYS delete the temporary file,
+            // whether the process succeeded or failed.
+            if (outputFile.exists()) {
+                outputFile.delete();
+            }
+        }
+    }
+
+    /**
+     * Generates a waveform from a raw PCM audio file stream. This is a private helper.
+     * @throws IOException If the file cannot be read.
+     */
+    private static float[] generateWaveformFromAudio(File pcmFile, int points, double logPower) throws IOException {
+        if (pcmFile == null || !pcmFile.exists() || pcmFile.length() == 0) {
+            return generateDynamicSongData(points);
+        }
+        if (points <= 0) {
+            throw new IllegalArgumentException("Points must be positive");
+        }
+        if (pcmFile.length() % 2 != 0) {
+            throw new IllegalArgumentException("PCM file must have even byte length");
+        }
+
+        final int numSamples = (int) (pcmFile.length() / 2);
+        final int samplesPerPoint = Math.max(1, numSamples / points);
+        final float[] waveform = new float[points * 3];
+
+        final int absoluteMax = findAbsoluteMaxFromStream(pcmFile);
+        if (absoluteMax == 0) {
+            return waveform;
+        }
+
+        try (InputStream is = new FileInputStream(pcmFile)) {
+            byte[] blockBuffer = new byte[samplesPerPoint * 2];
+            for (int i = 0; i < points; i++) {
+                int totalBytesRead = 0;
+                int bytesRead;
+                while(totalBytesRead < blockBuffer.length &&
+                        (bytesRead = is.read(blockBuffer, totalBytesRead, blockBuffer.length - totalBytesRead)) != -1) {
+                    totalBytesRead += bytesRead;
+                }
+                if (totalBytesRead <= 0) {
+                    break;
+                }
+                processBlock(blockBuffer, totalBytesRead, waveform, i, absoluteMax, logPower);
+            }
+        }
+
+        return waveform;
+    }
+
+    /**
+     * Reads a PCM file stream to find the maximum absolute sample value.
+     */
+    private static int findAbsoluteMaxFromStream(File pcmFile) throws IOException {
+        int max = 0;
+        try (InputStream is = new FileInputStream(pcmFile)) {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                for (int i = 0; i < bytesRead - 1; i += 2) {
+                    short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
+                    int absSample = Math.abs(sample);
+                    if (absSample > max) {
+                        max = absSample;
+                    }
+                }
+            }
+        }
+        return max;
+    }
+
+    public static float[] generateWaveformOld(Context context, MediaTrack tag) {
+        setFFMpegOff();
+        byte[] audioData = FFMpegHelper.toLowwerPCM16(tag, context);
+        return generateWaveformFromAudio(audioData, 540, 0.8); // 0.4 is original
     }
 
     /**
@@ -1053,9 +1206,15 @@ public class MusicAnalyser {
      * @param points The number of data points to generate (e.g., 640).
      * @return A float array with cleared, logarithmically-scaled [rms, min, max] data.
      */
-    public static float[] generateWaveformFromAudio(byte[] pcmAudioData, int points) {
-        if(pcmAudioData == null || pcmAudioData.length==0) {
+    public static float[] generateWaveformFromAudio(byte[] pcmAudioData, int points, double logPower) {
+        if (pcmAudioData == null || pcmAudioData.length == 0) {
             return generateDynamicSongData(points);
+        }
+        if (points <= 0) {
+            throw new IllegalArgumentException("Points must be positive");
+        }
+        if (pcmAudioData.length % 2 != 0) {
+            throw new IllegalArgumentException("PCM data must have even byte length");
         }
 
         final float[] waveform = new float[points * 3];
@@ -1064,93 +1223,62 @@ public class MusicAnalyser {
                 .asShortBuffer();
 
         final int numSamples = samples.capacity();
-        final int samplesPerPoint = numSamples / points;
+        final int samplesPerPoint = Math.max(1, numSamples / points);
 
-        // --- ADJUST THIS VALUE TO CHANGE THE LOOK ---
-        // Lower values (e.g., 0.3) = more boosted/full.
-        // Higher values (e.g., 0.6) = more spiky/linear.
-        final double power = 0.4;
-
-        short absoluteMax = 0;
-        for (int i = 0; i < numSamples; i++) {
-            if (Math.abs(samples.get(i)) > absoluteMax) {
-                absoluteMax = (short) Math.abs(samples.get(i));
-            }
-        }
+        // Find absolute max
+        int absoluteMax = findAbsoluteMax(samples, numSamples);
         if (absoluteMax == 0) {
-            return waveform; // Return array of zeros for silence
+            return waveform;
         }
 
+        // Generate waveform data
         for (int i = 0; i < points; i++) {
-            int startSample = i * samplesPerPoint;
-            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
-
-            short minInBlock = 0;
-            short maxInBlock = 0;
-            double sumOfSquares = 0.0;
-
-            for (int s = startSample; s < endSample; s++) {
-                short currentSample = samples.get(s);
-                sumOfSquares += currentSample * currentSample;
-                if (currentSample < minInBlock) minInBlock = currentSample;
-                if (currentSample > maxInBlock) maxInBlock = currentSample;
-            }
-
-            double rms = (endSample > startSample) ? Math.sqrt(sumOfSquares / (endSample - startSample)) : 0.0;
-
-            float normRms = (float) rms / absoluteMax;
-            float normMin = (float) minInBlock / absoluteMax;
-            float normMax = (float) maxInBlock / absoluteMax;
-
-            float logRms = (float) Math.pow(normRms, power);
-            float logMin = (float) Math.copySign(Math.pow(Math.abs(normMin), power), normMin);
-            float logMax = (float) Math.copySign(Math.pow(Math.abs(normMax), power), normMax);
-
-            waveform[i * 3]     = Float.isNaN(logRms) ? 0.0f : logRms;
-            waveform[i * 3 + 1] = Float.isNaN(logMin) ? 0.0f : logMin;
-            waveform[i * 3 + 2] = Float.isNaN(logMax) ? 0.0f : logMax;
+            processBlock(samples, waveform, i, samplesPerPoint, numSamples, absoluteMax, logPower);
         }
 
         return waveform;
     }
 
-    public static float[] generateWaveform(byte[] pcmAudioData, int points) {
-        // 2 values (min, max) for each point
-        final float[] waveform = new float[points * 2];
-
-        final ShortBuffer samples = ByteBuffer.wrap(pcmAudioData)
-                .order(ByteOrder.LITTLE_ENDIAN)
-                .asShortBuffer();
-
-        final int numSamples = samples.capacity();
-        final int samplesPerPoint = numSamples / points;
-
-        short absoluteMax = 0;
+    private static int findAbsoluteMax(ShortBuffer samples, int numSamples) {
+        int max = 0;
         for (int i = 0; i < numSamples; i++) {
-            if (Math.abs(samples.get(i)) > absoluteMax) {
-                absoluteMax = (short) Math.abs(samples.get(i));
-            }
+            max = Math.max(max, Math.abs(samples.get(i)));
         }
-        if (absoluteMax == 0) return waveform;
+        return max;
+    }
 
-        for (int i = 0; i < points; i++) {
-            int startSample = i * samplesPerPoint;
-            int endSample = Math.min(startSample + samplesPerPoint, numSamples);
+    private static void processBlock(ShortBuffer samples, float[] waveform, int blockIndex,
+                                     int samplesPerPoint, int numSamples, int absoluteMax,
+                                     double power) {
+        int startSample = blockIndex * samplesPerPoint;
+        int endSample = Math.min(startSample + samplesPerPoint, numSamples);
 
-            short minInBlock = 0;
-            short maxInBlock = 0;
+        short minInBlock = 0;
+        short maxInBlock = 0;
+        double sumOfSquares = 0.0;
 
-            for (int s = startSample; s < endSample; s++) {
-                short currentSample = samples.get(s);
-                if (currentSample < minInBlock) minInBlock = currentSample;
-                if (currentSample > maxInBlock) maxInBlock = currentSample;
-            }
-
-            waveform[i * 2]     = (float) minInBlock / absoluteMax;
-            waveform[i * 2 + 1] = (float) maxInBlock / absoluteMax;
+        for (int s = startSample; s < endSample; s++) {
+            short currentSample = samples.get(s);
+            sumOfSquares += currentSample * currentSample;
+            if (currentSample < minInBlock) minInBlock = currentSample;
+            if (currentSample > maxInBlock) maxInBlock = currentSample;
         }
 
-        return waveform;
+        double rms = (endSample > startSample)
+                ? Math.sqrt(sumOfSquares / (endSample - startSample))
+                : 0.0;
+
+        float normRms = (float) rms / absoluteMax;
+        float normMin = (float) minInBlock / absoluteMax;
+        float normMax = (float) maxInBlock / absoluteMax;
+
+        float logRms = (float) Math.pow(normRms, power);
+        float logMin = (float) Math.copySign(Math.pow(Math.abs(normMin), power), normMin);
+        float logMax = (float) Math.copySign(Math.pow(Math.abs(normMax), power), normMax);
+
+        waveform[blockIndex * 3]     = logRms;
+        waveform[blockIndex * 3 + 1] = logMin;
+        waveform[blockIndex * 3 + 2] = logMax;
     }
 
     /**

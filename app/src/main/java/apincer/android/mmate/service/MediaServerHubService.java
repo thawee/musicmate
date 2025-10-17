@@ -140,7 +140,7 @@ public class MediaServerHubService extends Service {
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.d(TAG, "Network available in media server service");
+                //Log.d(TAG, "Network available in media server service");
 
                  // If service lost its resources, re-initialize
                 if (!mediaServer.isInitialized()) {

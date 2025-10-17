@@ -15,12 +15,13 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import apincer.music.core.Constants;
-import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.codec.TagWriter;
@@ -41,6 +42,7 @@ public class FileRepository {
     private final Context context;
     private final TagRepository tagRepos;
     private final String STORAGE_SECONDARY;
+    private final ExecutorService coverArtExecutor = Executors.newSingleThreadExecutor();
 
     public static File getCoverArt(Context context, MusicTag music) {
         File cover = getFolderCoverArt(music.getPath());
@@ -250,7 +252,7 @@ public class FileRepository {
                     tagRepos.saveTag(basicTag);
 
                     // Defer cover art extraction completely
-                    MusicMateExecutors.lowPriority(() -> saveCoverartToCache(basicTag));
+                    coverArtExecutor.submit(() -> saveCoverartToCache(basicTag));
                 }
             }
         } catch (Exception ex) {
