@@ -4,7 +4,6 @@ import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
 
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -14,9 +13,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -24,23 +21,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import javax.inject.Inject;
 
-import apincer.android.mmate.ui.MainActivity;
+import apincer.android.mmate.MusixMateApp;
+import apincer.android.mmate.R;
 import apincer.music.core.NotificationId;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.android.mmate.MusixMateApp;
-import apincer.android.mmate.R;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.ApplicationUtils;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class MediaServerHubService extends Service {
+public class MediaServerHubService2 extends Service {
     private static final String TAG = "MediaServerHubService";
 
     @Inject
@@ -60,8 +60,6 @@ public class MediaServerHubService extends Service {
     private WifiManager.MulticastLock multicastLock;
 
     // Network monitoring
-    private final Handler networkHandler = new Handler(Looper.getMainLooper());
-    private Runnable stopServerRunnable;
     private ConnectivityManager.NetworkCallback networkCallback;
 
     // Wake lock to keep CPU running for stable streaming
@@ -107,17 +105,17 @@ public class MediaServerHubService extends Service {
     private void showNotification() {
         ((MusixMateApp)getApplicationContext()).createGroupNotification();
 
-         Intent notificationIntent = new Intent(this, MainActivity.class);
-         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+        // Intent notificationIntent = new Intent(this, MainActivity.class);
+        // PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         String deviceModel = ApplicationUtils.getDeviceModel();
-        String notificationTitle = "MusicMate [" + deviceModel + "]";
+        //String notificationTitle = "MusicMate [" + deviceModel + "]";
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, MusixMateApp.NOTIFICATION_CHANNEL_ID)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification_default)
                 .setSilent(true)
-                .setContentTitle(notificationTitle)
+                //.setContentTitle(notificationTitle)
                 .setContentTitle(getApplicationContext().getString(R.string.media_server_name))
                 .setGroup(MusixMateApp.NOTIFICATION_GROUP_KEY)
                 .setSubText(deviceModel)
@@ -125,7 +123,7 @@ public class MediaServerHubService extends Service {
                 //.setContentText(getApplicationContext().getString(R.string.media_server_name));
                 .setContentText("http://"+ BaseServer.getIpAddress()+":"+ CONTENT_SERVER_PORT);
 
-        mBuilder.setContentIntent(contentIntent);
+        // mBuilder.setContentIntent(contentIntent);
         startForeground(NotificationId.MEDIA_SERVER.getId(), mBuilder.build());
     }
 
@@ -139,50 +137,32 @@ public class MediaServerHubService extends Service {
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .build();
 
-        // Define the action to take after 30 minutes of no network
-        stopServerRunnable = () -> {
-            Log.w(TAG, "Network has been lost for 30 minutes. Stopping server.");
-            // Call the service's stopServers() method to ensure
-            // locks and notifications are also cleaned up.
-            if (mediaServer.isInitialized()) {
-                MediaServerHubService.this.stopServers();
-            }
-        };
-
         networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
                 //Log.d(TAG, "Network available in media server service");
+
                  // If service lost its resources, re-initialize
-               /* if (!mediaServer.isInitialized()) {
+                if (!mediaServer.isInitialized()) {
                     mediaServer.startServers();
                     cancelNotification();
-                } */
-
-                Log.d(TAG, "Network available. Cancelling any pending server stop.");
-                // Per your request, DO NOT start the server here.
-                // Just cancel the 30-minute stop timer.
-                networkHandler.removeCallbacks(stopServerRunnable);
+                }
             }
 
             @Override
             public void onLost(@NonNull Network network) {
-               // Log.d(TAG, "Network lost in media server service");
+                Log.d(TAG, "Network lost in media server service");
 
                 // If service lost its resources, re-initialize
-               /* if (mediaServer.isInitialized()) {
+                if (mediaServer.isInitialized()) {
                     showNotification();
                     mediaServer.stopServers();
-                }*/
-
-                Log.d(TAG, "Network lost. Will stop server in 30 minutes if it doesn't return.");
-                // Schedule the server to stop in 30 minutes (30 * 60 * 1000 milliseconds)
-                networkHandler.postDelayed(stopServerRunnable, 1800000L);
+                }
             }
         };
 
         connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
-       // networkCallback = null;
+        networkCallback = null;
     }
 
     private void stopNetworkMonitoring() {
@@ -228,17 +208,38 @@ public class MediaServerHubService extends Service {
     private void copyWebUIAssets(Context context) {
         try {
             String assetDir = "webui";
-            ApplicationUtils.deleteFilesFromCache(context, assetDir);
-            ApplicationUtils.copyFilesToCache(context, assetDir);
+            String[] assets = context.getAssets().list(assetDir);
+            if (assets == null || assets.length == 0) {
+                return;
+            }
+
+            File webappDir = new File(context.getFilesDir(), assetDir);
+            if (!webappDir.exists()) {
+                webappDir.mkdirs();
+            }
+
+            for (String asset : assets) {
+                File destFile = new File(webappDir, asset);
+                // Only copy if the file doesn't exist to prevent overwriting on every launch.
+                if (!destFile.exists()) {
+                    try (InputStream in = context.getAssets().open(assetDir + "/" + asset);
+                         OutputStream out = new FileOutputStream(destFile)) {
+
+                        byte[] buffer = new byte[1024];
+                        int read;
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
+                    }
+                    Log.i(TAG, "Copied web asset: " + asset);
+                }
+            }
         } catch (IOException e) {
             Log.e(TAG, "Failed to copy web assets", e);
         }
     }
 
     public void stopServers() {
-        // Add this line to cancel the timer if the user manually stops the server
-        networkHandler.removeCallbacks(stopServerRunnable);
-
         stopNetworkMonitoring();
         mediaServer.stopServers();
         cancelNotification();
@@ -261,8 +262,8 @@ public class MediaServerHubService extends Service {
             return mediaServer;
         }
 
-        public MediaServerHubService getService() {
-            return MediaServerHubService.this;
+        public MediaServerHubService2 getService() {
+            return MediaServerHubService2.this;
         }
     }
 }

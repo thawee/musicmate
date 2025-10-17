@@ -14,6 +14,7 @@
     <title>MusicMate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="icons/bootstrap-icons.min.css">
+    <script src="js/vibrant.min.js"></script>
     <script>
         // ADDED: Tell Tailwind to use the 'class' strategy for dark mode
         tailwind.config = {
@@ -58,6 +59,35 @@
         /* Style for the currently playing song in the queue */
         .playing-item { background-color: rgba(59, 130, 246, 0.20); }
         .dark .playing-item { background-color: rgba(59, 130, 246, 0.10); }
+
+        #player-footer.has-color-bg {
+        /* Force light text, overriding light/dark mode text colors */
+        color: #e5e7eb; /* approx. dark:text-gray-200 */
+        border-top-color: transparent; /* Hide the border when bg is colored */
+    }
+    #player-footer.has-color-bg h3 {
+        color: #ffffff;
+    }
+    #player-footer.has-color-bg p,
+    #player-footer.has-color-bg .text-gray-600,
+    #player-footer.has-color-bg .text-gray-500,
+    #player-footer.has-color-bg .font-mono {
+        color: #d1d5db; /* approx. dark:text-gray-300 */
+    }
+    #player-footer.has-color-bg i,
+    #player-footer.has-color-bg .text-gray-600,
+    #player-footer.has-color-bg .text-2xl {
+        color: #e5e7eb;
+    }
+    /* Override icon hover colors */
+    #player-footer.has-color-bg .hover\:text-black:hover,
+    #player-footer.has-color-bg .dark\:hover\:text-white:hover {
+        color: #ffffff !important;
+    }
+    /* Override blue active color for shuffle/repeat */
+    #player-footer.has-color-bg .text-blue-500 {
+        color: #60a5fa !important; /* Tailwind's blue-400 */
+    }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 flex flex-col h-screen overflow-hidden font-sans">
@@ -69,19 +99,15 @@
         <div id="stats-summary" class="hidden sm:flex items-center space-x-6 text-center">
             <div class="flex flex-col">
                 <span id="stats-songs" class="text-lg font-semibold text-black dark:text-white">0</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">SONGS</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">LIBRARY</span>
             </div>
             <div class="flex flex-col">
-                <span id="stats-artists" class="text-lg font-semibold text-black dark:text-white">0</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">ARTISTS</span>
+                <span id="stats-total-duration" class="text-lg font-semibold text-black dark:text-white">0</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">DURATION</span>
             </div>
             <div class="flex flex-col">
-                <span id="stats-genres" class="text-lg font-semibold text-black dark:text-white">0</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">GENRES</span>
-            </div>
-            <div class="flex flex-col">
-                <span id="stats-playlists" class="text-lg font-semibold text-black dark:text-white">0</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">PLAYLISTS</span>
+                <span id="stats-total-size" class="text-lg font-semibold text-black dark:text-white">0</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">STORAGE</span>
             </div>
         </div>
 
@@ -124,11 +150,11 @@
     </main>
 </div>
 
-<footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-800 shadow-2xl z-10">
-    <div class="w-full max-w-screen-2xl mx-auto md:px-4 md:pt-2 md:pb-3"> <div class="hidden md:flex items-center space-x-6">
+<footer id="player-footer" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-800 shadow-2xl z-10 transition-colors duration-500">
+    <div class="w-full max-w-screen-2xl mx-auto md:p-3"> <div class="hidden md:flex items-center space-x-6">
 
-        <div class="flex-1 min-w-0 flex items-center space-x-3 truncate">
-            <img id="footer-album-art" src="assets/no_cover.png" class="w-14 h-14 rounded object-cover cursor-pointer hover:ring-2 ring-blue-500 transition" alt="">
+        <div class="flex-1 min-w-0 flex items-center space-x-4 truncate">
+            <img id="footer-album-art" src="assets/no_cover.png" class="w-16 h-16 rounded object-cover cursor-pointer hover:ring-2 ring-blue-500 transition" alt="">
             <div class="truncate">
                 <div class="flex items-center space-x-2">
                     <h3 id="footer-title" class="font-bold text-black dark:text-white truncate">No Song Playing</h3>
@@ -162,7 +188,7 @@
         </div>
     </div>
 
-        <div class="md:hidden flex flex-col px-4 pt-2 pb-3">
+        <div class="md:hidden flex flex-col px-4 pt-1.5 pb-2">
             <div class="w-full flex items-center space-x-2 text-xs font-mono text-gray-500 dark:text-gray-400">
                 <span id="player-time-current-mobile">0:00</span>
                 <progress id="player-progress-mobile" class="w-full h-1.5" value="0" max="100"></progress>
@@ -170,7 +196,7 @@
             </div>
             <div class="flex items-center justify-between mt-2">
                 <div class="flex items-center space-x-3 truncate min-w-0">
-                    <img id="footer-album-art-mobile" src="assets/no_cover.png" class="w-12 h-12 rounded object-cover cursor-pointer" alt="">
+                    <img id="footer-album-art-mobile" src="assets/no_cover.png" class="w-9 h-9 rounded object-cover cursor-pointer" alt="">
                     <div class="truncate">
                         <div class="flex items-center space-x-1.5">
                             <h3 id="footer-title-mobile" class="font-bold text-black dark:text-white truncate">No Song Playing</h3>
@@ -226,7 +252,9 @@
             <img id="now-playing-art" src="assets/no_cover.png" class="w-64 h-64 md:w-96 md:h-96 rounded-lg shadow-2xl flex-shrink-0">
 
             <div class="flex flex-col text-white w-full">
-                <h1 id="now-playing-title" class="text-3xl md:text-5xl font-bold">Song Title</h1>
+                <div class="flex items-baseline space-x-4">
+                    <h1 id="now-playing-title" class="text-3xl md:text-5xl font-bold truncate">Song Title</h1>
+                    <div id="now-playing-quality-badge" class="flex-shrink-0"></div> </div>
                 <h2 id="now-playing-artist" class="text-xl md:text-2xl text-gray-300 mt-1">Artist Name</h2>
 
                 <div class="mt-6 w-full">
@@ -346,6 +374,7 @@
             waveformCanvas: document.getElementById('waveform-canvas'),
             nowPlayingTimeCurrent: document.getElementById('now-playing-time-current'),
             nowPlayingTimeDuration: document.getElementById('now-playing-time-duration'),
+            nowPlayingQualityBadge: document.getElementById('now-playing-quality-badge'),
 
             // Footer / Player elements
             playPauseBtn: document.getElementById('play-pause-btn'),
@@ -374,10 +403,9 @@
             footerArtistAlbumMobile: document.getElementById('footer-artist-album-mobile'),
 
             // Stats elements
-            statsArtists: document.getElementById('stats-artists'),
-            statsGenres: document.getElementById('stats-genres'),
-            statsPlaylists: document.getElementById('stats-playlists'),
             statsSongs: document.getElementById('stats-songs'),
+            statsSize: document.getElementById('stats-total-size'),
+            statsDuration: document.getElementById('stats-total-duration'),
         };
 
         // --- EVENT LISTENERS ---
@@ -518,7 +546,7 @@
         function renderView() {
             ui.libraryContent.classList.add('hidden');
             ui.queueContent.classList.add('hidden');
-            // MODIFIED: Use appropriate color classes for active/inactive states
+            // Use appropriate color classes for active/inactive states
             const activeClasses = ['text-black', 'dark:text-white'];
             const inactiveClasses = ['hover:text-black', 'dark:hover:text-white'];
             ui.libraryBtn.classList.remove(...activeClasses, ...inactiveClasses);
@@ -540,7 +568,7 @@
                 ui.queueContent.classList.remove('hidden');
                 ui.queueGridView.classList.toggle('hidden', currentDisplayMode !== 'grid');
                 ui.queueListView.classList.toggle('hidden', currentDisplayMode !== 'list');
-                updateBreadcrumb('Playing Queue');
+               // updateBreadcrumb('Playing Queue');
                 ui.breadcrumb.style.visibility = 'visible';
             }
 
@@ -566,11 +594,21 @@
         const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const wsUrl = `${scheme}://${window.location.hostname}:9000/ws`;
         let socket;
+        let heartbeatInterval;
         function connect() {
             try { socket = new WebSocket(wsUrl); } catch (e) { console.error("WS connect error:", e); setTimeout(connect, 3000); return; }
-            socket.onopen = () => { sendMessage({ command: 'browse', path: 'Library' }); sendMessage({ command: 'getNowPlaying' }); sendMessage({ command: 'getRenderers' }); sendMessage({ command: 'getQueue' }); sendMessage({ command: 'getStats' }); };
+            socket.onopen = () => {
+
+                sendMessage({ command: 'browse', path: currentBrowsePath });
+                sendMessage({ command: 'getNowPlaying' });
+                sendMessage({ command: 'getRenderers' });
+                //sendMessage({ command: 'getQueue' });
+                sendMessage({ command: 'getStats' });
+            };
             socket.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
-            socket.onclose = () => {setTimeout(connect, 3000); };
+            socket.onclose = () => {
+                setTimeout(connect, 3000);
+            };
             socket.onerror = (error) => { console.error("WS error:", error); socket.close(); };
         }
         function sendMessage(message) { if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message)); }
@@ -580,7 +618,7 @@
                 case 'browseResult':
                     currentBrowsePath = data.path;
                     updateLibraryItems(data.items);
-                    updateBreadcrumb(data.path);
+                    updateBreadcrumb(data.path, data.items);
                     break;
                 case 'nowPlaying':
                     currentTrack = data.track;
@@ -632,7 +670,10 @@
                         ui.footerRendererName.textContent = "Select a Player"; // Default text
                     }
                     break;
-                case 'updateQueue': updateQueueItems(data.queue); break;
+                case 'updateQueue':
+                    updateQueueItems(data.queue);
+                    updateBreadcrumb(data.path, data.queue);
+                    break;
                 case 'trackInfoResult':
                     ui.infoLoadingSpinner.classList.add('hidden');
                     if (data.info) {
@@ -670,7 +711,58 @@
 
         function formatTime(seconds) { if (isNaN(seconds)) return '0:00'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60).toString().padStart(2, '0'); return `${min}:${sec}`; }
 
-        function updateBreadcrumb(path) { const parts = path.split('/'); let html = ''; let currentPath = ''; parts.forEach((part, index) => { currentPath += (index > 0 ? '/' : '') + part; if (index < parts.length - 1) { html += `<a href="#" class="hover:text-black dark:hover:text-white" data-type="folder" data-path="${currentPath}">${part}</a> <span class="mx-1">/</span> `; } else { html += `<span class="text-black dark:text-white font-medium">${part}</span>`; } }); ui.breadcrumb.innerHTML = html; }
+        //function updateBreadcrumb(path, items) { const parts = path.split('/'); let html = ''; let currentPath = ''; parts.forEach((part, index) => { currentPath += (index > 0 ? '/' : '') + part; if (index < parts.length - 1) { html += `<a href="#" class="hover:text-black dark:hover:text-white" data-type="folder" data-path="${currentPath}">${part}</a> <span class="mx-1">/</span> `; } else { html += `<span class="text-black dark:text-white font-medium">${part}</span>`; } }); ui.breadcrumb.innerHTML = html; }
+        function updateBreadcrumb(path = '', items = []) {
+          const breadcrumbNav = document.createElement('nav');
+          breadcrumbNav.setAttribute('aria-label', 'breadcrumb');
+
+          const breadcrumbList = document.createElement('ol');
+          breadcrumbList.className = 'flex items-center space-x-2';
+
+          // If path is an empty string, .split('') produces [''], so we filter it
+          const parts = path.split('/').filter(part => part);
+
+          // If there are no parts, we might want a "Home" or "Root" default
+          if (parts.length === 0) {
+              parts.push('Home'); // Optional: Show a default root breadcrumb
+          }
+
+          parts.forEach((part, index) => {
+            const currentPath = parts.slice(0, index + 1).join('/');
+            const isLastPart = index === parts.length - 1;
+
+            const listItem = document.createElement('li');
+            // ... rest of the function is the same ...
+            listItem.className = 'flex items-center';
+
+            let partHtml;
+
+            if (!isLastPart) {
+              partHtml = `
+                <a href="#" class="hover:text-black dark:hover:text-white" data-type="folder" data-path="${currentPath}">${part}</a>
+                <span class="mx-2" aria-hidden="true">/</span>
+              `;
+            } else {
+              const songCount = items.length;
+              let countHtml = '';
+
+              if (songCount > 0) {
+                const formatter = new Intl.NumberFormat();
+                const formattedSongCount =  formatter.format(songCount);
+                countHtml = ` <span class="ml-2 text-gray-500 dark:text-gray-400">(${formattedSongCount})</span>`;
+              }
+
+              partHtml = `<span class="text-black dark:text-white font-medium" aria-current="page">${part}</span>${countHtml}`;
+            }
+
+            listItem.innerHTML = partHtml;
+            breadcrumbList.appendChild(listItem);
+          });
+
+          ui.breadcrumb.innerHTML = '';
+          ui.breadcrumb.appendChild(breadcrumbNav);
+          breadcrumbNav.appendChild(breadcrumbList);
+        }
 
         function updateAlbumGrid(items) {
             ui.albumGrid.innerHTML = items.map(item => {
@@ -807,6 +899,7 @@
             if (!track || !track.title) return;
 
             // --- Update All Player Elements ---
+            const footerEl = document.getElementById('player-footer');
 
             // 1. Footer "Now Playing" Info (Left Side)
             if (track.title) {
@@ -814,6 +907,34 @@
                 ui.footerArtistAlbum.textContent = `${track.artist || ''} - ${track.album || ''}`;
                 ui.footerQualityBadge.innerHTML = getQualityBadge(track);
                 ui.footerAlbumArt.src = track.artUrl || 'assets/no_cover.png';
+
+                // Must be placed after ui.footerAlbumArt.src is set
+                try {
+                    Vibrant.from(track.artUrl)
+                        .getPalette()
+                        .then(palette => {
+                            // Prefer a dark color for the background, like the first image
+                            const vibrantColor = palette.DarkMuted || palette.DarkVibrant || palette.Muted;
+                            if (vibrantColor) {
+                                footerEl.style.backgroundColor = vibrantColor.getHex();
+                                footerEl.classList.add('has-color-bg');
+                            } else {
+                                // Failed to find a good color, reset
+                                footerEl.style.backgroundColor = '';
+                                footerEl.classList.remove('has-color-bg');
+                            }
+                        })
+                        .catch(err => {
+                            // This can happen due to CORS or if the image is invalid
+                            console.error('Vibrant.js error:', err);
+                            footerEl.style.backgroundColor = '';
+                            footerEl.classList.remove('has-color-bg');
+                        });
+                } catch (err) {
+                    console.error('Vibrant.js init error:', err);
+                    footerEl.style.backgroundColor = '';
+                    footerEl.classList.remove('has-color-bg');
+                }
 
                 // Mobile footer text and art
                 if (ui.footerArtistAlbumMobile) ui.footerArtistAlbumMobile.textContent = `${track.artist || ''} - ${track.album || ''}`;
@@ -846,7 +967,7 @@
             // 4. Highlight the Currently Playing Track in the Queue
             document.querySelectorAll('.playing-item').forEach(item => item.classList.remove('playing-item'));
             if (track.id && currentMainView === 'queue') {
-                // CORRECTED SELECTOR: Looks for any element with the correct data-id and data-type.
+                // Looks for any element with the correct data-id and data-type.
                 const currentItemSelector = `[data-id="${track.id}"][data-type="song"]`;
                 const currentItemInQueue = document.querySelector(currentItemSelector);
                 if (currentItemInQueue) {
@@ -856,12 +977,13 @@
 
             // 5. If the Now Playing screen is visible, update it in real-time
             if (!ui.nowPlayingScreen.classList.contains('hidden')) {
-                // ADDED: Update the title, artist, and art on the Now Playing screen
+                // Update the title, artist, and art on the Now Playing screen
                 if(track.title) {
                     ui.nowPlayingTitle.textContent = track.title;
                     ui.nowPlayingArtist.textContent = track.artist;
                     ui.nowPlayingArt.src = track.artUrl || 'assets/no_cover.png';
                     ui.nowPlayingBg.style.backgroundImage = `url(${track.artUrl || 'assets/no_cover.png'})`;
+                    ui.nowPlayingQualityBadge.innerHTML = getQualityBadge(track);
                 }
 
                 const progress = track.duration > 0 ? (track.elapsed / track.duration) : 0;
@@ -965,26 +1087,29 @@
         function getQualityBadge(track) {
             if (!track) return '';
 
+            if(!track.quality) return '';
+
             const baseStyle = "text-xs font-medium rounded-full px-2 py-0.5";
 
-            if (track.format && track.format.startsWith('DSD')) {
+            if (track.quality.startsWith('DSD')) {
                 const dsdStyle = "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300";
-                return `<span class="${baseStyle} ${dsdStyle}">${track.format}</span>`;
+                return `<span class="${baseStyle} ${dsdStyle}">${track.quality}</span>`;
             }
-            if (track.isMQA === true) {
-                const mqaStyle = "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300";
-                return `<span class="${baseStyle} ${mqaStyle}">MQA</span>`;
+            if (track.quality.startsWith('MQA')) {
+                const mqaStyle = "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300";
+                return `<span class="${baseStyle} ${mqaStyle}">${track.quality}</span>`;
             }
-            if (track.bitDepth > 16 || track.sampleRate > 44100) {
-                // MODIFIED: Swapped 'stone' for a slightly stronger 'zinc'
-                const hiresStyle = "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300";
-                return `<span class="${baseStyle} ${hiresStyle}">Hi-Res</span>`;
+            if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HR')) {
+                const hiresStyle = "bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200";
+                return `<span class="${baseStyle} ${hiresStyle}">${track.quality}</span>`;
             }
-            if (track.bitDepth === 16 && track.sampleRate === 44100) {
-                const cdStyle = "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300";
-                return `<span class="${baseStyle} ${cdStyle}">CD</span>`;
+            if (track.quality.startsWith('CD') || track.quality.startsWith('SQ')) {
+                const sqStyle = "bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200";
+                return `<span class="${baseStyle} ${sqStyle}">${track.quality}</span>`;
             }
-            return '';
+
+            const hqStyle = "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300";
+            return `<span class="${baseStyle} ${hqStyle}">${track.quality}</span>`;
         }
 
         function updateStats(stats) {
@@ -992,10 +1117,9 @@
             // Use Intl.NumberFormat for nice comma formatting
             const formatter = new Intl.NumberFormat();
 
-            if (ui.statsArtists) ui.statsArtists.textContent = formatter.format(stats.artists);
-            if (ui.statsGenres) ui.statsGenres.textContent = formatter.format(stats.genres);
-            if (ui.statsPlaylists) ui.statsPlaylists.textContent = formatter.format(stats.playlists);
             if (ui.statsSongs) ui.statsSongs.textContent = formatter.format(stats.songs);
+            if (ui.statsSize) ui.statsSize.textContent = stats.totalSize;
+            if (ui.statsDuration) ui.statsDuration.textContent = stats.totalDuration;
         }
 
         function openNowPlayingScreen() {
@@ -1008,6 +1132,7 @@
             ui.nowPlayingArt.src = currentTrack.artUrl || 'assets/no_cover.png';
             ui.nowPlayingTitle.textContent = currentTrack.title;
             ui.nowPlayingArtist.textContent = currentTrack.artist;
+            ui.nowPlayingQualityBadge.innerHTML = getQualityBadge(currentTrack);
             resizeWaveformCanvas();
             openOverlay(ui.nowPlayingScreen);
         }
@@ -1024,29 +1149,53 @@
         }
 
         function drawWaveform(canvas, waveformData, progressPercentage) {
-            const ctx = canvas.getContext('2d');
-            const rect = canvas.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height;
-            const center = height / 2;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
 
-            ctx.clearRect(0, 0, width, height);
+    // Set canvas resolution for a crisp image
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-            if (!waveformData || waveformData.length === 0) return;
+    const width = rect.width;
+    const height = rect.height;
+    const center = height / 2;
 
-            const barWidth = width / waveformData.length;
-            const progressPoint = width * progressPercentage;
+    ctx.clearRect(0, 0, width, height);
+    if (!waveformData || waveformData.length === 0) return;
 
-            waveformData.forEach((peak, i) => {
-                const barHeight = peak * height;
-                const x = i * barWidth;
-                const y = center - (barHeight / 2);
+    // --- CRITICAL: Ensure 'waveformData' contains many points ---
+    // The number of points should be high (e.g., equal to canvas width)
+    const points = waveformData.length / 2;
+    const barWidth = width / points;
+    const progressPoint = width * progressPercentage;
 
-                // Use a different color for the played portion of the waveform
-                ctx.fillStyle = (x < progressPoint) ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)';
-                ctx.fillRect(x, y, barWidth * 0.8, barHeight); // 0.8 width for spacing
-            });
-        }
+    const playedPath = new Path2D();
+    const unplayedPath = new Path2D();
+
+    for (let i = 0; i < waveformData.length; i += 2) {
+        const x = (i / 2) * barWidth;
+
+        const min = waveformData[i] * center;
+        const max = waveformData[i + 1] * center;
+
+        const path = (x < progressPoint) ? playedPath : unplayedPath;
+
+        path.moveTo(x, center + min);
+        path.lineTo(x, center + max);
+    }
+
+    // --- CRITICAL: Line width must be 1 for a sharp look ---
+    ctx.lineWidth = 1;
+
+    // Draw played portion
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.stroke(playedPath);
+
+    // Draw unplayed portion
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.stroke(unplayedPath);
+}
 
         window.addEventListener('resize', resizeWaveformCanvas);
 
@@ -1055,4 +1204,5 @@
         connect();
     });
 </script>
+</body>
 </html>

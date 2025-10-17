@@ -88,7 +88,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
         addLibInfo("Jetty", "12.1.2");
     }
 
-    public void initServer(InetAddress bindAddress) throws Exception {
+    public void initServer(InetAddress bindAddress) {
         // Initialize the server with the specified port.
         serverThread = new Thread(() -> {
             try {
@@ -128,20 +128,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 connector.setReuseAddress(true); // Better address reuse for quick restarts
 
                 server.setConnectors(new Connector[]{connector});
-
-                /*
-                // Resource handler for content streaming
-                ResourceHandler resourceHandler = new ContentHandler();
-                resourceHandler.setBaseResource(ResourceFactory.of(resourceHandler).newResource("/"));
-                resourceHandler.setDirAllowed(false);
-                resourceHandler.setAcceptRanges(true);  // Enable range requests for seeking
-                resourceHandler.setEtags(true);         // Enable ETags for caching
-                // Add this to your ResourceHandler configuration
-                resourceHandler.setCacheControl("public, max-age=86400");
-                resourceHandler.setPrecompressedFormats(new CompressedContentFormat[0]); // Disable compression for audio
-                resourceHandler.setServer(server);
-                server.setHandler(resourceHandler);
-                */
 
                 // 1. WebSocket Handler on /ws context
                 WebSocketUpgradeHandler wsUpgradeHandler = WebSocketUpgradeHandler.from(server, container -> {
@@ -236,105 +222,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     @Override
     public int getListenPort() {
         return CONTENT_SERVER_PORT;
-    }
-
-    private class ContentHandler extends ResourceHandler {
-        private ContentHandler() {
-        }
-
-        @Override
-        public boolean handle(Request request, Response response, Callback callback) throws Exception {
-            response.getHeaders().put(HttpHeader.SERVER, getServerSignature(getComponentName()));
-
-            if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
-                return super.handle(request, response, callback);
-            }
-
-            MusicTag tag = findMusicTagFromUri(request.getHttpURI().getPath());
-            if (tag == null) {
-                Log.w(TAG, "Content not found for URI: " + request.getHttpURI().getPath());
-                return super.handle(request, response, callback);
-            }
-
-            File audioFile = new File(tag.getPath());
-            if (!audioFile.exists() || !audioFile.canRead()) {
-                Log.e(TAG, "Audio file not accessible: " + tag.getPath());
-                response.setStatus(HttpStatus.NOT_FOUND_404);
-                callback.succeeded();
-                return true;
-            }
-
-            notifyPlayback(Request.getRemoteAddr(request), request.getHeaders().get(HttpHeader.USER_AGENT), tag);
-
-            HttpContent content = getResourceService().getContent(tag.getPath(), request);
-            if (content == null) {
-                Log.w(TAG, "Jetty could not get content for path: " + tag.getPath());
-                return super.handle(request, response, callback);
-            }
-
-            prepareResponseHeaders(response, tag);
-
-            Log.i(TAG, "Starting stream: \"" + tag.getTitle() + "\" [" + formatAudioQuality(tag) + "] to " + Request.getRemoteAddr(request));
-            getResourceService().doGet(request, response, callback, content);
-
-            return true;
-        }
-
-        private MusicTag findMusicTagFromUri(String uri) {
-            if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {
-                return null;
-            }
-            try {
-                // More robust URI parsing to prevent exceptions.
-                String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length()); // Everything after "/music/"
-                if (pathPart.isEmpty()) {
-                    return null;
-                }
-                String[] parts = pathPart.split("/");
-                if (parts.length > 0 && !parts[0].isEmpty()) {
-                    long contentId = StringUtils.toLong(parts[0]);
-                    if (contentId > 0) { // Add validation
-                        return tagRepos.findById(contentId);
-                    }
-                }
-            } catch (Exception ex) {
-                Log.e(TAG, "Failed to parse content ID from URI: " + uri, ex);
-            }
-            return null;
-        }
-
-        private void prepareResponseHeaders(Response response, MusicTag tag) {
-            String mimeType = MimeTypeUtils.getMimeTypeFromPath(tag.getPath());
-            if (mimeType != null) {
-                response.getHeaders().put(HttpHeader.CONTENT_TYPE, mimeType);
-            }
-            addDlnaHeaders(response, tag);
-            addAudiophileHeaders(response, tag);
-        }
-
-        /**
-         * Add DLNA-specific headers for optimal client compatibility
-         */
-        private void addDlnaHeaders(Response response, MusicTag tag) {
-            // Common DLNA headers
-            response.getHeaders().put("transferMode.dlna.org", "Streaming");
-            response.getHeaders().put("contentFeatures.dlna.org", getDLNAContentFeatures(tag));
-
-            // Some renderers need this to know they can seek
-            response.getHeaders().put(HttpHeader.ACCEPT_RANGES, "bytes");
-        }
-
-        /**
-         * Add audiophile-specific headers with detailed audio quality information
-         */
-        private void addAudiophileHeaders(Response response, MusicTag tag) {
-            // Add custom headers with detailed audio information for audiophile clients
-            if (tag.getAudioSampleRate() > 0) response.getHeaders().put("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
-            if (tag.getAudioBitsDepth() > 0) response.getHeaders().put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
-            if (tag.getAudioBitRate() > 0) response.getHeaders().put("X-Audio-Bitrate", tag.getAudioBitRate() + " kbps");
-            if (TagUtils.getChannels(tag) > 0) response.getHeaders().put("X-Audio-Channels", String.valueOf(TagUtils.getChannels(tag)));
-            response.getHeaders().put("X-Audio-Format", Objects.toString(tag.getFileType(), ""));
-        }
     }
 
     private class WebContentHandler extends ResourceHandler {
@@ -509,6 +396,23 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 return;
             }
             sessions.add(session);
+            sendConnectedMessages(session);
+        }
+
+        private void sendConnectedMessages(Session session) {
+            Log.d(TAG, TAG+" - Connected Messages:");
+            sendMessage(session, wsContent.handleGetStats());
+            sendMessage(session, wsContent.sendDlnaRenderers());
+            sendMessage(session, wsContent.sendNowPlaying());
+            sendMessage(session, wsContent.sendQueueUpdate());
+        }
+
+        private void sendMessage(Session session, Map<String, Object> response) {
+            if (response != null) {
+                String jsonResponse = GSON.toJson(response);
+                session.sendText(jsonResponse, null);
+                Log.d(TAG, TAG+" - Response message: " + jsonResponse);
+            }
         }
 
         @OnWebSocketMessage

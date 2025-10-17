@@ -105,6 +105,10 @@ public class WebSocketContent {
                 boolean enabled = (boolean) message.getOrDefault("enabled", false);
                 handleSetShuffleMode( enabled);
                 break;
+            case "getWaveform":
+                // 1. Get the track ID from the message
+                double trackId = (double) message.get("id");
+                return handleGetWaveform((long) trackId);
             default:
                 System.err.println("Unknown command received: " + command);
                 break;
@@ -112,7 +116,26 @@ public class WebSocketContent {
         return null;
     }
 
-    private Map<String, Object> handleGetStats() {
+    private Map<String, Object> handleGetWaveform(long trackId) {
+        // 2. Find the song (this is just an example)
+        MusicTag song = tagRepos.findById(trackId); // Or findById, etc.
+
+        if (song != null) {
+            // 3. Get the waveform (assuming you have a way to do this)
+            float[] waveform = getWaveform(song);
+
+            // 4. Create a new Map to send back
+            Map<String, Object> response = new HashMap<>();
+            response.put("type", "trackWaveform"); // This matches the JS 'case'
+            response.put("trackId", song.getId()); // Use the same ID
+            response.put("waveform", waveform);
+
+            return response;
+        }
+        return null;
+    }
+
+    public Map<String, Object> handleGetStats() {
         List<MusicTag> list = tagRepos.getAllMusics();
         long songCount = list.size();
         long totalSize = 0;
@@ -246,7 +269,7 @@ public class WebSocketContent {
         }
     }
 
-    private Map<String, Object> sendDlnaRenderers() {
+    public Map<String, Object> sendDlnaRenderers() {
         if(playbackService ==null) return null;
 
         final String activeRendererUdn = playbackService.getPlayer()!=null?playbackService.getPlayer().getTargetId():"";
@@ -294,7 +317,7 @@ public class WebSocketContent {
       //  }).start();
     }
 
-    private Map<String, Object> sendQueueUpdate() {
+    public Map<String, Object> sendQueueUpdate() {
         // Sends the current queue state to a single client (e.g., on initial connect)
         try {
             List<QueueItem> playingQueue = tagRepos.getQueueItemDao().queryForAll();
@@ -309,7 +332,7 @@ public class WebSocketContent {
         return null;
     }
 
-    private Map<String, Object> sendNowPlaying() {
+    public Map<String, Object> sendNowPlaying() {
         if(playbackService != null) {
             MediaTrack nowPlaying = playbackService.getNowPlayingSong();
             if (nowPlaying != null) {
@@ -431,7 +454,9 @@ public class WebSocketContent {
 
             track.put("bitDepth", song.getAudioBitsDepth());
             track.put("sampleRate", song.getAudioSampleRate());
-            //}
+            if(!isEmpty(song.getYear())) {
+                track.put("bitDepth", song.getYear());
+            }
 
             String qualityIndicator = song.getQualityInd(); //MusicTagUtils.getQualityIndicator(song);
             if(!isEmpty(qualityIndicator)) {
@@ -445,13 +470,6 @@ public class WebSocketContent {
             return track;
         }
 
-    public Map<String, Object> getPlayingQueue(List<MusicTag> playingQueue) {
-        List<Map<String, ?>> queueAsMaps = playingQueue.stream()
-                .map(this::getMap)
-                .collect(Collectors.toList());
-        return Map.of("type", "updateQueue", "path", "Playing Queue","queue", queueAsMaps);
-    }
-
     public Map<String, Object> getPlaybackState(PlaybackState state) {
         long elapsed = state.currentPositionMs;
         MediaTrack tag = state.currentTrack;
@@ -460,8 +478,8 @@ public class WebSocketContent {
             track.put("elapsed", elapsed);
             track.put("state", state.currentState.name());
 
-            float[] waveform = getWaveform(tag);
-            track.put("waveform", waveform);
+            //float[] waveform = getWaveform(tag);
+            //track.put("waveform", waveform);
 
             return Map.of("type", "nowPlaying", "track", track);
         }
@@ -476,29 +494,4 @@ public class WebSocketContent {
         }
         return waveform;
     }
-
-    /*
-    public Map<String, Object> getNowPlaying(NowPlaying nowPlaying) {
-        long elapsed = nowPlaying.getElapsed();
-        MusicTag tag = nowPlaying.getSong();
-        if(tag != null) {
-            Map<String, Object> track = getMap(tag);
-            track.put("elapsed", elapsed);
-            track.put("state", nowPlaying.getPlayingState());
-*/
-           /* float[] cleanBlockWaveform = tag.getWaveformData();
-            if (cleanBlockWaveform == null) {
-                cleanBlockWaveform = MusicAnalyser.generateDynamicSongData(640);
-                // should create from file and save to db
-            } */
-    /*
-            float[] cleanBlockWaveform = MusicAnalyser.generateDynamicSongData(640);
-
-            track.put("waveform", cleanBlockWaveform);
-
-            return Map.of("type", "nowPlaying", "track", track);
-        }
-        return null;
-    } */
-
 }

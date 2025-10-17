@@ -34,4 +34,6 @@ public interface MediaTrack {
     long getAudioBitRate();
 
     String getFileType();
+
+    String getYear();
 }

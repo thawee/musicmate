@@ -249,6 +249,23 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 return;
             }
             sessions.add(connection);
+            sendConnectedMessages(connection);
+        }
+
+        private void sendConnectedMessages(NioHttpServer.WebSocketConnection connection) {
+            Log.d(TAG, TAG+" - Connected Messages:");
+            sendMessage(connection, webSocketContent.handleGetStats());
+            sendMessage(connection, webSocketContent.sendDlnaRenderers());
+            sendMessage(connection, webSocketContent.sendNowPlaying());
+            sendMessage(connection, webSocketContent.sendQueueUpdate());
+        }
+
+        private void sendMessage(NioHttpServer.WebSocketConnection connection, Map<String, Object> response) {
+            if (response != null) {
+                String jsonResponse = GSON.toJson(response);
+                connection.send(jsonResponse);
+                Log.d(TAG, TAG+" - Response message: " + jsonResponse);
+            }
         }
 
         @Override
@@ -343,6 +360,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             Map<String, Object> response = webSocketContent.getPlaybackState(state);
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
+                Log.v(TAG, TAG+" - Broadcasting playback state:"+jsonResponse);
                 broadcast(jsonResponse);
             }
         }

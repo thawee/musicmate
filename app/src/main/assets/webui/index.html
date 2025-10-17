@@ -257,6 +257,12 @@
                     <div id="now-playing-quality-badge" class="flex-shrink-0"></div> </div>
                 <h2 id="now-playing-artist" class="text-xl md:text-2xl text-gray-300 mt-1">Artist Name</h2>
 
+                <div class="flex items-center space-x-3 text-lg text-gray-400 mt-1">
+                    <p id="now-playing-album" class="truncate hidden">Album Name</p>
+                    <span id="now-playing-year-separator" class="hidden">&bull;</span>
+                    <p id="now-playing-year" class="flex-shrink-0 hidden">Year</p>
+                </div>
+
                 <div class="mt-6 w-full">
                     <canvas id="waveform-canvas" class="w-full h-16"></canvas>
                 </div>
@@ -371,6 +377,9 @@
             nowPlayingArt: document.getElementById('now-playing-art'),
             nowPlayingTitle: document.getElementById('now-playing-title'),
             nowPlayingArtist: document.getElementById('now-playing-artist'),
+            nowPlayingAlbum: document.getElementById('now-playing-album'),
+            nowPlayingYear: document.getElementById('now-playing-year'),
+            nowPlayingYearSeparator: document.getElementById('now-playing-year-separator'),
             waveformCanvas: document.getElementById('waveform-canvas'),
             nowPlayingTimeCurrent: document.getElementById('now-playing-time-current'),
             nowPlayingTimeDuration: document.getElementById('now-playing-time-duration'),
@@ -598,12 +607,7 @@
         function connect() {
             try { socket = new WebSocket(wsUrl); } catch (e) { console.error("WS connect error:", e); setTimeout(connect, 3000); return; }
             socket.onopen = () => {
-
                 sendMessage({ command: 'browse', path: currentBrowsePath });
-                sendMessage({ command: 'getNowPlaying' });
-                sendMessage({ command: 'getRenderers' });
-                //sendMessage({ command: 'getQueue' });
-                sendMessage({ command: 'getStats' });
             };
             socket.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
             socket.onclose = () => {
@@ -621,6 +625,20 @@
                     updateBreadcrumb(data.path, data.items);
                     break;
                 case 'nowPlaying':
+                    // Check if the track ID is changing
+                    if (data.track && (!currentTrack || currentTrack.id !== data.track.id)) {
+                        // This is a NEW song. Clear the old waveform.
+                        currentWaveform = null;
+                        currentWaveformTrackId = null;
+
+                        // --- IMPORTANT ---
+                        // Now, we ask the server for the new waveform.
+                        // The server must remove 'waveform' from this 'nowPlaying' message.
+                        if(data.track.id) {
+                            sendMessage({ command: 'getWaveform', id: data.track.id });
+                        }
+                    }
+
                     currentTrack = data.track;
                     if (data.track && data.track.title) {
                         updatePlayer(data.track);
@@ -658,6 +676,19 @@
                         if (ui.playPauseBtnMobile) {
                             ui.playPauseBtnMobile.classList.remove('bi-pause-circle-fill');
                             ui.playPauseBtnMobile.classList.add('bi-play-circle-fill');
+                        }
+                    }
+                    break;
+                case 'trackWaveform':
+                    if (data.trackId && data.waveform) {
+                        currentWaveform = data.waveform;
+                        currentWaveformTrackId = data.trackId;
+
+                        // Manually trigger a waveform redraw if the Now Playing screen is open
+                        if (!ui.nowPlayingScreen.classList.contains('hidden') && currentTrack && currentTrack.id === data.trackId) {
+                             const progress = currentTrack.duration > 0 ? (currentTrack.elapsed / currentTrack.duration) : 0;
+                             resizeWaveformCanvas();
+                             drawWaveform(ui.waveformCanvas, currentWaveform, progress);
                         }
                     }
                     break;
@@ -980,7 +1011,35 @@
                 // Update the title, artist, and art on the Now Playing screen
                 if(track.title) {
                     ui.nowPlayingTitle.textContent = track.title;
-                    ui.nowPlayingArtist.textContent = track.artist;
+
+                    // Handle Artist with "by " prefix
+                    if (track.artist) {
+                        ui.nowPlayingArtist.textContent = "by " + track.artist;
+                        ui.nowPlayingArtist.classList.remove('hidden');
+                    } else {
+                        ui.nowPlayingArtist.classList.add('hidden');
+                    }
+
+                    // Handle Album
+                    if (track.album) {
+                        ui.nowPlayingAlbum.textContent = track.album;
+                        ui.nowPlayingAlbum.classList.remove('hidden');
+                    } else {
+                        ui.nowPlayingAlbum.classList.add('hidden');
+                    }
+
+                    // Handle Year (assuming track.year exists)
+                    if (track.year) {
+                        ui.nowPlayingYear.textContent = track.year;
+                        ui.nowPlayingYear.classList.remove('hidden');
+                    } else {
+                        ui.nowPlayingYear.classList.add('hidden');
+                    }
+
+                    // Show separator only if both album and year exist
+                    ui.nowPlayingYearSeparator.classList.toggle('hidden', !(track.album && track.year));
+
+                    // Handle Art and Badge
                     ui.nowPlayingArt.src = track.artUrl || 'assets/no_cover.png';
                     ui.nowPlayingBg.style.backgroundImage = `url(${track.artUrl || 'assets/no_cover.png'})`;
                     ui.nowPlayingQualityBadge.innerHTML = getQualityBadge(track);
@@ -989,9 +1048,14 @@
                 const progress = track.duration > 0 ? (track.elapsed / track.duration) : 0;
                 ui.nowPlayingTimeCurrent.textContent = formatTime(track.elapsed);
                 ui.nowPlayingTimeDuration.textContent = formatTime(track.duration);
-                if (track.waveform) {
+                //if (track.waveform) {
+                //    resizeWaveformCanvas();
+                //    drawWaveform(ui.waveformCanvas, track.waveform, progress);
+                //}
+                // Check if we have the correct waveform stored
+                if (currentWaveform && currentWaveformTrackId === track.id) {
                     resizeWaveformCanvas();
-                    drawWaveform(ui.waveformCanvas, track.waveform, progress);
+                    drawWaveform(ui.waveformCanvas, currentWaveform, progress); // Use the stored waveform
                 }
             }
         }
@@ -1127,12 +1191,40 @@
                 showToast("Nothing is playing.");
                 return;
             }
+
             // Populate the screen with the current track's data
             ui.nowPlayingBg.style.backgroundImage = `url(${currentTrack.artUrl || 'assets/no_cover.png'})`;
             ui.nowPlayingArt.src = currentTrack.artUrl || 'assets/no_cover.png';
             ui.nowPlayingTitle.textContent = currentTrack.title;
-            ui.nowPlayingArtist.textContent = currentTrack.artist;
             ui.nowPlayingQualityBadge.innerHTML = getQualityBadge(currentTrack);
+
+            // Handle Artist with "by " prefix
+            if (currentTrack.artist) {
+                ui.nowPlayingArtist.textContent = "by " + currentTrack.artist;
+                ui.nowPlayingArtist.classList.remove('hidden');
+            } else {
+                ui.nowPlayingArtist.classList.add('hidden');
+            }
+
+            // Handle Album
+            if (currentTrack.album) {
+                ui.nowPlayingAlbum.textContent = currentTrack.album;
+                ui.nowPlayingAlbum.classList.remove('hidden');
+            } else {
+                ui.nowPlayingAlbum.classList.add('hidden');
+            }
+
+            // Handle Year (assuming currentTrack.year exists)
+            if (currentTrack.year) {
+                ui.nowPlayingYear.textContent = currentTrack.year;
+                ui.nowPlayingYear.classList.remove('hidden');
+            } else {
+                ui.nowPlayingYear.classList.add('hidden');
+            }
+
+            // Show separator only if both album and year exist
+            ui.nowPlayingYearSeparator.classList.toggle('hidden', !(currentTrack.album && currentTrack.year));
+
             resizeWaveformCanvas();
             openOverlay(ui.nowPlayingScreen);
         }
@@ -1149,6 +1241,59 @@
         }
 
         function drawWaveform(canvas, waveformData, progressPercentage) {
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+
+    // Set canvas resolution for a crisp image
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const width = rect.width;
+    const height = rect.height;
+    const center = height / 2;
+
+    ctx.clearRect(0, 0, width, height);
+    if (!waveformData || waveformData.length === 0) return;
+
+    const points = waveformData.length / 2;
+    // Use Math.max to prevent division by zero if points is 0
+    const barWidth = Math.max(1, width / points);
+    const progressPoint = width * progressPercentage;
+
+    // Use two paths to batch drawing, which is very efficient
+    const playedPath = new Path2D();
+    const unplayedPath = new Path2D();
+
+    for (let i = 0; i < waveformData.length; i += 2) {
+        const x = (i / 2) * barWidth;
+
+        // Ensure min/max are valid numbers
+        const min = (waveformData[i] || 0) * center;
+        const max = (waveformData[i + 1] || 0) * center;
+
+        // Calculate height, ensuring it's at least 1px for visibility
+        const barHeight = Math.max(1, max - min);
+
+        const path = (x < progressPoint) ? playedPath : unplayedPath;
+
+        // --- THIS IS THE CHANGE ---
+        // Use rect() to define a solid bar
+        // x, y, width, height
+        path.rect(x, center + min, barWidth, barHeight);
+    }
+
+    // --- AND THIS IS THE CHANGE ---
+    // Draw played portion
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fill(playedPath);
+
+    // Draw unplayed portion
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fill(unplayedPath);
+}
+
+        function drawWaveformOld(canvas, waveformData, progressPercentage) {
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
 

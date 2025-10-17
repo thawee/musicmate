@@ -120,7 +120,7 @@ public class ApplicationUtils {
      * @param context The application context.
      * @param path The path within the assets folder.
      */
-    public static void copyFileOrDirToCache(Context context, String path) throws IOException {
+    public static void copyFilesToCache(Context context, String path) throws IOException {
         AssetManager assetManager = context.getAssets();
         String[] assets = assetManager.list(path);
 
@@ -133,7 +133,7 @@ public class ApplicationUtils {
             }
             for (String asset : assets) {
                 String newPath = path.isEmpty() ? asset : path + "/" + asset;
-                copyFileOrDirToCache(context, newPath);
+                copyFilesToCache(context, newPath);
             }
         }
     }
@@ -291,7 +291,7 @@ public class ApplicationUtils {
         return StringUtils.trimToEmpty(Build.MODEL);
     }
 
-    public static void deleteFiles(Context context, String path) {
+    public static void deleteFilesFromCache(Context context, String path) {
         File fullPath = new File(context.getFilesDir(), path);
         if (fullPath.exists()) {
             FileUtils.delete(fullPath);
