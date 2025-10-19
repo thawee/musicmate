@@ -26,6 +26,7 @@ import java.util.List;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.repository.TagRepository;
+import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 
@@ -68,7 +69,7 @@ public abstract class AbstractContentBrowser {
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
-        return "http://" + BaseServer.getIpAddress() + ":" +CONTENT_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
+        return "http://" + NetworkUtils.getIpAddress() + ":" +CONTENT_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
@@ -78,7 +79,7 @@ public abstract class AbstractContentBrowser {
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, String key) {
         String uri = key+".png";
         return URI.create("http://"
-                + BaseServer.getIpAddress() + ":"
+                + NetworkUtils.getIpAddress() + ":"
                 + WEB_SERVER_PORT + CONTEXT_PATH_COVERART  + uri);
     }
 
@@ -143,7 +144,7 @@ public abstract class AbstractContentBrowser {
         // Add high-resolution audio indicator for compatible players
         if (tag.getAudioSampleRate() > 44100 || tag.getAudioBitsDepth() > 16) {
             musicTrack.addProperty(new DIDLObject.Property.UPNP.ARTIST_DISCO_URI(
-                    URI.create("http://" + BaseServer.getIpAddress() + ":" +
+                    URI.create("http://" + NetworkUtils.getIpAddress() + ":" +
                             WEB_SERVER_PORT + "/hires_badge")));
         }
 

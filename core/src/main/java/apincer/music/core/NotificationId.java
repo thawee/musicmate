@@ -18,20 +18,11 @@
 package apincer.music.core;
 
 public enum NotificationId {
-    LOCAL_BACKGROUND_MUSIC_PLAYER(1),
-    AVTRANSPORT_PLAYER(2),
-    LOCAL_IMAGE_PLAYER(3),
-    MULTI_CONTENT_PLAYER(4),
-    MEDIA_SERVER(5),
-    WEB_SERVER(6),
-    LOCAL_THIRD_PARTIE_MUSIC_PLAYER(7),
-    FILE_DOWNLOADER(8),
-    PLAYER_SERVICE(9),
-    BACKGROUND_MUSIC_SERVICE(10),
+    MEDIA_SERVER(1),
+    PLAYBACK_SERVICE(2),
     MAIN(11);
 
     private final int id;
-
 
     NotificationId(int id) {
         this.id = id;

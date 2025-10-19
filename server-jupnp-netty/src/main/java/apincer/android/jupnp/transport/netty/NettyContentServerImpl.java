@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.StreamPlayer;
+import apincer.music.core.playback.RemoteWebPlayer;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -820,13 +820,9 @@ public class NettyContentServerImpl extends BaseServer implements ContentServer 
                 String userAgent = request.headers().get(HttpHeaderNames.USER_AGENT);
                 if(getPlaybackService() != null) {
                     String clientIp = getRemoteAddress(ctx);
-                    //RendererDevice device = getPlaybackService().getRendererByIpAddress(clientIp);
-                    //if(device!=null) {
-                    //    PlaybackTarget player = DMCAPlayer.Factory.create(getContext(), device);
-                    //    getPlaybackService().notifyNewTrackPlaying(player, tag);
-                    //}else {
-                        PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
-                        getPlaybackService().notifyNewTrackPlaying(player, tag);
+                    PlaybackTarget player = RemoteWebPlayer.Factory.create(clientIp, userAgent, clientIp);
+                    getPlaybackService().switchPlayer(player, false);
+                    getPlaybackService().onMediaTrackChanged(tag);
                    // }
                 }
 

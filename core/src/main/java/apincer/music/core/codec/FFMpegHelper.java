@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
 
@@ -37,16 +38,14 @@ public class FFMpegHelper {
     }
 
     public static void extractCoverArt(MusicTag tag, File pathFile) {
-        //if(!isEmpty(tag.getCoverartMime())) {
         Log.d(TAG, "extractCoverArt: "+pathFile);
-            String targetPath = pathFile.getAbsolutePath();
-            targetPath = escapePathForFFMPEG(targetPath);
-            String options = " -c:v copy ";
+        String targetPath = pathFile.getAbsolutePath();
+        targetPath = escapePathForFFMPEG(targetPath);
+        String options = " -c:v copy ";
 
-            String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + targetPath + "\"";
-
-            FFmpegKit.execute(cmd); // do not clear the result
-       // }
+        String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + targetPath + "\"";
+        LogHelper.setFFMpegOff();
+        FFmpegKit.execute(cmd); // do not clear the result
     }
 
     public static void extractCoverArt(String path, File pathFile) {
@@ -57,7 +56,7 @@ public class FFMpegHelper {
             String options = " -c:v copy ";
 
             String cmd = " -hide_banner -nostats -i \"" + path + "\" " + options + " \"" + targetPath + "\"";
-
+            LogHelper.setFFMpegOff();
             FFmpegKit.execute(cmd); // do not clear the result
         }catch (Exception ex) {
             Log.e(TAG, "extractCoverArt", ex);
@@ -73,6 +72,7 @@ public class FFMpegHelper {
            // String options =" -map 0:V -y -codec copy ";
 
             String cmd = " -hide_banner -nostats -i \"" + tag.getPath() + "\" " + options + " \"" + pathFile+ "\"";
+            LogHelper.setFFMpegOff();
             Session session = FFmpegKit.execute(cmd); // do not clear the result
             if (ReturnCode.isSuccess(session.getReturnCode())) {
                 FileSystem.safeMove(context, pathFile, tag.getPath(), true);

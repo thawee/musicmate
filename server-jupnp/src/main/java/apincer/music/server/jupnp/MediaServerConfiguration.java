@@ -39,7 +39,7 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
 
     @Override
     protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort, int multicastResponsePort) {
-        return new WifiNetworkAddressFactory(streamListenPort, multicastResponsePort);
+        return new MediaServerAddressFactory(streamListenPort, multicastResponsePort);
     }
 
     @Override

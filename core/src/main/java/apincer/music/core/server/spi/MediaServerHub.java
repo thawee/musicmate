@@ -1,12 +1,17 @@
 package apincer.music.core.server.spi;
 
+import java.util.List;
+
+import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 public interface MediaServerHub {
-    void fetchPlaybackState(String udn);
 
-    void stopPlaying(String udn);
+    String getLibraryName();
+
+    List<PlaybackTarget> getAvailablePlaybackTargets();
 
     enum ServerStatus {
         RUNNING,
@@ -14,6 +19,10 @@ public interface MediaServerHub {
         STARTING,
         ERROR
     }
+
+    void activatePlayer(String udn, Callback callback);
+
+    void deactivatePlayer(String udn);
 
     void startServers();
 
@@ -23,6 +32,7 @@ public interface MediaServerHub {
 
     BehaviorSubject<ServerStatus> getServerStatus();
 
+    void stopPlaying(String udn);
     void pause(String rendererUdn);
 
     //void play(String rendererUdn);
@@ -34,4 +44,33 @@ public interface MediaServerHub {
 
     // Add a method for the hosting service to call on destroy
     void onDestroy();
+
+    public abstract static class Callback {
+        public Callback() {
+        }
+
+        public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
+            throw new RuntimeException("Stub!");
+        }
+
+        public void onMediaTrackChanged(MediaTrack metadata) {
+            throw new RuntimeException("Stub!");
+        }
+
+        public void onPlaybackStateChanged(PlaybackState state) {
+            throw new RuntimeException("Stub!");
+        }
+
+        public void onPlaybackStateTimeElapsedSeconds(long elapsedSeconds) {
+            throw new RuntimeException("Stub!");
+        }
+
+        public void onPlaybackTargetAdded(PlaybackTarget player) {
+            throw new RuntimeException("Stub!");
+        }
+
+        public void onPlaybackTargetRevoved(String targetId) {
+            throw new RuntimeException("Stub!");
+        }
+    }
 }

@@ -24,12 +24,12 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.List;
 
 import apincer.android.mmate.R;
+import apincer.android.mmate.playback.ExternalPlayer;
 import apincer.android.mmate.service.PlaybackServiceImpl;
-import apincer.music.core.playback.ExternalPlayer;
+import apincer.music.core.Constants;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
-import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 
@@ -83,7 +83,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void populateDMCAPlayers() {
-        List<PlaybackTarget> renderers = playbackService.getAvaiablePlaybackTargets();
+        List<PlaybackTarget> renderers = playbackService.getAvailablePlaybackTargets();
         dlnaPlayersContainer.removeAllViews();
         if (renderers != null && !renderers.isEmpty()) {
             for (PlaybackTarget player : renderers) {
@@ -94,7 +94,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 playerView.setBackgroundResource(R.drawable.rounded_bg);
                 playerView.setOnClickListener(v -> {
                     if(isPlaybackServiceBound) {
-                        playbackService.switchPlayer(player);
+                        playbackService.switchPlayer(player, true);
                         Toast.makeText(getContext(), "Selected: " + player.getDisplayName(), Toast.LENGTH_SHORT).show();
                     }
                     dismiss();
@@ -180,7 +180,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         PlaybackTarget playbackTarget = playbackService.getPlayer();
         if (playbackTarget != null) {
             String playerDetails = playbackTarget.getDisplayName();
-            String serverDetails = "MusicMate MediaServer ["+ ApplicationUtils .getDeviceModel()+"]\n" + playbackService.getServerLocation();
+            String serverDetails = Constants.getPresentationName() +"\n" + playbackService.getServerLocation();
             if (playbackTarget.isStreaming()) {
                 playerDetails = playerDetails + "\n" + playbackTarget.getDescription();
                 addSignalPathStep(signalPathContainer, "Media Server", serverDetails, true);

@@ -22,6 +22,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.http.NioHttpServer;
 import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.ContentServer;
@@ -237,7 +239,9 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         private final WebSocketContent webSocketContent = buildWebSocketContent(tagRepos);
 
         public WebSocketHandlerImpl() {
-            subscribePlaybackState(playbackState -> broadcastPlaybackState(playbackState));
+            subscribePlaybackState(this::broadcastPlaybackState);
+            subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(this::broadcastNowPlaying));
+            subscribePlaybackTarget(player -> player.ifPresent(this::broadcastPlaybackTarget));
         }
 
         @Override
@@ -253,9 +257,10 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         }
 
         private void sendConnectedMessages(NioHttpServer.WebSocketConnection connection) {
-            Log.d(TAG, TAG+" - Connected Messages:");
-            sendMessage(connection, webSocketContent.handleGetStats());
-            sendMessage(connection, webSocketContent.sendDlnaRenderers());
+            Log.d(TAG, TAG+" - Send Welcome Messages:");
+            sendMessage(connection, webSocketContent.getLibraryStats());
+            sendMessage(connection, webSocketContent.getAvailableRenderers());
+            sendMessage(connection, webSocketContent.getPlaybackTarget());
             sendMessage(connection, webSocketContent.sendNowPlaying());
             sendMessage(connection, webSocketContent.sendQueueUpdate());
         }
@@ -264,7 +269,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
                 connection.send(jsonResponse);
-                Log.d(TAG, TAG+" - Response message: " + jsonResponse);
+                Log.d(TAG, TAG+" - Send message: " + jsonResponse);
             }
         }
 
@@ -341,7 +346,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         }
 
         private void broadcast(String message) {
-            sessions.removeIf(session -> session.isClosed()); // Clean up closed connections
+            sessions.removeIf(NioHttpServer.WebSocketConnection::isClosed); // Clean up closed connections
 
             sessions.parallelStream().forEach(session -> {
                 try {
@@ -354,13 +359,29 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                     sessions.remove(session);
                 }
             });
+            Log.d(TAG, TAG+" - Broadcast message: " + message);
         }
 
         public void broadcastPlaybackState(PlaybackState state) {
             Map<String, Object> response = webSocketContent.getPlaybackState(state);
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
-                Log.v(TAG, TAG+" - Broadcasting playback state:"+jsonResponse);
+                broadcast(jsonResponse);
+            }
+        }
+
+        public void broadcastNowPlaying(MediaTrack track) {
+            Map<String, Object> response = webSocketContent.getNowPlaying(track);
+            if (response != null) {
+                String jsonResponse = GSON.toJson(response);
+                broadcast(jsonResponse);
+            }
+        }
+
+        public void broadcastPlaybackTarget(PlaybackTarget player) {
+            Map<String, Object> response = webSocketContent.getPlaybackTarget(player);
+            if (response != null) {
+                String jsonResponse = GSON.toJson(response);
                 broadcast(jsonResponse);
             }
         }

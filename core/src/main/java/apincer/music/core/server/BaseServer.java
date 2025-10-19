@@ -10,41 +10,37 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.collection.LruCache;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Optional;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.PlaybackState;
-import apincer.music.core.playback.StreamPlayer;
+import apincer.music.core.playback.RemoteWebPlayer;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackServiceBinder;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MusicMateExecutors;
+import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.TagUtils;
 import io.reactivex.rxjava3.functions.Consumer;
 
 public class BaseServer {
     private static final String TAG = "BaseServer";
-    public static final Pattern IPV4_PATTERN =
-            Pattern.compile(
-                    "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
+    //public static final Pattern IPV4_PATTERN =
+    //        Pattern.compile(
+    //                "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
     public static final int UPNP_SERVER_PORT = 49152; // IANA-recommended range 49152-65535 for UPnP
     public static final int CONTENT_SERVER_PORT = 9000; //8089;
@@ -138,11 +134,24 @@ public class BaseServer {
         }
     }
 
+    public void subscribeNowPlayingSong(Consumer<Optional<MediaTrack>> consumer) {
+        if(playbackService != null) {
+            playbackService.subscribeNowPlayingSong(consumer);
+        }
+    }
+
+    public void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer) {
+        if(playbackService != null) {
+            playbackService.subscribePlaybackTarget(consumer);
+        }
+    }
+
     public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
-                PlaybackTarget player = StreamPlayer.Factory.create(getContext(), clientIp, userAgent, clientIp);
-                playbackService.notifyNewTrackPlaying(player, tag);
+                PlaybackTarget player = RemoteWebPlayer.Factory.create(clientIp, userAgent, clientIp);
+                playbackService.switchPlayer(player, false);
+                playbackService.onMediaTrackChanged(tag);
             }
         });
     }
@@ -201,12 +210,16 @@ public class BaseServer {
         return qualityText;
     }
 
+    public static String getMusicUrl(MediaTrack track) {
+        return "http://"+ NetworkUtils.getIpAddress()+":"+  CONTENT_SERVER_PORT+CONTEXT_PATH_MUSIC + track.getId() + "/file." + track.getFileType();
+    }
 
     /**
      * get the ip address of the device
      *
      * @return the address or null if anything went wrong
      */
+    /*
     @NonNull
     public static String getIpAddress() {
         String hostAddress = null;
@@ -238,5 +251,5 @@ public class BaseServer {
         // maybe wifi is off we have to use the loopback device
         hostAddress = hostAddress == null ? "0.0.0.0" : hostAddress;
         return hostAddress;
-    }
+    } */
 }

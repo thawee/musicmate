@@ -1,6 +1,6 @@
 package apincer.android.mmate.service;
 
-import static apincer.music.core.playback.ExternalPlayer.SUPPORTED_PLAYERS;
+import static apincer.android.mmate.playback.ExternalPlayer.SUPPORTED_PLAYERS;
 
 import android.app.Notification;
 import android.content.ComponentName;
@@ -22,13 +22,13 @@ import android.util.Log;
 import javax.inject.Inject;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.ExternalPlayer;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.StringUtils;
 import dagger.hilt.android.AndroidEntryPoint;
 
+@Deprecated
 @AndroidEntryPoint
 public class ExternalPlayerListener extends NotificationListenerService {
     private static final String TAG = "NotificationListener";
@@ -69,8 +69,8 @@ public class ExternalPlayerListener extends NotificationListenerService {
                             apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
                             state.currentTrack = playbackService.getNowPlayingSong();
                             state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
-                            state.currentPositionMs = elapsedSeconds;
-                            playbackService.notifyPlaybackState(state);
+                            state.currentPositionSecond = elapsedSeconds;
+                            playbackService.onPlaybackStateChanged(state);
 
                             // Re-schedule the runnable to run again after the interval
                             handler.postDelayed(this, POLLING_INTERVAL_MS);
@@ -155,7 +155,7 @@ public class ExternalPlayerListener extends NotificationListenerService {
             CharSequence textSequence = extras.getCharSequence(EXTRA_TEXT);
             String artist = textSequence != null ? textSequence.toString() : "";
             if(playbackService != null) {
-                PlaybackTarget currentPlayer = ExternalPlayer.Factory.create(getBaseContext(), packageName,null);
+               /// PlaybackTarget currentPlayer = ExternalPlayer.Factory.create(getBaseContext(), packageName,null);
                 MusicTag currentSong = tagRepos.findMediaItem(title, artist,"");
 
                 MediaSession.Token token = extras.getParcelable(Notification.EXTRA_MEDIA_SESSION, MediaSession.Token.class);
@@ -175,7 +175,7 @@ public class ExternalPlayerListener extends NotificationListenerService {
 
                 // Publish the now playing information
 
-                playbackService.notifyNewTrackPlaying(currentPlayer, currentSong);
+               /// playbackService.notifyNewTrackPlaying(currentPlayer, currentSong);
             }
 
         } catch (Exception e) {
@@ -224,6 +224,7 @@ public class ExternalPlayerListener extends NotificationListenerService {
         }
     }
 
+    @Deprecated
     public static void setupNotificationListener(Context context) {
         ComponentName componentName = new ComponentName(context, ExternalPlayerListener.class);
         NotificationListenerService.requestRebind(componentName);

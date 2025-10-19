@@ -26,7 +26,7 @@ public class TagUtils {
         return String.format("%s/%s", tag.getAudioBitsDepth(), StringUtils.formatAudioSampleRate(sampleRate,false));
     }
 
-    public static boolean isMQAStudio(MusicTag tag) {
+    public static boolean isMQAStudio(MediaTrack tag) {
         return trimToEmpty(tag.getQualityInd()).contains("MQA Studio");
     }
 

@@ -1,7 +1,16 @@
 package apincer.music.core;
 
+import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
+
+import android.app.Notification;
+
+import org.jspecify.annotations.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import apincer.music.core.utils.ApplicationUtils;
+import apincer.music.core.utils.NetworkUtils;
 
 public final class Constants {
     public static final String QUALITY_AUDIOPHILE = "Audiophile";
@@ -75,6 +84,8 @@ public final class Constants {
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
     public static final String PREF_LAST_SCAN_TIME = "LAST_SCAN_TIME_PREF";
+    public static final String CHANNEL_ID_PLAYBACK = "playback_channel";
+    public static final String CHANNEL_ID_SERVER = "server_channel";
 
     static {
         IMAGE_COVERS.add("front.png");
@@ -141,4 +152,16 @@ public final class Constants {
     public static final String COVER_ARTS = "/Covers/";
     public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
     public static final String DEFAULT_COVERART_DLNA_RES = "no_cover.png";
+
+    public static String getPresentationName() {
+        // Get the clean, friendly device model name
+        String deviceModel = ApplicationUtils.getFriendlyDeviceName(); // e.g., "Galaxy S25"
+
+        // Format it for presentation
+        return "MusicMate (" + deviceModel + ")";
+    }
+
+    public static String getPresentationUrl() {
+        return  "http://" + NetworkUtils.getIpAddress() + ":" + CONTENT_SERVER_PORT + "/index.html";
+    }
 }

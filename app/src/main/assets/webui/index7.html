@@ -56,16 +56,6 @@
         .playing-item { background-color: rgba(59, 130, 246, 0.20); }
         .dark .playing-item { background-color: rgba(59, 130, 246, 0.10); }
 
-        .badge-separator {
-            display: none; /* Hidden by default */
-            margin: 0 6px;
-            color: #9ca3af; /* Muted text color */
-            font-weight: bold;
-        }
-        .dark .badge-separator {
-            color: #6b7280;
-        }
-
         #player-footer.has-color-bg {
             color: #e5e7eb;
             border-top-color: transparent;
@@ -255,13 +245,6 @@
             <div class="flex flex-col text-white w-full h-full">
                 <div>
                     <div id="now-playing-quality-details" class="font-mono text-sm text-blue-300 mb-2">
-                        <span id="badge-format" class="badge"></span>
-                        <span id="sep-format-rate" class="badge-separator">&bull;</span>
-                        <span id="badge-samplerate" class="badge"></span>
-                        <span id="sep-rate-depth" class="badge-separator">&bull;</span>
-                        <span id="badge-bitdepth" class="badge"></span>
-                        <span id="sep-depth-tier" class="badge-separator">&bull;</span>
-                        <span id="badge-quality-tier" class="badge tier-badge"></span>
                     </div>
 
                     <div class="flex items-baseline space-x-4">
@@ -394,14 +377,7 @@
             nowPlayingTimeCurrent: document.getElementById('now-playing-time-current'),
             nowPlayingTimeDuration: document.getElementById('now-playing-time-duration'),
             // --- MODIFIED: Point to new elements ---
-            badgeFormat: document.getElementById('badge-format'),
-            badgeSampleRate: document.getElementById('badge-samplerate'),
-            badgeBitDepth: document.getElementById('badge-bitdepth'),
-            badgeQualityTier: document.getElementById('badge-quality-tier'),
-            sepFormatRate: document.getElementById('sep-format-rate'),
-            sepRateDepth: document.getElementById('sep-rate-depth'),
-            sepDepthTier: document.getElementById('sep-depth-tier'),
-
+            nowPlayingQualityDetails: document.getElementById('now-playing-quality-details'),
             nowPlayingMetadata: document.getElementById('now-playing-metadata'),
             nowPlayingMetadataContent: document.getElementById('now-playing-metadata-content'),
             metadataLoadingSpinner: document.getElementById('metadata-loading-spinner'),
@@ -663,14 +639,7 @@
                     }
                     // --- MODIFIED: Update visuals on Now Playing screen ---
                     if (currentTrack && currentTrack.id === data.trackId && !ui.nowPlayingScreen.classList.contains('hidden')) {
-
-                        // --- FIX: Calculate current progress and pass it ---
-                        const state = currentPlaybackState;
-                        const duration = (currentTrack ? currentTrack.duration : 0) || state.duration || 0;
-                        const progress = (duration > 0) ? (state.elapsed / duration) * 100 : 0; // Get 0-100
-                        const progressRatio = progress / 100; // Get 0-1
-
-                        updateNowPlayingScreenVisuals(progressRatio); // Pass the 0-1 ratio
+                        updateNowPlayingScreenVisuals(); // This will now draw waveform AND bio
                     }
                     break;
 
@@ -1063,13 +1032,8 @@
                 return;
             }
 
-            // --- FIX: Calculate progress and pass it ---
-            const state = currentPlaybackState;
-            const duration = (currentTrack ? currentTrack.duration : 0) || state.duration || 0;
-            const progress = (duration > 0) ? (state.elapsed / duration) * 100 : 0; // Get 0-100
-
             // Update all text/art content
-            updateNowPlayingScreenUI(currentTrack, currentPlaybackState, progress);
+            updateNowPlayingScreenUI(currentTrack, currentPlaybackState);
 
             // Check for metadata (waveform AND bio) and request if missing
             const metadata = trackMetadataCache.get(currentTrack.id);
@@ -1089,91 +1053,23 @@
         }
 
         // --- MODIFIED: 'updateNowPlayingScreenUI' (Feature #1) ---
-        function updateNowPlayingScreenUI(track, state, progress) {
+        function updateNowPlayingScreenUI(track, state) {
             if (!track) return;
             ui.nowPlayingTitle.textContent = track.title;
             ui.nowPlayingArt.src = track.artUrl || 'assets/no_cover.png';
             ui.nowPlayingBg.style.backgroundImage = `url(${track.artUrl || 'assets/no_cover.png'})`;
 
-            // --- NEW: Feature #1 (Detailed Audio Quality with Separators) ---
-
-            // --- 1. Get and show the fallback/old badge ---
-            const fallbackQualityText = getQualityBadge(track);
-            let hasFallback = false;
-            if (fallbackQualityText) {
-                ui.badgeQualityTier.innerHTML = fallbackQualityText;
-                ui.badgeQualityTier.style.display = 'inline-block';
-                hasFallback = true;
-            } else {
-                ui.badgeQualityTier.style.display = 'none';
-            }
-
-            // --- 2. Hide all separators first ---
-            ui.sepFormatRate.style.display = 'none';
-            ui.sepRateDepth.style.display = 'none';
-            ui.sepDepthTier.style.display = 'none';
-
-            // --- 3. Track which badge was last shown ---
-            let lastBadgeShown = null;
-
-            // --- 4. Check for and show the NEW specific badges ---
+            // --- NEW: Feature #1 (Detailed Audio Quality) ---
+            // Your server must send format, sampleRate, and bitDepth in the 'track' object
             if (track.format) {
-                // Format Badge
-                ui.badgeFormat.innerHTML = track.format;
-                ui.badgeFormat.style.display = 'inline-block';
-                lastBadgeShown = ui.badgeFormat; // This is the last visible badge
-
-                // Sample Rate Badge
-                if (track.sampleRate) {
-                    ui.badgeSampleRate.innerHTML = track.sampleRate;
-                    ui.badgeSampleRate.style.display = 'inline-block';
-                    // Show separator between format and sampleRate
-                    ui.sepFormatRate.style.display = 'inline-block';
-                    lastBadgeShown = ui.badgeSampleRate; // Update last visible badge
-                } else {
-                    ui.badgeSampleRate.style.display = 'none';
-                }
-
-                // Bit Depth Badge
-                if (track.bitDepth) {
-                    ui.badgeBitDepth.innerHTML = track.bitDepth;
-                    ui.badgeBitDepth.style.display = 'inline-block';
-
-                    // Show the correct preceding separator
-                    if (lastBadgeShown === ui.badgeSampleRate) {
-                        ui.sepRateDepth.style.display = 'inline-block'; // Show sep after sampleRate
-                    } else if (lastBadgeShown === ui.badgeFormat) {
-                        ui.sepFormatRate.style.display = 'inline-block'; // Show sep after format
-                    }
-                    lastBadgeShown = ui.badgeBitDepth; // Update last visible badge
-                } else {
-                    ui.badgeBitDepth.style.display = 'none';
-                }
-
-                // --- 5. Show separator before the TIER badge ---
-                // If we showed any new badge AND the fallback badge exists
-                if (lastBadgeShown && hasFallback) {
-                    ui.sepDepthTier.style.display = 'inline-block';
-                }
-
+                let qualityHtml = `${track.format}`;
+                if (track.sampleRate) qualityHtml += ` &bull; ${track.sampleRate}`;
+                if (track.bitDepth) qualityHtml += ` &bull; ${track.bitDepth}`;
+                ui.nowPlayingQualityDetails.innerHTML = qualityHtml;
             } else {
-                // --- 6. FALLBACK (No new data) ---
-                ui.badgeFormat.style.display = 'none';
-                ui.badgeSampleRate.style.display = 'none';
-                ui.badgeBitDepth.style.display = 'none';
-                // All separators remain hidden
+                // Fallback to the old badge if new details aren't present
+                ui.nowPlayingQualityDetails.innerHTML = getQualityBadge(track);
             }
-
-            // --- (End of new badge logic) ---
-
-            // --- FIX: Pass progress (0-1) to visuals ---
-            // Update the <progress> bar (which wants 0-100)
-            if (ui.nowPlayingProgress) {
-                ui.nowPlayingProgress.value = progress;
-            }
-
-            // Calculate the progress *ratio* (0-1) for the waveform
-            const progressRatio = progress / 100;
 
             ui.nowPlayingArtist.textContent = track.artist ? "by " + track.artist : "";
             ui.nowPlayingArtist.classList.toggle('hidden', !track.artist);
@@ -1183,17 +1079,16 @@
             ui.nowPlayingYear.classList.toggle('hidden', !track.year);
             ui.nowPlayingYearSeparator.classList.toggle('hidden', !(track.album && track.year));
 
-            // Use the 'state' object that was passed in
             ui.nowPlayingTimeCurrent.textContent = formatTime(state.elapsed);
             const duration = track.duration || state.duration || 0;
             ui.nowPlayingTimeDuration.textContent = formatTime(duration);
 
-            // Pass the 0-1 ratio to the drawing function
-            updateNowPlayingScreenVisuals(progressRatio);
+            // Update visuals (like waveform and bio)
+            updateNowPlayingScreenVisuals();
         }
 
         // --- MODIFIED: 'updateNowPlayingScreenVisuals' (Feature #4) ---
-        function updateNowPlayingScreenVisuals(progressRatio) { // Receives 0-1 ratio
+        function updateNowPlayingScreenVisuals() {
             if (!currentTrack) {
                 ui.waveformCanvas.getContext('2d').clearRect(0, 0, ui.waveformCanvas.width, ui.waveformCanvas.height);
                 ui.nowPlayingMetadataContent.innerHTML = '';
@@ -1202,23 +1097,20 @@
             }
 
             const metadata = trackMetadataCache.get(currentTrack.id);
-
-            // --- FIX: Removed the stale 'progress' calculation ---
-            // const duration = currentTrack.duration || currentPlaybackState.duration;
-            // const progress = (duration > 0) ? (currentPlaybackState.elapsed / duration) : 0;
+            const duration = currentTrack.duration || currentPlaybackState.duration;
+            const progress = (duration > 0) ? (currentPlaybackState.elapsed / duration) : 0;
 
             // 1. Draw Waveform
             if (metadata && metadata.waveform) {
                 resizeWaveformCanvas(); // Ensure canvas is sized correctly
-
-                // --- FIX: Use the 'progressRatio' that was passed in ---
-                drawWaveform(ui.waveformCanvas, metadata.waveform, progressRatio);
+                drawWaveform(ui.waveformCanvas, metadata.waveform, progress);
             } else {
                 // No waveform data yet, clear the canvas
                 ui.waveformCanvas.getContext('2d').clearRect(0, 0, ui.waveformCanvas.width, ui.waveformCanvas.height);
             }
 
             // --- NEW: Feature #4 (Artist/Album Bio) ---
+            // Your server must send artistBio/albumBio in the 'trackMetadata' message
             if (metadata && metadata.info) {
                 // We have info, hide spinner and show content
                 ui.metadataLoadingSpinner.classList.add('hidden');

@@ -346,9 +346,9 @@ public class StringUtils {
 
     public static String formatAudioBitsDepth(int bit) {
         if(bit > 1) {
-            return String.format(Locale.getDefault(), "%d Bits", bit);
+            return String.format(Locale.getDefault(), "%d-Bits", bit);
         } else {
-            return String.format(Locale.getDefault(), "%d Bit", bit);
+            return String.format(Locale.getDefault(), "%d-Bit", bit);
         }
     }
 

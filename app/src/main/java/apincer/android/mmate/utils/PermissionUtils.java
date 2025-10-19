@@ -1,4 +1,4 @@
-package apincer.music.core.utils;
+package apincer.android.mmate.utils;
 
 import android.Manifest;
 import android.content.Context;

@@ -401,8 +401,8 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
         private void sendConnectedMessages(Session session) {
             Log.d(TAG, TAG+" - Connected Messages:");
-            sendMessage(session, wsContent.handleGetStats());
-            sendMessage(session, wsContent.sendDlnaRenderers());
+            sendMessage(session, wsContent.getLibraryStats());
+            sendMessage(session, wsContent.getAvailableRenderers());
             sendMessage(session, wsContent.sendNowPlaying());
             sendMessage(session, wsContent.sendQueueUpdate());
         }

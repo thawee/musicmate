@@ -5,6 +5,8 @@ import android.content.Context;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.transport.spi.StreamServerConfiguration;
 
+import javax.inject.Singleton;
+
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.NioContentServerImpl;
@@ -36,16 +38,19 @@ public class NioServerModule {
     }
 
     @Provides
+    @Singleton
     public MediaServerHub provideMediaServerHub(@ApplicationContext Context context, UpnpServiceConfiguration cfg, FileRepository fileRepos, TagRepository tagRepos) {
         return new MediaServerHubImpl(context, cfg, fileRepos, tagRepos);
     }
 
     @Provides
+    @Singleton
     public UpnpServer provideUpnpServer(@ApplicationContext Context context) {
         return new NioUPnpServerImpl(context);
     }
 
     @Provides
+    @Singleton
     public ContentServer provideContentServer(@ApplicationContext Context context,FileRepository fileRepos, TagRepository tagRepos) {
         return new NioContentServerImpl(context, fileRepos, tagRepos);
     }

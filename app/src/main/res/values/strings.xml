@@ -273,5 +273,7 @@
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
     <string name="encode">Encode</string>
+    <string name="notification_server_running">Server is active on your WiFi network</string>
+    <string name="notification_server_not_running">Required WiFi network</string>
 
 </resources>

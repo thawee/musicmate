@@ -20,7 +20,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import apincer.android.mmate.R;
-import apincer.music.core.utils.PermissionUtils;
+import apincer.android.mmate.utils.PermissionUtils;
 
 public class PermissionActivity extends AppCompatActivity {
     // android 5 SD card permissions

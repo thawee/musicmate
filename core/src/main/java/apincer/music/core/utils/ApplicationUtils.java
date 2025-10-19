@@ -264,7 +264,7 @@ public class ApplicationUtils {
         return null;
     }
 
-    public static String getDeviceDetails() {
+    public static String getAndroidRelease() {
        // return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE) +" on "+StringUtils.trimToEmpty(Build.MANUFACTURER) +" "+  StringUtils.trimToEmpty(Build.MODEL)+".";
        return "Android " +StringUtils.trimToEmpty(Build.VERSION.RELEASE);
     }
@@ -288,7 +288,82 @@ public class ApplicationUtils {
     }
 
     public static String getDeviceModel() {
+        //SM-S931B for S25
         return StringUtils.trimToEmpty(Build.MODEL);
+    }
+
+    /**
+     * Returns a user-friendly, marketable device name for presentation.
+     * It attempts to map known technical model codes to their common names
+     * (e.g., "SM-S931B" -> "Galaxy S25"). If the model is unknown, it falls back
+     * to a sensible "Manufacturer + Model" format.
+     *
+     * @return A clean, user-facing device name.
+     */
+    public static String getFriendlyDeviceName() {
+        String model = Build.MODEL;
+
+        // The mapping logic. Add more popular devices here over time.
+        switch (model) {
+            // --- Samsung Galaxy S Series ---
+            case "SM-S931B": // This is your hypothetical S25 example
+                return "Galaxy S25";
+            case "SM-S928B":
+            case "SM-S928U":
+                return "Galaxy S24 Ultra";
+            case "SM-S918B":
+            case "SM-S918U":
+                return "Galaxy S23 Ultra";
+            case "SM-S908E":
+            case "SM-S908U":
+                return "Galaxy S22 Ultra";
+
+            // --- Google Pixel Series ---
+            case "Pixel 8 Pro":
+                return "Google Pixel 8 Pro";
+            case "Pixel 8":
+                return "Google Pixel 8";
+            case "Pixel 7 Pro":
+                return "Google Pixel 7 Pro";
+            case "Pixel 7":
+                return "Google Pixel 7";
+
+            // --- Add other common models here ---
+            // case "some-other-model-code":
+            //     return "Friendly Name";
+
+            default:
+                // Fallback for unknown models
+                return getGenericDeviceName();
+        }
+    }
+
+    /**
+     * Returns a generic device name by combining manufacturer and model.
+     * Used as a fallback when a friendly name isn't available.
+     * @return A formatted, user-facing device name (e.g., "Samsung SM-S931B").
+     */
+    private static String getGenericDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+
+        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
     }
 
     public static void deleteFilesFromCache(Context context, String path) {
@@ -315,4 +390,6 @@ public class ApplicationUtils {
         }
         return false;
     }
+
+
 }

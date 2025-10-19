@@ -5,6 +5,7 @@ import java.util.List;
 // A simple record to hold the final, aggregated track information.
 public record TrackInfo(
         String artistBio,
+        String albumBio,
         String highResArtUrl,
         List<String> genres
 ) {

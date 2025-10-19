@@ -1,19 +1,18 @@
 package apincer.music.core.playback.spi;
 
-import apincer.music.core.playback.PlaybackState;
-
 public interface PlaybackTarget {
-    boolean play(MediaTrack track);
-    boolean pause();
-    boolean resume();
-    boolean stop();
+   // boolean play(MediaTrack track);
+   // boolean pause();
+   // boolean resume();
+   // boolean stop();
 
-    boolean next();
+   // boolean next();
 
-    boolean seekTo(long positionMs);
-    boolean setVolume(float volume); // Volume from 0.0 to 1.0
+   // boolean seekTo(long positionMs);
+   // boolean setVolume(float volume); // Volume from 0.0 to 1.0
 
     boolean isStreaming();
+    //boolean isControllable();
 
     // To report status back to the service/UI
    // PlaybackState getPlaybackState();
@@ -23,5 +22,9 @@ public interface PlaybackTarget {
     String getDisplayName();
     String getDescription();
 
-    void onSelected();
+    //void activate();
+
+    //void deactivate();
+
+    //boolean previous();
 }

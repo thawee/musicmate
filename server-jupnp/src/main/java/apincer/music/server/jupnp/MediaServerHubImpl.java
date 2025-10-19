@@ -1,16 +1,11 @@
 package apincer.music.server.jupnp;
 
 
-import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
-import static apincer.music.core.server.BaseServer.CONTEXT_PATH_MUSIC;
-
-import android.annotation.SuppressLint;
-import android.content.ComponentName;
+import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.util.Log;
+
+import androidx.annotation.RequiresPermission;
 
 import org.jupnp.UpnpService;
 import org.jupnp.UpnpServiceConfiguration;
@@ -44,7 +39,9 @@ import org.jupnp.support.model.PositionInfo;
 import org.jupnp.support.model.TransportInfo;
 import org.jupnp.support.model.item.Item;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -54,8 +51,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
-import apincer.music.core.playback.spi.PlaybackService;
-import apincer.music.core.playback.spi.PlaybackServiceBinder;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -97,10 +92,12 @@ public class MediaServerHubImpl implements MediaServerHub {
     protected UpnpServiceConfiguration upnpServiceCfg;
     private final FileRepository fileRepos;
     private final TagRepository tagRepos;
+    private Callback callback;
 
     public BehaviorSubject<ServerStatus> getServerStatus() {
         return serverStatus;
     }
+    private final List<PlaybackTarget> availableTargets = new CopyOnWriteArrayList<>();
 
     // Service components
     protected UpnpService upnpService;
@@ -115,9 +112,10 @@ public class MediaServerHubImpl implements MediaServerHub {
     private ScheduledFuture<?> transportInfoHandle;
     private final AtomicBoolean isPolling = new AtomicBoolean(false);
 
-    private PlaybackService playbackService;
-    private boolean isPlaybackServiceBound;
+   // private PlaybackService playbackService;
+   // private boolean isPlaybackServiceBound;
 
+    /*
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressLint("CheckResult")
         @Override
@@ -133,7 +131,7 @@ public class MediaServerHubImpl implements MediaServerHub {
             isPlaybackServiceBound = false;
             playbackService = null;
         }
-    };
+    }; */
 
     public MediaServerHubImpl(Context context, UpnpServiceConfiguration upnpServiceCfg, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context;
@@ -141,9 +139,9 @@ public class MediaServerHubImpl implements MediaServerHub {
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
 
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.PlaybackServiceImpl"));
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+       // Intent intent = new Intent();
+       // intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.PlaybackServiceImpl"));
+       // context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -160,55 +158,83 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     @Override
-    public void fetchPlaybackState(String udn) {
-        Device device = upnpService.getRegistry().getDevice(new UDN(udn), false);
-        if (device == null) {
-            return;
-        }
+    public void activatePlayer(String udn, Callback callback) {
+        this.callback = callback;
+        //auto resolve udn if, not found in registry
+        udn = resolveRendererUdn(udn);
 
-        Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
-        if (avTransportService == null) {
-            return;
-        }
-        upnpService.getControlPoint().execute(new GetMediaInfo(avTransportService) {
-            @Override
-            public void received(ActionInvocation invocation, MediaInfo mediaInfo) {
-                // The metadata is an XML string. We need to parse it.
-                String metadata = mediaInfo.getCurrentURIMetaData();
-                Item songItem = null;
+        if(!initialized) return;
 
-                if (metadata != null && !metadata.isEmpty()) {
-                    try {
-                        DIDLParser parser = new DIDLParser();
-                        DIDLContent didl = parser.parse(metadata);
-                        if (!didl.getItems().isEmpty()) {
-                            // The first item in the list is the current track
-                            songItem = didl.getItems().get(0);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, TAG+" - Error parsing DIDL metadata: " + e.getMessage());
-                    }
-                }
-
-                String title = songItem.getTitle();
-                String artist = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class).getName();
-                String album = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class).toString();
-                MusicTag song = tagRepos.findMediaItem(title, artist,album);
-                playbackService.notifyNewTrackPlaying(song);
-            }
-
-            @Override
-            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-            }
-        });
+        // polling state from remote device
         stopPolling();
         startPolling(udn);
+
+        // read state from remote device after active
+        try {
+            Device device = upnpService.getRegistry().getDevice(new UDN(udn), false);
+            if (device == null) {
+                return;
+            }
+
+            Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
+            if (avTransportService == null) {
+                return;
+            }
+            upnpService.getControlPoint().execute(new GetMediaInfo(avTransportService) {
+                @Override
+                public void received(ActionInvocation invocation, MediaInfo mediaInfo) {
+                    // The metadata is an XML string. We need to parse it.
+                    String metadata = mediaInfo.getCurrentURIMetaData();
+                    Item songItem = null;
+
+                    if (metadata != null && !metadata.isEmpty()) {
+                        try {
+                            DIDLParser parser = new DIDLParser();
+                            DIDLContent didl = parser.parse(metadata);
+                            if (!didl.getItems().isEmpty()) {
+                                // The first item in the list is the current track
+                                songItem = didl.getItems().get(0);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, TAG + " - Error parsing DIDL metadata: " + e.getMessage());
+                        }
+                    }
+
+                    String title = songItem.getTitle();
+                    String artist = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ARTIST.class).getName();
+                    String album = songItem.getFirstPropertyValue(DIDLObject.Property.UPNP.ALBUM.class).toString();
+                    MusicTag song = tagRepos.findMediaItem(title, artist, album);
+                    if (callback != null) {
+                        callback.onMediaTrackChanged(song);
+                    }
+                    //playbackService.notifyNewTrackPlaying(song);
+                }
+
+                @Override
+                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                }
+            });
+        } catch (Exception ignore) {
+            ignore.printStackTrace();
+        }
     }
 
+    private String resolveRendererUdn(String udn) {
+        Device device = upnpService.getRegistry().getDevice(new UDN(udn), false);
+        if (device == null) {
+            for(PlaybackTarget dev: availableTargets) {
+                if(dev.getDescription().equals(dev.getDescription())) {
+                    return dev.getTargetId();
+                }
+            }
+        }
+        return udn;
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     @Override
     public void startServers() {
         if(!isInitialized()) {
-           // long start = System.currentTimeMillis();
             Thread initializationThread = new Thread(() -> {
                 initialize(); // Your existing initialize method
                 if (isInitialized()) {
@@ -285,7 +311,6 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     private void shutdown() {
         try {
-
             // Send byebye notification before shutting down
             if (mediaServerDevice != null && upnpService != null) {
                 upnpService.getProtocolFactory().createSendingNotificationByebye(mediaServerDevice).run();
@@ -320,9 +345,14 @@ public class MediaServerHubImpl implements MediaServerHub {
             Log.i(TAG, TAG+" - Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
 
             if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
-                if(playbackService!= null) {
+               /* if(playbackService!= null) {
                     PlaybackTarget player = DMCAPlayer.Factory.create(context, MediaServerHubImpl.this, device);
-                    playbackService.getAvaiablePlaybackTargets().add(player);
+                    playbackService.getAvailablePlaybackTargets().add(player);
+                } */
+                PlaybackTarget player = DMCAPlayer.Factory.create(device);
+                availableTargets.add(player);
+                if(callback != null) {
+                    callback.onPlaybackTargetAdded(player);
                 }
             }
         }
@@ -334,9 +364,12 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         @Override
         public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
-            if(playbackService!= null) {
-                PlaybackTarget player = DMCAPlayer.Factory.create(context, MediaServerHubImpl.this, device);
-                playbackService.getAvaiablePlaybackTargets().remove(player);
+            String targetId = device.getIdentity().getUdn().getIdentifierString();
+
+            // Use removeIf to find and remove the item by its ID
+            availableTargets.removeIf(target -> target.getTargetId().equals(targetId));
+            if(callback != null) {
+                callback.onPlaybackTargetRevoved(targetId);
             }
         }
 
@@ -453,7 +486,59 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     @Override
+    public String getLibraryName() {
+        // NIO, Jetty, Netty
+        // JUPNP
+        return "jUPnP, "+getWebEngineName();
+    }
+
+    @Override
+    public List<PlaybackTarget> getAvailablePlaybackTargets() {
+        return availableTargets;
+    }
+
+    @Override
+    public void deactivatePlayer(String udn) {
+        stopPolling();
+    }
+
+    private String getWebEngineName() {
+        String webEngine = "Unknown";
+        // Check for Jetty
+        try {
+            Class.forName("org.eclipse.jetty.server.Server");
+            webEngine = "Eclipse Jetty";
+        } catch (ClassNotFoundException e) {
+            // Not Jetty, continue checking
+        }
+
+        // Check for Netty if Jetty not found
+        if ("Unknown".equals(webEngine)) {
+            try {
+                Class.forName("io.netty.bootstrap.ServerBootstrap");
+                webEngine = "Netty Framework";
+            } catch (ClassNotFoundException e) {
+                // Not Netty, continue checking
+            }
+        }
+
+        // Check for Java NIO if others not found
+        if ("Unknown".equals(webEngine)) {
+            try {
+                Class.forName("java.nio.channels.Selector");
+                webEngine = "Java NIO";
+            } catch (ClassNotFoundException e) {
+                // This is unlikely to fail in an Android environment
+            }
+        }
+        return webEngine;
+    }
+
+    @Override
     public void playSong(String rendererUdn, MediaTrack song) {
+        //auto resolve udn if, not found in registry
+        rendererUdn = resolveRendererUdn(rendererUdn);
+
         // Step 1: Find the target device (renderer) by its UDN
         Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
         if (device == null) {
@@ -473,7 +558,8 @@ public class MediaServerHubImpl implements MediaServerHub {
 
         // --- Create the URL for the song ---
         // This URL must point to your app's internal HTTP server.
-        String songUrl = "http://"+ BaseServer.getIpAddress()+":"+  CONTENT_SERVER_PORT+CONTEXT_PATH_MUSIC + song.getId() + "/file." + song.getFileType();
+       // String songUrl = "http://"+ NetworkUtils.getIpAddress()+":"+  CONTENT_SERVER_PORT+CONTEXT_PATH_MUSIC + song.getId() + "/file." + song.getFileType();
+        String songUrl = BaseServer.getMusicUrl(song);
 
         // Create a simple metadata string for the renderer (optional but recommended)
         String metadata = createDidlLiteMetadata(song, songUrl);
@@ -481,6 +567,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Step 3: Set the song URL on the renderer
         // This is an asynchronous action, so we use a callback.
         ControlPoint controlPoint = upnpService.getControlPoint();
+        String finalRendererUdn = rendererUdn;
         controlPoint.execute(new SetAVTransportURI(avTransportService, songUrl, metadata) {
             @Override
             public void success(ActionInvocation invocation) {
@@ -491,9 +578,9 @@ public class MediaServerHubImpl implements MediaServerHub {
                     @Override
                     public void success(ActionInvocation invocation) {
                         // System.out.println("Play command successful.");
-                        startPlaying(rendererUdn);
-                        fetchPlaybackState(rendererUdn);
-                        startPolling(rendererUdn);
+                        startPlaying(finalRendererUdn);
+                        activatePlayer(finalRendererUdn, callback);
+                        startPolling(finalRendererUdn);
                     }
 
                     @Override
@@ -571,7 +658,10 @@ public class MediaServerHubImpl implements MediaServerHub {
                 @Override
                 public void onReceived(PositionInfo positionInfo) {
                     count.set(0);
-                    playbackService.notifyPlaybackStateElapsedTime(parseHmsToSeconds(positionInfo.getRelTime()));
+                    if(callback != null) {
+                        callback.onPlaybackStateTimeElapsedSeconds(parseHmsToSeconds(positionInfo.getRelTime()));
+                    }
+                   // playbackService.notifyPlaybackStateElapsedTime(parseHmsToSeconds(positionInfo.getRelTime()));
                 }
 
                 @Override
@@ -737,11 +827,11 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public void onDestroy() {
-        if(playbackService != null) {
+       /* if(playbackService != null) {
             context.unbindService(serviceConnection);
             playbackService = null;
             isPlaybackServiceBound = false;
-        }
+        } */
     }
 
     // --- Interfaces for Callbacks ---

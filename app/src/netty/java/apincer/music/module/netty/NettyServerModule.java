@@ -35,16 +35,19 @@ public class NettyServerModule {
     }
 
     @Provides
+    @Singleton
     public MediaServerHub provideMediaServerHub(@ApplicationContext Context context, UpnpServiceConfiguration cfg, FileRepository fileRepos, TagRepository tagRepos) {
         return new MediaServerHubImpl(context, cfg, fileRepos, tagRepos);
     }
 
     @Provides
+    @Singleton
     public UpnpServer provideUpnpServer(@ApplicationContext Context context) {
         return new NettyUPnpServerImpl(context);
     }
 
     @Provides
+    @Singleton
     public ContentServer provideContentServer(@ApplicationContext Context context, FileRepository fileRepos, TagRepository tagRepos) {
         return new NettyContentServerImpl(context, fileRepos, tagRepos);
     }

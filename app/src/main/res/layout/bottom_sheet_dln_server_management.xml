@@ -14,6 +14,7 @@
         android:background="@drawable/dialog_header_background"
         android:padding="@dimen/dimen_12_dp">
         <TextView
+            android:id="@+id/server_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="MusicMate Media Server"

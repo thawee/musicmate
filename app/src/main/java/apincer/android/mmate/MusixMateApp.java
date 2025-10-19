@@ -1,18 +1,11 @@
 package apincer.android.mmate;
 
-import static apincer.android.mmate.service.ExternalPlayerListener.setupNotificationListener;
-
-import android.annotation.SuppressLint;
 import android.app.Application;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.os.IBinder;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -25,12 +18,12 @@ import com.google.android.material.color.DynamicColors;
 
 import javax.inject.Inject;
 
+import apincer.android.mmate.service.MediaServerManager;
 import apincer.android.mmate.service.PlaybackServiceImpl;
 import apincer.music.core.NotificationId;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
-import apincer.android.mmate.service.MediaServerHubService;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.android.mmate.ui.MainActivity;
 import apincer.music.core.utils.LogHelper;
@@ -42,16 +35,10 @@ import sakout.mehdi.StateViews.StateViewsBuilder;
 public class MusixMateApp extends Application {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
 
-   /* private static MusixMateApp INSTANCE;
-
-    public static MusixMateApp getInstancex() {
-        return INSTANCE;
-    } */
-
     public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
     public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
 
-    private MediaServerHubService mediaServerService;
+  //  private MediaServerHubService mediaServerService;
 
     @Inject
     FileRepository fileRepos;
@@ -62,19 +49,12 @@ public class MusixMateApp extends Application {
     public void onTerminate() {
         super.onTerminate();
 
-        // Rest of your termination code
-        if(mediaServerService != null) {
-            mediaServerService.stopServers();
-            unbindService(serviceConnection);
-        }
-
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
         MusicMateExecutors.getInstance().shutdown();
     }
 
     @Override public void onCreate() {
         super.onCreate();
-        //INSTANCE = this;
         // Apply dynamic color
         DynamicColors.applyToActivitiesIfAvailable(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -82,19 +62,10 @@ public class MusixMateApp extends Application {
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(getApplicationContext());
 
-        setupNotificationListener(this);
-
         // initialize thread executors
         MusicMateExecutors.getInstance();
 
-       // WorkManager.initialize(this, getWorkManagerConfiguration());
         startMusicScan();
-
-        // turn off ffmpeg-kit log
-       // FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
-
-        createNotificationChannel();
-        //mediaServerManager = new MediaServerManager(getApplicationContext());
 
         startMediaServer();
 
@@ -125,10 +96,8 @@ public class MusixMateApp extends Application {
     }
 
     private void startMediaServer() {
-        if(Settings.isAutoStartMediaServer(this)) {
-            Intent intent = new Intent(this, MediaServerHubService.class);
-            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        }
+        MediaServerManager manager = new MediaServerManager(this);
+        manager.startServer();
     }
 
     // Add this to your MusixMateApp class
@@ -145,36 +114,7 @@ public class MusixMateApp extends Application {
         }
     }
 
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @SuppressLint("CheckResult")
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MediaServerHubService.MediaServerHubBinder binder = (MediaServerHubService.MediaServerHubBinder) service;
-            mediaServerService = binder.getService();
-            if(Settings.isAutoStartMediaServer(getApplicationContext())) {
-                mediaServerService.startServers();
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-    };
-
-    public void createNotificationChannel() {
-        CharSequence name = getString(R.string.channel_name);
-        String description = getString(R.string.channel_description);
-        int importance = NotificationManager.IMPORTANCE_DEFAULT;
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance);
-        channel.setDescription(description);
-
-        // Register the channel with the system; you can't change the importance
-        // or other notification behaviors after this
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
-    }
-
+    @Deprecated
     public void createGroupNotification() {
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -192,6 +132,7 @@ public class MusixMateApp extends Application {
         notificationManager.notify(NotificationId.MAIN.getId(), mBuilder.build());
     }
 
+    @Deprecated
     public void cancelGroupNotification() {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (mNotificationManager.getActiveNotifications().length == 1) {
@@ -199,10 +140,12 @@ public class MusixMateApp extends Application {
         }
     }
 
+    // use by worker
     public FileRepository getFileRepository() {
         return fileRepos;
     }
 
+    // use by worker
     public TagRepository getTagRepository() {
         return tagRepos;
     }

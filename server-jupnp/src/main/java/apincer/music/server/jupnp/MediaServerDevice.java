@@ -1,7 +1,5 @@
 package apincer.music.server.jupnp;
 
-import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -40,14 +38,12 @@ import java.util.List;
 import java.util.UUID;
 
 import apincer.music.core.Constants;
-import apincer.music.core.server.BaseServer;
 import apincer.music.server.jupnp.content.ContentDirectory;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.ApplicationUtils;
 
 public class MediaServerDevice extends LocalDevice {
     private final DeviceDetailsProvider deviceDetailsProvider;
-
     public MediaServerDevice(Context context, TagRepository tagRepos) throws ValidationException {
         super(
                 new DeviceIdentity(new UDN(getUuid(context))),
@@ -57,8 +53,7 @@ public class MediaServerDevice extends LocalDevice {
                 createMediaServerServices(context, tagRepos),
                 null
         );
-      //  this.tagRepos = tagRepos;
-        deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
+        this.deviceDetailsProvider = new MediaDeviceDetailsProvider(context);
         ContentDirectory contentDirectoryService = getServiceImplementation(ContentDirectory.class);
         ConnectionManagerService connectionManagerService = getServiceImplementation(ConnectionManagerService.class);
        // this.mediaReceiverRegistrarService = getServiceImplementation(UmsMediaReceiverRegistrarService.class);
@@ -228,16 +223,13 @@ public class MediaServerDevice extends LocalDevice {
             @Override
             public DeviceDetails provide(RemoteClientInfo info) {
                 String modelNumber = ApplicationUtils.getVersionNumber(context);
-                String modelName = "MusicMate Server";
-                String modelDescription = "DLNA (UPnP/AV 1.0) Server - " + ApplicationUtils.getDeviceDetails();
-
-                // For better display in mConnectHD, include the device model in brackets
-                String friendlyName = "MusicMate Server [" + ApplicationUtils.getDeviceModel() + "]";
+               // String modelName = "MusicMate Server";
+                String modelDescription = Constants.getPresentationName()+ " | Your Hi-Res Audio Library (DMS, UPnP/AV 1.0)";
 
                 // Add serialNumber for better device identification
                 String serialNumber = getUuid(context).substring(0, 12).toUpperCase();
 
-                ModelDetails modelDetails = new ModelDetails(modelName,
+                ModelDetails modelDetails = new ModelDetails(ApplicationUtils.getDeviceModel(),
                         modelDescription,
                         modelNumber,
                         "https://github.com/thawee/musicmate"  // Add modelURL for more information
@@ -245,12 +237,12 @@ public class MediaServerDevice extends LocalDevice {
 
                // URI presentationURI = null;
             //if (!StringUtils.isEmpty(BaseServer.getIpAddress())) {
-                String webInterfaceUrl = "http://" + BaseServer.getIpAddress() + ":" + CONTENT_SERVER_PORT + "/index.html";
-                URI presentationURI = URI.create(webInterfaceUrl);
+               // String webInterfaceUrl = "http://" + NetworkUtils.getIpAddress() + ":" + CONTENT_SERVER_PORT + "/index.html";
+                URI presentationURI = URI.create(Constants.getPresentationUrl());
            // }
             return new DeviceDetails(
                     null,
-                    friendlyName,
+                    Constants.getPresentationName(),
                     MANUFACTURER_DETAILS,
                     modelDetails,
                     serialNumber,
