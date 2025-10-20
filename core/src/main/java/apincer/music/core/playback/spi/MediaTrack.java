@@ -36,4 +36,8 @@ public interface MediaTrack {
     String getFileType();
 
     String getYear();
+
+    boolean isMusicManaged();
+
+    double getDynamicRangeScore();
 }

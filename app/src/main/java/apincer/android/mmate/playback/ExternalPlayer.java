@@ -90,6 +90,11 @@ public class ExternalPlayer implements PlaybackTarget {
         return description;
     }
 
+    @Override
+    public boolean canReadSate() {
+        return true;
+    }
+
     public MediaController getMediaController() {
         return mediaController;
     }

@@ -104,7 +104,7 @@ public class NettyContentServerImpl extends BaseServer implements ContentServer 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z");
 
     public NettyContentServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
-        super(context);
+        super(context, fileRepos, tagRepos);
         this.context = context;
         this.serverPort = CONTENT_SERVER_PORT;
         this.repos = tagRepos;

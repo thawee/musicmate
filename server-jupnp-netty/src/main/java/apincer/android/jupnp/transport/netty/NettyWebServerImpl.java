@@ -31,7 +31,6 @@ import apincer.android.utils.FileUtils;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.WebSocketContent;
 import apincer.music.core.server.spi.ContentServer;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MimeTypeUtils;
@@ -112,7 +111,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
    // DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z");
 
     public NettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
-        super(context);
+        super(context, fileRepos, tagRepos);
         this.context = context;
         this.serverPort = WEB_SERVER_PORT;
         this.fileRepos = fileRepos;
@@ -545,7 +544,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
 
         private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
         private final Gson gson = new Gson();
-        private final WebSocketContent webSocketContent = buildWebSocketContent(tagRepos);
+        private final WebSocketContent webSocketContent = buildWebSocketContent();
 
         @Override
         public void handlerAdded(ChannelHandlerContext ctx) {

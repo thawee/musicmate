@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import apincer.android.mmate.service.PlaybackServiceImpl;
+import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.utils.MusicMateExecutors;
@@ -136,7 +136,7 @@ public class FileOperationTask {
 
     private static void skipToNext(Context context, MusicTag tag) {
         // Create an Intent for the service
-        Intent intent = new Intent(context, PlaybackServiceImpl.class);
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
 
         // Set the action and put the data as an extra
         intent.setAction(PlaybackService.ACTION_SKIP_TO_NEXT);

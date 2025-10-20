@@ -45,8 +45,8 @@ public class NioServerModule {
 
     @Provides
     @Singleton
-    public UpnpServer provideUpnpServer(@ApplicationContext Context context) {
-        return new NioUPnpServerImpl(context);
+    public UpnpServer provideUpnpServer(@ApplicationContext Context context, FileRepository fileRepos, TagRepository tagRepos) {
+        return new NioUPnpServerImpl(context,fileRepos, tagRepos);
     }
 
     @Provides

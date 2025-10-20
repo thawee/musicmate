@@ -12,6 +12,8 @@ import java.net.URI;
 import java.util.*;
 
 import apincer.music.core.http.NioHttpServer;
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.UpnpServer;
 
@@ -109,8 +111,8 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
     private Thread serverThread;
 
     // Simplified constructor for pure Java environment
-    public NioUPnpServerImpl(Context context) {
-        super(context);
+    public NioUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+        super(context, fileRepos, tagRepos);
        // this.configuration = configuration;
         addLibInfo("java.nio", "");
     }

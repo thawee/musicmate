@@ -57,7 +57,7 @@ import javax.inject.Inject;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
-import apincer.android.mmate.service.PlaybackServiceImpl;
+import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -130,8 +130,8 @@ public class TagsActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             // Get the binder from the service and set the mediaServerService instance
-            PlaybackServiceImpl.PlaybackServiceBinder binder = (PlaybackServiceImpl.PlaybackServiceBinder) service;
-            playbackService = binder.getService();
+            MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
+            playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
         }
 
@@ -237,7 +237,7 @@ public class TagsActivity extends AppCompatActivity {
         setupPageViewer();
 
         // Bind to the MediaServerService as soon as this service is created
-        Intent intent = new Intent(this, PlaybackServiceImpl.class);
+        Intent intent = new Intent(this, MusicMateServiceImpl.class);
         bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 

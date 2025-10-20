@@ -25,7 +25,7 @@ import java.util.List;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.playback.ExternalPlayer;
-import apincer.android.mmate.service.PlaybackServiceImpl;
+import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -45,7 +45,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     public void onStart() {
         super.onStart();
         // Bind to the service in onStart, which is a good place to handle resources that should be active when the fragment is visible
-        Intent intent = new Intent(getContext(), PlaybackServiceImpl.class);
+        Intent intent = new Intent(getContext(), MusicMateServiceImpl.class);
         getContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -138,7 +138,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            PlaybackServiceImpl.PlaybackServiceBinder binder = (PlaybackServiceImpl.PlaybackServiceBinder) service;
+            MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
             playbackService = binder.getService();
             isPlaybackServiceBound = true;
 

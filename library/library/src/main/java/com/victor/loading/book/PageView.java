@@ -7,6 +7,8 @@ import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
 
+import androidx.core.content.res.ResourcesCompat;
+
 import apincer.android.library.R;
 
 
@@ -62,7 +64,7 @@ public class PageView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        paint.setColor(getResources().getColor(R.color.book_loading_book));
+        paint.setColor(ResourcesCompat.getColor(getResources(), R.color.book_loading_book, getContext().getTheme()));
         paint.setStyle(Paint.Style.STROKE);
         float offset = border / 4;
         path.moveTo(width / 2, padding + offset);
@@ -71,7 +73,7 @@ public class PageView extends View {
         path.lineTo(width / 2, height - padding - offset);
         canvas.drawPath(path, paint);
 
-        paint.setColor(getResources().getColor(R.color.book_loading_page));
+        paint.setColor(ResourcesCompat.getColor(getResources(), R.color.book_loading_page, getContext().getTheme()));
         paint.setStyle(Paint.Style.FILL);
 
         offset = border / 2;

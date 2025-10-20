@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.android.utils.FileUtils;
@@ -49,8 +50,8 @@ import okio.Path;
 
 public class CoverartFetcher implements Fetcher {
     Context context;
-    MusicTag musicTag;
-    public CoverartFetcher(Context context, MusicTag musicTag) {
+    MediaTrack musicTag;
+    public CoverartFetcher(Context context, MediaTrack musicTag) {
         this.context = context;
         this.musicTag = musicTag;
     }
@@ -75,15 +76,14 @@ public class CoverartFetcher implements Fetcher {
     @Override
     public FetchResult fetch(@NonNull Continuation<? super FetchResult> continuation) {
         File covertFile = FileRepository.getCoverArt(context, musicTag);
-        String key = musicTag.getAlbumCoverUniqueKey();
-        //if(covertFile == null) {
-            // FIXME: should remove, cover already extracted during scan
-        //    covertFile = FileRepository.extractCoverArt(context, musicTag);
-        //}
         if(covertFile != null) {
-            Path imagePath = Path.get(covertFile);
-
-            ImageSource source = new FileImageSource(imagePath, FileSystem.SYSTEM, key, null, null);
+            // Path imagePath = Path.get(covertFile);
+            ImageSource source = new FileImageSource(
+                    Path.get(covertFile),
+                    FileSystem.SYSTEM,
+                    musicTag.getAlbumCoverUniqueKey(),
+                    null,
+                    null);
 
             return new SourceFetchResult(
                     source,
@@ -113,12 +113,15 @@ public class CoverartFetcher implements Fetcher {
         }
     }
 
-    public static ImageRequest.Builder builder(Context context, MusicTag tag) {
+    public static ImageRequest.Builder builder(Context context, MediaTrack tag) {
         ImageRequest.Builder builder = new ImageRequest.Builder(context);
-        builder.fetcherFactory(new Factory(context), new KClassMusicTag());
-        if(tag != null && !tag.isMusicManaged()) {
-            builder.diskCachePolicy(CachePolicy.DISABLED); // Disable disk caching
-            builder.memoryCachePolicy(CachePolicy.DISABLED); // Disable memory caching
+        if(tag != null) {
+            builder.diskCacheKey(tag.getAlbumCoverUniqueKey());
+            builder.fetcherFactory(new Factory(context), new KClassMusicTag());
+            if (!tag.isMusicManaged()) {
+                builder.diskCachePolicy(CachePolicy.DISABLED); // Disable disk caching
+                builder.memoryCachePolicy(CachePolicy.DISABLED); // Disable memory caching
+            }
         }
         return builder;
     }

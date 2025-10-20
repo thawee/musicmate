@@ -13,11 +13,11 @@ public interface PlaybackService {
     String ACTION_PLAY_NEXT = "apincer.android.mmate.playback.ACTION_PLAY_NEXT";
    // String ACTION_SET_DLNA_PLAYER = "apincer.android.mmate.playback.ACTION_SET_DLNA_PLAYER";
     String EXTRA_MUSIC_ID = "EXTRA_MUSIC_ID";
-   // String EXTRA_UDN = "EXTRA_UDN";
 
-    void stop();
 
-    void setShuffleMode(boolean enabled);
+ void stopPlaying();
+
+ void setShuffleMode(boolean enabled);
 
     void setRepeatMode(String mode);
 

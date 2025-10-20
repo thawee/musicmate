@@ -11,7 +11,7 @@ import com.balsikandar.crashreporter.ui.ExceptionLogFragment;
 /**
  * Created by bali on 11/08/17.
  */
-
+@Deprecated
 public class MainPagerAdapter extends FragmentPagerAdapter {
 
     private CrashLogFragment crashLogFragment;
@@ -19,7 +19,8 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
     private final String[] titles;
 
     public MainPagerAdapter(FragmentManager fm, String[] titles) {
-        super(fm);
+        // Pass the behavior flag to the super constructor
+        super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         this.titles = titles;
     }
 

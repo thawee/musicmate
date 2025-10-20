@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.UpnpServer;
 import io.netty.bootstrap.ServerBootstrap;
@@ -77,8 +79,8 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     private Router router;
 
-    public NettyUPnpServerImpl(Context context)  {
-        super(context);
+    public NettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos)  {
+        super(context, fileRepos, tagRepos);
 
         addLibInfo("Netty", "4.2.6");
 

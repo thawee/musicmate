@@ -17,10 +17,14 @@ public interface MediaServerHub {
         RUNNING,
         STOPPED,
         STARTING,
-        ERROR
+        ERROR;
+
+        public boolean isOnline() {
+            return this == RUNNING;
+        }
     }
 
-    void activatePlayer(String udn, Callback callback);
+    boolean activatePlayer(String udn, Callback callback);
 
     void deactivatePlayer(String udn);
 
@@ -49,10 +53,6 @@ public interface MediaServerHub {
         public Callback() {
         }
 
-        public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
-            throw new RuntimeException("Stub!");
-        }
-
         public void onMediaTrackChanged(MediaTrack metadata) {
             throw new RuntimeException("Stub!");
         }
@@ -62,14 +62,6 @@ public interface MediaServerHub {
         }
 
         public void onPlaybackStateTimeElapsedSeconds(long elapsedSeconds) {
-            throw new RuntimeException("Stub!");
-        }
-
-        public void onPlaybackTargetAdded(PlaybackTarget player) {
-            throw new RuntimeException("Stub!");
-        }
-
-        public void onPlaybackTargetRevoved(String targetId) {
             throw new RuntimeException("Stub!");
         }
     }

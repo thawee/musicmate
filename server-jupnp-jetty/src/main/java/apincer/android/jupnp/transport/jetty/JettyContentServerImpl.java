@@ -51,7 +51,6 @@ import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.WebSocketContent;
 import apincer.music.core.server.spi.ContentServer;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
@@ -78,13 +77,8 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     private Thread serverThread;
     private Server server;
 
-    private final TagRepository tagRepos;
-    private final FileRepository fileRepos;
-
     public JettyContentServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
-        super(context);
-        this.tagRepos = tagRepos;
-        this.fileRepos = fileRepos;
+        super(context, fileRepos, tagRepos);
         addLibInfo("Jetty", "12.1.2");
     }
 
@@ -314,7 +308,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
         private File getAlbumArt(Request request, String requestUri) {
             String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf(".png"));
-            return fileRepos.getCoverArt(albumUniqueKey);
+            return getFileRepos().getCoverArt(albumUniqueKey);
         }
 
         private MusicTag getSong(Request request, String uri) {
@@ -327,7 +321,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 String[] parts = pathPart.split("/");
                 if (parts.length > 0 && !parts[0].isEmpty()) {
                     long contentId = StringUtils.toLong(parts[0]);
-                    return tagRepos.findById(contentId);
+                    return getTagRepos().findById(contentId);
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "Failed to parse content ID from URI: " + uri, ex);
@@ -381,7 +375,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 .disableHtmlEscaping() // Reduces string processing
                 .serializeNulls() // Optional: skip nulls to reduce JSON size
                 .create();
-        private final WebSocketContent wsContent = buildWebSocketContent(tagRepos);
+        private final WebSocketContent wsContent = buildWebSocketContent();
 
         public WebSocketHandler() {
             subscribePlaybackState(playbackState -> broadcastPlaybackState(playbackState));

@@ -903,11 +903,6 @@ public class UIUtils  {
         vStoragesLayout.setVisibility(View.VISIBLE);
     }
 
-    public static float sp2px(Application application, float spValue) {
-        final float scale = application.getResources().getDisplayMetrics().scaledDensity;
-        return spValue * scale;
-    }
-
     private static void setTextViewShading(TextView view, float percentage) {
         int[] colors = {Color.WHITE, Color.WHITE, Color.GREEN, Color.GREEN};
         float floatPerc = percentage / 100;

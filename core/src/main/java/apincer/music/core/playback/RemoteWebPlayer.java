@@ -1,6 +1,7 @@
 package apincer.music.core.playback;
 
 import apincer.music.core.playback.spi.PlaybackTarget;
+import apincer.music.core.utils.PlayerNameUtils;
 
 public class RemoteWebPlayer implements PlaybackTarget {
 
@@ -10,7 +11,7 @@ public class RemoteWebPlayer implements PlaybackTarget {
 
     private RemoteWebPlayer(String targetId, String userAgent, String location) {
         this.targetId = targetId;
-        this.displayName = userAgent;
+        this.displayName = PlayerNameUtils.getFriendlyNameFromUserAgent(userAgent);
         this.location = location;
     }
 
@@ -32,6 +33,11 @@ public class RemoteWebPlayer implements PlaybackTarget {
     @Override
     public String getDescription() {
         return location;
+    }
+
+    @Override
+    public boolean canReadSate() {
+        return false;
     }
 
     public static class Factory {

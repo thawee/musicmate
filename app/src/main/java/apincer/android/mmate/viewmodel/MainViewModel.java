@@ -74,22 +74,4 @@ public class MainViewModel extends ViewModel {
     public FileRepository getFileRepository() {
         return fileRepos;
     }
-
-    /*
-    public static class MusicViewModelFactory implements ViewModelProvider.Factory {
-        private final Application application;
-
-        public MusicViewModelFactory(Application application) {
-            this.application = application;
-        }
-
-        @NonNull
-        @Override
-        public <T extends ViewModel> T create(Class<T> modelClass) {
-            if (modelClass.isAssignableFrom(MainViewModel.class)) {
-                return (T) new MainViewModel(application);
-            }
-            throw new IllegalArgumentException("Unknown ViewModel class");
-        }
-    } */
 }

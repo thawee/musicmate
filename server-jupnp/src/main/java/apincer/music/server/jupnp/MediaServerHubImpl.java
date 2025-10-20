@@ -112,36 +112,14 @@ public class MediaServerHubImpl implements MediaServerHub {
     private ScheduledFuture<?> transportInfoHandle;
     private final AtomicBoolean isPolling = new AtomicBoolean(false);
 
-   // private PlaybackService playbackService;
-   // private boolean isPlaybackServiceBound;
-
-    /*
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @SuppressLint("CheckResult")
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            // Get the binder from the service and set the mediaServerService instance
-            PlaybackServiceBinder binder = (PlaybackServiceBinder) service;
-            playbackService = binder.getService();
-            isPlaybackServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            isPlaybackServiceBound = false;
-            playbackService = null;
-        }
-    }; */
+    //active player to be monitor
+    private String activePlayerTargetId;
 
     public MediaServerHubImpl(Context context, UpnpServiceConfiguration upnpServiceCfg, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context;
         this.upnpServiceCfg = upnpServiceCfg;
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
-
-       // Intent intent = new Intent();
-       // intent.setComponent(new ComponentName("apincer.android.mmate", "apincer.android.mmate.service.PlaybackServiceImpl"));
-       // context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -157,28 +135,61 @@ public class MediaServerHubImpl implements MediaServerHub {
         return initialized;
     }
 
+    /**
+     * Activates and begins monitoring a specific UPnP/DLNA media renderer.
+     * <p>
+     * This method is the primary entry point for selecting a player. It validates the
+     * target device, sets it as the active player for the service, and initiates
+     * background polling to keep its state synchronized.
+     * <p>
+     * <b>Important:</b> This method will only succeed for players that are discoverable,
+     * support streaming, and explicitly allow their state to be read (as determined
+     * by {@code player.canReadSate()}).
+     * <p>
+     * Upon successful activation, it immediately dispatches an asynchronous request to
+     * fetch the currently playing track information. The result of this fetch is
+     * delivered via the provided {@link Callback}.
+     *
+     * @param udn The Unique Device Name (UDN) of the target media renderer. This
+     * identifier is used to look up the device in the UPnP registry.
+     * @param callback A callback interface to deliver results asynchronously. It will
+     * be invoked with the initial media track information and any
+     * subsequent changes discovered via polling.
+     * @return {@code true} if the activation process was successfully <b>initiated</b>.
+     * This does not guarantee that track information will be received, only
+     * that the request was sent. Returns {@code false} if the player could
+     * not be found, is invalid, the service is not initialized, or the
+     * activation command failed.
+     */
     @Override
-    public void activatePlayer(String udn, Callback callback) {
+    public boolean activatePlayer(String udn, Callback callback) {
         this.callback = callback;
         //auto resolve udn if, not found in registry
-        udn = resolveRendererUdn(udn);
+        PlaybackTarget player = resolveRenderer(udn);
+        if(player == null) {
+            return false;
+        }
+        if(player.canReadSate()) {
+            Log.d(TAG, "active dlna player: "+ player.getTargetId()+" - "+player.getDisplayName());
+            activePlayerTargetId = player.getTargetId();
+        }
 
-        if(!initialized) return;
+        if(!initialized) return false;
 
         // polling state from remote device
         stopPolling();
-        startPolling(udn);
+        startPolling();
 
         // read state from remote device after active
         try {
-            Device device = upnpService.getRegistry().getDevice(new UDN(udn), false);
+            Device device = upnpService.getRegistry().getDevice(new UDN(activePlayerTargetId), false);
             if (device == null) {
-                return;
+                return false;
             }
 
             Service avTransportService = findServiceRecursively(device, AV_TRANSPORT_TYPE);
             if (avTransportService == null) {
-                return;
+                return false;
             }
             upnpService.getControlPoint().execute(new GetMediaInfo(avTransportService) {
                 @Override
@@ -207,28 +218,26 @@ public class MediaServerHubImpl implements MediaServerHub {
                     if (callback != null) {
                         callback.onMediaTrackChanged(song);
                     }
-                    //playbackService.notifyNewTrackPlaying(song);
                 }
 
                 @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
                 }
             });
+            return true;
         } catch (Exception ignore) {
             ignore.printStackTrace();
         }
+        return false;
     }
 
-    private String resolveRendererUdn(String udn) {
-        Device device = upnpService.getRegistry().getDevice(new UDN(udn), false);
-        if (device == null) {
-            for(PlaybackTarget dev: availableTargets) {
-                if(dev.getDescription().equals(dev.getDescription())) {
-                    return dev.getTargetId();
-                }
+    private PlaybackTarget resolveRenderer(String udn) {
+        for(PlaybackTarget dev: availableTargets) {
+            if(udn.equals(dev.getTargetId()) || udn.equals(dev.getDescription())) {
+                return dev;
             }
         }
-        return udn;
+        return null;
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
@@ -310,6 +319,8 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     private void shutdown() {
+        stopPolling();
+
         try {
             // Send byebye notification before shutting down
             if (mediaServerDevice != null && upnpService != null) {
@@ -345,15 +356,8 @@ public class MediaServerHubImpl implements MediaServerHub {
             Log.i(TAG, TAG+" - Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
 
             if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
-               /* if(playbackService!= null) {
-                    PlaybackTarget player = DMCAPlayer.Factory.create(context, MediaServerHubImpl.this, device);
-                    playbackService.getAvailablePlaybackTargets().add(player);
-                } */
                 PlaybackTarget player = DMCAPlayer.Factory.create(device);
                 availableTargets.add(player);
-                if(callback != null) {
-                    callback.onPlaybackTargetAdded(player);
-                }
             }
         }
 
@@ -368,9 +372,6 @@ public class MediaServerHubImpl implements MediaServerHub {
 
             // Use removeIf to find and remove the item by its ID
             availableTargets.removeIf(target -> target.getTargetId().equals(targetId));
-            if(callback != null) {
-                callback.onPlaybackTargetRevoved(targetId);
-            }
         }
 
         @Override
@@ -499,7 +500,7 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     @Override
     public void deactivatePlayer(String udn) {
-        stopPolling();
+        // do nothing here, the stop previous polling should be done on activation steps.
     }
 
     private String getWebEngineName() {
@@ -535,14 +536,16 @@ public class MediaServerHubImpl implements MediaServerHub {
     }
 
     @Override
-    public void playSong(String rendererUdn, MediaTrack song) {
+    public void playSong(String udn, MediaTrack song) {
         //auto resolve udn if, not found in registry
-        rendererUdn = resolveRendererUdn(rendererUdn);
+       // PlaybackTarget player = resolveRenderer(rendererUdn);
+       // if(player == null) return;
 
+        activatePlayer(udn, callback);
         // Step 1: Find the target device (renderer) by its UDN
-        Device device = upnpService.getRegistry().getDevice(new UDN(rendererUdn), false);
+        Device device = upnpService.getRegistry().getDevice(new UDN(activePlayerTargetId), false);
         if (device == null) {
-            Log.i(TAG, TAG+" - Renderer with UDN " + rendererUdn + " not found.");
+            Log.i(TAG, TAG+" - Renderer with UDN " + activePlayerTargetId + " not found.");
             return;
         }
 
@@ -552,9 +555,6 @@ public class MediaServerHubImpl implements MediaServerHub {
             Log.i(TAG, TAG+" - Renderer does not have an AVTransport service.");
             return;
         }
-
-        //
-        stopPolling();
 
         // --- Create the URL for the song ---
         // This URL must point to your app's internal HTTP server.
@@ -567,7 +567,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Step 3: Set the song URL on the renderer
         // This is an asynchronous action, so we use a callback.
         ControlPoint controlPoint = upnpService.getControlPoint();
-        String finalRendererUdn = rendererUdn;
+        String finalRendererUdn = activePlayerTargetId;
         controlPoint.execute(new SetAVTransportURI(avTransportService, songUrl, metadata) {
             @Override
             public void success(ActionInvocation invocation) {
@@ -578,9 +578,9 @@ public class MediaServerHubImpl implements MediaServerHub {
                     @Override
                     public void success(ActionInvocation invocation) {
                         // System.out.println("Play command successful.");
+                        stopPolling();
                         startPlaying(finalRendererUdn);
-                        activatePlayer(finalRendererUdn, callback);
-                        startPolling(finalRendererUdn);
+                        startPolling();
                     }
 
                     @Override
@@ -646,15 +646,17 @@ public class MediaServerHubImpl implements MediaServerHub {
 
     /**
      * Starts polling the renderer for status and position updates.
-     * @param rendererUdn The UDN of the renderer to poll.
      */
-    private void startPolling(String rendererUdn) {
+    private void startPolling() {
+        if (activePlayerTargetId == null) return;
+
         int maxFails = 5;
         if (isPolling.compareAndSet(false, true)) {
+            Log.i(TAG, TAG+" - Polling position info start: " + activePlayerTargetId);
             scheduler = Executors.newScheduledThreadPool(2); // One thread for each task
             final AtomicInteger count = new AtomicInteger();
             // Task to get the current time position, polling every 3 seconds
-            final Runnable positionInfoPoller = () -> getPositionInfo(rendererUdn, new PositionInfoCallback() {
+            final Runnable positionInfoPoller = () -> getPositionInfo(activePlayerTargetId, new PositionInfoCallback() {
                 @Override
                 public void onReceived(PositionInfo positionInfo) {
                     count.set(0);
@@ -666,18 +668,18 @@ public class MediaServerHubImpl implements MediaServerHub {
 
                 @Override
                 public void onFailure(String message) {
-                    Log.i(TAG, TAG+" - Polling position info failed: " + message);
+                    Log.d(TAG, TAG+" - Polling position info failed: " + message);
                     int cnt = count.incrementAndGet();
                     if(cnt > maxFails) {
                         stopPolling();
-                        Log.i(TAG, TAG+" - Maximum polling failed: stop polling.");
+                        Log.d(TAG, TAG+" - Maximum polling failed: stop polling.");
                     }
                 }
             });
 
             positionInfoHandle = scheduler.scheduleWithFixedDelay(positionInfoPoller, 0, 2, TimeUnit.SECONDS);
         } else {
-            Log.i(TAG, TAG+" - Polling is already active.");
+            Log.d(TAG, TAG+" - Polling is already active.");
         }
     }
 

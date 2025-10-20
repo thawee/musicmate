@@ -25,6 +25,7 @@ import apincer.music.core.Constants;
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.codec.TagWriter;
+import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.utils.TagUtils;
@@ -44,7 +45,7 @@ public class FileRepository {
     private final String STORAGE_SECONDARY;
     private final ExecutorService coverArtExecutor = Executors.newSingleThreadExecutor();
 
-    public static File getCoverArt(Context context, MusicTag music) {
+    public static File getCoverArt(Context context, MediaTrack music) {
         File cover = getFolderCoverArt(music.getPath());
         if(cover == null) {
             String coverFile = COVER_ARTS +music.getAlbumCoverUniqueKey()+".png";
@@ -55,9 +56,6 @@ public class FileRepository {
         return cover;
     }
 
-   /* public static FileRepository newInstance(Context application) {
-        return new FileRepository(application);
-    } */
 
     public File extractCoverArt(MusicTag tag) {
         try {
@@ -140,7 +138,9 @@ public class FileRepository {
             if(!cover.exists()) {
                 // try to to get folder cover art
                 MusicTag song = tagRepos.getByAlbumCoverUniqueKey(albumCoverUniqueKey);
-                return getFolderCoverArt(song.getPath());
+                if(song != null) {
+                    return getFolderCoverArt(song.getPath());
+                }
             }
         return cover;
     }

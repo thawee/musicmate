@@ -95,7 +95,7 @@ import javax.inject.Inject;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.Settings;
-import apincer.android.mmate.service.PlaybackServiceImpl;
+import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.android.mmate.utils.PermissionUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
@@ -197,8 +197,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             // Get the binder from the service and set the mediaServerService instance
-            PlaybackServiceImpl.PlaybackServiceBinder binder = (PlaybackServiceImpl.PlaybackServiceBinder) service;
-            playbackService = binder.getService();
+            MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) service;
+            playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
             adapter.setPlaybackService(playbackService);
             playbackService.subscribePlaybackState(playbackState -> setNowPlaying(playbackService.getNowPlayingSong()));
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
       //  MusixMateApp.getInstance().startMusicScan();
 
         // Bind to the MediaServerService as soon as this service is created
-        Intent intent = new Intent(this, PlaybackServiceImpl.class);
+        Intent intent = new Intent(this, MusicMateServiceImpl.class);
         bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 

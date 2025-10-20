@@ -1,5 +1,7 @@
 package apincer.music.core.http;
 
+import androidx.annotation.NonNull;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -529,8 +531,7 @@ public class NioHttpServer implements Runnable {
             int activeFileStreams = 0;
 
             for (SelectionKey key : selector.keys()) {
-                if (key.isValid() && key.attachment() instanceof ConnectionAttachment) {
-                    ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
+                if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
 
                     // Track memory usage
                     if (attachment.requestData != null) {
@@ -571,8 +572,7 @@ public class NioHttpServer implements Runnable {
         ResponseTask task;
         while ((task = responseQueue.poll()) != null) {
             SelectionKey key = task.key;
-            if (key.isValid() && key.attachment() instanceof ConnectionAttachment) {
-                ConnectionAttachment attachment = (ConnectionAttachment) key.attachment();
+            if (key.isValid() && key.attachment() instanceof ConnectionAttachment attachment) {
                 attachment.response = task.response;
                 attachment.wsHandler = task.wsHandler; // Carry over the handler for handshake
                 key.interestOps(SelectionKey.OP_WRITE);
@@ -1259,7 +1259,7 @@ public class NioHttpServer implements Runnable {
             // Parse Range header if present
             String rangeHeader = request.getHeader("range", "");
             boolean rangeValid = true;
-            if (!rangeHeader.isEmpty() && rangeHeader.startsWith("bytes=")) {
+            if (rangeHeader.startsWith("bytes=")) {
                 // Check If-Range first
                 String ifRange = request.getHeader("if-range", null);
                 if (ifRange != null) {
@@ -1384,7 +1384,7 @@ public class NioHttpServer implements Runnable {
             }
 
             // Stream file data using efficient zero-copy transfer
-            if (headersSent && fileChannel != null && fileChannel.isOpen() && bytesSent < rangeLength) {
+            if (fileChannel != null && fileChannel.isOpen() && bytesSent < rangeLength) {
                 long position = rangeStart + bytesSent;
                 long remaining = rangeLength - bytesSent;
 
@@ -1833,7 +1833,7 @@ public class NioHttpServer implements Runnable {
         }
 
         @Override
-        public synchronized void write(byte[] b, int off, int len) {
+        public synchronized void write(@NonNull byte[] b, int off, int len) {
             if (count + len > maxSize) {
                 throw new RuntimeException("Request size exceeds limit: " + maxSize);
             }

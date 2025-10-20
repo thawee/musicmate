@@ -33,7 +33,8 @@ public class MediaServerManager {
     public static final String ACTION_STOP_SERVER = "apincer.android.mmate.action.STOP_SERVER";
 
     private final Context context;
-    private MediaServerHubService mediaServerService;
+
+    private MusicMateServiceImpl service;
     private boolean isBound = false;
 
     // LiveData to report the server's status to the UI
@@ -59,19 +60,19 @@ public class MediaServerManager {
         /**
          * Called by the Android system when the connection to the service has been established.
          * @param name The component name of the service that has been connected.
-         * @param service The IBinder of the service, which we can use to get the service instance.
+         * @param serviceBinder The IBinder of the service, which we can use to get the service instance.
          */
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
+        public void onServiceConnected(ComponentName name, IBinder serviceBinder) {
             Log.d(TAG, "Service connected");
             // We've bound to MediaServerHubService, cast the IBinder and get the instance.
-            MediaServerHubService.MediaServerHubBinder binder = (MediaServerHubService.MediaServerHubBinder) service;
-            mediaServerService = binder.getService();
+            MusicMateServiceImpl.MusicMateServiceImplBinder binder = (MusicMateServiceImpl.MusicMateServiceImplBinder) serviceBinder;
+            service = binder.getService();
             isBound = true;
 
             // CRITICAL: Once connected, start observing the LiveData from the service.
             // This ensures the manager always reflects the service's true state.
-            serviceStatusLiveData = mediaServerService.getStatusLiveData();
+            serviceStatusLiveData = service.getStatusLiveData();
             serviceStatusLiveData.observeForever(statusObserver);
         }
 
@@ -82,7 +83,7 @@ public class MediaServerManager {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.w(TAG, "Service disconnected unexpectedly");
-            mediaServerService = null;
+            service = null;
             isBound = false;
             serverStatusLiveData.postValue(MediaServerHub.ServerStatus.STOPPED);
         }
@@ -99,7 +100,7 @@ public class MediaServerManager {
         }
 
         Log.d(TAG, "Binding to MediaServerService...");
-        Intent intent = new Intent(context, MediaServerHubService.class);
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
         // BIND_AUTO_CREATE will create the service if it's not already running.
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
@@ -117,16 +118,16 @@ public class MediaServerManager {
             }
             context.unbindService(serviceConnection);
             isBound = false;
-            mediaServerService = null;
+            service = null;
         }
     }
 
     // --- Service Control Methods ---
 
     public void startServer() {
-        Log.d(TAG, "Requesting to start MediaServerService");
+        Log.d(TAG, "Requesting to start MusicMateServiceBinder");
         serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STARTING);
-        Intent intent = new Intent(context, MediaServerHubService.class);
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
         intent.setAction(ACTION_START_SERVER);
         context.startForegroundService(intent);
     }
@@ -134,7 +135,7 @@ public class MediaServerManager {
     public void stopServer() {
         Log.d(TAG, "Requesting to stop MediaServerService");
         serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STOPPED);
-        Intent intent = new Intent(context, MediaServerHubService.class);
+        Intent intent = new Intent(context, MusicMateServiceImpl.class);
         intent.setAction(ACTION_STOP_SERVER);
         context.startService(intent);
     }
@@ -148,8 +149,8 @@ public class MediaServerManager {
     }
 
     public String getLibraryName() {
-        if (isBound && mediaServerService != null) {
-            return mediaServerService.getLibraryName();
+        if (isBound && service != null) {
+            return service.getLibraryName();
         }
         return " - "; // Default
     }

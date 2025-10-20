@@ -46,13 +46,8 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
     private NioHttpServer server;
     private WebSocketHandlerImpl wsHandler;
 
-    private final TagRepository tagRepos;
-    private final FileRepository fileRepos;
-
     public NioContentServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
-        super(context);
-        this.fileRepos = fileRepos;
-        this.tagRepos =tagRepos;
+        super(context, fileRepos, tagRepos);
         addLibInfo("NioHttpServer", "2.1");
     }
 
@@ -157,7 +152,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
 
     private File getAlbumArt(String requestUri) {
         String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf(".png"));
-        return fileRepos.getCoverArt(albumUniqueKey);
+        return getFileRepos().getCoverArt(albumUniqueKey);
     }
 
     private MusicTag getSong(String uri) {
@@ -173,7 +168,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             if (parts.length > 0 && !parts[0].isEmpty()) {
                 long contentId = StringUtils.toLong(parts[0]);
                 if (contentId > 0) { // Add validation
-                    return tagRepos.findById(contentId);
+                    return getTagRepos().findById(contentId);
                 }
             }
         } catch (Exception ex) {
@@ -236,7 +231,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 .disableHtmlEscaping() // Reduces string processing
                 .serializeNulls() // Optional: skip nulls to reduce JSON size
                 .create();
-        private final WebSocketContent webSocketContent = buildWebSocketContent(tagRepos);
+        private final WebSocketContent webSocketContent = buildWebSocketContent();
 
         public WebSocketHandlerImpl() {
             subscribePlaybackState(this::broadcastPlaybackState);
@@ -348,6 +343,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         private void broadcast(String message) {
             sessions.removeIf(NioHttpServer.WebSocketConnection::isClosed); // Clean up closed connections
 
+            Log.d(TAG, TAG+" - Broadcast message: " + message);
             sessions.parallelStream().forEach(session -> {
                 try {
                     if (!session.isClosed()) {
@@ -359,7 +355,6 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                     sessions.remove(session);
                 }
             });
-            Log.d(TAG, TAG+" - Broadcast message: " + message);
         }
 
         public void broadcastPlaybackState(PlaybackState state) {

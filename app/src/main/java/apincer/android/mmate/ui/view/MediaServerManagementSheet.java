@@ -2,6 +2,9 @@ package apincer.android.mmate.ui.view;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+import static apincer.android.mmate.service.MusicMateServiceImpl.OFFLINE_STATUS;
+import static apincer.android.mmate.service.MusicMateServiceImpl.ONLINE_STATUS;
+
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -84,12 +87,10 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
     }
 
     private void observeServerStatus() {
-        //Observe the ViewModel's LiveData ---
         viewModel.getServerStatus().observe(getViewLifecycleOwner(), status -> {
             if (status == null) {
                 status = MediaServerHub.ServerStatus.STOPPED;
             }
-            tvServerStatus.setText(status.name());
 
             boolean isWifiConnected = NetworkUtils.isWifiConnected(requireContext());
 
@@ -100,6 +101,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     tvServerAddress.setVisibility(VISIBLE);
                     qrCodeImage.setVisibility(VISIBLE);
 
+                    tvServerStatus.setText(ONLINE_STATUS);
                     String serverLocation = viewModel.getServerLocationUrl();
                     tvServerAddress.setText(serverLocation);
                     detectWebEngine();
@@ -110,6 +112,8 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     btnStartServer.setEnabled(isWifiConnected); // Only enable start if WiFi is on
                     btnStopServer.setEnabled(false);
                     qrCodeImage.setVisibility(GONE);
+
+                    tvServerStatus.setText(OFFLINE_STATUS);
                     if (!isWifiConnected) {
                         tvServerAddress.setText(R.string.notification_server_not_running);
                         tvServerAddress.setVisibility(VISIBLE);
@@ -122,6 +126,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
                     tvServerAddress.setVisibility(GONE);
                     btnStartServer.setEnabled(false);
                     btnStopServer.setEnabled(false);
+                    tvServerStatus.setText(OFFLINE_STATUS);
                     break;
             }
         });

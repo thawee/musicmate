@@ -33,6 +33,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+import apincer.music.core.repository.FileRepository;
+import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.UpnpServer;
 
@@ -48,8 +50,8 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
     private Server server;
     private Router router;
 
-    public JettyUPnpServerImpl(Context context) {
-        super(context);
+    public JettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+        super(context,fileRepos, tagRepos);
         addLibInfo("Jetty", "12.1.2");
     }
 

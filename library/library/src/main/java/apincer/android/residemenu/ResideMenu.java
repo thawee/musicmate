@@ -15,6 +15,10 @@ import android.view.animation.AnimationUtils;
 import android.widget.*;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -41,6 +45,12 @@ public class ResideMenu extends FrameLayout {
     private View scrollViewMenu;
     private RelativeLayout  leftHeaderHolder;
     private RelativeLayout rightHeaderHolder;
+
+    // Add these as member variables to your custom view class
+    private int originalPaddingLeft;
+    private int originalPaddingTop;
+    private int originalPaddingRight;
+    private int originalPaddingBottom;
 
     /**
      * Current attaching activity.
@@ -82,6 +92,7 @@ public class ResideMenu extends FrameLayout {
 
     public ResideMenu(Context context) {
         super(context);
+        init();
         initViews(context, -1, -1);
     }
 
@@ -93,7 +104,36 @@ public class ResideMenu extends FrameLayout {
     public ResideMenu(Context context, int customLeftMenuId,
                       int customRightMenuId) {
         super(context);
+        init();
         initViews(context, customLeftMenuId, customRightMenuId);
+    }
+
+    private void init() {
+        // 1. Store the initial padding defined in your XML layout
+        originalPaddingLeft = getPaddingLeft();
+        originalPaddingTop = getPaddingTop();
+        originalPaddingRight = getPaddingRight();
+        originalPaddingBottom = getPaddingBottom();
+
+        // 2. This flag tells the system this view will handle insets
+        setFitsSystemWindows(true);
+
+        // 3. This is the new API that replaces fitSystemWindows
+        ViewCompat.setOnApplyWindowInsetsListener(this, (v, windowInsets) -> {
+            // Get the insets for the status bar and navigation bar
+            Insets systemBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            // Apply the original padding PLUS the new system bar insets
+            v.setPadding(
+                    originalPaddingLeft + systemBarInsets.left,
+                    originalPaddingTop + systemBarInsets.top,
+                    originalPaddingRight + systemBarInsets.right,
+                    originalPaddingBottom + systemBarInsets.bottom
+            );
+
+            // Tell the system that we've "consumed" (handled) these insets
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     private void initViews(Context context, int customLeftMenuId,
@@ -148,6 +188,7 @@ public class ResideMenu extends FrameLayout {
         return scrollViewRightMenu;
     }
 
+    /*
     @Override
     @Deprecated
     protected boolean fitSystemWindows(Rect insets) {
@@ -171,7 +212,7 @@ public class ResideMenu extends FrameLayout {
                 bottomPadding);
         insets.left = insets.top = insets.right = insets.bottom = 0;
         return true;
-    }
+    } */
 
     private int getNavigationBarHeight() {
         Resources resources = getResources();
@@ -688,8 +729,9 @@ public class ResideMenu extends FrameLayout {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     protected Menu newMenuInstance(Context context) {
-        try {
+       /* try {
             Class<?> menuBuilderClass = Class.forName("com.android.internal.view.menu.MenuBuilder");
 
             Constructor<?> constructor = menuBuilderClass.getDeclaredConstructor(Context.class);
@@ -698,7 +740,8 @@ public class ResideMenu extends FrameLayout {
 
         } catch (Exception e) {e.printStackTrace();}
 
-        return null;
+        return null; */
+        return new MenuBuilder(context);
     }
 
     public interface OnMenuListener {

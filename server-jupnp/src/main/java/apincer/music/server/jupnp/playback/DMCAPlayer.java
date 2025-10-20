@@ -5,7 +5,6 @@ import org.jupnp.model.meta.RemoteDevice;
 import apincer.music.core.playback.spi.PlaybackTarget;
 
 public class DMCAPlayer implements PlaybackTarget {
-
     private final String udn;
     private final String displayName;
     private final String location;
@@ -34,6 +33,11 @@ public class DMCAPlayer implements PlaybackTarget {
     @Override
     public String getDescription() {
         return location;
+    }
+
+    @Override
+    public boolean canReadSate() {
+        return true;
     }
 
     public static class Factory {

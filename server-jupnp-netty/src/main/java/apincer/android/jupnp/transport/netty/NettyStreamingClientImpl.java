@@ -34,7 +34,8 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -54,6 +55,7 @@ import io.netty.util.CharsetUtil;
 
 public class NettyStreamingClientImpl extends AbstractStreamClient<StreamClientConfigurationImpl, HttpRequest> {
     private static final String TAG = "NettyStreamingClient";
+    private static final int MAX_BODY_SIZE = 1048576; // 1MB
 
     final protected StreamClientConfigurationImpl configuration;
     protected final EventLoopGroup eventLoopGroup;
@@ -67,7 +69,9 @@ public class NettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
         int threads = 5 * cpus;
 
         try {
-            eventLoopGroup = new NioEventLoopGroup(threads);
+            // 1. Create a ThreadFactory so you can name your threads
+            //eventLoopGroup = new NioEventLoopGroup(threads, threadFactory);
+            eventLoopGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
             bootstrap = new Bootstrap();
 
             bootstrap.group(eventLoopGroup)
@@ -98,26 +102,15 @@ public class NettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
             return null;
         }
 
-        HttpMethod method;
-        switch (upnpRequest.getMethod()) {
-            case GET:
-                method = HttpMethod.GET;
-                break;
-            case POST:
-                method = HttpMethod.POST;
-                break;
-            case NOTIFY:
-                method = HttpMethod.valueOf("NOTIFY");
-                break;
-            case SUBSCRIBE:
-                method = HttpMethod.valueOf("SUBSCRIBE");
-                break;
-            case UNSUBSCRIBE:
-                method = HttpMethod.valueOf("UNSUBSCRIBE");
-                break;
-            default:
-                throw new RuntimeException("Unknown HTTP method: " + upnpRequest.getHttpMethodName());
-        }
+        HttpMethod method = switch (upnpRequest.getMethod()) {
+            case GET -> HttpMethod.GET;
+            case POST -> HttpMethod.POST;
+            case NOTIFY -> HttpMethod.valueOf("NOTIFY");
+            case SUBSCRIBE -> HttpMethod.valueOf("SUBSCRIBE");
+            case UNSUBSCRIBE -> HttpMethod.valueOf("UNSUBSCRIBE");
+            default ->
+                    throw new RuntimeException("Unknown HTTP method: " + upnpRequest.getHttpMethodName());
+        };
 
         HttpVersion httpVersion = upnpRequest.getHttpMinorVersion() == 0
                 ? HttpVersion.HTTP_1_0
@@ -210,7 +203,7 @@ public class NettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
                     ChannelPipeline p = ch.pipeline();
                     p.addLast(new ReadTimeoutHandler(getConfiguration().getTimeoutSeconds()));
                     p.addLast(new HttpClientCodec());
-                    p.addLast(new HttpContentDecompressor());
+                    p.addLast(new HttpContentDecompressor(MAX_BODY_SIZE));
                     p.addLast(new HttpObjectAggregator(1048576)); // 1MB max
                     p.addLast(handler);
                 }
@@ -300,7 +293,7 @@ public class NettyStreamingClientImpl extends AbstractStreamClient<StreamClientC
     }
 
     // Handler for HTTP responses
-    private static class HttpClientHandler extends io.netty.channel.SimpleChannelInboundHandler<FullHttpResponse> {
+    protected static class HttpClientHandler extends io.netty.channel.SimpleChannelInboundHandler<FullHttpResponse> {
         private final java.util.concurrent.CompletableFuture<FullHttpResponse> responseFuture = new java.util.concurrent.CompletableFuture<>();
         private Channel channel;
 

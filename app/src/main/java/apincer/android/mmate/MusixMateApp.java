@@ -1,16 +1,11 @@
 package apincer.android.mmate;
 
 import android.app.Application;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.core.app.NotificationCompat;
 import androidx.work.WorkManager;
 
 import com.balsikandar.crashreporter.CrashReporter;
@@ -19,13 +14,11 @@ import com.google.android.material.color.DynamicColors;
 import javax.inject.Inject;
 
 import apincer.android.mmate.service.MediaServerManager;
-import apincer.android.mmate.service.PlaybackServiceImpl;
-import apincer.music.core.NotificationId;
+import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.repository.PlaylistRepository;
-import apincer.android.mmate.ui.MainActivity;
 import apincer.music.core.utils.LogHelper;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import dagger.hilt.android.HiltAndroidApp;
@@ -34,11 +27,6 @@ import sakout.mehdi.StateViews.StateViewsBuilder;
 @HiltAndroidApp
 public class MusixMateApp extends Application {
     private static final String TAG = LogHelper.getTag(MusixMateApp.class);
-
-    public static final String NOTIFICATION_CHANNEL_ID = "MusicMateNotifications";
-    public static final String NOTIFICATION_GROUP_KEY = "MusicMate";
-
-  //  private MediaServerHubService mediaServerService;
 
     @Inject
     FileRepository fileRepos;
@@ -70,7 +58,7 @@ public class MusixMateApp extends Application {
         startMediaServer();
 
         // Call the static method to start the service from a valid context
-        PlaybackServiceImpl.startPlaybackService(this);
+        MusicMateServiceImpl.startService(this);
 
         PlaylistRepository.initPlaylist(this);
 
@@ -111,32 +99,6 @@ public class MusixMateApp extends Application {
             ScanAudioFileWorker.startScan(getApplicationContext());
         } else {
             Log.w(TAG, "Music scan skipped - no directories configured");
-        }
-    }
-
-    @Deprecated
-    public void createGroupNotification() {
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
-                getApplicationContext(), NOTIFICATION_CHANNEL_ID)
-                .setSilent(true)
-                .setGroup(NOTIFICATION_GROUP_KEY)
-                .setGroupSummary(true)
-                .setSmallIcon(R.drawable.ic_notification_default)
-                .setContentTitle("MusicMate")
-                .setContentText("")
-                .setContentIntent(pendingIntent);
-        notificationManager.notify(NotificationId.MAIN.getId(), mBuilder.build());
-    }
-
-    @Deprecated
-    public void cancelGroupNotification() {
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (mNotificationManager.getActiveNotifications().length == 1) {
-            mNotificationManager.cancel(NotificationId.MAIN.getId());
         }
     }
 
