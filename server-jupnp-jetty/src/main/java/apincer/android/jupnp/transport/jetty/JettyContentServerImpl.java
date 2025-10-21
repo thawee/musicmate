@@ -48,12 +48,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.PlaybackState;
+import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackCallback;
+import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.ContentServer;
 import apincer.music.core.utils.MimeTypeUtils;
-import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 
 public class JettyContentServerImpl extends BaseServer implements ContentServer {
@@ -246,13 +248,16 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
             if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
                 // Log.d(TAG, "Processing album art request: " + uri);
-                File filePath = getAlbumArt(request, requestUri);
+                //File filePath = getAlbumArt(request, requestUri);
+                File filePath = getAlbumArt(requestUri);
                 return sendResource(filePath, request, response, callback);
             } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
-                MusicTag song = getSong(request, requestUri);
+               // MusicTag song = getSong(request, requestUri);
+                MusicTag song = getSong(requestUri);
                 return sendSong(song, request, response, callback);
             }else {
-                File filePath = getWebResource(request, requestUri);
+               // File filePath = getWebResource(request, requestUri);
+                File filePath = getWebResource(requestUri);
                 return sendResource(filePath, request, response, callback);
             }
         }
@@ -298,6 +303,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             return true;
         }
 
+        /*
         private File getWebResource(Request request, String requestUri) {
             File filePath = new File(getContext().getFilesDir(), "webui");
             if(requestUri.contains("?")) {
@@ -328,6 +334,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             }
             return null;
         }
+         */
 
         private void prepareResponseHeaders(Response response, File filePath) {
             String mimeType = MimeTypeUtils.getMimeTypeFromPath(filePath.getAbsolutePath());
@@ -378,7 +385,23 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
         private final WebSocketContent wsContent = buildWebSocketContent();
 
         public WebSocketHandler() {
-            subscribePlaybackState(playbackState -> broadcastPlaybackState(playbackState));
+            registerPlaybackCallback(new PlaybackCallback() {
+                @Override
+                public void onMediaTrackChanged(MediaTrack metadata) {
+                  //  broadcastNowPlaying(metadata);
+                }
+
+                @Override
+                public void onPlaybackStateChanged(PlaybackState state) {
+                    broadcastPlaybackState(state);
+                }
+
+                @Override
+                public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
+                   // broadcastPlaybackTarget(playbackTarget);
+                }
+            });
+            //subscribePlaybackState(playbackState -> broadcastPlaybackState(playbackState));
         }
 
         @OnWebSocketOpen

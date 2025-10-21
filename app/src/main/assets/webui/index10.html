@@ -22,6 +22,8 @@
         }
     </script>
     <style>
+        /* ... [Your existing CSS styles remain unchanged] ... */
+
         /* Light Theme Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #e9ecef; }
@@ -53,6 +55,16 @@
         /* Style for the currently playing song in the queue */
         .playing-item { background-color: rgba(59, 130, 246, 0.20); }
         .dark .playing-item { background-color: rgba(59, 130, 246, 0.10); }
+
+        .badge-separator {
+            display: none; /* Hidden by default */
+            margin: 0 6px;
+            color: #9ca3af; /* Muted text color */
+            font-weight: bold;
+        }
+        .dark .badge-separator {
+            color: #6b7280;
+        }
 
         #player-footer.has-color-bg {
             color: #e5e7eb;
@@ -100,10 +112,6 @@
     <div class="bg-gray-200 dark:bg-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0 border-b border-gray-300 dark:border-gray-700">
         <div class="flex items-center space-x-4 flex-grow min-w-0">
             <div id="view-switcher" class="text-xl text-gray-500 dark:text-gray-400 space-x-2 flex-shrink-0">
-                <!--
-                <i id="library-btn" class="bi bi-collection cursor-pointer text-black dark:text-white" title="Library"></i>
-                <i id="queue-btn" class="bi bi-music-note-list cursor-pointer hover:text-black dark:hover:text-white" title="Playing Queue"></i>
-                -->
                 <button id="library-btn" title="Library" class="...[your classes]...">
                     <i class="bi bi-collection"></i>
                 </button>
@@ -205,7 +213,9 @@
 <div id="toast" class="fixed bottom-5 right-5 bg-blue-500 text-white py-2 px-4 rounded-md shadow-lg opacity-0 transition-opacity"></div>
 
 <div id="song-info-screen" class="overlay-screen fixed inset-0 bg-gray-100/95 dark:bg-gray-900/95 backdrop-blur-lg h-full w-full flex items-center justify-center p-4 lg:p-8 z-40 hidden opacity-0">
+
     <button id="close-song-info-btn" class="absolute top-5 right-8 text-4xl text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white z-10">&times;</button>
+
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 max-w-6xl w-full h-full lg:h-auto">
         <div class="lg:col-span-2 flex flex-col items-center justify-center text-center">
             <img id="info-art" src="assets/no_cover.png" class="w-64 h-64 lg:w-80 lg:h-80 object-cover rounded-lg shadow-2xl">
@@ -213,6 +223,7 @@
             <h2 id="info-artist" class="text-xl lg:text-2xl text-blue-600 dark:text-blue-400 mt-1">Artist Name</h2>
             <p id="info-album" class="text-md lg:text-lg text-gray-600 dark:text-gray-400 mt-1">from the album "Album Name"</p>
         </div>
+
         <div class="lg:col-span-3 bg-white/50 dark:bg-black dark:bg-opacity-20 rounded-lg p-6 flex flex-col h-[60vh] lg:h-auto">
             <div class="flex-shrink-0 border-b border-gray-300 dark:border-gray-700">
                 <h3 class="px-3 py-2 font-medium text-black dark:text-white text-lg">Music & Artist Information</h3>
@@ -228,42 +239,68 @@
     </div>
 </div>
 
-<div id="now-playing-screen" class="overlay-screen fixed inset-0 h-full w-full flex items-center justify-center z-50 hidden opacity-0">
+<div id="now-playing-screen" class="overlay-screen fixed inset-0 h-full w-full flex items-center justify-center z-50 hidden opacity-0 p-8">
     <div id="now-playing-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-500"></div>
     <div class="absolute inset-0 bg-black/50 backdrop-blur-xl"></div>
 
     <button id="close-now-playing-btn" class="absolute top-5 right-8 text-4xl text-gray-300 hover:text-white z-20">&times;</button>
 
-    <div class="relative w-full max-w-4xl px-8">
-        <div class="flex items-center space-x-8">
-            <img id="now-playing-art" src="assets/no_cover.png" class="w-64 h-64 md:w-96 md:h-96 rounded-lg shadow-2xl flex-shrink-0">
+    <div class="relative w-full max-w-6xl px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
 
-            <div class="flex flex-col text-white w-full">
-                <div class="flex items-baseline space-x-4">
-                    <h1 id="now-playing-title" class="text-3xl md:text-5xl font-bold truncate">Song Title</h1>
-                    <div id="now-playing-quality-badge" class="flex-shrink-0"></div> </div>
-                <h2 id="now-playing-artist" class="text-xl md:text-2xl text-gray-300 mt-1">Artist Name</h2>
+            <div class="flex-shrink-0 flex justify-center">
+                <img id="now-playing-art" src="assets/no_cover.png" class="w-64 h-64 md:w-96 md:h-96 rounded-lg shadow-2xl">
+            </div>
 
-                <div class="flex items-center space-x-3 text-lg text-gray-400 mt-1">
-                    <p id="now-playing-album" class="truncate hidden">Album Name</p>
-                    <span id="now-playing-year-separator" class="hidden">&bull;</span>
-                    <p id="now-playing-year" class="flex-shrink-0 hidden">Year</p>
+            <div class="flex flex-col text-white w-full h-full">
+                <div>
+                    <div id="now-playing-quality-details" class="font-mono text-sm text-blue-300 mb-2">
+                        <span id="badge-format" class="badge"></span>
+                        <span id="sep-format-rate" class="badge-separator">&bull;</span>
+                        <span id="badge-samplerate" class="badge"></span>
+                        <span id="sep-rate-depth" class="badge-separator">&bull;</span>
+                        <span id="badge-bitdepth" class="badge"></span>
+                        <span id="sep-depth-dr" class="badge-separator">&bull;</span>
+                        <span id="badge-drs" class="badge"></span>
+                        <span id="sep-depth-tier" class="badge-separator">&bull;</span>
+                        <span id="badge-quality-tier" class="badge tier-badge"></span>
+                    </div>
+
+                    <div class="flex items-baseline space-x-4">
+                        <h1 id="now-playing-title" class="text-3xl md:text-5xl font-bold truncate">Song Title</h1>
+                    </div>
+                    <h2 id="now-playing-artist" class="text-xl md:text-2xl text-gray-300 mt-1">Artist Name</h2>
+
+                    <div class="flex items-center space-x-3 text-lg text-gray-400 mt-1">
+                        <p id="now-playing-album" class="truncate hidden">Album Name</p>
+                        <span id="now-playing-year-separator" class="hidden">&bull;</span>
+                        <p id="now-playing-year" class="flex-shrink-0 hidden">Year</p>
+                    </div>
+
+                    <p id="now-playing-renderer" class="text-md text-gray-400 mt-2 flex items-center"></p>
+
+                    <div class="mt-6 w-full">
+                        <canvas id="waveform-canvas" class="w-full h-16"></canvas>
+                    </div>
+
+                    <div class="flex justify-between text-sm font-mono text-gray-400 mt-1">
+                        <span id="now-playing-time-current">0:00</span>
+                        <span id="now-playing-time-duration">0:00</span>
+                    </div>
                 </div>
 
-                <div class="mt-6 w-full">
-                    <canvas id="waveform-canvas" class="w-full h-16"></canvas>
+                <div id="now-playing-metadata" class="mt-8 pt-6 border-t border-white/20 text-gray-300 text-sm overflow-y-auto max-h-[30vh]">
+                    <div id="metadata-loading-spinner" class="hidden text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-300 mx-auto"></div>
+                    </div>
+                    <div id="now-playing-metadata-content">
+                    </div>
                 </div>
 
-                <div class="flex justify-between text-sm font-mono text-gray-400 mt-1">
-                    <span id="now-playing-time-current">0:00</span>
-                    <span id="now-playing-time-duration">0:00</span>
-                </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- MODAL FOR CONFIRMATION -->
 <div id="confirmation-modal" class="overlay-screen fixed inset-0 bg-gray-900/60 backdrop-blur-sm h-full w-full flex items-center justify-center z-50 hidden opacity-0">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4">
         <div class="p-6">
@@ -313,12 +350,13 @@
         // --- CONFIG & STATE ---
         let currentMainView = 'library';
         let currentDisplayMode = 'grid';
-        let currentTrack = null;
         let currentBrowsePath = 'Library';
         let shuffleMode = false;
         let repeatMode = 'none';
-        let currentWaveform = null;
-        let currentWaveformTrackId = null;
+        let currentTrack = null; // Will hold the static { "track": {...} } object from 'nowPlaying'
+        let currentPlaybackState = { state: 'stopped', elapsed: 0, duration: 0, trackId: null };
+        let currentRenderer = null;
+        let trackMetadataCache = new Map(); // Caches heavy data like waveforms
 
         // --- UI ELEMENTS ---
         const ui = {
@@ -356,10 +394,22 @@
             nowPlayingAlbum: document.getElementById('now-playing-album'),
             nowPlayingYear: document.getElementById('now-playing-year'),
             nowPlayingYearSeparator: document.getElementById('now-playing-year-separator'),
+            nowPlayingRenderer: document.getElementById('now-playing-renderer'),
             waveformCanvas: document.getElementById('waveform-canvas'),
             nowPlayingTimeCurrent: document.getElementById('now-playing-time-current'),
             nowPlayingTimeDuration: document.getElementById('now-playing-time-duration'),
-            nowPlayingQualityBadge: document.getElementById('now-playing-quality-badge'),
+            badgeFormat: document.getElementById('badge-format'),
+            badgeSampleRate: document.getElementById('badge-samplerate'),
+            badgeBitDepth: document.getElementById('badge-bitdepth'),
+            badgeDrs: document.getElementById('badge-drs'),
+            badgeQualityTier: document.getElementById('badge-quality-tier'),
+            sepFormatRate: document.getElementById('sep-format-rate'),
+            sepRateDepth: document.getElementById('sep-rate-depth'),
+            sepDepthDr: document.getElementById('sep-depth-dr'),
+            sepDepthTier: document.getElementById('sep-depth-tier'),
+            nowPlayingMetadata: document.getElementById('now-playing-metadata'),
+            nowPlayingMetadataContent: document.getElementById('now-playing-metadata-content'),
+            metadataLoadingSpinner: document.getElementById('metadata-loading-spinner'),
             rendererDropdownBtn: document.getElementById('footer-renderer-btn'),
             rendererDropdownList: document.getElementById('footer-renderer-list'),
             footerRendererName: document.getElementById('footer-renderer-name'),
@@ -403,6 +453,7 @@
         };
 
         // --- EVENT LISTENERS ---
+        // ... [Your existing event listeners remain unchanged] ...
         ui.libraryBtn.addEventListener('click', () => setMainView('library'));
         ui.queueBtn.addEventListener('click', () => setMainView('queue'));
         ui.gridViewBtn.addEventListener('click', () => setDisplayMode('grid'));
@@ -424,11 +475,12 @@
         ui.mobilePlayer.playPauseBtn.addEventListener('click', () => sendMessage({ command: 'togglePlayPause' }));
         ui.mobilePlayer.nextBtn.addEventListener('click', () => sendMessage({ command: 'next' }));
         ui.mobilePlayer.albumArt.addEventListener('click', () => openNowPlayingScreen());
-
-        // Modal Listeners
         ui.modalCancelBtn.addEventListener('click', () => closeOverlay(ui.confirmationModal));
+        window.addEventListener('resize', resizeWaveformCanvas);
+
 
         // --- EVENT HANDLERS & UI LOGIC ---
+        // ... [handleItemClick, setMainView, openSongInfoOverlay, setDisplayMode, renderView, handleRendererSelect, openOverlay, closeOverlay remain unchanged] ...
         function handleItemClick(e) {
             const folderLink = e.target.closest('a[data-path]');
             if (folderLink) {
@@ -493,9 +545,17 @@
             ui.infoTitle.textContent = trackData.title;
             ui.infoArtist.textContent = trackData.artist || 'Unknown Artist';
             ui.infoAlbum.textContent = trackData.album ? `from the album "${trackData.album}"` : '';
-            ui.infoLoadingSpinner.classList.remove('hidden');
-            ui.infoContentArea.innerHTML = '';
-            sendMessage({ command: 'getTrackInfo', artist: trackData.artist, album: trackData.album });
+
+            const metadata = trackMetadataCache.get(trackData.id);
+            if (metadata) {
+                renderTrackInfo(metadata.info);
+                ui.infoLoadingSpinner.classList.add('hidden');
+            } else {
+                ui.infoLoadingSpinner.classList.remove('hidden');
+                ui.infoContentArea.innerHTML = '';
+                sendMessage({ command: 'getTrackMetadata', id: trackData.id, artist: trackData.artist, album: trackData.album });
+            }
+
             openOverlay(ui.songInfoScreen);
         }
 
@@ -545,6 +605,7 @@
         function openOverlay(overlay) { overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10); }
         function closeOverlay(overlay) { overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300); }
 
+
         // --- WEBSOCKET LOGIC ---
         const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const wsUrl = `${scheme}://${window.location.hostname}:9000/ws`;
@@ -555,7 +616,6 @@
             catch (e) { console.error("WS connect error:", e); setTimeout(connect, 3000); return; }
 
             socket.onopen = () => {
-                // *** MODIFIED: Only request library content. Server will push other state. ***
                 console.log("WebSocket connected. Requesting library content...");
                 sendMessage({ command: 'browse', path: currentBrowsePath });
             };
@@ -573,31 +633,55 @@
                     updateBreadcrumb(data.path, data.items);
                     break;
                 case 'nowPlaying':
-                    if (data.track && (!currentTrack || currentTrack.id !== data.track.id)) {
-                        currentWaveform = null;
-                        currentWaveformTrackId = null;
-                        if(data.track.id) {
-                            sendMessage({ command: 'getWaveform', id: data.track.id });
-                        }
-                    }
                     currentTrack = data.track;
-                    updatePlayer(data.track);
+                    if (currentTrack && !ui.nowPlayingScreen.classList.contains('hidden') && !trackMetadataCache.has(currentTrack.id)) {
+                        sendMessage({ command: 'getTrackMetadata', id: currentTrack.id, artist: currentTrack.artist, album: currentTrack.album });
+                    }
+                    updatePlayerUI();
                     break;
-                case 'trackWaveform':
-                    if (data.trackId && data.waveform) {
-                        currentWaveform = data.waveform;
-                        currentWaveformTrackId = data.trackId;
-                        if (!ui.nowPlayingScreen.classList.contains('hidden') && currentTrack && currentTrack.id === data.trackId) {
-                             const progress = currentTrack.duration > 0 ? (currentTrack.elapsed / currentTrack.duration) : 0;
-                             resizeWaveformCanvas();
-                             drawWaveform(ui.waveformCanvas, currentWaveform, progress);
+                case 'playbackState':
+                    if ((!currentTrack && data.trackId) || (currentTrack && currentTrack.id != data.trackId)) {
+                        if (data.trackId) {
+                            sendMessage({ command: 'getNowPlaying' });
+                        } else {
+                            currentTrack = null; // Nothing is playing
                         }
                     }
+                    currentPlaybackState = data;
+                    updatePlayerUI();
                     break;
-                case 'dlnaRenderers':
+                case 'trackMetadata':
+                    trackMetadataCache.set(data.trackId, data);
+                    if (!ui.songInfoScreen.classList.contains('hidden') && ui.infoTitle.textContent === currentTrack?.title) {
+                         ui.infoLoadingSpinner.classList.add('hidden');
+                         renderTrackInfo(data.info);
+                    }
+
+                    if (currentTrack && currentTrack.id === data.trackId && !ui.nowPlayingScreen.classList.contains('hidden')) {
+                        // --- BUG FIX: Correctly calculate progress ---
+                        // Get the current state and duration
+                        const state = currentPlaybackState;
+                        const duration = (currentTrack ? currentTrack.duration : 0) || state.duration || 0;
+                        // Calculate progress 0-100
+                        const progress = (duration > 0) ? (state.elapsed / duration) * 100 : 0;
+                        // Calculate progress ratio 0-1
+                        const progressRatio = progress / 100;
+
+                        updateNowPlayingScreenVisuals(progressRatio); // Pass the 0-1 ratio
+                    }
+                    break;
+                case 'availableRenderers':
                     updateRendererList(data.renderers);
-                    const activeRenderer = data.renderers.find(r => r.active);
-                    ui.footerRendererName.textContent = activeRenderer ? activeRenderer.name : "Local Playback";
+                    updateRendererCheckmarks();
+                    break;
+                case 'playerStatus':
+                    currentRenderer = data
+                    ui.footerRendererName.textContent = data.name;
+                    updateRendererCheckmarks();
+
+                    if (!ui.nowPlayingScreen.classList.contains('hidden')) {
+                        ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${data.name}`;
+                    }
                     break;
                 case 'updateQueue':
                     updateQueueItems(data.queue);
@@ -618,6 +702,7 @@
         }
 
         // --- RENDERING LOGIC ---
+        // ... [formatTime, updateBreadcrumb, updateAlbumGrid, updateSongList, updateQueueList remain unchanged] ...
         function updateLibraryItems(items) {
             updateAlbumGrid(items);
             updateSongList(items);
@@ -698,6 +783,29 @@
             }).join('');
         }
 
+        // --- REFACTOR: Implemented 'updateQueueGrid' function ---
+        function updateQueueGrid(queue) {
+            if (!queue || queue.length === 0) {
+                ui.queueGrid.innerHTML = `<p class="text-center text-gray-500 py-8 col-span-full">The queue is empty.</p>`;
+                return;
+            }
+            ui.queueGrid.innerHTML = queue.map(song => {
+                const actionBtns = `<div class="absolute top-1.5 right-1.5 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="delete-queue-item-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-red-500" data-id="${song.id}" title="Remove from Queue"><i class="bi bi-trash"></i></div>
+                </div>`;
+                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${song.id}">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
+                        <img src="${song.artUrl}" class="w-full h-full object-cover" alt="${song.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
+                    </div>
+                    <div class="mt-2 w-full px-1"><div class="flex items-baseline justify-center space-x-2">
+                        <h5 class="text-sm text-gray-800 dark:text-gray-300 truncate">${song.title}</h5>
+                        <div class="flex-shrink-0">${getQualityBadge(song)}</div>
+                    </div></div>
+                    ${actionBtns}
+                </div>`;
+            }).join('');
+        }
+
         function updateQueueList(queue) {
             const header = document.querySelector('#queue-list-view thead tr');
             if(header) header.innerHTML = `<th scope="col" class="px-6 py-3">#</th><th scope="col" class="px-6 py-3">Title</th><th scope="col" class="px-6 py-3">Artist</th><th scope="col" class="px-6 py-3">Album</th><th scope="col" class="px-6 py-3 text-right"></th>`;
@@ -715,116 +823,87 @@
             ).join('');
         }
 
-        function updateRendererList(renderers) {
-            ui.rendererDropdownList.innerHTML = renderers.map(r => `<a href="#" class="flex justify-between items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-udn="${r.udn}" data-name="${r.name}"><span>${r.name}</span>${r.active ? '<i class="bi bi-check-lg text-blue-500 dark:text-blue-400"></i>' : ''}</a>`).join('');
+        // --- Renderer Checkmark Logic (Unchanged) ---
+        function updateRendererCheckmarks() {
+            const activeId = currentRenderer ? currentRenderer.targetId : null;
+            const allRenderers = ui.rendererDropdownList.querySelectorAll('a[data-udn]');
+            allRenderers.forEach(link => {
+                const isActive = link.dataset.udn === activeId;
+                const checkmark = link.querySelector('i.bi-check-lg');
+                if (checkmark) {
+                    checkmark.remove();
+                }
+                if (isActive) {
+                    link.insertAdjacentHTML('beforeend', '<i class="bi bi-check-lg text-blue-500 dark:text-blue-400"></i>');
+                }
+            });
         }
+        function updateRendererList(renderers) {
+            ui.rendererDropdownList.innerHTML = renderers.map(r =>
+                `<a href="#" class="flex justify-between items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-udn="${r.targetId}" data-name="${r.name}">
+                    <span>${r.name}</span>
+                </a>`
+            ).join('');
+        }
+        // ---
 
-        function updatePlayer(track) {
-            if (!track || !track.title) {
-                // Reset to "No Song Playing" state
-                updatePlayerElements(ui.desktopPlayer, null);
-                updatePlayerElements(ui.mobilePlayer, null);
-                document.getElementById('player-footer').style.backgroundColor = '';
-                document.getElementById('player-footer').classList.remove('has-color-bg');
-                return;
-            }
+        // ... [renderTrackInfo, showToast, handleEmptyQueue, showConfirmationModal, handleShuffleToggle, handleRepeatToggle, getQualityBadge, updateStats remain unchanged] ...
+        function updatePlayerUI() {
+            const track = currentTrack;
+            const state = currentPlaybackState;
 
-            // Update both desktop and mobile players
-            updatePlayerElements(ui.desktopPlayer, track);
-            updatePlayerElements(ui.mobilePlayer, track);
+            const isPlaying = state.state === 'playing';
+            const elapsed = state.elapsed || 0;
+            const duration = (track ? track.duration : 0) || state.duration || 0;
+            const progress = (duration > 0) ? (elapsed / duration) * 100 : 0;
+
+            updatePlayerElements(ui.desktopPlayer, track, isPlaying, elapsed, duration, progress);
+            updatePlayerElements(ui.mobilePlayer, track, isPlaying, elapsed, duration, progress);
 
             const footerEl = document.getElementById('player-footer');
-            try {
-                Vibrant.from(track.artUrl).getPalette().then(palette => {
-                    const vibrantColor = palette.DarkMuted || palette.DarkVibrant || palette.Muted;
-                    if (vibrantColor) {
-                        footerEl.style.backgroundColor = vibrantColor.getHex();
-                        footerEl.classList.add('has-color-bg');
-                    } else {
+            if (track && track.artUrl) {
+                try {
+                    Vibrant.from(track.artUrl).getPalette().then(palette => {
+                        const vibrantColor = palette.DarkMuted || palette.DarkVibrant || palette.Muted;
+                        footerEl.style.backgroundColor = vibrantColor ? vibrantColor.getHex() : '';
+                        footerEl.classList.toggle('has-color-bg', !!vibrantColor);
+                    }).catch(() => {
                         footerEl.style.backgroundColor = '';
                         footerEl.classList.remove('has-color-bg');
-                    }
-                }).catch(() => {
-                    footerEl.style.backgroundColor = '';
-                    footerEl.classList.remove('has-color-bg');
-                });
-            } catch (err) {
+                    });
+                } catch (err) { /* ignore */ }
+            } else {
                 footerEl.style.backgroundColor = '';
                 footerEl.classList.remove('has-color-bg');
             }
 
-            // Highlight currently playing track in the queue
             document.querySelectorAll('.playing-item').forEach(item => item.classList.remove('playing-item'));
-            if (track.id && currentMainView === 'queue') {
-                const currentItemInQueue = document.querySelector(`[data-id="${track.id}"][data-type="song"]`);
+            if (track && track.id && currentMainView === 'queue') {
+                const currentItemInQueue = document.querySelector(`#queue-content [data-id="${track.id}"][data-type="song"]`);
                 if (currentItemInQueue) currentItemInQueue.classList.add('playing-item');
             }
 
-            // Update Now Playing screen if visible
             if (!ui.nowPlayingScreen.classList.contains('hidden')) {
-                updateNowPlayingScreen(track);
+                updateNowPlayingScreenUI(track, state, progress);
             }
         }
 
-        function updatePlayerElements(elements, track) {
-            const isPlaying = track && track.state === 'playing';
-
+        function updatePlayerElements(elements, track, isPlaying, elapsed, duration, progress) {
             if (elements.playPauseBtn) {
-                elements.playPauseBtn.classList.remove('bi-play-circle-fill', 'bi-pause-circle-fill');
-                elements.playPauseBtn.classList.add(isPlaying ? 'bi-pause-circle-fill' : 'bi-play-circle-fill');
+                elements.playPauseBtn.classList.toggle('bi-pause-circle-fill', isPlaying);
+                elements.playPauseBtn.classList.toggle('bi-play-circle-fill', !isPlaying);
             }
 
             if(elements.title) elements.title.textContent = track ? track.title : 'No Song Playing';
-            if(elements.artistAlbum) elements.artistAlbum.textContent = track ? `${track.artist || ''} - ${track.album || ''}` : 'Artist - Album';
+            if(elements.artistAlbum) elements.artistAlbum.textContent = track ? `${track.artist || 'Unknown Artist'} - ${track.album || 'Unknown Album'}` : 'Artist - Album';
             if(elements.albumArt) elements.albumArt.src = track ? track.artUrl || 'assets/no_cover.png' : 'assets/no_cover.png';
             if(elements.qualityBadge) elements.qualityBadge.innerHTML = track ? getQualityBadge(track) : '';
-            if(elements.currentTime) elements.currentTime.textContent = formatTime(track ? track.elapsed : 0);
-            if(elements.duration) elements.duration.textContent = formatTime(track ? track.duration : 0);
-            if(elements.progress) elements.progress.value = (track && track.duration > 0) ? (track.elapsed / track.duration) * 100 : 0;
+            if(elements.currentTime) elements.currentTime.textContent = formatTime(elapsed);
+            if(elements.duration) elements.duration.textContent = formatTime(duration);
+            if(elements.progress) elements.progress.value = progress;
         }
 
-        function updateNowPlayingScreen(track) {
-            if (!track) return;
-            ui.nowPlayingTitle.textContent = track.title;
-            ui.nowPlayingArt.src = track.artUrl || 'assets/no_cover.png';
-            ui.nowPlayingBg.style.backgroundImage = `url(${track.artUrl || 'assets/no_cover.png'})`;
-            ui.nowPlayingQualityBadge.innerHTML = getQualityBadge(track);
-
-            // Handle Artist with "by " prefix
-            if (track.artist) {
-                ui.nowPlayingArtist.textContent = "by " + track.artist;
-                ui.nowPlayingArtist.classList.remove('hidden');
-            } else {
-                ui.nowPlayingArtist.classList.add('hidden');
-            }
-
-            // Handle Album
-            if (track.album) {
-                ui.nowPlayingAlbum.textContent = track.album;
-                ui.nowPlayingAlbum.classList.remove('hidden');
-            } else {
-                ui.nowPlayingAlbum.classList.add('hidden');
-            }
-
-            // Handle Year
-            if (track.year) {
-                ui.nowPlayingYear.textContent = track.year;
-                ui.nowPlayingYear.classList.remove('hidden');
-            } else {
-                ui.nowPlayingYear.classList.add('hidden');
-            }
-
-            // Show separator only if both album and year exist
-            ui.nowPlayingYearSeparator.classList.toggle('hidden', !(track.album && track.year));
-
-            const progress = (track.duration > 0) ? (track.elapsed / track.duration) : 0;
-            ui.nowPlayingTimeCurrent.textContent = formatTime(track.elapsed);
-            ui.nowPlayingTimeDuration.textContent = formatTime(track.duration);
-            if (currentWaveform && currentWaveformTrackId === track.id) {
-                resizeWaveformCanvas();
-                drawWaveform(ui.waveformCanvas, currentWaveform, progress);
-            }
-        }
+        // --- REFACTOR: Removed redundant 'updatePlayer' and 'updateNowPlayingScreen' functions ---
 
         function renderTrackInfo(info) {
             if (!info) { ui.infoContentArea.innerHTML = `<p class="text-gray-500">No information found for this track.</p>`; return; }
@@ -845,7 +924,6 @@
             setTimeout(() => { toast.classList.add('opacity-0'); }, 2500);
         }
 
-        // *** MODIFIED: Replaced confirm() with a custom modal ***
         function handleEmptyQueue() {
             showConfirmationModal(
                 'Empty Queue',
@@ -860,12 +938,9 @@
         function showConfirmationModal(title, text, onConfirm) {
             ui.modalTitle.textContent = title;
             ui.modalText.textContent = text;
-
-            // Clone and replace the confirm button to remove old event listeners
             const newConfirmBtn = ui.modalConfirmBtn.cloneNode(true);
             ui.modalConfirmBtn.parentNode.replaceChild(newConfirmBtn, ui.modalConfirmBtn);
             ui.modalConfirmBtn = newConfirmBtn;
-
             ui.modalConfirmBtn.onclick = () => {
                 onConfirm();
                 closeOverlay(ui.confirmationModal);
@@ -907,7 +982,7 @@
             sendMessage({ command: 'setRepeatMode', mode: repeatMode });
         }
 
-        function getQualityBadge(track) {
+        function getQualityBadgeHtml(track) {
             if (!track || !track.quality) return '';
             const baseStyle = "text-xs font-medium rounded-full px-2 py-0.5";
             if (track.quality.startsWith('DSD')) return `<span class="${baseStyle} bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">${track.quality}</span>`;
@@ -915,6 +990,53 @@
             if (track.quality.startsWith('Hi-Res') || track.quality.startsWith('HR')) return `<span class="${baseStyle} bg-amber-400 text-amber-900 dark:bg-amber-700 dark:text-amber-200">${track.quality}</span>`;
             if (track.quality.startsWith('CD') || track.quality.startsWith('SQ')) return `<span class="${baseStyle} bg-blue-400 text-blue-900 dark:bg-blue-700 dark:text-blue-200">${track.quality}</span>`;
             return `<span class="${baseStyle} bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300">${track.quality}</span>`;
+        }
+
+        // NEW HELPER: Returns just the DRS badge (e.g., [icon] DR12)
+        function getDrsBadgeHtml(track, addMargin) {
+            // Check for undefined or null. 0 is a valid value.
+            if (track.drs === undefined || track.drs === null) return '';
+
+            const drValue = parseInt(track.drs, 10); // Ensure it's a number
+            if (isNaN(drValue)) return '';
+
+            const baseStyle = "text-xs font-medium rounded-full px-2 py-0.5";
+            const drStyle = baseStyle + (addMargin ? ' ml-1' : ''); // Adds left margin
+
+            let colorClasses = '';
+            let displayText = '';
+
+            // This logic maps your getDRScoreColor method to Tailwind classes
+            if (drValue <= 0) {
+                // dr_none: gray
+                colorClasses = 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
+                displayText = 'DR N/A';
+            } else if (drValue < 8) { // 1-7
+                // dr_low: red
+                colorClasses = 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
+                displayText = `DR${drValue}`;
+            } else if (drValue < 13) { // 8-12
+                // dr_medium: yellow/amber
+                colorClasses = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300';
+                displayText = `DR${drValue}`;
+            } else { // 13+
+                // dr_high: green
+                colorClasses = 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300';
+                displayText = `DR${drValue}`;
+            }
+
+            // This function returns the full HTML string for the badge
+            return `<span class="${drStyle} ${colorClasses} inline-flex items-center">
+                      <i class="bi bi-bar-chart-line-fill mr-1"></i>${displayText}
+                  </span>`;
+        }
+
+        function getQualityBadge(track) {
+            if (!track) return '';
+            const qualityHtml = getQualityBadgeHtml(track);
+            // Add margin to DRS badge only if quality badge exists
+            const drsHtml = getDrsBadgeHtml(track, !!qualityHtml);
+            return qualityHtml + drsHtml;
         }
 
         function updateStats(stats) {
@@ -930,11 +1052,241 @@
                 showToast("Nothing is playing.");
                 return;
             }
-            updateNowPlayingScreen(currentTrack); // Ensure screen is up-to-date before showing
+
+            const state = currentPlaybackState;
+            const duration = (currentTrack ? currentTrack.duration : 0) || state.duration || 0;
+            const progress = (duration > 0) ? (state.elapsed / duration) * 100 : 0; // Get 0-100
+
+            // Update all text/art content
+            updateNowPlayingScreenUI(currentTrack, currentPlaybackState, progress);
+
+            // Check for metadata (waveform AND bio) and request if missing
+            const metadata = trackMetadataCache.get(currentTrack.id);
+            if (!metadata) {
+                // Show loading spinner for bio
+                ui.nowPlayingMetadataContent.innerHTML = '';
+                ui.metadataLoadingSpinner.classList.remove('hidden');
+                // Request metadata
+                sendMessage({ command: 'getTrackMetadata', id: currentTrack.id, artist: currentTrack.artist, album: currentTrack.album });
+            } else {
+                // We have metadata, draw visuals (waveform and bio)
+                // Calculate 0-1 ratio for visuals
+                const progressRatio = progress / 100;
+                updateNowPlayingScreenVisuals(progressRatio);
+            }
+
             resizeWaveformCanvas();
             openOverlay(ui.nowPlayingScreen);
         }
 
+        function updateNowPlayingScreenUI(track, state, progress) {
+            if (!track) return;
+            ui.nowPlayingTitle.textContent = track.title;
+            ui.nowPlayingArt.src = track.artUrl || 'assets/no_cover.png';
+            ui.nowPlayingBg.style.backgroundImage = `url(${track.artUrl || 'assets/no_cover.png'})`;
+
+            // --- Feature #1 (Detailed Audio Quality with Separators) ---
+
+            // --- 1. Get and show the 'quality tier' badge ---
+            const fallbackQualityText = getQualityBadgeHtml(track); // Use NEW helper
+            let hasFallback = false;
+            if (fallbackQualityText) {
+                ui.badgeQualityTier.innerHTML = fallbackQualityText;
+                ui.badgeQualityTier.style.display = 'inline-block';
+                hasFallback = true;
+            } else {
+                ui.badgeQualityTier.style.display = 'none';
+            }
+
+            // --- 2. Hide all separators first ---
+            ui.sepFormatRate.style.display = 'none';
+            ui.sepRateDepth.style.display = 'none';
+            ui.sepDepthDr.style.display = 'none'; // NEW
+            ui.sepDepthTier.style.display = 'none';
+
+            // --- 3. Track which badge was last shown ---
+            let lastBadgeShown = null;
+
+            // --- 4. Check for and show the NEW specific badges ---
+            if (track.format) {
+                // Format Badge
+                ui.badgeFormat.innerHTML = track.format;
+                ui.badgeFormat.style.display = 'inline-block';
+                lastBadgeShown = ui.badgeFormat; // This is the last visible badge
+
+                // Sample Rate Badge
+                if (track.sampleRate) {
+                    ui.badgeSampleRate.innerHTML = track.sampleRate;
+                    ui.badgeSampleRate.style.display = 'inline-block';
+                    // Show separator between format and sampleRate
+                    ui.sepFormatRate.style.display = 'inline-block';
+                    lastBadgeShown = ui.badgeSampleRate; // Update last visible badge
+                } else {
+                    ui.badgeSampleRate.style.display = 'none';
+                }
+
+                // Bit Depth Badge
+                if (track.bitDepth) {
+                    ui.badgeBitDepth.innerHTML = track.bitDepth;
+                    ui.badgeBitDepth.style.display = 'inline-block';
+
+                    // Show the correct preceding separator
+                    if (lastBadgeShown === ui.badgeSampleRate) {
+                        ui.sepRateDepth.style.display = 'inline-block'; // Show sep after sampleRate
+                    } else if (lastBadgeShown === ui.badgeFormat) {
+                        ui.sepFormatRate.style.display = 'inline-block'; // Show sep after format
+                    }
+                    lastBadgeShown = ui.badgeBitDepth; // Update last visible badge
+                } else {
+                    ui.badgeBitDepth.style.display = 'none';
+                }
+
+            } else {
+                // --- 6. FALLBACK (No new data) ---
+                ui.badgeFormat.style.display = 'none';
+                ui.badgeSampleRate.style.display = 'none';
+                ui.badgeBitDepth.style.display = 'none';
+            }
+
+           /* const drsHtml = getDrsBadgeHtml(track, false); // Generate the full badge HTML (no margin needed here)
+            if (drsHtml) {
+                ui.badgeDrs.innerHTML = drsHtml; // Set the innerHTML to the generated badge
+                ui.badgeDrs.style.display = 'inline-block'; // Use inline-block since it's now a full span
+
+                // Show the correct preceding separator
+                if (lastBadgeShown === ui.badgeBitDepth) {
+                    ui.sepDepthDr.style.display = 'inline-block';
+                } else if (lastBadgeShown === ui.badgeSampleRate) {
+                    ui.sepRateDepth.style.display = 'inline-block';
+                } else if (lastBadgeShown === ui.badgeFormat) {
+                    ui.sepFormatRate.style.display = 'inline-block';
+                }
+                lastBadgeShown = ui.badgeDrs;
+            } else {
+                // If drs doesn't exist or isn't a number, hide the badge container
+                ui.badgeDrs.style.display = 'none';
+                ui.badgeDrs.innerHTML = ''; // Clear content
+            } */
+
+            // --- CORRECTED: Add DR Badge Logic with Color ---
+            const drsExists = track.drs !== undefined && track.drs !== null;
+            const drValue = drsExists ? parseInt(track.drs, 10) : NaN;
+
+            if (drsExists && !isNaN(drValue)) {
+                let colorClass = '';
+                let displayText = '';
+
+                // Maps your getDRScoreColor logic to text colors
+                if (drValue <= 0) { // dr_none: gray
+                    colorClass = 'text-gray-400';
+                    displayText = 'DR N/A';
+                } else if (drValue < 8) { // 1-7 (dr_low: red)
+                    colorClass = 'text-red-400';
+                    displayText = `DR${drValue}`;
+                } else if (drValue < 13) { // 8-12 (dr_medium: yellow)
+                    colorClass = 'text-yellow-400';
+                    displayText = `DR${drValue}`;
+                } else { // 13+ (dr_high: green)
+                    colorClass = 'text-green-400';
+                    displayText = `DR${drValue}`;
+                }
+
+                // Reset old classes
+                ui.badgeDrs.classList.remove('text-blue-300', 'text-gray-400', 'text-red-400', 'text-yellow-400', 'text-green-400');
+                // Add new color class
+                ui.badgeDrs.classList.add(colorClass);
+
+                ui.badgeDrs.innerHTML = `<i class="bi bi-bar-chart-line-fill mr-1"></i>${displayText}`;
+                ui.badgeDrs.style.display = 'inline-flex'; // Use inline-flex for icon alignment
+                ui.badgeDrs.classList.add('items-center');
+
+                // Show the correct preceding separator
+                if (lastBadgeShown === ui.badgeBitDepth) {
+                    ui.sepDepthDr.style.display = 'inline-block';
+                } else if (lastBadgeShown === ui.badgeSampleRate) {
+                    ui.sepRateDepth.style.display = 'inline-block';
+                } else if (lastBadgeShown === ui.badgeFormat) {
+                    ui.sepFormatRate.style.display = 'inline-block';
+                }
+                lastBadgeShown = ui.badgeDrs;
+            } else {
+                // If drs doesn't exist or isn't a number, hide the badge
+                ui.badgeDrs.style.display = 'none';
+            }
+
+            // --- 5. Show separator before the TIER badge ---
+            if (lastBadgeShown && hasFallback) {
+                ui.sepDepthTier.style.display = 'inline-block';
+            }
+            // --- (End of new badge logic) ---
+
+            // Calculate the progress *ratio* (0-1) for the waveform
+            const progressRatio = progress / 100;
+
+            ui.nowPlayingArtist.textContent = track.artist ? "by " + track.artist : "";
+            ui.nowPlayingArtist.classList.toggle('hidden', !track.artist);
+            ui.nowPlayingAlbum.textContent = track.album || "";
+            ui.nowPlayingAlbum.classList.toggle('hidden', !track.album);
+            ui.nowPlayingYear.textContent = track.year || "";
+            ui.nowPlayingYear.classList.toggle('hidden', !track.year);
+            ui.nowPlayingYearSeparator.classList.toggle('hidden', !(track.album && track.year));
+
+            // It re-uses the name already stored in the footer
+            ui.nowPlayingRenderer.innerHTML = `<i class="bi bi-speaker-fill mr-2"></i>${ui.footerRendererName.textContent}`;
+
+            // Use the 'state' object that was passed in
+            ui.nowPlayingTimeCurrent.textContent = formatTime(state.elapsed);
+            const duration = track.duration || state.duration || 0;
+            ui.nowPlayingTimeDuration.textContent = formatTime(duration);
+
+            // Pass the 0-1 ratio to the drawing function
+            updateNowPlayingScreenVisuals(progressRatio);
+        }
+
+        function updateNowPlayingScreenVisuals(progressRatio) { // Receives 0-1 ratio
+            if (!currentTrack) {
+                ui.waveformCanvas.getContext('2d').clearRect(0, 0, ui.waveformCanvas.width, ui.waveformCanvas.height);
+                ui.nowPlayingMetadataContent.innerHTML = '';
+                ui.metadataLoadingSpinner.classList.add('hidden');
+                return;
+            }
+
+            const metadata = trackMetadataCache.get(currentTrack.id);
+
+            // 1. Draw Waveform
+            if (metadata && metadata.waveform) {
+                resizeWaveformCanvas(); // Ensure canvas is sized correctly
+                drawWaveform(ui.waveformCanvas, metadata.waveform, progressRatio);
+            } else {
+                // No waveform data yet, clear the canvas
+                ui.waveformCanvas.getContext('2d').clearRect(0, 0, ui.waveformCanvas.width, ui.waveformCanvas.height);
+            }
+
+            // 2. Draw Artist/Album Bio
+            if (metadata && metadata.info) {
+                ui.metadataLoadingSpinner.classList.add('hidden');
+                let bioHtml = '';
+                if (metadata.info.artistBio) {
+                    bioHtml += `<h4 class="font-semibold text-white mb-2">${currentTrack.artist}</h4><p class="text-gray-300">${metadata.info.artistBio}</p>`;
+                }
+                if (metadata.info.albumBio) {
+                     bioHtml += `<h4 class="font-semibold text-white mt-4 mb-2">${currentTrack.album}</h4><p class="text-gray-300">${metadata.info.albumBio}</p>`;
+                }
+                if (bioHtml === '') {
+                    bioHtml = '<p class="text-gray-400">No additional information available.</p>';
+                }
+                ui.nowPlayingMetadataContent.innerHTML = bioHtml;
+
+            } else {
+                // No metadata loaded yet, ensure spinner is visible if screen is open
+                ui.nowPlayingMetadataContent.innerHTML = '';
+                if (!ui.nowPlayingScreen.classList.contains('hidden')) {
+                    ui.metadataLoadingSpinner.classList.remove('hidden');
+                }
+            }
+        }
+
+        // ... [resizeWaveformCanvas and drawWaveform remain unchanged] ...
         function resizeWaveformCanvas() {
             const canvas = ui.waveformCanvas;
             if (!canvas) return;
@@ -977,7 +1329,6 @@
             ctx.fill(unplayedPath);
         }
 
-        window.addEventListener('resize', resizeWaveformCanvas);
 
         // --- INITIALIZE ---
         renderView();

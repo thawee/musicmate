@@ -4,6 +4,7 @@ import java.util.List;
 
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
@@ -24,7 +25,7 @@ public interface MediaServerHub {
         }
     }
 
-    boolean activatePlayer(String udn, Callback callback);
+    boolean activatePlayer(String udn, PlaybackCallback callback);
 
     void deactivatePlayer(String udn);
 
@@ -49,20 +50,4 @@ public interface MediaServerHub {
     // Add a method for the hosting service to call on destroy
     void onDestroy();
 
-    public abstract static class Callback {
-        public Callback() {
-        }
-
-        public void onMediaTrackChanged(MediaTrack metadata) {
-            throw new RuntimeException("Stub!");
-        }
-
-        public void onPlaybackStateChanged(PlaybackState state) {
-            throw new RuntimeException("Stub!");
-        }
-
-        public void onPlaybackStateTimeElapsedSeconds(long elapsedSeconds) {
-            throw new RuntimeException("Stub!");
-        }
-    }
 }

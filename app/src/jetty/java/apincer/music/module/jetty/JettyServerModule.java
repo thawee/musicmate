@@ -5,6 +5,8 @@ import android.content.Context;
 import org.jupnp.UpnpServiceConfiguration;
 import org.jupnp.transport.spi.StreamServerConfiguration;
 
+import javax.inject.Singleton;
+
 import apincer.android.jupnp.transport.jetty.JettyContentServerImpl;
 import apincer.android.jupnp.transport.jetty.JettyUPnpServerImpl;
 import apincer.music.core.repository.FileRepository;
@@ -43,8 +45,8 @@ public class JettyServerModule {
 
     @Provides
     @Singleton
-    public UpnpServer provideUpnpServer(@ApplicationContext Context context) {
-        return new JettyUPnpServerImpl(context);
+    public UpnpServer provideUpnpServer(@ApplicationContext Context context,FileRepository fileRepos, TagRepository tagRepos) {
+        return new JettyUPnpServerImpl(context, fileRepos, tagRepos);
     }
 
     @Provides

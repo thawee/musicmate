@@ -84,7 +84,6 @@ public class ApplicationUtils {
     }
 
     public static InputStream getAssetsAsStream(Context context, String inFile) {
-
         try {
             return context.getAssets().open(inFile);
         } catch (IOException e) {

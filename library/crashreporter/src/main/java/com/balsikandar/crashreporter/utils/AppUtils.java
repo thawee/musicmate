@@ -71,8 +71,8 @@ public class AppUtils {
                 + "\nBOARD : " + Build.BOARD
                 + "\nBOOTLOADER : " + Build.BOOTLOADER
                 + "\nBRAND : " + Build.BRAND
-                + "\nCPU_ABI : " + Build.CPU_ABI
-                + "\nCPU_ABI2 : " + Build.CPU_ABI2
+               // + "\nCPU_ABI : " + Build.CPU_ABI
+               // + "\nCPU_ABI2 : " + Build.CPU_ABI2
                 + "\nDISPLAY : " + Build.DISPLAY
                 + "\nFINGERPRINT : " + Build.FINGERPRINT
                 + "\nHARDWARE : " + Build.HARDWARE
@@ -81,7 +81,7 @@ public class AppUtils {
                 + "\nMANUFACTURER : " + Build.MANUFACTURER
                 + "\nMODEL : " + Build.MODEL
                 + "\nPRODUCT : " + Build.PRODUCT
-                + "\nSERIAL : " + Build.SERIAL
+               // + "\nSERIAL : " + Build.SERIAL
                 + "\nTAGS : " + Build.TAGS
                 + "\nTIME : " + Build.TIME
                 + "\nTYPE : " + Build.TYPE

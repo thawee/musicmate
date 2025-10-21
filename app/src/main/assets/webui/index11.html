@@ -480,6 +480,7 @@
 
 
         // --- EVENT HANDLERS & UI LOGIC ---
+        // ... [handleItemClick, setMainView, openSongInfoOverlay, setDisplayMode, renderView, handleRendererSelect, openOverlay, closeOverlay remain unchanged] ...
         function handleItemClick(e) {
             const folderLink = e.target.closest('a[data-path]');
             if (folderLink) {
@@ -490,68 +491,19 @@
             const infoBtn = e.target.closest('.song-info-btn');
             if (infoBtn) {
                 e.stopPropagation();
-                // --- FIX: Read from dataset.id, not dataset.trackId ---
-                openSongInfoOverlay({ trackId: infoBtn.dataset.id });
+                openSongInfoOverlay({ id: infoBtn.dataset.id });
                 return;
             }
             const delBtn = e.target.closest('.delete-queue-item-btn');
             if (delBtn) {
                 e.stopPropagation();
-                // --- FIX: Read from dataset.id, not dataset.trackId ---
-                sendMessage({ command: 'removeFromQueue', trackId: delBtn.dataset.id });
+                sendMessage({ command: 'removeFromQueue', id: delBtn.dataset.id });
                 return;
             }
             const queueBtn = e.target.closest('.add-to-queue-btn');
             if (queueBtn) {
                 e.stopPropagation();
-                // --- FIX: Read from dataset.id, not dataset.trackId ---
-                sendMessage({ command: 'addToQueue', trackId: queueBtn.dataset.id });
-                showToast('Added to queue!');
-                return;
-            }
-
-            // This line is correct, it finds the element by the [data-id] attribute
-            const itemElement = e.target.closest('[data-id]');
-            if (!itemElement) return;
-
-            const type = itemElement.dataset.type;
-            if (type === 'folder') {
-                sendMessage({ command: 'browse', path: itemElement.dataset.path });
-            }
-            else if (type === 'song') {
-                if (currentMainView === 'library') {
-                    // --- FIX: Read from dataset.id, not dataset.trackId ---
-                    sendMessage({ command: 'playFromContext', trackId: itemElement.dataset.id, path: currentBrowsePath });
-                } else {
-                    // --- FIX: Read from dataset.id, not dataset.trackId ---
-                    sendMessage({ command: 'play', trackId: itemElement.dataset.id });
-                }
-            }
-        }
-
-        function handleItemClickOld(e) {
-            const folderLink = e.target.closest('a[data-path]');
-            if (folderLink) {
-                e.preventDefault();
-                sendMessage({ command: 'browse', path: folderLink.dataset.path });
-                return;
-            }
-            const infoBtn = e.target.closest('.song-info-btn');
-            if (infoBtn) {
-                e.stopPropagation();
-                openSongInfoOverlay({ trackId: infoBtn.dataset.trackId });
-                return;
-            }
-            const delBtn = e.target.closest('.delete-queue-item-btn');
-            if (delBtn) {
-                e.stopPropagation();
-                sendMessage({ command: 'removeFromQueue', trackId: delBtn.dataset.trackId });
-                return;
-            }
-            const queueBtn = e.target.closest('.add-to-queue-btn');
-            if (queueBtn) {
-                e.stopPropagation();
-                sendMessage({ command: 'addToQueue', trackId: queueBtn.dataset.trackId });
+                sendMessage({ command: 'addToQueue', id: queueBtn.dataset.id });
                 showToast('Added to queue!');
                 return;
             }
@@ -561,9 +513,9 @@
             if (type === 'folder') { sendMessage({ command: 'browse', path: itemElement.dataset.path }); }
             else if (type === 'song') {
                 if (currentMainView === 'library') {
-                    sendMessage({ command: 'playFromContext', trackId: itemElement.dataset.trackId, path: currentBrowsePath });
+                    sendMessage({ command: 'playFromContext', id: itemElement.dataset.id, path: currentBrowsePath });
                 } else {
-                    sendMessage({ command: 'play', trackId: itemElement.dataset.trackId });
+                    sendMessage({ command: 'play', id: itemElement.dataset.id });
                 }
             }
         }
@@ -585,8 +537,8 @@
         }
 
         function openSongInfoOverlay(trackData) {
-            if (trackData.trackId && !trackData.title) {
-                 sendMessage({ command: 'getTrackDetails', trackId: trackData.trackId });
+            if (trackData.id && !trackData.title) {
+                 sendMessage({ command: 'getTrackDetails', id: trackData.id });
                  return;
             }
             ui.infoArt.src = trackData.artUrl || 'assets/no_cover.png';
@@ -594,14 +546,14 @@
             ui.infoArtist.textContent = trackData.artist || 'Unknown Artist';
             ui.infoAlbum.textContent = trackData.album ? `from the album "${trackData.album}"` : '';
 
-            const metadata = trackMetadataCache.get(trackData.trackId);
+            const metadata = trackMetadataCache.get(trackData.id);
             if (metadata) {
                 renderTrackInfo(metadata.info);
                 ui.infoLoadingSpinner.classList.add('hidden');
             } else {
                 ui.infoLoadingSpinner.classList.remove('hidden');
                 ui.infoContentArea.innerHTML = '';
-                sendMessage({ command: 'getTrackMetadata', trackId: trackData.trackId, artist: trackData.artist, album: trackData.album });
+                sendMessage({ command: 'getTrackMetadata', id: trackData.id, artist: trackData.artist, album: trackData.album });
             }
 
             openOverlay(ui.songInfoScreen);
@@ -664,7 +616,7 @@
             catch (e) { console.error("WS connect error:", e); setTimeout(connect, 3000); return; }
 
             socket.onopen = () => {
-                //console.log("WebSocket connected. Requesting library content...");
+                console.log("WebSocket connected. Requesting library content...");
                 sendMessage({ command: 'browse', path: currentBrowsePath });
             };
             socket.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
@@ -680,61 +632,15 @@
                     updateLibraryItems(data.items);
                     updateBreadcrumb(data.path, data.items);
                     break;
-                case 'nowPlayingOld':
-                    currentTrack = data.track;
-                    if (currentTrack && !ui.nowPlayingScreen.classList.contains('hidden') && !trackMetadataCache.has(currentTrack.trackId)) {
-                        sendMessage({ command: 'getTrackMetadata', trackId: currentTrack.trackId, artist: currentTrack.artist, album: currentTrack.album });
-                    }
-                    updatePlayerUI();
-                    break;
                 case 'nowPlaying':
                     currentTrack = data.track;
-
-                    // This function is fine. It updates the footer and,
-                    // importantly, the TEXT on the Now Playing screen (if open).
-                    updatePlayerUI();
-
-                    // --- START OF FIX ---
-                    // Now, we must explicitly handle the VISUALS (waveform/bio)
-                    // if the "Now Playing" screen is open.
-                    if (currentTrack && !ui.nowPlayingScreen.classList.contains('hidden')) {
-
-                        const metadata = trackMetadataCache.get(currentTrack.trackId);
-
-                        if (metadata) {
-                            // CACHE HIT: We have the data. Draw it immediately.
-                            //console.log("NowPlaying: Cache hit. Drawing visuals.");
-
-                            // We need the current progress ratio to draw the waveform correctly
-                            const state = currentPlaybackState;
-                            const duration = (currentTrack.duration || 0) || state.duration || 0;
-                            const progress = (duration > 0) ? (state.elapsed / duration) * 100 : 0;
-                            const progressRatio = progress / 100;
-
-                            // Call the function that draws the waveform and bio
-                            updateNowPlayingScreenVisuals(progressRatio);
-
-                        } else {
-                            // CACHE MISS: Request the data and show spinner.
-                            //console.log("NowPlaying: Cache miss. Requesting getTrackMetadata.");
-
-                            // Clear old visuals and show spinner
-                            ui.nowPlayingMetadataContent.innerHTML = '';
-                            ui.metadataLoadingSpinner.classList.remove('hidden');
-                            ui.waveformCanvas.getContext('2d').clearRect(0, 0, ui.waveformCanvas.width, ui.waveformCanvas.height); // Clear old waveform
-
-                            // Send the request (as you did before)
-                            sendMessage({
-                                command: 'getTrackMetadata',
-                                trackId: currentTrack.trackId,
-                                artist: currentTrack.artist,
-                                album: currentTrack.album
-                            });
-                        }
+                    if (currentTrack && !ui.nowPlayingScreen.classList.contains('hidden') && !trackMetadataCache.has(currentTrack.id)) {
+                        sendMessage({ command: 'getTrackMetadata', id: currentTrack.id, artist: currentTrack.artist, album: currentTrack.album });
                     }
+                    updatePlayerUI();
                     break;
                 case 'playbackState':
-                    if ((!currentTrack && data.trackId) || (currentTrack && currentTrack.trackId != data.trackId)) {
+                    if ((!currentTrack && data.trackId) || (currentTrack && currentTrack.id != data.trackId)) {
                         if (data.trackId) {
                             sendMessage({ command: 'getNowPlaying' });
                         } else {
@@ -751,7 +657,7 @@
                          renderTrackInfo(data.info);
                     }
 
-                    if (currentTrack && currentTrack.trackId === data.trackId && !ui.nowPlayingScreen.classList.contains('hidden')) {
+                    if (currentTrack && currentTrack.id === data.trackId && !ui.nowPlayingScreen.classList.contains('hidden')) {
                         // --- BUG FIX: Correctly calculate progress ---
                         // Get the current state and duration
                         const state = currentPlaybackState;
@@ -839,7 +745,7 @@
         function updateAlbumGrid(items) {
             ui.albumGrid.innerHTML = items.map(item => {
                 if (item.type === 'folder') {
-                    return `<div class="relative group text-center cursor-pointer" data-type="folder" data-id="${item.trackId}" data-path="${item.path}">
+                    return `<div class="relative group text-center cursor-pointer" data-type="folder" data-id="${item.id}" data-path="${item.path}">
                                 <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md flex items-center justify-center border border-transparent group-hover:border-blue-500 transition">
                                     <i class="bi bi-folder2-open text-6xl text-gray-400 dark:text-gray-500"></i>
                                 </div>
@@ -847,10 +753,10 @@
                             </div>`;
                 }
                 const actionBtns = `<div class="absolute top-1.5 right-1.5 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div class="song-info-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-blue-500" data-id="${item.trackId}" title="Song Info"><i class="bi bi-info-lg"></i></div>
-                    <div class="add-to-queue-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-green-500" data-id="${item.trackId}" title="Add to Queue"><i class="bi bi-plus-lg"></i></div>
+                    <div class="song-info-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-blue-500" data-id="${item.id}" title="Song Info"><i class="bi bi-info-lg"></i></div>
+                    <div class="add-to-queue-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-green-500" data-id="${item.id}" title="Add to Queue"><i class="bi bi-plus-lg"></i></div>
                 </div>`;
-                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${item.trackId}">
+                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${item.id}">
                     <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
                         <img src="${item.artUrl}" class="w-full h-full object-cover" alt="${item.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
                     </div>
@@ -867,12 +773,12 @@
             const songListHeader = document.querySelector('#library-list-view thead tr');
             if(songListHeader) songListHeader.innerHTML = `<th scope="col" class="px-6 py-3">Name</th><th scope="col" class="px-6 py-3">Artist</th><th scope="col" class="px-6 py-3">Album</th><th scope="col" class="px-6 py-3 text-right"><i class="bi bi-clock"></i></th><th scope="col" class="px-6 py-3 text-center">Actions</th>`;
             ui.songList.innerHTML = items.map(item => {
-                if (item.type === 'folder') return `<tr class="item-row cursor-pointer" data-type="folder" data-id="${item.trackId}" data-path="${item.path}"><td class="px-6 py-3 font-medium text-black dark:text-white"><i class="bi bi-folder-fill mr-3 text-blue-500 dark:text-blue-400"></i>${item.name}</td><td></td><td></td><td></td><td></td></tr>`;
-                return `<tr class="item-row cursor-pointer" data-type="song" data-id="${item.trackId}">
+                if (item.type === 'folder') return `<tr class="item-row cursor-pointer" data-type="folder" data-id="${item.id}" data-path="${item.path}"><td class="px-6 py-3 font-medium text-black dark:text-white"><i class="bi bi-folder-fill mr-3 text-blue-500 dark:text-blue-400"></i>${item.name}</td><td></td><td></td><td></td><td></td></tr>`;
+                return `<tr class="item-row cursor-pointer" data-type="song" data-id="${item.id}">
                     <td class="px-6 py-3 font-medium text-black dark:text-white"><div class="flex items-center space-x-2"><span>${item.title}</span>${getQualityBadge(item)}</div></td>
                     <td class="px-6 py-3">${item.artist || ''}</td><td class="px-6 py-3">${item.album || ''}</td>
                     <td class="px-6 py-3 text-right font-mono">${formatTime(item.duration)}</td>
-                    <td class="px-6 py-3 text-center"><i class="song-info-btn bi bi-info-circle-fill text-lg text-gray-500 hover:text-blue-500 cursor-pointer" data-id="${item.trackId}" title="Song Info"></i></td>
+                    <td class="px-6 py-3 text-center"><i class="song-info-btn bi bi-info-circle-fill text-lg text-gray-500 hover:text-blue-500 cursor-pointer" data-id="${item.id}" title="Song Info"></i></td>
                 </tr>`;
             }).join('');
         }
@@ -885,9 +791,9 @@
             }
             ui.queueGrid.innerHTML = queue.map(song => {
                 const actionBtns = `<div class="absolute top-1.5 right-1.5 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div class="delete-queue-item-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-red-500" data-id="${song.trackId}" title="Remove from Queue"><i class="bi bi-trash"></i></div>
+                    <div class="delete-queue-item-btn bg-black bg-opacity-60 text-white w-6 h-6 flex items-center justify-center rounded-full cursor-pointer hover:bg-red-500" data-id="${song.id}" title="Remove from Queue"><i class="bi bi-trash"></i></div>
                 </div>`;
-                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${song.trackId}">
+                return `<div class="relative group text-center cursor-pointer" data-type="song" data-id="${song.id}">
                     <div class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-md overflow-hidden border border-transparent group-hover:border-blue-500 transition">
                         <img src="${song.artUrl}" class="w-full h-full object-cover" alt="${song.title}" onerror="this.onerror=null;this.src='assets/no_cover.png';">
                     </div>
@@ -908,11 +814,11 @@
                 return;
             }
             ui.queueListBody.innerHTML = queue.map((song, index) =>
-                `<tr class="item-row cursor-pointer" data-id="${song.trackId}" data-type="song">
+                `<tr class="item-row cursor-pointer" data-id="${song.id}" data-type="song">
                     <td class="px-6 py-3 text-gray-500 dark:text-gray-400">${index + 1}</td>
                     <td class="px-6 py-3 font-medium text-black dark:text-white"><div class="flex items-center space-x-2"><span>${song.title}</span>${getQualityBadge(song)}</div></td>
                     <td class="px-6 py-3">${song.artist}</td><td class="px-6 py-3">${song.album}</td>
-                    <td class="px-6 py-3 text-right"><i class="bi bi-trash-fill text-gray-500 hover:text-red-500 cursor-pointer delete-queue-item-btn" data-id="${song.trackId}"></i></td>
+                    <td class="px-6 py-3 text-right"><i class="bi bi-trash-fill text-gray-500 hover:text-red-500 cursor-pointer delete-queue-item-btn" data-id="${song.id}"></i></td>
                 </tr>`
             ).join('');
         }
@@ -972,8 +878,8 @@
             }
 
             document.querySelectorAll('.playing-item').forEach(item => item.classList.remove('playing-item'));
-            if (track && track.trackId&& currentMainView === 'queue') {
-                const currentItemInQueue = document.querySelector(`#queue-content [data-id="${track.trackId}"][data-type="song"]`);
+            if (track && track.id && currentMainView === 'queue') {
+                const currentItemInQueue = document.querySelector(`#queue-content [data-id="${track.id}"][data-type="song"]`);
                 if (currentItemInQueue) currentItemInQueue.classList.add('playing-item');
             }
 
@@ -1155,13 +1061,13 @@
             updateNowPlayingScreenUI(currentTrack, currentPlaybackState, progress);
 
             // Check for metadata (waveform AND bio) and request if missing
-            const metadata = trackMetadataCache.get(currentTrack.trackId);
+            const metadata = trackMetadataCache.get(currentTrack.id);
             if (!metadata) {
                 // Show loading spinner for bio
                 ui.nowPlayingMetadataContent.innerHTML = '';
                 ui.metadataLoadingSpinner.classList.remove('hidden');
                 // Request metadata
-                sendMessage({ command: 'getTrackMetadata', trackId: currentTrack.trackId, artist: currentTrack.artist, album: currentTrack.album });
+                sendMessage({ command: 'getTrackMetadata', id: currentTrack.id, artist: currentTrack.artist, album: currentTrack.album });
             } else {
                 // We have metadata, draw visuals (waveform and bio)
                 // Calculate 0-1 ratio for visuals
@@ -1365,7 +1271,7 @@
                 return;
             }
 
-            const metadata = trackMetadataCache.get(currentTrack.trackId);
+            const metadata = trackMetadataCache.get(currentTrack.id);
 
             // 1. Draw Waveform
             if (metadata && metadata.waveform) {

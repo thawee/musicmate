@@ -81,7 +81,7 @@ public class CoverartFetcher implements Fetcher {
             ImageSource source = new FileImageSource(
                     Path.get(covertFile),
                     FileSystem.SYSTEM,
-                    musicTag.getAlbumCoverUniqueKey(),
+                    musicTag.getAlbumArtFilename(),
                     null,
                     null);
 
@@ -116,7 +116,7 @@ public class CoverartFetcher implements Fetcher {
     public static ImageRequest.Builder builder(Context context, MediaTrack tag) {
         ImageRequest.Builder builder = new ImageRequest.Builder(context);
         if(tag != null) {
-            builder.diskCacheKey(tag.getAlbumCoverUniqueKey());
+            builder.diskCacheKey(tag.getAlbumArtFilename());
             builder.fetcherFactory(new Factory(context), new KClassMusicTag());
             if (!tag.isMusicManaged()) {
                 builder.diskCachePolicy(CachePolicy.DISABLED); // Disable disk caching

@@ -73,14 +73,14 @@ public abstract class AbstractContentBrowser {
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {
-        return getAlbumArtUri(contentDirectory, tag.getAlbumCoverUniqueKey());
+        return getAlbumArtUri(contentDirectory, tag.getAlbumArtFilename());
     }
 
-    protected URI getAlbumArtUri(ContentDirectory contentDirectory, String key) {
-        String uri = key+".png";
+    protected URI getAlbumArtUri(ContentDirectory contentDirectory, String name) {
+        //String uri = key+".png";
         return URI.create("http://"
                 + NetworkUtils.getIpAddress() + ":"
-                + WEB_SERVER_PORT + CONTEXT_PATH_COVERART  + uri);
+                + WEB_SERVER_PORT + CONTEXT_PATH_COVERART  + name);
     }
 
     protected MusicTrack buildMusicTrack(ContentDirectory contentDirectory, MusicTag tag,String folderId, String itemPrefix) {

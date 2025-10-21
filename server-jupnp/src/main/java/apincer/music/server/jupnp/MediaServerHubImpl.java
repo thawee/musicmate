@@ -50,7 +50,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.playback.DMRPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -58,7 +60,6 @@ import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.StringUtils;
-import apincer.music.server.jupnp.playback.DMCAPlayer;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 /**
@@ -92,7 +93,7 @@ public class MediaServerHubImpl implements MediaServerHub {
     protected UpnpServiceConfiguration upnpServiceCfg;
     private final FileRepository fileRepos;
     private final TagRepository tagRepos;
-    private Callback callback;
+    private PlaybackCallback callback;
 
     public BehaviorSubject<ServerStatus> getServerStatus() {
         return serverStatus;
@@ -148,7 +149,7 @@ public class MediaServerHubImpl implements MediaServerHub {
      * <p>
      * Upon successful activation, it immediately dispatches an asynchronous request to
      * fetch the currently playing track information. The result of this fetch is
-     * delivered via the provided {@link Callback}.
+     * delivered via the provided {@link PlaybackCallback}.
      *
      * @param udn The Unique Device Name (UDN) of the target media renderer. This
      * identifier is used to look up the device in the UPnP registry.
@@ -162,7 +163,7 @@ public class MediaServerHubImpl implements MediaServerHub {
      * activation command failed.
      */
     @Override
-    public boolean activatePlayer(String udn, Callback callback) {
+    public boolean activatePlayer(String udn, PlaybackCallback callback) {
         this.callback = callback;
         //auto resolve udn if, not found in registry
         PlaybackTarget player = resolveRenderer(udn);
@@ -356,7 +357,10 @@ public class MediaServerHubImpl implements MediaServerHub {
             Log.i(TAG, TAG+" - Remote device available: " + device.getDisplayString() + " (" + device.getType().getType() + ")");
 
             if (device.getType().equals(MEDIA_RENDERER_DEVICE_TYPE)) {
-                PlaybackTarget player = DMCAPlayer.Factory.create(device);
+                String udn = device.getIdentity().getUdn().getIdentifierString();
+                String  displayName = device.getDetails().getFriendlyName();
+                String  location = device.getIdentity().getDescriptorURL().getHost();
+                PlaybackTarget player = DMRPlayer.Factory.create(udn, displayName, location);
                 availableTargets.add(player);
             }
         }

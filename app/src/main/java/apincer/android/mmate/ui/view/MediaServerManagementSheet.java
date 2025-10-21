@@ -25,7 +25,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.viewmodel.MediaServerViewModel;
+import apincer.android.mmate.ui.viewmodel.MediaServerViewModel;
 import apincer.music.core.Constants;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.utils.NetworkUtils;

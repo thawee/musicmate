@@ -1,10 +1,8 @@
-package apincer.android.mmate.playback;
+package apincer.music.core.playback;
 
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.media.session.MediaController;
 import android.net.Uri;
 
 import java.util.Arrays;
@@ -14,8 +12,9 @@ import java.util.Set;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackTarget;
 
-public class ExternalPlayer implements PlaybackTarget {
-    public static String DEFAULT_PLAYER_NAME = "UNKNOWN Player";
+public class ExternalAndroidPlayer implements PlaybackTarget {
+
+   // public static String DEFAULT_PLAYER_NAME = "UNKNOWN Player";
     public static final String HIBY_MUSIC_PACK_NAME = "com.hiby.music";
     public static final String NE_PLAYER_LITE_PACK_NAME = "jp.co.radius.neplayer_lite_an";
     public static final String NEUTRON_MUSIC_PACK_NAME = "com.neutroncode.mp";
@@ -49,11 +48,9 @@ public class ExternalPlayer implements PlaybackTarget {
     private final String displayName;
     private final String description;
 
-    private MediaController mediaController;
 
-    private ExternalPlayer(Context context, MediaController mediaController, String targetId, String displayName, String description) {
+    private ExternalAndroidPlayer(Context context, String targetId, String displayName, String description) {
         this.context = context;
-        this.mediaController = mediaController;
         this.targetId = targetId;
         this.displayName = displayName;
         this.description = description;
@@ -95,34 +92,65 @@ public class ExternalPlayer implements PlaybackTarget {
         return true;
     }
 
-    public MediaController getMediaController() {
-        return mediaController;
-    }
 
-    public void unregisterCallback(MediaController.Callback externalControllerCallback) {
-        mediaController.unregisterCallback(externalControllerCallback);
-        mediaController = null;
-    }
+/*
+    private final MediaController.Callback mediaCallback = new MediaController.Callback() {
+        @Override
+        public void onPlaybackStateChanged(PlaybackState state) {
+            Log.d("ExternalPlayer", "onPlaybackStateChanged");
+            if (state == null) {
+                return;
+            }
 
-    public void registerCallback(MediaController.Callback externalControllerCallback) {
-        mediaController.registerCallback(externalControllerCallback);
-    }
+            // --- START or STOP the poller based on the state ---
+            if (state.getState() == PlaybackState.STATE_PLAYING) {
+                // We are playing. Start the progress updater.
+                scheduleProgressUpdate();
+                if(playbackCallback!= null) {
+                    playbackCallback.onPlaybackStateTimeElapsedSeconds(state.getPosition());
+                }
+            } else {
+                // We are paused, stopped, etc. Stop the progress updater.
+                stopProgressUpdate();
+            }
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            Log.d("ExternalPlayer", "onMetadataChanged");
+            if(metadata ==null) return;
+
+            String title = metadata.getString(android.media.MediaMetadata.METADATA_KEY_TITLE);
+            String artist = metadata.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST);
+            String album = metadata.getString(android.media.MediaMetadata.METADATA_KEY_ALBUM);
+            long duration = metadata.getLong(android.media.MediaMetadata.METADATA_KEY_DURATION);
+
+            if(playbackCallback != null) {
+                playbackCallback.onMediaTrackChanged(title, artist, album, duration);
+            }
+        }
+    }; */
+
+
 
     public static class Factory {
-        public static PlaybackTarget create(Context context, MediaController mediaController, String packageName, String playerName) {
-            if(ExternalPlayer.SUPPORTED_PLAYERS.contains(packageName)) {
-                try {
-                    ApplicationInfo ai = context.getPackageManager().getApplicationInfo(packageName, 0);
-                    if (playerName == null || playerName.equals(packageName)) {
-                        playerName = String.valueOf(context.getPackageManager().getApplicationLabel(ai));
-                    }
-                } catch (Exception ignore) {
-                }
-
-                playerName = (playerName == null) ? ExternalPlayer.DEFAULT_PLAYER_NAME : playerName;
-                return new ExternalPlayer(context, mediaController, packageName, playerName, playerName);
+        public static PlaybackTarget create(Context context, String packageName) {
+            if(ExternalAndroidPlayer.SUPPORTED_PLAYERS.contains(packageName)) {
+                String playerName = getAppName(context, packageName);
+                return new ExternalAndroidPlayer(context, packageName, playerName, playerName);
             }
             return null;
+        }
+
+
+        private static String getAppName(Context context, String packageName) {
+            try {
+                return context.getPackageManager().getApplicationLabel(
+                        context.getPackageManager().getApplicationInfo(packageName, 0)
+                ).toString();
+            } catch (Exception e) {
+                return packageName;
+            }
         }
     }
 }

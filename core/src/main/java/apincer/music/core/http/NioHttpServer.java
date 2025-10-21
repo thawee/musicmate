@@ -4,10 +4,13 @@ import androidx.annotation.NonNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
@@ -1230,7 +1233,8 @@ public class NioHttpServer implements Runnable {
                         currentCount + "/" + maxConcurrentStreams + ")");
             }
 
-            this.addHeader("Content-Type", MimeTypeUtil.getMimeType(file.getName()));
+            //this.addHeader("Content-Type", MimeTypeUtil.getMimeType(file.getName()));
+            this.addHeader("Content-Type", MimeTypeUtil.readContentForMime(file.getName()));
             this.etag = generateETag(file);
             // Generate ETag based on file path, size and last modified time
             this.addHeader("ETag", etag);
@@ -1475,6 +1479,41 @@ public class NioHttpServer implements Runnable {
                 return MIME_MAP.getOrDefault(fileName.substring(lastDot + 1).toLowerCase(), "application/octet-stream");
             }
             return "application/octet-stream";
+        }
+
+        public static String readContentForMime(String filePath) {
+            File file = new File(filePath);
+
+            // 1. First, get the MIME type based on the file extension
+            String extensionMimeType = MimeTypeUtil.getMimeType(file.getName());
+
+            // 2. Check if the extension is for an image
+            if (!extensionMimeType.startsWith("image/")) {
+                // It's not an image (e.g., "audio/flac"), just return the extension type.
+                // We do NOT read the content.
+                return extensionMimeType;
+            }
+
+            // 3. It *is* supposed to be an image (e.g., "front.jpg").
+            //    NOW we read the content to find the *true* MIME type
+            //    (in case it's really a PNG).
+            String contentMimeType;
+            try (InputStream is = new FileInputStream(file)) {
+                // This reads the file's "magic bytes"
+                contentMimeType = URLConnection.guessContentTypeFromStream(is);
+            } catch (IOException e) {
+                contentMimeType = null;
+            }
+
+            // 4. Return the most accurate type
+            if (contentMimeType != null && !contentMimeType.equals("application/octet-stream")) {
+                // The content check was successful (e.g., it found "image/png").
+                // This is the most reliable answer.
+                return contentMimeType;
+            } else {
+                // The content check failed. Fall back to the extension type we found in step 1.
+                return extensionMimeType;
+            }
         }
     }
 

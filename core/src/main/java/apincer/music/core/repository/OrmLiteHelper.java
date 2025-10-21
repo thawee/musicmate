@@ -69,7 +69,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
-    private static final int DATABASE_VERSION = 9;
+    private static final int DATABASE_VERSION = 10;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -843,14 +843,14 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-    public MusicTag findByAlbumCoverUniqueKey(String albumUniqueKey) {
+    public MusicTag findByAlbumArtFilename(String albumUniqueKey) {
         try {
             Dao<MusicTag, ?> dao = getMusicTagDao();
             QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.where().eq("albumCoverUniqueKey", albumUniqueKey);
+            builder.where().eq("albumArtFilename", albumUniqueKey);
             return dao.queryForFirst(builder.prepare());
         } catch (SQLException ex) {
-            Log.e(TAG,"findByAlbumCoverUniqueKey", ex);
+            Log.e(TAG,"findByAlbumArtFilename", ex);
         }
         return null;
     }

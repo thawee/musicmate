@@ -3,13 +3,13 @@ package apincer.music.core.playback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.utils.PlayerNameUtils;
 
-public class RemoteWebPlayer implements PlaybackTarget {
+public class WebStreamingPlayer implements PlaybackTarget {
 
     private final String targetId;
     private final String displayName;
     private final String location;
 
-    private RemoteWebPlayer(String targetId, String userAgent, String location) {
+    private WebStreamingPlayer(String targetId, String userAgent, String location) {
         this.targetId = targetId;
         this.displayName = PlayerNameUtils.getFriendlyNameFromUserAgent(userAgent);
         this.location = location;
@@ -42,7 +42,7 @@ public class RemoteWebPlayer implements PlaybackTarget {
 
     public static class Factory {
         public static PlaybackTarget create(String ipAddress, String userAgent,String location) {
-            return new RemoteWebPlayer(ipAddress, userAgent, location);
+            return new WebStreamingPlayer(ipAddress, userAgent, location);
         }
     }
 }

@@ -24,9 +24,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.List;
 
 import apincer.android.mmate.R;
-import apincer.android.mmate.playback.ExternalPlayer;
 import apincer.android.mmate.service.MusicMateServiceImpl;
 import apincer.music.core.Constants;
+import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
@@ -185,7 +185,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 playerDetails = playerDetails + "\n" + playbackTarget.getDescription();
                 addSignalPathStep(signalPathContainer, "Media Server", serverDetails, true);
                 addSignalPathStep(signalPathContainer, "Renderer", playerDetails, false);
-            }else if (playbackTarget instanceof ExternalPlayer player) {
+            }else if (playbackTarget instanceof ExternalAndroidPlayer player) {
                 playerDetails = playerDetails +"\n"+player.getDescription();
                 addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
             }else {

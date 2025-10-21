@@ -1,18 +1,17 @@
-package apincer.music.server.jupnp.playback;
-
-import org.jupnp.model.meta.RemoteDevice;
+package apincer.music.core.playback;
 
 import apincer.music.core.playback.spi.PlaybackTarget;
 
-public class DMCAPlayer implements PlaybackTarget {
+public class DMRPlayer implements PlaybackTarget {
     private final String udn;
     private final String displayName;
     private final String location;
 
-    private DMCAPlayer(RemoteDevice renderer) {
-        this.udn = renderer.getIdentity().getUdn().getIdentifierString();
-        this.displayName = renderer.getDetails().getFriendlyName();
-        this.location = renderer.getIdentity().getDescriptorURL().getHost();
+    //DLNA/UPnP
+    private DMRPlayer(String urn, String friendlyName, String host) {
+        this.udn = urn;
+        this.displayName = friendlyName;
+        this.location = host;
     }
 
     @Override
@@ -41,8 +40,8 @@ public class DMCAPlayer implements PlaybackTarget {
     }
 
     public static class Factory {
-        public static PlaybackTarget create(RemoteDevice renderer) {
-            return new DMCAPlayer(renderer);
+        public static PlaybackTarget create(String urn, String friendlyName, String host) {
+            return new DMRPlayer( urn,  friendlyName, host);
         }
     }
 }

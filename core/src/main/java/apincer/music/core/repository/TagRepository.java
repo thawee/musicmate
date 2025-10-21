@@ -83,7 +83,9 @@ public class TagRepository {
                 path = FileUtils.getParentName(path);
             }
         }
-        tag.setAlbumCoverUniqueKey(DigestUtils.md5Hex(path)); // used for cached coverart
+
+
+      //  tag.setAlbumCoverUniqueKey(DigestUtils.md5Hex(path)); // used for cached coverart
 
         if(StringUtils.isEmpty(tag.getGenre())) {
             tag.setGenre(Constants.NONE);
@@ -628,8 +630,8 @@ public class TagRepository {
         dbHelper.delete(tag);
     }
 
-    public MusicTag getByAlbumCoverUniqueKey(String albumCoverUniqueKey) {
-        return dbHelper.findByAlbumCoverUniqueKey(albumCoverUniqueKey);
+    public MusicTag getByAlbumArtFilename(String albumArtFilename) {
+        return dbHelper.findByAlbumArtFilename(albumArtFilename);
     }
 
     public Dao<QueueItem, Long> getQueueItemDao() throws SQLException {

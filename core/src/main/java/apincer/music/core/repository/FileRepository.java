@@ -10,6 +10,7 @@ import android.util.Log;
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.anggrayudi.storage.file.StorageId;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -28,6 +29,7 @@ import apincer.music.core.codec.TagWriter;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.database.MusicTag;
+import apincer.music.core.utils.FileTypeUtil;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
@@ -48,7 +50,7 @@ public class FileRepository {
     public static File getCoverArt(Context context, MediaTrack music) {
         File cover = getFolderCoverArt(music.getPath());
         if(cover == null) {
-            String coverFile = COVER_ARTS +music.getAlbumCoverUniqueKey()+".png";
+            String coverFile = COVER_ARTS +music.getAlbumArtFilename();
             File dir =  context.getExternalCacheDir();
             cover = new File(dir, coverFile);
             if(!cover.exists()) cover = null;
@@ -56,21 +58,25 @@ public class FileRepository {
         return cover;
     }
 
-
-    public File extractCoverArt(MusicTag tag) {
+   //also save albumArtName
+    public void extractCoverArt(MusicTag tag) {
         try {
-            String coverFile = COVER_ARTS +tag.getAlbumCoverUniqueKey()+".png";
+           // String coverFilename = COVER_ARTS +DigestUtils.md5Hex(tag.getPath());
+            String coverFile = COVER_ARTS +tag.getAlbumArtFilename();
             File dir =  getContext().getExternalCacheDir();
             File pathFile = new File(dir, coverFile);
             if(!pathFile.exists()) {
+                String coverFilename = COVER_ARTS +DigestUtils.md5Hex(tag.getPath());
+                pathFile = new File(dir, coverFilename+".img");
                 FileUtils.createParentDirs(pathFile);
                 extractCoverArt(tag, pathFile);
+                String ext = FileTypeUtil.getExtensionFromContent(pathFile);
+                coverFilename = coverFilename+"."+ext;
+                tag.setAlbumArtFilename(coverFilename);
             }
-            return pathFile;
         } catch (Exception e) {
             Log.d(TAG,"extractCoverArt:", e);
         }
-        return null;
     }
 
     public boolean isManagedInLibrary(MusicTag tag) {
@@ -120,6 +126,7 @@ public class FileRepository {
         return StorageId.PRIMARY;
     }
 
+    /*
     public File getCoverArt(MusicTag music) {
         File cover = getFolderCoverArt(music.getPath());
         if(cover == null) {
@@ -129,15 +136,15 @@ public class FileRepository {
             if(!cover.exists()) cover = null;
         }
         return cover;
-    }
+    } */
 
-    public File getCoverArt(String albumCoverUniqueKey) {
-            String coverFile = COVER_ARTS +albumCoverUniqueKey+".png";
+    public File getCoverArt(String albumArtFilename) {
+            String coverFile = COVER_ARTS +albumArtFilename;
             File dir =  context.getExternalCacheDir();
             File cover = new File(dir, coverFile);
             if(!cover.exists()) {
                 // try to to get folder cover art
-                MusicTag song = tagRepos.getByAlbumCoverUniqueKey(albumCoverUniqueKey);
+                MusicTag song = tagRepos.getByAlbumArtFilename(albumArtFilename);
                 if(song != null) {
                     return getFolderCoverArt(song.getPath());
                 }
@@ -249,10 +256,12 @@ public class FileRepository {
                 if(basicTag != null) {
                     // Save basic tag immediately
                     basicTag.setMusicManaged(isManagedInLibrary(basicTag));
+                    saveCoverartToCache(basicTag); // must call before savetag, update albumArtName
+                    basicTag.setOriginTag(null);
                     tagRepos.saveTag(basicTag);
 
                     // Defer cover art extraction completely
-                    coverArtExecutor.submit(() -> saveCoverartToCache(basicTag));
+                   // coverArtExecutor.submit(() -> saveCoverartToCache(basicTag));
                 }
             }
         } catch (Exception ex) {
@@ -265,6 +274,11 @@ public class FileRepository {
             File folderCover = getFolderCoverArt(basicTag.getPath());
             if(folderCover == null) {
                 extractCoverArt(basicTag);
+            }else {
+                //update filename
+                String albumArtName = DigestUtils.md5Hex(basicTag.getPath());
+                String ext = FileTypeUtil.getExtensionFromContent(folderCover);
+                basicTag.setAlbumArtFilename(albumArtName+"."+ext);
             }
         } catch(Exception e) {
             Log.e(TAG, "Error extracting cover art", e);
@@ -520,7 +534,7 @@ public class FileRepository {
     }
 
     private void cleanCacheCover(MusicTag item) {
-        String coverFile = COVER_ARTS +item.getAlbumCoverUniqueKey()+".png";
+        String coverFile = COVER_ARTS +item.getAlbumArtFilename();
         File dir =  getContext().getExternalCacheDir();
         File pathFile = new File(dir, coverFile);
         if(pathFile.exists()) {

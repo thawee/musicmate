@@ -121,7 +121,7 @@ public class TagUtils {
         return isMPegFile(tag) || isAACFile(tag);
     }
 
-    public static String getDynamicRangeScore(MusicTag tag) {
+    public static String getDynamicRangeScore(MediaTrack tag) {
         String text;
         if(tag.getDynamicRangeScore()==0.00) {
             text = "";

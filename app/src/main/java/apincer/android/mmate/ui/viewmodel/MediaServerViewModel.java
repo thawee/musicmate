@@ -1,4 +1,4 @@
-package apincer.android.mmate.viewmodel;
+package apincer.android.mmate.ui.viewmodel;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;

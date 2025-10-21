@@ -29,7 +29,7 @@ public interface MediaTrack {
 
     double getAudioDuration();
 
-    String getAlbumCoverUniqueKey();
+    String getAlbumArtFilename();
 
     long getAudioBitRate();
 

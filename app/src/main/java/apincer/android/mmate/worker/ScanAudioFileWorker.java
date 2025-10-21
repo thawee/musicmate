@@ -91,15 +91,14 @@ public class ScanAudioFileWorker extends Worker {
             MusicMateExecutors.lowPriority(() -> {
                         List<MusicTag> BasicList = tagRepos.findMyNoDRMeterSongs();
                         for (MusicTag basicTag : BasicList) {
-                            //full scan
-                            if (TagReader.readExtras(getApplicationContext(), basicTag)) {
-                                basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
-                                tagRepos.saveTag(basicTag);
-                            }
-
-                            // extract cover art
                             try {
-                                repos.saveCoverartToCache(basicTag);
+                                //full scan
+                                if (TagReader.readExtras(getApplicationContext(), basicTag)) {
+                                    basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
+                                }
+
+                                //repos.saveCoverartToCache(basicTag);
+                                tagRepos.saveTag(basicTag);
                             } catch(Exception e) {
                                 Log.e(TAG, "Error extracting cover art", e);
                             }

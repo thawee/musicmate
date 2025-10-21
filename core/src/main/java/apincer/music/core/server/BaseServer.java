@@ -2,6 +2,7 @@ package apincer.music.core.server;
 
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
+import static apincer.music.core.utils.TagUtils.getDynamicRangeScore;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
@@ -28,7 +29,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import apincer.music.core.codec.MusicAnalyser;
@@ -37,12 +37,13 @@ import apincer.music.core.database.QueueItem;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.TrackInfo;
 import apincer.music.core.playback.PlaybackState;
-import apincer.music.core.playback.RemoteWebPlayer;
+import apincer.music.core.playback.WebStreamingPlayer;
 import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackService;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
-import apincer.music.core.repository.MusicInfoService;
+import apincer.music.core.repository.MusicInfoRepository;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.service.spi.MusicMateServiceBinder;
@@ -51,7 +52,6 @@ import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.utils.NetworkUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
-import io.reactivex.rxjava3.functions.Consumer;
 
 public class BaseServer {
     private static final String TAG = "BaseServer";
@@ -74,6 +74,8 @@ public class BaseServer {
     // common cache, used by all services
     private final LruCache<String, String> memoryCache;
     final int cacheSize = 10240; // 10 k
+
+    private PlaybackCallback playbackCallback;
 
     public BaseServer(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         this.context = context;
@@ -103,6 +105,11 @@ public class BaseServer {
             // Get the binder from the service and set the mediaServerService instance
             MusicMateServiceBinder binder = (MusicMateServiceBinder) service;
             playbackService = binder.getPlaybackService();
+            if(playbackCallback != null) {
+                playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
+                playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
+                playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
+            }
         }
 
         @Override
@@ -146,28 +153,10 @@ public class BaseServer {
        return new WebSocketContent();
     }
 
-    public void subscribePlaybackState(Consumer<PlaybackState> consumer) {
-        if(playbackService != null) {
-            playbackService.subscribePlaybackState(consumer);
-        }
-    }
-
-    public void subscribeNowPlayingSong(Consumer<Optional<MediaTrack>> consumer) {
-        if(playbackService != null) {
-            playbackService.subscribeNowPlayingSong(consumer);
-        }
-    }
-
-    public void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer) {
-        if(playbackService != null) {
-            playbackService.subscribePlaybackTarget(consumer);
-        }
-    }
-
     public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
-                PlaybackTarget player = RemoteWebPlayer.Factory.create(clientIp, userAgent, clientIp);
+                PlaybackTarget player = WebStreamingPlayer.Factory.create(clientIp, userAgent, clientIp);
                 playbackService.switchPlayer(player, false);
                 playbackService.onMediaTrackChanged(tag);
             }
@@ -186,6 +175,50 @@ public class BaseServer {
         );
     }
 
+    protected File getWebResource(String requestUri) {
+        File webUiDir = new File(getContext().getFilesDir(), "webui");
+        if (requestUri.contains("?")) {
+            requestUri = requestUri.substring(0, requestUri.indexOf("?"));
+        }
+        return new File(webUiDir, requestUri);
+    }
+
+    protected File getDefaultAlbumArt() {
+        File webUiDir = new File(getContext().getFilesDir(), "webui");
+        return new File(webUiDir, "assets/no_cover.png");
+    }
+
+    protected File getAlbumArt(String requestUri) {
+        //String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf("."));
+        String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length());
+        File albumArt = getFileRepos().getCoverArt(albumUniqueKey);
+        if(albumArt == null || albumArt.length() == 0) {
+            albumArt = getDefaultAlbumArt();
+        }
+        return albumArt;
+    }
+
+    protected MusicTag getSong(String uri) {
+        if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {
+            return null;
+        }
+        try {
+            String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length());
+            if (pathPart.isEmpty()) {
+                return null;
+            }
+            String[] parts = pathPart.split("/");
+            if (parts.length > 0 && !parts[0].isEmpty()) {
+                long contentId = StringUtils.toLong(parts[0]);
+                if (contentId > 0) { // Add validation
+                    return getTagRepos().findById(contentId);
+                }
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, TAG+" - Failed to parse content ID from URI: " + uri, ex);
+        }
+        return null;
+    }
 
     protected String formatAudioQuality(MusicTag tag) {
         // Pre-calculate capacity to avoid StringBuilder resizing
@@ -240,48 +273,18 @@ public class BaseServer {
         return fileRepos;
     }
 
-    /**
-     * get the ip address of the device
-     *
-     * @return the address or null if anything went wrong
-     */
-    /*
-    @NonNull
-    public static String getIpAddress() {
-        String hostAddress = null;
-        try {
-            for (Enumeration<NetworkInterface> networkInterfaces = NetworkInterface
-                    .getNetworkInterfaces(); networkInterfaces
-                         .hasMoreElements(); ) {
-                NetworkInterface networkInterface = networkInterfaces
-                        .nextElement();
-                if (!networkInterface.getName().startsWith("rmnet")) {
-                    for (Enumeration<InetAddress> inetAddresses = networkInterface
-                            .getInetAddresses(); inetAddresses.hasMoreElements(); ) {
-                        InetAddress inetAddress = inetAddresses.nextElement();
-                        if (!inetAddress.isLoopbackAddress() && inetAddress
-                                .getHostAddress() != null
-                                && IPV4_PATTERN.matcher(inetAddress
-                                .getHostAddress()).matches()) {
-
-                            hostAddress = inetAddress.getHostAddress();
-                        }
-
-                    }
-                }
-            }
-        } catch (SocketException se) {
-            Log.d(TAG,
-                    "Error while retrieving network interfaces", se);
+    public void registerPlaybackCallback(PlaybackCallback callback) {
+        this.playbackCallback = callback;
+        if(playbackService != null) {
+            playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
+            playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
+            playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
         }
-        // maybe wifi is off we have to use the loopback device
-        hostAddress = hostAddress == null ? "0.0.0.0" : hostAddress;
-        return hostAddress;
-    } */
+    }
 
     public class WebSocketContent {
         private static final String TAG = "WebSocketContent";
-        private final MusicInfoService musicInfoService = new MusicInfoService();
+        private final MusicInfoRepository musicInfoService = new MusicInfoRepository();
         // Cache for generated waveforms to avoid repeated heavy processing.
         private final LruCache<String, float[]> memoryCache;
         final int cacheSize = 10240; // Approx 10 MB based on average waveform size
@@ -307,22 +310,183 @@ public class BaseServer {
          * @param command The command string (e.g., "browse", "play", "getTrackMetadata").
          * @param message A Map containing the payload associated with the command (e.g., path, trackId).
          * @return A Map representing the JSON response to send back to the client,
-         * or {@code null} if the command does not require a direct response (e.g., control commands like 'next').
+         * or {@code null} if the command does not require a direct response.
          */
         @Nullable
         public Map<String, Object> handleCommand(String command, Map<String, Object> message) {
             if (command == null) {
-                Log.w(TAG, "Received null command");
+                Log.w(TAG, "Received websocket null command");
                 return null;
             }
+            Log.d(TAG, "Received websocket command: " + command);
 
+            try {
+                switch (command) {
+                    case "browse":
+                        String path = getOptionalString(message, "path", "Library");
+                        return sendBrowseResult(path);
+
+                    case "getTrackMetadata":
+                        long trackIdMeta = getRequiredTrackIdAsLong(message);
+                        return handleGetTrackMetadata(trackIdMeta);
+
+                    case "setRenderer":
+                        setRenderer(getRequiredString(message, "udn"));
+                        break; // No direct response needed
+
+                    case "getQueue":
+                        return sendQueueUpdate();
+
+                    case "addToQueue":
+                        handleAddToQueue(getRequiredString(message, "trackId"));
+                        break; // Queue update will be pushed
+
+                    case "emptyQueue":
+                        handleEmptyQueue();
+                        break; // Queue update will be pushed
+
+                    case "play":
+                        handlePlay(getRequiredString(message, "trackId"));
+                        break; // Playback state updates will be pushed
+
+                    case "playFromContext":
+                        String songIdContext = getRequiredString(message, "trackId");
+                        String pathContext = getRequiredString(message, "path");
+                        handlePlayFormContext(songIdContext, pathContext);
+                        break; // Playback state and queue updates will be pushed
+
+                    case "next":
+                        handlePlayNext();
+                        break; // Playback state update will be pushed
+
+                    case "previous":
+                        handlePlayPrevious();
+                        break; // Playback state update will be pushed
+
+                    case "getTrackDetails":
+                        return handleGetTrackDetails(getRequiredString(message, "trackId"));
+
+                    case "setRepeatMode":
+                        String mode = getRequiredString(message, "mode");
+                        if (!"none".equals(mode) && !"all".equals(mode) && !"one".equals(mode)) {
+                            throw new IllegalArgumentException("Invalid mode for setRepeatMode: " + mode);
+                        }
+                        handleSetRepeatMode(mode);
+                        break; // Playback state update will be pushed
+
+                    case "setShuffle":
+                        handleSetShuffleMode(getBoolean(message, "enabled"));
+                        break; // Playback state update will be pushed
+
+                    case "getNowPlaying":
+                        return sendNowPlaying();
+
+                    default:
+                        Log.w(TAG, "Unknown command received: " + command);
+                        return createErrorResponse("Unknown command: " + command);
+                }
+            } catch (IllegalArgumentException e) {
+                // This new catch block handles all validation failures from the helpers
+                Log.w(TAG, "Command '" + command + "' failed: " + e.getMessage());
+                return createErrorResponse(e.getMessage());
+            } catch (ClassCastException e) {
+                Log.e(TAG, "Error casting parameter for command: " + command, e);
+                return createErrorResponse("Invalid parameter type");
+            } catch (Exception e) {
+                Log.e(TAG, "Unexpected error handling command: " + command, e);
+                return createErrorResponse("Internal server error");
+            }
+            return null; // Return null for commands that don't send a direct response
+        }
+
+        /**
+         * Gets a required String parameter from the message map.
+         * Throws IllegalArgumentException if the parameter is null, empty, or the string "null".
+         */
+        private String getRequiredString(Map<String, Object> message, String key) {
+            Object obj = message.get(key);
+            if (obj == null) {
+                throw new IllegalArgumentException("Missing required parameter: " + key);
+            }
+            String value = String.valueOf(obj);
+            if (value.isEmpty() || "null".equalsIgnoreCase(value)) {
+                throw new IllegalArgumentException("Invalid or empty parameter: " + key);
+            }
+            return value;
+        }
+
+        /**
+         * Gets an optional String parameter from the message map.
+         * Returns the defaultValue if the parameter is null, empty, or the string "null".
+         */
+        private String getOptionalString(Map<String, Object> message, String key, String defaultValue) {
+            Object obj = message.get(key);
+            if (obj == null) {
+                return defaultValue;
+            }
+            String value = String.valueOf(obj);
+            if (value.isEmpty() || "null".equalsIgnoreCase(value)) {
+                return defaultValue;
+            }
+            return value;
+        }
+
+        /**
+         * Gets the "trackId" parameter and parses it as a long.
+         * This robustly handles the ID being sent as either a String or a Number.
+         * Throws IllegalArgumentException if the ID is missing or in an invalid format.
+         */
+        private long getRequiredTrackIdAsLong(Map<String, Object> message) {
+            Object idObj = message.get("trackId");
+            if (idObj == null) {
+                throw new IllegalArgumentException("Missing required parameter: trackId");
+            }
+
+            try {
+                if (idObj instanceof Number) {
+                    // Client sent it as a number
+                    return ((Number) idObj).longValue();
+                } else {
+                    // Client sent it as a string (which our JS client does)
+                    return Long.parseLong(String.valueOf(idObj));
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid format for trackId: " + idObj);
+            }
+        }
+
+        /**
+         * Gets a boolean parameter from the message map.
+         * Safely defaults to false if the parameter is null or not a boolean.
+         */
+        private boolean getBoolean(Map<String, Object> message, String key) {
+            // This is the most robust way to parse a boolean from an Object
+            return Boolean.TRUE.equals(message.get(key));
+        }
+
+        /**
+         * The main entry point for processing commands received from the WebSocket client.
+         * Parses the command and delegates to the appropriate handler method.
+         *
+         * @param command The command string (e.g., "browse", "play", "getTrackMetadata").
+         * @param message A Map containing the payload associated with the command (e.g., path, trackId).
+         * @return A Map representing the JSON response to send back to the client,
+         * or {@code null} if the command does not require a direct response (e.g., control commands like 'next').
+         */
+        @Nullable
+        public Map<String, Object> handleCommandOld(String command, Map<String, Object> message) {
+            if (command == null) {
+                Log.w(TAG, "Received websocket null command");
+                return null;
+            }
+            Log.d(TAG, "Received websocket command: "+command);
             try { // Add try-catch for robustness against parsing errors
                 switch (command) {
                     case "browse":
                         String path = String.valueOf(message.getOrDefault("path", "Library"));
                         return sendBrowseResult(path);
                     case "getTrackMetadata":
-                        Object idObj = message.get("id");
+                        Object idObj = message.get("trackId");
                         Object artistObj = message.get("artist");
                         Object albumObj = message.get("album");
                         if (!(idObj instanceof Number) || artistObj == null || albumObj == null) {
@@ -332,7 +496,7 @@ public class BaseServer {
                         long trackIdMeta = ((Number) idObj).longValue();
                         String artist = String.valueOf(artistObj);
                         String album = String.valueOf(albumObj);
-                        return handleGetTrackMetadata(trackIdMeta, artist, album);
+                        return handleGetTrackMetadata(trackIdMeta);
                     case "setRenderer":
                         String udn = String.valueOf(message.get("udn"));
                         if(udn == null || udn.isEmpty() || "null".equalsIgnoreCase(udn)) {
@@ -344,7 +508,7 @@ public class BaseServer {
                     case "getQueue":
                         return sendQueueUpdate();
                     case "addToQueue":
-                        String songIdAdd = String.valueOf(message.get("id"));
+                        String songIdAdd = String.valueOf(message.get("trackId"));
                         if(songIdAdd == null || songIdAdd.isEmpty() || "null".equalsIgnoreCase(songIdAdd)) {
                             Log.w(TAG, "addToQueue command failed: missing or invalid id.");
                             return createErrorResponse("Invalid ID for addToQueue");
@@ -355,7 +519,7 @@ public class BaseServer {
                         handleEmptyQueue();
                         break; // Queue update will be pushed
                     case "play":
-                        String songIdPlay = String.valueOf(message.get("id"));
+                        String songIdPlay = String.valueOf(message.get("trackId"));
                         if(songIdPlay == null || songIdPlay.isEmpty() || "null".equalsIgnoreCase(songIdPlay)) {
                             Log.w(TAG, "play command failed: missing or invalid id.");
                             return createErrorResponse("Invalid ID for play");
@@ -363,7 +527,7 @@ public class BaseServer {
                         handlePlay(songIdPlay);
                         break; // Playback state updates will be pushed
                     case "playFromContext":
-                        String songIdContext = String.valueOf(message.get("id"));
+                        String songIdContext = String.valueOf(message.get("trackId"));
                         String pathContext = String.valueOf(message.get("path"));
                         if(songIdContext == null || songIdContext.isEmpty() || "null".equalsIgnoreCase(songIdContext) || pathContext == null || pathContext.isEmpty()) {
                             Log.w(TAG, "playFromContext command failed: missing or invalid id or path.");
@@ -378,7 +542,7 @@ public class BaseServer {
                         handlePlayPrevious();
                         break; // Playback state update will be pushed
                     case "getTrackDetails":
-                        String trackIdDetails = String.valueOf(message.get("id"));
+                        String trackIdDetails = String.valueOf(message.get("trackId"));
                         if(trackIdDetails == null || trackIdDetails.isEmpty() || "null".equalsIgnoreCase(trackIdDetails)) {
                             Log.w(TAG, "getTrackDetails command failed: missing or invalid id.");
                             return createErrorResponse("Invalid ID for getTrackDetails");
@@ -424,12 +588,10 @@ public class BaseServer {
          * slow operations like file analysis and external API calls.
          *
          * @param trackId The ID of the track to fetch metadata for.
-         * @param artist  The artist name (used for external API lookups).
-         * @param album   The album name (used for external API lookups).
          * @return A Map representing the "trackMetadata" response, or {@code null} if the track is not found.
          */
         @Nullable
-        private Map<String, Object> handleGetTrackMetadata(long trackId, String artist, String album) {
+        private Map<String, Object> handleGetTrackMetadata(long trackId) {
             MusicTag song = tagRepos.findById(trackId);
             if (song == null) {
                 Log.w(TAG, "handleGetTrackMetadata: Track not found for ID " + trackId);
@@ -438,7 +600,7 @@ public class BaseServer {
 
             TrackInfo info = null;
             try {
-                info = musicInfoService.getFullTrackInfo(artist, album);
+                info = musicInfoService.getFullTrackInfo(song.getArtist(), song.getAlbumArtist(), song.getAlbum(), song.getYear());
             } catch (Exception ex) {
                 Log.e(TAG, "getTrackMetadata (bio fetch) failed for track ID " + trackId, ex);
             }
@@ -459,12 +621,7 @@ public class BaseServer {
             if (!isEmpty(song.getComposer())) {
                 credits.put("composer", song.getComposer());
             }
-            // Assuming MusicTag has getLyricist() - uncomment if it exists
-        /*
-        if (!isEmpty(song.getLyricist())) {
-            credits.put("lyricist", song.getLyricist());
-        }
-        */
+
             // Add more credits (producer, personnel) if available in MusicTag
             infoPayload.put("credits", credits);
 
@@ -814,15 +971,15 @@ public class BaseServer {
             // Use Map.of for immutable core fields, then add optional fields to a HashMap
             Map<String, Object> track = new HashMap<>(Map.of(
                     "type", "song",
-                    "id", song.getId(),
-                    "title", trimToEmpty(song.getTitle()), // Use trimToEmpty for safety
+                    "trackId", song.getId(),
+                    "title", trimToEmpty(song.getTitle()),
                     "artist", trimToEmpty(song.getArtist()),
                     "album", trimToEmpty(song.getAlbum()),
                     "duration", song.getAudioDuration(),
                     "format", trimToEmpty(song.getAudioEncoding()).toUpperCase(),
                     "bitDepth", StringUtils.formatAudioBitsDepth(song.getAudioBitsDepth()),
                     "sampleRate", StringUtils.formatAudioSampleRate(song.getAudioSampleRate(),true),
-                    "artUrl", "/coverart/" + song.getAlbumCoverUniqueKey() + ".png"
+                    "artUrl", "/coverart/" + song.getAlbumArtFilename()
             ));
 
             if (!isEmpty(song.getYear())) {
@@ -830,7 +987,7 @@ public class BaseServer {
             }
 
             if (song.getDynamicRangeScore()>0) {
-                track.put("drs", song.getDynamicRangeScore());
+                track.put("drs", getDynamicRangeScore(song));
             }
 
             String qualityIndicator = song.getQualityInd();
@@ -862,7 +1019,7 @@ public class BaseServer {
             return Map.of(
                     "type", "playbackState",
                     "trackId", state.currentTrack.getId(),
-                    "elapsed", state.currentPositionSecond, // Convert ms to seconds for client
+                    "elapsed", state.currentPositionSecond,
                     "state", stateName,
                     "duration", state.currentTrack.getAudioDuration() // Assuming duration is already in seconds
             );
@@ -917,27 +1074,6 @@ public class BaseServer {
 
             return waveform;
         }
-
-    /*
-    @Nullable
-    private float[] getWaveform(@NonNull MediaTrack tag) {
-        String cacheKey = String.valueOf(tag.getId());
-        float[] waveform = memoryCache.get(cacheKey);
-        if (waveform == null) {
-            Log.d(TAG, "Waveform cache miss for track ID: " + cacheKey);
-            waveform = MusicAnalyser.generateWaveform(context, tag, 480, 0.6); // Consider adjusting parameters
-            if (waveform != null) {
-                memoryCache.put(cacheKey, waveform);
-                Log.d(TAG, "Waveform generated and cached for track ID: " + cacheKey);
-            } else {
-                Log.w(TAG, "Failed to generate waveform for track ID: " + cacheKey);
-            }
-        } else {
-            Log.d(TAG, "Waveform cache hit for track ID: " + cacheKey);
-        }
-        return waveform;
-    } */
-
 
         /**
          * Gets the status information for the currently active playback target (renderer).

@@ -70,7 +70,7 @@ import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.viewmodel.TagsViewModel;
+import apincer.android.mmate.ui.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialClickableUnit;

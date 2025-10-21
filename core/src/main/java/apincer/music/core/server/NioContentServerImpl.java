@@ -23,11 +23,11 @@ import apincer.music.core.database.MusicTag;
 import apincer.music.core.http.NioHttpServer;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
+import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.spi.ContentServer;
-import apincer.music.core.utils.StringUtils;
 import apincer.music.core.utils.TagUtils;
 
 public class NioContentServerImpl extends BaseServer implements ContentServer {
@@ -87,7 +87,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
 
             if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
                 File filePath = getAlbumArt(requestUri);
-                return createResourceResponse(filePath, request);
+                return createAlbumArtResponse(filePath, request);
             } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
                 MusicTag song = getSong(requestUri);
                 return createSongResponse(song, request);
@@ -98,6 +98,18 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         } catch (Exception e) {
             Log.e(TAG, TAG+" - Error handling HTTP request", e);
             return new NioHttpServer.HttpResponse().setStatus(HTTP_INTERNAL_ERROR, "Internal Server Error");
+        }
+    }
+
+    private NioHttpServer.HttpResponse createAlbumArtResponse(File filePath, NioHttpServer.HttpRequest request) throws IOException {
+        if (filePath == null || !filePath.exists() || !filePath.canRead()) {
+            return new NioHttpServer.HttpResponse().setStatus(HTTP_NOT_FOUND, "Not Found").setBody("Resource not found".getBytes());
+        }
+        try {
+            return server.createFileResponse(filePath, request);
+        } catch (Exception e) {
+            filePath = getDefaultAlbumArt();
+            return server.createFileResponse(filePath, request);
         }
     }
 
@@ -140,41 +152,6 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 .setStatus(code, message)
                 .setBody(message.getBytes())
                 .addHeader("Content-Type", "text/plain; charset=utf-8");
-    }
-
-    private File getWebResource(String requestUri) {
-        File webUiDir = new File(getContext().getFilesDir(), "webui");
-        if (requestUri.contains("?")) {
-            requestUri = requestUri.substring(0, requestUri.indexOf("?"));
-        }
-        return new File(webUiDir, requestUri);
-    }
-
-    private File getAlbumArt(String requestUri) {
-        String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf(".png"));
-        return getFileRepos().getCoverArt(albumUniqueKey);
-    }
-
-    private MusicTag getSong(String uri) {
-        if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {
-            return null;
-        }
-        try {
-            String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length());
-            if (pathPart.isEmpty()) {
-                return null;
-            }
-            String[] parts = pathPart.split("/");
-            if (parts.length > 0 && !parts[0].isEmpty()) {
-                long contentId = StringUtils.toLong(parts[0]);
-                if (contentId > 0) { // Add validation
-                    return getTagRepos().findById(contentId);
-                }
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, TAG+" - Failed to parse content ID from URI: " + uri, ex);
-        }
-        return null;
     }
 
     private void prepareMusicStreamingHeaders(NioHttpServer.HttpResponse response, MusicTag song) {
@@ -234,9 +211,25 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         private final WebSocketContent webSocketContent = buildWebSocketContent();
 
         public WebSocketHandlerImpl() {
-            subscribePlaybackState(this::broadcastPlaybackState);
-            subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(this::broadcastNowPlaying));
-            subscribePlaybackTarget(player -> player.ifPresent(this::broadcastPlaybackTarget));
+            registerPlaybackCallback(new PlaybackCallback() {
+                @Override
+                public void onMediaTrackChanged(MediaTrack metadata) {
+                    broadcastNowPlaying(metadata);
+                }
+
+                @Override
+                public void onPlaybackStateChanged(PlaybackState state) {
+                    broadcastPlaybackState(state);
+                }
+
+                @Override
+                public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
+                    broadcastPlaybackTarget(playbackTarget);
+                }
+            });
+          //  subscribePlaybackState(this::broadcastPlaybackState);
+          //  subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(this::broadcastNowPlaying));
+          //  subscribePlaybackTarget(player -> player.ifPresent(this::broadcastPlaybackTarget));
         }
 
         @Override
@@ -308,11 +301,12 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 }
 
                 Map<String, Object> response = webSocketContent.handleCommand(command, messageMap);
-                if (response != null) {
+               sendMessage(connection, response);
+                /* if (response != null) {
                     String jsonResponse = GSON.toJson(response);
                     connection.send(jsonResponse);
                    // Log.d(TAG, "Response message: " + jsonResponse);
-                }
+                } */
             } catch (com.google.gson.JsonSyntaxException e) {
                 // Catching the specific exception for bad JSON.
                 Log.e(TAG, TAG+" - Error parsing WebSocket JSON message: " + message, e);
@@ -343,7 +337,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         private void broadcast(String message) {
             sessions.removeIf(NioHttpServer.WebSocketConnection::isClosed); // Clean up closed connections
 
-            Log.d(TAG, TAG+" - Broadcast message: " + message);
+          //  Log.d(TAG, TAG+" - Broadcast message: " + message);
             sessions.parallelStream().forEach(session -> {
                 try {
                     if (!session.isClosed()) {
@@ -370,6 +364,8 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
                 broadcast(jsonResponse);
+
+                Log.d(TAG, "broadcastNowPlaying: "+jsonResponse);
             }
         }
 
@@ -378,6 +374,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
                 broadcast(jsonResponse);
+                Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
             }
         }
 

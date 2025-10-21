@@ -144,7 +144,7 @@ public class TagsTechnicalFragment extends Fragment {
                     || field.getName().equals("mmManaged")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
-                    || field.getName().equals("albumCoverUniqueKey")
+                    || field.getName().equals("albumArtFilename")
                     || field.getName().equals("waveformData")
                     || field.getName().equals("data")
                     || field.getName().equals("storageId")

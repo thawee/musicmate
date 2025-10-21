@@ -114,7 +114,7 @@ import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
-import apincer.android.mmate.viewmodel.MainViewModel;
+import apincer.android.mmate.ui.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;

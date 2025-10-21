@@ -28,7 +28,7 @@ public class MusicTag implements MediaTrack {
     protected String uniqueKey;
 
     @DatabaseField
-    protected String albumCoverUniqueKey;
+    protected String albumArtFilename;
 
     // file information
     @DatabaseField
@@ -116,12 +116,12 @@ public class MusicTag implements MediaTrack {
    protected double dynamicRange = 0;
 
 
-    public String getAlbumCoverUniqueKey() {
-        return albumCoverUniqueKey;
+    public String getAlbumArtFilename() {
+        return albumArtFilename;
     }
 
-    public void setAlbumCoverUniqueKey(String albumUniqueKey) {
-        this.albumCoverUniqueKey = albumUniqueKey;
+    public void setAlbumArtFilename(String getAlbumArtFilename) {
+        this.albumArtFilename = getAlbumArtFilename;
     }
 
     public String getNormalizedArtist() {
@@ -397,7 +397,7 @@ public class MusicTag implements MediaTrack {
         MusicTag tag = new MusicTag();
         tag.id = id;
         tag.uniqueKey = uniqueKey;
-        tag.albumCoverUniqueKey = albumCoverUniqueKey;
+        tag.albumArtFilename = albumArtFilename;
         tag.path = path;
         tag.storageId = storageId;
         tag.simpleName = simpleName;
@@ -446,7 +446,7 @@ public class MusicTag implements MediaTrack {
     public void cloneFrom(MusicTag tag) {
         this.id = tag.id;
         this.uniqueKey = tag.uniqueKey;
-        this.albumCoverUniqueKey = tag.albumCoverUniqueKey;
+        this.albumArtFilename = tag.albumArtFilename;
         this.path = tag.path;
         this.fileSize = tag.fileSize;
         this.fileType = tag.fileType;
