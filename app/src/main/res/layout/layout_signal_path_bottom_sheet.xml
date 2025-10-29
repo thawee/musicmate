@@ -22,7 +22,9 @@
             android:text="Audio Output"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            app:drawableStartCompat="@drawable/rounded_speaker_24" />
 
         <!-- Spacer -->
         <View
@@ -73,7 +75,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Available Renderers"
+            android:text="Available Players"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 

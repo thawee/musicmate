@@ -2,20 +2,15 @@ package apincer.android.mmate.ui;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static apincer.android.mmate.utils.UIUtils.dpToPx;
 import static apincer.music.core.Constants.FLAC_NO_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
 import static apincer.music.core.Constants.KEY_FILTER_KEYWORD;
 import static apincer.music.core.Constants.KEY_FILTER_TYPE;
-import static apincer.music.core.Constants.TITLE_ARTIST;
-import static apincer.music.core.Constants.TITLE_GENRE;
-import static apincer.music.core.Constants.TITLE_GROUPING;
-import static apincer.music.core.Constants.TITLE_LIBRARY;
-import static apincer.music.core.Constants.TITLE_PLAYLIST;
-import static apincer.music.core.Constants.TITLE_RESOLUTION;
+import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
@@ -23,19 +18,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -49,6 +39,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.view.ActionMode;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
@@ -59,6 +50,7 @@ import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.anggrayudi.storage.file.DocumentFileCompat;
 import com.balsikandar.crashreporter.ui.CrashReporterActivity;
@@ -67,12 +59,8 @@ import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.carousel.CarouselLayoutManager;
-import com.google.android.material.carousel.CarouselSnapHelper;
-import com.google.android.material.carousel.MaskableFrameLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
 import com.skydoves.powerspinner.IconSpinnerItem;
 import com.skydoves.powerspinner.PowerSpinnerView;
@@ -157,25 +145,19 @@ public class MainActivity extends AppCompatActivity {
     // UI components
     private ResideMenu mResideMenu;
     private MusicTagAdapter adapter;
-    private MusicFolderAdapter folderAdapter;
+   // private MusicFolderAdapter folderAdapter;
     private SelectionTracker<Long> mTracker;
     private final List<MusicTag> selections = new ArrayList<>();
-    private Snackbar mExitSnackbar;
-    //private View mHeaderPanel;
-    private View mTitlePanel;
-    private TextView titleLabel;
-    private EditText mSearchView;
-    private ImageView customSearchIcon;
-    private ImageView customClearIcon;
+    //private Snackbar mExitSnackbar;
+    private View mHeaderPanel;
+    private ImageView mBackButton;
+    private TextView titleLabelText;
 
-    private RefreshLayout refreshLayout;
+    //private RefreshLayout refreshLayout;
     private StateView mStateView;
     private RecyclerView mRecyclerView;
-    private TextView headerSubtitle;
-    private int currentlyActiveFolderPosition = RecyclerView.NO_POSITION;
-    private View currentlyHighlightedView = null; // To keep track of the previously highlighted view
-    private RecyclerView folderRecyclerView;
-    private CarouselSnapHelper carouselSnapHelper;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private FloatingActionButton fabScrollToTop;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -298,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
         //setupNowPlayingView();
         setupBottomAppBar();
         setupRecycleView(searchCriteria);
-        setupSwipeToRefresh();
+        //setupSwipeToRefresh();
         setupResideMenus();
 
         // Observe ViewModel LiveData
@@ -308,12 +290,9 @@ public class MainActivity extends AppCompatActivity {
         viewModel.loadMusicItems(adapter.getCriteria());
 
         // Setup exit snackbar
-        mExitSnackbar = Snackbar.make(mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
-        View snackBarView = mExitSnackbar.getView();
-        snackBarView.setBackgroundColor(getColor(R.color.warningColor));
-
-        // Start music scan
-      //  MusixMateApp.getInstance().startMusicScan();
+        //mExitSnackbar = Snackbar.make(mRecyclerView, R.string.alert_back_to_exit, Snackbar.LENGTH_LONG);
+        //View snackBarView = mExitSnackbar.getView();
+        //snackBarView.setBackgroundColor(getColor(R.color.warningColor));
 
         // Bind to the MediaServerService as soon as this service is created
         Intent intent = new Intent(this, MusicMateServiceImpl.class);
@@ -325,7 +304,8 @@ public class MainActivity extends AppCompatActivity {
         viewModel.musicItems.observe(this, musicTags -> {
             mRecyclerView.post(() -> {
                         adapter.setMusicTags(musicTags);
-                        refreshLayout.finishRefresh();
+                        swipeRefreshLayout.setRefreshing(false);
+                       // refreshLayout.finishRefresh();
                     });
             updateHeaderPanel();
             if (adapter.getItemCount() == 0) {
@@ -335,99 +315,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.musicItemsLoading.observe(this, isLoading -> {
-            mRecyclerView.post(() -> {
-                if (isLoading) {
-                    refreshLayout.autoRefresh();
-                } else {
-                    refreshLayout.finishRefresh();
-                }
-            });
-        });
+        viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> {
+            if(isLoading) {
+                swipeRefreshLayout.setRefreshing(true);
+            }else {
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        }));
     }
 
     private void setupHeaderPanel() {
-        //mHeaderPanel = findViewById(R.id.header_panel);
-        mTitlePanel = findViewById(R.id.title_panel);
-        titleLabel = findViewById(R.id.title_label);
+        mHeaderPanel = findViewById(R.id.header_panel);
+        mBackButton = findViewById(R.id.header_back_btn);
+        titleLabelText = findViewById(R.id.header_label_text);
 
-        headerSubtitle = findViewById(R.id.header_subtitle);
-
-        mSearchView = findViewById(R.id.search_edit_text);
-        customSearchIcon = findViewById(R.id.search_icon);
-        customClearIcon = findViewById(R.id.search_clear_icon);
-
-        // Listener for the search icon click
-        mSearchView.setOnClickListener(v -> {
-            String query = mSearchView.getText().toString().trim();
-
-            adapter.setSearchString(query);
-            viewModel.loadMusicItems(adapter.getCriteria());
-            hideKeyboard();
-        });
-
-        // Listener for the "Search" action on the keyboard
-        mSearchView.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                String query = mSearchView.getText().toString().trim();
-                adapter.setSearchString(query);
-                viewModel.loadMusicItems(adapter.getCriteria());
-                hideKeyboard();
-                return true;
-            }
-            return false;
-        });
-
-        customSearchIcon.setOnClickListener(v -> {
-            String query = mSearchView.getText().toString().trim();
-            adapter.setSearchString(query);
-            viewModel.loadMusicItems(adapter.getCriteria());
-            hideKeyboard();
-        });
-
-        customClearIcon.setOnClickListener(v -> {
-            mSearchView.setText(""); // Clear the text
-            // Keyboard will likely stay open, which is often desired.
-            // If you want to hide it: hideKeyboard();
-            adapter.setSearchString("");
-            viewModel.loadMusicItems(adapter.getCriteria());
-        });
-
-        // TextWatcher to show/hide the clear icon
-        mSearchView.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Not needed
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (!s.isEmpty()) {
-                    customClearIcon.setVisibility(View.VISIBLE);
-                } else {
-                    customClearIcon.setVisibility(GONE);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                // Not needed
-            }
-        });
     }
 
-    private void hideKeyboard() {
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-        }
-        mSearchView.clearFocus(); // Optional: remove focus from EditText
-    }
-
-    /*
+   /*
     private void setupNowPlayingView() {
         // Initialize components
         View nowPlayingView = findViewById(R.id.now_playing_panel);
@@ -481,11 +385,6 @@ public class MainActivity extends AppCompatActivity {
         bottomSheet.show(getSupportFragmentManager(), "SignalPathBottomSheet");
     }
 
-    private void setupSwipeToRefresh() {
-        refreshLayout = findViewById(R.id.refreshLayout);
-        refreshLayout.setOnRefreshListener(refreshlayout -> viewModel.loadMusicItems(adapter.getCriteria()));
-    }
-
     private void setupRecycleView(SearchCriteria searchCriteria) {
         if (searchCriteria == null) {
             searchCriteria = new SearchCriteria(SearchCriteria.TYPE.LIBRARY);
@@ -493,70 +392,10 @@ public class MainActivity extends AppCompatActivity {
 
         ///  Music Folder List
         // Initialize adapter
-        folderAdapter = new MusicFolderAdapter(this, viewModel.getTagRepository(), searchCriteria);
+        //folderAdapter = new MusicFolderAdapter(this, viewModel.getTagRepository(), searchCriteria);
 
         // Setup RecyclerView
-        folderRecyclerView = findViewById(R.id.carousel_recycler_view);
-        folderRecyclerView.setAdapter(folderAdapter);
-        CarouselLayoutManager carouselLayoutManager = new CarouselLayoutManager();
-        folderRecyclerView.setLayoutManager(carouselLayoutManager);
-        carouselSnapHelper = new CarouselSnapHelper();
-        carouselSnapHelper.attachToRecyclerView(folderRecyclerView);
-
-        // ---- START: Listener for Snap Selection ----
-        folderRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    View centerView = carouselSnapHelper.findSnapView(carouselLayoutManager);
-                    if (centerView != null) {
-                        int newActivePosition = carouselLayoutManager.getPosition(centerView);
-
-                        if (newActivePosition != RecyclerView.NO_POSITION && newActivePosition != currentlyActiveFolderPosition) {
-                           // Log.d("FolderCarousel", "New active folder snapped: position " + newActivePosition);
-
-                            // 1. Update highlighted state (optional, but good for UX)
-                            //    You might need to notify the adapter for previous and new item to rebind
-                            //    if your highlighting is complex and done within onBindViewHolder.
-                            currentlyActiveFolderPosition = newActivePosition;
-
-                            // Unhighlight the previously highlighted view
-                            if (currentlyHighlightedView != null && currentlyHighlightedView != centerView) {
-                                folderAdapter.unhighlightFolder((MaskableFrameLayout) currentlyHighlightedView);
-                            }
-
-                            // Highlight the new center view
-                            if (currentlyHighlightedView != centerView) { // Avoid re-highlighting if it's the same
-                                folderAdapter.highlightFolder((MaskableFrameLayout) centerView);
-                                currentlyHighlightedView = centerView;
-                            }
-
-                            MusicFolder selectedFolder = folderAdapter.getItem(newActivePosition); // You'll need an getItem method
-
-                                String name = selectedFolder.getName(); // Or unique key
-
-                               // Log.d("FolderCarousel", "Selected name: " + name);
-
-                                if (adapter != null) {
-                                    if (mTracker!= null) mTracker.clearSelection();
-                                    if(actionMode!=null) actionMode.finish();
-                                    adapter.setSearchString("");
-                                    adapter.resetFilter();
-                                    adapter.setKeyword(name); // Set the keyword/criteria
-                                    if (viewModel != null) {
-                                        viewModel.loadMusicItems(adapter.getCriteria());
-                                    } else {
-                                        if(refreshLayout != null) {
-                                            refreshLayout.autoRefresh();
-                                        }
-                                    }
-                                }
-                        }
-                    }
-                }
-            }
-        });
+       // folderRecyclerView = findViewById(R.id.carousel_recycler_view);
         // ---- END: Listener for Snap Selection ----
 
         ///  Music Items List
@@ -566,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged() {
                 super.onChanged();
-                refreshLayout.finishRefresh();
+                //refreshLayout.finishRefresh();
                 updateHeaderPanel();
                 if (adapter.getItemCount() == 0) {
                     mStateView.displayState("search");
@@ -577,6 +416,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Setup RecyclerView
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
+        swipeRefreshLayout.setProgressViewOffset(false, 0, spinnerOffset);
+
+
+        // --- Set the listener ---
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // This method is called when the user swipes
+            //Log.d("MyApp", "User triggered refresh!");
+
+            // 1. Load your new data here (e.g., make a network call)
+            viewModel.loadMusicItems();
+        });
+
+        fabScrollToTop = findViewById(R.id.fab_scroll_to_top);
+        fabScrollToTop.setOnClickListener(view -> mRecyclerView.smoothScrollToPosition(0));
+
         mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setItemViewCacheSize(20);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -588,15 +444,46 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.setPreserveFocusAfterLayout(true);
 
+        // add on scrool listener
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager == null) return;
+
+                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                if (dy > 0) {
+                    // Scrolling down (list moving up)
+                    if (fabScrollToTop.isShown()) {
+                        fabScrollToTop.hide();
+                    }
+                } else if (dy < 0) {
+                    // Scrolling up (list moving down)
+                    // Only show if we're not at the very top
+                    if (firstVisibleItemPosition > 0 && !fabScrollToTop.isShown()) {
+                        fabScrollToTop.show();
+                    }
+                }
+
+                // Safety check: Always hide if we're at the top
+                if (firstVisibleItemPosition == 0 && fabScrollToTop.isShown()) {
+                    fabScrollToTop.hide();
+                }
+            }
+        });
+
         // Setup item click listener
         MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
             MusicTag tag = adapter.getMusicTag(position);
             if(tag == null) return;
 
-            if(SearchCriteria.TYPE.ARTIST.name().equals(tag.getFileType())) {
-                doStartRefresh(SearchCriteria.TYPE.ARTIST, tag.getTitle());
-            }else if("PLS".equals(tag.getAudioEncoding())) {
-                doStartRefresh(SearchCriteria.TYPE.PLAYLIST, tag.getUniqueKey());
+            if(tag instanceof MusicFolder folder) {
+                doStartRefresh(folder.getType(), tag.getTitle());
+           // }else if("PLS".equals(tag.getAudioEncoding())) {
+            //    doStartRefresh(SearchCriteria.TYPE.PLAYLIST, tag.getUniqueKey());
             }else {
                 doShowEditActivity(Collections.singletonList(tag));
             }
@@ -610,7 +497,8 @@ public class MainActivity extends AppCompatActivity {
                     new MusicTagAdapter.KeyProvider(),
                     new MusicTagAdapter.DetailsLookup(mRecyclerView),
                     StorageStrategy.createLongStorage())
-                    .withSelectionPredicate(SelectionPredicates.createSelectAnything())
+                    //.withSelectionPredicate(SelectionPredicates.createSelectAnything())
+                    .withSelectionPredicate(new MusicTrackSelectionPredicate(adapter))
                     .build();
             adapter.injectTracker(mTracker);
 
@@ -673,6 +561,20 @@ public class MainActivity extends AppCompatActivity {
         if (Settings.isShowStorageSpace(getApplicationContext())) {
             @SuppressLint("InflateParams") View storageView = getLayoutInflater().inflate(R.layout.view_header_left_menu, null);
             LinearLayout panel = storageView.findViewById(R.id.storage_bar);
+            TextView totalSongText = storageView.findViewById(R.id.header_total_songs);
+            TextView totalDurationText = storageView.findViewById(R.id.header_total_duration);
+
+            List<MusicTag> list = viewModel.getTagRepository().getAllMusics();
+            long songCount = list.size();
+            long totalDuration = 0;
+            for (MusicTag tag : list) {
+                if (tag != null) { // Add null check for safety
+                    totalDuration += (long) tag.getAudioDuration();
+                }
+            }
+
+            totalSongText.setText(StringUtils.formatSongSize(songCount));
+            totalDurationText.setText(StringUtils.formatDuration(totalDuration, true));
             UIUtils.buildStoragesStatus(getApplication(), panel);
             mResideMenu.setLeftHeader(storageView);
         }
@@ -684,63 +586,67 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderPanel() {
-        String label = adapter.getHeaderLabel();
+        SearchCriteria.TYPE type = adapter.getCriteria().getType();
         Drawable icon = null;
 
         // Set appropriate icon based on label
-        if (TITLE_LIBRARY.equals(label)) {
+        if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_library_music_24);
-        } else if (TITLE_GENRE.equals(label)) {
+        } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_style_24);
-        } else if (TITLE_GROUPING.equals(label)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_local_play_24);
-        } else if (TITLE_RESOLUTION.equals(label)) {
+       // } else if (SearchCriteria.TYPE.GROUPING.equals(type)) {
+        //    icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_local_play_24);
+        } else if (SearchCriteria.TYPE.CODEC.equals(type)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_equalizer_24);
-        } else if (TITLE_PLAYLIST.equals(label)) {
+        } else if (SearchCriteria.TYPE.PLAYLIST.equals(type)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_order_play_24);
-        } else if (TITLE_ARTIST.equals(label)) {
+        } else if (SearchCriteria.TYPE.ARTIST.equals(type)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_demography_24);
         }
 
-        titleLabel.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
-        titleLabel.setText(label);
-
-        // Build statistics text
-        SimplifySpanBuild spannable = new SimplifySpanBuild("");
-        if(SearchCriteria.TYPE.ARTIST.equals(adapter.getCriteria().getType())) {
-            if(adapter.getCriteria().getKeyword() == null) {
-                spannable.append(StringUtils.formatNumber(adapter.getTotalSongs()))
-                        .append(new SpecialTextUnit(" artists").setTextSize(12).useTextBold());
+        String unitLabel = StringUtils.formatTitle(adapter.getHeaderLabel());
+        if(!isEmpty(adapter.getCriteria().getKeyword())) {
+            // can back to higher category, except type library
+            unitLabel = "Songs | "+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
+            if(SearchCriteria.TYPE.LIBRARY.equals(type)){
+                mBackButton.setImageDrawable(icon);
             }else {
-                spannable.append(adapter.getCriteria().getKeyword())
-                        .append(new SpecialTextUnit(" [").setTextSize(12).useTextBold())
-                        .append(StringUtils.formatNumber(adapter.getTotalSongs()))
-                        .append(new SpecialTextUnit(" songs]").setTextSize(12).useTextBold());
+                mBackButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_arrow_shape_up_24));
+                mHeaderPanel.setOnClickListener(view -> {
+                    adapter.resetFilter();
+                    adapter.getCriteria().setKeyword(null);
+                    viewModel.loadMusicItems(adapter.getCriteria());
+                });
             }
         }else {
-            int count = adapter.getTotalSongs();
-            long totalSize = adapter.getTotalSize();
-            String duration = StringUtils.formatDuration(adapter.getTotalDuration(), true);
+            mBackButton.setImageDrawable(icon);
+        }
+
+        SimplifySpanBuild titleSpannable = new SimplifySpanBuild("");
+        titleSpannable.append(new SpecialTextUnit(adapter.getHeaderTitle()).setTextColor(Color.WHITE).setTextSize(16).useTextItalic().useTextBold());
+
+        if(!isEmpty(adapter.getCriteria().getFilterType())) {
+            titleSpannable.append("\n");
+            int count = adapter.getTotalItems();
+            String filterText = adapter.getCriteria().getFilterText();
+            if("Folder".equals(adapter.getCriteria().getFilterType())) {
+                filterText = DocumentFileCompat.getBasePath(getApplicationContext(), filterText);
+            }
+            titleSpannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count) + " Songs ").setTextSize(12).useTextItalic());
+            titleSpannable.append(new SpecialTextUnit("["+filterText+"]").setTextSize(10).useTextItalic());
+        }else {
+            int count = adapter.getTotalItems();
+            //long totalSize = adapter.getTotalSize();
 
             if (count > 0) {
-                // Ensure this file is saved with UTF-8 encoding.
-                String totalSongCountIcon = "🎵 ";
-                //String totalDurationIcon = "  ⏱ ";
-                String totalDurationIcon = "  ⏳ ";
-                String totalLibrarySizeIcon = "  📁 ";
-                spannable.append(new SpecialTextUnit(totalSongCountIcon))
-                        .append(new SpecialTextUnit(StringUtils.formatSongSize(count)).setTextSize(12).useTextBold())
-                        .append(new SpecialTextUnit(" songs ").setTextSize(12).useTextBold())
-                        .append(totalDurationIcon)
-                        .append(new SpecialTextUnit(duration).setTextSize(12).useTextBold())
-                        .append(totalLibrarySizeIcon)
-                        .append(new SpecialTextUnit(StringUtils.formatStorageSize(totalSize)).setTextSize(12).useTextBold());
-
+                titleSpannable.append("\n");
+                titleSpannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count) + " " + unitLabel).setTextSize(12).useTextItalic());
             } else {
-                spannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextBold());
+                titleSpannable.append("\n");
+                titleSpannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextItalic());
             }
         }
-        headerSubtitle.setText(spannable.build());
+        titleLabelText.setText(titleSpannable.build());
     }
 
     @Override
@@ -808,7 +714,7 @@ public class MainActivity extends AppCompatActivity {
     private void doStartRefresh(SearchCriteria.TYPE type, String keyword) {
         adapter.setType(type);
         adapter.setKeyword(keyword);
-        folderAdapter.refresh();
+       // folderAdapter.refresh();
         viewModel.loadMusicItems(adapter.getCriteria());
     }
 
@@ -817,27 +723,40 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
-        } else if (item.getItemId() == R.id.menu_all_music) {
+       /* } else if (item.getItemId() == R.id.menu_all_music) {
             doHideSearch();
             doStartRefresh(SearchCriteria.TYPE.LIBRARY, null);
-            return true;
-        } else if (item.getItemId() == R.id.menu_encodings) {
+            return true; */
+        } else if (item.getItemId() == R.id.menu_library_all_songs) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
+            doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_ALL_SONGS);
+            return true;
+        } else if (item.getItemId() == R.id.menu_library_recently_added) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_INCOMING_SONGS);
+            return true;
+        } else if (item.getItemId() == R.id.menu_library_similar_songs) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.LIBRARY, Constants.TITLE_DUPLICATE);
+            return true;
+        } else if (item.getItemId() == R.id.menu_codecs) {
+            doHideSearch();
+            doStartRefresh(SearchCriteria.TYPE.CODEC, null);
+            //doStartRefresh(SearchCriteria.TYPE.AUDIO_ENCODINGS, Constants.TITLE_HIGH_QUALITY);
             return true;
         } else if (item.getItemId() == R.id.menu_collection) {
             doHideSearch();
             PlaylistRepository.initPlaylist(getApplicationContext());
-            String playlist = PlaylistRepository.getPlaylistNames().get(0);
-            doStartRefresh(SearchCriteria.TYPE.PLAYLIST, playlist);
+            doStartRefresh(SearchCriteria.TYPE.PLAYLIST, null);
             return true;
-        } else if (item.getItemId() == R.id.menu_groupings) {
+        /*} else if (item.getItemId() == R.id.menu_groupings) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GROUPING, viewModel.getTagRepository().getActualGroupingList(getApplicationContext()).get(0));
-            return true;
+            doStartRefresh(SearchCriteria.TYPE.GROUPING, null);
+            return true; */
         } else if (item.getItemId() == R.id.menu_tag_genre) {
             doHideSearch();
-            doStartRefresh(SearchCriteria.TYPE.GENRE, viewModel.getTagRepository().getActualGenreList().get(0));
+            //doStartRefresh(SearchCriteria.TYPE.GENRE, viewModel.getTagRepository().getActualGenreList().get(0));
+            doStartRefresh(SearchCriteria.TYPE.GENRE, null);
             return true;
         } else if (item.getItemId() == R.id.menu_tag_artist) {
             doHideSearch();
@@ -846,6 +765,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if (item.getItemId() == R.id.menu_settings) {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.menu_files_permission) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
             startActivity(intent);
             return true;
         } else if (item.getItemId() == R.id.menu_notification_access) {
@@ -859,7 +782,7 @@ public class MainActivity extends AppCompatActivity {
             doShowRightMenus();
             return true;
         } else if (item.getItemId() == R.id.menu_directories) {
-            doSetDirectories();
+            doScanDirectories();
             return true;
       //  } else if (item.getItemId() == R.id.menu_media_server) {
       //      doManageMediaServer();
@@ -883,7 +806,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressLint("SetTextI18n")
-    private void doSetDirectories() {
+    private void doScanDirectories() {
         if (!PermissionUtils.checkAccessPermissions(getApplicationContext())) {
             Intent intent = new Intent(MainActivity.this, PermissionActivity.class);
             startActivity(intent);
@@ -1047,6 +970,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         titleText.setText(R.string.title_removing_music_files);
+        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.ic_item_delete_while_24dp),null,null,null);
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1163,6 +1087,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         titleText.setText(R.string.title_import_to_music_directory);
+        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_move_down_24),null,null,null);
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1546,6 +1471,71 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
+    // You can put this class inside your Activity/Fragment
+    private class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
+
+        private MusicTagAdapter adapter;
+
+        // Pass in your adapter so the predicate can look up items
+        MusicTrackSelectionPredicate(@NonNull MusicTagAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        /**
+         * This is the main method that prevents selection.
+         * It's called for both touch and programmatic selection.
+         */
+        @Override
+        public boolean canSetStateForKey(@NonNull Long key, boolean nextState) {
+            // We assume the 'key' is the position, based on your observer code.
+            int position = key.intValue();
+
+            if (position < 0 || position >= adapter.getItemCount()) {
+                return false; // Safety check for invalid positions
+            }
+
+            // Get the item from the adapter.
+            // NOTE: Make sure getMusicTag() returns the actual data object
+            // (e.g., MusicFolder or MusicFile)
+            Object item = adapter.getMusicTag(position);
+
+            if (item instanceof MusicFolder) {
+                // If the item IS a MusicFolder, REJECT any state change.
+                // This prevents it from being selected.
+                return false;
+            }
+
+            // Otherwise, it's a normal file, so allow the state change.
+            return true;
+        }
+
+        /**
+         * This method is called specifically for touch events.
+         * We'll add the same logic here for safety.
+         */
+        @Override
+        public boolean canSetStateAtPosition(int position, boolean nextState) {
+            if (position < 0 || position >= adapter.getItemCount()) {
+                return false;
+            }
+
+            Object item = adapter.getMusicTag(position);
+
+            if (item instanceof MusicFolder) {
+                // REJECT state change for MusicFolder
+                return false;
+            }
+
+            return true; // ALLOW state change for other items
+        }
+
+        @Override
+        public boolean canSelectMultiple() {
+            // You still want to allow multi-select for the files
+            return true;
+        }
+    }
+
     /**
      * Action Mode for handling contextual actions on selected items
      */
@@ -1558,7 +1548,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            mTitlePanel.setVisibility(GONE);
+            //mTitlePanel.setVisibility(GONE);
+            mHeaderPanel.setVisibility(GONE);
+            mRecyclerView.setPadding(0, 0, 0, 0);
             return false;
         }
 
@@ -1581,7 +1573,7 @@ public class MainActivity extends AppCompatActivity {
                 doEncodeAudioFiles(getSelections());
                 mode.finish();
                 return true;
-            } else if (id == R.id.action_calculate_replay_gain) {
+            } else if (id == R.id.action_measure_dr) {
                 doMeasureDR(getSelections());
                 mode.finish();
                 return true;
@@ -1604,8 +1596,9 @@ public class MainActivity extends AppCompatActivity {
         public void onDestroyActionMode(ActionMode mode) {
             mTracker.clearSelection();
             actionMode = null;
-           // mHeaderPanel.setVisibility(VISIBLE);
-            mTitlePanel.setVisibility(VISIBLE);
+            mHeaderPanel.setVisibility(VISIBLE);
+            mRecyclerView.setPadding(0, (int) dpToPx(getApplicationContext(), 42), 0, 0);
+            //mTitlePanel.setVisibility(VISIBLE);
         }
 
         private List<MusicTag> getSelections() {
@@ -1633,42 +1626,38 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            if (adapter != null && adapter.hasFilter()) {
-                adapter.resetFilter();
-                viewModel.loadMusicItems(adapter.getCriteria());
-                //refreshLayout.autoRefresh();
-                return;
-            }
-
-            if (adapter != null && adapter.isSearchMode()) {
-                doHideSearch();
-               // refreshLayout.autoRefresh();
-                viewModel.loadMusicItems(adapter.getCriteria());
-                return;
-            }
-
-            // if artist
-            if (adapter != null && SearchCriteria.TYPE.ARTIST.equals(adapter.getCriteria().getType())) {
-                if(adapter.getCriteria().getKeyword() != null) {
-                    adapter.getCriteria().setKeyword(null);
+            // if TYPE library or keyword is null, open leftMenu
+            if(adapter != null) {
+                if (adapter.hasFilter()) {
+                    adapter.resetFilter();
+                    swipeRefreshLayout.setRefreshing(true);
                     viewModel.loadMusicItems(adapter.getCriteria());
+                    //refreshLayout.autoRefresh();
+
                     return;
                 }
-            }
 
-            // If not on first item in library
-            if (adapter != null && !adapter.isFirstItem(getApplicationContext())) {
-                adapter.resetSelectedItem();
-                viewModel.loadMusicItems(adapter.getCriteria());
-               // refreshLayout.autoRefresh();
-                return;
-            }
+                if (adapter.isSearchMode()) {
+                    doHideSearch();
+                    // refreshLayout.autoRefresh();
+                    swipeRefreshLayout.setRefreshing(true);
+                    viewModel.loadMusicItems(adapter.getCriteria());
 
-            if (!mExitSnackbar.isShown()) {
-                mExitSnackbar.show();
-            } else {
-                mExitSnackbar.dismiss();
-                finish();
+                    return;
+                }
+
+                if (isEmpty(adapter.getCriteria().getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
+                    mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
+
+                    return;
+                }else if ((!isEmpty(adapter.getCriteria().getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
+                    adapter.resetFilter();
+                    adapter.getCriteria().setKeyword(null);
+                    swipeRefreshLayout.setRefreshing(true);
+                    viewModel.loadMusicItems(adapter.getCriteria());
+
+                    return;
+                }
             }
         }
     }

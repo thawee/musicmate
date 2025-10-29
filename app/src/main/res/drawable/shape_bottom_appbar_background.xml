@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CUSTOMIZATION:
+  - Replace "#121212" (solid_color) with your theme's dark surface color (e.g., "?attr/colorSurface").
+  - Replace "#33FFFFFF" (border_color) with your theme's border color.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Layer 1: Top Highlight (Gradient) -->
+    <!-- This creates the "3D" lifted effect by drawing a faint highlight at the top edge. -->
+    <item>
+        <shape android:shape="rectangle">
+            <!--
+              The gradient simulates a highlight.
+              It goes from a semi-transparent white to fully transparent.
+            -->
+            <gradient
+                android:angle="90"
+                android:startColor="#1AFFFFFF"
+                android:centerColor="#0DFFFFFF"
+                android:endColor="@android:color/transparent" />
+            <!--
+              Adjust the size (height) of the highlight.
+              A smaller height (e.g., 2dp-4dp) creates a sharper line.
+            -->
+            <size android:height="4dp" />
+
+            <!--
+              ADDED: Corners to match Layer 2, so the highlight rounds correctly.
+            -->
+            <corners
+                android:topLeftRadius="16dp"
+                android:topRightRadius="16dp" />
+        </shape>
+    </item>
+
+    <!-- Layer 2: Main Background Shape -->
+    <!-- This is the visible Bottom App Bar.
+         It's offset from the top by the height of the highlight layer above.
+    -->
+    <item
+        android:top="4dp" >
+        <shape android:shape="rectangle">
+            <!--
+              This is the main color of your Bottom App Bar.
+              REPLACE #121212 with your theme's dark surface color (e.g., "?attr/colorSurface").
+            -->
+            <solid android:color="#121212" />
+
+            <!--
+              NEW: Added a border (stroke).
+              Adjust the color and width to fit your theme.
+              I've used a semi-transparent white (#33FFFFFF) for a subtle effect.
+            -->
+            <stroke
+                android:width="1dp"
+                android:color="#33FFFFFF" /> <!-- 20% transparent white border -->
+
+            <!--
+              Your rounded corners.
+            -->
+            <corners
+                android:topLeftRadius="16dp"
+                android:topRightRadius="16dp"
+                android:bottomLeftRadius="4dp"
+                android:bottomRightRadius="4dp"/>
+        </shape>
+    </item>
+</layer-list>

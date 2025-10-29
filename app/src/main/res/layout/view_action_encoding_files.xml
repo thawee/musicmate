@@ -20,7 +20,9 @@
             android:text="@string/about_encoding_file"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            app:drawableStartCompat="@drawable/rounded_compress_24"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

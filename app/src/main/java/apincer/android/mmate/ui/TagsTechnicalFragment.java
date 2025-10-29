@@ -235,16 +235,11 @@ public class TagsTechnicalFragment extends Fragment {
         CompletableFuture.runAsync(
                 () -> {
                     for(MusicTag tag:tagsActivity.getEditItems()) {
-                       // String coverArtPath = "png"; //tag.getCoverartMime();
-                      //  if(!isEmpty(coverArtPath)) {
-                          //  coverArtPath = coverArtPath.replace("/", ".");
-                            String path = tag.getPath();
-                            File pathFile = new File(path);
-                            pathFile = pathFile.getParentFile();
-                           // String coverArtPath = path.substring(0, path.lastIndexOf("."))+"Cover.png";
-                           String coverArtPath = pathFile.getAbsolutePath()+"/Cover.png";
-                            FFMpegHelper.extractCoverArt(tag, new File(coverArtPath));
-                       // }
+                        String path = tag.getPath();
+                        File pathFile = new File(path);
+                        pathFile = pathFile.getParentFile();
+                        String coverArtPath = pathFile.getAbsolutePath()+"/Cover.png";
+                        FFMpegHelper.extractCoverArt(path, new File(coverArtPath));
                     }
                 }
         ).thenAccept(

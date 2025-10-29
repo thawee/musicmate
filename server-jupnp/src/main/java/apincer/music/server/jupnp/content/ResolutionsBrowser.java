@@ -18,6 +18,7 @@ import java.util.Map;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.MusicFolder;
+import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.utils.TagUtils;
 import musicmate.jupnp.nio.R;
@@ -53,7 +54,7 @@ public class ResolutionsBrowser extends AbstractContentBrowser {
 
         Map<String, MusicFolder> mapped = new HashMap<>();
         for(String pls: playlists) {
-            MusicFolder dir = new MusicFolder(pls);
+            MusicFolder dir = new MusicFolder(SearchCriteria.TYPE.CODEC,pls);
             dir.setUniqueKey(pls);
             mapped.put(pls, dir);
         }

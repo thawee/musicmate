@@ -136,7 +136,7 @@
     <string name="sync_to_hiby_label">Sync</string>
     <string name="sample_dr">DR14</string>
     <string name="preferences_sub_streaming">Streaming</string>
-    <string name="title_removing_music_files">Move songs to the Trash?</string>
+    <string name="title_removing_music_files">Move songs to the Trash</string>
 
     <string name="this_device">this device</string>
     <string name="play">Play</string>
@@ -185,8 +185,8 @@
     <string name="style">Style</string>
     <string name="sample_file_type">FLAC</string>
     <string name="file_status_new">New!</string>
-    <string name="title_dynamic_range_and_replay_gain">Analyze Dynamic Range?</string>
-    <string name="title_import_to_music_directory">Move to Music Directory?</string>
+    <string name="title_dynamic_range_and_replay_gain">Analyze Dynamic Range</string>
+    <string name="title_import_to_music_directory">Move to Music Directory</string>
     <string name="title_sync_to_streaming_server">Sync to Streaming Server</string>
     <string name="label_encodings">Encodings</string>
     <string name="label_quality_indicator">Quality</string>
@@ -197,8 +197,9 @@
     <string name="label_current">Current</string>
     <string name="label_default_reader">Default Reader</string>
     <string name="label_ffmpeg_reader">FFMpeg Reader</string>
-    <string name="about_encoding_file">Encode Audio File</string>
+    <string name="about_encoding_file">Convert Files</string>
     <string name="label_resolutions">Resolutions</string>
+    <string name="label_codecs">Codecs</string>
     <string name="label_lossy">LC</string>
     <string name="label_Lossless">SQ</string>
     <string name="label_hi_res">HR</string>
@@ -244,7 +245,7 @@
     <string name="encoding_mqa_blue_detail">Directly from Mastering Engineers</string>
     <string name="label_audio_quality">Sound Quality</string>
     <string name="cancel">Cancel</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="save">Save</string>
     <string name="scan">Scan</string>
     <string name="close">Close</string>
@@ -272,8 +273,14 @@
     <string name="analyze_music">Analyze Music File</string>
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
-    <string name="encode">Encode</string>
+    <string name="encode">Convert</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>
     <string name="notification_server_not_running">Required WiFi network</string>
+    <string name="update_library">Update Library</string>
+    <string name="label_library_all_songs">All Songs</string>
+    <string name="label_library_recently_added">Recently Added</string>
+    <string name="label_library_similar_songs">Similar Songs</string>
+    <string name="currently_playing">Current Player</string>
+    <string name="more_options">More Options</string>
 
 </resources>

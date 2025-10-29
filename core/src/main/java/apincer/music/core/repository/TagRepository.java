@@ -2,6 +2,7 @@ package apincer.music.core.repository;
 
 import static apincer.music.core.Constants.ARTIST_SEP;
 import static apincer.music.core.repository.FileRepository.getDefaultMusicPaths;
+import static apincer.music.core.utils.StringUtils.EMPTY;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -11,11 +12,8 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.table.TableUtils;
-
-import org.apache.commons.codec.digest.DigestUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -40,6 +38,7 @@ import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.utils.FileUtils;
+import apincer.music.core.utils.TagUtils;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import musicmate.core.R;
 
@@ -49,12 +48,7 @@ public class TagRepository {
     public static final List<String> LOSSY_AUDIO_FORMATS;
     static {
         // Initialize once when the class is loaded
-        List<String> formats = new ArrayList<>();
-        formats.add("MP3");
-        formats.add("AAC");
-        formats.add("OGG");
-        formats.add("WMA");
-        LOSSY_AUDIO_FORMATS = Collections.unmodifiableList(formats); // Make it unmodifiable
+        LOSSY_AUDIO_FORMATS = List.of("MP3", "AAC", "OGG", "WMA"); // Make it unmodifiable
     }
 
     private final OrmLiteHelper dbHelper;
@@ -84,15 +78,12 @@ public class TagRepository {
             }
         }
 
-
-      //  tag.setAlbumCoverUniqueKey(DigestUtils.md5Hex(path)); // used for cached coverart
-
         if(StringUtils.isEmpty(tag.getGenre())) {
             tag.setGenre(Constants.NONE);
         }
-        if(StringUtils.isEmpty(tag.getGrouping())) {
-            tag.setGrouping(Constants.NONE);
-        }
+       // if(StringUtils.isEmpty(tag.getGrouping())) {
+       //     tag.setGrouping(Constants.NONE);
+       // }
         if(StringUtils.isEmpty(tag.getArtist())) {
             tag.setArtist(Constants.EMPTY);
         }
@@ -186,21 +177,6 @@ public class TagRepository {
         }
     }
 
-    public void cleanMusicMateOld() {
-        try {
-            List<MusicTag> list =  dbHelper.findMySongs();
-            for(int i=0; i<list.size();i++) {
-                MusicTag mdata = list.get(i);
-                String path = mdata.getPath();
-                if(!FileRepository.isMediaFileExist(path) || mdata.getFileSize()==0.00) {
-                    removeTag(mdata);
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG,"cleanMusicMate",e);
-        }
-    }
-
     public List<String> getActualGenreList() {
         List<String> list = new ArrayList<>();
 
@@ -231,7 +207,8 @@ public class TagRepository {
         Collections.sort(list);
         return list;
     }
-	
+
+    /*
 	public static List<String> getDefaultGroupingList(Context context) {
         String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
         List<String> list = new ArrayList<>(Arrays.asList(groupings));
@@ -268,6 +245,8 @@ public class TagRepository {
         return list;
     }
 
+     */
+
     public List<String> getArtistList() {
         List<String> allArtistStrings = dbHelper.getArtists();
         // Use a HashSet for efficient de-duplication (fast lookups).
@@ -288,23 +267,6 @@ public class TagRepository {
         List<String> sortedList = new ArrayList<>(uniqueArtists);
         Collections.sort(sortedList);
         return sortedList;
-    }
-
-    public List<String> getArtistListOld() {
-        List<String> list = dbHelper.getArtists();
-        List<String> artistList = new ArrayList<>();
-        for(String artist:list) {
-            String[] arr = artist.split(ARTIST_SEP,-1);
-            for(String a:arr) {
-                a = trimToEmpty(a);
-                if(!artistList.contains(a)) {
-                    artistList.add(a);
-                }
-            }
-        }
-
-        Collections.sort(artistList);
-        return artistList;
     }
 
     public static List<String> getDefaultAlbumArtistList(Context context) {
@@ -348,20 +310,13 @@ public class TagRepository {
         List<MusicTag> results = new ArrayList<>();
         if (criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
             if (criteria.getKeyword() != null) {
-                List<MusicTag> list = getAllMusicsForPlaylist(); //dbHelper.findMySongs();
+                List<MusicTag> list = getAllMusicsForPlaylist();
                 String name = criteria.getKeyword();
                 for (MusicTag tag : list) {
                     if(PlaylistRepository.isSongInPlaylistName(tag, name)) {
                         results.add(tag);
                     }
                 }
-                /*
-                if(PlaylistRepository.isTitlePlaylist(name)) {
-                    // add missing titles
-                    List<MusicTag> missingList = PlaylistRepository.getMissingSongsForPlaylist(name, results);
-                    missingList.sort(Comparator.comparing(MusicTag::getTitle));
-                    results.addAll(missingList);
-                } */
             } else {
                 int index = 1;
                 for (String name : PlaylistRepository.getPlaylistNames()) {
@@ -400,7 +355,7 @@ public class TagRepository {
     }
 
     private static MusicFolder buildMusicTagPlaylist(int index, String key, String title) {
-        MusicFolder tag = new MusicFolder("PLS", title);
+        MusicFolder tag = new MusicFolder(SearchCriteria.TYPE.PLAYLIST, title);
         tag.setUniqueKey(key);
         tag.setId(10000+index);
         return tag;
@@ -421,7 +376,11 @@ public class TagRepository {
             // search title only, limit 5 songs
             list = dbHelper.findByKeyword(criteria.getSearchText());
         }else if (criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
-                if (StringUtils.isEmpty(criteria.getKeyword()) || Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
+                if (StringUtils.isEmpty(criteria.getKeyword())) {
+                    criteria.setKeyword(Constants.TITLE_ALL_SONGS);
+                }
+
+                if(Constants.TITLE_ALL_SONGS.equals(StringUtils.trimToEmpty(criteria.getKeyword()))) {
                     list = dbHelper.findMySongs();
                 } else if (Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword())) {
                     list = findRecentlyAdded(0, 0);
@@ -438,62 +397,164 @@ public class TagRepository {
             } else if (criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
                 list = dbHelper.findByPublisher(criteria.getKeyword());
             } else if (criteria.getType() == SearchCriteria.TYPE.ARTIST) {
-                if(criteria.getKeyword()==null) {
+                String keyword = criteria.getKeyword();
+                if(isEmpty(keyword)) {
                     list = findArtistItems();
                 }else {
-                    list = dbHelper.findByArtist(criteria.getKeyword(), 0, 0);
+                    if (isEmpty(keyword) || StringUtils.EMPTY.equalsIgnoreCase(keyword)) {
+                        keyword = "";
+                    }
+                    list = dbHelper.findByArtist(keyword, 0, 0);
                 }
             } else if (criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 list = dbHelper.findByMediaQuality(criteria.getKeyword());
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && isEmpty(criteria.getKeyword())) {
+                list = findCodecItems();
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_DSD.equals(criteria.getKeyword())) {
                 list = dbHelper.findDSDSongs(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_MASTER_AUDIO.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_MASTER_AUDIO.equals(criteria.getKeyword())) {
                 list = dbHelper.findMQASongs(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIGH_QUALITY.equals(criteria.getKeyword())) {
                 list = dbHelper.findHighQuality(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIFI_LOSSLESS.equals(criteria.getKeyword())) {
                 list = dbHelper.findLosslessSong(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS && Constants.TITLE_HIRES.equals(criteria.getKeyword())) {
+            } else if (criteria.getType() == SearchCriteria.TYPE.CODEC && Constants.TITLE_HIRES.equals(criteria.getKeyword())) {
                 list = dbHelper.findHiRes(0, 0);
-            } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-                String val = criteria.getKeyword();
-                if (isEmpty(val) || StringUtils.EMPTY.equalsIgnoreCase(val)) {
-                    val = "";
-                }
-                list = dbHelper.findByGrouping(val, 0, 0);
+           /* } else if (criteria.getType() == SearchCriteria.TYPE.GROUPING) {
+                String keyword = criteria.getKeyword();
+                if(isEmpty(keyword)) {
+                    list = findGroupingItems();
+                }else {
+                    if (isEmpty(keyword) || StringUtils.EMPTY.equalsIgnoreCase(keyword)) {
+                        keyword = "";
+                    }
+                    list = dbHelper.findByGrouping(keyword, 0, 0);
+                } */
             } else if (criteria.getType() == SearchCriteria.TYPE.GENRE) {
-
-                String val = criteria.getKeyword();
-                if (isEmpty(val) || StringUtils.EMPTY.equalsIgnoreCase(val)) {
-                    val = "";
+                String keyword = criteria.getKeyword();
+                if(isEmpty(keyword)) {
+                    list = findGenreItems();
+                }else {
+                    if (StringUtils.EMPTY.equalsIgnoreCase(keyword)) {
+                        keyword = "";
+                    }
+                    list = dbHelper.findByGenre(keyword);
                 }
-                list = dbHelper.findByGenre(val);
           //  } else if (criteria.getType() == SearchCriteria.TYPE.SEARCH) {
                 // search title only, limit 5 songs
           //      list = dbHelper.findByKeyword(criteria.getKeyword());
-            } else {
+         //   } else {
                 // default for MY_SONGS and others
-                list = dbHelper.findMySongs();
+          //      list = dbHelper.findMySongs();
             }
         return list;
     }
 
+    /*
+    private List<MusicTag> findGroupingItems() {
+        Map<String, MusicFolder> mapped = new HashMap<>();
+        List<MusicTag> list = getAllMusics();
+        for(MusicTag song: list) {
+            String name = song.getGrouping();
+            if(isEmpty(name)) {
+                name = EMPTY;
+            }
+            MusicFolder folder = mapped.getOrDefault(name, new MusicFolder(SearchCriteria.TYPE.GROUPING, name));
+            folder.increaseChildCount();
+            folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
+            mapped.put(name, folder);
+            // genres.add(folder);
+        }
+
+        // This is the line you already have
+        List<MusicTag> folderList = new ArrayList<>(mapped.values());
+
+        // This new line sorts the list in-place alphabetically by title
+        folderList.sort(Comparator.comparing(MusicTag::getTitle));
+
+        return folderList;
+    } */
+
+    private List<MusicTag> findCodecItems() {
+       // List<MusicTag> codecs = new ArrayList<>();
+        Map<String, MusicFolder> mapped = new HashMap<>();
+        List<MusicTag> list = getAllMusics();
+        for(MusicTag song: list) {
+            String codec = Constants.TITLE_HIFI_LOSSLESS;
+            if(TagUtils.isDSD(song)) {
+                codec = Constants.TITLE_DSD;
+            }else if(TagUtils.isMQA(song)) {
+                codec = Constants.TITLE_MASTER_AUDIO;
+            }else if(TagUtils.isHiRes(song)) {
+                codec = Constants.TITLE_HIRES;
+            }else if(TagUtils.isLossy(song)) {
+                codec = Constants.TITLE_HIGH_QUALITY;
+            }else if(TagUtils.isHiRes(song)) {
+                codec = Constants.TITLE_DSD;
+            }
+            MusicFolder folder = mapped.getOrDefault(codec, new MusicFolder(SearchCriteria.TYPE.CODEC, codec));
+            folder.increaseChildCount();
+            folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
+            mapped.put(codec, folder);
+            //codecs.add(folder);
+        }
+
+        // This is the line you already have
+        List<MusicTag> folderList = new ArrayList<>(mapped.values());
+
+        // This new line sorts the list in-place alphabetically by title
+        folderList.sort(Comparator.comparing(MusicTag::getTitle));
+
+        return folderList;
+    }
+
+    private List<MusicTag> findGenreItems() {
+       // List<MusicTag> genres = new ArrayList<>();
+        Map<String, MusicFolder> mapped = new HashMap<>();
+        List<MusicTag> list = getAllMusics();
+        for(MusicTag song: list) {
+            String genre = song.getGenre();
+            if(isEmpty(genre)) {
+                genre = EMPTY;
+            }
+            MusicFolder folder = mapped.getOrDefault(genre, new MusicFolder(SearchCriteria.TYPE.GENRE, genre));
+            folder.increaseChildCount();
+            folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
+            mapped.put(genre, folder);
+           // genres.add(folder);
+        }
+
+        // This is the line you already have
+        List<MusicTag> folderList = new ArrayList<>(mapped.values());
+
+        // This new line sorts the list in-place alphabetically by title
+        folderList.sort(Comparator.comparing(MusicTag::getTitle));
+
+        return folderList;
+    }
+
     private List<MusicTag> findArtistItems() {
-        List<MusicTag> artists = new ArrayList<>();
+       // List<MusicTag> artists = new ArrayList<>();
         Map<String, MusicFolder> mapped = new HashMap<>();
         List<MusicTag> list = getAllMusics();
         for(MusicTag song: list) {
             String artist = song.getArtist();
-            if(mapped.containsKey(artist)) {
-                mapped.get(artist).increaseChildCount();
-            }else {
-                MusicFolder folder = new MusicFolder(SearchCriteria.TYPE.ARTIST.name(), artist);
-                folder.increaseChildCount();
-                mapped.put(artist, folder);
-                artists.add(folder);
+            if(isEmpty(artist)) {
+                artist = EMPTY;
             }
+            MusicFolder folder = mapped.getOrDefault(artist, new MusicFolder(SearchCriteria.TYPE.ARTIST, artist));
+            folder.increaseChildCount();
+            folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
+            mapped.put(artist, folder);
         }
-        return artists;
+
+        // This is the line you already have
+        List<MusicTag> folderList = new ArrayList<>(mapped.values());
+
+        // This new line sorts the list in-place alphabetically by title
+        folderList.sort(Comparator.comparing(MusicTag::getTitle));
+
+        return folderList;
     }
 
     public List<MusicTag> getAllMusics() {
@@ -572,7 +633,7 @@ public class TagRepository {
                     }else {
                         name = "SD Card/"+name;
                     }
-                    MusicFolder dir = new MusicFolder(name);
+                    MusicFolder dir = new MusicFolder(SearchCriteria.TYPE.LIBRARY, name);
                     dir.setUniqueKey(musicDir);
                     dir.setName(name);
                     dir.setChildCount(0);
@@ -592,7 +653,15 @@ public class TagRepository {
         return new ArrayList<>(dirs);
     }
 
-    public long getMusicTotal() {
+    public long getTotalSongs() {
+        try {
+            return dbHelper.getMusicTagDao().countOf();
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    public long getTotalDuration() {
         try {
             return dbHelper.getMusicTagDao().countOf();
         } catch (SQLException e) {
@@ -636,10 +705,6 @@ public class TagRepository {
 
     public Dao<QueueItem, Long> getQueueItemDao() throws SQLException {
         return dbHelper.getQueueItemDao();
-    }
-
-    public OrmLiteHelper getOrmLiteHelper() {
-        return dbHelper;
     }
 
     public List<MusicTag> findMyNoDRMeterSongs() {
@@ -731,13 +796,14 @@ public class TagRepository {
         return dbHelper.getArtistWithChildrenCount();
     }
 
+    /*
     public List<String> getGrouping() {
         return dbHelper.getGrouping();
     }
 
     public List<MusicFolder> getGroupingWithChildrenCount() {
         return dbHelper.getGroupingWithChildrenCount();
-    }
+    } */
 
     public void setPlayingQueue(List<MusicTag> songsInContext) {
         try {
@@ -745,21 +811,19 @@ public class TagRepository {
             Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
 
             // Use a batch task to perform all operations in a single transaction
-            queueDao.callBatchTasks(new Callable<Void>() {
-                public Void call() throws Exception {
-                    // --- 1. Clear the entire table ---
-                    // This is the most direct and reliable way to clear a table.
-                    TableUtils.clearTable(queueDao.getConnectionSource(), QueueItem.class);
+            queueDao.callBatchTasks((Callable<Void>) () -> {
+                // --- 1. Clear the entire table ---
+                // This is the most direct and reliable way to clear a table.
+                TableUtils.clearTable(queueDao.getConnectionSource(), QueueItem.class);
 
-                    // --- 2. Populate the table with the new queue items ---
-                    int queueIndex = 1;
-                    for (MusicTag tag : songsInContext) {
-                        QueueItem newItem = new QueueItem(tag, queueIndex++);
-                        // This create is now part of the batch transaction
-                        queueDao.create(newItem);
-                    }
-                    return null;
+                // --- 2. Populate the table with the new queue items ---
+                int queueIndex = 1;
+                for (MusicTag tag : songsInContext) {
+                    QueueItem newItem = new QueueItem(tag, queueIndex++);
+                    // This create is now part of the batch transaction
+                    queueDao.create(newItem);
                 }
+                return null;
             });
         } catch (Exception e) {
             // Handle the exception (e.g., log it)

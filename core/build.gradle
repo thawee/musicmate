@@ -66,6 +66,7 @@ dependencies {
     implementation libs.square.okhttp3
     implementation libs.anggrayudi.storage
     implementation libs.ffmpegkit.audio
+    implementation libs.jsoup
 
     //implementation project(':library:justdsd')
     implementation project(':library:JustFLAC')

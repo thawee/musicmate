@@ -1,14 +1,18 @@
 package apincer.music.core.repository;
 
+import static com.anggrayudi.storage.file.StorageId.PRIMARY;
 import static apincer.music.core.Constants.COVER_ARTS;
+import static apincer.music.core.Constants.DEFAULT_COVERART;
+import static apincer.music.core.Constants.IMAGE_COVERS;
 import static apincer.music.core.utils.StringUtils.isEmpty;
-import static apincer.music.core.utils.Utils.runGcIfNeeded;
+import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.anggrayudi.storage.file.DocumentFileCompat;
-import com.anggrayudi.storage.file.StorageId;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -26,6 +28,8 @@ import apincer.music.core.Constants;
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.codec.TagWriter;
+import apincer.music.core.model.MusicFolder;
+import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.provider.FileSystem;
 import apincer.music.core.database.MusicTag;
@@ -45,63 +49,87 @@ public class FileRepository {
     private final Context context;
     private final TagRepository tagRepos;
     private final String STORAGE_SECONDARY;
-    private final ExecutorService coverArtExecutor = Executors.newSingleThreadExecutor();
 
     public static File getCoverArt(Context context, MediaTrack music) {
-        File cover = getFolderCoverArt(music.getPath());
-        if(cover == null) {
-            String coverFile = COVER_ARTS +music.getAlbumArtFilename();
-            File dir =  context.getExternalCacheDir();
-            cover = new File(dir, coverFile);
-            if(!cover.exists()) cover = null;
+        if(music instanceof MusicFolder folder) {
+            File cacheDir = context.getExternalCacheDir();
+            File cover;
+            SearchCriteria.TYPE type = folder.getType();
+            cover = switch (type) {
+                case ARTIST -> {
+                    File file = new File(DocumentFileCompat.buildAbsolutePath(context, PRIMARY, "Music"));
+                    //yield new File(file, music.getTitle());
+                    yield findFileAnyCase(music.getTitle(), file.listFiles());
+                }
+                case GENRE, CODEC -> new File(cacheDir, COVER_ARTS + music.getPath());
+                default ->
+                    // Fallback, but it's better to throw an error
+                        new File(cacheDir, COVER_ARTS + music.getPath());
+            };
+            if(music.getTitle().contains("25")) {
+                Log.d(TAG, "getCoverArt: MusicFolder - " + cover.getAbsolutePath());
+            }
+            return getFolderCoverArt(cover);
+        }else {
+            File cover = getFolderCoverArt(music.getPath());
+            if (cover == null) {
+                String coverFile = COVER_ARTS + music.getAlbumArtFilename();
+                File dir = context.getExternalCacheDir();
+                return new File(dir, coverFile);
+            }
+            return cover;
         }
-        return cover;
     }
 
    //also save albumArtName
-    public void extractCoverArt(MusicTag tag) {
+    public File extractEmbedCoverArt(MusicTag tag) {
         try {
-           // String coverFilename = COVER_ARTS +DigestUtils.md5Hex(tag.getPath());
+            //CacheDir/Covers/HEX.EXT
+            //Music/xxx/Cover.EXT
             String coverFile = COVER_ARTS +tag.getAlbumArtFilename();
             File dir =  getContext().getExternalCacheDir();
             File pathFile = new File(dir, coverFile);
-            if(!pathFile.exists()) {
-                String coverFilename = COVER_ARTS +DigestUtils.md5Hex(tag.getPath());
-                pathFile = new File(dir, coverFilename+".img");
-                FileUtils.createParentDirs(pathFile);
-                extractCoverArt(tag, pathFile);
-                String ext = FileTypeUtil.getExtensionFromContent(pathFile);
-                coverFilename = coverFilename+"."+ext;
-                tag.setAlbumArtFilename(coverFilename);
+            if(!pathFile.exists() || DEFAULT_COVERART.equals(tag.getAlbumArtFilename())) {
+                if (isManagedInLibrary(tag)) {
+                   // pathFile = new File(tag.getPath());
+                   // pathFile = pathFile.getParentFile();
+                   // String coverArtPath = pathFile.getAbsolutePath() + "/Cover.png";
+                   // extractEmbedCoverArtToFile(tag, new File(coverArtPath));
+                  //  return new File(coverArtPath);
+
+                    String path = tag.getPath();
+                    pathFile = new File(path);
+                    FileUtils.createParentDirs(pathFile);
+                    pathFile = pathFile.getParentFile();
+                    // String coverArtPath = path.substring(0, path.lastIndexOf("."))+"Cover.png";
+                    String coverArtPath = pathFile.getAbsolutePath()+"/Cover.png";
+                    FFMpegHelper.extractCoverArt(path, new File(coverArtPath));
+                    return new File(coverArtPath);
+                } else {
+                    String coverFilename = COVER_ARTS + DigestUtils.md5Hex(tag.getPath());
+                    pathFile = new File(dir, coverFilename + ".png");
+
+                   // extractEmbedCoverArtToFile(tag, pathFile);
+                    FileUtils.createParentDirs(pathFile);
+                    FFMpegHelper.extractCoverArt(tag.getPath(), pathFile);
+                    String ext = FileTypeUtil.getExtensionFromContent(pathFile);
+                    if(!"png".equalsIgnoreCase(ext)) {
+                        File newFile = new File(dir, COVER_ARTS + coverFilename + "." + ext);
+                        FileSystem.move(context, pathFile.getAbsolutePath(), newFile.getAbsolutePath());
+                        return newFile;
+                    }
+                    return pathFile;
+                }
             }
         } catch (Exception e) {
             Log.d(TAG,"extractCoverArt:", e);
         }
+        return null;
     }
 
     public boolean isManagedInLibrary(MusicTag tag) {
         String path = buildCollectionPath(tag, true);
         return StringUtils.compare(path, tag.getPath());
-    }
-
-    public static void extractCoverArt(MusicTag tag, File targetFile) {
-        if(tag == null) return;
-        try {
-            // Log.d(TAG, "extractCoverArt: "+path);
-            String path = tag.getPath();
-            FileUtils.createParentDirs(targetFile);
-            //File coverArtFile = getFolderCoverArt(path);
-            //if(coverArtFile!=null) {
-                // check directory images
-            //    FileSystem.copy(coverArtFile, targetFile);
-            //}else if(!StringUtils.isEmpty(tag.getCoverartMime())){
-            FFMpegHelper.extractCoverArt(path, targetFile);
-
-            // Only run GC if memory usage is high
-            runGcIfNeeded();
-        } catch (Exception e) {
-            Log.d(TAG, "extractCoverArt",e);
-        }
     }
 
     public Context getContext() {
@@ -119,26 +147,14 @@ public class FileRepository {
     public static String getSecondaryId(Context context) {
         List<String> sids = DocumentFileCompat.getStorageIds(context);
         for(String sid: sids) {
-            if(!sid.equals(StorageId.PRIMARY)) {
+            if(!sid.equals(PRIMARY)) {
                 return sid;
             }
         }
-        return StorageId.PRIMARY;
+        return PRIMARY;
     }
 
-    /*
-    public File getCoverArt(MusicTag music) {
-        File cover = getFolderCoverArt(music.getPath());
-        if(cover == null) {
-            String coverFile = COVER_ARTS +music.getAlbumCoverUniqueKey()+".png";
-            File dir =  context.getExternalCacheDir();
-            cover = new File(dir, coverFile);
-            if(!cover.exists()) cover = null;
-        }
-        return cover;
-    } */
-
-    public File getCoverArt(String albumArtFilename) {
+    public File getCoverArtByAlbumartFilename(String albumArtFilename) {
             String coverFile = COVER_ARTS +albumArtFilename;
             File dir =  context.getExternalCacheDir();
             File cover = new File(dir, coverFile);
@@ -180,17 +196,62 @@ public class FileRepository {
             }
         }
 
+        if(coverFile != null && coverFile.exists()) return coverFile;
+
         // get folder images
-        if(coverFile == null) {
+        /*if(coverFile == null) {
             for (String f : Constants.IMAGE_COVERS) {
-                File cover = new File(coverDir, f);
+                //File cover = new File(coverDir, f);
+                File cover = findFileAnyCase(f, coverDir.listFiles());
                 if (cover.exists()) {
                     coverFile = cover;
                     break;
                 }
             }
+        } */
+
+        if(coverDir == null) return null;
+
+        File[] files = coverDir.listFiles((file, s) -> IMAGE_COVERS.contains(s.toLowerCase()));
+
+        return (files!=null&&files.length>0)?files[0]:null;
+    }
+
+    public static File getFolderCoverArt(File folder) {
+        if (folder == null || !folder.isDirectory()) {
+            return null; // Not a valid folder
         }
-        return coverFile;
+
+        File[] files = folder.listFiles();
+        if (files == null || files.length == 0) {
+            return null; // Empty or unreadable
+        }
+
+        // --- Case-Insensitive Check While Respecting Priority ---
+
+        // 1. Loop through your priority list (e.g., "front.png", "front.jpg", "cover.jpg")
+        for (String priorityName : Constants.IMAGE_COVERS) {
+            File file = findFileAnyCase(priorityName, files);
+            if (file != null) return file;
+        }
+
+        // 3. If we checked all priorities and found no file
+        return null; // Return null, not the original folder
+    }
+
+    @Nullable
+    private static File findFileAnyCase(String priorityName, @org.jetbrains.annotations.Nullable File[] files) {
+        if(files == null) return null;
+
+        // 2. Check all files in the directory for a case-insensitive match
+        for (File file : files) {
+            if (file.getName().equalsIgnoreCase(priorityName)) {
+                // Found a match! Since we're looping in order of
+                // priority, this is the best one we can find.
+                return file;
+            }
+        }
+        return null;
     }
 
     public boolean setMusicTag(MusicTag item) {
@@ -272,8 +333,14 @@ public class FileRepository {
     public void saveCoverartToCache(MusicTag basicTag) {
         try {
             File folderCover = getFolderCoverArt(basicTag.getPath());
-            if(folderCover == null) {
-                extractCoverArt(basicTag);
+            if(folderCover == null || !folderCover.exists()) {
+                // if no folder album art,
+                File art = extractEmbedCoverArt(basicTag);
+                if(art != null && art.exists()) {
+                    basicTag.setAlbumArtFilename(art.getName());
+                }else {
+                    basicTag.setAlbumArtFilename(DEFAULT_COVERART);
+                }
             }else {
                 //update filename
                 String albumArtName = DigestUtils.md5Hex(basicTag.getPath());
@@ -298,13 +365,14 @@ public class FileRepository {
         // 5. file name <track no>-<artist>-<title>
         // [Hi-Res|Lossless|Compress]/<album|albumartist|artist>/<track no>-<artist>-<title>
         // /format/<album|albumartist|artist>/<track no> <artist>-<title>
+        // music/album artist/album (sound quality[HR/SQ/LC/DSD/MQA])/track - title.ext
         final String ReservedChars = "?|\\*<\":>[]~#%^@.";
         try {
             String musicPath = "Music/";
             String storageId = getStorageIdFor(metadata);
             String ext = FileUtils.getExtension(metadata.getPath());
             StringBuilder filename = new StringBuilder(musicPath);
-
+/*
             if (!StringUtils.isEmpty(metadata.getGrouping())) {
                 filename.append(StringUtils.formatFilePath(metadata.getGrouping()));
                 filename.append(File.separator);
@@ -318,32 +386,37 @@ public class FileRepository {
                 }
                 filename.append(File.separator);
             }
+*/
 
-            // publisher if albumArtist is various artist
             // albumArtist
             // then artist
-            String artist = StringUtils.formatFilePath(TagUtils.getFirstArtist(metadata.getArtist()));
+            String firstArtist = StringUtils.formatFilePath(TagUtils.getFirstArtist(metadata.getArtist()));
             String albumArtist = StringUtils.formatFilePath(metadata.getAlbumArtist());
-            boolean addArtist2title = "Various Artists".equals(albumArtist);
+           // boolean addArtist2title = "Various Artists".equals(albumArtist);
             if(!isEmpty(albumArtist)) {
                 filename.append(albumArtist).append(File.separator);
-            }else if (!isEmpty(artist)) {
-                filename.append(artist).append(File.separator);
+            }else if (!isEmpty(firstArtist)) {
+                filename.append(firstArtist).append(File.separator);
+            }else {
+                filename.append(Constants.UNKNOWN).append(File.separator);
             }
 
             // album
             String album = StringUtils.trimTitle(metadata.getAlbum());
-            if(!StringUtils.isEmpty(album)) {
-                if(!album.equalsIgnoreCase(albumArtist)) {
-                    filename.append(StringUtils.formatFilePath(album)).append(File.separator);
-                }
+            String sqInd = trimToEmpty(metadata.getQualityInd());
+            if(StringUtils.isEmpty(album)) {
+                album = Constants.UNKNOWN;
             }
+            if(!StringUtils.isEmpty(sqInd)) {
+                album = album+" ("+sqInd+")";
+            }
+            filename.append(StringUtils.formatFilePath(album)).append(File.separator);
 
             // track number
             if(!isEmpty(metadata.getTrack())) {
                 filename.append(StringUtils.getWord(metadata.getTrack(),"/",0)).append(" - ");
-            } else if(addArtist2title) {
-                filename.append(StringUtils.formatFilePath(artist)).append(" - ");
+            } else if(!isEmpty(firstArtist)) {
+                filename.append(StringUtils.formatFilePath(firstArtist)).append(" - ");
             }
 
             // title
@@ -374,21 +447,21 @@ public class FileRepository {
     }
 
     public String getStorageIdFor(MusicTag metadata) {
-        String STORAGE_PRIMARY = StorageId.PRIMARY;
+        String STORAGE_PRIMARY = PRIMARY;
        // if(metadata.isDSD() || metadata.isSACDISO()) {
             // DSD and ISO SACD
        //     return STORAGE_PRIMARY;
        // }else if (MusicTagUtils.isHiRes(metadata)) {
        //     return STORAGE_PRIMARY;
        // }else
-        if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) { // ||
+       // if(Constants.GROUPING_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) { // ||
             //    Constants.GROUPING_THAI_CLASSICAL.equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
+       //     return STORAGE_PRIMARY;
        // }else if(Constants.GROUPING_TRADITIONAL.equalsIgnoreCase(metadata.getGrouping())) {
        //     return STORAGE_PRIMARY;
-        }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {// ||
+       // }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {// ||
              //   Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
-            return STORAGE_PRIMARY;
+       //     return STORAGE_PRIMARY;
 
       /*  }else if(Constants.GROUPING_LOUNGE.equalsIgnoreCase(metadata.getGrouping()) ||
                  Constants.GROUPING_THAI_LOUNGE.equalsIgnoreCase(metadata.getGrouping())) {
@@ -396,7 +469,7 @@ public class FileRepository {
         }else if(Constants.GROUPING_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping()) ||
                 Constants.GROUPING_THAI_ACOUSTIC.equalsIgnoreCase(metadata.getGrouping())) {
                 return STORAGE_PRIMARY; */
-        }
+       // }
         return STORAGE_SECONDARY;
     }
 
@@ -560,7 +633,14 @@ public class FileRepository {
         List<String> storageIds = DocumentFileCompat.getStorageIds(context);
         List<String> files = new ArrayList<>();
         for (String sid : storageIds) {
+            // path Music
             File file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Music"));
+            if (file.exists()) {
+                files.add(file.getAbsolutePath());
+            }
+
+            // path Download
+            file = new File(DocumentFileCompat.buildAbsolutePath(context, sid, "Download"));
             if (file.exists()) {
                 files.add(file.getAbsolutePath());
             }

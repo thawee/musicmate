@@ -2,8 +2,7 @@ package apincer.android.mmate.coil3;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static apincer.music.core.Constants.COVER_ARTS;
-import static apincer.music.core.Constants.DEFAULT_COVERART_DLNA_RES;
-import static apincer.music.core.Constants.DEFAULT_COVERART_FILE;
+import static apincer.music.core.Constants.DEFAULT_COVERART;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -57,11 +56,11 @@ public class CoverartFetcher implements Fetcher {
     }
 
     public static Image getDefaultCover(Context mContext) {
-        File defaultCoverartDir = new File(getCoverartDir(mContext, COVER_ARTS),DEFAULT_COVERART_FILE);
+        File defaultCoverartDir = new File(getCoverartDir(mContext, COVER_ARTS),DEFAULT_COVERART);
         try {
             if(!defaultCoverartDir.exists()) {
                 FileUtils.createParentDirs(defaultCoverartDir);
-                InputStream in = ApplicationUtils.getAssetsAsStream(mContext.getApplicationContext(), DEFAULT_COVERART_DLNA_RES);
+                InputStream in = ApplicationUtils.getAssetsAsStream(mContext.getApplicationContext(), DEFAULT_COVERART);
                 Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
             }
 

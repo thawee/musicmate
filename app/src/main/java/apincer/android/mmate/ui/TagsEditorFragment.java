@@ -25,7 +25,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.File;
@@ -59,29 +58,20 @@ public class TagsEditorFragment extends Fragment {
     private static final String TAG = "TagsEditorFragment";
     protected Context context;
     protected TagsActivity tagsActivity;
-    //private View previewPanel;
     private TextView previewTitle;
-    private TextView previewArtist;
-    private TextView previewAlbum;
     private TextView previewPath;
     private ImageView previewCoverart;
     private TextInputEditText txtTitle;
-   // private TextInputEditText txtArtist;
     private AutoCompleteTextView txtArtist;
     private TextInputEditText txtAlbum;
     private AutoCompleteTextView txtAlbumArtist;
-   // private TextInputEditText txtDisc;
     private TextInputEditText txtTrack;
     private TextInputEditText txtYear;
     private AutoCompleteTextView txtGenre;
-    // private TextInputEditText txtGrouping;
-    private AutoCompleteTextView txtGrouping;
-    //private AutoCompleteTextView txtMediaType;
+    //private AutoCompleteTextView txtGrouping;
     private AutoCompleteTextView txtPublisher;
-    private FloatingActionButton fabSav;
+   // private FloatingActionButton fabSav;
     private AutoCompleteTextView qualityDropdown;
-   //private PowerSpinnerView fileQuality;
-    private volatile boolean bypassChange = false;
 
     @Inject
     TagRepository tagRepos;
@@ -98,41 +88,29 @@ public class TagsEditorFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.view_music_info_editor, container, false);
-       // previewPanel = v.findViewById(R.id.preview_panel);
         previewTitle = v.findViewById(R.id.preview_title);
         previewPath = v.findViewById(R.id.editor_pathname);
         previewCoverart = v.findViewById(R.id.preview_coverart);
         // input fields
         txtTitle = v.findViewById(R.id.input_title);
-       // txtArtist = v.findViewById(R.id.input_artist);
         txtArtist = v.findViewById(R.id.input_artist);
         txtAlbum = v.findViewById(R.id.input_album);
         txtAlbumArtist = v.findViewById(R.id.input_album_artist);
-        //txtDisc = v.findViewById(R.id.input_disc);
         txtTrack = v.findViewById(R.id.input_track);
         txtYear = v.findViewById(R.id.input_year);
         txtGenre = v.findViewById(R.id.input_genre);
-        txtGrouping = v.findViewById(R.id.input_grouping);
-        //txtMediaType = v.findViewById(R.id.input_media_type);
+        //txtGrouping = v.findViewById(R.id.input_grouping);
         txtPublisher = v.findViewById(R.id.input_publisher);
         qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
-        //fileQuality = v.findViewById(R.id.mediaFileQuality);
-       // fabSav = v.findViewById(R.id.fab_save);
-
-       // fabSav.setOnClickListener(view -> doSaveMediaItem());
 
         // popup list
         String[] qualityList = getResources().getStringArray(R.array.file_qualities);
         setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
-       // setupListValuePopup(txtArtist, TagRepository.getArtistList(), 3, false);
         setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
         setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
         setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
-        //TagRepository.getDefaultGenreList(getContext());
-        setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
-        // setupListValuePopup(txtGrouping, TagRepository.getGroupingList(getContext()),1);
+       // setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
         setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),3);
-       // setupListValuePopup(txtMediaType, Constants.getSourceList(requireContext()),1);
 
         return v;
     }
@@ -161,13 +139,11 @@ public class TagsEditorFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        //dismissPowerMenu();
         super.onDestroyView();
     }
 
     @Override
     public void onPause() {
-       // dismissPowerMenu();
         super.onPause();
     }
 
@@ -199,7 +175,6 @@ public class TagsEditorFragment extends Fragment {
         TextView trackLabel = cview.findViewById(R.id.track_label);
         TextView sepLabel = cview.findViewById(R.id.btn_add_sep);
         TextView dashLabel = cview.findViewById(R.id.btn_add_dash);
-        //TextView uscLabel = cview.findViewById(R.id.btn_add_uscore);
         TextView dotLabel = cview.findViewById(R.id.btn_add_dot);
         TextView spaceLabel = cview.findViewById(R.id.btn_add_space);
         TextView freeTextLabel = cview.findViewById(R.id.btn_add_free_text);
@@ -247,10 +222,8 @@ public class TagsEditorFragment extends Fragment {
         trackLabel.setOnClickListener(v -> mTagListLayout.addTag("track"));
         sepLabel.setOnClickListener(v -> mTagListLayout.addTag("/"));
         dashLabel.setOnClickListener(v -> mTagListLayout.addTag("-"));
-        //uscLabel.setOnClickListener(v -> mTagListLayout.addTag("_"));
         dotLabel.setOnClickListener(v -> mTagListLayout.addTag("."));
         spaceLabel.setOnClickListener(v -> mTagListLayout.addTag("sp"));
-       // freeTextLabel.setOnClickListener(v -> mTagListLayout.addTag("?"));
         freeTextLabel.setOnClickListener(v -> {
             // Create an AlertDialog with an EditText for input
             AlertDialog.Builder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.AlertDialogTheme);
@@ -338,9 +311,8 @@ public class TagsEditorFragment extends Fragment {
         final AtomicInteger completedCount = new AtomicInteger(0);
 
         // lose focus all dropdown
-        txtGrouping.clearFocus();
+        //txtGrouping.clearFocus();
         txtGenre.clearFocus();
-        //txtMediaType.clearFocus();
         qualityDropdown.clearFocus();
 
         // Process tags in a thread pool more efficiently
@@ -359,7 +331,6 @@ public class TagsEditorFragment extends Fragment {
                         boolean status = fileRepos.setMusicTag(tag);
                         int current = completedCount.incrementAndGet();
                         tagsActivity.updateProgressBar(current + "/" + totalItems);
-                       // tagsActivity.refreshDisplayTag();
                         // Post events one at a time
                     } catch (Exception e) {
                         Log.e(TAG, "doSaveMediaItem", e);
@@ -395,7 +366,7 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setAlbum(buildTag(txtAlbum, originTag.getAlbum()));
         tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, originTag.getAlbumArtist()));
         tagUpdate.setArtist(buildTag(txtArtist, originTag.getArtist()));
-        tagUpdate.setGrouping(buildTag(txtGrouping, originTag.getGrouping()));
+        //tagUpdate.setGrouping(buildTag(txtGrouping, originTag.getGrouping()));
         tagUpdate.setGenre(buildTag(txtGenre, originTag.getGenre()));
         tagUpdate.setPublisher(buildTag(txtPublisher, originTag.getPublisher()));
         tagUpdate.setYear(buildTag(txtYear, originTag.getYear()));
@@ -427,7 +398,6 @@ public class TagsEditorFragment extends Fragment {
         return text.startsWith("[") && text.endsWith("]");
     }
 
-
     private void doFormatTags() {
         tagsActivity.startProgressBar();
         CompletableFuture.runAsync(
@@ -457,12 +427,6 @@ public class TagsEditorFragment extends Fragment {
                 unused -> {
                     tagsActivity.refreshDisplayTag();
                     tagsActivity.stopProgressBar();
-                    // set updated item on main activity
-                   // tagsActivity.runOnUiThread(() -> {
-                       // bypassChange = true;
-                       // bindViews();
-                       // bypassChange = false;
-                   // });
                 }
         ).exceptionally(
                 throwable -> {
@@ -480,14 +444,12 @@ public class TagsEditorFragment extends Fragment {
         txtArtist.setText(tag.getArtist());
         txtAlbum.setText(tag.getAlbum());
         txtAlbumArtist.setText(tag.getAlbumArtist());
-        //txtDisc.setText(tag.getDisc());
         txtTrack.setText(tag.getTrack());
         txtYear.setText(tag.getYear());
         txtGenre.setText(tag.getGenre());
-        if(TagRepository.getDefaultGroupingList(getContext()).contains(tag.getGrouping())) {
-            txtGrouping.setText(tag.getGrouping());
-        }
-        //txtMediaType.setText(tag.getMediaType());
+       // if(TagRepository.getDefaultGroupingList(getContext()).contains(tag.getGrouping())) {
+       //     txtGrouping.setText(tag.getGrouping());
+       // }
         txtPublisher.setText(tag.getPublisher());
 
         txtTitle.invalidate();
@@ -513,7 +475,6 @@ public class TagsEditorFragment extends Fragment {
     }
 
     static class NoFilterArrayAdapter<T> extends ArrayAdapter<T> {
-
         private final List<T> items;
         private final Filter disabledFilter;
 

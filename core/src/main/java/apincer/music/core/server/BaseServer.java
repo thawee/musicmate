@@ -191,7 +191,7 @@ public class BaseServer {
     protected File getAlbumArt(String requestUri) {
         //String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf("."));
         String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length());
-        File albumArt = getFileRepos().getCoverArt(albumUniqueKey);
+        File albumArt = getFileRepos().getCoverArtByAlbumartFilename(albumUniqueKey);
         if(albumArt == null || albumArt.length() == 0) {
             albumArt = getDefaultAlbumArt();
         }
@@ -802,7 +802,7 @@ public class BaseServer {
          */
         private void handlePlayPrevious() {
             if (playbackService != null) {
-                playbackService.playPrevious();
+                playbackService.skipToPrevious();
             }
         }
 
@@ -811,7 +811,7 @@ public class BaseServer {
          */
         private void handlePlayNext() {
             if (playbackService != null) {
-                playbackService.playNext();
+                playbackService.skipToNext();
             }
         }
 

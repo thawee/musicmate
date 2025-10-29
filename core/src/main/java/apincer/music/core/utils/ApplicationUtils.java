@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.music.core.Constants;
+import apincer.music.core.provider.FileSystem;
 import apincer.music.core.provider.MusicFileProvider;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.SearchCriteria;
@@ -116,15 +117,16 @@ public class ApplicationUtils {
 
     /**
      * Recursively copies files and directories from a given path in the assets to the cache.
-     * @param context The application context.
-     * @param path The path within the assets folder.
+     *
+     * @param context   The application context.
+     * @param path      The path within the assets folder.
      */
-    public static void copyFilesToCache(Context context, String path) throws IOException {
+    public static void copyDirToAndroidFilesDir(Context context, String path) throws IOException {
         AssetManager assetManager = context.getAssets();
         String[] assets = assetManager.list(path);
 
         if (assets == null || assets.length == 0) { // It's a file
-            copyFile(context, path);
+            copyFileToAndroidFilesDir(context, path);
         } else { // It's a directory
             File fullPath = new File(context.getFilesDir(), path);
             if (!fullPath.exists()) {
@@ -132,7 +134,7 @@ public class ApplicationUtils {
             }
             for (String asset : assets) {
                 String newPath = path.isEmpty() ? asset : path + "/" + asset;
-                copyFilesToCache(context, newPath);
+                copyDirToAndroidFilesDir(context, newPath);
             }
         }
     }
@@ -142,8 +144,31 @@ public class ApplicationUtils {
      * @param context The application context.
      * @param filename The name/path of the file in assets.
      */
-    private static void copyFile(Context context, String filename) throws IOException {
+    public static void copyFileToAndroidFilesDir(Context context, String filename) throws IOException {
         File newFile = new File(context.getFilesDir(), filename);
+
+        // Use try-with-resources to automatically close streams
+        try (InputStream inputStream = context.getAssets().open(filename);
+             OutputStream outputStream = new FileOutputStream(newFile, false)) {
+
+            // Manually copy the file stream
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+        }
+    }
+
+    /**
+     * Copies a single file from assets to the cache directory.
+     * @param context The application context.
+     * @param filename The name/path of the file in assets.
+     * @param target The name/path of the file in assets.
+     */
+    public static void copyFileToAndroidCacheDir(Context context, String filename, String target) throws IOException {
+        File newFile = new File(context.getCacheDir(), target);
+        FileUtils.createParentDirs(newFile);
 
         // Use try-with-resources to automatically close streams
         try (InputStream inputStream = context.getAssets().open(filename);
@@ -365,7 +390,7 @@ public class ApplicationUtils {
         }
     }
 
-    public static void deleteFilesFromCache(Context context, String path) {
+    public static void deleteFilesFromAndroidFilesDir(Context context, String path) {
         File fullPath = new File(context.getFilesDir(), path);
         if (fullPath.exists()) {
             FileUtils.delete(fullPath);

@@ -114,7 +114,7 @@ public class PlaylistRepository {
                     }
                     break;
 
-                 case TYPE_GROUPING:
+                /* case TYPE_GROUPING:
                      if (entry.getSongs() != null) {
                          for (MusicTag song : entry.getSongs()) {
                              if (song != null && song.getGrouping() != null) {
@@ -123,7 +123,7 @@ public class PlaylistRepository {
                              }
                          }
                      }
-                     break;
+                     break; */
 
                 case TYPE_RATING:
                     if (entry.getSongs() != null) {
@@ -147,9 +147,10 @@ public class PlaylistRepository {
         return trimToEmpty(song.getRating()).toLowerCase();
     }
 
+    /*
     private static String getKeyForGrouping(MediaTrack song) {
         return trimToEmpty(song.getGrouping()).toLowerCase();
-    }
+    } */
 
     @NonNull
     private static String getKeyForGenre(MediaTrack song) {
@@ -172,9 +173,10 @@ public class PlaylistRepository {
         return title + "|" + artist + "|" + album;
     }
 
+    /*
     private static String getKeyForGrouping(MusicTag song) {
         return trimToEmpty(song.getGrouping()).toLowerCase();
-    }
+    } */
 
     @NonNull
     private static String getKeyForGenre(MusicTag song) {
@@ -306,7 +308,7 @@ public class PlaylistRepository {
             case TYPE_SONG -> getKeyForSong(tagToCheck);
             case TYPE_ALBUM -> getKeyForAlbum(tagToCheck);
             case TYPE_GENRE -> getKeyForGenre(tagToCheck);
-            case TYPE_GROUPING -> getKeyForGrouping(tagToCheck);
+           // case TYPE_GROUPING -> getKeyForGrouping(tagToCheck);
             case TYPE_RATING -> getKeyForRating(tagToCheck);
             default -> "";
         };

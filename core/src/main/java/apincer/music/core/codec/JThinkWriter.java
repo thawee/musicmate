@@ -92,12 +92,13 @@ public class JThinkWriter extends  TagWriter {
         setTagField(FieldKey.COMPOSER, trimToEmpty(musicTag.getComposer()), tag);
 
         // WAVE not support Grouping, use RECORD_LABEL
-        if(TagUtils.isWavFile(musicTag)) {
-            setTagField(FieldKey.RECORD_LABEL, trimToEmpty(musicTag.getGrouping()), tag);
-        }else {
+        //if(TagUtils.isWavFile(musicTag)) {
+           // setTagField(FieldKey.RECORD_LABEL, trimToEmpty(musicTag.getGrouping()), tag);
+       // }else {
+        if(!TagUtils.isWavFile(musicTag)) {
             setTagField(FieldKey.YEAR, trimToEmpty(musicTag.getYear()), tag);
             setTagField(FieldKey.DISC_NO, trimToEmpty(musicTag.getDisc()), tag);
-            setTagField(FieldKey.GROUPING, trimToEmpty(musicTag.getGrouping()), tag);
+           // setTagField(FieldKey.GROUPING, trimToEmpty(musicTag.getGrouping()), tag);
             setTagField(FieldKey.IS_COMPILATION, Boolean.toString(musicTag.isCompilation()), tag);
         }
 

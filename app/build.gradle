@@ -149,6 +149,7 @@ dependencies {
     implementation libs.androidx.loader
     implementation libs.androidx.drawerlayout
     implementation libs.androidx.viewpager2
+    implementation libs.androidx.swiperefreshlayout
 
     // media session
     implementation libs.androidx.media
@@ -183,8 +184,8 @@ dependencies {
     implementation libs.philjay.mpandroidchart
     implementation libs.vanniktech.textbuilder
     implementation libs.sparrow007.carouselrecyclerview // for reflectioncontainer
-    implementation libs.refresh.layout.kernel
-    implementation libs.refresh.header.classics
+    //implementation libs.refresh.layout.kernel
+    //implementation libs.refresh.header.classics
     implementation libs.tutorialsandroid.filepicker
     implementation libs.zxing.core
 

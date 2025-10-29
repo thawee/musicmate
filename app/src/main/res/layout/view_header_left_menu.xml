@@ -2,14 +2,60 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     android:background="@drawable/shape_header_left_menu"
     android:orientation="vertical"
     android:padding="4dp"
-    android:paddingLeft="8dp">
+    android:paddingStart="8dp"
+    tools:ignore="RtlSymmetry">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_12_dp"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            tools:ignore="RtlSymmetry">
+            <TextView
+                android:id="@+id/header_total_songs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:text="50,000"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Library"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingEnd="@dimen/dimen_12_dp"
+            android:layout_marginStart="@dimen/dimen_12_dp"
+            android:orientation="vertical"
+            tools:ignore="RtlSymmetry">
+            <TextView
+                android:id="@+id/header_total_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:text="400 Hrs"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Duration"/>
+        </LinearLayout>
 
+    </LinearLayout>
+
+    <!--
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,14 +74,16 @@
             android:textColor="@color/grey200"
             android:textSize="14sp" />
     </LinearLayout>
+    -->
     <LinearLayout
         android:id="@+id/storage_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_marginTop="@dimen/dimen_12_dp"
         android:background="@color/transparent"
         android:orientation="vertical"
-        android:padding="1dp">
+        android:padding="1dp"
+        tools:ignore="RtlHardcoded">
     </LinearLayout>
 </LinearLayout>

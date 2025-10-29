@@ -6,11 +6,13 @@ import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
+import java.io.File;
 import java.util.List;
 
 import apincer.music.core.playback.ExternalAndroidPlayer;
@@ -73,7 +75,7 @@ public class AndroidPlayerController {
     private final Runnable mUpdateProgressRunnable = new Runnable() {
         @Override
         public void run() {
-            // Log.d("ExternalPlayer", "mUpdateProgressRunnable.run");
+            // Log.d(TAG, "mUpdateProgressRunnable.run");
             if (mediaController == null) {
                 return;
             }
@@ -99,7 +101,7 @@ public class AndroidPlayerController {
     };
 
     private void scheduleProgressUpdate() {
-        // Log.d("ExternalPlayer", "scheduleProgressUpdate");
+        // Log.d(TAG, "scheduleProgressUpdate");
         // Stop any previous updates
         stopProgressUpdate();
         // Schedule the new one
@@ -107,7 +109,7 @@ public class AndroidPlayerController {
     }
 
     private void stopProgressUpdate() {
-        //  Log.d("ExternalPlayer", "stopProgressUpdate");
+       // Log.d(TAG, "stopProgressUpdate");
         mProgressHandler.removeCallbacks(mUpdateProgressRunnable);
     }
 
@@ -125,7 +127,6 @@ public class AndroidPlayerController {
         if(playbackCallback != null) {
             playbackCallback.onMediaTrackChanged(title, artist, album, duration);
         }
-
     }
 
     public void skipToNext() {
@@ -135,19 +136,31 @@ public class AndroidPlayerController {
     }
 
     public void play(MediaTrack song) {
-        if(mediaController != null) {
-            //play  song from song.getPath()
-            //mediaController.getTransportControls()
+        if(mediaController != null && song != null) {
+            File songFile = new File(song.getPath());
+
+            // Convert the File object to a Uri
+            Uri songUri = Uri.fromFile(songFile);
+            // Pass the Uri to playFromUri. The second parameter (extras) can be null.
+            mediaController.getTransportControls().playFromUri(songUri, null);
         }
     }
 
     public void pause() {
+        if(mediaController != null) {
+            mediaController.getTransportControls().pause();
+        }
     }
 
-    public void playPrevious() {
+    public void skipToPrevious() {
+        if(mediaController != null) {
+            mediaController.getTransportControls().skipToPrevious();
+        }
     }
 
     public void stopPlaying() {
-
+        if(mediaController != null) {
+            mediaController.getTransportControls().stop();
+        }
     }
 }

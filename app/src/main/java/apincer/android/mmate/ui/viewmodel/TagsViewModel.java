@@ -71,7 +71,7 @@ public class TagsViewModel extends ViewModel {
             newDisplayTag.setArtist(getCommonStringValue(currentItems, MusicTag::getArtist, MULTIPLE_ARTISTS, MULTIPLE_EMPTY));
             newDisplayTag.setAlbumArtist(getCommonStringValue(currentItems, MusicTag::getAlbumArtist, MULTIPLE_ALBUM_ARTISTS, MULTIPLE_EMPTY));
             newDisplayTag.setGenre(getCommonStringValue(currentItems, MusicTag::getGenre, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
-            newDisplayTag.setGrouping(getCommonStringValue(currentItems, MusicTag::getGrouping, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
+          //  newDisplayTag.setGrouping(getCommonStringValue(currentItems, MusicTag::getGrouping, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
             newDisplayTag.setTrack(getCommonStringValue(currentItems, MusicTag::getTrack, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
             newDisplayTag.setYear(getCommonStringValue(currentItems, MusicTag::getYear, MULTIPLE_EMPTY, MULTIPLE_EMPTY));
             newDisplayTag.setDisc(getCommonStringValue(currentItems, MusicTag::getDisc, MULTIPLE_EMPTY, MULTIPLE_EMPTY));

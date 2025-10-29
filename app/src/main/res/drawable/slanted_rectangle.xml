@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp" android:height="100dp"
+    android:viewportWidth="200" android:viewportHeight="100">
+
+    <path
+        android:fillColor="@color/colorPrimaryDark"
+        android:pathData="
+            M 8 0
+            L 180 0
+            A 20 20 0 0 1 200 20
+            L 180 100
+            A 8 8 0 0 1 172 100
+            L 0 100
+            A 8 8 0 0 1 0 92
+            L 0 8
+            A 8 8 0 0 1 8 0
+            z"
+        />
+
+
+    <!--
+     Path 2: The Border
+     Uses the same pathData but with a stroke and no fill.
+     The stroke color is '?attr/colorOutline' for theme-awareness.
+     20% transparent white border
+   -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="
+            M 8 0
+            L 180 0
+            A 20 20 0 0 1 200 20
+            L 180 100
+            A 8 8 0 0 1 172 100
+            L 0 100
+            A 8 8 0 0 1 0 92
+            L 0 8
+            A 8 8 0 0 1 8 0
+            z"
+        />
+</vector>

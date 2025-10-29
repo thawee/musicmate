@@ -32,6 +32,7 @@ import apincer.music.core.database.Playlist;
 import apincer.music.core.database.PlaylistItem;
 import apincer.music.core.database.QueueItem;
 import apincer.music.core.model.MusicFolder;
+import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.utils.LogHelper;
 import apincer.music.core.utils.StringUtils;
 
@@ -575,6 +576,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    /*
     public List<MusicFolder> getGroupingWithChildrenCount() {
         try {
             //select grouping, count(id) from musictag group by grouping
@@ -585,7 +587,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.groupBy("grouping");
             try (GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString())) {
                 for (String[] vals : results.getResults()) {
-                    MusicFolder group = new MusicFolder(vals[0]);
+                    MusicFolder group = new MusicFolder(SearchCriteria.TYPE.GROUPING, vals[0]);
                     group.setChildCount(StringUtils.toLong(vals[1]));
                     if (vals[0] == null) {
                         group.setName("_NULL");
@@ -600,7 +602,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             Log.e(TAG,"getGrouping: "+e.getMessage());
             return EMPTY_FOLDER_LIST;
         }
-    }
+    } */
 
     public List<MusicFolder> getGenresWithChildrenCount() {
         try {
@@ -612,7 +614,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             builder.groupBy("genre");
             try (GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString())) {
                 for (String[] vals : results.getResults()) {
-                    MusicFolder group = new MusicFolder(vals[0]);
+                    MusicFolder group = new MusicFolder(SearchCriteria.TYPE.GENRE, vals[0]);
                     //  group.setName(vals[0]);
                     group.setChildCount(StringUtils.toLong(vals[1]));
                     if (vals[0] == null) {
@@ -738,7 +740,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                         if (list.containsKey(artist)) {
                             group = list.get(artist);
                         } else {
-                            group = new MusicFolder(artist);
+                            group = new MusicFolder(SearchCriteria.TYPE.ARTIST, artist);
                         }
                         if (group != null) {
                             group.setChildCount(group.getChildCount() + StringUtils.toLong(vals[1]));
@@ -779,7 +781,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                     } else {
                         name = album + " (by " + albumArtist + ")";
                     }
-                    MusicFolder group = new MusicFolder(name);
+                    MusicFolder group = new MusicFolder(SearchCriteria.TYPE.ARTIST, name);
                     group.setUniqueKey(vals[2]);
                     group.setChildCount(StringUtils.toLong(count));
                     list.add(group);

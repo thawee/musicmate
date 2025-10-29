@@ -17,10 +17,12 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Scan Directories"
+            android:text="@string/update_library"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            app:drawableStartCompat="@drawable/rounded_directory_sync_24" />
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

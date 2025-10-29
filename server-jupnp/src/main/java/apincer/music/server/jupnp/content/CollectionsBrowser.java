@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.MusicFolder;
@@ -54,7 +55,7 @@ public class CollectionsBrowser extends AbstractContentBrowser {
 
         Map<String, MusicFolder> mapped = new HashMap<>();
         for(String pls: playlists) {
-            MusicFolder dir = new MusicFolder(pls);
+            MusicFolder dir = new MusicFolder(SearchCriteria.TYPE.PLAYLIST, pls);
             PlaylistEntry entry = PlaylistRepository.getPlaylistByName(pls);
             dir.setUniqueKey(entry.getUuid());
             mapped.put(pls, dir);

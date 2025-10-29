@@ -276,8 +276,8 @@ public class TagsActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         TagsTabLayoutAdapter adapter = new TagsTabLayoutAdapter(getSupportFragmentManager(), getLifecycle());
 
-        adapter.addNewTab(new TagsEditorFragment(), "Music Info");
-        adapter.addNewTab(new TagsTechnicalFragment(), "NERD");
+        adapter.addNewTab(new TagsEditorFragment(), "Song Info");
+        adapter.addNewTab(new TagsTechnicalFragment(), "Tech Info");
         viewPager.setAdapter(adapter);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -437,16 +437,12 @@ public class TagsActivity extends AppCompatActivity {
         SimplifySpanBuild tagSpan = new SimplifySpanBuild("");
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
 
-        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                    doBackToMainActivity(Constants.FILTER_TYPE_GENRE, currentDisplayTag.getGenre());
-                }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> doBackToMainActivity(Constants.FILTER_TYPE_GENRE, currentDisplayTag.getGenre())).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                 new SpecialTextUnit(isEmpty(currentDisplayTag.getGenre())?Constants.UNKNOWN:currentDisplayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
-        tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
-        tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> {
-                    doBackToMainActivity(Constants.FILTER_TYPE_GROUPING, currentDisplayTag.getGrouping());
-                }).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-                new SpecialTextUnit(isEmpty(currentDisplayTag.getGrouping())?" - ":currentDisplayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
+       // tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
+       // tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> doBackToMainActivity(Constants.FILTER_TYPE_GROUPING, currentDisplayTag.getGrouping())).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
+        //        new SpecialTextUnit(isEmpty(currentDisplayTag.getGrouping())?" - ":currentDisplayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
 
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagInfo.setText(tagSpan.build());

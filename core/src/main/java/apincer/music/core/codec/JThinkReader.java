@@ -200,7 +200,7 @@ public class JThinkReader extends TagReader{
                 metadata.setArtist(getId3TagValue(tag, FieldKey.ARTIST));
                 metadata.setAlbumArtist(getId3TagValue(tag, FieldKey.ALBUM_ARTIST));
                 metadata.setGenre(getId3TagValue(tag, FieldKey.GENRE));
-                metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
+              //  metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
                 metadata.setYear(getId3TagValue(tag, FieldKey.YEAR));
                 metadata.setTrack(getId3TagValue(tag, FieldKey.TRACK));
                 metadata.setComposer(getId3TagValue(tag, FieldKey.COMPOSER));
@@ -233,15 +233,16 @@ public class JThinkReader extends TagReader{
         }
 
         // Handle format-specific tags
-        if (TagUtils.isWavFile(metadata)) {
-            metadata.setGrouping(getId3TagValue(tag, FieldKey.RECORD_LABEL));
+       // if (TagUtils.isWavFile(metadata)) {
+           // metadata.setGrouping(getId3TagValue(tag, FieldKey.RECORD_LABEL));
            // processWaveSpecificTags(metadata, tempTagsMap, tag);
        // } else if (MusicTagUtils.isMPegFile(metadata)) {
        //     processMpegSpecificTags(metadata, tempTagsMap);
-        } else {
+       // } else {
+        if (!TagUtils.isWavFile(metadata)) {
             // Standard files support these tags directly
             metadata.setDisc(getId3TagValue(tag, FieldKey.DISC_NO));
-            metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
+            //metadata.setGrouping(getId3TagValue(tag, FieldKey.GROUPING));
             metadata.setQualityRating(getId3TagValue(tag, FieldKey.QUALITY));
           //  metadata.setMediaType(getId3TagValue(tag, FieldKey.MEDIA));
             metadata.setComment(getId3TagValue(tag, FieldKey.COMMENT));

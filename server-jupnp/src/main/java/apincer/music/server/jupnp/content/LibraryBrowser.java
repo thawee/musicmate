@@ -47,7 +47,7 @@ public class LibraryBrowser extends AbstractContentBrowser {
        // result.add((Container) new AlbumsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new ArtistsBrowser(getContext(), tagRepos).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new GenresBrowser(getContext(), tagRepos).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), firstResult, maxResults, orderby));
-        result.add((Container) new GroupingsBrowser(getContext(), tagRepos).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
+       // result.add((Container) new GroupingsBrowser(getContext(), tagRepos).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), firstResult, maxResults, orderby));
 
         //result.add((Container) new ResolutionsBrowser(getContext()).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), firstResult, maxResults, orderby));
         result.add((Container) new SourcesBrowser(getContext(), tagRepos).browseMeta(contentDirectory, ContentDirectoryIDs.MUSIC_SOURCE_FOLDER.getId(), firstResult, maxResults, orderby));

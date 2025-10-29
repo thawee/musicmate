@@ -226,6 +226,7 @@ public class AboutActivity extends AppCompatActivity {
                         encList.put(enc, 1);
                     }
 
+                    /*
                     // grouping
                     String grp = tag.getGrouping();
                     if(StringUtils.isEmpty(grp)) grp = Constants.UNKNOWN;
@@ -234,7 +235,7 @@ public class AboutActivity extends AppCompatActivity {
                         grpList.put(grp, cnt + 1);
                     }else {
                         grpList.put(grp, 1);
-                    }
+                    } */
                 }
                 getActivity().runOnUiThread(() -> {
                     // storage

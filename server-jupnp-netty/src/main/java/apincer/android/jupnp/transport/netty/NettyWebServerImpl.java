@@ -2,8 +2,7 @@ package apincer.android.jupnp.transport.netty;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static apincer.music.core.Constants.COVER_ARTS;
-import static apincer.music.core.Constants.DEFAULT_COVERART_DLNA_RES;
-import static apincer.music.core.Constants.DEFAULT_COVERART_FILE;
+import static apincer.music.core.Constants.DEFAULT_COVERART;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
@@ -280,7 +279,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
         final File defaultCoverartDir;
 
         public ContentServerHandler() {
-            defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
+            defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART);
             initDefaultCoverArt();
         }
 
@@ -379,7 +378,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
                 }
 
                 // Not in cache, fetch from database
-                    File coverFile = fileRepos.getCoverArt(albumUniqueKey);
+                    File coverFile = fileRepos.getCoverArtByAlbumartFilename(albumUniqueKey);
                     if (coverFile != null && coverFile.exists()) {
                         String mime = MimeTypeUtils.getMimeTypeFromPath(coverFile.getAbsolutePath());
 
@@ -440,7 +439,7 @@ public class NettyWebServerImpl extends BaseServer implements ContentServer {
                 if (!defaultCoverartDir.exists()) {
                     Log.d(TAG, "Default cover art not found, creating from assets");
                     FileUtils.createParentDirs(defaultCoverartDir);
-                    try (InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART_DLNA_RES)) {
+                    try (InputStream in = ApplicationUtils.getAssetsAsStream(getContext(), DEFAULT_COVERART)) {
                         if (in != null) {
                             Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
 

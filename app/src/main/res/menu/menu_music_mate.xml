@@ -39,14 +39,14 @@
 -->
 	<item
 		android:id="@+id/menu_directories"
-		android:icon="@drawable/rounded_music_history_24"
-		android:title="Scan Music"
+		android:icon="@drawable/rounded_directory_sync_24"
+		android:title="Update Library"
 		app:showAsAction="always" />
 
 	<item
         android:id="@+id/menu_settings"
         android:icon="@drawable/rounded_display_settings_24"
-        android:title="Settings"
+        android:title="Preferences"
         app:showAsAction="always" />
 
 	<!--
@@ -70,17 +70,17 @@
 		android:icon="@drawable/ic_baseline_playlist_play_24"
 		android:title="Export Playlists"
 		app:showAsAction="always" />
-
-	<item
-		android:id="@+id/menu_sd_permission"
-		android:icon="@drawable/ic_round_perm_data_setting_24"
-		android:title="Storage Permissions"
-		app:showAsAction="always" />
 -->
+	<item
+		android:id="@+id/menu_files_permission"
+		android:icon="@drawable/rounded_folder_managed_24"
+		android:title="Full File Access"
+		app:showAsAction="always" />
+
 	<item
 		android:id="@+id/menu_notification_access"
 		android:icon="@drawable/rounded_admin_panel_settings_24"
-		android:title="Notification Access"
+		android:title="Notification Permission"
 		app:showAsAction="always" />
 
 	<!--
@@ -101,14 +101,14 @@
 
 	<item
 		android:id="@+id/menu_about_music_mate"
-		android:icon="@drawable/rounded_info_24"
+		android:icon="@drawable/rounded_help_24"
 		android:title="About"
 		app:showAsAction="always" />
 
 	<item
 		android:id="@+id/menu_about_crash"
-		android:icon="@drawable/rounded_data_info_alert_24"
-		android:title="Crash Report"
+		android:icon="@drawable/rounded_bug_report_24"
+		android:title="View Crash Log"
 		app:showAsAction="always" />
 <!--
 	<item

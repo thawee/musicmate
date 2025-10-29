@@ -2,6 +2,7 @@ package apincer.android.mmate.ui;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static apincer.music.core.utils.StringUtils.formatSongSize;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -76,8 +77,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             return StringUtils.equals(tag.getGenre(), criteria.getFilterText());
         } else if (Constants.FILTER_TYPE_PUBLISHER.equals(criteria.getFilterType())) {
             return StringUtils.equals(tag.getPublisher(), criteria.getFilterText());
-        } else if (Constants.FILTER_TYPE_GROUPING.equals(criteria.getFilterType())) {
-            return StringUtils.equals(tag.getGrouping(), criteria.getFilterText());
+       // } else if (Constants.FILTER_TYPE_GROUPING.equals(criteria.getFilterType())) {
+       //     return StringUtils.equals(tag.getGrouping(), criteria.getFilterText());
         } else if (Constants.FILTER_TYPE_PATH.equals(criteria.getFilterType())) {
             return tag.getPath().startsWith(criteria.getFilterText());
         }
@@ -113,12 +114,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         return criteria;
     }
 
-    public int getTotalSongs() {
+    public int getTotalItems() {
         return localDataSet.size();
-    }
-
-    public long getTotalSize() {
-        return  totalSize;
     }
 
     public double getTotalDuration() {
@@ -132,26 +129,27 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public List<String> getHeaderTitles(Context context) {
         List<String> titles = new ArrayList<>();
-        if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
+       /* if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
             titles.add(Constants.TITLE_ALL_SONGS);
             titles.add(Constants.TITLE_INCOMING_SONGS);
             titles.add(Constants.TITLE_DUPLICATE);
             titles.add(Constants.TITLE_TO_ANALYST_DR);
            // titles.add(Constants.TITLE_BROKEN);
-        }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
+        }else*/
+        if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
             titles.add(Constants.QUALITY_AUDIOPHILE);
             titles.add(Constants.QUALITY_RECOMMENDED);
             titles.add(Constants.QUALITY_FAVORITE);
             titles.add(Constants.QUALITY_BAD);
-        }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
+        }else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
             titles.add(Constants.TITLE_HIGH_QUALITY);
             titles.add(Constants.TITLE_HIFI_LOSSLESS);
             titles.add(Constants.TITLE_HIRES);
             titles.add(Constants.TITLE_MASTER_AUDIO);
             titles.add(Constants.TITLE_DSD);
-        }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-            List<String> tabs = tagRepos.getActualGroupingList(context);
-            titles.addAll(tabs);
+       // }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
+       //     List<String> tabs = tagRepos.getActualGroupingList(context);
+       //     titles.addAll(tabs);
         }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
             List<String> tabs = tagRepos.getActualGenreList();
             titles.addAll(tabs);
@@ -172,7 +170,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(criteria!=null) {
             String keyword = trimToEmpty(criteria.getKeyword());
             if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
-                return isEmpty(criteria.getKeyword())?Constants.TITLE_ALL_SONGS:keyword;
+                return isEmpty(keyword) ? Constants.TITLE_ALL_SONGS : keyword;
+            }else if(criteria.getType() == SearchCriteria.TYPE.ARTIST) {
+                return isEmpty(keyword) ? Constants.TITLE_ARTIST : keyword;
+            }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
+                return isEmpty(keyword) ? Constants.TITLE_GENRE : keyword;
+           // }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
+            //    return isEmpty(keyword) ? Constants.TITLE_GROUPING : keyword;
             } else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
                 if (Constants.QUALITY_AUDIOPHILE.equals(keyword)) {
                     return Constants.QUALITY_AUDIOPHILE;
@@ -189,13 +193,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 }else {
                     return keyword;
                 }
-            } else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
-                return keyword;
+            } else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
+                return isEmpty(keyword) ? Constants.TITLE_CODEC : keyword;
             } else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
-               if(isEmpty(keyword)) {
-                   return Constants.TITLE_PLAYLIST;
-               }
-               return keyword;
+                return isEmpty(keyword) ? Constants.TITLE_PLAYLIST : keyword;
             } else {
                 return keyword;
             }
@@ -231,10 +232,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 return Constants.TITLE_LIBRARY;
            // }else if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
           //      return Constants.TITLE_QUALITY;
-            }else if(criteria.getType() == SearchCriteria.TYPE.AUDIO_ENCODINGS) {
-                return Constants.TITLE_RESOLUTION;
-            }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-                return Constants.TITLE_GROUPING;
+            }else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
+                return Constants.TITLE_CODEC;
+            //}else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
+           //     return Constants.TITLE_GROUPING;
             }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
                 return Constants.TITLE_GENRE;
             }else if(criteria.getType() == SearchCriteria.TYPE.ARTIST) {
@@ -248,14 +249,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             }
         }
         return Constants.TITLE_LIBRARY;
-    }
-
-    public boolean isFirstItem(Context context) {
-        return getHeaderTitle().equals(getHeaderTitles(context).get(0));
-    }
-
-    public void resetSelectedItem() {
-        criteria.setKeyword("");
     }
 
     // New method to set music tags from ViewModel
@@ -469,9 +462,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         imageLoader.enqueue(request);
 
         holder.mTitle.setText(MusicTagUtils.getFormattedTitle(holder.mContext, item));
-        if(SearchCriteria.TYPE.ARTIST.name().equals(item.getFileType())) {
-            holder.mSubtitle.setText(StringUtils.formatNumber(item.getChildCount()) +" songs");
-        }
+       // String subTitle = "🎵 "+formatSongSize(item.getChildCount());
+        String subTitle = formatSongSize(item.getChildCount());
+        subTitle = subTitle+" Songs | " + StringUtils.formatDuration(item.getAudioDuration(), true);
+
+        //if(SearchCriteria.TYPE.ARTIST.name().equals(item.getFileType())) {
+            holder.mSubtitle.setText(subTitle);
+       // }
     }
 
     public void onBindViewMusicTag(ViewHolder holder, @SuppressLint("RecyclerView") final int position, @NotNull MusicTag tag) {

@@ -20,7 +20,9 @@
             android:text="MusicMate Media Server"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:drawablePadding="@dimen/dimen_4_dp"
+            app:drawableStartCompat="@drawable/rounded_broadcast_on_personal_24"/>
     </LinearLayout>
 
     <LinearLayout

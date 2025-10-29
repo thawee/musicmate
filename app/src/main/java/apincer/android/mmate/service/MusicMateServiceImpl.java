@@ -2,7 +2,6 @@ package apincer.android.mmate.service;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -80,7 +79,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 @AndroidEntryPoint
 public class MusicMateServiceImpl extends Service implements PlaybackService {
     private static final String TAG = "MusicMateServiceImpl";
-    private static final String CHANNEL_ID = "musicmate_service_channel";
+    public static final String CHANNEL_ID = "musicmate_service_channel";
     private static final int SERVICE_ID = 1;
 
     public static final String ACTION_PLAY_PAUSE = "apincer.musicmate.ACTION_PLAY_PAUSE";
@@ -97,7 +96,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Inject
     MediaServerHub mediaServer;
 
-    private boolean isNotificationActive = false;
+    //private boolean isNotificationActive = false;
     private AndroidPlayerController androidPlayer;
 
     // -- SERVICE --
@@ -164,20 +163,23 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private final MediaSessionManager.OnActiveSessionsChangedListener sessionChangeListener =
             controllers -> {
                 Log.d(TAG, "Active sessions changed: " + controllers.size());
-                updateAvailableTargets(controllers);
+                updateAvailableExternalPlayers(controllers);
             };
 
     private PlaybackTarget getActivePlayer() {
         return currentPlayerSubject.getValue().orElse(null);
     }
 
-    private void updateAvailableTargets(List<MediaController> controllers) {
-        getAvailablePlaybackTargets().clear();
+    private void updateAvailableExternalPlayers(List<MediaController> controllers) {
+        // Remove all existing external Players
+        if (getAvailablePlaybackTargets() != null) {
+            getAvailablePlaybackTargets().removeIf(target -> target instanceof ExternalAndroidPlayer);
+        }
 
         // Add external media session targets
         for (MediaController controller : controllers) {
             String packageName = controller.getPackageName();
-            String sessionTag = controller.getTag();
+           // String sessionTag = controller.getTag();
             PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
             getAvailablePlaybackTargets().add(player);
         }
@@ -186,51 +188,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         Log.d(TAG, "Updated available targets: " + getAvailablePlaybackTargets().size());
     }
 
-    /*
-    private void bridgeExternalStateToApp(PlaybackState externalState) {
-        apincer.music.core.playback.PlaybackState appState = new apincer.music.core.playback.PlaybackState();
-
-        switch (externalState.getState()) {
-            case PlaybackState.STATE_PLAYING:
-                appState.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
-                break;
-            case PlaybackState.STATE_PAUSED:
-                appState.currentState = apincer.music.core.playback.PlaybackState.State.PAUSED;
-                break;
-            case PlaybackState.STATE_BUFFERING:
-                appState.currentState = apincer.music.core.playback.PlaybackState.State.BUFFERING;
-                break;
-            default:
-                appState.currentState = apincer.music.core.playback.PlaybackState.State.STOPPED;
-        }
-
-        appState.currentPositionSecond = externalState.getPosition();
-        appState.currentTrack = currentTrackSubject.getValue().orElse(null);
-
-        onPlaybackStateChanged(appState);
-    }
-
-    private void bridgeExternalMetadataToApp(android.media.MediaMetadata metadata) {
-        String title = metadata.getString(android.media.MediaMetadata.METADATA_KEY_TITLE);
-        String artist = metadata.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST);
-        String album = metadata.getString(android.media.MediaMetadata.METADATA_KEY_ALBUM);
-        long duration = metadata.getLong(android.media.MediaMetadata.METADATA_KEY_DURATION);
-
-        MediaTrack track = tagRepos.findMediaItem(title, artist, album); //, duration);
-
-        currentTrackSubject.onNext(Optional.of(track));
-    } */
-/*
-    private String getAppName(String packageName) {
-        try {
-            return getPackageManager().getApplicationLabel(
-                    getPackageManager().getApplicationInfo(packageName, 0)
-            ).toString();
-        } catch (Exception e) {
-            return packageName;
-        }
-    } */
-
     // ==================== Service Lifecycle ====================
 
     @Override
@@ -238,13 +195,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         super.onCreate();
         // must create notification within 5-10 seconds
         // Create the channel (it's safe to call this every time)
-        if(!isNotificationActive) {
-            createNotificationChannel();
+        //if(!isNotificationActive) {
+         //   createNotificationChannel();
 
-            // Start foreground service immediately with the *initial* notification
-            startForeground(SERVICE_ID, createInitialNotification());
-            isNotificationActive = true;
-        }
+        // Start foreground service immediately with the *initial* notification
+        startForeground(SERVICE_ID, createInitialNotification());
+        //    isNotificationActive = true;
+       // }
 
         this.wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -253,13 +210,17 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         getStatusLiveData().observeForever(status -> updateNotification(null, null));
 
+        // inital dmr player
+        getAvailablePlaybackTargets().addAll(mediaServer.getAvailablePlaybackTargets());
+
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
         androidPlayer = new AndroidPlayerController(getApplicationContext(), mediaSessionManager);
         ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
         try {
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(notificationListener);
-            updateAvailableTargets(controllers);
+            // initial with external player
+            updateAvailableExternalPlayers(controllers);
             mediaSessionManager.addOnActiveSessionsChangedListener(sessionChangeListener, notificationListener);
 
             // Load queue from database
@@ -268,8 +229,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             Log.e(TAG, "Missing notification listener permission", e);
         }
 
-        copyWebUIAssets(this);
-        getAvailablePlaybackTargets().addAll(mediaServer.getAvailablePlaybackTargets());
+        initWebUIAssets(this);
 
         Optional<PlaybackTarget> bestChoice = autoSelectBestPlayer();
         if (bestChoice.isPresent()) {
@@ -301,11 +261,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                     break;
                 case ACTION_NEXT:
                     // Add your logic to skip to the next track
-                    playNext();
+                    skipToNext();
                     break;
                 case ACTION_PREVIOUS:
                     // Add your logic to go to the previous track
-                    playPrevious();
+                    skipToPrevious();
                     break;
                 case ACTION_STOP:
                     // Add your logic to stop playback completely
@@ -324,13 +284,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public void startServers() {
         if (mediaServer.isInitialized()) return;
 
-        if(!isNotificationActive) {
-            createNotificationChannel();
+      /*  if(!isNotificationActive) {
+          //  createNotificationChannel();
 
             // Start foreground service immediately with the *initial* notification
             startForeground(SERVICE_ID, createInitialNotification());
             isNotificationActive = true;
-        }
+        } */
 
         if (!NetworkUtils.isWifiConnected(this)) {
             statusLiveData.postValue(MediaServerHub.ServerStatus.ERROR);
@@ -447,18 +407,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 .build();
     }
 
-    private void createNotificationChannel() {
-        NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID,
-                Constants.getPresentationName(),
-                NotificationManager.IMPORTANCE_LOW
-        );
-        channel.setDescription("Manages media playback");
-        if (notificationManager != null) {
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
-
     /**
      * Builds and displays the dynamic foreground service notification.
      * <p>
@@ -503,9 +451,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             // This will create or update the existing foreground service notification.
             notificationManager.notify(SERVICE_ID, builder.build());
 
-           // if (track != null && player != null && player.isStreaming()) {
-           //     loadAlbumArt(track, builder);
-           // }
         }
     }
 
@@ -560,7 +505,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private NotificationCompat.Builder createServerStatusNotification(@Nullable MediaServerHub.ServerStatus status) {
         String contentText = "Tap to start the server";
         String statusText = OFFLINE_STATUS;
-        int tracks = (status != null) ? (int) tagRepos.getMusicTotal() : 0;
+        int tracks = (status != null) ? (int) tagRepos.getTotalSongs() : 0;
         PendingIntent toggleIntent = createServerToggleIntent(); // Needs to be implemented
         int toggleIcon = R.drawable.ic_play_arrow;
         String toggleTitle = "Start Server";
@@ -805,7 +750,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
 
     @Override
-    public void playNext() {
+    public void skipToNext() {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
             if (isControllable()) {
                 androidPlayer.skipToNext();
@@ -822,15 +767,14 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
     }
 
-
     @Override
-    public void playPrevious() {
+    public void skipToPrevious() {
         currentPlayerSubject.getValue().ifPresent(playbackTarget -> {
             if (isControllable()) {
                 playPreviousOnStreamingPlayer(playbackTarget);
             } else {
                 // external player
-                androidPlayer.playPrevious();
+                androidPlayer.skipToPrevious();
             }
         });
     }
@@ -910,13 +854,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     @Override
     public PlaybackTarget getPlayer() {
-       // if (getActivePlayer() != null) {
-            return getActivePlayer();
-       // }
-       // return getAvailableTargets().stream()
-       //         //.filter(PlaybackTarget::isActive)
-       //         .findFirst()
-       //         .orElse(null);
+        return getActivePlayer();
     }
 
     @Override
@@ -1057,6 +995,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         // We iterate once to find the best match
         for (PlaybackTarget target : getAvailablePlaybackTargets()) {
+            if(target == null) continue;
 
             // --- Priority 1: DMCA / DMR Player ---
             // (Replace 'DMRPlayer' with your actual DLNA/UPnP player class name)
@@ -1098,12 +1037,12 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         return Optional.empty();
     }
 
-    private void copyWebUIAssets(Context context) {
+    private void initWebUIAssets(Context context) {
         try {
             String assetDir = "webui";
             // Per your code, this will delete and re-copy on every service creation.
-            ApplicationUtils.deleteFilesFromCache(context, assetDir);
-            ApplicationUtils.copyFilesToCache(context, assetDir);
+            ApplicationUtils.deleteFilesFromAndroidFilesDir(context, assetDir);
+            ApplicationUtils.copyDirToAndroidFilesDir(context, assetDir);
         } catch (IOException e) {
             Log.e(TAG, "Failed to copy web assets", e);
         }
@@ -1202,15 +1141,5 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public IBinder onBind(Intent intent) {
         return new MusicMateServiceImplBinder();
-    }
-
-    public static void startService(Context context) {
-        Log.d(TAG, "Start MusicMateService requested");
-        Intent intent = new Intent(context, MusicMateServiceImpl.class);
-        try {
-            context.startForegroundService(intent);
-        } catch (Exception e) {
-            Log.e(TAG, "Error starting MusicMateService ", e);
-        }
     }
 }

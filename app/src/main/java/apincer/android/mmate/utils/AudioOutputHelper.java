@@ -92,6 +92,10 @@ public class AudioOutputHelper {
 
         String address;
         int resId;
+
+        public String getDescription() {
+            return description;
+        }
     }
 
     public interface Callback {

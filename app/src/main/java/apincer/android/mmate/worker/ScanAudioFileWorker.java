@@ -53,8 +53,8 @@ public class ScanAudioFileWorker extends Worker {
            // TagRepository tagRepos) {
         super(context, parameters);
 
-        this.repos = ((MusixMateApp)getApplicationContext()).getFileRepository();;
-        this.tagRepos = ((MusixMateApp)getApplicationContext()).getTagRepository();;
+        this.repos = ((MusixMateApp)getApplicationContext()).getFileRepository();
+        this.tagRepos = ((MusixMateApp)getApplicationContext()).getTagRepository();
 
         // Get dynamic configuration based on device capabilities
         optimalThreadCount = getOptimalThreadCount();
@@ -93,11 +93,14 @@ public class ScanAudioFileWorker extends Worker {
                         for (MusicTag basicTag : BasicList) {
                             try {
                                 //full scan
-                                if (TagReader.readExtras(getApplicationContext(), basicTag)) {
-                                    basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
-                                }
+                                TagReader.readExtras(getApplicationContext(), basicTag);
+                               //     basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
+                                //}
 
-                                //repos.saveCoverartToCache(basicTag);
+                                basicTag.setMusicManaged(repos.isManagedInLibrary(basicTag));
+
+                                // re-try to extract embed album art
+                                repos.saveCoverartToCache(basicTag);
                                 tagRepos.saveTag(basicTag);
                             } catch(Exception e) {
                                 Log.e(TAG, "Error extracting cover art", e);

@@ -53,7 +53,8 @@ public final class Constants {
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
     public static final String TITLE_PLAYLIST = "Playlists";
     public static final String TITLE_RESOLUTION = "Resolutions";
-    public static final String TITLE_GROUPING = "Groupings";
+    public static final String TITLE_CODEC = "Codecs";
+   // public static final String TITLE_GROUPING = "Groupings";
     public static final String TITLE_GENRE = "Genres";
     public static final String TITLE_ARTIST = "Artists";
     public static final String TITLE_NO_COVERART = "No Embed Coverart";
@@ -88,9 +89,11 @@ public final class Constants {
     public static final String CHANNEL_ID_SERVER = "server_channel";
 
     static {
+        //png
         IMAGE_COVERS.add("front.png");
         IMAGE_COVERS.add("cover.png");
         IMAGE_COVERS.add("folder.png"); // not supported by UAPP
+        // jpg
         IMAGE_COVERS.add("front.jpg"); // support by neplayer
         IMAGE_COVERS.add("cover.jpg");
         IMAGE_COVERS.add("folder.jpg"); // not supported by UAPP
@@ -101,6 +104,7 @@ public final class Constants {
         RELATED_FILE_TYPES.add("pdf");
         RELATED_FILE_TYPES.add("md5");
         RELATED_FILE_TYPES.add("txt");
+        RELATED_FILE_TYPES.add("md");
         RELATED_FILE_TYPES.add("json"); // tags, override to embed iso
 
     }
@@ -150,8 +154,7 @@ public final class Constants {
     public static final String PUBLISHER_YOUTUBE = "Youtube";
 
     public static final String COVER_ARTS = "/Covers/";
-    public static final String DEFAULT_COVERART_FILE = "default_coverart.png";
-    public static final String DEFAULT_COVERART_DLNA_RES = "no_cover.png";
+    public static final String DEFAULT_COVERART = "no_cover.png";
 
     public static String getPresentationName() {
         // Get the clean, friendly device model name

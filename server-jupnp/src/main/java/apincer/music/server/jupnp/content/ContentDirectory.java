@@ -158,7 +158,7 @@ public class ContentDirectory {
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GENRES_FOLDER.getId(), () -> new GenresBrowser(getContext(),tagRepos));
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ALBUMS_FOLDER.getId(), () -> new AlbumsBrowser(getContext(),tagRepos));
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ARTISTS_FOLDER.getId(), () -> new ArtistsBrowser(getContext(),tagRepos));
-        directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), () -> new GroupingsBrowser(getContext(),tagRepos));
+        //directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_FOLDER.getId(), () -> new GroupingsBrowser(getContext(),tagRepos));
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_FOLDER.getId(), () -> new CollectionsBrowser(getContext(),tagRepos));
         directBrowserRegistry.put(ContentDirectoryIDs.MUSIC_RESOLUTION_FOLDER.getId(), () -> new ResolutionsBrowser(getContext(),tagRepos));
 
@@ -173,9 +173,9 @@ public class ContentDirectory {
                 () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_ALBUM_PREFIX.getId(), ContentDirectoryIDs.MUSIC_ALBUM_ITEM_PREFIX.getId()));
         prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId(),
                 () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_ARTIST_PREFIX.getId(), ContentDirectoryIDs.MUSIC_ARTIST_ITEM_PREFIX.getId()));
-        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), () -> new GroupingFolderBrowser(getContext(),tagRepos));
-        prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId(),
-                () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId()));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), () -> new GroupingFolderBrowser(getContext(),tagRepos));
+       // prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId(),
+        //        () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId(), ContentDirectoryIDs.MUSIC_GROUPING_ITEM_PREFIX.getId()));
         prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), () -> new CollectionFolderBrowser(getContext(),tagRepos));
         prefixBrowserRegistry.put(ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId(),
                 () -> new MusicItemBrowser(getContext(), tagRepos, ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId(), ContentDirectoryIDs.MUSIC_COLLECTION_ITEM_PREFIX.getId()));

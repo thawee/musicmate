@@ -265,7 +265,7 @@ public static class Loudness {
         tag.setGenre(getValueForKey(tags, KEY_TAG_GENRE));
 
         //KEY_TAG_GROUPING
-        tag.setGrouping(getValueForKey(tags, KEY_TAG_GROUPING));
+       // tag.setGrouping(getValueForKey(tags, KEY_TAG_GROUPING));
 
         //KEY_TAG_TRACK
         tag.setTrack(getValueForKey(tags, KEY_TAG_TRACK));
@@ -323,7 +323,7 @@ public static class Loudness {
         if(TagUtils.isWavFile(tag)) {
             tag.setComposer(getValueForKey(tags, KEY_TAG_WAVE_COMPOSER));
             tag.setAlbumArtist(getValueForKey(tags, KEY_TAG_WAVE_ALBUM_ARTIST));
-            tag.setGrouping(getValueForKey(tags, KEY_TAG_WAVE_GROUP));
+          //  tag.setGrouping(getValueForKey(tags, KEY_TAG_WAVE_GROUP));
           //  tag.setMediaType(getValueForKey(tags, KEY_TAG_WAVE_MEDIA));
             tag.setPublisher(getValueForKey(tags, KEY_TAG_WAVE_PUBLISHER));
             tag.setYear(getValueForKey(tags, KEY_TAG_WAVE_YEAR));
@@ -436,7 +436,7 @@ public static class Loudness {
             tag.setGenre(getTagforKey(tags, KEY_TAG_GENRE));
 
             //KEY_TAG_GROUPING
-            tag.setGrouping(getTagforKey(tags, KEY_TAG_GROUPING));
+           // tag.setGrouping(getTagforKey(tags, KEY_TAG_GROUPING));
 
             //KEY_TAG_TRACK
             tag.setTrack(getTagforKey(tags, KEY_TAG_TRACK));
@@ -516,7 +516,7 @@ public static class Loudness {
             String []text = metadata.split("#",-1);
 
             tag.setDisc(extractField(text, 0));
-            tag.setGrouping(extractField(text, 1));
+           // tag.setGrouping(extractField(text, 1));
             tag.setQualityRating(extractField(text,2));
             tag.setAlbumArtist(extractField(text, 4));
             tag.setComposer(extractField(text, 5));

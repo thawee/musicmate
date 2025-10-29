@@ -160,12 +160,12 @@ public abstract class AbstractContentBrowser {
             parentId = folderId + tag.getArtist();
         }else  if(ContentDirectoryIDs.MUSIC_GENRE_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGenre();
-        }else  if(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().equalsIgnoreCase(folderId)) {
+     /*   }else  if(ContentDirectoryIDs.MUSIC_GROUPING_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGrouping();
         }else  if(ContentDirectoryIDs.MUSIC_COLLECTION_PREFIX.getId().equalsIgnoreCase(folderId)) {
             parentId = folderId + tag.getGrouping();
         }else  if(ContentDirectoryIDs.MUSIC_RESOLUTION_PREFIX.getId().equalsIgnoreCase(folderId)) {
-            parentId = folderId + tag.getGrouping();
+            parentId = folderId + tag.getGrouping(); */
         }else {
             parentId =  folderId;
         }

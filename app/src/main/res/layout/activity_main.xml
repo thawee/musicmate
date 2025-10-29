@@ -35,27 +35,28 @@
                android:id="@+id/musicsAppBar"
                android:layout_width="match_parent"
                android:layout_height="wrap_content"
-               android:background="@color/colorPrimary_light"
+               android:background="@color/transparent"
                app:layout_constraintTop_toTopOf="parent">
+			   <!--
 			   <LinearLayout
 				   android:id="@+id/header_panel"
 				   android:layout_width="match_parent"
 				   android:layout_height="wrap_content"
 				   android:orientation="vertical"
-				   android:background="@drawable/shape_header_panel">
+				   android:background="@color/transparent">
 
 				   <RelativeLayout
 					   android:id="@+id/title_panel"
 					   android:layout_width="match_parent"
-					   android:layout_height="@dimen/dimen_40_dp"
+					   android:layout_height="wrap_content"
 					   android:background="@color/transparent">
-					   <LinearLayout
+					   <RelativeLayout
 						   android:id="@+id/title_label_panel"
 						   android:gravity="start"
 						   android:orientation="vertical"
-						   android:layout_width="wrap_content"
-						   android:layout_height="match_parent"
-						   android:background="@drawable/tab_start_bg">
+						   android:layout_width="@dimen/dimen_164_dp"
+						   android:layout_height="@dimen/dimen_64_dp"
+						   android:background="@drawable/slanted_rectangle">
 						   <TextView
 							   android:id="@+id/title_label"
 							   android:layout_width="match_parent"
@@ -63,15 +64,29 @@
 							   android:textAppearance="@style/TitleTextStyle"
 							   android:textColor="@color/material_color_grey_400"
 							   android:textStyle="bold|italic"
-							   android:gravity="center_vertical"
+							   android:gravity="start|center_vertical"
 							   android:layout_marginEnd="@dimen/dimen_32_dp"
 							   android:paddingStart="@dimen/dimen_16_dp"
-							   android:paddingBottom="@dimen/dimen_4_dp"
+							   android:paddingBottom="@dimen/dimen_2_dp"
 							   android:drawablePadding="@dimen/dimen_4_dp"
-							   android:text="MusicMate"
+							   android:text="Library"
 							   tools:ignore="HardcodedText,RtlSymmetry" />
-					   </LinearLayout>
-
+						   <TextView
+							   android:id="@+id/subtitle_label"
+							   android:layout_width="match_parent"
+							   android:layout_height="match_parent"
+							   android:layout_below="@+id/title_label"
+							   android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+							   android:textColor="@color/material_color_grey_400"
+							   android:textStyle="italic"
+							   android:gravity="center_vertical"
+							   android:layout_marginEnd="@dimen/dimen_2_dp"
+							   android:paddingStart="@dimen/dimen_24_dp"
+							   android:text="2,000 songs"
+							   tools:ignore="HardcodedText,RtlSymmetry" />
+					   </RelativeLayout>
+						-->
+					   <!--
 					   <RelativeLayout
 						   android:id="@+id/custom_search_container"
 						   android:layout_width="match_parent"
@@ -89,14 +104,16 @@
 							   android:layout_height="wrap_content"
 							   android:layout_centerVertical="true"
 							   android:layout_toStartOf="@+id/search_clear_icon"
-							   android:background="@null"
+                               android:autofillHints=""
+                               android:background="@null"
 						   android:hint=""
 						   android:textColorHint="@color/search_bar_hint_color"
 						   android:textColor="@color/search_bar_text_color"
 						   android:inputType="text"
 						   android:imeOptions="actionSearch"
 						   android:paddingEnd="8dp"
-						   android:singleLine="true"/>
+						   android:singleLine="true"
+                               tools:ignore="LabelFor" />
 
 						   <ImageView
 							   android:id="@+id/search_clear_icon"
@@ -126,12 +143,15 @@
 							   android:background="?attr/selectableItemBackgroundBorderless"
 							   android:padding="4dp"/>
 					   </RelativeLayout>
+					   -->
+			   <!--
 				   </RelativeLayout>
-
 				   <LinearLayout
 					   android:layout_width="match_parent"
 					   android:layout_height="match_parent"
                        android:orientation="vertical">
+                       -->
+					   <!--
 				   <androidx.recyclerview.widget.RecyclerView
 					   android:id="@+id/carousel_recycler_view"
 					   app:layoutManager="com.google.android.material.carousel.CarouselLayoutManager"
@@ -153,13 +173,15 @@
 						   android:paddingBottom="@dimen/dimen_8_dp"
 						   android:textColor="@color/material_color_grey_400"
 						   android:textSize="8pt"
-						   android:gravity="center"/>
+						   android:gravity="center"/> -->
+		   <!--
 				   <View
 					   android:layout_width="match_parent"
 					   android:layout_height="2dp"
 					   android:background="@drawable/divider_header_horizontal" />
 				   </LinearLayout>
 			   </LinearLayout>
+			   -->
 
                <View
                    android:layout_width="match_parent"
@@ -170,6 +192,7 @@
 			   <RelativeLayout
 				   android:layout_width="match_parent"
                    android:layout_height="match_parent">
+				   <!--
 					   <com.scwang.smart.refresh.layout.SmartRefreshLayout
 						   android:id="@+id/refreshLayout"
 						   android:layout_width="match_parent"
@@ -177,22 +200,109 @@
 						   android:background="@color/black"
 						   app:srlPrimaryColor="@color/colorPrimary_light"
 						   app:srlAccentColor="@android:color/white">
-					   <com.scwang.smart.refresh.header.ClassicsHeader
-						   android:layout_width="match_parent"
-						   android:layout_height="wrap_content"/>
-				   <androidx.recyclerview.widget.RecyclerView
-					   android:id="@+id/recycler_view"
-					   android:layout_width="match_parent"
-					   android:layout_height="match_parent"
-					   android:layout_alignParentStart="true"
-					   android:layout_marginBottom="@dimen/dimen_48_dp"
-					   android:background="@drawable/img_back"
-					   android:clipToPadding="false"
-					   tools:listitem="@layout/view_list_item" />
+						   <com.scwang.smart.refresh.header.ClassicsHeader
+							   android:layout_width="match_parent"
+							   android:layout_height="wrap_content"/>
+						   <androidx.recyclerview.widget.RecyclerView
+							   android:id="@+id/recycler_view"
+							   android:layout_width="match_parent"
+							   android:layout_height="match_parent"
+							   android:layout_alignParentStart="true"
+							   android:layout_marginBottom="@dimen/dimen_48_dp"
+							   android:background="@drawable/img_back"
+							   android:clipToPadding="false"
+							   tools:listitem="@layout/view_list_item" />
 						   <com.scwang.smart.refresh.footer.ClassicsFooter
 							   android:layout_width="match_parent"
 							   android:layout_height="wrap_content"/>
 					   </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+					-->
+				   <FrameLayout
+					   android:layout_width="match_parent"
+					   android:layout_height="match_parent">
+
+					   <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+						   android:id="@+id/swipe_refresh_layout"
+						   android:layout_width="match_parent"
+						   android:layout_height="match_parent">
+					   <androidx.recyclerview.widget.RecyclerView
+						   android:id="@+id/recycler_view"
+						   android:layout_width="match_parent"
+						   android:layout_height="match_parent"
+						   android:clipToPadding="false"
+						   android:paddingTop="@dimen/dimen_42_dp" />
+					   </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+					   <!--
+					   <androidx.constraintlayout.widget.ConstraintLayout
+						   android:id="@+id/header_panel"
+						   android:layout_width="@dimen/dimen_164_dp"
+						   android:layout_height="@dimen/dimen_56_dp"
+						   android:background="@drawable/slanted_rectangle"
+						   android:layout_marginStart="@dimen/dimen_4_dp"
+						   android:layout_marginTop="@dimen/dimen_2_dp"
+						   android:paddingTop="@dimen/dimen_4_dp">
+
+						   <ImageView
+							   android:id="@+id/header_back_btn"
+							   android:layout_width="wrap_content"
+							   android:layout_height="wrap_content"
+							   app:layout_constraintStart_toStartOf="parent"
+							   android:layout_marginStart="@dimen/dimen_4_dp"
+							   android:src="@drawable/rounded_arrow_shape_up_stack_24"
+							   app:layout_constraintBaseline_toBaselineOf="@id/header_label_text"/>
+						   <TextView
+							   android:id="@+id/header_label_text"
+							   android:layout_width="wrap_content"
+							   android:layout_height="wrap_content"
+							   android:paddingTop="@dimen/dimen_8_dp"
+							   android:text="Library"
+							   android:gravity="top|start"
+							   android:drawablePadding="@dimen/dimen_4_dp"
+							   android:layout_marginStart="@dimen/dimen_4_dp"
+							   android:layout_gravity="top|start"
+							   app:layout_constraintStart_toEndOf="@id/header_back_btn"
+                               tools:ignore="MissingConstraints" />
+					   </androidx.constraintlayout.widget.ConstraintLayout>
+					   -->
+					   <androidx.constraintlayout.widget.ConstraintLayout
+						   android:id="@+id/header_panel"
+						   android:layout_width="wrap_content"
+						   android:layout_height="@dimen/dimen_42_dp"
+						   android:background="@drawable/slanted_rectangle"
+						   android:layout_marginTop="@dimen/dimen_1_dp"
+						   android:layout_marginStart="@dimen/dimen_1_dp"
+						   android:paddingTop="@dimen/dimen_4_dp">
+
+						   <ImageView
+							   android:id="@+id/header_back_btn"
+							   android:layout_width="wrap_content"
+							   android:layout_height="wrap_content"
+                               android:contentDescription="TODO"
+                               app:layout_constraintStart_toStartOf="parent"
+							   android:layout_marginStart="@dimen/dimen_4_dp"
+							   android:src="@drawable/rounded_arrow_shape_up_stack_24"
+							   app:layout_constraintBaseline_toBaselineOf="@id/header_label_text"/>
+
+						   <TextView
+							   android:id="@+id/header_label_text"
+							   android:layout_width="wrap_content"
+							   android:layout_height="wrap_content"
+							   android:text="Library"
+							   android:drawablePadding="@dimen/dimen_4_dp"
+							   android:layout_marginStart="@dimen/dimen_4_dp"
+							   android:layout_marginEnd="@dimen/dimen_4_dp"
+							   android:layout_marginBottom="@dimen/dimen_4_dp"
+							   android:paddingEnd="@dimen/dimen_16_dp"
+							   app:layout_constraintStart_toEndOf="@id/header_back_btn"
+							   app:layout_constraintEnd_toEndOf="parent"
+							   app:layout_constraintTop_toTopOf="parent"
+							   app:layout_constraintBottom_toBottomOf="parent"
+							   android:ellipsize="end"
+							   android:maxLines="2"
+                               tools:ignore="RtlSymmetry" />
+
+					   </androidx.constraintlayout.widget.ConstraintLayout>
+				   </FrameLayout>
 
 				   <sakout.mehdi.StateViews.StateView
 					   android:id="@+id/status_page"
@@ -208,6 +318,23 @@
 						   android:text="" />
 
 				   </sakout.mehdi.StateViews.StateView>
+
+				   <com.google.android.material.floatingactionbutton.FloatingActionButton
+					   android:id="@+id/fab_scroll_to_top"
+					   android:layout_width="wrap_content"
+					   android:layout_height="wrap_content"
+					   android:layout_gravity="bottom|end"
+					   android:layout_marginBottom="@dimen/dimen_96_dp"
+					   android:layout_marginEnd="16dp"
+					   android:layout_alignParentBottom="true"
+					   android:layout_alignParentEnd="true"
+					   android:src="@drawable/rounded_arrow_shape_up_stack_24"
+					   android:contentDescription="Scroll to Top"
+					   app:fabSize="normal"
+					   app:backgroundTint="?attr/colorPrimary"
+					   app:tint="?attr/colorOnPrimary"
+					   android:visibility="gone"
+					   tools:visibility="visible" />
    			</RelativeLayout>
 
        </LinearLayout>
@@ -215,26 +342,26 @@
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_48_dp"
+        android:layout_height="@dimen/dimen_56_dp"
         android:layout_gravity="bottom"
-        app:backgroundTint="@color/colorPrimary_light"
+        app:backgroundTint="@color/back_transparent"
         app:fabAlignmentMode="center"
         app:fabCradleMargin="@dimen/dimen_12_dp"
         app:fabCradleRoundedCornerRadius="@dimen/dimen_12_dp"
         app:fabCradleVerticalOffset="@dimen/dimen_4_dp"
-        app:hideOnScroll="false"
-        app:layout_scrollFlags="scroll|enterAlways"
+        app:hideOnScroll="true"
         app:navigationContentDescription="Collection"
         app:contentInsetStartWithNavigation="0dp"
         app:contentInsetStart="0dp"
-        android:layout_alignParentBottom="true"
         android:outlineAmbientShadowColor="@android:color/black"
-        android:outlineSpotShadowColor="@android:color/black">
+        android:outlineSpotShadowColor="@android:color/black"
+		style="@style/RoundedBottomAppBar"
+		android:layout_margin="16dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/shape_bottom_background">
+            android:background="@drawable/shape_bottom_appbar_background">
 
 			<LinearLayout
 				android:id="@+id/navigation_collections"
@@ -260,7 +387,7 @@
 				android:paddingStart="@dimen/dimen_8_dp"
 				android:gravity="center"
 				android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-				android:text="Collections"
+				android:text="Library"
                 tools:ignore="RtlSymmetry" />
 			</LinearLayout>
 			<!--
@@ -288,7 +415,7 @@
 				android:layout_marginEnd="@dimen/dimen_120_dp"
 				android:contentDescription="@string/app_name"
 				android:paddingEnd="@dimen/dimen_8_dp"
-				android:src="@drawable/rounded_music_cast_24"
+				android:src="@drawable/rounded_speaker_24"
 				tools:ignore="RtlSymmetry" />
 
 			<ImageView

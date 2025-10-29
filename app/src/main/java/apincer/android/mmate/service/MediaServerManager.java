@@ -36,6 +36,7 @@ public class MediaServerManager {
 
     private MusicMateServiceImpl service;
     private boolean isBound = false;
+    private boolean toStartServer;
 
     // LiveData to report the server's status to the UI
     private final MutableLiveData<MediaServerHub.ServerStatus> serverStatusLiveData = new MutableLiveData<>(MediaServerHub.ServerStatus.STOPPED);
@@ -74,6 +75,11 @@ public class MediaServerManager {
             // This ensures the manager always reflects the service's true state.
             serviceStatusLiveData = service.getStatusLiveData();
             serviceStatusLiveData.observeForever(statusObserver);
+
+            if(toStartServer) {
+                service.stopServers();
+                toStartServer = false;
+            }
         }
 
         /**
@@ -122,22 +128,32 @@ public class MediaServerManager {
         }
     }
 
-    // --- Service Control Methods ---
-
     public void startServer() {
-        Log.d(TAG, "Requesting to start MusicMateServiceBinder");
-        serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STARTING);
-        Intent intent = new Intent(context, MusicMateServiceImpl.class);
-        intent.setAction(ACTION_START_SERVER);
-        context.startForegroundService(intent);
+        Log.d(TAG, "Requesting to start MusicMateService");
+        if(isBound && service != null) {
+            service.startServers();
+        }else {
+            toStartServer = true;
+            doBindService();
+            /*
+            serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STARTING);
+            Intent intent = new Intent(context, MusicMateServiceImpl.class);
+            intent.setAction(ACTION_START_SERVER);
+            context.startForegroundService(intent);
+             */
+        }
     }
 
     public void stopServer() {
         Log.d(TAG, "Requesting to stop MediaServerService");
-        serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STOPPED);
-        Intent intent = new Intent(context, MusicMateServiceImpl.class);
-        intent.setAction(ACTION_STOP_SERVER);
-        context.startService(intent);
+        if(isBound && service != null) {
+            service.stopServers();
+        }else {
+            serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STOPPED);
+            Intent intent = new Intent(context, MusicMateServiceImpl.class);
+            intent.setAction(ACTION_STOP_SERVER);
+            context.startService(intent);
+        }
     }
 
     // --- Data Accessor Methods for the ViewModel ---

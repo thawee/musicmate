@@ -16,25 +16,44 @@
   -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto" >
-
+<!--
     <item
         android:icon="@drawable/ic_round_library_music_24"
         android:id="@+id/menu_all_music"
         android:title="@string/label_library"
         app:showAsAction="always" />
+-->
+    <item
+        android:icon="@drawable/ic_round_library_music_24"
+        android:id="@+id/menu_library_all_songs"
+        android:title="@string/label_library_all_songs"
+        app:showAsAction="always" />
 
     <item
-        android:icon="@drawable/ic_round_local_play_24"
-        android:id="@+id/menu_groupings"
-        android:title="@string/label_groupings"
-        app:showAsAction="ifRoom" />
-<!--
-    <item
-        android:icon="@drawable/ic_round_copyright_24"
-        android:id="@+id/menu_publisher"
-        android:title="Publisher"
+        android:icon="@drawable/ic_round_library_music_24"
+        android:id="@+id/menu_library_recently_added"
+        android:title="@string/label_library_recently_added"
         app:showAsAction="always" />
--->
+
+    <item
+        android:icon="@drawable/ic_round_library_music_24"
+        android:id="@+id/menu_library_similar_songs"
+        android:title="@string/label_library_similar_songs"
+        app:showAsAction="always" />
+
+    <!--
+        <item
+            android:icon="@drawable/ic_round_local_play_24"
+            android:id="@+id/menu_groupings"
+            android:title="@string/label_groupings"
+            app:showAsAction="ifRoom" />
+
+        <item
+            android:icon="@drawable/ic_round_copyright_24"
+            android:id="@+id/menu_publisher"
+            android:title="Publisher"
+            app:showAsAction="always" />
+    -->
     <!--
     <item
         android:icon="@drawable/ic_round_audio_file_24"
@@ -84,8 +103,8 @@
 
     <item
         android:icon="@drawable/rounded_equalizer_24"
-        android:id="@+id/menu_encodings"
-        android:title="@string/label_resolutions"
+        android:id="@+id/menu_codecs"
+        android:title="@string/label_codecs"
         app:showAsAction="ifRoom" />
 
 </menu>

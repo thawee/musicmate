@@ -294,7 +294,89 @@ public class StringUtils {
         return WordUtils.capitalize(str);
     }
 
+    /**
+     * Formats a duration from a total number of seconds into a user-friendly string.
+     * <p>
+     * This method provides two distinct formats:
+     * <ol>
+     * <li><b>Standard (withUnit = false):</b> Formats as {@code HH:MM:SS} or {@code MM:SS}.
+     * It strips leading "00:" components (e.g., "05:30" instead of "00:05:30").</li>
+     * <li><b>Friendly (withUnit = true):</b> Formats with units, adapting to the duration:
+     * <ul>
+     * <li><b>&lt; 1 Minute:</b> "54 Sec"</li>
+     * <li><b>&lt; 48 Hours:</b> "12 Hrs, 30 Min"</li>
+     * <li><b>&ge; 48 Hours:</b> "12.5 Days"</li>
+     * </ul>
+     * </li>
+     * </ol>
+     *
+     * @param totalseconds The total duration in seconds.
+     * @param withUnit     If {@code true}, formats with friendly units (e.g., "1.5 Days").
+     * If {@code false}, formats as {@code HH:MM:SS}.
+     * @return A formatted string representing the duration.
+     */
     public static String formatDuration(double totalseconds, boolean withUnit) {
+
+        // --- Format: 12:34:56 (with leading 00: stripped) ---
+        if (!withUnit) {
+            long s = (long) (totalseconds % 60);
+            long m = (long) (totalseconds / 60 % 60);
+            long h = (long) (totalseconds / 3600); // Total hours
+
+            // Format as HH:MM:SS
+            String formatText = String.format(Locale.getDefault(), "%02d:%02d:%02d", h, m, s);
+
+            // Strip leading "00:" (e.g., "00:05:30" -> "05:30")
+            while (formatText.startsWith("00:") && formatText.length() > 5) {
+                formatText = formatText.substring(3); // "00:".length() is 3
+            }
+            return formatText;
+        }
+
+        // --- Format: Friendly Units (e.g., "1.5 Days" or "12 Hrs, 30 Min") ---
+
+        double totalHours = totalseconds / 3600.0;
+
+        // NEW: If duration is 2 days (48 hours) or more, use the "Days" format
+        if (totalHours >= 48.0) {
+            double totalDays = totalHours / 24.0;
+            // Format to one decimal place
+            return String.format(Locale.getDefault(), "%.1f Days", totalDays);
+        }
+
+        // --- Original logic for durations < 48 hours ---
+        // (This shows "Hrs, Min" and ignores seconds)
+
+        long h = (long) (totalseconds / 3600);
+        long m = (long) (totalseconds / 60 % 60);
+
+        // Using %d to avoid padding (e.g., " 5 Hrs" -> "5 Hrs")
+        String formatHrsUnit = "%d Hrs";
+        String formatMinuteUnit = "%d Min";
+        String formatText = "";
+
+        if (h > 0) {
+            formatText = String.format(Locale.getDefault(), formatHrsUnit, h);
+        }
+
+        if (m > 0) {
+            if (formatText != null && !formatText.isEmpty()) {
+                formatText = formatText + ", ";
+            }
+            formatText = formatText + String.format(Locale.getDefault(), formatMinuteUnit, m);
+        }
+
+        // Handle cases where duration is less than 1 minute
+        if (formatText == null || formatText.isEmpty()) {
+            long s = (long) (totalseconds % 60);
+            return String.format(Locale.getDefault(), "%d Sec", s);
+        }
+
+        return formatText;
+    }
+
+
+    public static String formatDurationOld(double totalseconds, boolean withUnit) {
         int unitms = 1; //1000;
         long s = (long) (totalseconds / unitms % 60);
         long m = (long) (totalseconds / unitms / 60 % 60);

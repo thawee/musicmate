@@ -41,7 +41,7 @@ public class SearchCriteria implements Parcelable {
         this.type = type;
     }
 
-    public enum TYPE {LIBRARY, MEDIA_QUALITY, PUBLISHER, GENRE,GROUPING, PLAYLIST, AUDIO_ENCODINGS,ARTIST}
+    public enum TYPE {LIBRARY, MEDIA_QUALITY, PUBLISHER, GENRE, PLAYLIST, CODEC, ARTIST}
 
     protected SearchCriteria(Parcel in) {
         String typeName = in.readString();

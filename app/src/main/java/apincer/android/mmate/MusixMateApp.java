@@ -1,6 +1,12 @@
 package apincer.android.mmate;
 
+import static apincer.android.mmate.service.MusicMateServiceImpl.CHANNEL_ID;
+import static apincer.music.core.Constants.COVER_ARTS;
+import static apincer.music.core.Constants.DEFAULT_COVERART;
+
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -11,10 +17,13 @@ import androidx.work.WorkManager;
 import com.balsikandar.crashreporter.CrashReporter;
 import com.google.android.material.color.DynamicColors;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 
 import apincer.android.mmate.service.MediaServerManager;
-import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.music.core.Constants;
+import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.MusicMateExecutors;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -50,15 +59,24 @@ public class MusixMateApp extends Application {
         LogHelper.setSLF4JOn();
         CrashReporter.initialize(getApplicationContext());
 
+        // must create notification channel for foreground services
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        createNotificationChannel(notificationManager);
+
         // initialize thread executors
         MusicMateExecutors.getInstance();
 
+        //prepare defaultAssets
+        initDefaultAssets();
+
+        // start music scan
         startMusicScan();
 
         startMediaServer();
 
         // Call the static method to start the service from a valid context
-        MusicMateServiceImpl.startService(this);
+        MediaServerManager serverManager = new MediaServerManager(this);
+        serverManager.startServer();
 
         PlaylistRepository.initPlaylist(this);
 
@@ -81,6 +99,27 @@ public class MusixMateApp extends Application {
                 .setButtonTextColor(Color.parseColor("#FFFFFF"))
                 .setIconSize(getResources().getDimensionPixelSize(R.dimen.state_views_icon_size));
 
+    }
+
+    private void createNotificationChannel(NotificationManager notificationManager) {
+        NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                Constants.getPresentationName(),
+                NotificationManager.IMPORTANCE_LOW
+        );
+        channel.setDescription("Manages media");
+        if (notificationManager != null) {
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void initDefaultAssets() {
+        String coverFile = COVER_ARTS +DEFAULT_COVERART;
+        try {
+            ApplicationUtils.copyFileToAndroidCacheDir(this, DEFAULT_COVERART, coverFile);
+        } catch (IOException e) {
+            Log.e(TAG, "cannot prepare initial assets", e);
+        }
     }
 
     private void startMediaServer() {

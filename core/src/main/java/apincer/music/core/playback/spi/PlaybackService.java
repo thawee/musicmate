@@ -15,9 +15,11 @@ public interface PlaybackService {
     String EXTRA_MUSIC_ID = "EXTRA_MUSIC_ID";
 
 
- void stopPlaying();
+    void skipToPrevious();
 
- void setShuffleMode(boolean enabled);
+    void stopPlaying();
+
+    void setShuffleMode(boolean enabled);
 
     void setRepeatMode(String mode);
 
@@ -35,11 +37,9 @@ public interface PlaybackService {
 
     void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer);
 
-    void playPrevious();
-
     void play(MediaTrack song);
 
-    void playNext();
+    void skipToNext();
 
     void switchPlayer(String targetId, boolean controlled);
 

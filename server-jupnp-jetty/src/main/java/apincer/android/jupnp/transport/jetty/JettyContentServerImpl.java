@@ -1,7 +1,7 @@
 package apincer.android.jupnp.transport.jetty;
 
 import static apincer.music.core.Constants.COVER_ARTS;
-import static apincer.music.core.Constants.DEFAULT_COVERART_FILE;
+import static apincer.music.core.Constants.DEFAULT_COVERART;
 import static apincer.music.core.server.DLNAHeaderHelper.getDLNAContentFeatures;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
@@ -224,7 +224,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
         final File defaultCoverartDir;
 
         private WebContentHandler() {
-            defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART_FILE);
+            defaultCoverartDir = new File(getCoverartDir(COVER_ARTS),DEFAULT_COVERART);
         }
 
         @Override

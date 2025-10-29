@@ -187,13 +187,20 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 addSignalPathStep(signalPathContainer, "Renderer", playerDetails, false);
             }else if (playbackTarget instanceof ExternalAndroidPlayer player) {
                 playerDetails = playerDetails +"\n"+player.getDescription();
-                addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
-            }else {
-                addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
+                addSignalPathStep(signalPathContainer, "Player", playerDetails, true);
                 AudioOutputHelper.getOutputDevice(getContext(), device -> {
-                    String deviceDetails = device.getName()+"\n"+device.getCodec()+", "+device.getBitPerSampling()+", "+device.getSamplingRate();
+                    String deviceDetails = device.getDescription()
+                            +" ["+device.getName()+"]\n"
+                            +device.getCodec() +", "
+                            +StringUtils.formatAudioSampleRate(device.getSamplingRate(), true) + ", "+ StringUtils.formatAudioBitsDepth(device.getBitPerSampling());
                     addSignalPathStep(signalPathContainer, "Device", deviceDetails, false);
                 });
+            }else {
+                addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
+               /* AudioOutputHelper.getOutputDevice(getContext(), device -> {
+                    String deviceDetails = device.getName()+"\n"+device.getCodec()+", "+device.getBitPerSampling()+", "+device.getSamplingRate();
+                    addSignalPathStep(signalPathContainer, "Device", deviceDetails, false);
+                }); */
             }
         }
 

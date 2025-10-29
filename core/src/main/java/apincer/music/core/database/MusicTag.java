@@ -293,13 +293,15 @@ public class MusicTag implements MediaTrack {
         this.comment = comment;
     }
 
-    public String getGrouping() {
+   /* public String getGrouping() {
         return grouping;
     }
 
     public void setGrouping(String grouping) {
         this.grouping = grouping;
     }
+
+    */
 
     public String getComposer() {
         return composer;
