@@ -80,6 +80,7 @@ public class Settings {
         return !dirs.isEmpty();
     }
 
+    /*
     public static long getLastScanTime(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getLong(Constants.PREF_LAST_SCAN_TIME,0);
@@ -91,7 +92,7 @@ public class Settings {
         SharedPreferences.Editor edit = prefs.edit();
         edit.putLong(Constants.PREF_LAST_SCAN_TIME, l);
         edit.apply();
-    }
+    } */
 
     public static SharedPreferences getPreferences(Context context) {
         // The default preference file name is constructed like this

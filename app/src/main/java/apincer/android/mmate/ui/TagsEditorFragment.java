@@ -466,7 +466,7 @@ public class TagsEditorFragment extends Fragment {
         ImageRequest request = CoverartFetcher.builder(getContext(), tag)
                                 .data(tag)
                 .target(new ImageViewTarget(previewCoverart))
-                .error(imageRequest -> CoverartFetcher.getDefaultCover(getContext()))
+               // .error(imageRequest -> CoverartFetcher.getDefaultCover(getContext()))
                 .build();
         imageLoader.enqueue(request);
 

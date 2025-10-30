@@ -69,7 +69,6 @@ public class PlaylistRepository {
         // song - key is title|artist|album
         // album - key is album|artist
         // genre - key is genre
-        // grouping - key is grouping
         if (allPlaylists == null) {
             return;
         }
@@ -114,17 +113,6 @@ public class PlaylistRepository {
                     }
                     break;
 
-                /* case TYPE_GROUPING:
-                     if (entry.getSongs() != null) {
-                         for (MusicTag song : entry.getSongs()) {
-                             if (song != null && song.getGrouping() != null) {
-                                 String grouping = getKeyForGrouping(song);
-                                 entry.getMappedSongs().put(grouping, song);
-                             }
-                         }
-                     }
-                     break; */
-
                 case TYPE_RATING:
                     if (entry.getSongs() != null) {
                         for (MusicTag song : entry.getSongs()) {
@@ -147,11 +135,6 @@ public class PlaylistRepository {
         return trimToEmpty(song.getRating()).toLowerCase();
     }
 
-    /*
-    private static String getKeyForGrouping(MediaTrack song) {
-        return trimToEmpty(song.getGrouping()).toLowerCase();
-    } */
-
     @NonNull
     private static String getKeyForGenre(MediaTrack song) {
         return trimToEmpty(song.getGenre()).toLowerCase();
@@ -172,11 +155,6 @@ public class PlaylistRepository {
         String album = trimToEmpty(song.getAlbum()).toLowerCase();
         return title + "|" + artist + "|" + album;
     }
-
-    /*
-    private static String getKeyForGrouping(MusicTag song) {
-        return trimToEmpty(song.getGrouping()).toLowerCase();
-    } */
 
     @NonNull
     private static String getKeyForGenre(MusicTag song) {

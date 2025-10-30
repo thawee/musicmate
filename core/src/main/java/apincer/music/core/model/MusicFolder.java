@@ -17,7 +17,7 @@ public class MusicFolder extends MusicTag {
         this.type = type;
 
         // --- 1. Build the correct, full path based on type ---
-        this.path = type.name()+"/"+name;
+        this.path = type.name().toLowerCase()+"/"+name;
 
         // --- 2. Use the full path as the unique key ---
         // This is now unique (e.g., "Music/Rock" vs "Covers/genres/Rock")

@@ -529,7 +529,7 @@ public class TagsActivity extends AppCompatActivity {
                 .data(displayTag)
                 .target(new ImageViewTarget(coverArtView))
                 .memoryCachePolicy(CachePolicy.ENABLED)
-                .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
+               // .error(imageRequest -> CoverartFetcher.getDefaultCover(getApplicationContext()))
                 .build();
 
         // Enqueue all requests

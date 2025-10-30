@@ -14,7 +14,7 @@
         android:id="@+id/item_title_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/dimen_60_dp"
+        android:layout_marginStart="@dimen/dimen_72_dp"
         android:layout_marginTop="@dimen/dimen_16_dp"
         android:layout_marginEnd="@dimen/dimen_2_dp"
         android:background="@drawable/shape_item_background"
@@ -31,7 +31,7 @@
             android:paddingTop="1dp"
             android:paddingBottom="@dimen/dimen_4_dp"
             android:text="@{title}"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textAppearance="@style/TextAppearance.Material3.TitleSmall.Emphasized"
             android:textColor="?attr/colorOnSurface" />
         <TextView
             android:id="@+id/item_subtitle"
@@ -54,10 +54,10 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/item_image_coverart"
-            android:layout_width="80dp"
+            android:layout_width="92dp"
             android:layout_height="80dp"
             android:layout_margin="@dimen/dimen_2_dp"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             android:importantForAccessibility="no" app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView"
             tools:src="@tools:sample/avatars" />
     </FrameLayout>

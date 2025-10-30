@@ -2,10 +2,6 @@ package apincer.music.core;
 
 import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
 
-import android.app.Notification;
-
-import org.jspecify.annotations.NonNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +16,7 @@ public final class Constants {
     public static final String FILTER_TYPE_ARTIST = "Artist";
     public static final String FILTER_TYPE_ALBUM = "Album";
     public static final String FILTER_TYPE_GENRE = "Genre";
-    public static final String FILTER_TYPE_GROUPING = "Grouping";
+    //public static final String FILTER_TYPE_GROUPING = "Grouping";
     public static final String FILTER_TYPE_PUBLISHER = "Publisher";
     public static final String FILTER_TYPE_PATH = "Folder";
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
@@ -44,15 +40,17 @@ public final class Constants {
     public static final String ARTIST_SEP = ",";
     public static final String ARTIST_SEP_SPACE = ", ";
 
+    /*
     public static final String GROUPING_CLASSICAL = "Classical";
     public static final String GROUPING_TRADITIONAL = "Traditional";
     public static final String GROUPING_LOUNGE = "Lounge";
     public static final String GROUPING_CONTEMPORARY = "Contemporary";
     public static final String GROUPING_OLDEIS = "Oldies";
+    */
 
     public static final String TITLE_LIBRARY = "Library"; //""Collections";
     public static final String TITLE_PLAYLIST = "Playlists";
-    public static final String TITLE_RESOLUTION = "Resolutions";
+    //public static final String TITLE_RESOLUTION = "Resolutions";
     public static final String TITLE_CODEC = "Codecs";
    // public static final String TITLE_GROUPING = "Groupings";
     public static final String TITLE_GENRE = "Genres";
@@ -78,15 +76,8 @@ public final class Constants {
     public static final String TITLE_MQA_SHORT = "MQA";
     public static final String TITLE_HIGH_QUALITY_SHORT = "LC"; //Lossy Codec
 
- //   public static final String FIELD_SEP = ";";
-  //  public static final double MIN_TITLE = 0.80;
-  //  public static final double MIN_ARTIST = 0.70;
-
     public static final List<String> IMAGE_COVERS = new ArrayList<>();
     public static final List<String> RELATED_FILE_TYPES = new ArrayList<>();
-    public static final String PREF_LAST_SCAN_TIME = "LAST_SCAN_TIME_PREF";
-    public static final String CHANNEL_ID_PLAYBACK = "playback_channel";
-    public static final String CHANNEL_ID_SERVER = "server_channel";
 
     static {
         //png
@@ -109,9 +100,7 @@ public final class Constants {
 
     }
 
-   // public static final String STATUS_SUCCESS="success";
-    //public static final String STATUS_FAIL="fail";
-    public static final String KEY_SEARCH_TYPE="search_criteria_type";
+   public static final String KEY_SEARCH_TYPE="search_criteria_type";
     public static final String KEY_SEARCH_KEYWORD="search_criteria_keyword";
     public static final String KEY_FILTER_TYPE="search_filter_type";
     public static final String KEY_FILTER_KEYWORD="search_filter_keyword";
@@ -127,7 +116,7 @@ public final class Constants {
     public static final String MEDIA_ENC_AIFF = "AIFF";
     public static final String MEDIA_ENC_AIFF_ALT = "AIF";
     public static final String MEDIA_ENC_SACD = "SACD";
-    public static final String MEDIA_ENC_MQA = "MQA";
+    //public static final String MEDIA_ENC_MQA = "MQA";
 
     public static final String PREF_NEXT_SONG_BY_MEDIA_BUTTONS = "preference_default_next_by_media_buttons";
    // public static final String PREF_VIBRATE_ON_NEXT_SONG = "preference_vibrate_on_next_song";

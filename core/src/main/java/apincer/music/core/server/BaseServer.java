@@ -82,7 +82,7 @@ public class BaseServer {
         this.fileRepos = fileRepos;
         this.tagRepos = tagRepos;
 
-        this.coverartDir = context.getExternalCacheDir();
+        this.coverartDir =  FileRepository.getCoverartDir(context); //context.getExternalCacheDir();
         this.appVersion = ApplicationUtils.getVersionNumber(context);
         this.osVersion = Build.VERSION.RELEASE;
         this.memoryCache = new LruCache<>(cacheSize);

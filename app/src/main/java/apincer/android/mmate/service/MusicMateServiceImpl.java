@@ -618,7 +618,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         AssetManager assetManager = getApplicationContext().getAssets();
 
         // Use a try-with-resources block to ensure the InputStream is automatically closed.
-        try (InputStream inputStream = assetManager.open("no_cover.png")) {
+        try (InputStream inputStream = assetManager.open("Covers/no_cover.png")) {
             // Decode the stream directly into a Bitmap
             return BitmapFactory.decodeStream(inputStream);
         } catch (IOException e) {

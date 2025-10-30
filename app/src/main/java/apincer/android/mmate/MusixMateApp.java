@@ -91,8 +91,8 @@ public class MusixMateApp extends Application {
                 )
 
                 .addState("search",
-                        "No Results Found",
-                        "Could not find any results matching search criteria",
+                        "No Results",
+                        "Could not find any results matching criteria",
                         AppCompatResources.getDrawable(this, R.drawable.ic_search_black_24dp), null)
 
                 .setButtonBackgroundColor(Color.parseColor("#317DED"))
@@ -114,9 +114,11 @@ public class MusixMateApp extends Application {
     }
 
     private void initDefaultAssets() {
-        String coverFile = COVER_ARTS +DEFAULT_COVERART;
+       // String coverFile = COVER_ARTS +DEFAULT_COVERART;
         try {
-            ApplicationUtils.copyFileToAndroidCacheDir(this, DEFAULT_COVERART, coverFile);
+            String assetDir = "Covers";
+            ApplicationUtils.copyDirToAndroidCacheDir(getApplicationContext(), assetDir);
+           // ApplicationUtils.copyFileToAndroidCacheDir(this, DEFAULT_COVERART, coverFile);
         } catch (IOException e) {
             Log.e(TAG, "cannot prepare initial assets", e);
         }

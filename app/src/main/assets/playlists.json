@@ -811,10 +811,25 @@
     {
       "name": "เพลงพื้นบ้าน ตำนานท้องถิ่น ฟินๆ เพลินๆ",
       "uuid": "Traditional",
-      "type": "grouping",
+      "type": "genre",
       "songs": [
         {
-          "grouping": "Traditional"
+          "genre": "Mor Lum"
+        },
+        {
+          "genre": "Luk Krung"
+        },
+        {
+          "genre": "Luk Thung"
+        },
+        {
+          "genre": "Phuea Chiwit"
+        },
+        {
+          "genre": "Kam Mueang"
+        },
+        {
+          "genre": "Kantrum"
         }
       ]
     },
@@ -834,20 +849,59 @@
     {
       "name": "คลาสสิคเพราะๆ ละมุนละไม ในวันสบายๆ",
       "uuid": "CLASSICAL",
-      "type": "grouping",
+      "type": "genre",
       "songs": [
         {
-          "grouping": "Classical"
+          "genre": "Classical"
+        },
+        {
+          "genre": "Concertos"
+        },
+        {
+          "genre": "Instrument"
         }
       ]
     },
     {
       "name": "ฟังง่ายๆ ผ่อนคลาย สะบายอารมณ์",
       "uuid": "LOUNGE",
-      "type": "grouping",
+      "type": "genre",
       "songs": [
         {
-          "grouping": "Lounge"
+          "genre": "Jazz"
+        },
+        {
+          "genre": "Jazz, Ballads"
+        },
+        {
+          "genre": "Jazz, Vocal"
+        },
+        {
+          "genre": "Jazz, Pop"
+        },
+        {
+          "genre": "Blues"
+        },
+        {
+          "genre": "Country"
+        },
+        {
+          "genre": "Folk"
+        },
+        {
+          "genre": "Blues, Country, Folk"
+        },
+        {
+          "genre": "Audiophile"
+        },
+        {
+          "genre": "Bossa Nova"
+        },
+        {
+          "genre": "Thai, Jazz"
+        },
+        {
+          "genre": "Test"
         }
       ]
     },
@@ -885,10 +939,22 @@
     {
       "name": "เพลงฮิตเพราะๆ เปิดปุ๊ปเพราะปั๊ป ฟังปั๊ปเพราะปุ๊ป",
       "uuid": "Contemporary",
-      "type": "grouping",
+      "type": "genre",
       "songs": [
         {
-          "grouping": "Contemporary"
+          "genre": "Alternative"
+        },
+        {
+          "genre": "Pop"
+        },
+        {
+          "genre": "Thai, Alternative"
+        },
+        {
+          "genre": "Thai, Pop"
+        },
+        {
+          "genre": "Rock"
         }
       ]
     },

@@ -1,5 +1,6 @@
 package apincer.music.core.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -24,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import apincer.music.core.Constants;
-import apincer.music.core.provider.FileSystem;
 import apincer.music.core.provider.MusicFileProvider;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.SearchCriteria;
@@ -162,12 +162,12 @@ public class ApplicationUtils {
 
     /**
      * Copies a single file from assets to the cache directory.
-     * @param context The application context.
+     *
+     * @param context  The application context.
      * @param filename The name/path of the file in assets.
-     * @param target The name/path of the file in assets.
      */
-    public static void copyFileToAndroidCacheDir(Context context, String filename, String target) throws IOException {
-        File newFile = new File(context.getCacheDir(), target);
+    public static void copyFileToAndroidCacheDir(Context context, String filename) throws IOException {
+        File newFile = new File(context.getCacheDir(), filename);
         FileUtils.createParentDirs(newFile);
 
         // Use try-with-resources to automatically close streams
@@ -208,7 +208,7 @@ public class ApplicationUtils {
     public static boolean isIntentAvailable(Context context, Intent intent)
     {
         final PackageManager packageManager = context.getPackageManager();
-        List<ResolveInfo> list =
+        @SuppressLint("QueryPermissionsNeeded") List<ResolveInfo> list =
                 packageManager.queryIntentActivities(intent,
                         PackageManager.MATCH_DEFAULT_ONLY);
         return !list.isEmpty();
@@ -379,7 +379,7 @@ public class ApplicationUtils {
     }
 
     private static String capitalize(String s) {
-        if (s == null || s.length() == 0) {
+        if (s == null || s.isEmpty()) {
             return "";
         }
         char first = s.charAt(0);
@@ -416,4 +416,21 @@ public class ApplicationUtils {
     }
 
 
+    public static void copyDirToAndroidCacheDir(Context context, String path) throws IOException {
+        AssetManager assetManager = context.getAssets();
+        String[] assets = assetManager.list(path);
+
+        if (assets == null || assets.length == 0) { // It's a file
+            copyFileToAndroidCacheDir(context, path);
+        } else { // It's a directory
+            File fullPath = new File(context.getCacheDir(), path);
+            if (!fullPath.exists()) {
+                fullPath.mkdirs();
+            }
+            for (String asset : assets) {
+                String newPath = path.isEmpty() ? asset : path + "/" + asset;
+                copyDirToAndroidCacheDir(context, newPath);
+            }
+        }
+    }
 }

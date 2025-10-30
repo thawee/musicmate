@@ -216,7 +216,7 @@ public class MusicTagUtils {
         } else if (isEmpty(artist)) {
             return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + album;
         }
-        return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
+        return StringUtils.truncate(artist, 40, StringUtils.TruncateType.SUFFIX) + StringUtils.SEP_SUBTITLE + album;
     }
 
     public static boolean isLossless(MusicTag tag) {
@@ -460,7 +460,7 @@ public class MusicTagUtils {
         if (isLossy(song)) {
             // Explicitly label the audio as "Lossy" instead of an empty string,
             // which provides more valuable information to the user.
-            return "LC"; // lossy compress codecs
+            return "LC"; // lossy compress codec
         }
 
         // 5. Check for CD Quality (16-bit / 44.1 kHz)

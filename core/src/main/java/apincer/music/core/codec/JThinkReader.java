@@ -69,7 +69,7 @@ public class JThinkReader extends TagReader{
 
     @Override
     protected MusicTag readBasicTag(String mediaPath) {
-        Log.i(TAG, "readBasicTag: " + mediaPath);
+        //Log.i(TAG, "readBasicTag: " + mediaPath);
         // Ensure this method is called from a background thread
         if (Looper.myLooper() == Looper.getMainLooper()) {
             Log.w(TAG, "Tag reading should not be done on the main thread");

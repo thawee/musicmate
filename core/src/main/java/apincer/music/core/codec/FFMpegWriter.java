@@ -145,7 +145,6 @@ public class FFMpegWriter extends TagWriter {
         // ffmpeg -hide_banner -i aiff.aiff -map 0 -y -codec copy -metadata "artist-sort=emon feat sort" aiffout.aiff
         Log.i(TAG, "writeTag: "+tag.getPath());
         String srcPath = tag.getPath();
-       // File dir2 = context.getExternalCacheDir();
         File dir = FileSystem.getCacheDirForFile(context, tag.getStorageId());
 
         String ext = FileUtils.getExtension(srcPath);

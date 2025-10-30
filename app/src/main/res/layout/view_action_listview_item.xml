@@ -25,6 +25,7 @@
         android:layout_gravity="center"
         android:layout_marginLeft="@dimen/dimen_4_dp"
         android:padding="@dimen/activity_horizontal_margin"
+        android:ellipsize="start"
         android:textColor="@color/white" />
     <TextView
         android:id="@+id/status"

@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 import apincer.android.mmate.MusixMateApp;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.utils.MusicMateExecutors;
-import apincer.android.mmate.Settings;
 import apincer.music.core.codec.TagReader;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
@@ -109,7 +108,7 @@ public class ScanAudioFileWorker extends Worker {
                     });
 
             // Save current time as last scan time
-            Settings.setLastScanTime(getApplicationContext(), System.currentTimeMillis());
+           // Settings.setLastScanTime(getApplicationContext(), System.currentTimeMillis());
 
             Data outputData = new Data.Builder()
                     .putInt("processedFiles", processedFiles)

@@ -132,18 +132,6 @@ public class MusicTag implements MediaTrack {
         return normalizedTitle;
     }
 
-    // Use the custom persister for this field
-   // @DatabaseField(persisterClass = FloatArrayPersister.class)
-   // private float[] waveformData;
-
-   // public float[] getWaveformData() {
-   //     return waveformData;
-   // }
-
-    //public void setWaveformData(float[] waveformData) {
-    //    this.waveformData = waveformData;
-   // }
-
     public String getQualityInd() {
         return qualityInd;
     }
@@ -293,16 +281,6 @@ public class MusicTag implements MediaTrack {
         this.comment = comment;
     }
 
-   /* public String getGrouping() {
-        return grouping;
-    }
-
-    public void setGrouping(String grouping) {
-        this.grouping = grouping;
-    }
-
-    */
-
     public String getComposer() {
         return composer;
     }
@@ -440,8 +418,6 @@ public class MusicTag implements MediaTrack {
         tag.mqaSampleRate = mqaSampleRate;
        // tag.language = language;
         tag.audioStartTime = audioStartTime;
-        //tag.coverartMime = coverartMime;
-        //tag.waveformData = waveformData;
         return tag;
     }
 
@@ -566,102 +542,4 @@ public class MusicTag implements MediaTrack {
         this.dynamicRange = measuredDR;
     }
 
-    /*
-    protected MusicTag(Parcel in) {
-        id = in.readLong();
-        uniqueKey = in.readString();
-        albumCoverUniqueKey = in.readString();
-        path = in.readString();
-        fileType = in.readString();
-        fileLastModified = in.readLong();
-        fileSize = in.readLong();
-        mmManaged = in.readByte() != 0;
-        storageId = in.readString();
-        simpleName = in.readString();
-        qualityRating = in.readString();
-        audioEncoding = in.readString();
-        qualityInd = in.readString();
-        mqaSampleRate = in.readLong();
-        audioChannels = in.readString();
-        audioBitsDepth = in.readInt();
-        audioSampleRate = in.readLong();
-        audioBitRate = in.readLong();
-        audioDuration = in.readDouble();
-        audioStartTime = in.readDouble();
-        title = in.readString();
-        artist = in.readString();
-        album = in.readString();
-        year = in.readString();
-        genre = in.readString();
-        track = in.readString();
-        disc = in.readString();
-        comment = in.readString();
-        grouping = in.readString();
-        composer = in.readString();
-        albumArtist = in.readString();
-        compilation = in.readByte() != 0;
-        publisher = in.readString();
-        drScore = in.readDouble();
-        dynamicRange = in.readDouble();
-        in.readFloatArray(waveformData);
-    } */
-
-    /*
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(id);
-        dest.writeString(uniqueKey);
-        dest.writeString(albumCoverUniqueKey);
-        dest.writeString(path);
-        dest.writeString(fileType);
-        dest.writeLong(fileLastModified);
-        dest.writeLong(fileSize);
-        dest.writeByte((byte) (mmManaged ? 1 : 0));
-        dest.writeString(storageId);
-        dest.writeString(simpleName);
-        dest.writeString(qualityRating);
-        dest.writeString(audioEncoding);
-        dest.writeString(qualityInd);
-        dest.writeLong(mqaSampleRate);
-        dest.writeString(audioChannels);
-        dest.writeInt(audioBitsDepth);
-        dest.writeLong(audioSampleRate);
-        dest.writeLong(audioBitRate);
-        dest.writeDouble(audioDuration);
-        dest.writeDouble(audioStartTime);
-        dest.writeString(title);
-        dest.writeString(artist);
-        dest.writeString(album);
-        dest.writeString(year);
-        dest.writeString(genre);
-        dest.writeString(track);
-        dest.writeString(disc);
-        dest.writeString(comment);
-        dest.writeString(grouping);
-        dest.writeString(composer);
-        dest.writeString(albumArtist);
-        dest.writeByte((byte) (compilation ? 1 : 0));
-        dest.writeString(publisher);
-        dest.writeDouble(drScore);
-        dest.writeDouble(dynamicRange);
-        dest.writeFloatArray(waveformData);
-    } */
-
-    /*
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<MusicTag> CREATOR = new Creator<>() {
-        @Override
-        public MusicTag createFromParcel(Parcel in) {
-            return new MusicTag(in);
-        }
-
-        @Override
-        public MusicTag[] newArray(int size) {
-            return new MusicTag[size];
-        }
-    }; */
 }

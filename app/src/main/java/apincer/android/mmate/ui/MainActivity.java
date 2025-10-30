@@ -42,10 +42,10 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.view.ActionMode;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -106,7 +106,6 @@ import apincer.android.mmate.ui.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
-import apincer.android.utils.FileUtils;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
 import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -315,13 +314,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> {
-            if(isLoading) {
-                swipeRefreshLayout.setRefreshing(true);
-            }else {
-                swipeRefreshLayout.setRefreshing(false);
-            }
-        }));
+        viewModel.musicItemsLoading.observe(this, isLoading -> mRecyclerView.post(() -> swipeRefreshLayout.setRefreshing(isLoading)));
     }
 
     private void setupHeaderPanel() {
@@ -431,7 +424,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         fabScrollToTop = findViewById(R.id.fab_scroll_to_top);
-        fabScrollToTop.setOnClickListener(view -> mRecyclerView.smoothScrollToPosition(0));
+       // fabScrollToTop.setOnClickListener(view -> mRecyclerView.smoothScrollToPosition(0));
+        fabScrollToTop.setOnClickListener(view -> mRecyclerView.scrollToPosition(0));
 
         mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setItemViewCacheSize(20);
@@ -604,10 +598,30 @@ public class MainActivity extends AppCompatActivity {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_demography_24);
         }
 
-        String unitLabel = StringUtils.formatTitle(adapter.getHeaderLabel());
+        int count = adapter.getTotalItems();
+        String unitLabel;
         if(!isEmpty(adapter.getCriteria().getKeyword())) {
+            // total songs
+            if(count > 0) {
+                unitLabel = StringUtils.formatSongSize(count) + " Songs";
+            }else {
+                unitLabel = "No Results";
+            }
+
+            // filter details or duration
+            if(isEmpty(adapter.getCriteria().getFilterType())) {
+                unitLabel = unitLabel+ " | "+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
+            }else {
+                String filterText = adapter.getCriteria().getFilterText();
+                if ("Folder".equals(adapter.getCriteria().getFilterType())) {
+                    filterText = StringUtils.truncate(DocumentFileCompat.getBasePath(getApplicationContext(), filterText), 38, StringUtils.TruncateType.PREFIX);
+                }else {
+                    filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
+                }
+                unitLabel = unitLabel+" ["+filterText+"]";
+            }
+
             // can back to higher category, except type library
-            unitLabel = "Songs | "+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
             if(SearchCriteria.TYPE.LIBRARY.equals(type)){
                 mBackButton.setImageDrawable(icon);
             }else {
@@ -619,33 +633,21 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }else {
+            // total songs
+            if(count > 0) {
+                unitLabel = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
+            }else {
+                unitLabel = "No Results";
+            }
+            //unitLabel = StringUtils.formatTitle(adapter.getHeaderLabel());
             mBackButton.setImageDrawable(icon);
         }
 
         SimplifySpanBuild titleSpannable = new SimplifySpanBuild("");
         titleSpannable.append(new SpecialTextUnit(adapter.getHeaderTitle()).setTextColor(Color.WHITE).setTextSize(16).useTextItalic().useTextBold());
+        titleSpannable.append("\n");
+        titleSpannable.append(new SpecialTextUnit(unitLabel).setTextColor(ResourcesCompat.getColor(getResources(), R.color.grey400, getTheme())).setTextSize(12).useTextItalic());
 
-        if(!isEmpty(adapter.getCriteria().getFilterType())) {
-            titleSpannable.append("\n");
-            int count = adapter.getTotalItems();
-            String filterText = adapter.getCriteria().getFilterText();
-            if("Folder".equals(adapter.getCriteria().getFilterType())) {
-                filterText = DocumentFileCompat.getBasePath(getApplicationContext(), filterText);
-            }
-            titleSpannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count) + " Songs ").setTextSize(12).useTextItalic());
-            titleSpannable.append(new SpecialTextUnit("["+filterText+"]").setTextSize(10).useTextItalic());
-        }else {
-            int count = adapter.getTotalItems();
-            //long totalSize = adapter.getTotalSize();
-
-            if (count > 0) {
-                titleSpannable.append("\n");
-                titleSpannable.append(new SpecialTextUnit(StringUtils.formatSongSize(count) + " " + unitLabel).setTextSize(12).useTextItalic());
-            } else {
-                titleSpannable.append("\n");
-                titleSpannable.append(new SpecialTextUnit("No Results").setTextSize(12).useTextItalic());
-            }
-        }
         titleLabelText.setText(titleSpannable.build());
     }
 
@@ -914,7 +916,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnOK.setOnClickListener(v -> {
             Settings.setDirectories(getApplicationContext(), dirs);
-            Settings.setLastScanTime(getApplicationContext(), 0);
+           // Settings.setLastScanTime(getApplicationContext(), 0);
             // start scan after setting dirs
             Log.i(TAG, "Starting scan music file for first time.");
             ScanAudioFileWorker.startScan(getApplicationContext());
@@ -1002,7 +1004,8 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileUtils.getFileName(tag.getPath()));
+                //name.setText(FileUtils.getFileName(tag.getPath()));
+                name.setText(tag.getSimpleName());
 
                 return view;
             }
@@ -1119,7 +1122,8 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileUtils.getFileName(tag.getPath()));
+               // name.setText(FileUtils.getFileName(tag.getPath()));
+                name.setText(tag.getSimpleName());
 
                 return view;
             }
@@ -1234,7 +1238,8 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileUtils.getFileName(tag.getPath()));
+                //name.setText(FileUtils.getFileName(tag.getPath()));
+                name.setText(tag.getSimpleName());
 
                 return view;
             }
@@ -1385,7 +1390,8 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                name.setText(FileUtils.getFileName(tag.getPath()));
+                //name.setText(FileUtils.getFileName(tag.getPath()));
+                name.setText(tag.getSimpleName());
 
                 return view;
             }
@@ -1472,9 +1478,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // You can put this class inside your Activity/Fragment
-    private class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
+    private static class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
 
-        private MusicTagAdapter adapter;
+        private final MusicTagAdapter adapter;
 
         // Pass in your adapter so the predicate can look up items
         MusicTrackSelectionPredicate(@NonNull MusicTagAdapter adapter) {
@@ -1499,14 +1505,9 @@ public class MainActivity extends AppCompatActivity {
             // (e.g., MusicFolder or MusicFile)
             Object item = adapter.getMusicTag(position);
 
-            if (item instanceof MusicFolder) {
-                // If the item IS a MusicFolder, REJECT any state change.
-                // This prevents it from being selected.
-                return false;
-            }
-
-            // Otherwise, it's a normal file, so allow the state change.
-            return true;
+            // If the item IS a MusicFolder, REJECT any state change.
+            // This prevents it from being selected.
+            return !(item instanceof MusicFolder);
         }
 
         /**
@@ -1521,12 +1522,8 @@ public class MainActivity extends AppCompatActivity {
 
             Object item = adapter.getMusicTag(position);
 
-            if (item instanceof MusicFolder) {
-                // REJECT state change for MusicFolder
-                return false;
-            }
-
-            return true; // ALLOW state change for other items
+            // REJECT state change for MusicFolder
+            return !(item instanceof MusicFolder);
         }
 
         @Override
@@ -1649,14 +1646,12 @@ public class MainActivity extends AppCompatActivity {
                 if (isEmpty(adapter.getCriteria().getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
                     mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
 
-                    return;
                 }else if ((!isEmpty(adapter.getCriteria().getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
                     adapter.resetFilter();
                     adapter.getCriteria().setKeyword(null);
                     swipeRefreshLayout.setRefreshing(true);
                     viewModel.loadMusicItems(adapter.getCriteria());
 
-                    return;
                 }
             }
         }

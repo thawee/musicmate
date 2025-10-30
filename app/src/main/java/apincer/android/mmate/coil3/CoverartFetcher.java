@@ -1,21 +1,15 @@
 package apincer.android.mmate.coil3;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static apincer.music.core.Constants.COVER_ARTS;
 import static apincer.music.core.Constants.DEFAULT_COVERART;
+import static apincer.music.core.repository.FileRepository.getCoverartDir;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,10 +17,6 @@ import java.util.List;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.repository.FileRepository;
-import apincer.music.core.utils.ApplicationUtils;
-import apincer.android.utils.FileUtils;
-import coil3.BitmapImage;
-import coil3.Image;
 import coil3.ImageLoader;
 import coil3.decode.DataSource;
 import coil3.decode.FileImageSource;
@@ -55,48 +45,47 @@ public class CoverartFetcher implements Fetcher {
         this.musicTag = musicTag;
     }
 
-    public static Image getDefaultCover(Context mContext) {
-        File defaultCoverartDir = new File(getCoverartDir(mContext, COVER_ARTS),DEFAULT_COVERART);
-        try {
+   // private Image getDefaultCover() {
+       // File defaultCoverartDir = new File(getCoverartDir(mContext),DEFAULT_COVERART);
+        /*try {
             if(!defaultCoverartDir.exists()) {
                 FileUtils.createParentDirs(defaultCoverartDir);
                 InputStream in = ApplicationUtils.getAssetsAsStream(mContext.getApplicationContext(), DEFAULT_COVERART);
                 Files.copy(in, defaultCoverartDir.toPath(), REPLACE_EXISTING);
             }
-
         } catch (IOException ignored) { }
 
         Bitmap bitmap = BitmapFactory.decodeFile(defaultCoverartDir.getAbsolutePath());
-
-        return new BitmapImage(bitmap, true);
-    }
+        */
+    //    Bitmap bitmap = BitmapFactory.decodeStream(ApplicationUtils.getAssetsAsStream(context, COVER_ARTS+DEFAULT_COVERART));
+   //     return new BitmapImage(bitmap, true);
+   // }
 
     @Nullable
     @Override
     public FetchResult fetch(@NonNull Continuation<? super FetchResult> continuation) {
         File covertFile = FileRepository.getCoverArt(context, musicTag);
-        if(covertFile != null) {
-            // Path imagePath = Path.get(covertFile);
-            ImageSource source = new FileImageSource(
-                    Path.get(covertFile),
-                    FileSystem.SYSTEM,
-                    musicTag.getAlbumArtFilename(),
-                    null,
-                    null);
-
-            return new SourceFetchResult(
-                    source,
-                    null, // mime type
-                    DataSource.DISK
-            );
+        String cacheKey = musicTag.getAlbumArtFilename();
+        if(covertFile == null || !covertFile.exists()) {
+            covertFile = getDefaultCover();
+            cacheKey = null;
         }
+        ImageSource source = new FileImageSource(
+                Path.get(covertFile),
+                FileSystem.SYSTEM,
+                cacheKey,
+                null,
+                null);
 
-        return null;
+        return new SourceFetchResult(
+                source,
+                null, // mime type
+                DataSource.DISK
+        );
     }
 
-    public static File getCoverartDir(Context context, String coverartName) {
-        File coverartDir = context.getExternalCacheDir();
-        return new File(coverartDir, coverartName);
+    private File getDefaultCover() {
+        return new File(getCoverartDir(context),DEFAULT_COVERART);
     }
 
     public static class Factory implements Fetcher.Factory<MusicTag> {

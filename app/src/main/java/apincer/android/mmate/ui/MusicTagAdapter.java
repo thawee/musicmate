@@ -457,7 +457,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .data(item)
                 .size(240, 240)
                 .target(new ImageViewTarget(holder.mCoverArtView))
-                .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
+               // .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
                 .build();
         imageLoader.enqueue(request);
 
@@ -520,7 +520,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                 .data(tag)
                 .size(240, 240)
                 .target(new ImageViewTarget(holder.mCoverArtView))
-                .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
+               // .error(imageRequest -> CoverartFetcher.getDefaultCover(holder.mContext))
                 .build();
         imageLoader.enqueue(request);
 

@@ -282,5 +282,6 @@
     <string name="label_library_similar_songs">Similar Songs</string>
     <string name="currently_playing">Current Player</string>
     <string name="more_options">More Options</string>
+    <string name="fetch_songs_info">Get Infos</string>
 
 </resources>

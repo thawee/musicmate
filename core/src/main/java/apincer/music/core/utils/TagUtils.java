@@ -110,7 +110,7 @@ public class TagUtils {
         } else if (isEmpty(artist)) {
             return StringUtils.UNKNOWN_CAP + StringUtils.SEP_SUBTITLE + album;
         }
-        return StringUtils.truncate(artist, 40) + StringUtils.SEP_SUBTITLE + album;
+        return StringUtils.truncate(artist, 40, StringUtils.TruncateType.SUFFIX) + StringUtils.SEP_SUBTITLE + album;
     }
 
     public static boolean isLossless(MusicTag tag) {

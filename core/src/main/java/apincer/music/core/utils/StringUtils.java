@@ -60,6 +60,11 @@ public class StringUtils {
 
     private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
 
+    public enum TruncateType {
+        PREFIX, // Adds "..." at the beginning
+        SUFFIX  // Adds "..." at the end
+    }
+
     public static boolean equals(String album, String album1) {
         return trimTitle(album).equals(trimTitle(album1));
     }
@@ -93,13 +98,47 @@ public class StringUtils {
     }
 
 
-    public static String truncate(String input, int maxLength) {
-        if(input == null) {
+    /**
+     * Truncates a string to a max length, adding an ellipsis to the start (PREFIX) or end (SUFFIX).
+     *
+     * @param input     The string to truncate.
+     * @param maxLength The total maximum length of the resulting string, including the ellipsis.
+     * @param type      The type of truncation (PREFIX or SUFFIX).
+     * @return The truncated string.
+     */
+    public static String truncate(String input, int maxLength, TruncateType type) {
+        if (input == null) {
             return "";
-        }else if (input.length() <= maxLength) {
+        }
+
+        // If the string is already short enough, return it as is.
+        if (input.length() <= maxLength) {
             return input;
-        } else {
-            return input.substring(0, maxLength - 3) + "...";
+        }
+
+        String ellipsis = "...";
+        int ellipsisLength = ellipsis.length(); // 3
+
+        // --- Safety Check ---
+        // If maxLength is too small to even fit the ellipsis (e.g., 3 or less),
+        // we can't add "...". Just return a hard-cut substring.
+        if (maxLength <= ellipsisLength) {
+            return input.substring(0, maxLength);
+        }
+        // --- End Safety Check ---
+
+        // Use a switch to handle the truncation type
+        switch (type) {
+            case PREFIX:
+                // We want "...end"
+                // Get the last (maxLength - 3) characters
+                return ellipsis + input.substring(input.length() - (maxLength - ellipsisLength));
+
+            case SUFFIX:
+            default:
+                // We want "start..."
+                // Get the first (maxLength - 3) characters
+                return input.substring(0, maxLength - ellipsisLength) + ellipsis;
         }
     }
 	

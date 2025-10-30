@@ -1,5 +1,6 @@
 package apincer.music.core.codec;
 
+import static apincer.music.core.repository.FileRepository.getCoverartDir;
 import static apincer.music.core.utils.StringUtils.toDouble;
 
 import android.content.Context;
@@ -34,7 +35,7 @@ public class FFMpegHelper {
 
     @Deprecated
     public static void extractCoverArt(MusicTag tag, File pathFile) {
-        Log.d(TAG, "extractCoverArt: "+pathFile);
+        Log.d(TAG, "extractCoverArt: from:"+tag.getPath()+", to:"+pathFile);
         String targetPath = pathFile.getAbsolutePath();
        // targetPath = escapePathForFFMPEG(targetPath);
         String options = " -c:v copy ";
@@ -46,7 +47,7 @@ public class FFMpegHelper {
 
     public static void extractCoverArt(String path, File pathFile) {
         try {
-            Log.d(TAG, "extractCoverArt: "+path);
+            Log.d(TAG, "extractCoverArt: from:"+path+", to:"+pathFile);
             String targetPath = pathFile.getAbsolutePath();
            // targetPath = escapePathForFFMPEG(targetPath);
             String options = " -c:v copy ";
@@ -258,7 +259,7 @@ public class FFMpegHelper {
 
         String ext = FileUtils.getExtension(srcPath);
         String targetExt = FileUtils.getExtension(targetPath).toLowerCase(Locale.US);
-        File dir = context.getExternalCacheDir();
+        File dir = getCoverartDir(context); //context.getExternalCacheDir();
         String tmpPath = "/tmp/"+ DigestUtils.md5Hex(srcPath)+"."+ext;
         dir = new File(dir, tmpPath);
         FileUtils.createParentDirs(dir);
