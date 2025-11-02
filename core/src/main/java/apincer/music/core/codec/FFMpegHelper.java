@@ -264,7 +264,7 @@ public class FFMpegHelper {
         dir = new File(dir, tmpPath);
         FileUtils.createParentDirs(dir);
         tmpPath = dir.getAbsolutePath();
-        FileSystem.copy(context, srcPath, tmpPath);
+        FileSystem.copyFile(context, srcPath, tmpPath);
 
         String tmpTarget = tmpPath.replace("."+ext, "_NEWFMT."+targetExt);
 

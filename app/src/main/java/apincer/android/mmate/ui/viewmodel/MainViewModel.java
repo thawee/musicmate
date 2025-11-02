@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import apincer.android.mmate.ui.MusicTagAdapter;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.repository.FileRepository;
@@ -73,5 +74,10 @@ public class MainViewModel extends ViewModel {
 
     public FileRepository getFileRepository() {
         return fileRepos;
+    }
+
+    public void search(MusicTagAdapter adapter, String query) {
+        adapter.search(query);
+        loadMusicItems(adapter.getCriteria());
     }
 }

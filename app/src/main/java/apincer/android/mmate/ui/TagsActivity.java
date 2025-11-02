@@ -1,5 +1,8 @@
 package apincer.android.mmate.ui;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static com.google.android.material.bottomappbar.BottomAppBar.FAB_ALIGNMENT_MODE_CENTER;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
@@ -43,7 +46,9 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.color.DynamicColors;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -58,6 +63,7 @@ import javax.inject.Inject;
 import apincer.android.mmate.R;
 import apincer.android.mmate.coil3.CoverartFetcher;
 import apincer.android.mmate.service.MusicMateServiceImpl;
+import apincer.android.mmate.utils.UIUtils;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -69,7 +75,6 @@ import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
-import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.ui.viewmodel.TagsViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import cn.iwgang.simplifyspan.SimplifySpanBuild;
@@ -93,8 +98,9 @@ public class TagsActivity extends AppCompatActivity {
 
     private ImageView coverArtView;
     private TabLayout tabLayout;
-    private Toolbar toolbar;
+   // private Toolbar toolbar;
     private AppBarLayout appBarLayout;
+    private BottomAppBar bottomAppBar;
 
     private TextView titleView;
     private TextView artistView ;
@@ -187,6 +193,9 @@ public class TagsActivity extends AppCompatActivity {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
+        //Enable Dynamic Colors
+        DynamicColors.applyToActivitiesIfAvailable(getApplication());
+
         // set status bar color to black
         Window window = getWindow();
        // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -205,10 +214,12 @@ public class TagsActivity extends AppCompatActivity {
             loadMusicTagsFromDb(tagIds);
         }
 
+        /*
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        */
 
         // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
@@ -218,8 +229,9 @@ public class TagsActivity extends AppCompatActivity {
         CollapsingToolbarLayout toolBarLayout = findViewById(R.id.toolbar_layout);
         int statusBarHeight = getStatusBarHeight();
         int height = UIUtils.getScreenHeight(this);
-        toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
-       // toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
+        //toolBarLayout.getLayoutParams().height = height + statusBarHeight + 70;
+        toolBarLayout.getLayoutParams().height = height + statusBarHeight + 96;
+        //toolbar_from_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         toolbar_to_color = ContextCompat.getColor(getApplicationContext(), apincer.android.library.R.color.colorPrimary);
         StateView mStateView = findViewById(R.id.status_page);
         mStateView.hideStates();
@@ -271,6 +283,7 @@ public class TagsActivity extends AppCompatActivity {
 
     private void setupPageViewer() {
         appBarLayout = findViewById(R.id.appbar);
+        bottomAppBar = findViewById(R.id.bottom_app_bar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
 
         tabLayout = findViewById(R.id.tabLayout);
@@ -440,10 +453,6 @@ public class TagsActivity extends AppCompatActivity {
         tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> doBackToMainActivity(Constants.FILTER_TYPE_GENRE, currentDisplayTag.getGenre())).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
                 new SpecialTextUnit(isEmpty(currentDisplayTag.getGenre())?Constants.UNKNOWN:currentDisplayTag.getGenre()).setTextSize(14).useTextBold().showUnderline());
 
-       // tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
-       // tagSpan.appendMultiClickable(new SpecialClickableUnit(tagInfo, (tv, clickableSpan) -> doBackToMainActivity(Constants.FILTER_TYPE_GROUPING, currentDisplayTag.getGrouping())).setNormalTextColor(linkNorTextColor).setPressBgColor(linkPressBgColor),
-        //        new SpecialTextUnit(isEmpty(currentDisplayTag.getGrouping())?" - ":currentDisplayTag.getGrouping()).setTextSize(14).useTextBold().showUnderline());
-
         tagSpan.append(new SpecialTextUnit(StringUtils.SYMBOL_SEP).setTextSize(14).useTextBold());
         tagInfo.setText(tagSpan.build());
 
@@ -611,18 +620,34 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {
-            toolbar.getMenu().clear();
-            toolbar.inflateMenu(R.menu.menu_tag_editor);
-            toolbar.setOnMenuItemClickListener(listener);
+       /* toolbar.getMenu().clear();
+        toolbar.inflateMenu(R.menu.menu_tag_editor);
+        toolbar.setOnMenuItemClickListener(listener);
+        toolbar.setTitle(""); */
+
+        bottomAppBar.inflateMenu(R.menu.menu_tag_editor);
+        bottomAppBar.setOnMenuItemClickListener(listener);
+       // bottomAppBar.setHideOnScroll(true);
+        bottomAppBar.setTitle("Song Info");
+        bottomAppBar.setVisibility(VISIBLE);
     }
 
     public void setupMenuTechnical(Toolbar.OnMenuItemClickListener listener) {
-            toolbar.getMenu().clear();
-            toolbar.inflateMenu(R.menu.menu_tag_technical);
-            toolbar.setOnMenuItemClickListener(listener);
+        /*toolbar.getMenu().clear();
+        toolbar.inflateMenu(R.menu.menu_tag_technical);
+        toolbar.setOnMenuItemClickListener(listener);
+        toolbar.setTitle("");
+        */
+
+        bottomAppBar.inflateMenu(R.menu.menu_tag_technical);
+        bottomAppBar.setOnMenuItemClickListener(listener);
+       // bottomAppBar.setHideOnScroll(true);
+        bottomAppBar.setTitle("Technical Info");
+        bottomAppBar.setVisibility(VISIBLE);
     }
     public void setupMenuPreview(Toolbar.OnMenuItemClickListener listener) {
-        toolbar.getMenu().clear();
+       // toolbar.getMenu().clear();
+        bottomAppBar.setVisibility(GONE);
     }
 
     public List<MusicTag> getEditItems() {
@@ -761,6 +786,7 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void setupMenuToolbar() {
+        bottomAppBar.getMenu().clear();;
         if (previewState) {
             setupMenuPreview(getOnMenuItemClickListener());
         }else if(activeFragment!= null) {
@@ -773,14 +799,14 @@ public class TagsActivity extends AppCompatActivity {
     }
 
     private void fadeToolbarTitle(double scale) {
-        if (toolbar != null) {
+       /* if (toolbar != null) {
             for (int i = 0; i < toolbar.getChildCount(); i++) {
                 if (toolbar.getChildAt(i) instanceof TextView title) {
                     //You now have the title textView. Do something with it
                     title.setAlpha((float) scale);
                 }
             }
-        }
+        } */
     }
 
     /**

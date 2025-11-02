@@ -1,5 +1,6 @@
 package apincer.android.mmate.ui;
 
+import static com.google.android.material.internal.ViewUtils.hideKeyboard;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -22,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -87,7 +90,7 @@ public class TagsEditorFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.view_music_info_editor, container, false);
+        View v = inflater.inflate(R.layout.fragment_music_info_editor, container, false);
         previewTitle = v.findViewById(R.id.preview_title);
         previewPath = v.findViewById(R.id.editor_pathname);
         previewCoverart = v.findViewById(R.id.preview_coverart);
@@ -102,6 +105,29 @@ public class TagsEditorFragment extends Fragment {
         //txtGrouping = v.findViewById(R.id.input_grouping);
         txtPublisher = v.findViewById(R.id.input_publisher);
         qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
+
+        // --- FIX #1: Fix the NestedScrollView crash ---
+        NestedScrollView myScrollView = v.findViewById(R.id.editor_scroll_view);
+        myScrollView.setNestedScrollingEnabled(false);
+
+        // --- FIX #2: Clear focus on scroll ---
+        myScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(@NonNull NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+
+                // Check if the user is actively scrolling
+                if (scrollY != oldScrollY) {
+                    View currentFocus = requireActivity().getCurrentFocus();
+                    if (currentFocus != null) {
+                        // Clear focus from the EditText
+                        currentFocus.clearFocus();
+
+                        // Hide the keyboard
+                        hideKeyboard(currentFocus);
+                    }
+                }
+            }
+        });
 
         // popup list
         String[] qualityList = getResources().getStringArray(R.array.file_qualities);
@@ -312,8 +338,16 @@ public class TagsEditorFragment extends Fragment {
 
         // lose focus all dropdown
         //txtGrouping.clearFocus();
-        txtGenre.clearFocus();
-        qualityDropdown.clearFocus();
+       // txtGenre.clearFocus();
+       // qualityDropdown.clearFocus();
+        View currentFocus = requireActivity().getCurrentFocus();
+        if (currentFocus != null) {
+            // Clear focus from the EditText
+            currentFocus.clearFocus();
+
+            // Hide the keyboard
+            hideKeyboard(currentFocus);
+        }
 
         // Process tags in a thread pool more efficiently
         CompletableFuture<Void> processingFuture = CompletableFuture.runAsync(() -> {

@@ -911,10 +911,11 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private PlaybackTarget resolveStreamingPlayerTarget(PlaybackTarget player) {
         if(!player.isStreaming()) return player;
+        if(player.getDescription() == null) return player;
 
         //Log.d(TAG, "resolve streaming player: " + player.getTargetId() +" :: "+getAvailablePlaybackTargets().size());
         for(PlaybackTarget dev: getAvailablePlaybackTargets()) {
-            if(dev.isStreaming()
+            if(dev!=null && dev.isStreaming()
                     && player.getDescription().equals(dev.getDescription())) {
                // Log.d(TAG, "resolve player:"+ dev.getTargetId()+" - "+dev.getDisplayName());
                 return dev;

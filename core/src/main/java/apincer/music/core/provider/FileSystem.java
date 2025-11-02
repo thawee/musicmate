@@ -1,7 +1,5 @@
 package apincer.music.core.provider;
 
-import static apincer.music.core.utils.StringUtils.isEmpty;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -25,25 +23,39 @@ public class FileSystem {
         super();
     }
 
-    public static boolean copy(Context context, final String source, final String target) {
+    public static boolean copyFile(Context context, final String source, final String target) {
         File newFile = new File(target);
         File file = new File(source);
 
         if(!file.exists()) return false;
 
-        // create new directory if not existed
-        File newDir  = newFile.getParentFile();
-        if(newDir != null && !newDir.exists()) {
-            // create new directory
-            com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
-            //mkdirs(newDir);
+        try {
+
+            // create new directory if not existed
+            File newDir  = newFile.getParentFile();
+            if(newDir != null && !newDir.exists()) {
+                // create new directory
+                com.anggrayudi.storage.file.DocumentFileCompat.mkdirs(context, newDir.getAbsolutePath());
+                //mkdirs(newDir);
+            }
+
+            copyFile(file, newFile);
+            return true;
+        } catch (IOException e) {
+           // throw new RuntimeException(e);
         }
-        return copy(context, file, newFile);
+        return false;
     }
     /*
      * file manipulations
      */
+    /*
+    @Deprecated
     public static boolean copy(Context context, final File source, final File target) {
+        if(source == null || target == null) return false;
+        if(!source.exists()) return false;
+        if(source.getAbsoluteFile().equals(target.getAbsoluteFile())) return false;
+
         FileInputStream inStream = null;
         FileOutputStream outStream = null;
         FileChannel inChannel = null;
@@ -59,22 +71,7 @@ public class FileSystem {
                 inChannel = inStream.getChannel();
                 outChannel = outStream.getChannel();
                 inChannel.transferTo(0, inChannel.size(), outChannel);
-          /*  }catch(Exception ex) {
-                Log.d(TAG, "Trying copy by document file");
-           // } else {
-                // Storage Access Framework
-                DocumentFile targetDoc = DocumentFileCompat.fromFile(context, target);
-                outStream = DocumentFileUtils.openOutputStream(targetDoc, context);
-                if (outStream != null) {
-                    // Both for SAF and for Kitkat, write to output stream.
-                    byte[] buffer = new byte[DEFAULT_BUFFER_SIZE]; // MAGIC_NUMBER
-                    int bytesRead;
-                    while ((bytesRead = inStream.read(buffer)) != -1) {
-                        outStream.write(buffer, 0, bytesRead);
-                    }
-                }else {
-                    return false;
-                } */
+          /
           //  }
         } catch (Exception e) {
             Log.e(TAG,"Error when copying file from " + source.getAbsolutePath() + " to " + target.getAbsolutePath());
@@ -86,6 +83,7 @@ public class FileSystem {
             closeSilently(outChannel);
         }
 
+
         //check file size
         if(!isValidSize(source.getAbsolutePath(), target.getAbsolutePath(), true)) {
             delete(target.getAbsolutePath());
@@ -93,12 +91,18 @@ public class FileSystem {
         }
 
         return true;
-    }
+    } */
 
     /*
     Fastest copy methods
      */
+    /*
+    @Deprecated
     public static void copy(File source, File dest) throws IOException {
+        if(source == null || dest == null) return;
+        if(!source.exists()) return;
+        if(source.getAbsoluteFile().equals(dest.getAbsoluteFile())) return;
+
         try (InputStream is = new FileInputStream(source); OutputStream os = new FileOutputStream(dest)) {
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int length;
@@ -106,8 +110,9 @@ public class FileSystem {
                 os.write(buffer, 0, length);
             }
         }
-    }
+    } */
 
+    /*
     @Deprecated
     public static String getFilename(String path) {
         if(isEmpty(path)) {
@@ -115,12 +120,12 @@ public class FileSystem {
         }
         File file = new File(path);
         return file.getName();
-    }
+    } */
 
     public static boolean safeMove(Context context, String srcPath, String targetPath) {
         String tmpPath = targetPath+"_tmp_safe_move";
         String bakPath = targetPath+"_tmp_safe_backup";
-        if(copy(context, srcPath, tmpPath)) {
+        if(copyFile(context, srcPath, tmpPath)) {
             // check original and tmp file is valid file size
             if (isValidSize(srcPath, tmpPath, true)) {
                 // copy file is ok, no lost file content
@@ -200,6 +205,28 @@ public class FileSystem {
             }
         }
         return context.getExternalCacheDir();
+    }
+
+    /**
+     * Copies a file using the fastest method (NIO FileChannel)
+     * and the safest resource management (try-with-resources).
+     */
+    public static void copyFile(File source, File dest) throws IOException {
+        if (source == null || dest == null) {
+            throw new NullPointerException("Source or Dest is null");
+        }
+        if (!source.exists()) {
+            throw new IOException("Source file does not exist: " + source);
+        }
+        if (source.getAbsoluteFile().equals(dest.getAbsoluteFile())) {
+            return; // Source and destination are the same
+        }
+
+        try (FileChannel sourceChannel = new FileInputStream(source).getChannel();
+             FileChannel destChannel = new FileOutputStream(dest).getChannel()) {
+
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        }
     }
 
     // Copy an InputStream to a File.

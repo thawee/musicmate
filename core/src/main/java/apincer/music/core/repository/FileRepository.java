@@ -4,6 +4,7 @@ import static com.anggrayudi.storage.file.StorageId.PRIMARY;
 import static apincer.music.core.Constants.COVER_ARTS;
 import static apincer.music.core.Constants.DEFAULT_COVERART;
 import static apincer.music.core.Constants.IMAGE_COVERS;
+import static apincer.music.core.Constants.TITLE_MQA_SHORT;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -18,6 +19,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,14 +93,14 @@ public class FileRepository {
             File dir =  getCoverartDir(getContext());
             String path = tag.getPath();
             String coverartName = tag.getAlbumArtFilename();
-            Log.d(TAG, "extractEmbedCoverArt: from: " + path +", by:  "+coverartName);
+           // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", by:  "+coverartName);
             if(isEmpty(coverartName) || DEFAULT_COVERART.equals(coverartName)) {
                 if (isManagedInLibrary(tag)) {
 
                     File pathFile = new File(path);
                     pathFile = pathFile.getParentFile();
                     pathFile = new File(pathFile, "Cover.png");
-                    Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
+                   // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
                     FFMpegHelper.extractCoverArt(path, pathFile);
                     return DigestUtils.md5Hex(pathFile.getParentFile().getAbsolutePath()); // hex for folder i.e. artist/album
                 } else {
@@ -106,14 +108,8 @@ public class FileRepository {
                     File pathFile = new File(dir, coverFilename + ".png");
 
                     FileUtils.createParentDirs(pathFile);
-                    Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
+                   // Log.d(TAG, "extractEmbedCoverArt: from: " + path +", to:  "+pathFile.getAbsolutePath());
                     FFMpegHelper.extractCoverArt(path, pathFile);
-                    /* String ext = FileTypeUtil.getExtensionFromContent(pathFile);
-                    if(!"png".equalsIgnoreCase(ext)) {
-                        File newFile = new File(dir, coverFilename + "." + ext);
-                        FileSystem.move(context, pathFile.getAbsolutePath(), newFile.getAbsolutePath());
-                        return newFile;
-                    } */
                     return pathFile.getName(); // hex for individual file
                 }
             }
@@ -139,17 +135,6 @@ public class FileRepository {
         this.tagRepos = tagRepos;
         //String STORAGE_SECONDARY = getSecondaryId(context);
     }
-
-    /*
-    public static String getSecondaryId(Context context) {
-        List<String> sids = DocumentFileCompat.getStorageIds(context);
-        for(String sid: sids) {
-            if(!sid.equals(PRIMARY)) {
-                return sid;
-            }
-        }
-        return PRIMARY;
-    }*/
 
     public File getCoverArtByAlbumartFilename(String albumArtFilename) {
             File dir = getCoverartDir(context);
@@ -410,8 +395,15 @@ public class FileRepository {
             if(StringUtils.isEmpty(album)) {
                 album = Constants.UNKNOWN;
             }
-            if(!StringUtils.isEmpty(sqInd) && !Constants.TITLE_HIFI_LOSSLESS_SHORT.equals(sqInd)) {
-                album = album+" ("+sqInd+")";
+            if(!StringUtils.isEmpty(sqInd)) {
+                if (sqInd.contains(TITLE_MQA_SHORT)) {
+                    // use MQA for MQA and MQA Studio
+                    sqInd = TITLE_MQA_SHORT;
+                }
+
+                if (!Constants.TITLE_HIFI_LOSSLESS_SHORT.equals(sqInd)) {
+                    album = album + " (" + sqInd + ")";
+                }
             }
             filename.append(StringUtils.formatFilePath(album)).append(File.separator);
 
@@ -571,7 +563,11 @@ public class FileRepository {
         if(files != null) {
             for (File f : files) {
                 File newRelated = new File(newDir, f.getName());
-                FileSystem.copy(getContext(), f, newRelated);
+                try {
+                    FileSystem.copyFile( f, newRelated);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }

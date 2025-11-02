@@ -8,6 +8,7 @@ import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.drawable.AnimatedImageDrawable;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,7 +35,6 @@ import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackService;
-import apincer.music.core.repository.PlaylistRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
@@ -45,6 +45,7 @@ import apincer.android.mmate.ui.view.RatingIndicatorView;
 import apincer.android.mmate.ui.view.TriangleLabelView;
 import apincer.android.mmate.utils.MusicTagUtils;
 import apincer.music.core.utils.StringUtils;
+import apincer.music.core.utils.TagUtils;
 import coil3.ImageLoader;
 import coil3.SingletonImageLoader;
 import coil3.request.ImageRequest;
@@ -55,7 +56,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     private final List<MusicTag> localDataSet;
     private SelectionTracker<Long> mTracker;
     private OnListItemClick onListItemClick;
-    private long totalSize;
+    //private long totalSize;
     private double totalDuration;
     private PlaybackService playbackService;
     private final TagRepository tagRepos;
@@ -89,7 +90,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         criteria.setKeyword(text);
     }
 
-    public void setSearchString(String text) {
+    public void search(String text) {
         if(isEmpty(text)) {
             criteria.resetSearch();
         }else {
@@ -125,45 +126,6 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     public void resetFilter() {
         criteria.setFilterText(null);
         criteria.setFilterType(null);
-    }
-
-    public List<String> getHeaderTitles(Context context) {
-        List<String> titles = new ArrayList<>();
-       /* if(criteria.getType() == SearchCriteria.TYPE.LIBRARY) {
-            titles.add(Constants.TITLE_ALL_SONGS);
-            titles.add(Constants.TITLE_INCOMING_SONGS);
-            titles.add(Constants.TITLE_DUPLICATE);
-            titles.add(Constants.TITLE_TO_ANALYST_DR);
-           // titles.add(Constants.TITLE_BROKEN);
-        }else*/
-        if(criteria.getType() == SearchCriteria.TYPE.MEDIA_QUALITY) {
-            titles.add(Constants.QUALITY_AUDIOPHILE);
-            titles.add(Constants.QUALITY_RECOMMENDED);
-            titles.add(Constants.QUALITY_FAVORITE);
-            titles.add(Constants.QUALITY_BAD);
-        }else if(criteria.getType() == SearchCriteria.TYPE.CODEC) {
-            titles.add(Constants.TITLE_HIGH_QUALITY);
-            titles.add(Constants.TITLE_HIFI_LOSSLESS);
-            titles.add(Constants.TITLE_HIRES);
-            titles.add(Constants.TITLE_MASTER_AUDIO);
-            titles.add(Constants.TITLE_DSD);
-       // }else if(criteria.getType() == SearchCriteria.TYPE.GROUPING) {
-       //     List<String> tabs = tagRepos.getActualGroupingList(context);
-       //     titles.addAll(tabs);
-        }else if(criteria.getType() == SearchCriteria.TYPE.GENRE) {
-            List<String> tabs = tagRepos.getActualGenreList();
-            titles.addAll(tabs);
-        }else if(criteria.getType() == SearchCriteria.TYPE.PUBLISHER) {
-            List<String> tabs = tagRepos.getPublisherList(context);
-            titles.addAll(tabs);
-        }else if(criteria.getType() == SearchCriteria.TYPE.PLAYLIST) {
-            PlaylistRepository.initPlaylist(context);
-            titles.addAll(PlaylistRepository.getPlaylistNames());
-        }else {
-            titles.add(getHeaderTitle());
-        }
-
-        return titles;
     }
 
     public String getHeaderTitle() {
@@ -255,7 +217,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
     @SuppressLint("NotifyDataSetChanged")
     public void setMusicTags(List<MusicTag> tags) {
         localDataSet.clear();
-        totalSize = 0;
+        //totalSize = 0;
         totalDuration = 0;
 
         if(tags == null) return;
@@ -264,7 +226,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(noFilters) {
             for (MusicTag tag : tags) {
                 localDataSet.add(tag);
-                totalSize += tag.getFileSize();
+                //totalSize += tag.getFileSize();
                 totalDuration += tag.getAudioDuration();
             }
         } else {
@@ -273,7 +235,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
                     continue;
                 }
                 localDataSet.add(tag);
-                totalSize += tag.getFileSize();
+                //totalSize += tag.getFileSize();
                 totalDuration += tag.getAudioDuration();
             }
         }
@@ -442,11 +404,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         if(itemViewType == 0) {
             onBindViewMusicTag(holder, position, item); // Pass item, not position
         } else {
-            onBindViewMusicFolder(holder, position, (MusicFolder) item); // Pass item, not position
+            onBindViewMusicFolder(holder, (MusicFolder) item); // Pass item, not position
         }
     }
 
-    private void onBindViewMusicFolder(ViewHolder holder, int position, MusicFolder item) {
+    private void onBindViewMusicFolder(ViewHolder holder, MusicFolder item) {
         // When user scrolls, this line binds the correct selection status
        // holder.rootView.setActivated(mTracker.isSelected((long) position));
         holder.rootView.setEnabled(true);
@@ -492,12 +454,19 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background); // Create this drawable
         }
         if(playbackService != null) {
-            if(tag.equals(playbackService.getNowPlayingSong())) {
-                holder.mPlayerView.setImageResource(R.drawable.round_play_circle_outline_24);
+            if (tag.equals(playbackService.getNowPlayingSong())) {
                 holder.mPlayerView.setVisibility(VISIBLE);
-                if (holder.mTitleLayout != null) {
-                    holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background_highlighted); // Create this drawable
+                if (holder.mPlayerView.getDrawable() instanceof AnimatedImageDrawable animatedImageDrawable) {
+                    animatedImageDrawable.start();
                 }
+                /// holder.mPlayerView.setImageResource(R.drawable.round_play_circle_outline_24);
+                /// holder.mPlayerView.setVisibility(VISIBLE);
+                // if (holder.mTitleLayout != null) {
+                //     holder.mTitleLayout.setBackgroundResource(R.drawable.shape_item_background_highlighted); // Create this drawable
+                // }
+              //  } else {
+              //      animatedImageDrawable.stop();
+              //  }
             }
         }
 
@@ -528,8 +497,16 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mSubtitle.setText(MusicTagUtils.getFormattedSubtitle(tag));
 
       //  holder.resolutionView.setMusicItem(tag);
-        holder.drDbView.setMusicItem(tag);
-        holder.qualityIndicatorView.setMusicItem(tag);
+
+        if(TagUtils.isLossy(tag)) {
+            holder.qualityIndicatorView.setVisibility(GONE);
+            holder.drDbView.setVisibility(GONE);
+        } else {
+            holder.qualityIndicatorView.setVisibility(VISIBLE);
+            holder.drDbView.setVisibility(VISIBLE);
+            holder.qualityIndicatorView.setMusicItem(tag);
+            holder.drDbView.setMusicItem(tag);
+        }
         holder.ratingIndicatorView.setMusicItem(tag);
         holder.mDurationView.setMusicItem(tag);
     }

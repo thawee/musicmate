@@ -11,6 +11,7 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
@@ -18,12 +19,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -41,9 +44,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -59,6 +64,7 @@ import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skydoves.powerspinner.IconSpinnerAdapter;
@@ -106,10 +112,9 @@ import apincer.android.mmate.ui.viewmodel.MainViewModel;
 import apincer.android.mmate.worker.FileOperationTask;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
-import cn.iwgang.simplifyspan.SimplifySpanBuild;
-import cn.iwgang.simplifyspan.unit.SpecialTextUnit;
 import dagger.hilt.android.AndroidEntryPoint;
-import me.zhanghai.android.fastscroll.FastScrollerBuilder;
+//import me.zhanghai.android.fastscroll.FastScrollerBuilder;
+import me.stellarsand.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
 /**
@@ -144,15 +149,16 @@ public class MainActivity extends AppCompatActivity {
     // UI components
     private ResideMenu mResideMenu;
     private MusicTagAdapter adapter;
-   // private MusicFolderAdapter folderAdapter;
     private SelectionTracker<Long> mTracker;
     private final List<MusicTag> selections = new ArrayList<>();
     //private Snackbar mExitSnackbar;
     private View mHeaderPanel;
     private ImageView mBackButton;
-    private TextView titleLabelText;
+    //private TextView titleLabelText;
+    //private View headerSearchIcon;
+    private SearchView headerSearchView;
+    private TextView headerStatText;
 
-    //private RefreshLayout refreshLayout;
     private StateView mStateView;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -163,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
     private ActionMode actionMode;
 
     // State variables
+    private long lastScrollEventTime = 0;
     private Timer timer;
     private volatile boolean busy;
     private MediaTrack previouslyPlaying;
@@ -207,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 if (!busy) {
-                                    runOnUiThread(() -> scrollToListening(song));
+                                    runOnUiThread(() -> scrollToSong(song));
                                 }
                             }
                         }, 500); // 0.5 seconds
@@ -228,6 +235,9 @@ public class MainActivity extends AppCompatActivity {
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+
+        //Enable Dynamic Colors
+        DynamicColors.applyToActivitiesIfAvailable(getApplication());
 
         tagViewResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -320,8 +330,18 @@ public class MainActivity extends AppCompatActivity {
     private void setupHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
         mBackButton = findViewById(R.id.header_back_btn);
-        titleLabelText = findViewById(R.id.header_label_text);
+       // titleLabelText = findViewById(R.id.header_label_text);
+        //headerSearchIcon = findViewById(R.id.header_search_icon);
+        headerSearchView = findViewById(R.id.search_view);
+        headerStatText = findViewById(R.id.header_stats_text);
 
+      //  mHeaderPanel.setRenderEffect(
+      //          RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
+      //  );
+        mHeaderPanel.getBackground().setAlpha(90); // 0–255, lower = more transparent
+
+        setupSearchView();
+        openSearch();
     }
 
    /*
@@ -357,6 +377,13 @@ public class MainActivity extends AppCompatActivity {
         BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
         setSupportActionBar(bottomAppBar);
 
+        /*bottomAppBar.setRenderEffect(
+                RenderEffect.createBlurEffect(25f, 25f, Shader.TileMode.CLAMP)
+        ); */
+
+        bottomAppBar.getBackground().setAlpha(200); // optional, 0–255
+        bottomAppBar.setElevation(dpToPx(getApplicationContext(), 8));
+
         View leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
 
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
@@ -369,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
         signalPath.setOnClickListener(v -> doShowSignalPath());
-        signalPath.setOnLongClickListener(v -> scrollToListening(previouslyPlaying));
+        signalPath.setOnLongClickListener(v -> scrollToSong(previouslyPlaying));
         mediaServer.setOnClickListener(v -> doManageMediaServer());
     }
 
@@ -383,22 +410,12 @@ public class MainActivity extends AppCompatActivity {
             searchCriteria = new SearchCriteria(SearchCriteria.TYPE.LIBRARY);
         }
 
-        ///  Music Folder List
-        // Initialize adapter
-        //folderAdapter = new MusicFolderAdapter(this, viewModel.getTagRepository(), searchCriteria);
-
-        // Setup RecyclerView
-       // folderRecyclerView = findViewById(R.id.carousel_recycler_view);
-        // ---- END: Listener for Snap Selection ----
-
-        ///  Music Items List
         // Initialize adapter
         adapter = new MusicTagAdapter(viewModel.getTagRepository(), searchCriteria);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {
                 super.onChanged();
-                //refreshLayout.finishRefresh();
                 updateHeaderPanel();
                 if (adapter.getItemCount() == 0) {
                     mStateView.displayState("search");
@@ -413,42 +430,77 @@ public class MainActivity extends AppCompatActivity {
         int spinnerOffset = getResources().getDimensionPixelSize(R.dimen.dimen_56_dp); // Example offset
         swipeRefreshLayout.setProgressViewOffset(false, 0, spinnerOffset);
 
-
         // --- Set the listener ---
         swipeRefreshLayout.setOnRefreshListener(() -> {
             // This method is called when the user swipes
-            //Log.d("MyApp", "User triggered refresh!");
-
             // 1. Load your new data here (e.g., make a network call)
             viewModel.loadMusicItems();
         });
 
         fabScrollToTop = findViewById(R.id.fab_scroll_to_top);
-       // fabScrollToTop.setOnClickListener(view -> mRecyclerView.smoothScrollToPosition(0));
-        fabScrollToTop.setOnClickListener(view -> mRecyclerView.scrollToPosition(0));
+        // Instant scroll for very long lists
+        fabScrollToTop.setOnClickListener(v -> {
+            mRecyclerView.stopScroll();
+            mRecyclerView.scrollToPosition(0);
+            mRecyclerView.postDelayed(() ->
+                    mRecyclerView.smoothScrollBy(0, 0), 10);
+        });
+
+        ViewCompat.setOnApplyWindowInsetsListener(fabScrollToTop, (v, insets) -> {
+            // Get the system bar insets (which include the navigation bar)
+            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+
+            // Get the base margin you want from your dimensions
+            int baseMargin = getResources().getDimensionPixelSize(R.dimen.dimen_64_dp);
+
+            // Get the view's existing layout parameters
+            ViewGroup.LayoutParams params = v.getLayoutParams();
+
+            // Check if they are MarginLayoutParams (which they should be for a FAB)
+            if (params instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) params;
+
+                // Set the new bottom margin by adding the base margin and the inset
+                marginParams.bottomMargin = baseMargin + bottomInset;
+
+                // Re-apply the updated layout parameters to the view
+                v.setLayoutParams(marginParams);
+            }
+
+            // Return the insets so other views can consume them
+            return insets;
+        });
 
         mRecyclerView = findViewById(R.id.recycler_view);
-        mRecyclerView.setItemViewCacheSize(20);
+
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(adapter);
+        //Tune performance
         mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setItemViewCacheSize(10);
+        mRecyclerView.setItemAnimator(null);
 
         // Add bottom padding
         RecyclerView.ItemDecoration itemDecoration = new BottomOffsetDecoration(64);
         mRecyclerView.addItemDecoration(itemDecoration);
         mRecyclerView.setPreserveFocusAfterLayout(true);
 
-        // add on scrool listener
+        // add on scroll listener
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+
+                if (dy != 0 || dx != 0) {
+                    lastScrollEventTime = SystemClock.elapsedRealtime();
+                }
 
                 LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
                 if (layoutManager == null) return;
 
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
+                // --- FAB behavior ---
                 if (dy > 0) {
                     // Scrolling down (list moving up)
                     if (fabScrollToTop.isShown()) {
@@ -467,17 +519,40 @@ public class MainActivity extends AppCompatActivity {
                     fabScrollToTop.hide();
                 }
             }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if (newState != RecyclerView.SCROLL_STATE_IDLE) {
+                    // We are DRAGGING (state 1) or SETTLING (state 2).
+
+                    // 1. Update the timestamp *every time* the state changes to non-idle.
+                    lastScrollEventTime = SystemClock.elapsedRealtime();
+
+                    // 2. Disable the view.
+                    recyclerView.setEnabled(false);
+                } else {
+                    // We are IDLE (state 0).
+
+                    // 1. Re-enable immediately.
+                    recyclerView.setEnabled(true);
+
+                    // 2. Update the timestamp ONE LAST TIME as we become idle.
+                    //    This ensures the guard is active for the next 200ms.
+                    lastScrollEventTime = SystemClock.elapsedRealtime();
+                }
+            }
         });
 
         // Setup item click listener
         MusicTagAdapter.OnListItemClick onListItemClick = (view, position) -> {
+
             MusicTag tag = adapter.getMusicTag(position);
             if(tag == null) return;
 
             if(tag instanceof MusicFolder folder) {
                 doStartRefresh(folder.getType(), tag.getTitle());
-           // }else if("PLS".equals(tag.getAudioEncoding())) {
-            //    doStartRefresh(SearchCriteria.TYPE.PLAYLIST, tag.getUniqueKey());
             }else {
                 doShowEditActivity(Collections.singletonList(tag));
             }
@@ -491,7 +566,6 @@ public class MainActivity extends AppCompatActivity {
                     new MusicTagAdapter.KeyProvider(),
                     new MusicTagAdapter.DetailsLookup(mRecyclerView),
                     StorageStrategy.createLongStorage())
-                    //.withSelectionPredicate(SelectionPredicates.createSelectAnything())
                     .withSelectionPredicate(new MusicTrackSelectionPredicate(adapter))
                     .build();
             adapter.injectTracker(mTracker);
@@ -519,10 +593,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup fast scroller
         new FastScrollerBuilder(mRecyclerView)
-                .useMd2Style()
+                //.useMd2Style()
+                .useMd1Style()
                 .setPadding(0, 0, 8, 0)
                 .setThumbDrawable(Objects.requireNonNull(
                         ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
+                .setPopupTextProvider((view, position) -> {
+                    MediaTrack track = adapter.getMusicTag(position);
+                    if(track != null) return track.getTitle().subSequence(0,1);
+                    return null;
+                })
                 .build();
 
         // Initialize action mode callback
@@ -581,13 +661,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateHeaderPanel() {
         SearchCriteria.TYPE type = adapter.getCriteria().getType();
-        Drawable icon = null;
+       // String keyword = adapter.getCriteria().getKeyword();
+        Drawable icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.bg_transparent);
 
+        /*
         // Set appropriate icon based on label
-        if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_library_music_24);
+        if (SearchCriteria.TYPE.LIBRARY.equals(type) && TITLE_ALL_SONGS.equalsIgnoreCase(keyword)) {
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_library_music_24);
+        }else if (SearchCriteria.TYPE.LIBRARY.equals(type) && TITLE_INCOMING_SONGS.equalsIgnoreCase(keyword)) {
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_add_diamond_24);
+        }else if (SearchCriteria.TYPE.LIBRARY.equals(type) && TITLE_DUPLICATE.equalsIgnoreCase(keyword)) {
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_auto_awesome_motion_24);
+        }else if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_library_music_24);
         } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_style_24);
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_style_24);
        // } else if (SearchCriteria.TYPE.GROUPING.equals(type)) {
         //    icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_local_play_24);
         } else if (SearchCriteria.TYPE.CODEC.equals(type)) {
@@ -595,22 +683,23 @@ public class MainActivity extends AppCompatActivity {
         } else if (SearchCriteria.TYPE.PLAYLIST.equals(type)) {
             icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_order_play_24);
         } else if (SearchCriteria.TYPE.ARTIST.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_demography_24);
-        }
+            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_for_you_24);
+        } */
 
         int count = adapter.getTotalItems();
-        String unitLabel;
+        String statText;
         if(!isEmpty(adapter.getCriteria().getKeyword())) {
+          //  mBackButton.setVisibility(GONE);
             // total songs
             if(count > 0) {
-                unitLabel = StringUtils.formatSongSize(count) + " Songs";
+                statText = StringUtils.formatSongSize(count) + " Songs";
             }else {
-                unitLabel = "No Results";
+                statText = "No Results";
             }
 
             // filter details or duration
-            if(isEmpty(adapter.getCriteria().getFilterType())) {
-                unitLabel = unitLabel+ " | "+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
+            if(isEmpty(adapter.getCriteria().getFilterType()) && count > 0) {
+                statText = statText+ " · "+ StringUtils.formatDuration(adapter.getTotalDuration(), true);
             }else {
                 String filterText = adapter.getCriteria().getFilterText();
                 if ("Folder".equals(adapter.getCriteria().getFilterType())) {
@@ -618,7 +707,7 @@ public class MainActivity extends AppCompatActivity {
                 }else {
                     filterText = StringUtils.truncate(filterText, 38, StringUtils.TruncateType.SUFFIX);
                 }
-                unitLabel = unitLabel+" ["+filterText+"]";
+                statText = statText+" · ["+filterText+"]";
             }
 
             // can back to higher category, except type library
@@ -635,20 +724,23 @@ public class MainActivity extends AppCompatActivity {
         }else {
             // total songs
             if(count > 0) {
-                unitLabel = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
+                statText = StringUtils.formatSongSize(count) + " " + StringUtils.formatTitle(adapter.getHeaderLabel());
             }else {
-                unitLabel = "No Results";
+                statText = "No Results";
             }
             //unitLabel = StringUtils.formatTitle(adapter.getHeaderLabel());
-            mBackButton.setImageDrawable(icon);
+           // mBackButton.setImageDrawable(icon);
+          //  mBackButton.setVisibility(INVISIBLE);
         }
 
-        SimplifySpanBuild titleSpannable = new SimplifySpanBuild("");
+        /*SimplifySpanBuild titleSpannable = new SimplifySpanBuild("");
         titleSpannable.append(new SpecialTextUnit(adapter.getHeaderTitle()).setTextColor(Color.WHITE).setTextSize(16).useTextItalic().useTextBold());
         titleSpannable.append("\n");
         titleSpannable.append(new SpecialTextUnit(unitLabel).setTextColor(ResourcesCompat.getColor(getResources(), R.color.grey400, getTheme())).setTextSize(12).useTextItalic());
-
-        titleLabelText.setText(titleSpannable.build());
+        */
+       // titleLabelText.setText(titleSpannable.build());
+        headerSearchView.setQueryHint("Search "+StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
+        headerStatText.setText(statText);
     }
 
     @Override
@@ -658,6 +750,8 @@ public class MainActivity extends AppCompatActivity {
         if (mResideMenu.isOpened()) {
             mResideMenu.closeMenu();
         }
+
+     //   closeSearch();
     }
 
     @Override
@@ -682,23 +776,21 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private boolean scrollToListening(MediaTrack currentlyPlaying) {
+    private boolean scrollToSong(MediaTrack currentlyPlaying) {
         if (currentlyPlaying == null) return false;
 
         int positionToScroll = adapter.getMusicTagPosition(currentlyPlaying);
-        scrollToPosition(positionToScroll, true);
+        scrollToPosition(positionToScroll);
         return true;
     }
 
-    private void scrollToPosition(int position, boolean offset) {
+    private void scrollToPosition(int position) {
         if (position != RecyclerView.NO_POSITION) {
-            if (offset) {
-                int positionWithOffset = position - RECYCLEVIEW_ITEM_SCROLLING_OFFSET;
-                if (positionWithOffset < 0) {
-                    positionWithOffset = 0;
-                }
-                mRecyclerView.scrollToPosition(positionWithOffset);
+            int positionWithOffset = position - RECYCLEVIEW_ITEM_SCROLLING_OFFSET;
+            if (positionWithOffset < 0) {
+                positionWithOffset = 0;
             }
+            mRecyclerView.scrollToPosition(positionWithOffset);
             if (position - 1 > RecyclerView.NO_POSITION) {
                 // show as 2nd item on screen
                 position = position - 1;
@@ -709,7 +801,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doHideSearch() {
-        adapter.setSearchString("");
+        adapter.search("");
         viewModel.loadMusicItems(adapter.getCriteria());
     }
 
@@ -963,6 +1055,79 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void openSearch() {
+        // Hide the title, back arrow, and icon
+        //titleLabelText.setVisibility(View.GONE);
+       // mBackButton.setVisibility(View.GONE);
+        //headerSearchIcon.setVisibility(View.GONE);
+
+        // Show the SearchView
+        headerSearchView.setVisibility(View.VISIBLE);
+        headerSearchView.requestFocus();
+
+       // mBackButton.setImageDrawable(getDrawable(R.drawable.round_close_24));
+       // mBackButton.setOnClickListener(view -> closeSearch());
+
+        // Show keyboard
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(headerSearchView.findViewById(androidx.appcompat.R.id.search_src_text), InputMethodManager.SHOW_IMPLICIT);
+    }
+
+    // Put this method inside your MainActivity class
+    private void closeSearch() {
+        // Hide the SearchView
+        headerSearchView.setVisibility(View.GONE);
+        headerSearchView.setQuery("", false); // Clear the text
+
+        // Show the title, back arrow, and search icon
+        //titleLabelText.setVisibility(View.VISIBLE);
+        //mBackButton.setVisibility(View.VISIBLE);
+        //headerSearchIcon.setVisibility(View.VISIBLE);
+
+        // Hide the keyboard
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(headerSearchView.getWindowToken(), 0);
+
+        updateHeaderPanel();
+    }
+
+    private void setupSearchView() {
+        // This is the main listener for handling text changes and search submissions
+        headerSearchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // User pressed the search button on the keyboard
+                // myAdapter.getFilter().filter(query);
+                viewModel.search(adapter, query);
+                headerSearchView.clearFocus(); // Hide keyboard
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // User is typing
+                // myAdapter.getFilter().filter(newText);
+                viewModel.search(adapter, newText);
+                return true;
+            }
+        });
+
+        // This listener handles the "X" (close) button inside the SearchView
+        headerSearchView.setOnCloseListener(() -> {
+            // Note: This only fires if the search view is set to be iconified,
+            // which ours is not. We'll manually handle the 'X' button.
+            return false;
+        });
+
+        // Manually handle the "X" button click
+        ImageView closeButton = headerSearchView.findViewById(androidx.appcompat.R.id.search_close_btn);
+        closeButton.setOnClickListener(v -> {
+            headerSearchView.setQuery("", false); // Clear the text
+            // You might also want to close the whole search bar here:
+            // closeSearch();
+        });
+    }
+
     private void doDeleteMediaItems(List<MusicTag> selections) {
         if (selections.isEmpty()) return;
 
@@ -972,7 +1137,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         titleText.setText(R.string.title_removing_music_files);
-        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.ic_item_delete_while_24dp),null,null,null);
+        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_delete_24),null,null,null);
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1090,7 +1255,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         titleText.setText(R.string.title_import_to_music_directory);
-        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_move_down_24),null,null,null);
+        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_deployed_code_update_24),null,null,null);
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1207,6 +1372,7 @@ public class MainActivity extends AppCompatActivity {
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
         titleText.setText(R.string.title_dynamic_range_and_replay_gain);
+        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_query_stats_24),null,null,null);
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1478,7 +1644,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // You can put this class inside your Activity/Fragment
-    private static class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
+    private class MusicTrackSelectionPredicate extends SelectionTracker.SelectionPredicate<Long> {
 
         private final MusicTagAdapter adapter;
 
@@ -1493,6 +1659,10 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public boolean canSetStateForKey(@NonNull Long key, boolean nextState) {
+            if (isSelectionBlocked()) {
+                return false;
+            }
+
             // We assume the 'key' is the position, based on your observer code.
             int position = key.intValue();
 
@@ -1516,6 +1686,10 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public boolean canSetStateAtPosition(int position, boolean nextState) {
+            if (isSelectionBlocked()) {
+                return false;
+            }
+
             if (position < 0 || position >= adapter.getItemCount()) {
                 return false;
             }
@@ -1530,6 +1704,13 @@ public class MainActivity extends AppCompatActivity {
         public boolean canSelectMultiple() {
             // You still want to allow multi-select for the files
             return true;
+        }
+
+        private boolean isSelectionBlocked() {
+            // This is the only guard we need.
+            // We block if any scroll-related activity (drag, fling, or
+            // stopping) has happened in the last 200 milliseconds.
+            return (SystemClock.elapsedRealtime() - lastScrollEventTime < 200);
         }
     }
 
@@ -1546,8 +1727,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             //mTitlePanel.setVisibility(GONE);
-            mHeaderPanel.setVisibility(GONE);
             mRecyclerView.setPadding(0, 0, 0, 0);
+            mHeaderPanel.setVisibility(GONE);
             return false;
         }
 
@@ -1623,6 +1804,11 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+           // if (headerSearchView.getVisibility() == View.VISIBLE) {
+           //     closeSearch();
+           //     return;
+           // }
+
             // if TYPE library or keyword is null, open leftMenu
             if(adapter != null) {
                 if (adapter.hasFilter()) {
@@ -1644,8 +1830,8 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (isEmpty(adapter.getCriteria().getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
-                    mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
-
+                   // mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
+                    doShowLeftMenus();
                 }else if ((!isEmpty(adapter.getCriteria().getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
                     adapter.resetFilter();
                     adapter.getCriteria().setKeyword(null);

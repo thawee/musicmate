@@ -173,12 +173,13 @@ dependencies {
     ksp libs.androidx.hilt.compiler
 
     // UI Libs
-    implementation libs.skydoves.powerspinner
+    implementation libs.skydoves.powerspinner // for codec conversion dialog
     implementation libs.skydoves.progressview
     implementation libs.skydoves.androidribbon
     implementation libs.skydoves.elasticviews
     implementation libs.iwgang.simplifyspan
-    implementation libs.zhanghai.fastscroll
+    //implementation libs.zhanghai.fastscroll
+    implementation libs.androidfastscroll.kt
     implementation libs.medyo.stateviews
     implementation libs.chrisbanes.photoview
     implementation libs.philjay.mpandroidchart

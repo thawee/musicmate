@@ -1,27 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/selector_item"
-    android:paddingTop="@dimen/dimen_1_dp"
-    android:paddingBottom="@dimen/dimen_2_dp">
+    android:minHeight="88dp"
+    android:paddingVertical="@dimen/dimen_4_dp"
+    android:paddingHorizontal="@dimen/dimen_4_dp"
+    android:clickable="true"
+    android:focusable="true">
 
+    <!-- Album Art -->
     <FrameLayout
         android:id="@+id/item_imageFrame"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/dimen_2_dp"
-        android:background="@drawable/shape_item_coverart_background">
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/shape_item_coverart_background"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/item_image_coverart"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_margin="@dimen/dimen_2_dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
             android:importantForAccessibility="no"
-            android:scaleType="fitCenter"
             tools:src="@tools:sample/avatars"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.RoundedImageView" />
 
@@ -30,126 +36,110 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="top|end"
-            android:layout_margin="@dimen/dimen_4_dp"
             android:padding="@dimen/dimen_4_dp"
             app:backgroundColor="@color/material_color_yellow_900"
             app:corner="rightTop"
-            app:labelBottomPadding="2dp"
-            app:labelCenterPadding="0dp"
-            app:labelTopPadding="4dp"
             app:primaryText="New"
             app:primaryTextColor="@color/material_color_yellow_500"
-            app:primaryTextSize="8sp"
-            app:secondaryText=""
-            app:secondaryTextColor="@color/material_color_yellow_100"
-            app:secondaryTextSize="6sp" />
+            app:primaryTextSize="8sp" />
     </FrameLayout>
 
+    <!-- Title + Subtitle + Metadata -->
     <LinearLayout
         android:id="@+id/item_title_layout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_8_dp"
-        android:layout_marginEnd="@dimen/dimen_2_dp"
-        android:layout_toEndOf="@id/item_imageFrame"
-        android:background="@drawable/shape_item_background"
         android:orientation="vertical"
         android:paddingStart="@dimen/dimen_8_dp"
-        android:paddingBottom="@dimen/dimen_4_dp"
-        tools:ignore="RtlSymmetry">
+        app:layout_constraintStart_toEndOf="@id/item_imageFrame"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/item_imageFrame"
+        app:layout_constraintBottom_toBottomOf="@id/item_imageFrame">
 
         <TextView
             android:id="@+id/item_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:fontFamily="@font/sfthonburi_bold"
             android:maxLines="1"
-            android:paddingTop="1dp"
-            android:text="@{title}"
             android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-            android:textColor="?attr/colorOnSurface" />
+            android:fontFamily="@font/sfthonburi_bold"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="A Way Back Home" />
 
         <TextView
             android:id="@+id/item_subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:fontFamily="@font/sfthonburi_regular"
             android:singleLine="true"
-            android:text="@{subtitle}"
             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:fontFamily="@font/sfthonburi_regular"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Allan Taylor ◇ The Road Well Travelled" />
 
-        <RelativeLayout
+        <!-- Metadata Row -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dimen_8_dp"
-            android:layout_marginBottom="@dimen/dimen_4_dp">
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/dimen_4_dp"
+            android:gravity="center_vertical">
 
             <apincer.android.mmate.ui.view.QualityIndicatorView
                 android:id="@+id/icon_quality_indicator"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical" />
+                android:layout_height="wrap_content" />
 
             <apincer.android.mmate.ui.view.DynamicRangeView
                 android:id="@+id/dynamic_range_db_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                android:layout_toEndOf="@id/icon_quality_indicator"
-                android:gravity="center_vertical"
-                app:db="96 dB"
-                app:dr="DR12" />
+                app:dr="DR12"
+                app:db="96 dB" />
 
             <apincer.android.mmate.ui.view.RatingIndicatorView
                 android:id="@+id/rating_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                android:layout_toEndOf="@id/dynamic_range_db_view"
-                android:gravity="center_vertical"
                 app:mode="mini" />
 
-            <LinearLayout
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <apincer.android.mmate.ui.view.DurationView
+                android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="@dimen/dimen_4_dp"
-                android:orientation="horizontal"
-                android:paddingEnd="@dimen/dimen_2_dp"
-                tools:ignore="RtlSymmetry">
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dimen_6_dp" />
 
-                <apincer.android.mmate.ui.view.DurationView
-                    android:id="@+id/view_duration"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-                <ImageView
-                    android:id="@+id/item_more_actions"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/dimen_24_dp"
-                    android:contentDescription="@string/more_options"
-                    android:padding="@dimen/dimen_2_dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/rounded_more_vert_24" />
-            </LinearLayout>
-        </RelativeLayout>
+            <ImageView
+                android:id="@+id/item_more_actions"
+                android:layout_width="@dimen/dimen_24_dp"
+                android:layout_height="@dimen/dimen_24_dp"
+                android:padding="@dimen/dimen_2_dp"
+                android:contentDescription="@string/more_options"
+                android:src="@drawable/rounded_more_vert_24" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- Currently Playing Indicator -->
     <ImageView
         android:id="@+id/item_player"
         android:layout_width="@dimen/dimen_24_dp"
         android:layout_height="@dimen/dimen_24_dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="@dimen/dimen_14_dp"
-        android:layout_marginEnd="@dimen/dimen_4_dp"
+        android:layout_margin="@dimen/dimen_4_dp"
         android:background="@drawable/shape_round_background_playing"
-        android:contentDescription="@string/currently_playing"
         android:padding="@dimen/dimen_6_dp"
         android:scaleType="fitXY"
-        tools:src="@tools:sample/avatars"/>
+        android:contentDescription="@string/currently_playing"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/ic_equalizer_active"
+        tools:src="@drawable/ic_equalizer_active" />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

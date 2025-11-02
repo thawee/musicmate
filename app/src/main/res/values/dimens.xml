@@ -103,5 +103,6 @@
     <dimen name="your_extra_large_corner_radius">16dp</dimen>
     <dimen name="dimen_34_dp">34dp</dimen>
     <dimen name="dimen_54_dp">54dp</dimen>
-    <dimen name="dimen_164_dp">164dp</dimen> <!-- Match your shapeAppearance -->
+    <dimen name="dimen_164_dp">164dp</dimen>
+    <dimen name="dimen_80_dp">80dp</dimen> <!-- Match your shapeAppearance -->
 </resources>

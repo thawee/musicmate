@@ -1,0 +1,33 @@
+<resources>
+    <!-- Primary App Colors -->
+    <color name="colorPrimary">#90CAF9</color>
+    <color name="colorOnPrimary">#0D47A1</color>
+    <color name="colorPrimaryContainer">#1565C0</color>
+    <color name="colorOnPrimaryContainer">#E3F2FD</color>
+
+    <!-- Secondary / Accent -->
+    <color name="colorSecondary">#80CBC4</color>
+    <color name="colorOnSecondary">#00332E</color>
+    <color name="colorSecondaryContainer">#004D43</color>
+    <color name="colorOnSecondaryContainer">#A7FFEB</color>
+
+    <!-- Surface / Background -->
+    <color name="colorSurface">#121212</color>
+    <color name="colorOnSurface">#E3E3E3</color>
+    <color name="colorSurfaceVariant">#2C2C2C</color>
+    <color name="colorOnSurfaceVariant">#B0B0B0</color>
+
+    <!-- Outline / Divider -->
+    <color name="colorOutline">#666666</color>
+    <color name="colorOutlineVariant">#333333</color>
+
+    <!-- Highlights -->
+    <color name="colorControlHighlight">#90CAF933</color>
+    <color name="colorSurfaceContainerLowest">#1E1E1E</color>
+
+    <!-- Player Indicator -->
+    <color name="colorPlayingIndicator">#64B5F6</color>
+
+    <!-- Album Art Frame -->
+    <color name="colorArtFrame">#2C2C2C</color>
+</resources>

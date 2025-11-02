@@ -79,7 +79,7 @@ public class NetworkUtils {
                         if (!address.isLoopbackAddress()) {
                             String hostAddress = address.getHostAddress();
                             if (hostAddress != null && IPV4_PATTERN.matcher(hostAddress).matches()) {
-                                Log.d(TAG, "Found WiFi IP address: " + hostAddress);
+                                //Log.d(TAG, "Found WiFi IP address: " + hostAddress);
                                 return hostAddress; // Return immediately with the WiFi IP.
                             }
                         }

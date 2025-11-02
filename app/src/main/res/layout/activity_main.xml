@@ -1,448 +1,282 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright 2017
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~    http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/main_content"
-    android:layout_above="@+id/bottom_app_bar"
     tools:context=".ui.MainActivity">
 
-       <LinearLayout
-           android:layout_width="match_parent"
-           android:layout_height="match_parent"
-           app:layout_behavior="@string/appbar_scrolling_view_behavior"
-           app:layout_scrollFlags="scroll|exitUntilCollapsed"
-           android:orientation="vertical"
-           >
-           <com.google.android.material.appbar.AppBarLayout
-               android:id="@+id/musicsAppBar"
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               android:background="@color/transparent"
-               app:layout_constraintTop_toTopOf="parent">
-			   <!--
-			   <LinearLayout
-				   android:id="@+id/header_panel"
-				   android:layout_width="match_parent"
-				   android:layout_height="wrap_content"
-				   android:orientation="vertical"
-				   android:background="@color/transparent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-				   <RelativeLayout
-					   android:id="@+id/title_panel"
-					   android:layout_width="match_parent"
-					   android:layout_height="wrap_content"
-					   android:background="@color/transparent">
-					   <RelativeLayout
-						   android:id="@+id/title_label_panel"
-						   android:gravity="start"
-						   android:orientation="vertical"
-						   android:layout_width="@dimen/dimen_164_dp"
-						   android:layout_height="@dimen/dimen_64_dp"
-						   android:background="@drawable/slanted_rectangle">
-						   <TextView
-							   android:id="@+id/title_label"
-							   android:layout_width="match_parent"
-							   android:layout_height="match_parent"
-							   android:textAppearance="@style/TitleTextStyle"
-							   android:textColor="@color/material_color_grey_400"
-							   android:textStyle="bold|italic"
-							   android:gravity="start|center_vertical"
-							   android:layout_marginEnd="@dimen/dimen_32_dp"
-							   android:paddingStart="@dimen/dimen_16_dp"
-							   android:paddingBottom="@dimen/dimen_2_dp"
-							   android:drawablePadding="@dimen/dimen_4_dp"
-							   android:text="Library"
-							   tools:ignore="HardcodedText,RtlSymmetry" />
-						   <TextView
-							   android:id="@+id/subtitle_label"
-							   android:layout_width="match_parent"
-							   android:layout_height="match_parent"
-							   android:layout_below="@+id/title_label"
-							   android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-							   android:textColor="@color/material_color_grey_400"
-							   android:textStyle="italic"
-							   android:gravity="center_vertical"
-							   android:layout_marginEnd="@dimen/dimen_2_dp"
-							   android:paddingStart="@dimen/dimen_24_dp"
-							   android:text="2,000 songs"
-							   tools:ignore="HardcodedText,RtlSymmetry" />
-					   </RelativeLayout>
-						-->
-					   <!--
-					   <RelativeLayout
-						   android:id="@+id/custom_search_container"
-						   android:layout_width="match_parent"
-						   android:layout_height="wrap_content"
-						   android:layout_toEndOf="@+id/title_label_panel"
-						   android:background="@drawable/search_bar_background"
-						   android:paddingStart="12dp"
-						   android:paddingEnd="12dp"
-						   android:paddingTop="8dp"
-						   android:paddingBottom="8dp">
+        <!-- 🔷 Persistent Header -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/header_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/shape_background_main_header"
+            android:paddingVertical="@dimen/dimen_8_dp"
+            android:paddingHorizontal="@dimen/dimen_12_dp"
 
-						   <EditText
-							   android:id="@+id/search_edit_text"
-							   android:layout_width="match_parent"
-							   android:layout_height="wrap_content"
-							   android:layout_centerVertical="true"
-							   android:layout_toStartOf="@+id/search_clear_icon"
-                               android:autofillHints=""
-                               android:background="@null"
-						   android:hint=""
-						   android:textColorHint="@color/search_bar_hint_color"
-						   android:textColor="@color/search_bar_text_color"
-						   android:inputType="text"
-						   android:imeOptions="actionSearch"
-						   android:paddingEnd="8dp"
-						   android:singleLine="true"
-                               tools:ignore="LabelFor" />
+            android:elevation="8dp"
+            android:alpha="0.92">
 
-						   <ImageView
-							   android:id="@+id/search_clear_icon"
-							   android:layout_width="wrap_content"
-							   android:layout_height="wrap_content"
-							   android:layout_centerVertical="true"
-							   android:layout_toStartOf="@+id/search_icon"
-						   android:src="@drawable/ic_clear_24dp"
-						   android:contentDescription="Clear Search Text"
-						   android:clickable="true"
-						   android:focusable="true"
-						   android:background="?attr/selectableItemBackgroundBorderless"
-						   android:padding="4dp"
-						   android:visibility="gone"
-						   android:layout_marginEnd="4dp"/>
+            <!-- Back Button -->
+            <ImageView
+                android:id="@+id/header_back_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/rounded_arrow_shape_up_24"
+                android:contentDescription="Back"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="@+id/search_view"
+                android:padding="@dimen/dimen_4_dp" />
 
-						   <ImageView
-							   android:id="@+id/search_icon"
-							   android:layout_width="wrap_content"
-							   android:layout_height="wrap_content"
-							   android:layout_alignParentEnd="true"
-							   android:layout_centerVertical="true"
-							   android:src="@drawable/ic_search_24dp"
-							   android:contentDescription="Search Icon"
-							   android:clickable="true"
-							   android:focusable="true"
-							   android:background="?attr/selectableItemBackgroundBorderless"
-							   android:padding="4dp"/>
-					   </RelativeLayout>
-					   -->
-			   <!--
-				   </RelativeLayout>
-				   <LinearLayout
-					   android:layout_width="match_parent"
-					   android:layout_height="match_parent"
-                       android:orientation="vertical">
-                       -->
-					   <!--
-				   <androidx.recyclerview.widget.RecyclerView
-					   android:id="@+id/carousel_recycler_view"
-					   app:layoutManager="com.google.android.material.carousel.CarouselLayoutManager"
-					   android:layout_width="match_parent"
-					   tools:listitem="@layout/view_list_item_carousel"
-					   android:background="@drawable/shape_black_round_corner"
-					   android:layout_height="100dp"
-					   android:layout_gravity="center"
-					   android:clipChildren="false"
-					   android:clipToPadding="false"
-					   app:carousel_alignment="center"/>
-					   <TextView
-						   android:id="@+id/header_subtitle"
-						   android:layout_width="match_parent"
-						   android:layout_height="wrap_content"
-						   android:layout_marginTop="@dimen/dimen_4_dp"
-						   android:paddingLeft="@dimen/dimen_12_dp"
-						   android:paddingRight="@dimen/dimen_12_dp"
-						   android:paddingBottom="@dimen/dimen_8_dp"
-						   android:textColor="@color/material_color_grey_400"
-						   android:textSize="8pt"
-						   android:gravity="center"/> -->
-		   <!--
-				   <View
-					   android:layout_width="match_parent"
-					   android:layout_height="2dp"
-					   android:background="@drawable/divider_header_horizontal" />
-				   </LinearLayout>
-			   </LinearLayout>
-			   -->
+            <!-- Persistent Search Bar -->
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/search_view"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/dimen_40_dp"
+                android:layout_marginStart="@dimen/dimen_4_dp"
+                android:layout_marginTop="@dimen/dimen_4_dp"
+                android:layout_marginBottom="@dimen/dimen_4_dp"
+                android:background="@drawable/search_bar_frosted"
+                android:queryHint="Search your music..."
+                app:iconifiedByDefault="false"
+                app:searchIcon="@null"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/header_back_btn"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:inputType="text"
+                android:imeOptions="actionSearch" />
 
-               <View
-                   android:layout_width="match_parent"
-                   android:layout_height="1dp"
-                   android:background="@color/black" />
-           </com.google.android.material.appbar.AppBarLayout>
+            <!--
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/search_view"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/dimen_40_dp"
+                android:layout_marginStart="@dimen/dimen_8_dp"
+                android:layout_marginEnd="@dimen/dimen_8_dp"
+                android:background="@drawable/search_bar_background"
+                android:queryHint="Search your music..."
+                app:iconifiedByDefault="false"
+                app:searchIcon="@null"
+                app:layout_constraintStart_toEndOf="@id/header_back_btn"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:inputType="text"
+                android:imeOptions="actionSearch" />
+                -->
+            <!-- Stats Text -->
+            <TextView
+                android:id="@+id/header_stats_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1,248 songs · 93 hours"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                app:layout_constraintStart_toStartOf="@id/search_view"
+                app:layout_constraintTop_toBottomOf="@id/search_view"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginTop="@dimen/dimen_6_dp"
+                tools:text="1,248 songs · 93 hours 20 min" />
 
-			   <RelativeLayout
-				   android:layout_width="match_parent"
-                   android:layout_height="match_parent">
-				   <!--
-					   <com.scwang.smart.refresh.layout.SmartRefreshLayout
-						   android:id="@+id/refreshLayout"
-						   android:layout_width="match_parent"
-						   android:layout_height="match_parent"
-						   android:background="@color/black"
-						   app:srlPrimaryColor="@color/colorPrimary_light"
-						   app:srlAccentColor="@android:color/white">
-						   <com.scwang.smart.refresh.header.ClassicsHeader
-							   android:layout_width="match_parent"
-							   android:layout_height="wrap_content"/>
-						   <androidx.recyclerview.widget.RecyclerView
-							   android:id="@+id/recycler_view"
-							   android:layout_width="match_parent"
-							   android:layout_height="match_parent"
-							   android:layout_alignParentStart="true"
-							   android:layout_marginBottom="@dimen/dimen_48_dp"
-							   android:background="@drawable/img_back"
-							   android:clipToPadding="false"
-							   tools:listitem="@layout/view_list_item" />
-						   <com.scwang.smart.refresh.footer.ClassicsFooter
-							   android:layout_width="match_parent"
-							   android:layout_height="wrap_content"/>
-					   </com.scwang.smart.refresh.layout.SmartRefreshLayout>
-					-->
-				   <FrameLayout
-					   android:layout_width="match_parent"
-					   android:layout_height="match_parent">
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-					   <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-						   android:id="@+id/swipe_refresh_layout"
-						   android:layout_width="match_parent"
-						   android:layout_height="match_parent">
-					   <androidx.recyclerview.widget.RecyclerView
-						   android:id="@+id/recycler_view"
-						   android:layout_width="match_parent"
-						   android:layout_height="match_parent"
-						   android:clipToPadding="false"
-						   android:paddingTop="@dimen/dimen_42_dp" />
-					   </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-					   <!--
-					   <androidx.constraintlayout.widget.ConstraintLayout
-						   android:id="@+id/header_panel"
-						   android:layout_width="@dimen/dimen_164_dp"
-						   android:layout_height="@dimen/dimen_56_dp"
-						   android:background="@drawable/slanted_rectangle"
-						   android:layout_marginStart="@dimen/dimen_4_dp"
-						   android:layout_marginTop="@dimen/dimen_2_dp"
-						   android:paddingTop="@dimen/dimen_4_dp">
+        <!-- 🔹 Content List -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-						   <ImageView
-							   android:id="@+id/header_back_btn"
-							   android:layout_width="wrap_content"
-							   android:layout_height="wrap_content"
-							   app:layout_constraintStart_toStartOf="parent"
-							   android:layout_marginStart="@dimen/dimen_4_dp"
-							   android:src="@drawable/rounded_arrow_shape_up_stack_24"
-							   app:layout_constraintBaseline_toBaselineOf="@id/header_label_text"/>
-						   <TextView
-							   android:id="@+id/header_label_text"
-							   android:layout_width="wrap_content"
-							   android:layout_height="wrap_content"
-							   android:paddingTop="@dimen/dimen_8_dp"
-							   android:text="Library"
-							   android:gravity="top|start"
-							   android:drawablePadding="@dimen/dimen_4_dp"
-							   android:layout_marginStart="@dimen/dimen_4_dp"
-							   android:layout_gravity="top|start"
-							   app:layout_constraintStart_toEndOf="@id/header_back_btn"
-                               tools:ignore="MissingConstraints" />
-					   </androidx.constraintlayout.widget.ConstraintLayout>
-					   -->
-					   <androidx.constraintlayout.widget.ConstraintLayout
-						   android:id="@+id/header_panel"
-						   android:layout_width="wrap_content"
-						   android:layout_height="@dimen/dimen_42_dp"
-						   android:background="@drawable/slanted_rectangle"
-						   android:layout_marginTop="@dimen/dimen_1_dp"
-						   android:layout_marginStart="@dimen/dimen_1_dp"
-						   android:paddingTop="@dimen/dimen_4_dp">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                tools:listitem="@layout/view_list_item" />
 
-						   <ImageView
-							   android:id="@+id/header_back_btn"
-							   android:layout_width="wrap_content"
-							   android:layout_height="wrap_content"
-                               android:contentDescription="TODO"
-                               app:layout_constraintStart_toStartOf="parent"
-							   android:layout_marginStart="@dimen/dimen_4_dp"
-							   android:src="@drawable/rounded_arrow_shape_up_stack_24"
-							   app:layout_constraintBaseline_toBaselineOf="@id/header_label_text"/>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </LinearLayout>
 
-						   <TextView
-							   android:id="@+id/header_label_text"
-							   android:layout_width="wrap_content"
-							   android:layout_height="wrap_content"
-							   android:text="Library"
-							   android:drawablePadding="@dimen/dimen_4_dp"
-							   android:layout_marginStart="@dimen/dimen_4_dp"
-							   android:layout_marginEnd="@dimen/dimen_4_dp"
-							   android:layout_marginBottom="@dimen/dimen_4_dp"
-							   android:paddingEnd="@dimen/dimen_16_dp"
-							   app:layout_constraintStart_toEndOf="@id/header_back_btn"
-							   app:layout_constraintEnd_toEndOf="parent"
-							   app:layout_constraintTop_toTopOf="parent"
-							   app:layout_constraintBottom_toBottomOf="parent"
-							   android:ellipsize="end"
-							   android:maxLines="2"
-                               tools:ignore="RtlSymmetry" />
+    <!-- 🔹 Scroll-to-top FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_scroll_to_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="@dimen/dimen_96_dp"
+        android:src="@drawable/rounded_arrow_shape_up_stack_24"
+        android:contentDescription="Scroll to Top"
+        app:fabSize="normal"
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="?attr/colorOnPrimary"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
-					   </androidx.constraintlayout.widget.ConstraintLayout>
-				   </FrameLayout>
+    <sakout.mehdi.StateViews.StateView
+        android:id="@+id/status_page"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="@dimen/dimen_48_dp">
 
-				   <sakout.mehdi.StateViews.StateView
-					   android:id="@+id/status_page"
-					   android:layout_width="match_parent"
-					   android:layout_height="match_parent"
-					   android:layout_alignParentStart="true"
-					   android:layout_marginBottom="@dimen/dimen_48_dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="" />
 
-					   <TextView
-						   android:layout_width="wrap_content"
-						   android:layout_height="wrap_content"
-						   android:layout_gravity="center"
-						   android:text="" />
+    </sakout.mehdi.StateViews.StateView>
 
-				   </sakout.mehdi.StateViews.StateView>
-
-				   <com.google.android.material.floatingactionbutton.FloatingActionButton
-					   android:id="@+id/fab_scroll_to_top"
-					   android:layout_width="wrap_content"
-					   android:layout_height="wrap_content"
-					   android:layout_gravity="bottom|end"
-					   android:layout_marginBottom="@dimen/dimen_96_dp"
-					   android:layout_marginEnd="16dp"
-					   android:layout_alignParentBottom="true"
-					   android:layout_alignParentEnd="true"
-					   android:src="@drawable/rounded_arrow_shape_up_stack_24"
-					   android:contentDescription="Scroll to Top"
-					   app:fabSize="normal"
-					   app:backgroundTint="?attr/colorPrimary"
-					   app:tint="?attr/colorOnPrimary"
-					   android:visibility="gone"
-					   tools:visibility="visible" />
-   			</RelativeLayout>
-
-       </LinearLayout>
-
+    <!-- 🔹 Bottom App Bar -->
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_56_dp"
+        android:layout_height="@dimen/dimen_64_dp"
+        android:layout_gravity="bottom"
+        app:fabAlignmentMode="center"
+        app:hideOnScroll="true"
+        style="@style/RoundedBottomAppBar"
+        android:background="@drawable/shape_bottom_frosted_panel">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="@dimen/dimen_16_dp"
+            android:gravity="center_vertical">
+
+            <!-- Left section -->
+            <LinearLayout
+                android:id="@+id/navigation_collections"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical">
+                <ImageView
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:src="@drawable/round_subscriptions_24"
+                    android:contentDescription="Library" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:text="Library"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+            </LinearLayout>
+
+            <!-- Right section -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical|end"
+                android:layout_alignParentEnd="true">
+
+                <ImageView
+                    android:id="@+id/navigation_signal_path"
+                    android:layout_width="@dimen/dimen_24_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_marginEnd="@dimen/dimen_32_dp"
+                    android:src="@drawable/rounded_speaker_24"
+                    android:contentDescription="Signal Path" />
+
+                <ImageView
+                    android:id="@+id/navigation_media_server"
+                    android:layout_width="@dimen/dimen_24_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_marginEnd="@dimen/dimen_32_dp"
+                    android:src="@drawable/rounded_broadcast_on_personal_24"
+                    android:contentDescription="Media Server" />
+
+                <ImageView
+                    android:id="@+id/navigation_settings"
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:layout_marginEnd="@dimen/dimen_8_dp"
+                    android:src="@drawable/ic_widgets_white_24dp"
+                    android:contentDescription="Settings" />
+            </LinearLayout>
+        </RelativeLayout>
+    </com.google.android.material.bottomappbar.BottomAppBar>
+
+    <!--
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottom_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dimen_64_dp"
         android:layout_gravity="bottom"
         app:backgroundTint="@color/back_transparent"
         app:fabAlignmentMode="center"
-        app:fabCradleMargin="@dimen/dimen_12_dp"
-        app:fabCradleRoundedCornerRadius="@dimen/dimen_12_dp"
-        app:fabCradleVerticalOffset="@dimen/dimen_4_dp"
         app:hideOnScroll="true"
-        app:navigationContentDescription="Collection"
-        app:contentInsetStartWithNavigation="0dp"
-        app:contentInsetStart="0dp"
-        android:outlineAmbientShadowColor="@android:color/black"
-        android:outlineSpotShadowColor="@android:color/black"
-		style="@style/RoundedBottomAppBar"
-		android:layout_margin="16dp">
+        style="@style/RoundedBottomAppBar"
+        android:layout_margin="16dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/shape_bottom_appbar_background">
 
-			<LinearLayout
-				android:id="@+id/navigation_collections"
-				android:layout_width="wrap_content"
-				android:layout_height="match_parent"
-				android:layout_alignParentStart="true"
-				android:layout_centerInParent="true"
-				android:layout_centerVertical="true"
-				android:gravity="center"
-				android:layout_marginStart="@dimen/dimen_16_dp"
-				android:layout_marginEnd="@dimen/dimen_12_dp"
-                tools:ignore="UseCompoundDrawables">
-            <ImageView
+            <LinearLayout
+                android:id="@+id/navigation_collections"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="@dimen/dimen_8_dp"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/round_subscriptions_24"
-				tools:ignore="RtlSymmetry" />
-			<TextView
-				android:layout_width="wrap_content"
-				android:layout_height="match_parent"
-				android:paddingStart="@dimen/dimen_8_dp"
-				android:gravity="center"
-				android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-				android:text="Library"
-                tools:ignore="RtlSymmetry" />
-			</LinearLayout>
-			<!--
-			<ImageView
-				android:id="@+id/navigation_song_playing"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_alignParentEnd="true"
-				android:layout_centerInParent="true"
-				android:layout_marginStart="@dimen/dimen_12_dp"
-				android:layout_marginEnd="@dimen/dimen_120_dp"
-				android:contentDescription="@string/app_name"
-				android:paddingEnd="@dimen/dimen_8_dp"
-				android:visibility="gone"
-				android:src="@drawable/rounded_auto_read_play_24"
-				tools:ignore="RtlSymmetry" />
-			-->
-			<ImageView
-				android:id="@+id/navigation_signal_path"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_alignParentEnd="true"
-				android:layout_centerInParent="true"
-				android:layout_marginStart="@dimen/dimen_12_dp"
-				android:layout_marginEnd="@dimen/dimen_120_dp"
-				android:contentDescription="@string/app_name"
-				android:paddingEnd="@dimen/dimen_8_dp"
-				android:src="@drawable/rounded_speaker_24"
-				tools:ignore="RtlSymmetry" />
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:layout_marginStart="@dimen/dimen_16_dp">
+                <ImageView
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:src="@drawable/round_subscriptions_24"
+                    android:contentDescription="Library" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/dimen_8_dp"
+                    android:text="Library"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+            </LinearLayout>
 
-			<ImageView
-				android:id="@+id/navigation_media_server"
-				android:layout_width="@dimen/dimen_32_dp"
-				android:layout_height="@dimen/dimen_32_dp"
-				android:layout_alignParentEnd="true"
-				android:layout_centerInParent="true"
-				android:layout_marginStart="@dimen/dimen_12_dp"
-				android:layout_marginEnd="@dimen/dimen_68_dp"
-				android:contentDescription="@string/app_name"
-				android:paddingEnd="@dimen/dimen_8_dp"
-				android:src="@drawable/rounded_broadcast_on_personal_24"
-				tools:ignore="RtlSymmetry" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="end|center_vertical"
+                android:layout_marginStart="@dimen/dimen_24_dp"
+                android:layout_toEndOf="@id/navigation_collections"
+                android:layout_alignParentEnd="true">
+                <ImageView
+                    android:id="@+id/navigation_signal_path"
+                    android:layout_width="@dimen/dimen_24_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_marginEnd="@dimen/dimen_32_dp"
+                    android:src="@drawable/rounded_speaker_24"
+                    android:contentDescription="Signal Path" />
 
-			<ImageView
-				android:id="@+id/navigation_settings"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_alignParentEnd="true"
-				android:layout_centerInParent="true"
-				android:layout_marginStart="@dimen/dimen_12_dp"
-				android:layout_marginEnd="@dimen/dimen_16_dp"
-				android:contentDescription="@string/app_name"
-				android:paddingEnd="@dimen/dimen_8_dp"
-				android:src="@drawable/ic_widgets_white_24dp"
-				tools:ignore="RtlSymmetry" />
+                <ImageView
+                    android:id="@+id/navigation_media_server"
+                    android:layout_width="@dimen/dimen_24_dp"
+                    android:layout_height="@dimen/dimen_24_dp"
+                    android:layout_marginEnd="@dimen/dimen_32_dp"
+                    android:src="@drawable/rounded_broadcast_on_personal_24"
+                    android:contentDescription="Media Server" />
+
+                <ImageView
+                    android:id="@+id/navigation_settings"
+                    android:layout_width="@dimen/dimen_32_dp"
+                    android:layout_height="@dimen/dimen_32_dp"
+                    android:layout_marginEnd="@dimen/dimen_16_dp"
+                    android:src="@drawable/ic_widgets_white_24dp"
+                    android:contentDescription="Settings" />
+            </LinearLayout>
         </RelativeLayout>
-	</com.google.android.material.bottomappbar.BottomAppBar>
+    </com.google.android.material.bottomappbar.BottomAppBar>
+    -->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

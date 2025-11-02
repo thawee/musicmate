@@ -15,6 +15,47 @@
   limitations under the License.
   -->
 <resources>
+    <!--
+    Adaptive Color Palette (Light Modes, for Dark Modes, see values-night/colors.xml),
+    -->
+    <!-- Primary App Colors -->
+    <color name="colorPrimary">#1E88E5</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorPrimaryContainer">#E3F2FD</color>
+    <color name="colorOnPrimaryContainer">#0D47A1</color>
+
+    <!-- Secondary / Accent -->
+    <color name="colorSecondary">#03DAC6</color>
+    <color name="colorOnSecondary">#00332E</color>
+    <color name="colorSecondaryContainer">#B2F0E9</color>
+    <color name="colorOnSecondaryContainer">#00201B</color>
+
+    <!-- Surface / Background -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#1C1B1F</color>
+    <color name="colorSurfaceVariant">#E8EAF6</color>
+    <color name="colorOnSurfaceVariant">#44464F</color>
+
+    <!-- Outline / Divider -->
+    <color name="colorOutline">#79747E</color>
+    <color name="colorOutlineVariant">#C4C7D0</color>
+
+    <!-- Highlights -->
+    <color name="colorControlHighlight">#1E88E533</color>
+    <color name="colorSurfaceContainerLowest">#FAFAFA</color>
+
+    <!-- Player Indicator -->
+    <color name="colorPlayingIndicator">#1E88E5</color>
+
+    <!-- Album Art Frame -->
+    <color name="colorArtFrame">#ECEFF1</color>
+
+    <color name="md_theme_primary">#4E6CFF</color>
+    <color name="md_theme_primaryContainer">#DCE1FF</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- Original colors-->
+
     <color name="bt_accent">#00B8D4</color>
     <color name="drawer_header_background">@color/bt_accent</color>
     <!--
@@ -515,7 +556,7 @@
     <color name="rating_text">#ffb300</color>
     <color name="rating_background">#36454F</color>
 
-    <color name="duration_background">#36454F</color>
+    <color name="duration_background">#33000000</color>
 
     <color name="new_indicator_text">#ff424242</color>
     <color name="new_indicator_background">#fff59d</color>
