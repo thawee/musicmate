@@ -511,7 +511,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         String webEngine = "Unknown";
         // Check for Jetty
         try {
-            Class.forName("org.eclipse.jetty.server.Server");
+            Class.forName("apincer.android.jupnp.transport.jetty.JettyWebServerImpl");
             webEngine = "Eclipse Jetty";
         } catch (ClassNotFoundException e) {
             // Not Jetty, continue checking
@@ -520,7 +520,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Check for Netty if Jetty not found
         if ("Unknown".equals(webEngine)) {
             try {
-                Class.forName("io.netty.bootstrap.ServerBootstrap");
+                Class.forName("apincer.android.jupnp.transport.netty.NettyWebServerImpl");
                 webEngine = "Netty Framework";
             } catch (ClassNotFoundException e) {
                 // Not Netty, continue checking
@@ -530,7 +530,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Check for Java NIO if others not found
         if ("Unknown".equals(webEngine)) {
             try {
-                Class.forName("java.nio.channels.Selector");
+                Class.forName("apincer.music.core.server.NioWebServerImpl");
                 webEngine = "Java NIO";
             } catch (ClassNotFoundException e) {
                 // This is unlikely to fail in an Android environment

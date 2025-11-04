@@ -1,6 +1,6 @@
 package apincer.music.core;
 
-import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
+import static apincer.music.core.server.BaseServer.WEB_SERVER_PORT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +22,8 @@ public final class Constants {
     public static final String FILTER_TYPE_ALBUM_ARTIST = "Album Artist";
     public static final String DEFAULT_ALBUM_TEXT = "Single";
 
-    public static final int FLAC_OPTIMAL_COMPRESS_LEVEL = 4;
-    public static final int FLAC_NO_COMPRESS_LEVEL = 0;
+    public static final int FLAC_STANDARD_COMPRESS_LEVEL = 4;
+    public static final int FLAC_UNCOMPRESS_LEVEL = 0;
 
     // public static final long QUALITY_SAMPLING_RATE_192 = 192000;
    public static final long QUALITY_SAMPLING_RATE_96 = 96000;
@@ -154,6 +154,6 @@ public final class Constants {
     }
 
     public static String getPresentationUrl() {
-        return  "http://" + NetworkUtils.getIpAddress() + ":" + CONTENT_SERVER_PORT + "/index.html";
+        return  "http://" + NetworkUtils.getIpAddress() + ":" + WEB_SERVER_PORT + "/index.html";
     }
 }

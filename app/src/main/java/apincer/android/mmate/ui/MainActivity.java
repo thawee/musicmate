@@ -3,8 +3,8 @@ package apincer.android.mmate.ui;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static apincer.android.mmate.utils.UIUtils.dpToPx;
-import static apincer.music.core.Constants.FLAC_NO_COMPRESS_LEVEL;
-import static apincer.music.core.Constants.FLAC_OPTIMAL_COMPRESS_LEVEL;
+import static apincer.music.core.Constants.FLAC_STANDARD_COMPRESS_LEVEL;
+import static apincer.music.core.Constants.FLAC_UNCOMPRESS_LEVEL;
 import static apincer.music.core.Constants.KEY_FILTER_KEYWORD;
 import static apincer.music.core.Constants.KEY_FILTER_TYPE;
 import static apincer.music.core.utils.StringUtils.isEmpty;
@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -67,14 +68,12 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.skydoves.powerspinner.IconSpinnerAdapter;
-import com.skydoves.powerspinner.IconSpinnerItem;
-import com.skydoves.powerspinner.PowerSpinnerView;
 
 import org.apache.commons.text.WordUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,7 +104,6 @@ import apincer.android.mmate.ui.view.MediaServerManagementSheet;
 import apincer.android.mmate.ui.view.SignalPathBottomSheet;
 import apincer.android.mmate.ui.widget.RatioSegmentedProgressBarDrawable;
 import apincer.music.core.utils.ApplicationUtils;
-import apincer.music.core.utils.TagUtils;
 import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.UIUtils;
 import apincer.android.mmate.ui.viewmodel.MainViewModel;
@@ -113,7 +111,6 @@ import apincer.android.mmate.worker.FileOperationTask;
 import apincer.android.mmate.worker.ScanAudioFileWorker;
 import apincer.android.residemenu.ResideMenu;
 import dagger.hilt.android.AndroidEntryPoint;
-//import me.zhanghai.android.fastscroll.FastScrollerBuilder;
 import me.stellarsand.android.fastscroll.FastScrollerBuilder;
 import sakout.mehdi.StateViews.StateView;
 
@@ -131,13 +128,9 @@ public class MainActivity extends AppCompatActivity {
     private static final double MAX_PROGRESS = 100.00;
 
     // File format constants
-    public static final String FLAC_OPTIMAL = "FLAC (Optimal)";
-    public static final String FLAC_LEVEL_0 = "FLAC (No Compression)";
     public static final String FILE_FLAC = "FLAC";
     public static final String FILE_AIFF = "AIFF";
     public static final String FILE_MP3 = "MP3";
-    public static final String MP3_320_KHZ = "MPEG-3";
-    public static final String AIFF = "AIFF";
 
     // Activity result launcher
     ActivityResultLauncher<Intent> tagViewResultLauncher;
@@ -154,8 +147,6 @@ public class MainActivity extends AppCompatActivity {
     //private Snackbar mExitSnackbar;
     private View mHeaderPanel;
     private ImageView mBackButton;
-    //private TextView titleLabelText;
-    //private View headerSearchIcon;
     private SearchView headerSearchView;
     private TextView headerStatText;
 
@@ -189,7 +180,9 @@ public class MainActivity extends AppCompatActivity {
             playbackService = binder.getPlaybackService();
             isPlaybackServiceBound = true;
             adapter.setPlaybackService(playbackService);
-            playbackService.subscribePlaybackState(playbackState -> setNowPlaying(playbackService.getNowPlayingSong()));
+            playbackService.subscribePlaybackState(
+                    playbackState -> setNowPlaying(playbackService.getNowPlayingSong()),
+                    throwable -> Log.e("BaseServer", "Error in PlaybackState subscription", throwable));
         }
 
         @Override
@@ -330,8 +323,6 @@ public class MainActivity extends AppCompatActivity {
     private void setupHeaderPanel() {
         mHeaderPanel = findViewById(R.id.header_panel);
         mBackButton = findViewById(R.id.header_back_btn);
-       // titleLabelText = findViewById(R.id.header_label_text);
-        //headerSearchIcon = findViewById(R.id.header_search_icon);
         headerSearchView = findViewById(R.id.search_view);
         headerStatText = findViewById(R.id.header_stats_text);
 
@@ -457,8 +448,7 @@ public class MainActivity extends AppCompatActivity {
             ViewGroup.LayoutParams params = v.getLayoutParams();
 
             // Check if they are MarginLayoutParams (which they should be for a FAB)
-            if (params instanceof ViewGroup.MarginLayoutParams) {
-                ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) params;
+            if (params instanceof ViewGroup.MarginLayoutParams marginParams) {
 
                 // Set the new bottom margin by adding the base margin and the inset
                 marginParams.bottomMargin = baseMargin + bottomInset;
@@ -601,7 +591,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPopupTextProvider((view, position) -> {
                     MediaTrack track = adapter.getMusicTag(position);
                     if(track != null) return track.getTitle().subSequence(0,1);
-                    return null;
+                    return "-";
                 })
                 .build();
 
@@ -661,35 +651,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateHeaderPanel() {
         SearchCriteria.TYPE type = adapter.getCriteria().getType();
-       // String keyword = adapter.getCriteria().getKeyword();
         Drawable icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.bg_transparent);
-
-        /*
-        // Set appropriate icon based on label
-        if (SearchCriteria.TYPE.LIBRARY.equals(type) && TITLE_ALL_SONGS.equalsIgnoreCase(keyword)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_library_music_24);
-        }else if (SearchCriteria.TYPE.LIBRARY.equals(type) && TITLE_INCOMING_SONGS.equalsIgnoreCase(keyword)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_add_diamond_24);
-        }else if (SearchCriteria.TYPE.LIBRARY.equals(type) && TITLE_DUPLICATE.equalsIgnoreCase(keyword)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_auto_awesome_motion_24);
-        }else if (SearchCriteria.TYPE.LIBRARY.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_library_music_24);
-        } else if (SearchCriteria.TYPE.GENRE.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_style_24);
-       // } else if (SearchCriteria.TYPE.GROUPING.equals(type)) {
-        //    icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.ic_round_local_play_24);
-        } else if (SearchCriteria.TYPE.CODEC.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_equalizer_24);
-        } else if (SearchCriteria.TYPE.PLAYLIST.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_order_play_24);
-        } else if (SearchCriteria.TYPE.ARTIST.equals(type)) {
-            icon = ContextCompat.getDrawable(getBaseContext(), R.drawable.rounded_for_you_24);
-        } */
 
         int count = adapter.getTotalItems();
         String statText;
         if(!isEmpty(adapter.getCriteria().getKeyword())) {
-          //  mBackButton.setVisibility(GONE);
             // total songs
             if(count > 0) {
                 statText = StringUtils.formatSongSize(count) + " Songs";
@@ -728,17 +694,8 @@ public class MainActivity extends AppCompatActivity {
             }else {
                 statText = "No Results";
             }
-            //unitLabel = StringUtils.formatTitle(adapter.getHeaderLabel());
-           // mBackButton.setImageDrawable(icon);
-          //  mBackButton.setVisibility(INVISIBLE);
         }
 
-        /*SimplifySpanBuild titleSpannable = new SimplifySpanBuild("");
-        titleSpannable.append(new SpecialTextUnit(adapter.getHeaderTitle()).setTextColor(Color.WHITE).setTextSize(16).useTextItalic().useTextBold());
-        titleSpannable.append("\n");
-        titleSpannable.append(new SpecialTextUnit(unitLabel).setTextColor(ResourcesCompat.getColor(getResources(), R.color.grey400, getTheme())).setTextSize(12).useTextItalic());
-        */
-       // titleLabelText.setText(titleSpannable.build());
         headerSearchView.setQueryHint("Search "+StringUtils.truncate(adapter.getHeaderTitle(), 25, StringUtils.TruncateType.SUFFIX));
         headerStatText.setText(statText);
     }
@@ -1056,21 +1013,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openSearch() {
-        // Hide the title, back arrow, and icon
-        //titleLabelText.setVisibility(View.GONE);
-       // mBackButton.setVisibility(View.GONE);
-        //headerSearchIcon.setVisibility(View.GONE);
 
         // Show the SearchView
         headerSearchView.setVisibility(View.VISIBLE);
-        headerSearchView.requestFocus();
+       // headerSearchView.requestFocus();
 
        // mBackButton.setImageDrawable(getDrawable(R.drawable.round_close_24));
        // mBackButton.setOnClickListener(view -> closeSearch());
 
         // Show keyboard
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(headerSearchView.findViewById(androidx.appcompat.R.id.search_src_text), InputMethodManager.SHOW_IMPLICIT);
+       // InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+       // imm.showSoftInput(headerSearchView.findViewById(androidx.appcompat.R.id.search_src_text), InputMethodManager.SHOW_IMPLICIT);
     }
 
     // Put this method inside your MainActivity class
@@ -1135,9 +1088,12 @@ public class MainActivity extends AppCompatActivity {
 
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
+        ImageView titleIcon = cview.findViewById(R.id.title_icon);
         TextView titleText = cview.findViewById(R.id.title);
+        TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
         titleText.setText(R.string.title_removing_music_files);
-        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_delete_24),null,null,null);
+        fileListTitleText.setText(R.string.files_to_delete);
+        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_delete_24));
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1254,8 +1210,11 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
+        ImageView titleIcon = cview.findViewById(R.id.title_icon);
+        TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
         titleText.setText(R.string.title_import_to_music_directory);
-        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_deployed_code_update_24),null,null,null);
+        fileListTitleText.setText(R.string.files_to_move);
+        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_deployed_code_update_24));
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1371,8 +1330,11 @@ public class MainActivity extends AppCompatActivity {
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
         TextView titleText = cview.findViewById(R.id.title);
+        ImageView titleIcon = cview.findViewById(R.id.title_icon);
+        TextView fileListTitleText = cview.findViewById(R.id.file_list_title);
         titleText.setText(R.string.title_dynamic_range_and_replay_gain);
-        titleText.setCompoundDrawablesWithIntrinsicBounds(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_query_stats_24),null,null,null);
+        fileListTitleText.setText(R.string.files_to_analyze);
+        titleIcon.setImageDrawable(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rounded_query_stats_24));
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1487,44 +1449,17 @@ public class MainActivity extends AppCompatActivity {
 
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
-        PowerSpinnerView encodingList = cview.findViewById(R.id.audioEncoding);
+       // PowerSpinnerView encodingList = cview.findViewById(R.id.audioEncoding);
+        AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
         MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
         View btnCancel = cview.findViewById(R.id.button_cancel);
         ProgressBar progressBar = cview.findViewById(R.id.progressBar);
 
-        btnOK.setText(R.string.encode);
+        btnOK.setText(R.string.convert);
 
-        List<IconSpinnerItem> iconSpinnerItems = new ArrayList<>();
-
-        // Determine possible output formats based on input file type
-        if (TagUtils.isAIFFile(selections.get(0)) ||
-                TagUtils.isALACFile(selections.get(0)) ||
-                TagUtils.isDSD(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
-            iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
-        } else if (TagUtils.isAACFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem(MP3_320_KHZ, null));
-        } else if (TagUtils.isFLACFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
-            iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
-            iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
-        } else if (TagUtils.isWavFile(selections.get(0))) {
-            iconSpinnerItems.add(new IconSpinnerItem(FLAC_LEVEL_0, null));
-            iconSpinnerItems.add(new IconSpinnerItem(FLAC_OPTIMAL, null));
-            iconSpinnerItems.add(new IconSpinnerItem(AIFF, null));
-        }
-
-        // Setup spinner
-        IconSpinnerAdapter iconSpinnerAdapter = new IconSpinnerAdapter(encodingList);
-        encodingList.setSpinnerAdapter(iconSpinnerAdapter);
-        encodingList.setItems(iconSpinnerItems);
-
-        if (!iconSpinnerItems.isEmpty()) {
-            encodingList.selectItemByIndex(0);
-            btnOK.setEnabled(true);
-        }
-
-        encodingList.setLifecycleOwner(this);
+        String[] outputFormatList = getResources().getStringArray(R.array.output_formats);
+        setupListValuePopupFullList(outputFormat, Arrays.asList(outputFormatList));
+        outputFormat.setText(outputFormatList[1]); // set default, flac standard compress
 
         itemsView.setAdapter(new BaseAdapter() {
             @Override
@@ -1589,22 +1524,25 @@ public class MainActivity extends AppCompatActivity {
             alert.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
-        int compressionLevel = FLAC_OPTIMAL_COMPRESS_LEVEL;
-             String targetExt = FILE_FLAC;
 
-           IconSpinnerItem item = iconSpinnerItems.get(encodingList.getSelectedIndex());
-           if (FLAC_OPTIMAL.contentEquals(item.getText())) {
-                 targetExt = FILE_FLAC;
-             } else if (FLAC_LEVEL_0.contentEquals(item.getText())) {
-                 targetExt = FILE_FLAC;
-                compressionLevel = FLAC_NO_COMPRESS_LEVEL;
-             } else if (MP3_320_KHZ.contentEquals(item.getText())) {
-                targetExt = FILE_MP3;
-            } else if (AIFF.contentEquals(item.getText())) {
-                  targetExt = FILE_AIFF;
-              }
+        int compressionLevel = FLAC_STANDARD_COMPRESS_LEVEL;
+        String targetExt;
+        String selectedFormat = outputFormat.getText().toString();
+       // if(selectedFormat.contains(".flac")) {
+       //     compressionLevel = selectedFormat.contains("Uncompressed")?FLAC_UNCOMPRESS_LEVEL:FLAC_STANDARD_COMPRESS_LEVEL;
+      //      targetExt = FILE_FLAC;
+       // }else
+        if(selectedFormat.contains(".aiff")) {
+            targetExt = FILE_AIFF;
+        }else if(selectedFormat.contains(".mp3")) {
+            targetExt = FILE_MP3;
+        }else {
+            compressionLevel = selectedFormat.contains("Uncompressed")?FLAC_UNCOMPRESS_LEVEL:FLAC_STANDARD_COMPRESS_LEVEL;
+            targetExt = FILE_FLAC;
+        }
+
         final String finalTargetExt = targetExt.toLowerCase();
-       final int finalCompressionLevel = compressionLevel;
+        final int finalCompressionLevel = compressionLevel;
 
         btnOK.setOnClickListener(v -> {
             busy = true;
@@ -1641,6 +1579,28 @@ public class MainActivity extends AppCompatActivity {
         });
 
         alert.show();
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupListValuePopupFullList(AutoCompleteTextView input, List<String> dropdownList) {
+        NoFilterArrayAdapter<String> adapter = new NoFilterArrayAdapter<>(
+                this,
+                R.layout.item_dropdown_dark,
+                dropdownList
+        );
+        input.setAdapter(adapter);
+        input.setThreshold(0);
+
+        // Disable keyboard input — dropdown only
+        input.setKeyListener(null);
+        input.setFocusable(false);
+        input.setClickable(true);
+
+        // Always open dropdown when clicked
+        input.setOnClickListener(v -> input.showDropDown());
+
+        // Optional: dark popup background
+        input.setDropDownBackgroundResource(R.color.black_transparent_64);
     }
 
     // You can put this class inside your Activity/Fragment

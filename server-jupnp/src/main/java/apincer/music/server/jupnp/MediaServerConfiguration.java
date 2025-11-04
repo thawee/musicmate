@@ -16,8 +16,8 @@ import org.jupnp.transport.spi.StreamServerConfiguration;
 
 import java.net.URI;
 
-import apincer.music.core.server.spi.ContentServer;
 import apincer.music.core.server.spi.UpnpServer;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.server.jupnp.transport.OKHttpStreamingClient;
 import apincer.music.server.jupnp.transport.StreamClientConfigurationImpl;
 import apincer.music.server.jupnp.transport.StreamServerConfigurationImpl;
@@ -28,9 +28,9 @@ public class MediaServerConfiguration extends AndroidUpnpServiceConfiguration {
     //Injected
     private final Context context;
     private  final UpnpServer upnpServer;
-    private final ContentServer contentServer;
+    private final WebServer contentServer;
 
-    public MediaServerConfiguration(Context context, UpnpServer upnpServer, ContentServer contentServer) {
+    public MediaServerConfiguration(Context context, UpnpServer upnpServer, WebServer contentServer) {
         super(UPNP_SERVER_PORT, 0);
         this.context = context;
         this.upnpServer = upnpServer;

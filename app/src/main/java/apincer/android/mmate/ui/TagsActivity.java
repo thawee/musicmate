@@ -1,8 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static com.google.android.material.bottomappbar.BottomAppBar.FAB_ALIGNMENT_MODE_CENTER;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trim;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
@@ -36,7 +33,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.PopupMenu;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -46,7 +42,6 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
-import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.tabs.TabLayout;
@@ -100,7 +95,7 @@ public class TagsActivity extends AppCompatActivity {
     private TabLayout tabLayout;
    // private Toolbar toolbar;
     private AppBarLayout appBarLayout;
-    private BottomAppBar bottomAppBar;
+    //private BottomAppBar bottomAppBar;
 
     private TextView titleView;
     private TextView artistView ;
@@ -214,13 +209,6 @@ public class TagsActivity extends AppCompatActivity {
             loadMusicTagsFromDb(tagIds);
         }
 
-        /*
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        */
-
         // Your business logic to handle the back pressed event
         OnBackPressedCallback onBackPressedCallback = new TagsActivity.BackPressedCallback(true);
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
@@ -277,13 +265,13 @@ public class TagsActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        setupMenuToolbar();
+        //setupMenuToolbar();
         return true;
     }
 
     private void setupPageViewer() {
         appBarLayout = findViewById(R.id.appbar);
-        bottomAppBar = findViewById(R.id.bottom_app_bar);
+       // bottomAppBar = findViewById(R.id.bottom_app_bar);
         ViewPager2 viewPager = findViewById(R.id.viewpager);
 
         tabLayout = findViewById(R.id.tabLayout);
@@ -297,7 +285,7 @@ public class TagsActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 activeFragment = adapter.fragments.get(position);
-                setupMenuToolbar();
+                //setupMenuToolbar();
             }
 
             @Override
@@ -564,7 +552,7 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         final BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this); // Or pass 'context'
-        View sheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_trash_dialog, null);
+        View sheetView = LayoutInflater.from(this).inflate(R.layout.view_action_trash_bottom_sheet_dialog, null);
         bottomSheetDialog.setContentView(sheetView);
 
         Button cancelButton = sheetView.findViewById(R.id.button_cancel);
@@ -619,37 +607,6 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
-    public void setupMenuEditor(Toolbar.OnMenuItemClickListener listener) {
-       /* toolbar.getMenu().clear();
-        toolbar.inflateMenu(R.menu.menu_tag_editor);
-        toolbar.setOnMenuItemClickListener(listener);
-        toolbar.setTitle(""); */
-
-        bottomAppBar.inflateMenu(R.menu.menu_tag_editor);
-        bottomAppBar.setOnMenuItemClickListener(listener);
-       // bottomAppBar.setHideOnScroll(true);
-        bottomAppBar.setTitle("Song Info");
-        bottomAppBar.setVisibility(VISIBLE);
-    }
-
-    public void setupMenuTechnical(Toolbar.OnMenuItemClickListener listener) {
-        /*toolbar.getMenu().clear();
-        toolbar.inflateMenu(R.menu.menu_tag_technical);
-        toolbar.setOnMenuItemClickListener(listener);
-        toolbar.setTitle("");
-        */
-
-        bottomAppBar.inflateMenu(R.menu.menu_tag_technical);
-        bottomAppBar.setOnMenuItemClickListener(listener);
-       // bottomAppBar.setHideOnScroll(true);
-        bottomAppBar.setTitle("Technical Info");
-        bottomAppBar.setVisibility(VISIBLE);
-    }
-    public void setupMenuPreview(Toolbar.OnMenuItemClickListener listener) {
-       // toolbar.getMenu().clear();
-        bottomAppBar.setVisibility(GONE);
-    }
-
     public List<MusicTag> getEditItems() {
         return viewModel.editItems.getValue();
     }
@@ -669,6 +626,13 @@ public class TagsActivity extends AppCompatActivity {
 
         @Override
         public void handleOnBackPressed() {
+            // lose focus all dropdown
+            View currentFocus = getCurrentFocus();
+            if (currentFocus != null) {
+                // Clear focus from the EditText
+                currentFocus.clearFocus();
+            }
+
             if (previewState) {
                 // In preview mode, return to main activity
                 finish();
@@ -705,9 +669,6 @@ public class TagsActivity extends AppCompatActivity {
             coverArtView.setScaleX((float) scale);
             coverArtView.setScaleY((float) scale);
 
-            // Fade toolbar title
-            fadeToolbarTitle(scrollRatio);
-
             // Fully expanded state
             boolean isFullyExpanded = verticalOffset == 0;
             if (isFullyExpanded && !wasFullyExpanded) {
@@ -715,7 +676,7 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyExpanded = true;
                 wasFullyCollapsed = false;
                 previewState = true;
-                setupMenuToolbar();
+                //setupMenuToolbar();
 
                 // No need to rebuild the display tag if it's not dirty
                 viewModel.refreshDisplayTag();
@@ -726,7 +687,7 @@ public class TagsActivity extends AppCompatActivity {
                 wasFullyCollapsed = true;
                 wasFullyExpanded = false;
                 previewState = false;
-                setupMenuToolbar();
+               // setupMenuToolbar();
             }
 
             // Handle tab layout color fade based on scroll position
@@ -774,39 +735,6 @@ public class TagsActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
-            return item -> {
-                if (item.getItemId() == R.id.menu_preview_calculate_dr) {
-                    doMeasureDR();
-                }
-                return false;
-            };
-    }
-
-    private void setupMenuToolbar() {
-        bottomAppBar.getMenu().clear();;
-        if (previewState) {
-            setupMenuPreview(getOnMenuItemClickListener());
-        }else if(activeFragment!= null) {
-            if (activeFragment instanceof TagsEditorFragment) {
-                setupMenuEditor(((TagsEditorFragment) activeFragment).getOnMenuItemClickListener());
-            } else if (activeFragment instanceof TagsTechnicalFragment) {
-                setupMenuTechnical(((TagsTechnicalFragment) activeFragment).getOnMenuItemClickListener());
-            }
-        }
-    }
-
-    private void fadeToolbarTitle(double scale) {
-       /* if (toolbar != null) {
-            for (int i = 0; i < toolbar.getChildCount(); i++) {
-                if (toolbar.getChildAt(i) instanceof TextView title) {
-                    //You now have the title textView. Do something with it
-                    title.setAlpha((float) scale);
-                }
-            }
-        } */
     }
 
     /**
@@ -862,9 +790,7 @@ public class TagsActivity extends AppCompatActivity {
         }
 
         // Try to update the timestamp - if another thread beat us, return
-        if (!lastProgressUpdate.compareAndSet(lastUpdate, now)) {
-            return;
-        }
+        lastProgressUpdate.compareAndSet(lastUpdate, now);
     }
 
     /**

@@ -60,7 +60,7 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
         this.router = (Router) router;
         Thread serverThread = new Thread(() -> {
             try {
-               // Log.i(TAG, "Starting UPnP Server (Jetty) on " + bindAddress.getHostAddress() + ":" + getListenPort());
+               // Log.i(TAG, "Starting UPnPServer (Jetty) on " + bindAddress.getHostAddress() + ":" + getListenPort());
 
                 QueuedThreadPool threadPool = new QueuedThreadPool(MAX_THREADS, MIN_THREADS, IDLE_TIMEOUT);
                 threadPool.setName("jetty-upnp-server");
@@ -84,12 +84,12 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
                 // Set the UPnP handler for all contexts
                 server.setHandler(new UPnpHandler());
                 server.start();
-                Log.i(TAG, "UPnP Server started on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT +" successfully.");
+                Log.i(TAG, "UPnPServer started on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT +" successfully.");
 
                 server.join();
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to start or run UPnP server", e);
+                Log.e(TAG, "Failed to start or run UPnPServer", e);
             }
         });
         serverThread.setName("jetty-upnp-runner");
@@ -98,13 +98,13 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     @Override
     public void stopServer() {
-        Log.i(TAG, "Stopping UPnP Server (Jetty)");
+        Log.i(TAG, "Stopping UPnPServer (Jetty)");
         try {
             if (server != null && server.isRunning()) {
                 server.stop();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error stopping UPnP server", e);
+            Log.e(TAG, "Error stopping UPnPServer", e);
         }
     }
 

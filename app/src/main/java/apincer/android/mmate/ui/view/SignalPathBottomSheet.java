@@ -64,7 +64,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
-        return inflater.inflate(R.layout.layout_signal_path_bottom_sheet, container, false);
+        return inflater.inflate(R.layout.view_action_signal_path_bottom_sheet, container, false);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         playersHeader.setOnClickListener(v -> togglePlayersVisibility());
     }
 
-    private void populateDMCAPlayers() {
+    private void populatePlaybackTargets() {
         List<PlaybackTarget> renderers = playbackService.getAvailablePlaybackTargets();
         dlnaPlayersContainer.removeAllViews();
         if (renderers != null && !renderers.isEmpty()) {
@@ -143,7 +143,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             isPlaybackServiceBound = true;
 
             addSignalPathSteps();
-            populateDMCAPlayers();
+            populatePlaybackTargets();
         }
 
         @Override
@@ -204,8 +204,8 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             }
         }
 
-        // --- Populate DLNA players ---
-        populateDMCAPlayers();
+        // --- Populate players ---
+        populatePlaybackTargets();
 
         // Set the initial state of the collapsible list based on the active player
         isPlayersExpanded = playbackTarget != null;

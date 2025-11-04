@@ -131,11 +131,11 @@ public class NioUPnpServerImpl extends BaseServer implements UpnpServer {
         serverThread = new Thread(server);
         serverThread.setName("nio-upnp-runner");
         serverThread.start();
-        Log.i(TAG, TAG+" - UnNP Server (NIO) running on " + bindAddress.getHostAddress() + ":" + getListenPort());
+        Log.i(TAG, TAG+" - UPnPServer (NIO) running on " + bindAddress.getHostAddress() + ":" + getListenPort());
     }
 
     public void stopServer() {
-        //System.out.println(TAG + ": Stopping UPnP Server");
+        //System.out.println(TAG + ": Stopping UPnPServer");
         if (server != null) {
             server.stop();
         }

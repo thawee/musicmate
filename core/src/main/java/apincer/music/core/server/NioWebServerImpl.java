@@ -15,23 +15,20 @@ import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.http.NioHttpServer;
-import apincer.music.core.playback.PlaybackState;
-import apincer.music.core.playback.spi.MediaTrack;
-import apincer.music.core.playback.spi.PlaybackCallback;
-import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
-import apincer.music.core.server.spi.ContentServer;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.utils.TagUtils;
 
-public class NioContentServerImpl extends BaseServer implements ContentServer {
-    private static final String TAG = "NioContentServer";
+public class NioWebServerImpl extends BaseServer implements WebServer {
+    private static final String TAG = "NioWebServer";
 
     private static final String DEFAULT_PATH = "/index.html";
     private static final String MSG_SONG_NOT_FOUND = "Song not found";
@@ -46,15 +43,15 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
     private NioHttpServer server;
     private WebSocketHandlerImpl wsHandler;
 
-    public NioContentServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+    public NioWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("NioHttpServer", "2.1");
+        addLibInfo("NioWebServer", "2.1");
     }
 
     public void initServer(InetAddress bindAddress) {
         serverThread = new Thread(() -> {
             try {
-                server = new NioHttpServer(CONTENT_SERVER_PORT);
+                server = new NioHttpServer(WEB_SERVER_PORT);
                 server.setMaxThread(MAX_THREADS);
                 server.setClientReadBufferSize(READ_BUFFER_SIZE);
                 server.setKeepAliveTimeout(IDLE_TIMEOUT);
@@ -65,16 +62,16 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
 
                 // --- Main HTTP Handler ---
                 server.registerFallbackHandler(this::handleHttpRequest);
-                Log.i(TAG, TAG+" - Content Server (NIO) running on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT);
+                Log.i(TAG, TAG+" - WebServer (NIO) running on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
                 server.run(); // This blocks until the server is stopped.
                // Log.i(TAG, "Content Server stopped.");
 
             } catch (Exception e) {
-                Log.e(TAG, TAG+" - Failed to start Content Server", e);
+                Log.e(TAG, TAG+" - Failed to start WebServer", e);
             }
         });
 
-        serverThread.setName("nio-server-runner");
+        serverThread.setName("nio-webserver-runner");
         serverThread.start();
     }
 
@@ -173,7 +170,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
     }
 
     public void stopServer() {
-        Log.i(TAG, TAG+" - Stopping Content Server (NIO)");
+        Log.i(TAG, TAG+" - Stopping WebServer (NIO)");
         if (wsHandler != null) {
             wsHandler.shutdown(); // ← Close all WebSocket connections
         }
@@ -193,24 +190,26 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
 
     @Override
     public String getComponentName() {
-        return "ContentServer";
+        return "WebServer";
     }
 
     @Override
     public int getListenPort() {
-        return CONTENT_SERVER_PORT;
+        return WEB_SERVER_PORT;
     }
 
-    private class WebSocketHandlerImpl implements NioHttpServer.WebSocketHandler {
+    private class WebSocketHandlerImpl extends WebSocketContent implements NioHttpServer.WebSocketHandler {
         private final CopyOnWriteArraySet<NioHttpServer.WebSocketConnection> sessions = new CopyOnWriteArraySet<>();
         private static final int MAX_SESSIONS = 100;
         private static final Gson GSON = new GsonBuilder()
                 .disableHtmlEscaping() // Reduces string processing
                 .serializeNulls() // Optional: skip nulls to reduce JSON size
                 .create();
-        private final WebSocketContent webSocketContent = buildWebSocketContent();
+       // private final WebSocketContent webSocketContent = buildWebSocketContent();
 
         public WebSocketHandlerImpl() {
+            super();
+            /*
             registerPlaybackCallback(new PlaybackCallback() {
                 @Override
                 public void onMediaTrackChanged(MediaTrack metadata) {
@@ -226,10 +225,25 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
                     broadcastPlaybackTarget(playbackTarget);
                 }
+            }); */
+        }
+
+        @Override
+        protected void broadcastMessage(String jsonResponse) {
+            sessions.removeIf(NioHttpServer.WebSocketConnection::isClosed); // Clean up closed connections
+
+            //  Log.d(TAG, TAG+" - Broadcast message: " + message);
+            sessions.parallelStream().forEach(session -> {
+                try {
+                    if (!session.isClosed()) {
+                        session.send(jsonResponse);
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, TAG+" - Failed to broadcast to a session, removing it.", e);
+                    session.forceClose();
+                    sessions.remove(session);
+                }
             });
-          //  subscribePlaybackState(this::broadcastPlaybackState);
-          //  subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(this::broadcastNowPlaying));
-          //  subscribePlaybackTarget(player -> player.ifPresent(this::broadcastPlaybackTarget));
         }
 
         @Override
@@ -241,16 +255,10 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                 return;
             }
             sessions.add(connection);
-            sendConnectedMessages(connection);
-        }
-
-        private void sendConnectedMessages(NioHttpServer.WebSocketConnection connection) {
-            Log.d(TAG, TAG+" - Send Welcome Messages:");
-            sendMessage(connection, webSocketContent.getLibraryStats());
-            sendMessage(connection, webSocketContent.getAvailableRenderers());
-            sendMessage(connection, webSocketContent.getPlaybackTarget());
-            sendMessage(connection, webSocketContent.sendNowPlaying());
-            sendMessage(connection, webSocketContent.sendQueueUpdate());
+            List<Map<String, Object>> messages = getWelcomeMessages();
+            for (Map<String, Object> message : messages) {
+                sendMessage(connection, message);
+            }
         }
 
         private void sendMessage(NioHttpServer.WebSocketConnection connection, Map<String, Object> response) {
@@ -300,13 +308,8 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
                     return;
                 }
 
-                Map<String, Object> response = webSocketContent.handleCommand(command, messageMap);
+                Map<String, Object> response = handleCommand(command, messageMap);
                sendMessage(connection, response);
-                /* if (response != null) {
-                    String jsonResponse = GSON.toJson(response);
-                    connection.send(jsonResponse);
-                   // Log.d(TAG, "Response message: " + jsonResponse);
-                } */
             } catch (com.google.gson.JsonSyntaxException e) {
                 // Catching the specific exception for bad JSON.
                 Log.e(TAG, TAG+" - Error parsing WebSocket JSON message: " + message, e);
@@ -334,25 +337,9 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
             Log.e(TAG, TAG+" - WebSocket error", ex);
         }
 
-        private void broadcast(String message) {
-            sessions.removeIf(NioHttpServer.WebSocketConnection::isClosed); // Clean up closed connections
-
-          //  Log.d(TAG, TAG+" - Broadcast message: " + message);
-            sessions.parallelStream().forEach(session -> {
-                try {
-                    if (!session.isClosed()) {
-                        session.send(message);
-                    }
-                } catch (Exception e) {
-                    Log.w(TAG, TAG+" - Failed to broadcast to a session, removing it.", e);
-                    session.forceClose();
-                    sessions.remove(session);
-                }
-            });
-        }
-
+        /*
         public void broadcastPlaybackState(PlaybackState state) {
-            Map<String, Object> response = webSocketContent.getPlaybackState(state);
+            Map<String, Object> response = getPlaybackState(state);
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
                 broadcast(jsonResponse);
@@ -360,7 +347,7 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         }
 
         public void broadcastNowPlaying(MediaTrack track) {
-            Map<String, Object> response = webSocketContent.getNowPlaying(track);
+            Map<String, Object> response = getNowPlaying(track);
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
                 broadcast(jsonResponse);
@@ -370,19 +357,22 @@ public class NioContentServerImpl extends BaseServer implements ContentServer {
         }
 
         public void broadcastPlaybackTarget(PlaybackTarget player) {
-            Map<String, Object> response = webSocketContent.getPlaybackTarget(player);
+            Map<String, Object> response = getPlaybackTarget(player);
             if (response != null) {
                 String jsonResponse = GSON.toJson(response);
                 broadcast(jsonResponse);
                 Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
             }
-        }
+        } */
 
         // Shutdown cleanup executor when server stops
         public void shutdown() {
-
-            sessions.forEach(session -> session.close(1001, "Server shutting down"));
-            sessions.clear();
+            try {
+                sessions.forEach(session -> session.close(1001, "Server shutting down"));
+                sessions.clear();
+            }catch (Exception exception) {
+                exception.printStackTrace();
+            }
         }
     }
 }

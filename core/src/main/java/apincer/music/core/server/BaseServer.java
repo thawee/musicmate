@@ -17,6 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.File;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -56,7 +59,7 @@ import apincer.music.core.utils.TagUtils;
 public class BaseServer {
     private static final String TAG = "BaseServer";
     public static final int UPNP_SERVER_PORT = 49152; // IANA-recommended range 49152-65535 for UPnP
-    public static final int CONTENT_SERVER_PORT = 9000; //8089;
+    //public static final int CONTENT_SERVER_PORT = 9000; //8089;
     public static final int WEB_SERVER_PORT = 9000;
     public static final String CONTEXT_PATH_WEBSOCKET = "/ws";
     protected static final String CONTEXT_PATH_ROOT = "/";
@@ -106,9 +109,39 @@ public class BaseServer {
             MusicMateServiceBinder binder = (MusicMateServiceBinder) service;
             playbackService = binder.getPlaybackService();
             if(playbackCallback != null) {
-                playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
-                playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
-                playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
+                //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
+                playbackService.subscribeNowPlayingSong(
+                        // onNext
+                        mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
+
+                        // onError
+                        throwable -> {
+                            // Now you log the error instead of crashing!
+                            Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
+                        }
+                );
+               // playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
+                playbackService.subscribePlaybackTarget(
+                        // onNext
+                        playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
+
+                        // onError
+                        throwable -> {
+                            // Now you log the error instead of crashing!
+                            Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
+                        }
+                );
+                //playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
+                playbackService.subscribePlaybackState(
+                        // onNext
+                        playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
+
+                        // onError
+                        throwable -> {
+                            // Now you log the error instead of crashing!
+                            Log.e("BaseServer", "Error in PlaybackState subscription", throwable);
+                        }
+                );
             }
         }
 
@@ -149,9 +182,10 @@ public class BaseServer {
         return new File(coverartDir, coverartName);
     }
 
+    /*
     public WebSocketContent buildWebSocketContent() {
        return new WebSocketContent();
-    }
+    } */
 
     public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
         MusicMateExecutors.execute(() -> {
@@ -262,7 +296,7 @@ public class BaseServer {
     }
 
     public static String getMusicUrl(MediaTrack track) {
-        return "http://"+ NetworkUtils.getIpAddress()+":"+  CONTENT_SERVER_PORT+CONTEXT_PATH_MUSIC + track.getId() + "/file." + track.getFileType();
+        return "http://"+ NetworkUtils.getIpAddress()+":"+  WEB_SERVER_PORT+CONTEXT_PATH_MUSIC + track.getId() + "/file." + track.getFileType();
     }
 
     public TagRepository getTagRepos() {
@@ -273,21 +307,49 @@ public class BaseServer {
         return fileRepos;
     }
 
-    public void registerPlaybackCallback(PlaybackCallback callback) {
+    private void registerPlaybackCallback(PlaybackCallback callback) {
         this.playbackCallback = callback;
         if(playbackService != null) {
-            playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
-            playbackService.subscribePlaybackTarget(playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)));
-            playbackService.subscribePlaybackState(playbackState -> playbackCallback.onPlaybackStateChanged(playbackState));
+            //playbackService.subscribeNowPlayingSong(mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged));
+            playbackService.subscribeNowPlayingSong(
+                    // onNext
+                    mediaTrack -> mediaTrack.ifPresent(playbackCallback::onMediaTrackChanged),
+
+                    // onError
+                    throwable -> {
+                        // Now you log the error instead of crashing!
+                        Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
+                    });
+            playbackService.subscribePlaybackTarget(
+                    playbackTarget -> playbackTarget.ifPresent(playbackTarget1 -> playbackCallback.onPlaybackTargetChanged(playbackTarget1)),
+
+                    // onError
+                    throwable -> {
+                        // Now you log the error instead of crashing!
+                        Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
+                    });
+            playbackService.subscribePlaybackState(
+                    playbackState -> playbackCallback.onPlaybackStateChanged(playbackState),
+
+                    // onError
+                    throwable -> {
+                        // Now you log the error instead of crashing!
+                        Log.e("BaseServer", "Error in nowPlayingSong subscription", throwable);
+                    });
         }
     }
 
-    public class WebSocketContent {
+    public abstract class WebSocketContent {
         private static final String TAG = "WebSocketContent";
         private final MusicInfoRepository musicInfoService = new MusicInfoRepository();
         // Cache for generated waveforms to avoid repeated heavy processing.
         private final LruCache<String, float[]> memoryCache;
         final int cacheSize = 10240; // Approx 10 MB based on average waveform size
+
+        protected static final Gson GSON = new GsonBuilder()
+                .disableHtmlEscaping() // Reduces string processing
+                .serializeNulls() // Optional: skip nulls to reduce JSON size
+                .create();
 
         /**
          * Constructs the WebSocket content handler.
@@ -301,7 +363,41 @@ public class BaseServer {
                     return (waveform.length * 4) / 1024;
                 }
             };
+
+            registerPlaybackCallback(new PlaybackCallback() {
+                @Override
+                public void onMediaTrackChanged(MediaTrack track) {
+                    Map<String, Object> response = getNowPlaying(track);
+                    if (response != null) {
+                        String jsonResponse = GSON.toJson(response);
+                        broadcastMessage(jsonResponse);
+
+                        Log.d(TAG, "broadcastNowPlaying: "+jsonResponse);
+                    }
+                }
+
+                @Override
+                public void onPlaybackStateChanged(PlaybackState state) {
+                    Map<String, Object> response = getPlaybackState(state);
+                    if (response != null) {
+                        String jsonResponse = GSON.toJson(response);
+                        broadcastMessage(jsonResponse);
+                    }
+                }
+
+                @Override
+                public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
+                    Map<String, Object> response = getPlaybackTarget(playbackTarget);
+                    if (response != null) {
+                        String jsonResponse = GSON.toJson(response);
+                        broadcastMessage(jsonResponse);
+                        Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
+                    }
+                }
+            });
         }
+
+        protected abstract void broadcastMessage(String jsonResponse);
 
         /**
          * The main entry point for processing commands received from the WebSocket client.
@@ -1155,6 +1251,17 @@ public class BaseServer {
          */
         private Map<String, Object> createErrorResponse(String message) {
             return Map.of("type", "error", "message", message);
+        }
+
+        public List<Map<String, Object>> getWelcomeMessages() {
+            Log.d(TAG, TAG+" - Connected Messages:");
+            List<Map<String, Object>> messages = new ArrayList<>();
+            messages.add(getLibraryStats());
+            messages.add(getAvailableRenderers());
+            messages.add(sendNowPlaying());
+            messages.add(sendQueueUpdate());
+
+            return messages;
         }
     }
 }

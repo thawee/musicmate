@@ -127,7 +127,6 @@
         <item>Classical</item>
         <item>Classical, Concertos</item>
         <item>Instrument</item>
-        <item>Instrument, Vocal</item>
         <item>Jazz</item>
         <item>Jazz, Ballads</item>
         <item>Jazz, Vocal</item>
@@ -157,13 +156,12 @@
         <item>Thai, Alternative</item>
         <item>Thai, Acoustic</item>
         <item>Thai, Instrument</item>
-        <item>Thai, Instrument Vocal</item>
-        <item>Thai, Classical</item>
+        <item>Thai, Traditional</item>
         <item>Thai, EDM</item>
         <item>Thai, Hip-Hop</item>
         <item>Thai, Indie</item>
         <item>Thai, Pop</item>
-        <item>Thai, Pop Vocal</item>
+        <item>Thai, Vocal</item>
         <item>Thai, Rock</item>
         <item>Thai, Jazz</item>
 
@@ -175,6 +173,13 @@
         <item>Phuea Chiwit</item>
 
         <item>Indonesia</item>
+
+        <item>Chinese, Instrument</item>
+        <item>Chinese, Pop</item>
+        <item>Chinese, Traditional</item>
+        <item>Chinese, Vocal</item>
+
+        <item>Traditional</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Lounge</item>
@@ -197,5 +202,11 @@
         <item>Favorite</item>
         <item>Bad</item>
         <item>Not Rated</item>
+    </string-array>
+    <string-array name="output_formats" >
+        <item>Uncompressed PCM, 16/24-bit, .aiff</item>
+        <item>Lossless, Standard Compression, .flac</item>
+        <item>Lossless, Uncompressed, .flac</item>
+        <item>MPEG-1 Layer III, 320kbps, .mp3</item>
     </string-array>
 </resources>

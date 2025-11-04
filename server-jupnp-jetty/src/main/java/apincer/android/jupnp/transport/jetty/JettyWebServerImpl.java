@@ -42,24 +42,21 @@ import java.io.File;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.playback.PlaybackState;
-import apincer.music.core.playback.spi.MediaTrack;
-import apincer.music.core.playback.spi.PlaybackCallback;
-import apincer.music.core.playback.spi.PlaybackTarget;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
 import apincer.music.core.server.BaseServer;
-import apincer.music.core.server.spi.ContentServer;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.utils.MimeTypeUtils;
 import apincer.music.core.utils.TagUtils;
 
-public class JettyContentServerImpl extends BaseServer implements ContentServer {
-    private static final String TAG = "JettyContentServer";
+public class JettyWebServerImpl extends BaseServer implements WebServer {
+    private static final String TAG = "JettyWebServer";
 
     // Optimized server configuration for audiophile streaming
     //private static final int OUTPUT_BUFFER_SIZE = 262144; // 262144 - 256KB for better high-res streaming
@@ -79,7 +76,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     private Thread serverThread;
     private Server server;
 
-    public JettyContentServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+    public JettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
         addLibInfo("Jetty", "12.1.2");
     }
@@ -112,13 +109,13 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
               //  httpConfig.setSendXPoweredBy(true);
                 httpConfig.setRequestHeaderSize(REQUEST_HEADER_SIZE);
                 httpConfig.setResponseHeaderSize(RESPONSE_HEADER_SIZE);
-                httpConfig.setSecurePort(CONTENT_SERVER_PORT);
+                httpConfig.setSecurePort(WEB_SERVER_PORT);
                 httpConfig.setSecureScheme("http");
 
                 // HTTP connector with optimized settings for stable streaming
                 ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory(httpConfig));
                 connector.setHost("0.0.0.0"); // Bind only to IPv4
-                connector.setPort(CONTENT_SERVER_PORT);
+                connector.setPort(WEB_SERVER_PORT);
                 connector.setIdleTimeout(CONNECTION_TIMEOUT);
                 connector.setAcceptQueueSize(ACCEPT_QUEUE_SIZE);
                 connector.setReuseAddress(true); // Better address reuse for quick restarts
@@ -174,11 +171,11 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 server.setStopTimeout(5000);
                 server.start();
 
-                Log.i(TAG, "Content Server started on " + bindAddress.getHostAddress() + ":" + CONTENT_SERVER_PORT +" successfully.");
+                Log.i(TAG, "WebServer started on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT +" successfully.");
 
                 server.join(); // Keep the thread alive until the server is stopped.
             } catch (Exception e) {
-                Log.e(TAG, "Failed to start Content Server", e);
+                Log.e(TAG, "Failed to start WebServer", e);
                // throw new RuntimeException(e);
             }
         });
@@ -189,14 +186,14 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
     public void stopServer() {
         // Stop the server.
-        Log.i(TAG, "Stopping Content Server (Jetty)");
+        Log.i(TAG, "Stopping WebServer (Jetty)");
 
         try {
             if (server != null && server.isRunning()) {
                 server.stop();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error stopping Content Server", e);
+            Log.e(TAG, "Error stopping WebServer", e);
            // throw new RuntimeException(e);
         }
         // Add thread cleanup
@@ -217,7 +214,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
     @Override
     public int getListenPort() {
-        return CONTENT_SERVER_PORT;
+        return WEB_SERVER_PORT;
     }
 
     private class WebContentHandler extends ResourceHandler {
@@ -248,15 +245,12 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
 
             if (requestUri.startsWith(CONTEXT_PATH_COVERART)) {
                 // Log.d(TAG, "Processing album art request: " + uri);
-                //File filePath = getAlbumArt(request, requestUri);
                 File filePath = getAlbumArt(requestUri);
                 return sendResource(filePath, request, response, callback);
             } else if (requestUri.startsWith(CONTEXT_PATH_MUSIC)) {
-               // MusicTag song = getSong(request, requestUri);
                 MusicTag song = getSong(requestUri);
                 return sendSong(song, request, response, callback);
             }else {
-               // File filePath = getWebResource(request, requestUri);
                 File filePath = getWebResource(requestUri);
                 return sendResource(filePath, request, response, callback);
             }
@@ -303,39 +297,6 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             return true;
         }
 
-        /*
-        private File getWebResource(Request request, String requestUri) {
-            File filePath = new File(getContext().getFilesDir(), "webui");
-            if(requestUri.contains("?")) {
-                requestUri = requestUri.substring(0, requestUri.indexOf("?"));
-            }
-            return new File(filePath, requestUri);
-        }
-
-        private File getAlbumArt(Request request, String requestUri) {
-            String albumUniqueKey = requestUri.substring(CONTEXT_PATH_COVERART.length(), requestUri.indexOf(".png"));
-            return getFileRepos().getCoverArt(albumUniqueKey);
-        }
-
-        private MusicTag getSong(Request request, String uri) {
-            if (uri == null || !uri.startsWith(CONTEXT_PATH_MUSIC)) {
-                return null;
-            }
-            try {
-                // IMPROVEMENT: More robust URI parsing to prevent exceptions.
-                String pathPart = uri.substring(CONTEXT_PATH_MUSIC.length()); // Everything after "/res/"
-                String[] parts = pathPart.split("/");
-                if (parts.length > 0 && !parts[0].isEmpty()) {
-                    long contentId = StringUtils.toLong(parts[0]);
-                    return getTagRepos().findById(contentId);
-                }
-            } catch (Exception ex) {
-                Log.e(TAG, "Failed to parse content ID from URI: " + uri, ex);
-            }
-            return null;
-        }
-         */
-
         private void prepareResponseHeaders(Response response, File filePath) {
             String mimeType = MimeTypeUtils.getMimeTypeFromPath(filePath.getAbsolutePath());
             if (mimeType != null) {
@@ -374,7 +335,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
     }
 
     @WebSocket
-    public class WebSocketHandler {
+    public class WebSocketHandler extends WebSocketContent{
         // Store all active sessions
         private static final CopyOnWriteArraySet<Session> sessions = new CopyOnWriteArraySet<>();
         private static final int MAX_SESSIONS = 100;
@@ -382,10 +343,11 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 .disableHtmlEscaping() // Reduces string processing
                 .serializeNulls() // Optional: skip nulls to reduce JSON size
                 .create();
-        private final WebSocketContent wsContent = buildWebSocketContent();
+       // private final WebSocketContent wsContent = buildWebSocketContent();
 
         public WebSocketHandler() {
-            registerPlaybackCallback(new PlaybackCallback() {
+            super();
+           /* registerPlaybackCallback(new PlaybackCallback() {
                 @Override
                 public void onMediaTrackChanged(MediaTrack metadata) {
                   //  broadcastNowPlaying(metadata);
@@ -400,8 +362,24 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 public void onPlaybackTargetChanged(PlaybackTarget playbackTarget) {
                    // broadcastPlaybackTarget(playbackTarget);
                 }
-            });
+            }); */
             //subscribePlaybackState(playbackState -> broadcastPlaybackState(playbackState));
+        }
+
+        @Override
+        protected void broadcastMessage(String jsonResponse) {
+            // logger.debug("Broadcasting message to {} sessions: {}", sessions.size(), message);
+
+            sessions.parallelStream()
+                    .filter(Session::isOpen)
+                    .forEach(session -> {
+                        try {
+                            session.sendText(jsonResponse, null);
+                        } catch (Exception e) {
+                            // Remove dead session
+                            sessions.remove(session);
+                        }
+                    });
         }
 
         @OnWebSocketOpen
@@ -413,15 +391,10 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                 return;
             }
             sessions.add(session);
-            sendConnectedMessages(session);
-        }
-
-        private void sendConnectedMessages(Session session) {
-            Log.d(TAG, TAG+" - Connected Messages:");
-            sendMessage(session, wsContent.getLibraryStats());
-            sendMessage(session, wsContent.getAvailableRenderers());
-            sendMessage(session, wsContent.sendNowPlaying());
-            sendMessage(session, wsContent.sendQueueUpdate());
+            List<Map<String, Object>> messages = getWelcomeMessages();
+            for (Map<String, Object> message : messages) {
+                sendMessage(session, message);
+            }
         }
 
         private void sendMessage(Session session, Map<String, Object> response) {
@@ -470,7 +443,7 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
                     return;
                 }
 
-                Map<String, Object> response = wsContent.handleCommand(command, messageMap);
+                Map<String, Object> response = handleCommand(command, messageMap);
                 if(response != null) {
                     session.sendText(GSON.toJson(response), null);
                     Log.d(TAG, "Response message: " + GSON.toJson(response));
@@ -498,36 +471,9 @@ public class JettyContentServerImpl extends BaseServer implements ContentServer 
             Log.e(TAG, "WebSocket error on session " + session.getRemoteSocketAddress(), error);
         }
 
-        /**
-         * Broadcast message to all connected clients
-         * @param message Message to broadcast
-         */
-        private void broadcast(String message) {
-            // logger.debug("Broadcasting message to {} sessions: {}", sessions.size(), message);
-
-            sessions.parallelStream()
-                    .filter(Session::isOpen)
-                    .forEach(session -> {
-                        try {
-                            session.sendText(message, null);
-                        } catch (Exception e) {
-                            // Remove dead session
-                            sessions.remove(session);
-                        }
-                    });
-        }
-
-        public void broadcastPlaybackState(PlaybackState state) {
-            Map<String, Object> response = wsContent.getPlaybackState(state);
-            if (response != null) {
-                String jsonResponse = GSON.toJson(response);
-                broadcast(jsonResponse);
-            }
-        }
-
         // Shutdown cleanup executor when server stops
         public void shutdown() {
-            sessions.forEach(session -> session.close());
+            sessions.forEach(Session::close);
             sessions.clear();
         }
     }

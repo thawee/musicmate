@@ -5,129 +5,167 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/shape_round_actionview_black">
+    android:background="@drawable/bg_dialog_dark_blur"
+    android:elevation="8dp"
+    android:clipToOutline="true"
+    android:outlineProvider="background"
+    android:layout_margin="12dp"
+    tools:ignore="UseCompoundDrawables">
+
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/dialog_header_background"
-        android:padding="@dimen/dimen_12_dp">
+        android:background="@drawable/bg_dialog_header_gradient"
+        android:padding="@dimen/dimen_14_dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/rounded_transform_24"
+            android:layout_marginEnd="8dp"
+            app:tint="@color/white" />
+
         <TextView
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/about_encoding_file"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:drawablePadding="@dimen/dimen_4_dp"
-            app:drawableStartCompat="@drawable/rounded_transform_24"/>
+            android:shadowColor="#88000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4" />
     </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/dimen_12_dp">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/dimen_4_dp"
-        android:layout_margin="@dimen/dimen_2_dp"
-        android:background="@drawable/border_back_label">
 
+    <!-- Content Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/dimen_14_dp">
+
+        <!-- Output Format Section -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:orientation="horizontal"
-            android:layout_weight="1">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/dimen_6_dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/border_back_label">
 
-            <com.skydoves.powerspinner.PowerSpinnerView
-                android:id="@+id/audioEncoding"
+            <com.google.android.material.textfield.TextInputLayout
+                android:hint="@string/output_format"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/black_transparent_64"
-                android:gravity="center"
-                android:hint="@string/label_encodings"
-                android:padding="10dp"
-                android:textColor="@color/white"
-                android:textColorHint="@color/white"
-                android:textSize="14.5sp"
-                app:spinner_arrow_gravity="end"
-                app:spinner_arrow_padding="8dp"
-                app:spinner_divider_color="@color/white"
-                app:spinner_divider_show="true"
-                app:spinner_divider_size="0.4dp"
-                app:spinner_item_height="46dp"
-                app:spinner_popup_animation="dropdown"
-                app:spinner_popup_background="@color/black_transparent_64"
-                app:spinner_popup_elevation="14dp"
-                tools:ignore="TouchTargetSizeCheck" />
+                android:layout_marginTop="8dp"
+                app:boxBackgroundColor="@color/black_transparent_64"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="@color/teal_200"
+                app:hintTextColor="@color/white"
+                app:endIconTint="@color/white">
 
+                <AutoCompleteTextView
+                    android:id="@+id/output_format"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:popupBackground="@drawable/bg_spinner_popup_dark"
+                    android:dropDownVerticalOffset="8dp"
+                    android:dropDownWidth="match_parent" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Progress Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/progressLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/conversion_progress"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginBottom="2dp"
+                    android:visibility="gone" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dimen_8_dp"
+                    android:layout_marginHorizontal="24dp"
+                    android:indeterminate="false"
+                    android:progress="0"
+                    android:max="100"
+                    android:progressTint="@color/teal_200"
+                    android:visibility="gone" />
+            </LinearLayout>
         </LinearLayout>
 
-        <RelativeLayout
+        <!-- File List Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/files_to_convert"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <ListView
+            android:id="@+id/itemListView"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dimen_24_dp"
-            android:layout_marginTop="@dimen/dimen_2_dp"
+            android:layout_height="240dp"
+            android:divider="@color/material_blue_grey_800"
+            android:dividerHeight="1dp"
+            android:scrollbars="vertical"
+            android:background="@color/black_transparent_64" />
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="@drawable/shape_round_format_black">
+            android:gravity="end"
+            android:layout_marginTop="@dimen/dimen_24_dp">
 
-            <ProgressBar
-                android:id="@+id/progressBar"
-                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/dimen_8_dp"
-                android:layout_marginLeft="24dp"
-                android:layout_marginTop="@dimen/dimen_8_dp"
-                android:layout_marginRight="24dp" />
-        </RelativeLayout>
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_cancel"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/close"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                app:strokeColor="@color/teal_200" />
 
-    <ListView
-        android:id="@+id/itemListView"
-        android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
-        android:layout_marginRight="@dimen/dimen_4_dp"
-        android:divider="@color/material_blue_grey_800"
-        android:scrollbars="vertical"
-        android:dividerHeight="1dp"
-        android:background="@color/grey900">
-    </ListView>
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="match_parent" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="@dimen/dimen_24_dp"
-        android:gravity="end">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_cancel"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="@string/close"/>
-
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?attr/colorOutline" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_encode_file"
-            style="@style/Widget.Material3.Button"
-            android:layout_marginStart="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Encode File"/>
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_encode_file"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/convert"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/teal_200"
+                android:textColor="@color/black" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

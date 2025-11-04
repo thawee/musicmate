@@ -802,9 +802,6 @@
       "songs": [
         {
           "genre": "Luk Thung"
-        },
-        {
-          "genre": "Thai, Luk Thung"
         }
       ]
     },
@@ -840,9 +837,6 @@
       "songs": [
         {
           "genre": "Mor Lum"
-        },
-        {
-          "genre": "Thai, Mor Lum"
         }
       ]
     },
@@ -859,6 +853,15 @@
         },
         {
           "genre": "Instrument"
+        },
+        {
+          "genre": "Thai, Traditional"
+        },
+        {
+          "genre": "Chines, Traditional"
+        },
+        {
+          "genre": "Traditional"
         }
       ]
     },
@@ -901,7 +904,13 @@
           "genre": "Thai, Jazz"
         },
         {
+          "genre": "Thai, Vocal"
+        },
+        {
           "genre": "Test"
+        },
+        {
+          "genre": "Chinese, Vocal"
         }
       ]
     },

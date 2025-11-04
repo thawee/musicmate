@@ -104,5 +104,7 @@
     <dimen name="dimen_34_dp">34dp</dimen>
     <dimen name="dimen_54_dp">54dp</dimen>
     <dimen name="dimen_164_dp">164dp</dimen>
-    <dimen name="dimen_80_dp">80dp</dimen> <!-- Match your shapeAppearance -->
+    <dimen name="dimen_80_dp">80dp</dimen>
+    <dimen name="dimen_84_dp">84dp</dimen>
+    <dimen name="editor_bottom_bar_height">64dp</dimen> <!-- Match your shapeAppearance -->
 </resources>

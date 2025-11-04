@@ -1,26 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/shape_round_actionview_black">
+    android:background="@drawable/bg_dialog_dark_blur"
+    android:elevation="8dp"
+    android:clipToOutline="true"
+    android:outlineProvider="background"
+    android:layout_margin="12dp"
+    tools:ignore="UseCompoundDrawables">
+
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/dialog_header_background"
-        android:padding="@dimen/dimen_12_dp">
+        android:background="@drawable/bg_dialog_header_gradient"
+        android:padding="@dimen/dimen_14_dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/rounded_directory_sync_24"
+            android:layout_marginEnd="8dp"
+            app:tint="@color/white" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/update_library"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:drawablePadding="@dimen/dimen_4_dp"
-            app:drawableStartCompat="@drawable/rounded_directory_sync_24" />
+            android:textStyle="bold"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,6 +53,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/dimen_8_dp"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:text="Add..."
             android:gravity="end"
             android:layout_gravity="end"
@@ -79,7 +94,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_fetch_songs_info"
-            style="@style/Widget.Material3.Button"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/fetch_songs_info"/>
@@ -95,7 +110,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_ok"
-            style="@style/Widget.Material3.Button"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/scan"/>

@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:minHeight="@dimen/app_bar_height"
         android:fitsSystemWindows="true"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
@@ -276,16 +276,13 @@
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_gravity="bottom"
-            android:background="@color/bgColor"
-            app:tabIndicatorColor="@android:color/white"
-            app:tabSelectedTextColor="@color/white"
-            app:tabTextColor="@color/grey400"
-            app:layout_collapseMode="pin"
-            app:tabGravity="fill"
-            app:tabMode="fixed"
-            android:contentDescription="@string/editor_musicmate_info"/>
+            android:layout_height="wrap_content"
+            app:tabBackground="?attr/colorOnPrimary"
+            app:tabIndicatorColor="?attr/colorPrimary"
+            app:tabTextAppearance="@style/TextAppearance.Material3.TitleMedium"
+            app:tabRippleColor="?attr/colorSurfaceVariant"
+            app:tabTextColor="?attr/colorOnSurfaceVariant"
+            app:tabSelectedTextColor="?attr/colorPrimary"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -295,14 +292,4 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottom_app_bar"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dimen_56_dp"
-        android:layout_gravity="bottom"
-        android:layout_margin="16dp"
-        style="@style/Widget.Material3.BottomAppBar"
-        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.RoundBottomAppBar"
-        app:menu="@menu/menu_tag_editor"
-        app:contentInsetLeft="@dimen/dimen_128_dp"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

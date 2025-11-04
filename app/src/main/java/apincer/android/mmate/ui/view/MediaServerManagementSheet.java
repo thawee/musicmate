@@ -61,7 +61,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.bottom_sheet_dln_server_management, container, false);
+        View view = inflater.inflate(R.layout.view_action_server_management_bottom_sheet, container, false);
         tvServerName = view.findViewById(R.id.server_name);
         tvServerStatus = view.findViewById(R.id.server_status);
         tvServerAddress = view.findViewById(R.id.server_address);
@@ -76,6 +76,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
 
         tvServerName.setText(Constants.getPresentationName());
         observeServerStatus();
+        detectWebEngine();
         return view;
     }
 

@@ -18,8 +18,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+
+import com.google.android.material.button.MaterialButtonToggleGroup;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -45,6 +46,8 @@ public class TagsTechnicalFragment extends Fragment {
     protected TagsActivity tagsActivity;
     private AlertDialog progressDialog;
 
+    private MaterialButtonToggleGroup toggleGroup;
+
     @Inject
     TagRepository tagRepos;
     @Inject
@@ -59,24 +62,33 @@ public class TagsTechnicalFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_ffmpeg, container, false);
+        View v =  inflater.inflate(R.layout.fragment_editor_tech, container, false);
+
+        toggleGroup = v.findViewById(R.id.actionGroup);
+       // MaterialButton buttonReadTag = v.findViewById(R.id.btn_reload_tag);
+       // MaterialButton buttonExtractCoverart = v.findViewById(R.id.btn_extract_coverart);
+       // MaterialButton buttonRemoveCoverart = v.findViewById(R.id.btn_remove_coverart);
+
+        setupActions();
+
+        return v;
     }
 
-    public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
-        return item -> {
-            if(item.getItemId() == R.id.menu_editor_tech_refresh) {
-               // doReloadTagFromFile();
+    private void setupActions() {
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return; // avoid double-trigger on uncheck
+
+            if (checkedId == R.id.btn_reload_tag) {
                 doResetTagFromFile();
-                //getActivity().finish();
-            }else if(item.getItemId() == R.id.menu_editor_tech_extract_coverart) {
+            } else if (checkedId == R.id.btn_extract_coverart) {
                 doExtractEmbedCoverart();
-            }if(item.getItemId() == R.id.menu_editor_tech_remove_coverart) {
+            } else if (checkedId == R.id.btn_remove_coverart) {
                 doRemoveEmbedCoverart();
-           // }if(item.getItemId() == R.id.menu_editor_tech_replaygain) {
-           //     doUpdateReplayGain();
             }
-            return false;
-        };
+
+            // Deselect after action (to act like toolbar buttons)
+            group.clearChecked();
+        });
     }
 
     @Override

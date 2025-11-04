@@ -31,11 +31,18 @@ public interface PlaybackService {
 
     void onPlaybackStateElapsedTime(long elapsedTimeMS);
 
-    void subscribePlaybackState(Consumer<PlaybackState> consumer);
+    void subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer);
 
-    void subscribeNowPlayingSong(Consumer<Optional<MediaTrack>> consumer);
+   // void subscribeNowPlayingSong(Consumer<Optional<MediaTrack>> consumer);
 
-    void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer);
+    void subscribeNowPlayingSong(
+            Consumer<Optional<MediaTrack>> onNextConsumer,
+            Consumer<Throwable> onErrorConsumer
+    );
+
+    void subscribePlaybackTarget(
+            Consumer<Optional<PlaybackTarget>> consumer,
+            Consumer<Throwable> onErrorConsumer);
 
     void play(MediaTrack song);
 

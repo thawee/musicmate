@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/activity_horizontal_margin"
+    android:clipToPadding="false"
+    android:paddingBottom="?attr/actionBarSize"
+    android:orientation="vertical">
+
+    <!-- File name -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/filename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_4_dp"
+        android:layout_gravity="center"
+        android:textStyle="italic"
+        android:textSize="12sp"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <!-- Action buttons group -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/actionGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_8_dp"
+        android:background="?attr/colorSurface"
+        android:gravity="center"
+        app:singleSelection="false"
+        app:selectionRequired="false">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_reload_tag"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Reload"
+            android:icon="@drawable/round_restore_page_24"
+            app:iconGravity="textStart"
+            android:insetBottom="4dp"
+            android:insetTop="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_extract_coverart"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Extract Cover"
+            android:icon="@drawable/ic_round_image_24"
+            app:iconGravity="textStart"
+            android:insetBottom="4dp"
+            android:insetTop="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_remove_coverart"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Remove Cover"
+            android:icon="@drawable/ic_round_hide_image_24"
+            app:iconGravity="textStart"
+            android:insetBottom="4dp"
+            android:insetTop="4dp" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <!-- Main scroll content -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingBottom="?attr/actionBarSize">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="@dimen/dimen_4_dp">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:textSize="16sp"
+                android:text="Music Tags:"
+                android:textColor="?attr/colorOnSurface" />
+
+            <HorizontalScrollView
+                android:id="@+id/horizontalView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:scrollbars="horizontal|vertical"
+                android:scrollbarStyle="outsideInset"
+                android:fillViewport="true">
+
+                <TableLayout
+                    android:id="@+id/tags"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:isScrollContainer="true" />
+            </HorizontalScrollView>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_12_dp"
+                android:textSize="16sp"
+                android:text="FFMPEG Output:"
+                android:textColor="?attr/colorOnSurface" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_8_dp"
+                app:cardElevation="1dp"
+                app:cardCornerRadius="12dp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/ffmpeg_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/dimen_8_dp"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

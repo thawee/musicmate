@@ -1,6 +1,5 @@
 package apincer.android.mmate.ui;
 
-import static com.google.android.material.internal.ViewUtils.hideKeyboard;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.content.Context;
@@ -12,21 +11,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -65,16 +62,19 @@ public class TagsEditorFragment extends Fragment {
     private TextView previewPath;
     private ImageView previewCoverart;
     private TextInputEditText txtTitle;
-    private AutoCompleteTextView txtArtist;
+    private TextInputEditText txtArtist;
     private TextInputEditText txtAlbum;
     private AutoCompleteTextView txtAlbumArtist;
     private TextInputEditText txtTrack;
     private TextInputEditText txtYear;
     private AutoCompleteTextView txtGenre;
     //private AutoCompleteTextView txtGrouping;
-    private AutoCompleteTextView txtPublisher;
+    private TextInputEditText txtPublisher;
    // private FloatingActionButton fabSav;
     private AutoCompleteTextView qualityDropdown;
+
+    private NestedScrollView scrollView;
+    private MaterialButtonToggleGroup toggleGroup;
 
     @Inject
     TagRepository tagRepos;
@@ -90,7 +90,7 @@ public class TagsEditorFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_music_info_editor, container, false);
+        View v = inflater.inflate(R.layout.fragment_editor_tags, container, false);
         previewTitle = v.findViewById(R.id.preview_title);
         previewPath = v.findViewById(R.id.editor_pathname);
         previewCoverart = v.findViewById(R.id.preview_coverart);
@@ -106,25 +106,30 @@ public class TagsEditorFragment extends Fragment {
         txtPublisher = v.findViewById(R.id.input_publisher);
         qualityDropdown = v.findViewById(R.id.mediaQualityDropdown);
 
+        toggleGroup = v.findViewById(R.id.editor_action_group);
+
+       // MaterialButton buttonReformat = v.findViewById(R.id.action_reformat);
+       // MaterialButton buttonReadTag = v.findViewById(R.id.action_read_tag);
+       // MaterialButton buttonSave = v.findViewById(R.id.action_save);
+
+        setupActions();
+
         // --- FIX #1: Fix the NestedScrollView crash ---
         NestedScrollView myScrollView = v.findViewById(R.id.editor_scroll_view);
         myScrollView.setNestedScrollingEnabled(false);
 
         // --- FIX #2: Clear focus on scroll ---
-        myScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(@NonNull NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+        myScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (v1, scrollX, scrollY, oldScrollX, oldScrollY) -> {
 
-                // Check if the user is actively scrolling
-                if (scrollY != oldScrollY) {
-                    View currentFocus = requireActivity().getCurrentFocus();
-                    if (currentFocus != null) {
-                        // Clear focus from the EditText
-                        currentFocus.clearFocus();
+            // Check if the user is actively scrolling
+            if (scrollY != oldScrollY) {
+                View currentFocus = requireActivity().getCurrentFocus();
+                if (currentFocus != null) {
+                    // Clear focus from the EditText
+                    currentFocus.clearFocus();
 
-                        // Hide the keyboard
-                        hideKeyboard(currentFocus);
-                    }
+                    // Hide the keyboard
+                    //hideKeyboard(currentFocus);
                 }
             }
         });
@@ -132,25 +137,53 @@ public class TagsEditorFragment extends Fragment {
         // popup list
         String[] qualityList = getResources().getStringArray(R.array.file_qualities);
         setupListValuePopupFullList(qualityDropdown, Arrays.asList(qualityList));
-        setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
+       // setupListValuePopup(txtArtist, tagRepos.getArtistList(), 1);
         setupListValuePopup(txtAlbumArtist, TagRepository.getDefaultAlbumArtistList(getContext()),1);
         setupListValuePopup(txtGenre, TagRepository.getDefaultGenreList(getContext()),1);
        // setupListValuePopupFullList(txtGrouping, TagRepository.getDefaultGroupingList(getContext()));
-        setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),3);
+       // setupListValuePopup(txtPublisher, tagRepos.getDefaultPublisherList(getContext()),3);
 
         return v;
     }
 
+    private void setupActions() {
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return; // avoid double-trigger on uncheck
+
+            if (checkedId == R.id.action_reformat) {
+                doFormatTags();
+            } else if (checkedId == R.id.action_read_tag) {
+                doShowReadTagsPreview();
+            } else if (checkedId == R.id.action_save) {
+                doSaveMediaItem();
+            }
+
+            // Deselect after action (to act like toolbar buttons)
+            group.clearChecked();
+        });
+    }
+
     private void setupListValuePopup(AutoCompleteTextView input, List<String> dropdownList, int minChar) {
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, dropdownList);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), R.layout.item_dropdown_dark, dropdownList);
         input.setAdapter(arrayAdapter);
         input.setThreshold(minChar);
     }
 
     private void setupListValuePopupFullList(AutoCompleteTextView input, List<String> dropdownList) {
-        ArrayAdapter<String> arrayAdapter = new NoFilterArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, dropdownList);
+        ArrayAdapter<String> arrayAdapter = new NoFilterArrayAdapter<>(getContext(), R.layout.item_dropdown_dark, dropdownList);
         input.setAdapter(arrayAdapter);
         input.setThreshold(0);
+
+        // Disable keyboard input — dropdown only
+        input.setKeyListener(null);
+        input.setFocusable(false);
+        input.setClickable(true);
+
+        // Always open dropdown when clicked
+        input.setOnClickListener(v -> input.showDropDown());
+
+        // Optional: dark popup background
+        input.setDropDownBackgroundResource(R.color.black_transparent_64);
     }
 
     @Override
@@ -171,18 +204,6 @@ public class TagsEditorFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-    }
-
-    public Toolbar.OnMenuItemClickListener getOnMenuItemClickListener() {
-        return item -> {if (item.getItemId() == R.id.menu_editor_read_tag) {
-                doShowReadTagsPreview();
-            } else if (item.getItemId() == R.id.menu_editor_format_tag) {
-                doFormatTags();
-            }else if (item.getItemId() == R.id.menu_editor_save) {
-                doSaveMediaItem();
-            }
-            return false;
-        };
     }
 
     private void doShowReadTagsPreview() {
@@ -337,16 +358,13 @@ public class TagsEditorFragment extends Fragment {
         final AtomicInteger completedCount = new AtomicInteger(0);
 
         // lose focus all dropdown
-        //txtGrouping.clearFocus();
-       // txtGenre.clearFocus();
-       // qualityDropdown.clearFocus();
         View currentFocus = requireActivity().getCurrentFocus();
         if (currentFocus != null) {
             // Clear focus from the EditText
             currentFocus.clearFocus();
 
             // Hide the keyboard
-            hideKeyboard(currentFocus);
+            //hideKeyboard(currentFocus);
         }
 
         // Process tags in a thread pool more efficiently
@@ -481,9 +499,6 @@ public class TagsEditorFragment extends Fragment {
         txtTrack.setText(tag.getTrack());
         txtYear.setText(tag.getYear());
         txtGenre.setText(tag.getGenre());
-       // if(TagRepository.getDefaultGroupingList(getContext()).contains(tag.getGrouping())) {
-       //     txtGrouping.setText(tag.getGrouping());
-       // }
         txtPublisher.setText(tag.getPublisher());
 
         txtTitle.invalidate();
@@ -508,6 +523,7 @@ public class TagsEditorFragment extends Fragment {
         previewPath.setText(tag.getSimpleName());
     }
 
+    /*
     static class NoFilterArrayAdapter<T> extends ArrayAdapter<T> {
         private final List<T> items;
         private final Filter disabledFilter;
@@ -536,5 +552,5 @@ public class TagsEditorFragment extends Fragment {
         public Filter getFilter() {
             return disabledFilter;
         }
-    }
+    } */
 }

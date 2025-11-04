@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
@@ -10,8 +11,8 @@
         android:layout_height="wrap_content"
         android:minWidth="@dimen/dimen_12_dp"
         android:layout_gravity="center"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="@dimen/dimen_4_dp"
         android:padding="@dimen/activity_horizontal_margin"
         android:textColor="@color/white" />
 
@@ -20,21 +21,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/seq"
-        android:layout_toLeftOf="@+id/status"
+        android:layout_toStartOf="@+id/status"
         android:gravity="left"
+        android:maxLines="2"
         android:layout_gravity="center"
-        android:layout_marginLeft="@dimen/dimen_4_dp"
+        android:layout_marginStart="@dimen/dimen_4_dp"
         android:padding="@dimen/activity_horizontal_margin"
         android:ellipsize="start"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        tools:ignore="RtlHardcoded" />
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:minWidth="@dimen/dimen_24_dp"
         android:layout_gravity="center"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="@dimen/dimen_4_dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="@dimen/dimen_4_dp"
         android:padding="@dimen/activity_horizontal_margin"
         android:textColor="@color/white" />
 </RelativeLayout>

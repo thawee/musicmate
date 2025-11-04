@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Highlight color when pressed or selected -->
+    <item android:state_pressed="true" android:drawable="@color/teal_700" />
+    <item android:state_activated="true" android:drawable="@color/teal_700" />
+    <!-- Default transparent background -->
+    <item android:drawable="@android:color/transparent" />
+</selector>

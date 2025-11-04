@@ -10,7 +10,7 @@ import org.jupnp.transport.spi.StreamServerConfiguration;
 
 import java.net.InetAddress;
 
-import apincer.music.core.server.spi.ContentServer;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.server.spi.UpnpServer;
 
 public class StreamServerImpl implements StreamServer<StreamServerConfiguration> {
@@ -19,10 +19,10 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
 
     // Injected
     private final Context context;
-    private final ContentServer contentServer;
+    private final WebServer contentServer;
     private final UpnpServer upnpServer;
 
-    public StreamServerImpl(Context context, UpnpServer upnpServer, ContentServer contentServer, StreamServerConfiguration configuration) {
+    public StreamServerImpl(Context context, UpnpServer upnpServer, WebServer contentServer, StreamServerConfiguration configuration) {
         this.configuration = configuration;
         this.context = context;
         this.upnpServer = upnpServer;

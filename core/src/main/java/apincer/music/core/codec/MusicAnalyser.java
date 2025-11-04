@@ -88,20 +88,16 @@ public class MusicAnalyser {
 
                 dynamicRangeScore = calculateDRMeter(audioData);
 
-               // waveformData = generateWaveformFromAudio(audioData, waveformPoints);
-                //Log.i(TAG, tag.getPath());
-                //Log.i(TAG, "DR: " + getDynamicRange() + "dB, DRS: " + getDynamicRangeScore() + ", UpScaledScore: "+getUpScaledScore()+", ReSampledScore: "+getReSampledScore()+", MQA: " + isMQA() + ", MQA Studio: " + isMQAStudio() + ", OriginalSampleRate: " + getOriginalSampleRate());
-
-                // Only run GC if memory usage is high
-                runGcIfNeeded();
             } catch (IllegalArgumentException e) {
                 Log.w(TAG, "analyst: " + e.getMessage());
             } catch (OutOfMemoryError e) {
                 // Attempt to run garbage collection
                 Log.w(TAG, "analyst: OutOfMemoryError - " + e.getMessage());
-                runGcIfNeeded();
             } catch (Exception e) {
                 Log.e(TAG, "analyst", e);
+            }finally {
+                // Only run GC if memory usage is high
+                runGcIfNeeded();
             }
         tag.setDynamicRange(getDynamicRange());
         tag.setDynamicRangeScore(getDynamicRangeScore());

@@ -62,16 +62,13 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
     private static final String TAG = "NettyUPnpServer";
     private static final int SERVER_BACKLOG = 256;
-    //private static final int SOCKET_TIMEOUT_MS = 15000;
     private static final int WRITE_BUFFER_LOW = 8 * 1024;
     private static final int WRITE_BUFFER_HIGH = 24 * 1024;
-    //private static final int RECEIVE_BUFFER_SIZE = 1024;
-    //private static final int SEND_BUFFER_SIZE = 2048;
     private static final int MAX_HTTP_CONTENT_LENGTH = 5 * 1024 * 1024; // 5 MB
 
     // Initialize groups once and make them final
-    private final EventLoopGroup bossGroup;
-    private final EventLoopGroup workerGroup;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     private Thread serverThread;
     private Channel serverChannel;
@@ -83,15 +80,6 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
         super(context, fileRepos, tagRepos);
 
         addLibInfo("Netty", "4.2.6");
-
-        // Name threads for better debugging
-        ThreadFactory bossThreadFactory = new DefaultThreadFactory("upnp-boss");
-        ThreadFactory workerThreadFactory = new DefaultThreadFactory("upnp-worker");
-
-        int processorCount = Runtime.getRuntime().availableProcessors();
-
-        this.bossGroup = new MultiThreadIoEventLoopGroup(1, bossThreadFactory, NioIoHandler.newFactory());
-        this.workerGroup = new MultiThreadIoEventLoopGroup(Math.min(4,processorCount), workerThreadFactory, NioIoHandler.newFactory());
     }
 
     @Override
@@ -103,6 +91,15 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
         try {
             this.router = (Router) router;
+            // Name threads for better debugging
+            ThreadFactory bossThreadFactory = new DefaultThreadFactory("upnp-boss");
+            ThreadFactory workerThreadFactory = new DefaultThreadFactory("upnp-worker");
+
+            int processorCount = Runtime.getRuntime().availableProcessors();
+
+            this.bossGroup = new MultiThreadIoEventLoopGroup(1, bossThreadFactory, NioIoHandler.newFactory());
+            this.workerGroup = new MultiThreadIoEventLoopGroup(Math.min(4,processorCount), workerThreadFactory, NioIoHandler.newFactory());
+
             serverThread = new Thread(() -> {
                 try {
                     // Pooled buffers for better memory management
@@ -140,7 +137,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
                     serverChannel = f.channel();
                     isInitialized = true;
 
-                    Log.i(TAG, "UPnP Server started on "+bindAddress.getHostAddress()+":"+getListenPort()+" successfully.");
+                    Log.i(TAG, "UPnPServer started on "+bindAddress.getHostAddress()+":"+getListenPort()+" successfully.");
 
                 } catch (Exception ex) {
                     Log.e(TAG, "Failed to initialize server: " + ex.getMessage(), ex);
@@ -168,7 +165,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
             return; // Already stopped or not initialized
         }
 
-      //  Log.i(TAG, "Stopping Http UPNP Server");
+      //  Log.i(TAG, "Stopping UPnPServer");
         isInitialized = false;
 
         try {
@@ -198,7 +195,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
             }
         }
 
-        Log.i(TAG, "Http UPNP Server stopped successfully");
+        Log.i(TAG, "UPnPServer stopped successfully");
     }
 
     @Override

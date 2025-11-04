@@ -33,15 +33,12 @@ tasks.withType(JavaCompile).configureEach {
 
 dependencies {
     implementation project(':core')
-    //implementation project(':server-api')
     implementation project(':server-jupnp')
     implementation project(':library:library')
 
     implementation libs.androidx.annotation
     implementation libs.androidx.core
-
-    implementation libs.ormlite.android
-
+  
     implementation libs.jupnp.android
     implementation libs.jupnp.support
     implementation libs.netty.codec.http

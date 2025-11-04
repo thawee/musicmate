@@ -77,7 +77,7 @@ public class MediaServerManager {
             serviceStatusLiveData.observeForever(statusObserver);
 
             if(toStartServer) {
-                service.stopServers();
+                service.startServers();
                 toStartServer = false;
             }
         }
@@ -129,7 +129,7 @@ public class MediaServerManager {
     }
 
     public void startServer() {
-        Log.d(TAG, "Requesting to start MusicMateService");
+        //Log.d(TAG, "Requesting to start MusicMateService");
         if(isBound && service != null) {
             service.startServers();
         }else {

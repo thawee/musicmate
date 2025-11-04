@@ -47,6 +47,7 @@ import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.QueueItem;
 import apincer.music.core.playback.ExternalAndroidPlayer;
+import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.playback.spi.PlaybackService;
@@ -181,11 +182,32 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             String packageName = controller.getPackageName();
            // String sessionTag = controller.getTag();
             PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
-            getAvailablePlaybackTargets().add(player);
+            addPlaybackTarget(player);
         }
 
         // Streaming players will be added via registerStreamingPlayer()
         Log.d(TAG, "Updated available targets: " + getAvailablePlaybackTargets().size());
+    }
+
+    private void addPlaybackTarget(PlaybackTarget player) {
+        // 1. Safety check for the new player and its ID
+        if (player == null || player.getTargetId() == null) {
+            return;
+        }
+
+        String newTargetId = player.getTargetId();
+        List<PlaybackTarget> targets = getAvailablePlaybackTargets();
+
+        // 2. Check for an existing player with the same ID
+        for (PlaybackTarget existingPlayer : targets) {
+            if (existingPlayer != null && newTargetId.equals(existingPlayer.getTargetId())) {
+                // A player with this ID already exists, so don't add.
+                return;
+            }
+        }
+
+        // 3. If the loop completes, no match was found. Add the new player.
+        targets.add(player);
     }
 
     // ==================== Service Lifecycle ====================
@@ -210,8 +232,13 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
         getStatusLiveData().observeForever(status -> updateNotification(null, null));
 
-        // inital dmr player
-        getAvailablePlaybackTargets().addAll(mediaServer.getAvailablePlaybackTargets());
+        // initial dmr/local player player
+        //getAvailablePlaybackTargets().addAll(mediaServer.getAvailablePlaybackTargets());
+        // Iterate and add using the duplicate-checking method
+        List<PlaybackTarget> serverTargets = mediaServer.getAvailablePlaybackTargets();
+        for (PlaybackTarget player : serverTargets) {
+            addPlaybackTarget(player);
+        }
 
         // external player controller
         mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
@@ -1098,22 +1125,23 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         }
     }
 
-    @SuppressLint("CheckResult")
     @Override
-    public void subscribePlaybackState(Consumer<apincer.music.core.playback.PlaybackState> consumer) {
-        playbackStateSubject.subscribe(consumer);
+    public void subscribePlaybackState(Consumer<PlaybackState> consumer, Consumer<Throwable> onErrorConsumer) {
+        playbackStateSubject.subscribe(consumer, onErrorConsumer);
     }
 
-    @SuppressLint("CheckResult")
     @Override
-    public void subscribeNowPlayingSong(Consumer<Optional<MediaTrack>> consumer) {
-        currentTrackSubject.subscribe(consumer);
+    public void subscribeNowPlayingSong(
+            Consumer<Optional<MediaTrack>> onNextConsumer,
+            Consumer<Throwable> onErrorConsumer
+    ) {
+        // Use the subscribe overload that takes both
+        currentTrackSubject.subscribe(onNextConsumer, onErrorConsumer);
     }
 
-    @SuppressLint("CheckResult")
     @Override
-    public void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer) {
-        currentPlayerSubject.subscribe(consumer);
+    public void subscribePlaybackTarget(Consumer<Optional<PlaybackTarget>> consumer, Consumer<Throwable> onErrorConsumer) {
+        currentPlayerSubject.subscribe(consumer, onErrorConsumer);
     }
 
     @Override

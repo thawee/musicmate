@@ -273,7 +273,6 @@
     <string name="analyze_music">Analyze Music File</string>
     <string name="move_to_trash">Move to Trash</string>
     <string name="analyst">Analyst</string>
-    <string name="encode">Convert</string>
     <string name="notification_server_running">Server is active on your WiFi network</string>
     <string name="notification_server_not_running">Required WiFi network</string>
     <string name="update_library">Update Library</string>
@@ -283,5 +282,14 @@
     <string name="currently_playing">Current Player</string>
     <string name="more_options">More Options</string>
     <string name="fetch_songs_info">Get Infos</string>
+    <string name="album_art">album art</string>
+    <string name="output_format">Output Format</string>
+    <string name="conversion_progress">Conversion Progress</string>
+    <string name="files_to_convert">Files to Convert</string>
+    <string name="convert">Convert</string>
+    <string name="files">Files</string>
+    <string name="files_to_delete">Files to Delete</string>
+    <string name="files_to_analyze">Files to Analyze</string>
+    <string name="files_to_move">Files to Move</string>
 
 </resources>

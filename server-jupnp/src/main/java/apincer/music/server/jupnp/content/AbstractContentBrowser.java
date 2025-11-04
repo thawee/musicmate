@@ -1,6 +1,5 @@
 package apincer.music.server.jupnp.content;
 
-import static apincer.music.core.server.BaseServer.CONTENT_SERVER_PORT;
 import static apincer.music.core.server.BaseServer.CONTEXT_PATH_COVERART;
 import static apincer.music.core.server.BaseServer.CONTEXT_PATH_MUSIC;
 import static apincer.music.core.server.BaseServer.WEB_SERVER_PORT;
@@ -69,7 +68,7 @@ public abstract class AbstractContentBrowser {
     }
 
     public String getUriString(ContentDirectory contentDirectory, MusicTag tag) {
-        return "http://" + NetworkUtils.getIpAddress() + ":" +CONTENT_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
+        return "http://" + NetworkUtils.getIpAddress() + ":" +WEB_SERVER_PORT +  CONTEXT_PATH_MUSIC + tag.getId() + "/file." + tag.getFileType();
     }
 
     protected URI getAlbumArtUri(ContentDirectory contentDirectory, MusicTag tag) {

@@ -451,7 +451,7 @@ public class NioHttpServer implements Runnable {
                     return t;
                 }
         );
-        System.out.println("Worker pool started with " + coreCount + " threads.");
+        //System.out.println("Worker pool started with " + coreCount + " threads.");
 
         // The "supervisor" loop is now on the outside.
         while (isRunning) {
@@ -466,7 +466,7 @@ public class NioHttpServer implements Runnable {
                 serverSocketChannel.configureBlocking(false);
                 serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-                System.out.println("Multi-threaded NIO Server started on port: " + port);
+               // System.out.println("Multi-threaded NIO Server started on port: " + port);
                 lastTimeoutCheck = System.currentTimeMillis();
 
                 // This is the inner I/O processing loop.

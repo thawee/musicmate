@@ -9,8 +9,8 @@ import javax.inject.Singleton;
 
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
-import apincer.music.core.server.NioContentServerImpl;
-import apincer.music.core.server.spi.ContentServer;
+import apincer.music.core.server.NioWebServerImpl;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.server.spi.UpnpServer;
 import apincer.music.server.jupnp.MediaServerConfiguration;
@@ -28,7 +28,7 @@ import dagger.hilt.components.SingletonComponent;
 public class NioServerModule {
 
     @Provides
-    public UpnpServiceConfiguration provideUpnpServiceConfiguration(@ApplicationContext Context context, UpnpServer upnpServer, ContentServer contentServer) {
+    public UpnpServiceConfiguration provideUpnpServiceConfiguration(@ApplicationContext Context context, UpnpServer upnpServer, WebServer contentServer) {
         return new MediaServerConfiguration(context, upnpServer, contentServer);
     }
 
@@ -51,7 +51,7 @@ public class NioServerModule {
 
     @Provides
     @Singleton
-    public ContentServer provideContentServer(@ApplicationContext Context context,FileRepository fileRepos, TagRepository tagRepos) {
-        return new NioContentServerImpl(context, fileRepos, tagRepos);
+    public WebServer provideWebServer(@ApplicationContext Context context,FileRepository fileRepos, TagRepository tagRepos) {
+        return new NioWebServerImpl(context, fileRepos, tagRepos);
     }
 }

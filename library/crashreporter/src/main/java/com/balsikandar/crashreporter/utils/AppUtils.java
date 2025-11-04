@@ -3,6 +3,7 @@ package com.balsikandar.crashreporter.utils;
 import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -104,11 +105,11 @@ public class AppUtils {
 
     private static String getAndroidDeviceId(Context context) {
         final String INVALID_ANDROID_ID = "9774d56d682e549c";
-        final String androidId = android.provider.Settings.Secure.getString(
+        @SuppressLint("HardwareIds") final String androidId = android.provider.Settings.Secure.getString(
                 context.getContentResolver(),
                 android.provider.Settings.Secure.ANDROID_ID);
         if (androidId == null
-                || androidId.toLowerCase().equals(INVALID_ANDROID_ID)) {
+                || androidId.equalsIgnoreCase(INVALID_ANDROID_ID)) {
             return null;
         }
         return androidId;
