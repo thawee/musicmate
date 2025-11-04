@@ -1,8 +1,6 @@
 package apincer.android.mmate;
 
 import static apincer.android.mmate.service.MusicMateServiceImpl.CHANNEL_ID;
-import static apincer.music.core.Constants.COVER_ARTS;
-import static apincer.music.core.Constants.DEFAULT_COVERART;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -114,11 +112,9 @@ public class MusixMateApp extends Application {
     }
 
     private void initDefaultAssets() {
-       // String coverFile = COVER_ARTS +DEFAULT_COVERART;
         try {
             String assetDir = "Covers";
             ApplicationUtils.copyDirToAndroidCacheDir(getApplicationContext(), assetDir);
-           // ApplicationUtils.copyFileToAndroidCacheDir(this, DEFAULT_COVERART, coverFile);
         } catch (IOException e) {
             Log.e(TAG, "cannot prepare initial assets", e);
         }

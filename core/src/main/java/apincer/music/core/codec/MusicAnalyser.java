@@ -73,11 +73,11 @@ public class MusicAnalyser {
     }
 
     private void doAnalyst(MusicTag tag) {
-        int durationInSeconds = 30; //(int) tag.getAudioDuration()-10; // remove offset 10 seconds // 30;
+        int durationInSeconds = 30;
         this.sampleRate = (int) tag.getAudioSampleRate();
         this.bitsPerSample = tag.getAudioBitsDepth();
         this.channels = 2;
-            try {
+        try {
                 byte[] audioData = AudioDecoder.decodeAudio(tag, durationInSeconds);
 
                 if (TagUtils.isFLACFile(tag)) {
@@ -88,17 +88,17 @@ public class MusicAnalyser {
 
                 dynamicRangeScore = calculateDRMeter(audioData);
 
-            } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
                 Log.w(TAG, "analyst: " + e.getMessage());
-            } catch (OutOfMemoryError e) {
+        } catch (OutOfMemoryError e) {
                 // Attempt to run garbage collection
                 Log.w(TAG, "analyst: OutOfMemoryError - " + e.getMessage());
-            } catch (Exception e) {
+        } catch (Exception e) {
                 Log.e(TAG, "analyst", e);
-            }finally {
+        }finally {
                 // Only run GC if memory usage is high
                 runGcIfNeeded();
-            }
+        }
         tag.setDynamicRange(getDynamicRange());
         tag.setDynamicRangeScore(getDynamicRangeScore());
 
@@ -280,7 +280,7 @@ public class MusicAnalyser {
     }
 
     public static double calculateDynamicRange(byte[] audioData, int bitDepth) {
-        if (bitDepth != 16 && bitDepth != 24) {
+        /*if (bitDepth != 16 && bitDepth != 24) {
             throw new IllegalArgumentException("Unsupported bit depth. Only 16-bit and 24-bit are supported.");
         }
 
@@ -301,6 +301,55 @@ public class MusicAnalyser {
                 if (samples[i] > 0x7FFFFF) {
                     samples[i] -= 0x1000000; // Convert to signed 24-bit
                 }
+            }
+        } */
+
+        // 1. Updated validation to include 32-bit
+        if (bitDepth != 16 && bitDepth != 24 && bitDepth != 32) {
+            throw new IllegalArgumentException("Unsupported bit depth. Only 16, 24, and 32-bit are supported.");
+        }
+
+        // 2. A more robust way to calculate bytesPerSample and sampleCount
+        int bytesPerSample;
+        if (bitDepth == 16) {
+            bytesPerSample = 2;
+        } else if (bitDepth == 24) {
+            bytesPerSample = 3;
+        } else { // bitDepth == 32
+            bytesPerSample = 4;
+        }
+        int sampleCount = audioData.length / bytesPerSample;
+
+        // Your original array creation
+        double[] samples = new double[sampleCount];
+
+        // 3. Updated conversion loop
+        for (int i = 0; i < sampleCount; i++) {
+            if (bitDepth == 16) {
+                int low = audioData[2 * i] & 0xFF;
+                int high = audioData[2 * i + 1] & 0xFF;
+                // Correctly sign-extends from 16-bit short, then widens to double
+                samples[i] = (short) ((high << 8) | low);
+
+            } else if (bitDepth == 24) { // <-- Changed from 'else'
+                int low = audioData[3 * i] & 0xFF;
+                int mid = audioData[3 * i + 1] & 0xFF;
+                int high = audioData[3 * i + 2] & 0xFF;
+
+                int sample = (high << 16) | (mid << 8) | low;
+                if (sample > 0x7FFFFF) { // Manually sign-extend 24-bit value
+                    sample -= 0x1000000;
+                }
+                samples[i] = sample; // Store 24-bit int value in double
+
+            } else { // This case must be 32-bit
+                int b0 = audioData[4 * i] & 0xFF;     // low byte
+                int b1 = audioData[4 * i + 1] & 0xFF;
+                int b2 = audioData[4 * i + 2] & 0xFF;
+                int b3 = audioData[4 * i + 3] & 0xFF; // high byte
+
+                // Combine directly into a 32-bit signed int, which is stored in the double
+                samples[i] = (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
             }
         }
 

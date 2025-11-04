@@ -55,7 +55,7 @@ public class TagsViewModel extends ViewModel {
         rebuildDisplayTag(singleItemList);
     }
 
-    private void rebuildDisplayTag(List<MusicTag> currentItems) {
+    public void rebuildDisplayTag(List<MusicTag> currentItems) {
         if (currentItems == null || currentItems.isEmpty()) {
             _displayTag.postValue(null);
             return;

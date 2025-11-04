@@ -342,7 +342,9 @@ public class TagsEditorFragment extends Fragment {
                 if(!file.exists()) continue;
                 parser.parse(item, list);
             }
-            tagsActivity.refreshDisplayTag();
+            // display only
+            //tagsActivity.refreshDisplayTag();
+            tagsActivity.rebuildDisplayTag(items);
             alert.dismiss();
         });
         btnCancel.setOnClickListener(v -> alert.dismiss());

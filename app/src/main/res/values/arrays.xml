@@ -172,14 +172,11 @@
         <item>Mor Lum</item>
         <item>Phuea Chiwit</item>
 
-        <item>Indonesia</item>
-
         <item>Chinese, Instrument</item>
         <item>Chinese, Pop</item>
         <item>Chinese, Traditional</item>
         <item>Chinese, Vocal</item>
-
-        <item>Traditional</item>
+        <item>Asian, Traditional</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Lounge</item>

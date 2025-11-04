@@ -619,6 +619,10 @@ public class TagsActivity extends AppCompatActivity {
         viewModel.refreshDisplayTag();
     }
 
+    public void rebuildDisplayTag(List<MusicTag> items) {
+        viewModel.rebuildDisplayTag(items);
+    }
+
     private class BackPressedCallback extends OnBackPressedCallback {
         public BackPressedCallback(boolean enabled) {
             super(enabled);
