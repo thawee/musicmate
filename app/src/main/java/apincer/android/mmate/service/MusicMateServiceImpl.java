@@ -1,16 +1,14 @@
 package apincer.android.mmate.service;
 
+import static apincer.android.mmate.service.MediaNotificationBuilder.updateNotification;
+
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.net.ConnectivityManager;
@@ -32,7 +30,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +37,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.inject.Inject;
 
-import apincer.android.mmate.R;
-import apincer.android.mmate.coil3.CoverartFetcher;
-import apincer.android.mmate.ui.MainActivity;
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.QueueItem;
@@ -57,13 +51,6 @@ import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.service.spi.MusicMateServiceBinder;
 import apincer.music.core.utils.ApplicationUtils;
 import apincer.music.core.utils.NetworkUtils;
-import coil3.BitmapImage;
-import coil3.Image;
-import coil3.ImageLoader;
-import coil3.SingletonImageLoader;
-import coil3.request.ImageRequest;
-import coil3.size.Scale;
-import coil3.target.Target;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
@@ -81,7 +68,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 public class MusicMateServiceImpl extends Service implements PlaybackService {
     private static final String TAG = "MusicMateServiceImpl";
     public static final String CHANNEL_ID = "musicmate_service_channel";
-    private static final int SERVICE_ID = 1;
+    public static final int SERVICE_ID = 1;
 
     public static final String ACTION_PLAY_PAUSE = "apincer.musicmate.ACTION_PLAY_PAUSE";
     public static final String ACTION_NEXT = "apincer.musicmate.ACTION_NEXT";
@@ -230,7 +217,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         this.connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        getStatusLiveData().observeForever(status -> updateNotification(null, null));
+        getStatusLiveData().observeForever(status -> updateNotification(getApplicationContext(),null, null, mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs()));
 
         // initial dmr/local player player
         //getAvailablePlaybackTargets().addAll(mediaServer.getAvailablePlaybackTargets());
@@ -434,309 +421,9 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
                 .build();
     }
 
-    /**
-     * Builds and displays the dynamic foreground service notification.
-     * <p>
-     * This notification intelligently adapts its content and controls based on the current
-     * playback context. It can show server status, full media controls for streaming, or
-     * a simple monitoring status for external players.
-     *
-     * @param track  The currently active media track, containing details like title and artist.
-     * This can be {@code null} if nothing is playing.
-     * @param player The current playback target. This determines the type of notification to show.
-     * If {@code null}, a generic server status notification is shown.
-     */
-    private void updateNotification(
-            @Nullable MediaTrack track,
-            @Nullable PlaybackTarget player) {
-
-        // Determine which type of notification to build
-        if(player !=null && player.isStreaming()) {
-            updateNotificationForStreaming(track, player);
-        }else {
-            NotificationCompat.Builder builder;
-            MediaServerHub.ServerStatus status = statusLiveData.getValue();
-            if (player == null) {
-                // CASE 1: No active player. Show only the server status.
-                // This informs the user the service is running in the background.
-                builder = createServerStatusNotification(status);
-           // } else if (player.isStreaming() && isControllable()) {
-                // CASE 2: Controlling a streaming player (e.g., DLNA/UPnP).
-                // This shows full track info and media playback controls.
-           //     builder = createStreamingControlNotification(track, player, status);
-           // } else if (player.isStreaming()) {
-                // CASE 3: Controlling a streaming player (e.g., JPlay, mConnect).
-                // This shows server info, full track info and NO media playback controls.
-           //     builder = createStreamingNotification(track, player, status);
-            } else {
-                // CASE 4: Monitoring an external, non-controllable player (e.g., Spotify Connect).
-                // This shows a simple status to avoid conflicting with the other app's notification.
-                builder = createMonitoringNotification(player, status);
-            }
-
-            // Post the generated notification to the system.
-            // This will create or update the existing foreground service notification.
-            notificationManager.notify(SERVICE_ID, builder.build());
-
-        }
-    }
-
-    /**
-     * Uses Coil to asynchronously load album art and then displays it in a
-     * BigPictureStyle notification.
-     */
-    private void updateNotificationForStreaming(MediaTrack track, PlaybackTarget player) {
-        ImageLoader imageLoader = SingletonImageLoader.get(getApplicationContext());
-
-        Target target = new Target() {
-            @Override
-            public void onSuccess(@NonNull Image result) {
-                if(result instanceof BitmapImage bitmapImage) {
-                    Bitmap bitmap = bitmapImage.getBitmap();
-                    // Update the builder with the real album art and re-post the notification.
-                    NotificationCompat.Builder builder = createStreamingNotification(track, player, bitmap);
-                    builder.setLargeIcon(bitmap);
-                    notificationManager.notify(SERVICE_ID, builder.build());
-                }
-            }
-
-            @Override
-            public void onError(@Nullable Image errorDrawable) {
-                // Image failed to load. Show the notification with the default art instead.
-                Bitmap defaultArt = loadDefaultAlbumArt();
-                NotificationCompat.Builder builder = createStreamingNotification(track, player, defaultArt);
-                notificationManager.notify(SERVICE_ID, builder.build());
-            }
-        };
-
-        ImageRequest request = CoverartFetcher.builder(getApplicationContext(), track)
-                .data(track)
-                // CRITICAL: Scale the image to a 2:1 aspect ratio for BigPictureStyle.
-                // This prevents cropping and saves a huge amount of memory.
-                //.size(1024, 512)
-                .scale(Scale.FIT)
-                .size(640, 320)
-                .target(target)
-                .build();
-
-        imageLoader.enqueue(request);
-    }
-
-    /**
-     * Creates a notification that only displays the media server status.
-     * Used when no player is active.
-     *
-     * @param status The current status of the server.
-     * @return A configured NotificationCompat.Builder.
-     */
-    private NotificationCompat.Builder createServerStatusNotification(@Nullable MediaServerHub.ServerStatus status) {
-        String contentText = "Tap to start the server";
-        String statusText = OFFLINE_STATUS;
-        int tracks = (status != null) ? (int) tagRepos.getTotalSongs() : 0;
-        PendingIntent toggleIntent = createServerToggleIntent(); // Needs to be implemented
-        int toggleIcon = R.drawable.ic_play_arrow;
-        String toggleTitle = "Start Server";
-
-        if (status != null && status.isOnline()) {
-            statusText = ONLINE_STATUS;
-            contentText = tracks + " tracks available";
-            toggleIcon = R.drawable.ic_stop;
-            toggleTitle = "Stop Server";
-        }
-
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification_default)
-                .setContentTitle(Constants.getPresentationName())
-                .setContentText(contentText)
-                .setSubText(statusText)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOnlyAlertOnce(true)
-                .addAction(toggleIcon, toggleTitle, toggleIntent);
-    }
 
     private boolean isPlaying() {
         return playbackStateSubject.getValue().currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
-    }
-
-    /**
-     * Creates a notification for when the app is streaming to a player without playback controls.
-     * It displays full track information, the server status, and the player it's streaming to.
-     *
-     * @param track    The currently streaming media track. Can be null.
-     * @param player   The target player receiving the stream. Must not be null.
-     * @param albumArt   The current albumArt of streaming media track.
-     * @return A configured NotificationCompat.Builder.
-     */
-    private NotificationCompat.Builder createStreamingNotification(
-            @Nullable MediaTrack track,
-            @NonNull PlaybackTarget player,
-            @NonNull Bitmap albumArt) {
-
-        String title;
-        String contentText;
-        String subText;
-
-        // --- 1. Set up the main text content based on track availability ---
-        if (track != null) {
-            title = track.getTitle();
-            // Use the artist for the content text. Provide a fallback if it's missing.
-            if (track.getArtist() != null && !track.getArtist().isEmpty()) {
-                contentText = "by "+track.getArtist();
-            } else {
-                contentText = "Streaming audio"; // A generic but clear fallback
-            }
-        } else {
-            // Fallback text for when there is no track info
-            title = "Streaming...";
-            contentText = "Streaming audio"; // A generic but clear fallback
-        }
-
-        // --- 2. Create a rich subtext with player name ---
-        subText = "on " + player.getDisplayName();
-
-        // --- 4. Build the notification ---
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification_default)
-                .setContentTitle(title)
-                .setContentText(contentText)
-                .setSubText(subText)
-                .setLargeIcon(albumArt)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent)
-                .setOngoing(true) // Streaming notifications should be sticky
-                .setOnlyAlertOnce(true);
-
-        if(isControllable()) {
-            // for controlled from webui
-            // Create media control intents
-            PendingIntent playPauseIntent = createActionIntent(ACTION_PLAY_PAUSE); // Implement these
-            PendingIntent nextIntent = createActionIntent(ACTION_NEXT);
-            PendingIntent prevIntent = createActionIntent(ACTION_PREVIOUS);
-
-            int playPauseIcon = isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play_arrow;
-
-            // Add media control actions
-            builder.addAction(R.drawable.ic_previous, "Previous", prevIntent);
-            builder.addAction(playPauseIcon, "Play/Pause", playPauseIntent);
-            builder.addAction(R.drawable.ic_next, "Next", nextIntent);
-        }
-
-        // Apply the Style
-        builder.setStyle(new NotificationCompat.BigPictureStyle()
-                .bigPicture(albumArt)
-                // This is a common trick: hide the circular largeIcon when the
-                // bigPicture is shown to avoid having two copies of the image.
-                .bigLargeIcon((Bitmap) null)
-        );
-
-        return builder;
-    }
-
-
-    /**
-     * Creates a default album art bitmap by loading "no_cover.png" from the app's assets folder.
-     *
-     * @return The Bitmap loaded from assets, or null if the file cannot be found or read.
-     */
-    private Bitmap loadDefaultAlbumArt() {
-        AssetManager assetManager = getApplicationContext().getAssets();
-
-        // Use a try-with-resources block to ensure the InputStream is automatically closed.
-        try (InputStream inputStream = assetManager.open("Covers/no_cover.png")) {
-            // Decode the stream directly into a Bitmap
-            return BitmapFactory.decodeStream(inputStream);
-        } catch (IOException e) {
-            // If the file is not found or another I/O error occurs, log it for debugging.
-            Log.e("MusicMateService", "Failed to load default album art from assets", e);
-            // Return null as a fallback. The calling code should handle this.
-            return null;
-        }
-    }
-
-    /**
-     * Creates a simple notification to show that we are monitoring an external player.
-     * Contains no media controls to avoid conflicts.
-     *
-     * @param player The external player being monitored.
-     * @param status The current status of the server.
-     * @return A configured NotificationCompat.Builder.
-     */
-    private NotificationCompat.Builder createMonitoringNotification(
-            @NonNull PlaybackTarget player,
-            @Nullable MediaServerHub.ServerStatus status) {
-
-        String serverInfo = (status != null && status.isOnline())
-                ? ONLINE_STATUS
-                : OFFLINE_STATUS;
-
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification_default)
-                .setContentTitle(Constants.getPresentationName())
-                .setContentText("Connected to " + player.getDisplayName())
-                .setSubText(serverInfo)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOnlyAlertOnce(true);
-    }
-
-    /**
-     * Creates a PendingIntent for a media control action.
-     * This intent is configured to be sent back to this service when a notification
-     * button is pressed.
-     *
-     * @param action The specific action string (e.g., ACTION_PLAY_PAUSE) for the intent.
-     * @return A configured PendingIntent ready to be attached to a notification action.
-     */
-    private PendingIntent createActionIntent(String action) {
-        // Create an intent that will be directed back to this same service
-        Intent intent = new Intent(getApplicationContext(), MusicMateServiceImpl.class);
-        intent.setAction(action);
-
-        // For Android 12 (API 31) and higher, specifying mutability is required.
-        // FLAG_IMMUTABLE is the recommended and more secure choice for intents
-        // that don't need to be modified by the receiving app.
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        flags |= PendingIntent.FLAG_IMMUTABLE;
-
-        // The request code (the second parameter, here 0) can be used to differentiate
-        // between pending intents, but since we use unique actions, it's not critical.
-        return PendingIntent.getService(getApplicationContext(), 0, intent, flags);
-    }
-
-    /**
-     * Creates a PendingIntent that will either start or stop the media servers,
-     * depending on their current state. This is used for the action button on the
-     * server-status notification.
-     *
-     * @return A PendingIntent configured to toggle the server's running state.
-     */
-    private PendingIntent createServerToggleIntent() {
-        String action;
-
-        // Check the current status to decide which action the button should perform.
-        // We get the value from the LiveData holding the server status.
-        MediaServerHub.ServerStatus status = statusLiveData.getValue();
-
-        if (status != null && status.isOnline()) {
-            // If the server is currently online, the button should stop it.
-            action = MediaServerManager.ACTION_STOP_SERVER;
-        } else {
-            // If the server is offline or status is unknown, the button should start it.
-            action = MediaServerManager.ACTION_START_SERVER;
-        }
-
-        // Now, create the PendingIntent with the determined action,
-        // using the same secure pattern as our media controls.
-        Intent intent = new Intent(getApplicationContext(), MusicMateServiceImpl.class);
-        intent.setAction(action);
-
-        // For Android 12 (API 31) and higher, specifying mutability is required.
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        flags |= PendingIntent.FLAG_IMMUTABLE;
-
-        return PendingIntent.getService(getApplicationContext(), 0, intent, flags);
     }
 
     @Override
@@ -932,7 +619,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
             currentPlayerSubject.getValue().ifPresent(this::deactivatePlayer);
 
             currentPlayerSubject.onNext(Optional.of(newTarget));
-            updateNotification(null, newTarget);
+            updateNotification(getApplicationContext(), null, newTarget, mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs());
         }
     }
 
@@ -1113,7 +800,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Override
     public void onPlaybackStateChanged(apincer.music.core.playback.PlaybackState state) {
         playbackStateSubject.onNext(state);
-        updateNotification(state.currentTrack, currentPlayerSubject.getValue().orElse(null));
+        updateNotification(getApplicationContext(), state.currentTrack, currentPlayerSubject.getValue().orElse(null), mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs());
     }
 
     @Override

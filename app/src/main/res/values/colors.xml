@@ -54,6 +54,11 @@
     <color name="md_theme_primaryContainer">#DCE1FF</color>
     <color name="transparent">#00000000</color>
 
+    <!-- Material baseline neutral colors -->
+    <color name="md_theme_surface">#FFFBFE</color> <!-- light surface -->
+    <color name="md_theme_surface_variant">#E7E0EC</color>
+    <color name="md_theme_on_surface">#1C1B1F</color>
+
     <!-- Original colors-->
 
     <color name="bt_accent">#00B8D4</color>

@@ -30,4 +30,8 @@
 
     <!-- Album Art Frame -->
     <color name="colorArtFrame">#2C2C2C</color>
+
+    <color name="md_theme_surface">#1C1B1F</color> <!-- dark surface -->
+    <color name="md_theme_surface_variant">#49454F</color>
+    <color name="md_theme_on_surface">#E6E1E5</color>
 </resources>

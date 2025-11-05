@@ -49,6 +49,12 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     }
 
     public void initServer(InetAddress bindAddress) {
+        // If server thread is not null and is still running, exit.
+        if (serverThread != null && serverThread.isAlive()) {
+            Log.w(TAG, TAG + " - initServer() called, but server is already running.");
+            return;
+        }
+
         serverThread = new Thread(() -> {
             try {
                 server = new NioHttpServer(WEB_SERVER_PORT);
@@ -180,12 +186,17 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
         // Add thread cleanup
         if (serverThread != null && serverThread.isAlive()) {
             try {
-                serverThread.join(5000); // Wait up to 5 seconds
+                serverThread.join(2000); // Wait up to 2 seconds
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 Log.w(TAG, TAG+" - Interrupted while waiting for server thread", e);
             }
         }
+
+        // Set fields to null so the server can be restarted
+        serverThread = null;
+        server = null;
+        wsHandler = null;
     }
 
     @Override
@@ -230,6 +241,8 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
 
         @Override
         protected void broadcastMessage(String jsonResponse) {
+            if(sessions ==null || sessions.isEmpty()) return;
+
             sessions.removeIf(NioHttpServer.WebSocketConnection::isClosed); // Clean up closed connections
 
             //  Log.d(TAG, TAG+" - Broadcast message: " + message);

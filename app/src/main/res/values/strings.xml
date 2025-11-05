@@ -291,5 +291,6 @@
     <string name="files_to_delete">Files to Delete</string>
     <string name="files_to_analyze">Files to Analyze</string>
     <string name="files_to_move">Files to Move</string>
+    <string name="play_pause">Play</string>
 
 </resources>

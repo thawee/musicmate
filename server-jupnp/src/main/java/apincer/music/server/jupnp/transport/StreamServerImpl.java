@@ -19,14 +19,14 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
 
     // Injected
     private final Context context;
-    private final WebServer contentServer;
+    private final WebServer webServer;
     private final UpnpServer upnpServer;
 
-    public StreamServerImpl(Context context, UpnpServer upnpServer, WebServer contentServer, StreamServerConfiguration configuration) {
+    public StreamServerImpl(Context context, UpnpServer upnpServer, WebServer webServer, StreamServerConfiguration configuration) {
         this.configuration = configuration;
         this.context = context;
         this.upnpServer = upnpServer;
-        this.contentServer = contentServer;
+        this.webServer = webServer;
     }
 
     public StreamServerConfiguration getConfiguration() {
@@ -40,12 +40,17 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
         if(upnpServer != null) {
             upnpServer.stopServer();
         }
-        if(contentServer != null) {
-            contentServer.stopServer();
+        if(webServer != null) {
+            webServer.stopServer();
         }
 
         try {
-            this.contentServer.initServer(bindAddress);
+            this.webServer.initServer(bindAddress);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
             this.upnpServer.initServer(bindAddress, router);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -61,8 +66,8 @@ public class StreamServerImpl implements StreamServer<StreamServerConfiguration>
         if(upnpServer != null) {
             upnpServer.stopServer();
         }
-        if(contentServer != null) {
-            contentServer.stopServer();
+        if(webServer != null) {
+            webServer.stopServer();
         }
     }
 
