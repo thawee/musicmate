@@ -1,7 +1,6 @@
 package apincer.music.core.repository;
 
 import static apincer.music.core.Constants.ARTIST_SEP;
-import static apincer.music.core.Constants.ARTIST_SEP_SPACE;
 import static apincer.music.core.Constants.NONE;
 import static apincer.music.core.utils.StringUtils.EMPTY;
 import static apincer.music.core.utils.StringUtils.isEmpty;
@@ -15,6 +14,7 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.GenericRawResults;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.SelectArg;
 import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
@@ -802,11 +802,20 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 builder.where().isNull("artist").or().eq("artist", "");
             }else {
                 name = name.replace("'", "''");
-                builder.where().eq("artist", name).or()
+                //todo seperator can be ; and ,
+               /* builder.where().eq("artist", name).or()
                         .like("artist",name+ARTIST_SEP+LIKE_LITERAL).or()
                         .like("artist",name+ARTIST_SEP_SPACE+LIKE_LITERAL).or()
                         .like("artist", LIKE_LITERAL+ARTIST_SEP+name).or()
-                        .like("artist", LIKE_LITERAL+ARTIST_SEP_SPACE+name);
+                        .like("artist", LIKE_LITERAL+ARTIST_SEP_SPACE+name).or()
+
+                        // New clauses for "," to fix the todo
+                        .like("artist", name + ARTIST_SEP_ALT + LIKE_LITERAL).or()
+                        .like("artist", name + ARTIST_SEP_ALT_SPACE + LIKE_LITERAL).or()
+                        .like("artist", LIKE_LITERAL + ARTIST_SEP_ALT + name).or()
+                        .like("artist", LIKE_LITERAL + ARTIST_SEP_ALT_SPACE + name); */
+                // Note: Use SelectArg for security instead of name.replace("'", "''")
+                builder.where().like("artist", new SelectArg("%" + name + "%"));
             }
             if(firstResult>0) {
                 builder.offset(firstResult);

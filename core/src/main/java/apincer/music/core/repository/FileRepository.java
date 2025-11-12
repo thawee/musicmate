@@ -5,6 +5,7 @@ import static apincer.music.core.Constants.COVER_ARTS;
 import static apincer.music.core.Constants.DEFAULT_COVERART;
 import static apincer.music.core.Constants.IMAGE_COVERS;
 import static apincer.music.core.Constants.TITLE_MQA_SHORT;
+import static apincer.music.core.provider.FileSystem.copyRelatedFiles;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
@@ -19,7 +20,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -207,6 +207,8 @@ public class FileRepository {
 
         File folder = file.getParentFile();
 
+        if(folder == null) return null;
+
         File[] files = folder.listFiles();
         if (files != null && files.length > 0) {
             // --- Priority 1: Check for file matching the folder's name in same directory ---
@@ -222,14 +224,14 @@ public class FileRepository {
             // Check for folderName.jpg
             File folderNameJpg = findFileAnyCase(folderName + ".jpg", files);
             if (folderNameJpg != null) {
-                Log.d(TAG, "found: "+folderNamePng);
+                Log.d(TAG, "found: "+folderNameJpg);
                 return folderNameJpg;
             }
 
             // Check for folderName.jpeg as well, just in case
             File folderNameJpeg = findFileAnyCase(folderName + ".jpeg", files);
             if (folderNameJpeg != null) {
-                Log.d(TAG, "found: "+folderNamePng);
+                Log.d(TAG, "found: "+folderNameJpeg);
                 return folderNameJpeg;
             }
 
@@ -496,7 +498,7 @@ public class FileRepository {
                 return true;
             }
             if (FileSystem.move(getContext(), tag.getPath(), newPath)) {
-                copyRelatedFiles(tag, newPath);
+                copyRelatedFiles(new File(tag.getPath()), new File(newPath));
                 cleanCacheCover(tag);
 
                 File file = new File(tag.getPath());
@@ -550,27 +552,6 @@ public class FileRepository {
             cleanMediaDirectory(parentFolder);
         }
      }
-
-    private void copyRelatedFiles(MusicTag item, String newPath) {
-        // move related file, front.jpg, cover.jpg, folder.jpg, *.cue,
-        File oldFile = new File(item.getPath());
-        File oldDir = oldFile.getParentFile();
-        File newFile = new File(newPath);
-        File newDir = newFile.getParentFile();
-
-        assert oldDir != null;
-        File [] files = oldDir.listFiles(file -> Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(file).toLowerCase()));
-        if(files != null) {
-            for (File f : files) {
-                File newRelated = new File(newDir, f.getName());
-                try {
-                    FileSystem.copyFile( f, newRelated);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
 
     public boolean importAudioFile(MusicTag item) {
         boolean status;

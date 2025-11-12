@@ -17,7 +17,6 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -537,15 +536,46 @@ public class TagRepository {
        // List<MusicTag> artists = new ArrayList<>();
         Map<String, MusicFolder> mapped = new HashMap<>();
         List<MusicTag> list = getAllMusics();
-        for(MusicTag song: list) {
+        /*for(MusicTag song: list) {
             String artist = song.getArtist();
             if(isEmpty(artist)) {
                 artist = EMPTY;
             }
+            // todo split artist by ; and ,
             MusicFolder folder = mapped.getOrDefault(artist, new MusicFolder(SearchCriteria.TYPE.ARTIST, artist));
             folder.increaseChildCount();
             folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
             mapped.put(artist, folder);
+        } */
+
+        for (MusicTag song : list) {
+            String artistString = song.getArtist();
+
+            if (isEmpty(artistString)) {
+                // Handle songs with no artist tag, group them under EMPTY
+                String artistName = EMPTY;
+                MusicFolder folder = mapped.getOrDefault(artistName, new MusicFolder(SearchCriteria.TYPE.ARTIST, artistName));
+                folder.increaseChildCount();
+                folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
+                mapped.put(artistName, folder);
+            } else {
+                // Split the artist string by either comma or semicolon
+                String[] individualArtists = artistString.split("[;,]");
+
+                // Loop through each individual artist name
+                for (String artistName : individualArtists) {
+                    String trimmedName = artistName.trim();
+
+                    // Only process non-empty names after trimming
+                    if (!isEmpty(trimmedName)) {
+                        MusicFolder folder = mapped.getOrDefault(trimmedName, new MusicFolder(SearchCriteria.TYPE.ARTIST, trimmedName));
+                        folder.increaseChildCount();
+                        // Add the song's duration to *each* artist it belongs to
+                        folder.setAudioDuration(folder.getAudioDuration() + song.getAudioDuration());
+                        mapped.put(trimmedName, folder);
+                    }
+                }
+            }
         }
 
         // This is the line you already have

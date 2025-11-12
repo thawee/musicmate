@@ -418,8 +418,8 @@ public class TagsEditorFragment extends Fragment {
         tagUpdate.setTitle(buildTag(txtTitle, originTag.getTitle()));
         tagUpdate.setTrack(buildTag(txtTrack, originTag.getTrack()));
         tagUpdate.setAlbum(buildTag(txtAlbum, originTag.getAlbum()));
-        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, originTag.getAlbumArtist()));
         tagUpdate.setArtist(buildTag(txtArtist, originTag.getArtist()));
+        tagUpdate.setAlbumArtist(buildTag(txtAlbumArtist, originTag.getAlbumArtist(), tagUpdate.getArtist()));
         //tagUpdate.setGrouping(buildTag(txtGrouping, originTag.getGrouping()));
         tagUpdate.setGenre(buildTag(txtGenre, originTag.getGenre()));
         tagUpdate.setPublisher(buildTag(txtPublisher, originTag.getPublisher()));
@@ -442,6 +442,16 @@ public class TagsEditorFragment extends Fragment {
     private String buildTag(TextView txt, String oldVal) {
         String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
         if(isEmpty(text) || isMultiValuesMarker(text)) {
+            return oldVal;
+        }
+        return text;
+    }
+
+    private String buildTag(TextView txt, String oldVal, String defaultVal) {
+        String text = StringUtils.trimToEmpty(String.valueOf(txt.getText()));
+        if(isEmpty(text)) {
+            return defaultVal;
+        }else if (isMultiValuesMarker(text)) {
             return oldVal;
         }
         return text;

@@ -223,7 +223,155 @@ public class FFMpegHelper {
         }
     }
 
+    /**
+     * Converts an audio file to a different format using FFmpeg.
+     *
+     * <p>This method handles the conversion of an audio file from {@code srcPath} to
+     * {@code targetPath} using the specified audio parameters. It supports special
+     * filtering for DSF input and applies specific bit depths and compression levels
+     * based on the target format.
+     *
+     * <p>The conversion is performed in a temporary directory. Only upon successful
+     * completion will the temporary file be moved to the final {@code targetPath}.
+     *
+     * <p><b>Format-Specific Logic:</b>
+     * <ul>
+     * <li><b>DSF Input:</b> A 24kHz lowpass filter and 6dB volume gain are applied.
+     * <li><b>FLAC Output:</b> Uses {@code cLevel} for compression (defaulting to 5)
+     * and {@code bitDept} for the sample format (s16, s24, s32).</li>
+     * <li><b>M4A (ALAC) Output:</b> Uses {@code bitDept} for the sample format
+     * (s16, s24, s32).</li>
+     * <li><b>AIFF (PCM) Output:</b> Uses {@code bitDept} to select the specific
+     * PCM codec (pcm_s16be, pcm_s24be, pcm_s32be).</li>
+     * <li><b>MP3 Output:</b> Ignores {@code bitDept} and encodes to 320k bitrate.</li>
+     * </ul>
+     *
+     * @param context    The Android {@link Context} used for file system operations.
+     * @param srcPath    The absolute file path of the source audio file to convert.
+     * @param targetPath The absolute file path where the converted file should be saved.
+     * If this file already exists, a suffix ("_001") will be appended.
+     * @param cLevel     The desired compression level. Primarily used for FLAC (0-12).
+     * An invalid value will result in a default (e.g., 5 for FLAC).
+     * @param bitDept    The desired output bit depth (16, 24, or 32). This is only
+     * applied to formats that support it (FLAC, ALAC, AIFF).
+     * @return {@code true} if the conversion was successful and the file was moved
+     * to {@code targetPath}, {@code false} otherwise (e.g., FFmpeg failure,
+     * cancellation, or file I/O error).
+     */
     public static boolean convert(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
+        String options = "";
+
+        if(bitDept ==1) {
+            bitDept = 24; // dsd
+        }
+
+        // 1. Handle DSF input filters
+        // We only apply the filter and resampler here.
+        // The bit depth (-sample_fmt) will be set later based on the `bitDept` parameter.
+        if (srcPath.toLowerCase().endsWith(".dsf")) {
+            // convert from dsf
+            // use lowpass filter to eliminate distortion and resample.
+            options += " -af \"lowpass=24000, volume=6dB\" -ar 48000 ";
+        }
+
+        // 2. Determine the output sample format string based on bitDept
+        // This will be used for codecs that respect -sample_fmt (like FLAC and ALAC).
+        String sampleFmt = "";
+        if (bitDept == 16) {
+            sampleFmt = " -sample_fmt s16 ";
+        } else if (bitDept == 24) {
+            sampleFmt = " -sample_fmt s24 ";
+        } else if (bitDept == 32) {
+            sampleFmt = " -sample_fmt s32 ";
+        }
+        // If bitDept is 0 or another value, we don't pass the flag,
+        // letting FFmpeg choose a suitable default.
+
+        // 3. Set codec options based on target file extension
+        String targetExt = FileUtils.getExtension(targetPath.toLowerCase(Locale.US));
+
+        if (targetExt.endsWith("flac")) {
+            // FLAC respects -sample_fmt for bit depth.
+            // Use 5 as a default compression if cLevel is invalid.
+            int compression = (cLevel >= 0 && cLevel <= 12) ? cLevel : 5;
+            options += sampleFmt + " -y -vn -c:a flac -compression_level " + compression;
+
+        } else if (targetExt.endsWith("mp3")) {
+            // MP3 is lossy and doesn't have a PCM bit depth.
+            // We ignore `bitDept` and `sampleFmt`.
+            options += " -y -vn -c:a libmp3lame -b:a 320k ";
+
+        } else if (targetExt.endsWith("m4a")) {
+            // Assuming ALAC (Apple Lossless), which respects -sample_fmt.
+            // Your old code `pcm_s...be` was for raw PCM, not ALAC. This is correct.
+            options += sampleFmt + " -y -vn -c:a alac ";
+
+        } else if (targetExt.endsWith("aiff")) {
+            // For uncompressed PCM like AIFF, we set the bit depth
+            // by choosing the specific codec name. We ignore `sampleFmt`.
+            if (bitDept == 24) {
+                options += " -y -vn -c:a pcm_s24be "; // 24-bit Big Endian
+            } else if (bitDept == 32) {
+                options += " -y -vn -c:a pcm_s32be "; // 32-bit Big Endian
+            } else {
+                // Default to 16-bit for AIFF
+                options += " -y -vn -c:a pcm_s16be "; // 16-bit Big Endian
+            }
+        } else {
+            Log.e(TAG, "Unsupported target format: " + targetPath);
+            return false;
+        }
+
+        Log.i(TAG, "Converting: " + srcPath);
+
+        String ext = FileUtils.getExtension(srcPath);
+
+        String tmpTarget = srcPath.replace("." + ext, "_NEWFMT." + targetExt);
+
+        String cmd = " -hide_banner -nostats -i \"" + srcPath + "\" " + options + " \"" + tmpTarget + "\"";
+        Log.i(TAG, "Converting with cmd: " + cmd);
+
+        try {
+            LogHelper.setFFMpegOff();
+            FFmpegSession session = FFmpegKit.execute(cmd);
+
+            // *** IMPORTANT FIX ***
+            // You must check for SUCCESS, not just "not cancel".
+            // A failed (but not cancelled) session would have been treated as a success.
+            if (ReturnCode.isSuccess(session.getReturnCode())) {
+                Log.i(TAG, "Conversion successful: " + srcPath);
+                File targetFile = new File(targetPath);
+                if (targetFile.exists()) {
+                    // Consider a better way to handle existing files
+                    // This logic is risky, e.g., "song.v1.mp3" -> "song_001.v1.mp3"
+                    targetPath = targetPath.replaceFirst("\\.(?=[^\\.]+$)", "_001.");
+                }
+
+                if(FileSystem.move(context, tmpTarget, targetPath)) {
+                   // FileRepository.newInstance(context).scanMusicFile(new File(targetPath),true); // re scan file
+                    return true;
+                } else {
+                    Log.e(TAG, "Failed to move temp file to final target");
+                    return false;
+                }
+            } else {
+                // Conversion failed or was cancelled
+                Log.e(TAG, String.format("Conversion failed. RC: %s. Logs:\n%s",
+                        session.getReturnCode(), session.getAllLogsAsString()));
+                return false;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "FFmpeg execution threw an exception", e);
+            return false;
+        } finally {
+            // Always clean up the temp *source* file
+           // FileSystem.delete(tmpPath);
+            // Also clean up the temp *target* file in case of failure
+            FileSystem.delete(tmpTarget);
+        }
+    }
+
+    public static boolean convertOld(Context context, String srcPath, String targetPath, int cLevel, int bitDept) {
         String options="";
         if (srcPath.toLowerCase().endsWith(".dsf")){
             // convert from dsf to 24 bits, 48 kHz
@@ -290,13 +438,7 @@ public class FFMpegHelper {
        return false;
     }
 
-   /* public static String escapePathForFFMPEG(String path) {
-        path = StringUtils.trimToEmpty(path);
-       // path = path.replace("'", "''");
-        return path;
-    } */
-
-    /*
+   /*
     https://github.com/Moonbase59/loudgain/blob/master/src/loudgain.c
     public static final double RGV2_REFERENCE = -18.00;
     public static double getReplayGain(MusicTag tag) {

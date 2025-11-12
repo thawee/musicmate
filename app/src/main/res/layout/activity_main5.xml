@@ -19,48 +19,73 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/shape_background_main_header"
+            android:paddingVertical="@dimen/dimen_8_dp"
             android:paddingHorizontal="@dimen/dimen_12_dp"
-            android:paddingTop="@dimen/dimen_8_dp"
-            android:paddingBottom="@dimen/dimen_6_dp"
-            android:elevation="6dp"
-            android:alpha="0.98">
 
+            android:elevation="8dp"
+            android:alpha="0.92">
+
+            <!-- Back Button -->
             <ImageView
                 android:id="@+id/header_back_btn"
-                android:layout_width="@dimen/dimen_36_dp"
-                android:layout_height="@dimen/dimen_36_dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:src="@drawable/rounded_arrow_shape_up_24"
-                android:contentDescription="@string/back"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="@dimen/dimen_4_dp"
+                android:contentDescription="Back"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="@id/search_view"
-                app:layout_constraintTop_toTopOf="@id/search_view" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="@+id/search_view"
+                android:padding="@dimen/dimen_4_dp" />
 
+            <!-- Persistent Search Bar -->
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/search_view"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/dimen_40_dp"
+                android:layout_marginStart="@dimen/dimen_4_dp"
+                android:layout_marginTop="@dimen/dimen_4_dp"
+                android:layout_marginBottom="@dimen/dimen_4_dp"
+                android:background="@drawable/search_bar_frosted"
+                android:queryHint="Search your music..."
+                app:iconifiedByDefault="false"
+                app:searchIcon="@null"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/header_back_btn"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:inputType="text"
+                android:imeOptions="actionSearch" />
+
+            <!--
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/search_view"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/dimen_40_dp"
                 android:layout_marginStart="@dimen/dimen_8_dp"
-                android:background="@drawable/search_bar_frosted"
-                android:queryHint="@string/search_music_hint"
+                android:layout_marginEnd="@dimen/dimen_8_dp"
+                android:background="@drawable/search_bar_background"
+                android:queryHint="Search your music..."
                 app:iconifiedByDefault="false"
                 app:searchIcon="@null"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@id/header_back_btn"
-                app:layout_constraintEnd_toEndOf="parent" />
-
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:inputType="text"
+                android:imeOptions="actionSearch" />
+                -->
+            <!-- Stats Text -->
             <TextView
                 android:id="@+id/header_stats_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:text="1,248 songs · 93 hours"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginTop="@dimen/dimen_4_dp"
-                app:layout_constraintTop_toBottomOf="@id/search_view"
                 app:layout_constraintStart_toStartOf="@id/search_view"
+                app:layout_constraintTop_toBottomOf="@id/search_view"
                 app:layout_constraintBottom_toBottomOf="parent"
-                tools:text="622 songs · 44 hrs 24 min" />
+                android:layout_marginTop="@dimen/dimen_6_dp"
+                tools:text="1,248 songs · 93 hours 20 min" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- 🔹 Content List -->
@@ -75,7 +100,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="@dimen/dimen_96_dp"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/view_list_item" />
 
@@ -91,8 +115,8 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="@dimen/dimen_96_dp"
         android:src="@drawable/rounded_arrow_shape_up_stack_24"
-        android:contentDescription="@string/scroll_to_top"
-        app:fabSize="mini"
+        android:contentDescription="Scroll to Top"
+        app:fabSize="normal"
         app:backgroundTint="?attr/colorPrimary"
         app:tint="?attr/colorOnPrimary"
         android:visibility="gone"

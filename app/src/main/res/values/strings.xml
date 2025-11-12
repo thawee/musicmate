@@ -267,7 +267,7 @@
     <string name="analyze_dynamic_range">Analyze Dynamic Range</string>
     <string name="show_frequency_spectrum">Show Frequency Spectrum</string>
     <string name="open_containing_folder">Open Containing Folder</string>
-    <string name="find_online">Find Info Online</string>
+    <string name="find_online">Search Info on Google</string>
     <string name="label_rating_indicator">Rating</string>
     <string name="editor_label_pathName">Path</string>
     <string name="analyze_music">Analyze Music File</string>
@@ -292,5 +292,8 @@
     <string name="files_to_analyze">Files to Analyze</string>
     <string name="files_to_move">Files to Move</string>
     <string name="play_pause">Play</string>
+    <string name="back">Back\n</string>
+    <string name="search_music_hint">Search Songs</string>
+    <string name="scroll_to_top">Scroll to Top</string>
 
 </resources>

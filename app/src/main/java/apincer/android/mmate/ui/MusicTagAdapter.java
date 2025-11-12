@@ -435,7 +435,8 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     public void onBindViewMusicTag(ViewHolder holder, @SuppressLint("RecyclerView") final int position, @NotNull MusicTag tag) {
         // When user scrolls, this line binds the correct selection status
-        holder.rootView.setActivated(mTracker.isSelected((long) position));
+       // holder.rootView.setActivated(mTracker.isSelected((long) position));
+        holder.rootView.setSelected(mTracker.isSelected((long) position));
         if(tag.getAudioDuration() == 0) {
             holder.moreActions.setEnabled(false);
             holder.rootView.setEnabled(false);

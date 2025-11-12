@@ -39,6 +39,8 @@ public final class Constants {
     public static final String EMPTY = "";
     public static final String ARTIST_SEP = ",";
     public static final String ARTIST_SEP_SPACE = ", ";
+    public static final String ARTIST_SEP_ALT = ",";
+    public static final String ARTIST_SEP_ALT_SPACE = ", ";
 
     /*
     public static final String GROUPING_CLASSICAL = "Classical";

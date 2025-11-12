@@ -14,10 +14,12 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import apincer.android.utils.FileUtils;
+import apincer.music.core.Constants;
+
 public class FileSystem {
     private static final String TAG = "FileSystem";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-   // private final Context mContext;
 
     FileSystem() {
         super();
@@ -46,81 +48,6 @@ public class FileSystem {
         }
         return false;
     }
-    /*
-     * file manipulations
-     */
-    /*
-    @Deprecated
-    public static boolean copy(Context context, final File source, final File target) {
-        if(source == null || target == null) return false;
-        if(!source.exists()) return false;
-        if(source.getAbsoluteFile().equals(target.getAbsoluteFile())) return false;
-
-        FileInputStream inStream = null;
-        FileOutputStream outStream = null;
-        FileChannel inChannel = null;
-        FileChannel outChannel = null;
-        try {
-            inStream = new FileInputStream(source);
-
-            // First try the normal way
-          //  try {
-           // if(target.canWrite()) {
-                // standard way
-                outStream = new FileOutputStream(target);
-                inChannel = inStream.getChannel();
-                outChannel = outStream.getChannel();
-                inChannel.transferTo(0, inChannel.size(), outChannel);
-          /
-          //  }
-        } catch (Exception e) {
-            Log.e(TAG,"Error when copying file from " + source.getAbsolutePath() + " to " + target.getAbsolutePath());
-            return false;
-        } finally {
-            closeSilently(inStream);
-            closeSilently(outStream);
-            closeSilently(inChannel);
-            closeSilently(outChannel);
-        }
-
-
-        //check file size
-        if(!isValidSize(source.getAbsolutePath(), target.getAbsolutePath(), true)) {
-            delete(target.getAbsolutePath());
-            return false;
-        }
-
-        return true;
-    } */
-
-    /*
-    Fastest copy methods
-     */
-    /*
-    @Deprecated
-    public static void copy(File source, File dest) throws IOException {
-        if(source == null || dest == null) return;
-        if(!source.exists()) return;
-        if(source.getAbsoluteFile().equals(dest.getAbsoluteFile())) return;
-
-        try (InputStream is = new FileInputStream(source); OutputStream os = new FileOutputStream(dest)) {
-            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                os.write(buffer, 0, length);
-            }
-        }
-    } */
-
-    /*
-    @Deprecated
-    public static String getFilename(String path) {
-        if(isEmpty(path)) {
-            return "";
-        }
-        File file = new File(path);
-        return file.getName();
-    } */
 
     public static boolean safeMove(Context context, String srcPath, String targetPath) {
         String tmpPath = targetPath+"_tmp_safe_move";
@@ -226,6 +153,41 @@ public class FileSystem {
              FileChannel destChannel = new FileOutputStream(dest).getChannel()) {
 
             destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        }
+    }
+
+    public static void copyRelatedDir(File f, File newRelated) {
+        if(newRelated.exists()) {
+            newRelated.mkdirs();
+        }
+        copyRelatedFiles(f, newRelated);
+    }
+
+    public static void copyRelatedFiles(File oldFile, File newFile) {
+        // move related file, front.jpg, cover.jpg, folder.jpg, *.cue,
+       // File oldFile = new File(item.getPath());
+        File oldDir = oldFile.getParentFile();
+       // File newFile = new File(newPath);
+        if(newFile.isFile()) {
+            newFile = newFile.getParentFile();
+        }
+       // File newDir = newFile.getParentFile();
+
+        assert oldDir != null;
+        File [] files = oldDir.listFiles(file -> (file.isDirectory() && "cover".equalsIgnoreCase(file.getName()) || Constants.RELATED_FILE_TYPES.contains(FileUtils.getExtension(file).toLowerCase())));
+        if(files != null) {
+            for (File f : files) {
+                File newRelated = new File(newFile, f.getName());
+                try {
+                    if(f.isDirectory()) {
+                        FileSystem.copyRelatedDir(f, newRelated);
+                    }else {
+                        FileSystem.copyFile(f, newRelated);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 

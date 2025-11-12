@@ -11,7 +11,7 @@ import apincer.android.jupnp.transport.jetty.JettyWebServerImpl;
 import apincer.android.jupnp.transport.jetty.JettyUPnpServerImpl;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
-import apincer.music.core.server.spi.WebSserver;
+import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.server.spi.MediaServerHub;
 import apincer.music.core.server.spi.UpnpServer;
 import apincer.music.server.jupnp.MediaServerConfiguration;
@@ -28,7 +28,7 @@ import dagger.hilt.components.SingletonComponent;
 public class JettyServerModule {
 
     @Provides
-    public UpnpServiceConfiguration provideUpnpServiceConfiguration(@ApplicationContext Context context, UpnpServer upnpServer, ContentServer contentServer) {
+    public UpnpServiceConfiguration provideUpnpServiceConfiguration(@ApplicationContext Context context, UpnpServer upnpServer, WebServer contentServer) {
         return new MediaServerConfiguration(context, upnpServer, contentServer);
     }
 

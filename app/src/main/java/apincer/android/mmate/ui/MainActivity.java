@@ -1764,6 +1764,10 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            if(headerSearchView != null) {
+                headerSearchView.clearFocus();
+            }
+
            // if (headerSearchView.getVisibility() == View.VISIBLE) {
            //     closeSearch();
            //     return;

@@ -1,37 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Gradient base background -->
+    <!-- Soft translucent blur overlay -->
     <item>
-        <shape xmlns:android="http://schemas.android.com/apk/res/android"
-            android:shape="rectangle">
-
-            <!-- Gentle translucent gradient overlay -->
-            <gradient
-                android:startColor="#66FFFFFF"
-            android:endColor="#33FFFFFF"
-            android:angle="45" />
-
-            <!-- Optional: soft border or outline -->
-            <stroke
-                android:width="1dp"
-                android:color="#1FFFFFFF" />
-
-            <!-- Rounded bottom edges to blend better -->
-            <corners
-                android:bottomLeftRadius="16dp"
-                android:bottomRightRadius="16dp" />
+        <shape android:shape="rectangle">
+            <solid android:color="#CC1E1E1E" /> <!-- Semi-transparent dark -->
         </shape>
     </item>
 
-    <!-- Slanted overlay -->
+    <!-- Subtle vertical gradient -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/transparent" />
-            <corners android:radius="0dp" />
-            <pathData>
-                M0,0 L1000,0 L1000,120 L0,180 Z
-            </pathData>
+            <gradient
+                android:startColor="#331E1E1E"
+                android:centerColor="#221E1E1E"
+                android:endColor="#001E1E1E"
+                android:angle="270" />
+        </shape>
+    </item>
+
+    <!-- Bottom divider line -->
+    <item android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <size android:height="1dp" />
+            <solid android:color="#22FFFFFF" />
         </shape>
     </item>
 </layer-list>
