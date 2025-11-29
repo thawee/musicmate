@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import apincer.music.core.Constants;
 import apincer.android.storage.StorageVolume;
+import apincer.music.core.playback.spi.MediaTrack;
 
 public class StringUtils {
     // ·  \u00b7
@@ -59,6 +60,29 @@ public class StringUtils {
     public static final String EMPTY = " - "; // must left as empty for dropdown list
 
     private static final Pattern ESCAPE_XML_CHARS = Pattern.compile("[\"&'<>]");
+
+    public static String getSimplifiedAlbum(MediaTrack track) {
+        if (track == null) {
+            return null;
+        }
+
+        String albumTitle = track.getAlbum(); // Assuming this method exists
+
+        // Handle null or empty titles
+        if (albumTitle == null || albumTitle.isEmpty()) {
+            return albumTitle;
+        }
+
+        final String suffix = " - Single";
+
+        // Check if the album title ends with " - Single"
+        if (albumTitle.endsWith(suffix)) {
+            return "Single";
+        } else {
+            // Otherwise, return the full, original album title
+            return albumTitle;
+        }
+    }
 
     public enum TruncateType {
         PREFIX, // Adds "..." at the beginning

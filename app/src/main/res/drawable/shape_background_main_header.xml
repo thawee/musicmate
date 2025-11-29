@@ -1,27 +1,29 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Soft translucent blur overlay -->
+
+    <!-- Soft blur-like background (semi-transparent dark) -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#CC1E1E1E" /> <!-- Semi-transparent dark -->
+            <solid android:color="#D91A1A1A" /> <!-- 85% dark, clean neutral -->
         </shape>
     </item>
 
-    <!-- Subtle vertical gradient -->
+    <!-- Smooth depth gradient (top darker → bottom lighter) -->
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:startColor="#331E1E1E"
-                android:centerColor="#221E1E1E"
-                android:endColor="#001E1E1E"
-                android:angle="270" />
+                android:startColor="#1A000000"
+            android:centerColor="#0DFFFFFF"
+            android:endColor="#00000000"
+            android:angle="270" />
         </shape>
     </item>
 
-    <!-- Bottom divider line -->
-    <item android:bottom="0dp">
+    <!-- Crisp but subtle bottom divider -->
+    <item android:gravity="bottom">
         <shape android:shape="rectangle">
             <size android:height="1dp" />
-            <solid android:color="#22FFFFFF" />
+            <solid android:color="#40FFFFFF" /> <!-- 25% white for OLED clarity -->
         </shape>
     </item>
+
 </layer-list>

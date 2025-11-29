@@ -268,11 +268,9 @@
         green  - MQA
         blue   - MQA Studio
     -->
+    <!--
     <color name="resolution_dsd">#009688</color>
     <color name="resolution_lossless">#FFC107</color>
-    <!--
-    <color name="resolution_lossy">#FF5722</color>
-    -->
     <color name="resolution_lossy">@color/grey400</color>
     <color name="resolution_hires">#FF9800</color>
 
@@ -282,12 +280,33 @@
     <color name="resolution_dsd_256">#FF0000</color>
     <color name="resolution_mqa">#4CAF50</color>
     <color name="resolution_mqa_studio">#2196F3</color>
+    -->
 
+    <!--
     <color name="quality_hd">#ffb300</color>
     <color name="quality_h24bits">#FEDD55</color>
     <color name="quality_sd">#ffecb3</color>
     <color name="quality_unknown">@color/grey600</color>
     <color name="quality_unknown_black">#000000</color>
+    -->
+
+    <!-- Dark-mode Optimized -->
+    <color name="resolution_pcm_44_48">#4FC3F7</color>   <!-- Light blue -->
+    <color name="resolution_pcm_96">#81D4FA</color>     <!-- Softer blue -->
+    <color name="resolution_dsd_64_128">#9575CD</color>  <!-- Soft purple -->
+    <color name="resolution_dsd_256">#7E57C2</color>    <!-- Deeper purple -->
+    <color name="resolution_dsd">#B39DDB</color>        <!-- General DSD -->
+    <color name="resolution_mqa">#66BB6A</color>         <!-- Soft green -->
+    <color name="resolution_mqa_studio">#42A5F5</color>  <!-- Blue-green -->
+    <color name="resolution_lossless">#FFCA28</color>   <!-- Soft amber -->
+    <color name="resolution_hires">#FFB300</color>      <!-- Gold (hi-res) -->
+    <color name="resolution_lossy">#9E9E9E</color>      <!-- Grey 400 -->
+
+    <color name="quality_hd">#FFB300</color>          <!-- Bright gold -->
+    <color name="quality_h24bits">#F5C843</color>     <!-- Mid gold -->
+    <color name="quality_sd">#FFE082</color>          <!-- Light amber -->
+    <color name="quality_unknown">#9E9E9E</color>     <!-- Neutral grey -->
+    <color name="quality_unknown_black">#424242</color> <!-- Soft dark -->
 
     <color name="file_format_dsd">#ffb300</color>
     <color name="file_format_lossless">#ffecb3</color>

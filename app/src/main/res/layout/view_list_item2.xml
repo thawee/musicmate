@@ -62,7 +62,6 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingEnd="@dimen/dimen_24_dp"
             android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
             android:fontFamily="@font/sfthonburi_bold"
             android:textColor="?attr/colorOnSurface"
@@ -72,34 +71,21 @@
             android:id="@+id/item_subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_1_dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
             android:fontFamily="@font/sfthonburi_regular"
             android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="Allan Taylor" />
+            tools:text="Allan Taylor ◇ The Road Well Travelled" />
 
         <!-- Metadata Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="@dimen/dimen_1_dp"
+            android:layout_marginTop="@dimen/dimen_4_dp"
             android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/item_album"
-                android:layout_width="@dimen/dimen_132_dp"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                android:fontFamily="@font/sfthonburi_regular"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="The Road Well Travelled" />
-
-            <!--
             <apincer.android.mmate.ui.view.QualityIndicatorView
                 android:id="@+id/icon_quality_indicator"
                 android:layout_width="wrap_content"
@@ -112,39 +98,25 @@
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 app:dr="DR12"
                 app:db="96 dB" />
-               -->
-            <!--
+
             <apincer.android.mmate.ui.view.RatingIndicatorView
                 android:id="@+id/rating_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 app:mode="mini" />
-            -->
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
-            <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/icon_quality_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <apincer.android.mmate.ui.view.DynamicRangeView
-                android:id="@+id/dynamic_range_db_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:dr="DR12"
-                app:db="96 dB" />
-
             <apincer.android.mmate.ui.view.DurationView
                 android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/dimen_2_dp" />
-            <!--
+                android:layout_marginEnd="@dimen/dimen_6_dp" />
+
             <ImageView
                 android:id="@+id/item_more_actions"
                 android:layout_width="@dimen/dimen_24_dp"
@@ -152,7 +124,6 @@
                 android:padding="@dimen/dimen_2_dp"
                 android:contentDescription="@string/more_options"
                 android:src="@drawable/rounded_more_vert_24" />
-                -->
         </LinearLayout>
     </LinearLayout>
 

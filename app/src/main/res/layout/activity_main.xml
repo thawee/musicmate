@@ -11,7 +11,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_dodgeInsetEdges="bottom">
 
         <!-- 🔷 Persistent Header -->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -46,6 +47,7 @@
                 android:queryHint="@string/search_music_hint"
                 app:iconifiedByDefault="false"
                 app:searchIcon="@null"
+                android:textColor="?attr/colorOnSurface"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@id/header_back_btn"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -68,14 +70,14 @@
             android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:layout_marginBottom="@dimen/dimen_36_dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="@dimen/dimen_96_dp"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/view_list_item" />
 
@@ -87,16 +89,19 @@
         android:id="@+id/fab_scroll_to_top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginStart="@dimen/dimen_8_dp"
+        android:layout_marginEnd="@dimen/dimen_8_dp"
         android:layout_marginBottom="@dimen/dimen_96_dp"
         android:src="@drawable/rounded_arrow_shape_up_stack_24"
         android:contentDescription="@string/scroll_to_top"
         app:fabSize="mini"
-        app:backgroundTint="?attr/colorPrimary"
-        app:tint="?attr/colorOnPrimary"
         android:visibility="gone"
-        tools:visibility="visible" />
+        tools:visibility="visible"
+
+        app:shapeAppearanceOverlay="@style/Fab.Stroke"
+        app:backgroundTint="@color/black_transparent_80"
+        app:tint="?attr/colorPrimary"/>
 
     <sakout.mehdi.StateViews.StateView
         android:id="@+id/status_page"
@@ -120,7 +125,7 @@
         android:layout_height="@dimen/dimen_64_dp"
         android:layout_gravity="bottom"
         app:fabAlignmentMode="center"
-        app:hideOnScroll="true"
+        app:hideOnScroll="false"
         style="@style/RoundedBottomAppBar"
         android:background="@drawable/shape_bottom_frosted_panel">
 
@@ -132,16 +137,18 @@
 
             <!-- Left section -->
             <LinearLayout
-                android:id="@+id/navigation_collections"
+
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical">
                 <ImageView
+                    android:id="@+id/navigation_collections"
                     android:layout_width="@dimen/dimen_32_dp"
                     android:layout_height="@dimen/dimen_32_dp"
                     android:src="@drawable/round_subscriptions_24"
                     android:contentDescription="Library" />
                 <TextView
+                    android:id="@+id/navigation_now_playing"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingStart="@dimen/dimen_8_dp"

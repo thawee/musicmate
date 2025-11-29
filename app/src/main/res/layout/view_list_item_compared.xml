@@ -62,35 +62,38 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingEnd="@dimen/dimen_24_dp"
             android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
             android:fontFamily="@font/sfthonburi_bold"
             android:textColor="?attr/colorOnSurface"
             tools:text="A Way Back Home" />
 
-        <TextView
-            android:id="@+id/item_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_1_dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:fontFamily="@font/sfthonburi_regular"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="Allan Taylor" />
-
-        <!-- Metadata Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="@dimen/dimen_1_dp"
-            android:gravity="center_vertical">
-
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/item_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:fontFamily="@font/sfthonburi_regular"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Allan Taylor" />
+            <TextView
+                android:id="@+id/item_subtitle_sep"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:fontFamily="@font/sfthonburi_regular"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:text=" \u00b7 " />
             <TextView
                 android:id="@+id/item_album"
-                android:layout_width="@dimen/dimen_132_dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
@@ -98,12 +101,19 @@
                 android:fontFamily="@font/sfthonburi_regular"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="The Road Well Travelled" />
+        </LinearLayout>
+        <!-- Metadata Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/dimen_4_dp"
+            android:gravity="center_vertical">
 
-            <!--
             <apincer.android.mmate.ui.view.QualityIndicatorView
                 android:id="@+id/icon_quality_indicator"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"/>
 
             <apincer.android.mmate.ui.view.DynamicRangeView
                 android:id="@+id/dynamic_range_db_view"
@@ -112,47 +122,53 @@
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 app:dr="DR12"
                 app:db="96 dB" />
-               -->
-            <!--
-            <apincer.android.mmate.ui.view.RatingIndicatorView
-                android:id="@+id/rating_view"
+
+            <TextView
+                android:id="@+id/item_filetype"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/dimen_24_dp"
+                android:layout_margin="@dimen/dimen_1_dp"
+                android:background="@drawable/shape_background_duration"
+                android:gravity="center"
+                android:layout_gravity="center_vertical"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                app:mode="mini" />
-            -->
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:paddingTop="@dimen/dimen_2_dp"
+                android:paddingBottom="@dimen/dimen_2_dp"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:text="FLAC"
+                tools:ignore="HardcodedText"
+                />
+
+            <TextView
+                android:id="@+id/item_sample_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dimen_24_dp"
+                android:layout_margin="@dimen/dimen_1_dp"
+                android:background="@drawable/shape_background_duration"
+                android:gravity="center"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/dimen_6_dp"
+                android:paddingStart="@dimen/dimen_8_dp"
+                android:paddingEnd="@dimen/dimen_8_dp"
+                android:paddingTop="@dimen/dimen_2_dp"
+                android:paddingBottom="@dimen/dimen_2_dp"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:text="96 kHz"
+                tools:ignore="HardcodedText"
+                />
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
-            <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/icon_quality_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <apincer.android.mmate.ui.view.DynamicRangeView
-                android:id="@+id/dynamic_range_db_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:dr="DR12"
-                app:db="96 dB" />
-
             <apincer.android.mmate.ui.view.DurationView
                 android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/dimen_2_dp" />
-            <!--
-            <ImageView
-                android:id="@+id/item_more_actions"
-                android:layout_width="@dimen/dimen_24_dp"
-                android:layout_height="@dimen/dimen_24_dp"
-                android:padding="@dimen/dimen_2_dp"
-                android:contentDescription="@string/more_options"
-                android:src="@drawable/rounded_more_vert_24" />
-                -->
+                android:layout_marginEnd="@dimen/dimen_1_dp" />
         </LinearLayout>
     </LinearLayout>
 

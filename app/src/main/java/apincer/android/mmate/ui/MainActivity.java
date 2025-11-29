@@ -11,7 +11,6 @@ import static apincer.music.core.utils.StringUtils.isEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
@@ -26,7 +25,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -135,9 +133,8 @@ public class MainActivity extends AppCompatActivity {
     // Activity result launcher
     ActivityResultLauncher<Intent> tagViewResultLauncher;
 
-    // ViewModel and Repository
+    // ViewModel
     private MainViewModel viewModel;
-   // private FileRepository repos;
 
     // UI components
     private ResideMenu mResideMenu;
@@ -154,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private FloatingActionButton fabScrollToTop;
+
+    private TextView nowPlayingLabel;
 
     // Action mode
     private ActionModeCallback actionModeCallback;
@@ -217,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                     adapter.notifyItemChanged(previouslyPlaying);
                     adapter.notifyItemChanged(song);
                 }
-
+                nowPlayingLabel.setText(StringUtils.truncate(song.getTitle(), 16, StringUtils.TruncateType.SUFFIX));
                 previouslyPlaying = song;
             });
         }
@@ -335,34 +334,6 @@ public class MainActivity extends AppCompatActivity {
         openSearch();
     }
 
-   /*
-    private void setupNowPlayingView() {
-        // Initialize components
-        View nowPlayingView = findViewById(R.id.now_playing_panel);
-        ImageView nowPlayingCoverArt = findViewById(R.id.now_playing_coverart);
-        ImageView nowPlayingPlayer = findViewById(R.id.now_playing_player);
-        ImageView nowPlayingOutputDevice = findViewById(R.id.now_playing_device);
-
-        // Create manager
-        nowPlayingHolder = new NowPlayingViewHolder(
-                getApplicationContext(),
-                nowPlayingView,
-                nowPlayingCoverArt,
-                nowPlayingPlayer,
-                nowPlayingOutputDevice
-       // );
-
-        // Setup click listeners
-        nowPlayingView.setOnClickListener(view1 -> scrollToListening());
-        nowPlayingView.setOnLongClickListener(view1 -> {
-            MusixMateApp.getPlayerControl().playNextSong(getApplicationContext());
-            return true;
-        });
-
-        // Hide initially
-        nowPlayingView.setVisibility(GONE);
-    } */
-
     private void setupBottomAppBar() {
         // Find components
         BottomAppBar bottomAppBar = findViewById(R.id.bottom_app_bar);
@@ -376,6 +347,7 @@ public class MainActivity extends AppCompatActivity {
         bottomAppBar.setElevation(dpToPx(getApplicationContext(), 8));
 
         View leftMenu = bottomAppBar.findViewById(R.id.navigation_collections);
+        nowPlayingLabel = bottomAppBar.findViewById(R.id.navigation_now_playing);
 
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
        // UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
@@ -387,7 +359,8 @@ public class MainActivity extends AppCompatActivity {
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
         signalPath.setOnClickListener(v -> doShowSignalPath());
-        signalPath.setOnLongClickListener(v -> scrollToSong(previouslyPlaying));
+        //signalPath.setOnLongClickListener(v -> scrollToSong(previouslyPlaying));
+        nowPlayingLabel.setOnClickListener(v -> scrollToSong(previouslyPlaying));
         mediaServer.setOnClickListener(v -> doManageMediaServer());
     }
 
@@ -583,11 +556,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup fast scroller
         new FastScrollerBuilder(mRecyclerView)
-                //.useMd2Style()
                 .useMd1Style()
                 .setPadding(0, 0, 8, 0)
-                .setThumbDrawable(Objects.requireNonNull(
-                        ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
+                //.setThumbDrawable(Objects.requireNonNull(
+                //        ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
                 .setPopupTextProvider((view, position) -> {
                     MediaTrack track = adapter.getMusicTag(position);
                     if(track != null) return track.getTitle().subSequence(0,1);
@@ -1026,31 +998,12 @@ public class MainActivity extends AppCompatActivity {
        // imm.showSoftInput(headerSearchView.findViewById(androidx.appcompat.R.id.search_src_text), InputMethodManager.SHOW_IMPLICIT);
     }
 
-    // Put this method inside your MainActivity class
-    private void closeSearch() {
-        // Hide the SearchView
-        headerSearchView.setVisibility(View.GONE);
-        headerSearchView.setQuery("", false); // Clear the text
-
-        // Show the title, back arrow, and search icon
-        //titleLabelText.setVisibility(View.VISIBLE);
-        //mBackButton.setVisibility(View.VISIBLE);
-        //headerSearchIcon.setVisibility(View.VISIBLE);
-
-        // Hide the keyboard
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(headerSearchView.getWindowToken(), 0);
-
-        updateHeaderPanel();
-    }
-
     private void setupSearchView() {
         // This is the main listener for handling text changes and search submissions
         headerSearchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 // User pressed the search button on the keyboard
-                // myAdapter.getFilter().filter(query);
                 viewModel.search(adapter, query);
                 headerSearchView.clearFocus(); // Hide keyboard
                 return true;
@@ -1059,7 +1012,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 // User is typing
-                // myAdapter.getFilter().filter(newText);
                 viewModel.search(adapter, newText);
                 return true;
             }
@@ -1185,7 +1137,6 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void onComplete() {
-                           // viewModel.deleteMediaItems(selections);
                             runOnUiThread(() -> {
                                 viewModel.loadMusicItems();
                                 busy = false;
@@ -1246,7 +1197,6 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-               // name.setText(FileUtils.getFileName(tag.getPath()));
                 name.setText(tag.getSimpleName());
 
                 return view;
@@ -1366,7 +1316,6 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                //name.setText(FileUtils.getFileName(tag.getPath()));
                 name.setText(tag.getSimpleName());
 
                 return view;
@@ -1449,7 +1398,6 @@ public class MainActivity extends AppCompatActivity {
 
         Map<MusicTag, String> statusList = new HashMap<>();
         ListView itemsView = cview.findViewById(R.id.itemListView);
-       // PowerSpinnerView encodingList = cview.findViewById(R.id.audioEncoding);
         AutoCompleteTextView outputFormat = cview.findViewById(R.id.output_format);
         MaterialButton btnOK = cview.findViewById(R.id.button_encode_file);
         View btnCancel = cview.findViewById(R.id.button_cancel);
@@ -1491,7 +1439,6 @@ public class MainActivity extends AppCompatActivity {
 
                 seq.setText(String.valueOf(i + 1));
                 status.setText(statusList.getOrDefault(tag, "-"));
-                //name.setText(FileUtils.getFileName(tag.getPath()));
                 name.setText(tag.getSimpleName());
 
                 return view;
@@ -1528,10 +1475,6 @@ public class MainActivity extends AppCompatActivity {
         int compressionLevel = FLAC_STANDARD_COMPRESS_LEVEL;
         String targetExt;
         String selectedFormat = outputFormat.getText().toString();
-       // if(selectedFormat.contains(".flac")) {
-       //     compressionLevel = selectedFormat.contains("Uncompressed")?FLAC_UNCOMPRESS_LEVEL:FLAC_STANDARD_COMPRESS_LEVEL;
-      //      targetExt = FILE_FLAC;
-       // }else
         if(selectedFormat.contains(".aiff")) {
             targetExt = FILE_AIFF;
         }else if(selectedFormat.contains(".mp3")) {
@@ -1768,25 +1711,18 @@ public class MainActivity extends AppCompatActivity {
                 headerSearchView.clearFocus();
             }
 
-           // if (headerSearchView.getVisibility() == View.VISIBLE) {
-           //     closeSearch();
-           //     return;
-           // }
-
             // if TYPE library or keyword is null, open leftMenu
             if(adapter != null) {
                 if (adapter.hasFilter()) {
                     adapter.resetFilter();
                     swipeRefreshLayout.setRefreshing(true);
                     viewModel.loadMusicItems(adapter.getCriteria());
-                    //refreshLayout.autoRefresh();
 
                     return;
                 }
 
                 if (adapter.isSearchMode()) {
                     doHideSearch();
-                    // refreshLayout.autoRefresh();
                     swipeRefreshLayout.setRefreshing(true);
                     viewModel.loadMusicItems(adapter.getCriteria());
 
@@ -1794,14 +1730,12 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (isEmpty(adapter.getCriteria().getKeyword()) || SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
-                   // mResideMenu.openMenu(ResideMenu.DIRECTION_LEFT);
                     doShowLeftMenus();
                 }else if ((!isEmpty(adapter.getCriteria().getKeyword())) && !SearchCriteria.TYPE.LIBRARY.equals(adapter.getCriteria().getType())) {
                     adapter.resetFilter();
                     adapter.getCriteria().setKeyword(null);
                     swipeRefreshLayout.setRefreshing(true);
                     viewModel.loadMusicItems(adapter.getCriteria());
-
                 }
             }
         }

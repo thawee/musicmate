@@ -80,9 +80,6 @@ public class TagRepository {
         if(StringUtils.isEmpty(tag.getGenre())) {
             tag.setGenre(Constants.NONE);
         }
-       // if(StringUtils.isEmpty(tag.getGrouping())) {
-       //     tag.setGrouping(Constants.NONE);
-       // }
         if(StringUtils.isEmpty(tag.getArtist())) {
             tag.setArtist(Constants.EMPTY);
         }
@@ -206,45 +203,6 @@ public class TagRepository {
         Collections.sort(list);
         return list;
     }
-
-    /*
-	public static List<String> getDefaultGroupingList(Context context) {
-        String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
-        List<String> list = new ArrayList<>(Arrays.asList(groupings));
-        Collections.sort(list);
-        return list;
-    }
-
-    public List<String> getActualGroupingList(Context context) {
-        List<String> list = new ArrayList<>();
-        List<String> names = dbHelper.getGrouping();
-        for (String group:names) {
-            if(StringUtils.isEmpty(group)) {
-                if(!list.contains(StringUtils.EMPTY)) {
-                    list.add(StringUtils.EMPTY);
-                }
-            }else {
-                list.add(group);
-            }
-        }
-        Collections.sort(list);
-        return list;
-    }
-
-    public List<String> getGroupingList(Context context) {
-        List<String> list = getActualGroupingList(context);
-        String[] groupings =  context.getResources().getStringArray(R.array.default_groupings);
-        for(String grouping: groupings) {
-            if(!list.contains(grouping)) {
-                list.add(grouping);
-            }
-        }
-
-        Collections.sort(list);
-        return list;
-    }
-
-     */
 
     public List<String> getArtistList() {
         List<String> allArtistStrings = dbHelper.getArtists();
@@ -449,31 +407,6 @@ public class TagRepository {
         return list;
     }
 
-    /*
-    private List<MusicTag> findGroupingItems() {
-        Map<String, MusicFolder> mapped = new HashMap<>();
-        List<MusicTag> list = getAllMusics();
-        for(MusicTag song: list) {
-            String name = song.getGrouping();
-            if(isEmpty(name)) {
-                name = EMPTY;
-            }
-            MusicFolder folder = mapped.getOrDefault(name, new MusicFolder(SearchCriteria.TYPE.GROUPING, name));
-            folder.increaseChildCount();
-            folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
-            mapped.put(name, folder);
-            // genres.add(folder);
-        }
-
-        // This is the line you already have
-        List<MusicTag> folderList = new ArrayList<>(mapped.values());
-
-        // This new line sorts the list in-place alphabetically by title
-        folderList.sort(Comparator.comparing(MusicTag::getTitle));
-
-        return folderList;
-    } */
-
     private List<MusicTag> findCodecItems() {
        // List<MusicTag> codecs = new ArrayList<>();
         Map<String, MusicFolder> mapped = new HashMap<>();
@@ -500,9 +433,23 @@ public class TagRepository {
 
         // This is the line you already have
         List<MusicTag> folderList = new ArrayList<>(mapped.values());
-
+        final Map<String, Integer> customOrder = Map.of(
+                Constants.TITLE_HIGH_QUALITY, 0,
+                Constants.TITLE_HIFI_LOSSLESS, 1,
+                Constants.TITLE_HIRES, 2,
+                Constants.TITLE_MASTER_AUDIO, 3,
+                Constants.TITLE_DSD, 4
+        );
         // This new line sorts the list in-place alphabetically by title
-        folderList.sort(Comparator.comparing(MusicTag::getTitle));
+        //folderList.sort(Comparator.comparing(MusicTag::getTitle));
+
+        final int defaultPriority = Integer.MAX_VALUE;
+
+        // Sort the list using the custom order
+        folderList.sort(Comparator.comparingInt(tag ->
+                // Get the priority from the map, or use the default
+                customOrder.getOrDefault(tag.getTitle(), defaultPriority)
+        ));
 
         return folderList;
     }
@@ -536,17 +483,6 @@ public class TagRepository {
        // List<MusicTag> artists = new ArrayList<>();
         Map<String, MusicFolder> mapped = new HashMap<>();
         List<MusicTag> list = getAllMusics();
-        /*for(MusicTag song: list) {
-            String artist = song.getArtist();
-            if(isEmpty(artist)) {
-                artist = EMPTY;
-            }
-            // todo split artist by ; and ,
-            MusicFolder folder = mapped.getOrDefault(artist, new MusicFolder(SearchCriteria.TYPE.ARTIST, artist));
-            folder.increaseChildCount();
-            folder.setAudioDuration(folder.getAudioDuration()+song.getAudioDuration());
-            mapped.put(artist, folder);
-        } */
 
         for (MusicTag song : list) {
             String artistString = song.getArtist();
@@ -825,15 +761,6 @@ public class TagRepository {
     public List<MusicFolder> getArtistWithChildrenCount() {
         return dbHelper.getArtistWithChildrenCount();
     }
-
-    /*
-    public List<String> getGrouping() {
-        return dbHelper.getGrouping();
-    }
-
-    public List<MusicFolder> getGroupingWithChildrenCount() {
-        return dbHelper.getGroupingWithChildrenCount();
-    } */
 
     public void setPlayingQueue(List<MusicTag> songsInContext) {
         try {

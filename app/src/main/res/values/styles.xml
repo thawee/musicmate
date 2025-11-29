@@ -498,4 +498,9 @@ M2
         <item name="shapeAppearanceOverlay">@style/RoundedBottomAppBarShape</item>
     </style>
 
+    <style name="Fab.Stroke" parent="">
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="strokeWidth">2dp</item>
+    </style>
+
 </resources>
