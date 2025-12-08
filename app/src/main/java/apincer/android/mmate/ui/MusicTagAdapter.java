@@ -480,13 +480,14 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             if (tag.equals(playbackService.getNowPlayingSong())) {
                 isPlaying = true;
                 Drawable bg = AppCompatResources.getDrawable(holder.mContext, R.drawable.shape_round_background_playing);
-                Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_equalizer_active);
+               // Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_equalizer_active);
+                Drawable drawable = AppCompatResources.getDrawable(holder.mContext, R.drawable.ic_notification_default);
                 holder.mPlayerView.setImageDrawable(drawable);
                 holder.mPlayerView.setBackground(bg);
                 holder.mPlayerView.setVisibility(VISIBLE);
-                if (drawable instanceof AnimatedImageDrawable animatedImageDrawable) {
+                /*if (drawable instanceof AnimatedImageDrawable animatedImageDrawable) {
                     animatedImageDrawable.start();
-                }
+                } */
             }
         }
         if(!isPlaying && MusicTagUtils.getRating(tag)>= 3) {

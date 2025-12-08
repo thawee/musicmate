@@ -29,6 +29,8 @@ public class AndroidPlayerController {
     private PlaybackCallback playbackCallback;
     private MediaMetadata currentMetadata;
 
+    private long lastUpdateSongTime;
+
     // How long to wait between progress updates (in milliseconds)
     private static final long PROGRESS_UPDATE_INTERVAL = 1000; // 1 seconds
 
@@ -117,30 +119,23 @@ public class AndroidPlayerController {
             this.mediaController.registerCallback(mediaCallback, mProgressHandler);
 
             // --- 2. Get the initial metadata ---
-            MediaMetadata metadata = mediaController.getMetadata();
-            if (metadata != null) {
-                currentMetadata = metadata; // Store initial metadata
+            readMetadata(playbackCallback);
+        }
+    }
+
+    private void readMetadata(PlaybackCallback playbackCallback) {
+        MediaMetadata metadata = mediaController.getMetadata();
+        if (metadata != null) {
+            currentMetadata = metadata; // Store initial metadata
+
+            if (playbackCallback != null) {
                 String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
                 String artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
                 String album = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM);
                 long duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION);
-                if (playbackCallback != null) {
-                    playbackCallback.onMediaTrackChanged(title, artist, album, duration);
-                }
+                playbackCallback.onMediaTrackChanged(title, artist, album, duration);
+                lastUpdateSongTime = System.currentTimeMillis();
             }
-
-            // --- 3. Get the initial playback state ---
-            /*PlaybackState state = mediaController.getPlaybackState();
-            if (state != null && state.getState() == PlaybackState.STATE_PLAYING) {
-                scheduleProgressUpdate(); // Start progress poller if already playing
-                if (playbackCallback != null) {
-                    playbackCallback.onPlaybackStateChanged(true);
-                }
-            } else {
-                if (playbackCallback != null) {
-                    playbackCallback.onPlaybackStateChanged(false);
-                }
-            } */
         }
     }
 
@@ -188,6 +183,10 @@ public class AndroidPlayerController {
                     long timeSinceUpdate = SystemClock.elapsedRealtime() - lastUpdateTime;
                     long elapsedMillis = lastPosition + (long) (timeSinceUpdate * playbackSpeed);
                     playbackCallback.onPlaybackStateTimeElapsedSeconds(elapsedMillis/1000);
+                    if((System.currentTimeMillis() - lastUpdateSongTime) > elapsedMillis) {
+                        // read current title
+                        readMetadata(playbackCallback);
+                    }
                 }
 
                 // Schedule the next update

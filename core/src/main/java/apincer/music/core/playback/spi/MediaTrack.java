@@ -5,7 +5,7 @@ public interface MediaTrack {
 
     String getTitle();
 
-    String getRating();
+    String getQualityRating();
 
    // String getGrouping();
 

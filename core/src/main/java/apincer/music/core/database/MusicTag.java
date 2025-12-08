@@ -50,7 +50,7 @@ public class MusicTag implements MediaTrack {
     protected String simpleName;
 
     @DatabaseField(index = true)
-   protected String qualityRating;
+    protected String qualityRating;
     @DatabaseField
     protected String audioEncoding; //AAC,MP3, ALAC, FLAC, DSD
 
@@ -97,8 +97,8 @@ public class MusicTag implements MediaTrack {
     @DatabaseField
     protected String comment = "";
    // @Index
-   @DatabaseField(index = true)
-   protected String grouping = "";
+  // @DatabaseField(index = true)
+  // protected String grouping = "";
     @DatabaseField
     protected String composer = "";
     @DatabaseField
@@ -293,10 +293,11 @@ public class MusicTag implements MediaTrack {
         return title;
     }
 
+    /*
     @Override
     public String getRating() {
         return getQualityRating();
-    }
+    } */
 
     public void setTitle(String title) {
         this.title = title;
@@ -404,7 +405,7 @@ public class MusicTag implements MediaTrack {
         tag.track = track;
         tag.disc = disc;
         tag.comment = comment;
-        tag.grouping = grouping;
+     //   tag.grouping = grouping;
         tag.composer = composer;
         tag.publisher = publisher;
         tag.compilation = compilation;
@@ -446,7 +447,7 @@ public class MusicTag implements MediaTrack {
         this.track = tag.track;
         this.disc = tag.disc;
         this.comment = tag.comment;
-        this.grouping = tag.grouping;
+      //  this.grouping = tag.grouping;
         this.composer = tag.composer;
        // this.mediaType = tag.mediaType;
         this.compilation = tag.compilation;

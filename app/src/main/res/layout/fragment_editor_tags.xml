@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,6 +7,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.TagsActivity">
+    -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/activity_horizontal_margin"
+    android:clipToPadding="false"
+    android:paddingBottom="?attr/actionBarSize"
+    android:orientation="vertical">
 
     <!-- App Bar with Tabs -->
     <!--
@@ -31,21 +42,53 @@
         </com.google.android.material.tabs.TabLayout>
     </com.google.android.material.appbar.AppBarLayout>
     -->
-    <!-- Scrollable Metadata Fields -->
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/editor_scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:padding="16dp"
-        android:layout_marginBottom="@dimen/editor_bottom_bar_height"
-        android:clipToPadding="false"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+
+            <!-- Bottom Action Toggle Buttons -->
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/editor_action_group"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/editor_bottom_bar_height"
+                android:layout_gravity="bottom"
+                android:padding="8dp"
+                android:background="?attr/colorSurface"
+                android:elevation="8dp"
+                app:singleSelection="true"
+                app:selectionRequired="false">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_reformat"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Re-format"
+                    app:icon="@drawable/round_auto_awesome_24"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_read_tag"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Get Tags"
+                    app:icon="@drawable/ic_file_rename_outline_24"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_save"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Save"
+                    app:icon="@drawable/ic_round_save_24"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <!-- Album Art and File Path -->
             <com.google.android.material.card.MaterialCardView
@@ -98,6 +141,22 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+    <!-- Scrollable Metadata Fields -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/editor_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:padding="16dp"
+        android:layout_marginBottom="@dimen/editor_bottom_bar_height"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
             <!-- Tag Fields -->
             <com.google.android.material.textfield.TextInputLayout
                 android:hint="Title"
@@ -226,52 +285,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </com.google.android.material.textfield.TextInputLayout>
+
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Action Toggle Buttons -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/editor_action_group"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/editor_bottom_bar_height"
-        android:layout_gravity="bottom"
-        android:padding="8dp"
-        android:background="?attr/colorSurface"
-        android:elevation="8dp"
-        app:singleSelection="false">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/action_reformat"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Re-format"
-            app:icon="@drawable/round_auto_awesome_24"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/action_read_tag"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Get Tags"
-            app:icon="@drawable/ic_file_rename_outline_24"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/action_save"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Save"
-            app:icon="@drawable/ic_round_save_24"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>

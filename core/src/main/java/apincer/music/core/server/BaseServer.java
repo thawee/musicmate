@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import apincer.music.core.codec.MusicAnalyser;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.database.QueueItem;
+import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.model.PlaylistEntry;
 import apincer.music.core.model.TrackInfo;
 import apincer.music.core.playback.PlaybackState;
@@ -955,9 +955,9 @@ public class BaseServer {
         public Map<String, Object> sendQueueUpdate() {
             try {
                 // Fetching QueueItems which contain the order and the MusicTag
-                List<QueueItem> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
+                List<PlayingQueue> playingQueue = tagRepos.getQueueItemDao().queryBuilder().orderBy("position", true).query(); // Order by 'position'
                 List<Map<String, ?>> queueAsMaps = playingQueue.stream()
-                        .map(QueueItem::getTrack) // Get the MusicTag from QueueItem
+                        .map(PlayingQueue::getTrack) // Get the MusicTag from QueueItem
                         .filter(java.util.Objects::nonNull) // Filter out any null tracks
                         .map(this::getMap) // Convert MusicTag to Map
                         .collect(Collectors.toList());

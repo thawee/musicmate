@@ -60,7 +60,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginTop="@dimen/dimen_4_dp"
                 app:layout_constraintTop_toBottomOf="@id/search_view"
-                app:layout_constraintStart_toStartOf="@id/search_view"
+                app:layout_constraintStart_toStartOf="@id/header_back_btn"
                 app:layout_constraintBottom_toBottomOf="parent"
                 tools:text="622 songs · 44 hrs 24 min" />
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -132,29 +132,45 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingHorizontal="@dimen/dimen_16_dp"
+            android:paddingHorizontal="@dimen/dimen_8_dp"
             android:gravity="center_vertical">
 
             <!-- Left section -->
-            <LinearLayout
-
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical">
                 <ImageView
                     android:id="@+id/navigation_collections"
                     android:layout_width="@dimen/dimen_32_dp"
                     android:layout_height="@dimen/dimen_32_dp"
+                    android:layout_centerVertical="true"
+                    android:gravity="center_vertical"
                     android:src="@drawable/round_subscriptions_24"
-                    android:contentDescription="Library" />
+                    android:contentDescription="@string/library" />
+               <!--
                 <TextView
                     android:id="@+id/navigation_now_playing"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dimen_2_dp"
                     android:paddingStart="@dimen/dimen_8_dp"
-                    android:text="Library"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
-            </LinearLayout>
+                    android:text="@string/library"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                    tools:ignore="RtlSymmetry" />
+                -->
+
+            <TextView
+                android:id="@+id/navigation_now_playing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_38_dp"
+                android:layout_marginEnd="@dimen/dimen_96_dp"
+                android:padding="@dimen/dimen_12_dp"
+                android:text="@string/app_name"
+                android:gravity="center"
+                android:lines="1"
+                android:maxLines="1"
+                android:layout_centerVertical="true"
+                android:background="@drawable/shape_border_playing_black"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                tools:ignore="RtlSymmetry" />
 
             <!-- Right section -->
             <LinearLayout
@@ -163,7 +179,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical|end"
                 android:layout_alignParentEnd="true">
-
+                <!--
                 <ImageView
                     android:id="@+id/navigation_signal_path"
                     android:layout_width="@dimen/dimen_24_dp"
@@ -171,14 +187,14 @@
                     android:layout_marginEnd="@dimen/dimen_32_dp"
                     android:src="@drawable/rounded_speaker_24"
                     android:contentDescription="Signal Path" />
-
+                -->
                 <ImageView
                     android:id="@+id/navigation_media_server"
                     android:layout_width="@dimen/dimen_24_dp"
                     android:layout_height="@dimen/dimen_24_dp"
-                    android:layout_marginEnd="@dimen/dimen_32_dp"
+                    android:layout_marginEnd="@dimen/dimen_24_dp"
                     android:src="@drawable/rounded_broadcast_on_personal_24"
-                    android:contentDescription="Media Server" />
+                    android:contentDescription="@string/media_server" />
 
                 <ImageView
                     android:id="@+id/navigation_settings"
@@ -186,7 +202,7 @@
                     android:layout_height="@dimen/dimen_32_dp"
                     android:layout_marginEnd="@dimen/dimen_8_dp"
                     android:src="@drawable/ic_widgets_white_24dp"
-                    android:contentDescription="Settings" />
+                    android:contentDescription="@string/settings" />
             </LinearLayout>
         </RelativeLayout>
     </com.google.android.material.bottomappbar.BottomAppBar>

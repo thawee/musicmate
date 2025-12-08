@@ -586,5 +586,6 @@
     <color name="new_indicator_background">#fff59d</color>
     <color name="new_download_indicator_text">#b0120a</color>
     <color name="new_download_indicator_background">#fff59d</color>
+    <color name="now_playing_background">#800D47A1</color>
 
 </resources>

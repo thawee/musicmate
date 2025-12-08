@@ -76,7 +76,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  *     have issue jupnp auto stopping/starting on wifi loss
  *   - httpcore smooth, better SQ than netty, cpu <10, memory < 256 mb, peak 380mb
  *     have bug to stop playing on client sometime
- *   - jetty12 is faster than jetty11 12% but cannot run on android 34
+ *   - jetty12 is faster than jetty11 12% and work on android 34
  *   <p>
  *   Optimized for compatibility with DLNA clients like mConnectHD and RoPieeeXL
  *  </p>
@@ -530,7 +530,7 @@ public class MediaServerHubImpl implements MediaServerHub {
         // Check for Java NIO if others not found
         if ("Unknown".equals(webEngine)) {
             try {
-                Class.forName("apincer.music.core.server.NioWebServerImpl");
+                Class.forName("apincer.music.server.jupnp.transport.NioWebServerImpl");
                 webEngine = "Java NIO";
             } catch (ClassNotFoundException e) {
                 // This is unlikely to fail in an Android environment

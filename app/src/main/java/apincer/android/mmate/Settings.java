@@ -43,25 +43,10 @@ public class Settings {
         return prefs.getBoolean(Constants.PREF_ENABLE_MEDIA_SERVER,false);
     }
 
-    public static boolean isUseNettyLibrary(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getBoolean(Constants.PREF_NETTY_MEDIA_SERVER,false);
-    }
-
     public static boolean isExcludeArtistFromSimilarSongs(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(Constants.PREF_EXCLUDE_ARTIST_FROM_SIMILAR_SONGS,false);
     }
-
-    /*
-    public static List<String> getDirectories(Context context) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        List<String> defaultDirs = FileRepository.newInstance(context).getDefaultMusicPaths();
-        Set<String> defaultDirsSet = new HashSet<>(defaultDirs);
-        Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, defaultDirsSet);
-        return new ArrayList<>(dirs);
-    } */
 
     public static void setDirectories(Context context, List<String> dirs) {
         SharedPreferences prefs =
@@ -79,20 +64,6 @@ public class Settings {
         Set<String> dirs = prefs.getStringSet(Constants.PREF_MUSICMATE_DIRECTORIES, dirsSet);
         return !dirs.isEmpty();
     }
-
-    /*
-    public static long getLastScanTime(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getLong(Constants.PREF_LAST_SCAN_TIME,0);
-    }
-
-    public static void setLastScanTime(Context context, long l) {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putLong(Constants.PREF_LAST_SCAN_TIME, l);
-        edit.apply();
-    } */
 
     public static SharedPreferences getPreferences(Context context) {
         // The default preference file name is constructed like this

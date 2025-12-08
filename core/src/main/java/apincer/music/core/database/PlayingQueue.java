@@ -2,8 +2,8 @@ package apincer.music.core.database;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "queue_items")
-public class QueueItem {
+@DatabaseTable(tableName = "playing_queue")
+public class PlayingQueue {
 
     @DatabaseField(id = true, canBeNull = false)
     private long id;
@@ -18,7 +18,7 @@ public class QueueItem {
     @DatabaseField(canBeNull = false)
     private long position;
 
-    public QueueItem(MusicTag track, long position) {
+    public PlayingQueue(MusicTag track, long position) {
         this.track = track;
         this.id = track.getId();
         this.position = position;
@@ -28,6 +28,6 @@ public class QueueItem {
         return track;
     }
 
-    public QueueItem() {
+    public PlayingQueue() {
     }
 }

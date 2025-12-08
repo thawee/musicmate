@@ -32,7 +32,7 @@ import javax.inject.Singleton;
 
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.database.QueueItem;
+import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.utils.StringUtils;
@@ -669,7 +669,7 @@ public class TagRepository {
         return dbHelper.findByAlbumArtFilename(albumArtFilename);
     }
 
-    public Dao<QueueItem, Long> getQueueItemDao() throws SQLException {
+    public Dao<PlayingQueue, Long> getQueueItemDao() throws SQLException {
         return dbHelper.getQueueItemDao();
     }
 
@@ -679,18 +679,18 @@ public class TagRepository {
 
     public void addToPlayingQueue(MusicTag song) {
         try {
-            Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
+            Dao<PlayingQueue, Long> queueDao = dbHelper.getQueueItemDao();
             // Get the current size of the queue to determine the next position.
             // If the queue has 5 items (positions 0-4), countOf() returns 5, which is the correct next position.
             long nextPosition = queueDao.countOf();
-            QueueItem qItem = new QueueItem(song, nextPosition);
+            PlayingQueue qItem = new PlayingQueue(song, nextPosition);
             queueDao.create(qItem);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public List<QueueItem> getQueueItems() {
+    public List<PlayingQueue> getQueueItems() {
         try {
             return dbHelper.getQueueItemDao().queryForAll();
         } catch (SQLException ignored) { }
@@ -765,18 +765,18 @@ public class TagRepository {
     public void setPlayingQueue(List<MusicTag> songsInContext) {
         try {
             // --- Get references to our Data Access Objects (DAOs) ---
-            Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
+            Dao<PlayingQueue, Long> queueDao = dbHelper.getQueueItemDao();
 
             // Use a batch task to perform all operations in a single transaction
             queueDao.callBatchTasks((Callable<Void>) () -> {
                 // --- 1. Clear the entire table ---
                 // This is the most direct and reliable way to clear a table.
-                TableUtils.clearTable(queueDao.getConnectionSource(), QueueItem.class);
+                TableUtils.clearTable(queueDao.getConnectionSource(), PlayingQueue.class);
 
                 // --- 2. Populate the table with the new queue items ---
                 int queueIndex = 1;
                 for (MusicTag tag : songsInContext) {
-                    QueueItem newItem = new QueueItem(tag, queueIndex++);
+                    PlayingQueue newItem = new PlayingQueue(tag, queueIndex++);
                     // This create is now part of the batch transaction
                     queueDao.create(newItem);
                 }
@@ -790,9 +790,9 @@ public class TagRepository {
 
     public void emptyPlayingQueue() {
         try {
-            Dao<QueueItem, Long> queueDao = dbHelper.getQueueItemDao();
+            Dao<PlayingQueue, Long> queueDao = dbHelper.getQueueItemDao();
 
-            TableUtils.clearTable(queueDao.getConnectionSource(), QueueItem.class);
+            TableUtils.clearTable(queueDao.getConnectionSource(), PlayingQueue.class);
         } catch (SQLException e) {
             // throw new RuntimeException(e);
         }

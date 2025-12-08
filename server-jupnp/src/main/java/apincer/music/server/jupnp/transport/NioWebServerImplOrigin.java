@@ -1,10 +1,10 @@
-package apincer.music.core.server;
+package apincer.music.server.jupnp.transport;
 
 import static apincer.music.core.http.NioHttpServer.HTTP_INTERNAL_ERROR;
 import static apincer.music.core.http.NioHttpServer.HTTP_NOT_FOUND;
 import static apincer.music.core.http.NioHttpServer.WEBSOCKET_CLOSE_SERVER_FULL;
-import static apincer.music.core.server.DLNAHeaderHelper.getDLNAContentFeatures;
 import static apincer.music.core.utils.StringUtils.isEmpty;
+import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures;
 
 import android.content.Context;
 import android.util.Log;
@@ -24,10 +24,11 @@ import apincer.music.core.database.MusicTag;
 import apincer.music.core.http.NioHttpServer;
 import apincer.music.core.repository.FileRepository;
 import apincer.music.core.repository.TagRepository;
+import apincer.music.core.server.BaseServer;
 import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.utils.TagUtils;
 
-public class NioWebServerImpl extends BaseServer implements WebServer {
+public class NioWebServerImplOrigin extends BaseServer implements WebServer {
     private static final String TAG = "NioWebServer";
 
     private static final String DEFAULT_PATH = "/index.html";
@@ -43,7 +44,7 @@ public class NioWebServerImpl extends BaseServer implements WebServer {
     private NioHttpServer server;
     private WebSocketHandlerImpl wsHandler;
 
-    public NioWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
+    public NioWebServerImplOrigin(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
         addLibInfo("NioWebServer", "2.1");
     }

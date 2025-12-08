@@ -111,7 +111,7 @@ public class TagsTechnicalFragment extends Fragment {
         TableRow tbrow0 = new TableRow(getContext());
         TextView tv0 = new TextView(getContext());
         TableRow.LayoutParams llp = new TableRow.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        llp.setMargins(0, 0, 2, 0);//2px right-margin
+        llp.setMargins(2, 0, 2, 2);//2px right-margin
         LinearLayout cell = new LinearLayout(getContext());
         cell.setBackgroundColor(Color.DKGRAY);
         cell.setLayoutParams(llp);//2px border on the right for the cell
@@ -138,15 +138,17 @@ public class TagsTechnicalFragment extends Fragment {
         cell.addView(tv);
         tbrow0.addView(cell);
 
-        cell = new LinearLayout(getContext());
-        cell.setBackgroundColor(Color.DKGRAY);
-        cell.setLayoutParams(llp);//2px border on the right for the cell
-        tv = new TextView(getContext());
-        tv.setText(R.string.label_ffmpeg_reader);
-        tv.setTextColor(Color.WHITE);
-        cell.addView(tv);
-        tbrow0.addView(cell);
+
+       // cell = new LinearLayout(getContext());
+       // cell.setBackgroundColor(Color.DKGRAY);
+       // cell.setLayoutParams(llp);//2px border on the right for the cell
+       // tv = new TextView(getContext());
+       // tv.setText(R.string.label_ffmpeg_reader);
+     //   tv.setTextColor(Color.WHITE);
+      //  cell.addView(tv);
+      //  tbrow0.addView(cell);
         table.addView(tbrow0);
+
 
         List<Field> fields =  ReflectUtil.getAllFields(MusicTag.class);
        // String text = "\nField Name\t--> Library\t<>\tFFMPeg\n";
@@ -156,7 +158,9 @@ public class TagsTechnicalFragment extends Fragment {
                     || field.getName().equals("mmManaged")
                     || field.getName().equals("id")
                     || field.getName().equals("uniqueKey")
-                    || field.getName().equals("albumArtFilename")
+                    || field.getName().equals("normalizedArtist")
+                    || field.getName().equals("normalizedTitle")
+                   // || field.getName().equals("albumArtFilename")
                     || field.getName().equals("waveformData")
                     || field.getName().equals("data")
                     || field.getName().equals("storageId")
@@ -167,7 +171,7 @@ public class TagsTechnicalFragment extends Fragment {
             }
             TableRow tr = new TableRow(getContext());
             tr.setBackgroundColor(Color.BLACK);
-            tr.setPadding(0, 0, 0, 2); //Border between rows
+            tr.setPadding(4, 0, 4, 2); //Border between rows
 
            // TableRow.LayoutParams llp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
            // llp.setMargins(0, 0, 2, 0);//2px right-margin
@@ -175,7 +179,10 @@ public class TagsTechnicalFragment extends Fragment {
             //New Cell
             String mateVal = format(ReflectUtil.getFieldValue(field,tag),20,"\n");
             String stdVal = format(ReflectUtil.getFieldValue(field,tt),20,"\n");
-            String ffmpegVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
+           // String ffmpegVal = format(ReflectUtil.getFieldValue(field,ffmpegTag),20,"\n");
+
+            //String mateVal = ReflectUtil.getFieldValue(field,tag).toString();
+            //String stdVal = ReflectUtil.getFieldValue(field,tt).toString();
 
             cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.DKGRAY);
@@ -183,7 +190,7 @@ public class TagsTechnicalFragment extends Fragment {
             TextView t1v = new TextView(getContext());
             t1v.setText(field.getName());
             //t1v.setTextColor(StringUtils.equals(mateVal, ffmpegVal)?Color.WHITE:Color.RED);
-            t1v.setTextColor(StringUtils.equals(stdVal, ffmpegVal)?Color.WHITE:Color.RED);
+            t1v.setTextColor(StringUtils.equals(stdVal, mateVal)?Color.WHITE:Color.RED);
             t1v.setGravity(Gravity.START);
             t1v.setPadding(24,0,0,0);
             cell.addView(t1v);
@@ -209,7 +216,7 @@ public class TagsTechnicalFragment extends Fragment {
             cell.addView(t3v);
             tr.addView(cell);
 
-            cell = new LinearLayout(getContext());
+           /* cell = new LinearLayout(getContext());
             cell.setBackgroundColor(Color.GRAY);
             cell.setLayoutParams(llp);//2px border on the right for the cell
             t3v = new TextView(getContext());
@@ -217,7 +224,7 @@ public class TagsTechnicalFragment extends Fragment {
             t3v.setTextColor(Color.WHITE);
             t3v.setGravity(Gravity.CENTER);
             cell.addView(t3v);
-            tr.addView(cell);
+            tr.addView(cell); */
 
             table.addView(tr);
         }

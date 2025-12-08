@@ -6,7 +6,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.Collection;
 
-@DatabaseTable(tableName = "playlists")
+@DatabaseTable(tableName = "playlist")
 public class Playlist {
     public enum PlaylistType {
         STATIC,  // A manually curated list of songs

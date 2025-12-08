@@ -77,9 +77,11 @@ public class FileRepository {
             return getFolderCoverArt(cover);
         }else {
             File cover = getFolderCoverArt(music.getPath());
-            if (cover == null && (isEmpty(music.getAlbumArtFilename()) && music.getAlbumArtFilename().contains(DEFAULT_COVERART))) {
-                cover = new File(cacheDir, music.getAlbumArtFilename());
-                Log.d(TAG, "getCoverArt: no folder image, check " + cover.getAbsolutePath());
+            if (cover == null) { // || !(isEmpty(music.getAlbumArtFilename()) && music.getAlbumArtFilename().contains(DEFAULT_COVERART))) {
+                if(!DEFAULT_COVERART.equals(music.getAlbumArtFilename())) {
+                    cover = new File(cacheDir, music.getAlbumArtFilename());
+                    Log.d(TAG, "getCoverArt: no folder image, check " + cover.getAbsolutePath());
+                }
             }
             return cover;
         }
@@ -328,7 +330,7 @@ public class FileRepository {
                 if(basicTag != null) {
                     // Save basic tag immediately
                     basicTag.setMusicManaged(isManagedInLibrary(basicTag));
-                    saveCoverartToCache(basicTag); // must call before savetag, update albumArtName
+                    saveCoverartToCache(basicTag); // must call before save tag, update albumArtName
                     basicTag.setOriginTag(null);
                     tagRepos.saveTag(basicTag);
                 }
@@ -345,8 +347,7 @@ public class FileRepository {
                 //update filename, use folder for hex
                 File file = new File(basicTag.getPath());
                 String albumArtName = DigestUtils.md5Hex(file.getParentFile().getAbsolutePath());
-                String ext = FileUtils.getExtension(file);
-                //String ext = FileTypeUtil.getExtensionFromContent(folderCover);
+                String ext = FileUtils.getExtension(folderCover);
                 basicTag.setAlbumArtFilename(albumArtName+"."+ext);
             }else {
                 // if no folder album art,

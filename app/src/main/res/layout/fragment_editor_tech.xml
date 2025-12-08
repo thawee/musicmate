@@ -8,26 +8,16 @@
     android:paddingBottom="?attr/actionBarSize"
     android:orientation="vertical">
 
-    <!-- File name -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/filename"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_4_dp"
-        android:layout_gravity="center"
-        android:textStyle="italic"
-        android:textSize="12sp"
-        android:textColor="?attr/colorOnSurfaceVariant" />
-
     <!-- Action buttons group -->
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/actionGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/dimen_8_dp"
+        android:elevation="8dp"
         android:background="?attr/colorSurface"
         android:gravity="center"
-        app:singleSelection="false"
+        app:singleSelection="true"
         app:selectionRequired="false">
 
         <com.google.android.material.button.MaterialButton
@@ -39,8 +29,7 @@
             android:text="Reload"
             android:icon="@drawable/round_restore_page_24"
             app:iconGravity="textStart"
-            android:insetBottom="4dp"
-            android:insetTop="4dp" />
+            app:iconPadding="8dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_extract_coverart"
@@ -66,6 +55,17 @@
             android:insetBottom="4dp"
             android:insetTop="4dp" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <!-- File name -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/filename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_4_dp"
+        android:layout_gravity="center"
+        android:textStyle="italic"
+        android:textSize="12sp"
+        android:textColor="?attr/colorOnSurfaceVariant" />
 
     <!-- Main scroll content -->
     <ScrollView

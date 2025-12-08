@@ -60,6 +60,10 @@ android {
                 dimension = "server"
                 // Gradle will look for code in `src/netty/java`
             }
+        optimized {
+            dimension = "server"
+            // Gradle will look for code in `src/optimized/java`
+        }
     }
 
     compileOptions {
@@ -231,6 +235,11 @@ dependencies {
     nettyImplementation libs.jupnp.android
     nettyImplementation project(':server-jupnp')
     nettyImplementation project(':server-jupnp-netty')
+
+    //optimized
+    optimizedImplementation libs.jupnp.android
+    optimizedImplementation project(':server-jupnp')
+    optimizedImplementation project(':server-jupnp-jetty')
 
     // Local Library
     //implementation project(':library:justdsd')

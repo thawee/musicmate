@@ -4,24 +4,19 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-
-import java.util.List;
 
 import apincer.android.mmate.R;
 import apincer.android.mmate.service.MusicMateServiceImpl;
@@ -34,12 +29,14 @@ import apincer.music.core.utils.StringUtils;
 import apincer.android.mmate.utils.AudioOutputHelper;
 
 public class SignalPathBottomSheet extends BottomSheetDialogFragment {
-    private boolean isPlayersExpanded = true;
-    private LinearLayout dlnaPlayersContainer;
-    private ImageView expandArrow;
+    private final View.OnClickListener onClickListener;
 
     private PlaybackService playbackService;
     private boolean isPlaybackServiceBound = false;
+
+    public SignalPathBottomSheet(View.OnClickListener onClickListener) {
+        this.onClickListener = onClickListener;
+    }
 
     @Override
     public void onStart() {
@@ -72,48 +69,16 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
         // Get the LinearLayout where the DLNA players will be added
-        dlnaPlayersContainer = view.findViewById(R.id.dlna_players_container);
-        expandArrow = view.findViewById(R.id.expand_arrow);
         TextView qualityIndicator = view.findViewById(R.id.quality_indicator);
         qualityIndicator.setText("");
 
-        // Set up click listener for the expandable section
-        LinearLayout playersHeader = view.findViewById(R.id.players_header);
-        playersHeader.setOnClickListener(v -> togglePlayersVisibility());
-    }
-
-    private void populatePlaybackTargets() {
-        List<PlaybackTarget> renderers = playbackService.getAvailablePlaybackTargets();
-        dlnaPlayersContainer.removeAllViews();
-        if (renderers != null && !renderers.isEmpty()) {
-            for (PlaybackTarget player : renderers) {
-                TextView playerView = new TextView(getContext());
-                playerView.setText(player.getDisplayName());
-                playerView.setTextColor(Color.BLUE);
-                playerView.setPadding(32, 32, 32, 32);
-                playerView.setBackgroundResource(R.drawable.rounded_bg);
-                playerView.setOnClickListener(v -> {
-                    if(isPlaybackServiceBound) {
-                        playbackService.switchPlayer(player, true);
-                        Toast.makeText(getContext(), "Selected: " + player.getDisplayName(), Toast.LENGTH_SHORT).show();
-                    }
-                    dismiss();
-                });
-                dlnaPlayersContainer.addView(playerView);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickListener.onClick(v);
+                dismiss();
             }
-        }
-    }
-
-    // Helper function to add a step to the signal path
-    private void togglePlayersVisibility() {
-        if (isPlayersExpanded) {
-            dlnaPlayersContainer.setVisibility(View.GONE);
-            expandArrow.animate().rotation(0).setDuration(200).start();
-        } else {
-            dlnaPlayersContainer.setVisibility(View.VISIBLE);
-            expandArrow.animate().rotation(180).setDuration(200).start();
-        }
-        isPlayersExpanded = !isPlayersExpanded;
+        });
     }
 
     // Helper function to add a step to the signal path
@@ -143,7 +108,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
             isPlaybackServiceBound = true;
 
             addSignalPathSteps();
-            populatePlaybackTargets();
+           // populatePlaybackTargets();
         }
 
         @Override
@@ -197,18 +162,7 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
                 });
             }else {
                 addSignalPathStep(signalPathContainer, "Player", playerDetails, false);
-               /* AudioOutputHelper.getOutputDevice(getContext(), device -> {
-                    String deviceDetails = device.getName()+"\n"+device.getCodec()+", "+device.getBitPerSampling()+", "+device.getSamplingRate();
-                    addSignalPathStep(signalPathContainer, "Device", deviceDetails, false);
-                }); */
             }
         }
-
-        // --- Populate players ---
-        populatePlaybackTargets();
-
-        // Set the initial state of the collapsible list based on the active player
-        isPlayersExpanded = playbackTarget != null;
-        togglePlayersVisibility();
     }
 }

@@ -10,25 +10,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:minWidth="@dimen/dimen_12_dp"
-        android:layout_gravity="center"
+        android:layout_gravity="start|center_vertical"
         android:layout_alignParentStart="true"
         android:layout_marginStart="@dimen/dimen_4_dp"
         android:padding="@dimen/activity_horizontal_margin"
+        tools:text="1"
         android:textColor="@color/white" />
 
     <TextView
         android:id="@+id/name"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/seq"
         android:layout_toStartOf="@+id/status"
         android:gravity="left"
         android:maxLines="2"
-        android:layout_gravity="center"
-        android:layout_marginStart="@dimen/dimen_4_dp"
+        android:layout_gravity="left"
+        android:layout_marginStart="@dimen/dimen_16_dp"
+        android:layout_marginEnd="@dimen/dimen_32_dp"
         android:padding="@dimen/activity_horizontal_margin"
         android:ellipsize="start"
         android:textColor="@color/white"
+        tools:text="Test and Test"
         tools:ignore="RtlHardcoded" />
     <TextView
         android:id="@+id/status"

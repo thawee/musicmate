@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                     adapter.notifyItemChanged(previouslyPlaying);
                     adapter.notifyItemChanged(song);
                 }
-                nowPlayingLabel.setText(StringUtils.truncate(song.getTitle(), 16, StringUtils.TruncateType.SUFFIX));
+                nowPlayingLabel.setText(StringUtils.truncate(song.getTitle(), 24, StringUtils.TruncateType.SUFFIX));
                 previouslyPlaying = song;
             });
         }
@@ -352,21 +352,24 @@ public class MainActivity extends AppCompatActivity {
         ImageView rightMenu = bottomAppBar.findViewById(R.id.navigation_settings);
        // UIUtils.getTintedDrawable(rightMenu.getDrawable(), Color.WHITE);
 
-        View signalPath = bottomAppBar.findViewById(R.id.navigation_signal_path);
+      //  View signalPath = bottomAppBar.findViewById(R.id.navigation_signal_path);
         View mediaServer = bottomAppBar.findViewById(R.id.navigation_media_server);
 
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
-        signalPath.setOnClickListener(v -> doShowSignalPath());
+        //signalPath.setOnClickListener(v -> doShowSignalPath());
         //signalPath.setOnLongClickListener(v -> scrollToSong(previouslyPlaying));
-        nowPlayingLabel.setOnClickListener(v -> scrollToSong(previouslyPlaying));
+       // nowPlayingLabel.setOnClickListener(v -> scrollToSong(previouslyPlaying));
+        nowPlayingLabel.setOnClickListener(v -> doShowSignalPath());
         mediaServer.setOnClickListener(v -> doManageMediaServer());
     }
 
     private void doShowSignalPath() {
-        SignalPathBottomSheet bottomSheet = new SignalPathBottomSheet();
-        bottomSheet.show(getSupportFragmentManager(), "SignalPathBottomSheet");
+        if(previouslyPlaying != null) {
+            SignalPathBottomSheet bottomSheet = new SignalPathBottomSheet(v -> scrollToSong(previouslyPlaying));
+            bottomSheet.show(getSupportFragmentManager(), "SignalPathBottomSheet");
+        }
     }
 
     private void setupRecycleView(SearchCriteria searchCriteria) {
@@ -820,7 +823,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void doManageMediaServer() {
         // bottom sheet to display dlna server status, and buttons to start/stop server
-        MediaServerManagementSheet sheet = MediaServerManagementSheet.newInstance();
+        MediaServerManagementSheet sheet = MediaServerManagementSheet.newInstance(playbackService);
         sheet.show(getSupportFragmentManager(), MediaServerManagementSheet.TAG);
     }
 

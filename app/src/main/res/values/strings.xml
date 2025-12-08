@@ -295,5 +295,9 @@
     <string name="back">Back\n</string>
     <string name="search_music_hint">Search Songs</string>
     <string name="scroll_to_top">Scroll to Top</string>
+    <string name="not_available">Not Available</string>
+    <string name="library">Library</string>
+    <string name="media_server">Media Server</string>
+    <string name="settings">Settings</string>
 
 </resources>

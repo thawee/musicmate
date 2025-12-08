@@ -2,7 +2,7 @@
     android:color="?attr/colorControlHighlight">
     <item>
         <shape android:shape="oval">
-            <solid android:color="?attr/colorPrimaryContainer" />
+            <solid android:color="@color/now_playing_background" />
             <size android:width="36dp" android:height="36dp" />
             <corners android:radius="18dp" />
             <padding android:left="4dp" android:right="4dp"

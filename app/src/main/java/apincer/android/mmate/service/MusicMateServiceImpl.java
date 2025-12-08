@@ -39,7 +39,7 @@ import javax.inject.Inject;
 
 import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
-import apincer.music.core.database.QueueItem;
+import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.PlaybackState;
 import apincer.music.core.playback.spi.MediaTrack;
@@ -75,8 +75,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     public static final String ACTION_PREVIOUS = "apincer.musicmate.ACTION_PREVIOUS";
     public static final String ACTION_STOP = "apincer.musicmate.ACTION_STOP";
 
-    public static final String ONLINE_STATUS = "🟢 Online"; // Green circle for Online
-    public static final String OFFLINE_STATUS = "🔴 Offline"; // Red circle for Offline
+    public static final String ONLINE_STATUS = "Online"; // Green circle for Online
+    public static final String OFFLINE_STATUS = "Offline"; // Red circle for Offline
 
     @Inject
     TagRepository tagRepos;
@@ -655,8 +655,8 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private void loadPlayingQueue() {
         try {
             List<MusicTag> queueList = new CopyOnWriteArrayList<>();
-            List<QueueItem> queues = tagRepos.getQueueItems();
-            for (QueueItem queueItem : queues) {
+            List<PlayingQueue> queues = tagRepos.getQueueItems();
+            for (PlayingQueue queueItem : queues) {
                 queueList.add(queueItem.getTrack());
             }
 

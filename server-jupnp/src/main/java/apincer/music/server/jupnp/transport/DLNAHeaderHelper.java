@@ -1,4 +1,4 @@
-package apincer.music.core.server;
+package apincer.music.server.jupnp.transport;
 
 import static apincer.music.core.utils.TagUtils.isAACFile;
 import static apincer.music.core.utils.TagUtils.isALACFile;

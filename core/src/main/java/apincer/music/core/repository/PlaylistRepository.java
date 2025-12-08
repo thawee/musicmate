@@ -116,7 +116,7 @@ public class PlaylistRepository {
                 case TYPE_RATING:
                     if (entry.getSongs() != null) {
                         for (MusicTag song : entry.getSongs()) {
-                            if (song != null && song.getRating() != null) {
+                            if (song != null && song.getQualityRating() != null) {
                                 String grouping = getKeyForRating(song);
                                 entry.getMappedSongs().put(grouping, song);
                             }
@@ -132,7 +132,7 @@ public class PlaylistRepository {
     }
 
     private static String getKeyForRating(MediaTrack song) {
-        return trimToEmpty(song.getRating()).toLowerCase();
+        return trimToEmpty(song.getQualityRating()).toLowerCase();
     }
 
     @NonNull

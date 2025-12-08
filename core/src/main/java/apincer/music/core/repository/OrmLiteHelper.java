@@ -30,7 +30,7 @@ import apincer.music.core.Constants;
 import apincer.music.core.database.MusicTag;
 import apincer.music.core.database.Playlist;
 import apincer.music.core.database.PlaylistItem;
-import apincer.music.core.database.QueueItem;
+import apincer.music.core.database.PlayingQueue;
 import apincer.music.core.model.MusicFolder;
 import apincer.music.core.model.SearchCriteria;
 import apincer.music.core.utils.LogHelper;
@@ -41,7 +41,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     private Dao<MusicTag, Long> musicTagDao = null;
     private Dao<Playlist, Long> playlistDao = null;
     private Dao<PlaylistItem, Long> playlistItemDao = null;
-    private Dao<QueueItem, Long> queueItemDao = null;
+    private Dao<PlayingQueue, Long> queueItemDao = null;
 
     public MusicTag findByUniqueKey(String uniqueKey) {
         try {
@@ -70,7 +70,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     //Database name
     private static final String DATABASE_NAME = "apincer.musicmate.db";
     private static final String TAG = LogHelper.getTag(OrmLiteHelper.class);
-    private static final int DATABASE_VERSION = 10;
+    private static final int DATABASE_VERSION = 12;
     private static final List<MusicFolder> EMPTY_FOLDER_LIST = null;
     public static final List<MusicTag> EMPTY_LIST = null;
     private static final List<String> EMPTY_STRING_LIST = null;
@@ -90,7 +90,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, MusicTag.class);
             TableUtils.createTable(connectionSource, Playlist.class);
             TableUtils.createTable(connectionSource, PlaylistItem.class);
-            TableUtils.createTable(connectionSource, QueueItem.class);
+            TableUtils.createTable(connectionSource, PlayingQueue.class);
         } catch (SQLException e) {
             Log.e(TAG,"onCreate", e);
         }
@@ -103,7 +103,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.dropTable(connectionSource, MusicTag.class, true);
             TableUtils.dropTable(connectionSource, Playlist.class, true);
             TableUtils.dropTable(connectionSource, PlaylistItem.class, true);
-            TableUtils.dropTable(connectionSource, QueueItem.class, true);
+            TableUtils.dropTable(connectionSource, PlayingQueue.class, true);
             onCreate(database, connectionSource);
 
             //clean cached directory
@@ -910,9 +910,9 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         return playlistItemDao;
     }
 
-    public Dao<QueueItem, Long> getQueueItemDao() throws SQLException {
+    public Dao<PlayingQueue, Long> getQueueItemDao() throws SQLException {
         if (queueItemDao == null) {
-            queueItemDao = getDao(QueueItem.class);
+            queueItemDao = getDao(PlayingQueue.class);
         }
         return queueItemDao;
     }

@@ -43,7 +43,6 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     // Jetty tuning parameters
     private static final int OUTPUT_BUFFER_SIZE = 65536; // 64KB
-    private static final int MAX_THREADS = 12;
     private static final int MIN_THREADS = 4;
     private static final int IDLE_TIMEOUT = 30000; // 30 seconds
 
@@ -62,7 +61,11 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
             try {
                // Log.i(TAG, "Starting UPnPServer (Jetty) on " + bindAddress.getHostAddress() + ":" + getListenPort());
 
-                QueuedThreadPool threadPool = new QueuedThreadPool(MAX_THREADS, MIN_THREADS, IDLE_TIMEOUT);
+                // Calculate threads based on cores
+                int cores = Runtime.getRuntime().availableProcessors();
+                int maxThreads = Math.max(MIN_THREADS, cores * 4); // giving enough threads for blocking operations
+
+                QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, MIN_THREADS, IDLE_TIMEOUT);
                 threadPool.setName("jetty-upnp-server");
 
                 server = new Server(threadPool);
@@ -164,12 +167,8 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
             resp.getHeaders().put(HttpHeader.PRAGMA, "no-cache");
 
             if (responseMessage.hasBody()) {
-                try {
-                    Content.Sink.write(resp, true, ByteBuffer.wrap(responseMessage.getBodyBytes())); //, callback);
-                    callback.succeeded();
-                } catch (IOException e) {
-                    callback.failed(e);
-                }
+                // Use non-blocking write with callback
+                Content.Sink.write(resp, true, ByteBuffer.wrap(responseMessage.getBodyBytes()).toString(), callback);
             } else {
                 callback.succeeded();
             }
@@ -193,7 +192,11 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
             requestMessage.setHeaders(headers);
 
             if (req.getLength() > 0) {
-                byte[] bodyBytes = Content.Source.asByteBuffer(req).array(); // .asBytes(req);
+                 // Efficiently read content using InputStream rather than buffering everything if possible,
+                 // but StreamRequestMessage often requires a full body.
+                 // We stick to simple reading here as optimization for huge UPnP bodies is rarely needed (metadata is small).
+                 // However, we avoid deprecated or inefficient calls.
+                 byte[] bodyBytes = Content.Source.asByteBuffer(req).array();
                 if (requestMessage.isContentTypeMissingOrText()) {
                     requestMessage.setBodyCharacters(bodyBytes);
                 } else {

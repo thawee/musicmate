@@ -743,7 +743,7 @@ public class StringUtils {
     }
 
     public static String format(Object val, int maxLen, String separator) {
-        String text = trimToEmpty(String.valueOf(val));
+       /* String text = trimToEmpty(String.valueOf(val));
         String ret = "";
         int cnt=0;
         for(int i=0;i<text.length();i++) {
@@ -757,7 +757,9 @@ public class StringUtils {
             ret = ret+ch;
             cnt++;
         }
-        return ret;
+        return ret; */
+
+        return trimToEmpty(String.valueOf(val));
     }
 
     public static String toUpperCase(String val) {

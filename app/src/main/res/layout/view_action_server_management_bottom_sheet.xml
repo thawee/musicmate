@@ -10,9 +10,9 @@
     android:clipToOutline="true"
     android:outlineProvider="background"
     android:layout_margin="12dp"
+    android:paddingBottom="16dp"
     tools:ignore="UseCompoundDrawables">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,106 +32,180 @@
             android:id="@+id/server_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="MusicMate Media Server"
+            android:text="MusicMate Server"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold"/>
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/dimen_12_dp">
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <LinearLayout
-            android:id="@+id/info_block"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/dimen_96_dp"
-            android:orientation="vertical">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Status: "
-                    android:textAppearance="?attr/textAppearanceBodyMedium"/>
-                <TextView
-                    android:id="@+id/server_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Stopped"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Powered By: "
-                    android:textAppearance="?attr/textAppearanceBodyMedium"/>
-                <TextView
-                    android:id="@+id/server_power_by"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Java NIO Server"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textStyle="bold"/>
-            </LinearLayout>
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp">
 
-            <TextView
-                android:id="@+id/server_address"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="http://localhost:9000/"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:layout_marginBottom="24dp"/>
-        </LinearLayout>
         <LinearLayout
-            android:layout_width="@dimen/dimen_92_dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="@dimen/dimen_24_dp"
-            android:layout_toEndOf="@id/info_block">
-            <ImageView
-                android:id="@+id/qr_code_image"
-                android:layout_width="@dimen/dimen_86_dp"
-                android:layout_height="@dimen/dimen_86_dp"
-                android:layout_gravity="center"
-                android:scaleType="fitCenter"
-                android:padding="8dp"
-                android:background="@android:color/white"
-                android:elevation="4dp"
-                android:contentDescription="Generated QR Code" />
+            android:background="@drawable/bg_rounded_surface_dark"
+            android:padding="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Server Status"
+                        android:textSize="12sp"
+                        android:textColor="#B0B0B0"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <View
+                            android:id="@+id/status_indicator"
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/shape_circle_red"
+                            android:layout_marginEnd="6dp"/>
+
+                        <TextView
+                            android:id="@+id/server_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Stopped"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/server_power_by"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Address"
+                        android:textSize="12sp"
+                        android:textColor="#B0B0B0"/>
+
+                    <TextView
+                        android:id="@+id/server_address"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="192.168.1.105:9000"
+                        android:textColor="#E0E0E0"
+                        android:textSize="14sp"
+                        android:textStyle="italic"/>
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/qr_code_image"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:scaleType="fitCenter"
+                    android:padding="4dp"
+                    android:background="@drawable/bg_rounded_white_small"
+                    android:contentDescription="QR Code" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#33FFFFFF"
+                android:layout_marginVertical="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_stop_server"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Stop MediaServer"
+                    android:layout_marginEnd="8dp"
+                    app:strokeColor="#FF5252"
+                    android:textColor="#FF5252"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_start_server"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Start MediaServer"
+                    app:backgroundTint="@color/teal_200"
+                    android:textColor="#000000"/>
+            </LinearLayout>
         </LinearLayout>
-    </RelativeLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_start_server"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Server"
-        android:layout_marginTop="@dimen/dimen_8_dp"
-        android:layout_marginBottom="@dimen/dimen_8_dp"/>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_stop_server"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Stop Server"
-        android:enabled="false"/>
+        <LinearLayout
+            android:id="@+id/btn_select_player"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_rounded_surface_dark"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginTop="12dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/rounded_speaker_24"
+                app:tint="@color/teal_200"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Active Player"
+                    android:textSize="12sp"
+                    android:textColor="#B0B0B0"/>
+
+                <TextView
+                    android:id="@+id/txt_current_player"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Galaxy S25 (This Device)"
+                    android:textSize="15sp"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end"/>
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="#808080"/>
+        </LinearLayout>
+
     </LinearLayout>
 </LinearLayout>
