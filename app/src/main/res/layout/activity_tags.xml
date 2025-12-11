@@ -118,7 +118,7 @@
                             android:lines="2"
                             android:gravity="center"
                             android:layout_gravity="top|center_horizontal"
-                            android:fontFamily="@font/sfthonburi_regular"
+                            android:fontFamily="@font/noto_sans_thai_bold"
                             android:textColor="@color/material_color_grey_100"
                             android:textStyle="bold"
                             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"

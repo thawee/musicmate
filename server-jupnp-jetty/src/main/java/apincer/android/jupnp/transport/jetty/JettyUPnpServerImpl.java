@@ -51,7 +51,7 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
     public JettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context,fileRepos, tagRepos);
-        addLibInfo("Jetty", "12.1.2");
+        addLibInfo("Jetty", "12.1.5");
     }
 
     @Override
@@ -87,7 +87,7 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
                 // Set the UPnP handler for all contexts
                 server.setHandler(new UPnpHandler());
                 server.start();
-                Log.i(TAG, "UPnPServer started on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT +" successfully.");
+                Log.i(TAG, "UPnPServer started on " + bindAddress.getHostAddress() + ":" + getListenPort() +" successfully.");
 
                 server.join();
 
@@ -168,7 +168,13 @@ public class JettyUPnpServerImpl extends BaseServer implements UpnpServer {
 
             if (responseMessage.hasBody()) {
                 // Use non-blocking write with callback
-                Content.Sink.write(resp, true, ByteBuffer.wrap(responseMessage.getBodyBytes()).toString(), callback);
+               // Content.Sink.write(resp, true, ByteBuffer.wrap(responseMessage.getBodyBytes()).toString(), callback);
+                try {
+                    Content.Sink.write(resp, true, ByteBuffer.wrap(responseMessage.getBodyBytes())); //, callback);
+                    callback.succeeded();
+                } catch (IOException e) {
+                    callback.failed(e);
+                }
             } else {
                 callback.succeeded();
             }

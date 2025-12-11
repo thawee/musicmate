@@ -81,7 +81,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
     public JettyWebServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos) {
         super(context, fileRepos, tagRepos);
-        addLibInfo("Jetty", "12.1.2");
+        addLibInfo("Jetty", "12.1.5");
 
         // Calculate buffer size based on RAM once
         int bufferSize = calculateBufferSize(context);
@@ -164,7 +164,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                 server.setStopAtShutdown(true);
                 server.start();
 
-                Log.i(TAG, "WebServer started on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT);
+                Log.i(TAG, "WebServer started on " + bindAddress.getHostAddress() + ":" + WEB_SERVER_PORT +" successfully.");
                 server.join();
 
             } catch (Exception e) {
@@ -265,16 +265,17 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             ClientProfile profile = profileManager.detect(userAgent);
 
             // Apply the profile
-            if(profile.chunkSize > 0) {
+            //if(profile.chunkSize > 0) {
               //  response.setBufferSize(profile.chunkSize);
-            }
+            //}
 
             prepareMusicStreamingHeaders(response, song, profile);
 
             // Async notification to avoid blocking the IO thread
             String remoteAddr = Request.getRemoteAddr(request);
            // String userAgent = request.getHeaders().get(HttpHeader.USER_AGENT);
-            notificationExecutor.submit(() -> notifyPlayback(remoteAddr, userAgent, song));
+           // notificationExecutor.submit(() -> notifyPlayback(remoteAddr, userAgent, song));
+            notifyPlayback(remoteAddr, userAgent, song);
 
             return sendResource(audioFile, request, response, callback);
         }
@@ -310,13 +311,13 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
            // if (tag.getAudioBitsDepth() > 0) response.getHeaders().put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
 
             // MIME Type Corrections (Netty parity)
-            if (isALACFile(tag)) {
+            /*if (isALACFile(tag)) {
                 response.getHeaders().put(HttpHeader.CONTENT_TYPE, "audio/apple-lossless");
             } else if (isAACFile(tag)) {
                 response.getHeaders().put(HttpHeader.CONTENT_TYPE, "audio/mp4");
             } else if (isAIFFile(tag)) {
                 response.getHeaders().put(HttpHeader.CONTENT_TYPE, "audio/aiff");
-            }
+            } */
 
             // High Res Info
             if (profile.supportsHighRes) {
@@ -326,14 +327,14 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             }
 
             // Advanced Audiophile Hints
-            if (profile.supportsDirectStreaming) response.getHeaders().put("X-Direct-Streaming", "true");
+           /* if (profile.supportsDirectStreaming) response.getHeaders().put("X-Direct-Streaming", "true");
             if (profile.supportsLosslessStreaming && (isLossless(tag) || isHiRes(tag))) response.getHeaders().put("X-Lossless-Streaming", "true");
             if (profile.supportsGapless) response.getHeaders().put("X-Gapless-Support", "true");
 
             if (profile.supportsBitPerfectStreaming && (isLossless(tag))) {
                 response.getHeaders().put("X-Bit-Perfect-Streaming", "true");
                 response.getHeaders().put("X-Original-Format", "true");
-            }
+            } */
         }
     }
 

@@ -64,7 +64,7 @@
             android:maxLines="1"
             android:paddingEnd="@dimen/dimen_24_dp"
             android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-            android:fontFamily="@font/sfthonburi_bold"
+            android:fontFamily="@font/noto_sans_thai_bold"
             android:textColor="?attr/colorOnSurface"
             tools:text="A Way Back Home" />
 
@@ -76,7 +76,7 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:fontFamily="@font/sfthonburi_regular"
+            android:fontFamily="@font/noto_sans_thai_semi_bold"
             android:textColor="?attr/colorOnSurfaceVariant"
             tools:text="Allan Taylor" />
 
@@ -95,7 +95,7 @@
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                android:fontFamily="@font/sfthonburi_regular"
+                android:fontFamily="@font/noto_sans_thai_regular"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="The Road Well Travelled" />
 
