@@ -536,9 +536,11 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
             if(holder.mSampleRate != null) {
                 holder.mSampleRate.setText(TagUtils.getSampleRate(tag));
             }
-        }else {
-            holder.drDbView.setVisibility(GONE);
-
+        }else if(tag.getDynamicRangeScore()>0){
+            holder.drDbView.setVisibility(VISIBLE);
+            holder.drDbView.setMusicItem(tag);
+        }else{
+             holder.drDbView.setVisibility(GONE);
         }
         /*
         if(TagUtils.isLossy(tag)) {

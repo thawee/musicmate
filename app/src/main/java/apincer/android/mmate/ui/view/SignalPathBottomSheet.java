@@ -72,12 +72,9 @@ public class SignalPathBottomSheet extends BottomSheetDialogFragment {
         TextView qualityIndicator = view.findViewById(R.id.quality_indicator);
         qualityIndicator.setText("");
 
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onClickListener.onClick(v);
-                dismiss();
-            }
+        view.setOnClickListener(v -> {
+            onClickListener.onClick(v);
+            dismiss();
         });
     }
 

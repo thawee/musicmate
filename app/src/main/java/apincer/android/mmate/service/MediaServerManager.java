@@ -135,12 +135,6 @@ public class MediaServerManager {
         }else {
             toStartServer = true;
             doBindService();
-            /*
-            serverStatusLiveData.setValue(MediaServerHub.ServerStatus.STARTING);
-            Intent intent = new Intent(context, MusicMateServiceImpl.class);
-            intent.setAction(ACTION_START_SERVER);
-            context.startForegroundService(intent);
-             */
         }
     }
 

@@ -79,7 +79,7 @@ public class NettyUPnpServerImpl extends BaseServer implements UpnpServer {
     public NettyUPnpServerImpl(Context context, FileRepository fileRepos, TagRepository tagRepos)  {
         super(context, fileRepos, tagRepos);
 
-        addLibInfo("Netty", "4.2.6");
+        addLibInfo("Netty", "4.2.8");
     }
 
     @Override

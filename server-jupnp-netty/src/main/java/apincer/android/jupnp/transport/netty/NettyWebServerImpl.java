@@ -87,7 +87,7 @@ public class NettyWebServerImpl extends BaseServer implements WebServer {
         this.serverPort = WEB_SERVER_PORT;
         this.repos = tagRepos;
 
-        addLibInfo("Netty", "4.2.6");
+        addLibInfo("Netty", "4.2.8");
 
         // Calculate buffer size based on RAM once
         int bufferSize = calculateBufferSize(context);

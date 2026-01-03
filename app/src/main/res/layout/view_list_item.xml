@@ -54,7 +54,8 @@
         app:layout_constraintStart_toEndOf="@id/item_imageFrame"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/item_imageFrame"
-        app:layout_constraintBottom_toBottomOf="@id/item_imageFrame">
+        app:layout_constraintBottom_toBottomOf="@id/item_imageFrame"
+        tools:ignore="RtlSymmetry">
 
         <TextView
             android:id="@+id/item_title"
@@ -126,24 +127,29 @@
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
-            <apincer.android.mmate.ui.view.QualityIndicatorView
-                android:id="@+id/icon_quality_indicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <apincer.android.mmate.ui.view.DynamicRangeView
-                android:id="@+id/dynamic_range_db_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dimen_6_dp"
-                app:dr="DR12"
-                app:db="96 dB" />
-
             <apincer.android.mmate.ui.view.DurationView
                 android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/dimen_2_dp" />
+
+
+            <apincer.android.mmate.ui.view.DynamicRangeView
+                android:id="@+id/dynamic_range_db_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_2_dp"
+                android:layout_marginEnd="@dimen/dimen_2_dp"
+                app:dr="DR12"
+                app:db="96 dB" />
+
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/icon_quality_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_2_dp"
+                android:layout_marginEnd="@dimen/dimen_2_dp"/>
+
             <!--
             <ImageView
                 android:id="@+id/item_more_actions"

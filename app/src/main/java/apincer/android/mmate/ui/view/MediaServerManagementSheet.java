@@ -8,6 +8,7 @@ import static apincer.android.mmate.service.MusicMateServiceImpl.ONLINE_STATUS;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -109,7 +110,8 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
         }
 
         btnSelectPlayer.setOnClickListener(v -> {
-            PopupMenu popup = new PopupMenu(getContext(), v);
+           // PopupMenu popup = new PopupMenu(getContext(), v);
+            PopupMenu popup = new PopupMenu(getContext(), btnSelectPlayer, Gravity.END);
 
             // 1. Add Local Player
             //popup.getMenu().add(0, 0, 0, "Galaxy S25 (This Device)");
@@ -142,7 +144,7 @@ public class MediaServerManagementSheet extends BottomSheetDialogFragment {
     private void detectWebEngine() {
         String webEngine = viewModel.getLibraryName();
         if (tvServerPowerBy != null) {
-            tvServerPowerBy.setText("Powered by " + webEngine);
+            tvServerPowerBy.setText(getString(R.string.powered_by, webEngine));
         }
     }
 

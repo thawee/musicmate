@@ -4,7 +4,6 @@ import static apincer.android.mmate.service.MediaNotificationBuilder.updateNotif
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -93,7 +92,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private WifiManager wifiManager;
     private PowerManager powerManager;
     private ConnectivityManager connectivityManager;
-    private NotificationManager notificationManager;
+//    private NotificationManager notificationManager;
 
     // Locks to keep the CPU and WiFi active for stable streaming
     private WifiManager.WifiLock wifiLock;
@@ -215,7 +214,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
         this.wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         this.connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+       // this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         getStatusLiveData().observeForever(status -> updateNotification(getApplicationContext(),null, null, mediaServer.getServerStatus().getValue(), tagRepos.getTotalSongs()));
 

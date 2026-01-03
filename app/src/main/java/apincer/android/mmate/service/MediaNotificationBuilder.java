@@ -143,7 +143,6 @@ public class MediaNotificationBuilder {
         });
     }
 
-    @Deprecated
     private void notifyPlayingSong(Context context, PlaybackTarget player, MediaTrack track, Bitmap albumArtBitmap, int bgColor, int textColor) {
         boolean isPlaying = true;
 

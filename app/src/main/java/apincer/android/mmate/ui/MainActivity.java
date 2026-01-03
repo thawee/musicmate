@@ -358,9 +358,6 @@ public class MainActivity extends AppCompatActivity {
         // Setup menu click listeners
         leftMenu.setOnClickListener(v -> doShowLeftMenus());
         rightMenu.setOnClickListener(v -> doShowRightMenus());
-        //signalPath.setOnClickListener(v -> doShowSignalPath());
-        //signalPath.setOnLongClickListener(v -> scrollToSong(previouslyPlaying));
-       // nowPlayingLabel.setOnClickListener(v -> scrollToSong(previouslyPlaying));
         nowPlayingLabel.setOnClickListener(v -> doShowSignalPath());
         mediaServer.setOnClickListener(v -> doManageMediaServer());
     }
@@ -565,7 +562,7 @@ public class MainActivity extends AppCompatActivity {
                 //        ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
                 .setPopupTextProvider((view, position) -> {
                     MediaTrack track = adapter.getMusicTag(position);
-                    if(track != null) return track.getTitle().subSequence(0,1);
+                    if(track != null && track.getTitle() != null) return track.getTitle().subSequence(0,1);
                     return "-";
                 })
                 .build();

@@ -119,7 +119,7 @@ public class TagRepository {
 
     public MusicTag findMediaItem(String currentTitle, String currentArtist, String currentAlbum) {
         try {
-            List<MusicTag> list = findMediaByTitle(currentTitle);
+            List<MusicTag> list = findMediaByTitle(trimToEmpty(currentTitle));
 
             double prvTitleScore = 0.0;
             double prvArtistScore = 0.0;
