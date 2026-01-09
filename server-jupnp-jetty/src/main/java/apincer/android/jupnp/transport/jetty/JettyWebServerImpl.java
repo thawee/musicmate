@@ -20,6 +20,7 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.content.HttpContent;
 import org.eclipse.jetty.http.pathmap.PathSpec;
+import org.eclipse.jetty.server.AliasCheck;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -47,6 +48,7 @@ import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -143,6 +145,15 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                     });
                 });
 
+                //Required:
+                AliasCheck aliasCheck = (pathInContext, resource) -> true;
+                wsContext.setAliasChecks(Collections.singletonList(aliasCheck)); // bypass alias check
+                wsContext.setAllowNullPathInContext(true);
+
+                // Optional: Add context attributes
+                wsContext.setAttribute("websocket.server.version", "12.1.2");
+                wsContext.setAttribute("websocket.max.connections", 1000);
+
                 wsContext.setHandler(wsHandler);
 
                 // 5. Web Content & Streaming Handler
@@ -153,6 +164,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                 webHandler.setServer(server);
 
                 ContextHandler webContext = new ContextHandler(CONTEXT_PATH_ROOT);
+                webContext.setAliasChecks(Collections.singletonList(aliasCheck)); // bypass alias check
                 webContext.setHandler(webHandler);
 
                 // 6. Combine Handlers
@@ -352,7 +364,11 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
 
         @Override
         protected void broadcastMessage(String jsonResponse) {
-            sessions.parallelStream().filter(Session::isOpen).forEach(session -> session.sendText(jsonResponse, null));
+            if(sessions != null) {
+                sessions.parallelStream().filter(Session::isOpen).forEach(session -> {
+                    session.sendText(jsonResponse, null);
+                });
+            }
         }
 
         @OnWebSocketOpen

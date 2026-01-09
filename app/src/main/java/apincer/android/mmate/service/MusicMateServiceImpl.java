@@ -159,7 +159,7 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
 
     private void updateAvailableExternalPlayers(List<MediaController> controllers) {
         // Remove all existing external Players
-        if (getAvailablePlaybackTargets() != null) {
+        if (getAvailablePlaybackTargets() != null && !getAvailablePlaybackTargets().isEmpty()) {
             getAvailablePlaybackTargets().removeIf(target -> target instanceof ExternalAndroidPlayer);
         }
 

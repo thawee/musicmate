@@ -214,6 +214,9 @@ public class BaseServer {
         if (requestUri.contains("?")) {
             requestUri = requestUri.substring(0, requestUri.indexOf("?"));
         }
+        if (requestUri.contains("#")) {
+            requestUri = requestUri.substring(0, requestUri.indexOf("#"));
+        }
         return new File(webUiDir, requestUri);
     }
 
@@ -372,7 +375,7 @@ public class BaseServer {
                         String jsonResponse = GSON.toJson(response);
                         broadcastMessage(jsonResponse);
 
-                        Log.d(TAG, "broadcastNowPlaying: "+jsonResponse);
+                       // Log.d(TAG, "broadcastNowPlaying: "+jsonResponse);
                     }
                 }
 
@@ -391,7 +394,7 @@ public class BaseServer {
                     if (response != null) {
                         String jsonResponse = GSON.toJson(response);
                         broadcastMessage(jsonResponse);
-                        Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
+                        //Log.d(TAG, "broadcastPlaybackTarget: "+jsonResponse);
                     }
                 }
             });
@@ -414,7 +417,7 @@ public class BaseServer {
                 Log.w(TAG, "Received websocket null command");
                 return null;
             }
-            Log.d(TAG, "Received websocket command: " + command);
+           // Log.d(TAG, "Received websocket command: " + command);
 
             try {
                 switch (command) {
@@ -1254,7 +1257,7 @@ public class BaseServer {
         }
 
         public List<Map<String, Object>> getWelcomeMessages() {
-            Log.d(TAG, TAG+" - Connected Messages:");
+           // Log.d(TAG, TAG+" - Connected Messages:");
             List<Map<String, Object>> messages = new ArrayList<>();
             messages.add(getLibraryStats());
             messages.add(getAvailableRenderers());
