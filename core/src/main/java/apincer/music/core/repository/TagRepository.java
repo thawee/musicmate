@@ -238,6 +238,7 @@ public class TagRepository {
         return list;
     }
 
+    @Deprecated
     public List<MusicTag> findByPath(String path) {
        return dbHelper.findByPath(path);
     }
@@ -532,6 +533,7 @@ public class TagRepository {
         return dbHelper.findMySongs(aristAlbum);
     }
 
+    @Deprecated
     public List<String> getDefaultPublisherList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = dbHelper.getPublishers();
@@ -553,6 +555,7 @@ public class TagRepository {
         return list;
     }
 
+    @Deprecated
     public List<String> getPublisherList(Context context) {
         List<String> list = new ArrayList<>();
         List<String> names = dbHelper.getPublishers();

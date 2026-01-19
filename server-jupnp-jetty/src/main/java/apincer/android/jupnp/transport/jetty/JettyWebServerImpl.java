@@ -1,11 +1,6 @@
 package apincer.android.jupnp.transport.jetty;
 
 import static apincer.music.core.server.ProfileManager.calculateBufferSize;
-import static apincer.music.core.utils.TagUtils.isAACFile;
-import static apincer.music.core.utils.TagUtils.isAIFFile;
-import static apincer.music.core.utils.TagUtils.isALACFile;
-import static apincer.music.core.utils.TagUtils.isHiRes;
-import static apincer.music.core.utils.TagUtils.isLossless;
 import static apincer.music.server.jupnp.transport.DLNAHeaderHelper.getDLNAContentFeatures;
 import static apincer.music.core.utils.StringUtils.isEmpty;
 
@@ -60,6 +55,7 @@ import apincer.music.core.server.ProfileManager;
 import apincer.music.core.server.model.ClientProfile;
 import apincer.music.core.server.spi.WebServer;
 import apincer.music.core.utils.MimeTypeUtils;
+import apincer.music.core.utils.StringUtils;
 
 public class JettyWebServerImpl extends BaseServer implements WebServer {
     private static final String TAG = "JettyWebServer";
@@ -134,10 +130,6 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                     container.setIdleTimeout(Duration.ofMinutes(10));
 
                     // Add mapping using the Jetty 12 specific API
-                    /*container.addMapping(PathSpec.from("/*"), (req, resp) -> {
-                        // Return the annotated POJO, passing the session list
-                        return new WebSocketHandler(activeWebsocketSessions);
-                    }); */
                     PathSpec pathSpec = PathSpec.from("^.*$"); //accept any string including empty space
                     container.addMapping(pathSpec, (req, resp, callback) -> {
                         // Create and return WebSocket endpoint instance
@@ -276,17 +268,10 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             // ONE LINE DETECTION
             ClientProfile profile = profileManager.detect(userAgent);
 
-            // Apply the profile
-            //if(profile.chunkSize > 0) {
-              //  response.setBufferSize(profile.chunkSize);
-            //}
-
             prepareMusicStreamingHeaders(response, song, profile);
 
             // Async notification to avoid blocking the IO thread
             String remoteAddr = Request.getRemoteAddr(request);
-           // String userAgent = request.getHeaders().get(HttpHeader.USER_AGENT);
-           // notificationExecutor.submit(() -> notifyPlayback(remoteAddr, userAgent, song));
             notifyPlayback(remoteAddr, userAgent, song);
 
             return sendResource(audioFile, request, response, callback);
@@ -319,34 +304,12 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
             response.getHeaders().put("contentFeatures.dlna.org", getDLNAContentFeatures(tag));
             response.getHeaders().put(HttpHeader.ACCEPT_RANGES, "bytes");
 
-            //  if (tag.getAudioSampleRate() > 0) response.getHeaders().put("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
-           // if (tag.getAudioBitsDepth() > 0) response.getHeaders().put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
-
-            // MIME Type Corrections (Netty parity)
-            /*if (isALACFile(tag)) {
-                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "audio/apple-lossless");
-            } else if (isAACFile(tag)) {
-                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "audio/mp4");
-            } else if (isAIFFile(tag)) {
-                response.getHeaders().put(HttpHeader.CONTENT_TYPE, "audio/aiff");
-            } */
-
             // High Res Info
             if (profile.supportsHighRes) {
                 if (tag.getAudioSampleRate() > 0) response.getHeaders().put("X-Audio-Sample-Rate", tag.getAudioSampleRate() + " Hz");
                 if (tag.getAudioBitsDepth() > 0) response.getHeaders().put("X-Audio-Bit-Depth", tag.getAudioBitsDepth() + " bit");
                 if (tag.getAudioBitRate() > 0) response.getHeaders().put("X-Audio-Bitrate", tag.getAudioBitRate() + " kbps");
             }
-
-            // Advanced Audiophile Hints
-           /* if (profile.supportsDirectStreaming) response.getHeaders().put("X-Direct-Streaming", "true");
-            if (profile.supportsLosslessStreaming && (isLossless(tag) || isHiRes(tag))) response.getHeaders().put("X-Lossless-Streaming", "true");
-            if (profile.supportsGapless) response.getHeaders().put("X-Gapless-Support", "true");
-
-            if (profile.supportsBitPerfectStreaming && (isLossless(tag))) {
-                response.getHeaders().put("X-Bit-Perfect-Streaming", "true");
-                response.getHeaders().put("X-Original-Format", "true");
-            } */
         }
     }
 
@@ -365,9 +328,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
         @Override
         protected void broadcastMessage(String jsonResponse) {
             if(sessions != null) {
-                sessions.parallelStream().filter(Session::isOpen).forEach(session -> {
-                    session.sendText(jsonResponse, null);
-                });
+                sessions.parallelStream().filter(Session::isOpen).forEach(session -> session.sendText(jsonResponse, null));
             }
         }
 
@@ -391,7 +352,7 @@ public class JettyWebServerImpl extends BaseServer implements WebServer {
                 Map<String, Object> map = GSON.fromJson(message, Map.class);
                 String command = String.valueOf(map.get("command"));
 
-                if (command != null) {
+                if (!StringUtils.isEmpty(command)) {
                     Map<String, Object> response = handleCommand(command, map);
                     if (response != null) {
                         session.sendText(GSON.toJson(response), org.eclipse.jetty.websocket.api.Callback.NOOP);

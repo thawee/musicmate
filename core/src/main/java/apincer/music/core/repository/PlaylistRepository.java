@@ -131,15 +131,18 @@ public class PlaylistRepository {
         }
     }
 
+    @Deprecated
     private static String getKeyForRating(MediaTrack song) {
         return trimToEmpty(song.getQualityRating()).toLowerCase();
     }
 
+    @Deprecated
     @NonNull
     private static String getKeyForGenre(MediaTrack song) {
         return trimToEmpty(song.getGenre()).toLowerCase();
     }
 
+    @Deprecated
     @NonNull
     private static String getKeyForAlbum(MediaTrack song) {
         String albumTitle = trimToEmpty(song.getAlbum()).toLowerCase();
@@ -147,6 +150,7 @@ public class PlaylistRepository {
         return albumTitle + "|" + artist;
     }
 
+    @Deprecated
     @NonNull
     private static String getKeyForSong(MediaTrack song) {
         String title = trimToEmpty(song.getTitle()).toLowerCase();

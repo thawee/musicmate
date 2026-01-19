@@ -111,6 +111,7 @@ public class MusicMateExecutors {
     }
 
     // Add a static shutdown method
+    @Deprecated
     public static void shutdownAll() {
         if (mInstance != null) {
             mInstance.shutdown();

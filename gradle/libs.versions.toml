@@ -19,7 +19,7 @@ compileSdkVersion = "36"
 buildTools ="36.1.0" #""35.0.1"
 #buildTools ="36.0.0"
 #androidGradlePlugin = "8.11.1"
-androidGradlePlugin = "8.13.2"
+androidGradlePlugin = "9.0.0"
 aboutlibraries = "13.2.1"
 kotlin = "2.3.0"
 kotlinxSerializationCore = "1.9.0"
@@ -27,8 +27,8 @@ coroutines = "1.10.2"
 # ksp version is <kotlin>-ksp
 # https://repo.maven.apache.org/maven2/com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/
 #ksp="2.2.21-2.0.4"
-ksp="2.3.0"
-hilt ="2.57.2"
+ksp= "2.3.2"
+hilt ="2.58"
 
 [libraries]
 androidfastscroll-kt = { module = "com.github.StellarSand:AndroidFastScroll-kt", version.ref = "androidfastscrollKt" }
@@ -70,8 +70,8 @@ junit = { module = "junit:junit", version.ref = "junit" }
 #junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 #nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 ormlite-android = {module = "com.j256.ormlite:ormlite-android", version = "6.1"}
-jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.20.1"}
-jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.20.1"}
+jackson-core = {module = "com.fasterxml.jackson.core:jackson-core", version="2.21.0"}
+jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version="2.21.0"}
 #airbnb-lottie={module="com.airbnb.android:lottie", version="6.7.1"}
 
 #glide-runtime = {module = "com.github.bumptech.glide:glide", version="4.16.0"}

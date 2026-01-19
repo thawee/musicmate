@@ -8,7 +8,6 @@ import static apincer.music.core.utils.StringUtils.trimToEmpty;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -376,9 +375,10 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
     @Override
     public int getItemViewType(int position) {
-        if(localDataSet.get(position) instanceof MusicFolder) {
+        MusicTag tag = localDataSet.get(position);
+        if(tag instanceof MusicFolder) {
             return 2;
-        }else if (isComparing()) {
+        }else if (isComparing(tag)) {
             return 1;
         }else {
             return 0;
@@ -527,7 +527,7 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
 
       //  holder.resolutionView.setMusicItem(tag);
 
-        if(isComparing()) {
+        if(isComparing(tag)) {
             holder.drDbView.setVisibility(VISIBLE);
             holder.drDbView.setMusicItem(tag);
             if(holder.mFileType != null) {
@@ -561,13 +561,13 @@ public class MusicTagAdapter extends RecyclerView.Adapter<MusicTagAdapter.ViewHo
         holder.mDurationView.setMusicItem(tag);
     }
 
-    private boolean isComparing() {
-        if(criteria == null) return false;
+    private boolean isComparing(MusicTag tag) {
+        if(criteria == null || tag == null) return false;
 
         if(criteria.getType().equals(SearchCriteria.TYPE.LIBRARY)) {
-            return Constants.TITLE_DUPLICATE.equals(criteria.getKeyword()) || Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword());
+            return (!tag.isMusicManaged()) || Constants.TITLE_DUPLICATE.equals(criteria.getKeyword()) || Constants.TITLE_INCOMING_SONGS.equals(criteria.getKeyword());
         }
-        return false;
+        return !tag.isMusicManaged();
       // return criteria.getType().equals(SearchCriteria.TYPE.LIBRARY) && Constants.TITLE_DUPLICATE.equals(criteria.getKeyword());
     }
 

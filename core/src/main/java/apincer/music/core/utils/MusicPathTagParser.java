@@ -192,7 +192,7 @@ public class MusicPathTagParser {
                 tag.setTitle(tag.getTitle() + " " + featuring);
             }
 
-            if (mode == READ_MODE.HIERARCHY && (file != null)) {
+            if (mode == READ_MODE.HIERARCHY) {
                 file = file.getParentFile();
                 tag.setAlbum(file.getName());
                 if (StringUtils.isEmpty(tag.getArtist())) {

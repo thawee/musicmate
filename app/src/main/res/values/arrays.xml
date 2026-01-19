@@ -121,8 +121,8 @@
     </string-array>
 
     <string-array name="default_genres">
-        <item>Alternative</item>
-        <item>Acoustic</item>
+        <item>Alternative &amp; Indie</item>
+        <item>Acoustic &amp; Vocal</item>
         <item>Bossa Nova</item>
         <item>Classical</item>
         <item>Classical, Concertos</item>
@@ -141,29 +141,28 @@
         <item>Pop, Rock</item>
         <item>Pop, Vocal</item>
         <item>Rock</item>
-        <item>Rock, Alternative</item>
         <item>Rock, Classic</item>
         <item>Rock, Hard Rock</item>
-        <item>Rock, Metal</item>
+        <item>Metal</item>
         <item>Rock, Soft Rock</item>
         <item>Reggae &amp; Ska</item>
         <item>Latin</item>
         <item>Hip-Hop</item>
         <item>EDM</item>
         <item>Rap</item>
-        <item>Indie</item>
 
-        <item>Thai, Alternative</item>
-        <item>Thai, Acoustic</item>
+        <item>Thai, Alternative &amp; Indie</item>
+        <item>Thai, Acoustic &amp; Vocal</item>
         <item>Thai, Instrument</item>
         <item>Thai, Traditional</item>
+        <item>Thai, Oldies</item>
         <item>Thai, EDM</item>
         <item>Thai, Hip-Hop</item>
-        <item>Thai, Indie</item>
         <item>Thai, Pop</item>
-        <item>Thai, Vocal</item>
+        <item>Thai, Pop Rock</item>
         <item>Thai, Rock</item>
         <item>Thai, Jazz</item>
+        <item>Thai, Reggae &amp; Ska</item>
 
         <item>Kantrum</item>
         <item>Kam Mueang</item>
@@ -176,7 +175,8 @@
         <item>Chinese, Pop</item>
         <item>Chinese, Traditional</item>
         <item>Chinese, Vocal</item>
-        <item>Asian, Traditional</item>
+
+        <item>Traditional</item>
     </string-array>
     <string-array name="default_groupings">
         <item>Lounge</item>

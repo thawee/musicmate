@@ -87,24 +87,6 @@ public class TagUtils {
         return ((tag.getAudioBitsDepth() >= Constants.QUALITY_BIT_DEPTH_HD) && (tag.getAudioSampleRate() >= QUALITY_SAMPLING_RATE_96));
     }
 
-    /*
-    public static String getFormattedTitle(Context context, MusicTag tag) {
-        String title =  trimToEmpty(tag.getTitle());
-        if(Settings.isShowTrackNumber(context)) {
-            String track = trimToEmpty(tag.getTrack());
-            if(track.startsWith("0")) {
-                track = track.substring(1);
-            }
-            if(track.indexOf("/")>0) {
-                track = track.substring(0,track.indexOf("/"));
-            }
-            if(!isEmpty(track)) {
-                title = track + StringUtils.SEP_TITLE + title;
-            }
-        }
-        return title;
-    } */
-
     public static String getFormattedSubtitle(MusicTag tag) {
         String album = StringUtils.trimTitle(tag.getAlbum());
         String artist = StringUtils.trimTitle(tag.getArtist());
@@ -297,8 +279,6 @@ public class TagUtils {
         String mqaIndicator = trimToEmpty(song.getQualityInd());
         if ("MQA".equalsIgnoreCase(mqaIndicator) || "MQA Studio".equalsIgnoreCase(mqaIndicator)) {
             // We now include the original sample rate for MQA
-            //String mqaSampleRate = StringUtils.formatAudioSampleRate(song.getMqaSampleRate(), true);
-            //return String.format("%s (%s)", mqaIndicator, mqaSampleRate);
             return "MQA"; // mqaIndicator;
         }
 

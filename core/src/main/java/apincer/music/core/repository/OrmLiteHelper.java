@@ -55,9 +55,8 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         return null;
     }
 
+    @Deprecated
     public List<MusicTag> getAllMusicsForPlaylist() {
-           // OrmLiteHelper.ORDERED_BY [] aristAlbum = {OrmLiteHelper.ORDERED_BY.TITLE, OrmLiteHelper.ORDERED_BY.ARTIST};
-          //  return findMySongs(aristAlbum);
         List<MusicTag> list = findMySongs();
         list.sort(Comparator
                 .comparing(MusicTag::getNormalizedTitle)
@@ -105,10 +104,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.dropTable(connectionSource, PlaylistItem.class, true);
             TableUtils.dropTable(connectionSource, PlayingQueue.class, true);
             onCreate(database, connectionSource);
-
-            //clean cached directory
-           // FileRepository.newInstance(context).cleanCacheCovers();
-           // FileRepository.newInstance(context).cleanCacheCovers();
         } catch (SQLException e) {
             Log.e(TAG,"onUpgrade", e);
         }
@@ -224,6 +219,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
     }
 
     // Add batch save method
+    @Deprecated
     public void saveTagsBatch(List<MusicTag> tags) {
         if (tags == null || tags.isEmpty()) return;
 
@@ -490,9 +486,10 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                         "GROUP BY normalizedTitle, normalizedArtist HAVING COUNT(*) > 1) " +
                         "ORDER BY normalizedTitle, normalizedArtist";
 
-                GenericRawResults<MusicTag> rawResults = dao.queryRaw(rawQuery, dao.getRawRowMapper());
-                // Use getResults() which is the correct method to get the list
-                return rawResults.getResults();
+                try (GenericRawResults<MusicTag> rawResults = dao.queryRaw(rawQuery, dao.getRawRowMapper())) {
+                    // Use getResults() which is the correct method to get the list
+                    return rawResults.getResults();
+                }
             }
 
         } catch (Exception e) {
@@ -502,6 +499,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
+    @Deprecated
     public List<MusicTag> findSimilarSongsOld(boolean excludeArtist) {
         try {
             List<MusicTag> list =  getMusicTagDao().queryForAll();
@@ -575,34 +573,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
             return EMPTY_STRING_LIST;
         }
     }
-
-    /*
-    public List<MusicFolder> getGroupingWithChildrenCount() {
-        try {
-            //select grouping, count(id) from musictag group by grouping
-            List<MusicFolder> list = new ArrayList<>();
-            Dao<MusicTag, ?> dao = getMusicTagDao();
-            QueryBuilder<MusicTag, ?> builder = dao.queryBuilder();
-            builder.selectRaw("grouping, count(id)");
-            builder.groupBy("grouping");
-            try (GenericRawResults<String[]> results = dao.queryRaw(builder.prepareStatementString())) {
-                for (String[] vals : results.getResults()) {
-                    MusicFolder group = new MusicFolder(SearchCriteria.TYPE.GROUPING, vals[0]);
-                    group.setChildCount(StringUtils.toLong(vals[1]));
-                    if (vals[0] == null) {
-                        group.setName("_NULL");
-                    } else if (StringUtils.isEmpty(vals[0])) {
-                        group.setName("_EMPTY");
-                    }
-                    list.add(group);
-                }
-            }
-            return list;
-        } catch (Exception e) {
-            Log.e(TAG,"getGrouping: "+e.getMessage());
-            return EMPTY_FOLDER_LIST;
-        }
-    } */
 
     public List<MusicFolder> getGenresWithChildrenCount() {
         try {
@@ -802,18 +772,6 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
                 builder.where().isNull("artist").or().eq("artist", "");
             }else {
                 name = name.replace("'", "''");
-                //todo seperator can be ; and ,
-               /* builder.where().eq("artist", name).or()
-                        .like("artist",name+ARTIST_SEP+LIKE_LITERAL).or()
-                        .like("artist",name+ARTIST_SEP_SPACE+LIKE_LITERAL).or()
-                        .like("artist", LIKE_LITERAL+ARTIST_SEP+name).or()
-                        .like("artist", LIKE_LITERAL+ARTIST_SEP_SPACE+name).or()
-
-                        // New clauses for "," to fix the todo
-                        .like("artist", name + ARTIST_SEP_ALT + LIKE_LITERAL).or()
-                        .like("artist", name + ARTIST_SEP_ALT_SPACE + LIKE_LITERAL).or()
-                        .like("artist", LIKE_LITERAL + ARTIST_SEP_ALT + name).or()
-                        .like("artist", LIKE_LITERAL + ARTIST_SEP_ALT_SPACE + name); */
                 // Note: Use SelectArg for security instead of name.replace("'", "''")
                 builder.where().like("artist", new SelectArg("%" + name + "%"));
             }
@@ -896,6 +854,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         return musicTagDao;
     }
 
+    @Deprecated
     public Dao<Playlist, Long> getPlaylistDao() throws SQLException {
         if (playlistDao == null) {
             playlistDao = getDao(Playlist.class);
@@ -903,6 +862,7 @@ public class OrmLiteHelper extends OrmLiteSqliteOpenHelper {
         return playlistDao;
     }
 
+    @Deprecated
     public Dao<PlaylistItem, Long> getPlaylistItemDao() throws SQLException {
         if (playlistItemDao == null) {
             playlistItemDao = getDao(PlaylistItem.class);

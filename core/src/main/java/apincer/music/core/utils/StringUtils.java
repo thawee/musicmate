@@ -152,18 +152,16 @@ public class StringUtils {
         // --- End Safety Check ---
 
         // Use a switch to handle the truncation type
-        switch (type) {
-            case PREFIX:
+        return switch (type) {
+            case PREFIX ->
                 // We want "...end"
                 // Get the last (maxLength - 3) characters
-                return ellipsis + input.substring(input.length() - (maxLength - ellipsisLength));
-
-            case SUFFIX:
-            default:
+                    ellipsis + input.substring(input.length() - (maxLength - ellipsisLength));
+            default ->
                 // We want "start..."
                 // Get the first (maxLength - 3) characters
-                return input.substring(0, maxLength - ellipsisLength) + ellipsis;
-        }
+                    input.substring(0, maxLength - ellipsisLength) + ellipsis;
+        };
     }
 	
 	@SuppressLint("SuspiciousIndentation")
@@ -292,7 +290,7 @@ public class StringUtils {
 
     public static String formatStorageSize(long bytes) {
         double s = bytes*1.00;
-        String unit = "Bytes";
+        String unit;
         if(bytes<= StorageVolume.MB_IN_BYTES) {
             s = s/StorageVolume.KB_IN_BYTES;
             unit = "KB";

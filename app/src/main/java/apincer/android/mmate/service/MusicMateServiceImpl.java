@@ -83,7 +83,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     @Inject
     MediaServerHub mediaServer;
 
-    //private boolean isNotificationActive = false;
     private AndroidPlayerController androidPlayer;
 
     // -- SERVICE --
@@ -92,7 +91,6 @@ public class MusicMateServiceImpl extends Service implements PlaybackService {
     private WifiManager wifiManager;
     private PowerManager powerManager;
     private ConnectivityManager connectivityManager;
-//    private NotificationManager notificationManager;
 
     // Locks to keep the CPU and WiFi active for stable streaming
     private WifiManager.WifiLock wifiLock;

@@ -109,7 +109,7 @@
             android:orientation="horizontal"
             android:layout_marginTop="@dimen/dimen_4_dp"
             android:gravity="center_vertical">
-
+<!--
             <apincer.android.mmate.ui.view.QualityIndicatorView
                 android:id="@+id/icon_quality_indicator"
                 android:layout_width="wrap_content"
@@ -122,7 +122,7 @@
                 android:layout_marginStart="@dimen/dimen_6_dp"
                 app:dr="DR12"
                 app:db="96 dB" />
-
+-->
             <TextView
                 android:id="@+id/item_filetype"
                 android:layout_width="wrap_content"
@@ -132,13 +132,12 @@
                 android:gravity="center"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="@dimen/dimen_6_dp"
-                android:paddingStart="@dimen/dimen_8_dp"
                 android:paddingEnd="@dimen/dimen_8_dp"
                 android:paddingTop="@dimen/dimen_2_dp"
                 android:paddingBottom="@dimen/dimen_2_dp"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                 android:text="FLAC"
-                tools:ignore="HardcodedText"
+                tools:ignore="HardcodedText,RtlSymmetry"
                 />
 
             <TextView
@@ -168,7 +167,23 @@
                 android:id="@+id/view_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/dimen_1_dp" />
+                android:layout_marginEnd="@dimen/dimen_2_dp" />
+
+            <apincer.android.mmate.ui.view.DynamicRangeView
+                android:id="@+id/dynamic_range_db_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen_2_dp"
+                android:layout_marginEnd="@dimen/dimen_2_dp"
+                app:dr="DR12"
+                app:db="96 dB" />
+
+            <apincer.android.mmate.ui.view.QualityIndicatorView
+                android:id="@+id/icon_quality_indicator"
+                android:layout_marginStart="@dimen/dimen_2_dp"
+                android:layout_marginEnd="@dimen/dimen_2_dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
         </LinearLayout>
     </LinearLayout>
 

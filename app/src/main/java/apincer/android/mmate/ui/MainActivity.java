@@ -562,7 +562,7 @@ public class MainActivity extends AppCompatActivity {
                 //        ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_fastscroll_thumb)))
                 .setPopupTextProvider((view, position) -> {
                     MediaTrack track = adapter.getMusicTag(position);
-                    if(track != null && track.getTitle() != null) return track.getTitle().subSequence(0,1);
+                    if(track != null && !isEmpty(track.getTitle())) return track.getTitle().subSequence(0,1);
                     return "-";
                 })
                 .build();

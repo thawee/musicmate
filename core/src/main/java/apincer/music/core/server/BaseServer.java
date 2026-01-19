@@ -182,11 +182,6 @@ public class BaseServer {
         return new File(coverartDir, coverartName);
     }
 
-    /*
-    public WebSocketContent buildWebSocketContent() {
-       return new WebSocketContent();
-    } */
-
     public void notifyPlayback(String clientIp, String userAgent, MusicTag tag) {
         MusicMateExecutors.execute(() -> {
             if(playbackService != null) {
@@ -598,7 +593,7 @@ public class BaseServer {
                         return handleGetTrackMetadata(trackIdMeta);
                     case "setRenderer":
                         String udn = String.valueOf(message.get("udn"));
-                        if(udn == null || udn.isEmpty() || "null".equalsIgnoreCase(udn)) {
+                        if(isEmpty(udn) || "null".equalsIgnoreCase(udn)) {
                             Log.w(TAG, "setRenderer command failed: missing or invalid udn.");
                             return createErrorResponse("Invalid UDN for setRenderer");
                         }
@@ -608,7 +603,7 @@ public class BaseServer {
                         return sendQueueUpdate();
                     case "addToQueue":
                         String songIdAdd = String.valueOf(message.get("trackId"));
-                        if(songIdAdd == null || songIdAdd.isEmpty() || "null".equalsIgnoreCase(songIdAdd)) {
+                        if(isEmpty(songIdAdd) || "null".equalsIgnoreCase(songIdAdd)) {
                             Log.w(TAG, "addToQueue command failed: missing or invalid id.");
                             return createErrorResponse("Invalid ID for addToQueue");
                         }
@@ -619,7 +614,7 @@ public class BaseServer {
                         break; // Queue update will be pushed
                     case "play":
                         String songIdPlay = String.valueOf(message.get("trackId"));
-                        if(songIdPlay == null || songIdPlay.isEmpty() || "null".equalsIgnoreCase(songIdPlay)) {
+                        if(isEmpty(songIdPlay) || "null".equalsIgnoreCase(songIdPlay)) {
                             Log.w(TAG, "play command failed: missing or invalid id.");
                             return createErrorResponse("Invalid ID for play");
                         }
@@ -628,7 +623,7 @@ public class BaseServer {
                     case "playFromContext":
                         String songIdContext = String.valueOf(message.get("trackId"));
                         String pathContext = String.valueOf(message.get("path"));
-                        if(songIdContext == null || songIdContext.isEmpty() || "null".equalsIgnoreCase(songIdContext) || pathContext == null || pathContext.isEmpty()) {
+                        if(isEmpty(songIdContext) || "null".equalsIgnoreCase(songIdContext) || isEmpty(pathContext)) {
                             Log.w(TAG, "playFromContext command failed: missing or invalid id or path.");
                             return createErrorResponse("Invalid ID or Path for playFromContext");
                         }
@@ -642,14 +637,14 @@ public class BaseServer {
                         break; // Playback state update will be pushed
                     case "getTrackDetails":
                         String trackIdDetails = String.valueOf(message.get("trackId"));
-                        if(trackIdDetails == null || trackIdDetails.isEmpty() || "null".equalsIgnoreCase(trackIdDetails)) {
+                        if(isEmpty(trackIdDetails) || "null".equalsIgnoreCase(trackIdDetails)) {
                             Log.w(TAG, "getTrackDetails command failed: missing or invalid id.");
                             return createErrorResponse("Invalid ID for getTrackDetails");
                         }
                         return handleGetTrackDetails(trackIdDetails);
                     case "setRepeatMode":
                         String mode = String.valueOf(message.get("mode"));
-                        if(mode == null || (!mode.equals("none") && !mode.equals("all") && !mode.equals("one"))) {
+                        if(isEmpty(mode) || (!mode.equals("none") && !mode.equals("all") && !mode.equals("one"))) {
                             Log.w(TAG, "setRepeatMode command failed: invalid mode.");
                             return createErrorResponse("Invalid mode for setRepeatMode");
                         }
@@ -830,9 +825,6 @@ public class BaseServer {
          */
         private void handleEmptyQueue() {
             tagRepos.emptyPlayingQueue();
-            //if(playbackService != null) {
-            //    playbackService.clearQueue(); // Also inform playback service if necessary
-            //}
         }
 
         /**
@@ -937,9 +929,6 @@ public class BaseServer {
                 MusicTag song = tagRepos.findById(trackId);
                 if (song != null) {
                     tagRepos.addToPlayingQueue(song);
-                    //if (playbackService != null) {
-                    //    playbackService.addToQueue(song); // Also inform playback service if needed
-                    // }
                 } else {
                     Log.w(TAG, "handleAddToQueue: Track not found for ID " + songId);
                 }
@@ -1053,7 +1042,7 @@ public class BaseServer {
                 Log.e(TAG, "Error browsing path: " + path, e);
                 // Return empty list on error
             }
-            return Map.of("type", "browseResult", "items", items, "path", path);
+            return Map.of("type", "browseResult", "items", items, "path", StringUtils.trimToEmpty(path));
         }
 
         /**

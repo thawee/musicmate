@@ -100,8 +100,7 @@ public class MediaNotificationBuilder {
                     */
                     .build();
 
-            NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
-            nm.notify(SERVICE_ID, notification);
+            notify(context, notification);
         });
     }
 
@@ -178,8 +177,7 @@ public class MediaNotificationBuilder {
                 .build();
 
         //notificationManager.notify(SERVICE_ID, notification);
-        NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
-        nm.notify(SERVICE_ID, notification);
+        notify(context, notification);
     }
 
     /**
@@ -307,8 +305,7 @@ public class MediaNotificationBuilder {
                 .setOnlyAlertOnce(true)
                 .build();
 
-        NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
-        nm.notify(SERVICE_ID, notification);
+        notify(context, notification);
     }
 
 
@@ -360,8 +357,8 @@ public class MediaNotificationBuilder {
                     NotificationCompat.Builder builder = createStreamingNotification(context,track, player, bitmap);
                     builder.setLargeIcon(bitmap);
                     //notificationManager.notify(SERVICE_ID, builder.build());
-                    NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
-                    nm.notify(SERVICE_ID, builder.build());
+
+                    MediaNotificationBuilder.notify(context, builder.build());
                 }
             }
 
@@ -371,8 +368,7 @@ public class MediaNotificationBuilder {
                 Bitmap defaultArt = loadDefaultAlbumArt(context);
                 NotificationCompat.Builder builder = createStreamingNotification(context,track, player, defaultArt);
                 //notificationManager.notify(SERVICE_ID, builder.build());
-                NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
-                nm.notify(SERVICE_ID, builder.build());
+                MediaNotificationBuilder.notify(context, builder.build());
             }
         };
 
@@ -387,6 +383,13 @@ public class MediaNotificationBuilder {
                 .build();
 
         imageLoader.enqueue(request);
+    }
+
+    private static void notify(Context context, Notification builder) {
+        NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
+        if(nm != null) {
+            nm.notify(SERVICE_ID, builder);
+        }
     }
 
 
@@ -559,8 +562,7 @@ public class MediaNotificationBuilder {
                 .addAction(toggleIcon, toggleTitle, toggleIntent)
                 .build();
 
-        NotificationManager nm = ContextCompat.getSystemService(context, NotificationManager.class);
-        nm.notify(SERVICE_ID, notification);
+        MediaNotificationBuilder.notify(context, notification);
     }
 
     // --- Helper: Ensure software bitmap (for Palette)
